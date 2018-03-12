@@ -1,0 +1,5 @@
+#
+# File: py-rcsb_db/MANIFEST.in
+#
+include HISTORY.txt
+#

@@ -1,0 +1,5 @@
+# RCSB_DB HISTORY
+
+11-Mar-2018  - Py2->Py3 and refactored for python packaging tools
+
+
