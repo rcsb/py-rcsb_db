@@ -55,7 +55,7 @@ class ChemCompLoaderTests(unittest.TestCase):
         self.__verbose = False
         self.__loadPathList = []
         self.__ioObj = IoAdapter(verbose=self.__verbose)
-        self.__topCachePath = '../../../../../../reference/components/ligand-dict-v3'
+        self.__topCachePath = os.path.join(TOPDIR, "rcsb_db", "data", "MOCK_CHEM_COMP_REPO")
         self.__startTime = time.time()
         logger.debug("Running tests on version %s" % __version__)
         logger.debug("Starting %s at %s" % (self.id(),
@@ -91,7 +91,7 @@ class ChemCompLoaderTests(unittest.TestCase):
             for name in files:
                 if name.endswith(".cif") and len(name) <= 7:
                     pathList.append(os.path.join(root, name))
-        logger.info("\nFound %d files in %s\n" % (len(pathList), self.__topCachePath))
+        logger.debug("\nFound %d files in %s\n" % (len(pathList), self.__topCachePath))
         return pathList
 
     def testListFiles(self):
@@ -100,7 +100,7 @@ class ChemCompLoaderTests(unittest.TestCase):
 
         try:
             pathList = self.__makeComponentPathList()
-            logger.info("\nFound %d files\n" % len(pathList))
+            logger.debug("\nFound %d files\n" % len(pathList))
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -123,20 +123,21 @@ class ChemCompLoaderTests(unittest.TestCase):
 
         try:
             ccsd = ChemCompSchemaDef()
-            sml = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=None, workPath='.', cleanUp=False,
+            sml = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=None, workPath=os.path.join(HERE, "test-output"), cleanUp=False,
                                   warnings='default', verbose=self.__verbose)
             pathList = self.__makeComponentPathList()
 
             containerNameList, tList = sml.makeLoadFiles(pathList, append=False)
             for tId, fn in tList:
-                logger.info("\nCreated table %s load file %s\n" % (tId, fn))
+                logger.debug("\nCreated table %s load file %s\n" % (tId, fn))
             #
 
             self.open(dbName=ccsd.getDatabaseName())
-            sdl = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath='.', cleanUp=False,
+            sdl = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath=os.path.join(HERE, "test-output"), cleanUp=False,
                                   warnings='default', verbose=self.__verbose)
 
-            sdl.loadBatchFiles(loadList=tList, containerNameList=containerNameList, deleteOpt='all')
+            ok = sdl.loadBatchFiles(loadList=tList, containerNameList=containerNameList, deleteOpt='all')
+            self.assertTrue(ok)
             self.close()
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -145,10 +146,11 @@ class ChemCompLoaderTests(unittest.TestCase):
     def loadBatchFilesMulti(self, dataList, procName, optionsD, workingDir):
         ccsd = ChemCompSchemaDef()
         self.open(dbName=ccsd.getDatabaseName())
-        sdl = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath='.', cleanUp=False,
+        sdl = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath=os.path.join(HERE, 'test-output'), cleanUp=False,
                               warnings='default', verbose=self.__verbose)
         #
-        sdl.loadBatchFiles(loadList=dataList, containerNameList=None, deleteOpt=None)
+        ok = sdl.loadBatchFiles(loadList=dataList, containerNameList=None, deleteOpt=None)
+        self.assertTrue(ok)
         self.close()
         return dataList, dataList, []
 
@@ -171,7 +173,7 @@ class ChemCompLoaderTests(unittest.TestCase):
         """
         logger.debug("\nStarting %s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
         startTime = time.time()
-        numProc = 4
+        numProc = 2
         try:
             dataS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
             dataList = [a for a in dataS]
@@ -180,13 +182,13 @@ class ChemCompLoaderTests(unittest.TestCase):
             ok, failList, retLists, diagList = mpu.runMulti(dataList=dataList, numProc=numProc, numResults=1)
             pathList = retLists[0]
             endTime0 = time.time()
-            logger.info("\nPath list length %d  in %.2f seconds\n" % (len(pathList), endTime0 - startTime))
+            logger.debug("\nPath list length %d  in %.2f seconds\n" % (len(pathList), endTime0 - startTime))
 
             # logger.info("\nPath list %r\n" % pathList[:20])
             # pathList=self.__makeComponentPathList()
 
             ccsd = ChemCompSchemaDef()
-            sml = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=None, workPath='.', cleanUp=False,
+            sml = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=None, workPath=os.path.join(HERE, "test-output"), cleanUp=False,
                                   warnings='default', verbose=self.__verbose)
 
             #
@@ -198,13 +200,13 @@ class ChemCompLoaderTests(unittest.TestCase):
             tList = retLists[1]
 
             for tId, fn in tList:
-                logger.info("\nCreated table %s load file %s\n" % (tId, fn))
+                logger.debug("\nCreated table %s load file %s\n" % (tId, fn))
             #
 
             endTime1 = time.time()
-            logger.info("\nBatch files created in %.2f seconds\n" % (endTime1 - endTime0))
+            logger.debug("\nBatch files created in %.2f seconds\n" % (endTime1 - endTime0))
             self.open(dbName=ccsd.getDatabaseName())
-            sdl = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath='.', cleanUp=False,
+            sdl = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath=os.path.join(HERE, "test-output"), cleanUp=False,
                                   warnings='default', verbose=self.__verbose)
             #
             for tId, fn in tList:
@@ -216,7 +218,7 @@ class ChemCompLoaderTests(unittest.TestCase):
             ok, failList, retLists, diagList = mpu.runMulti(dataList=tList, numProc=numProc, numResults=1)
 
             endTime2 = time.time()
-            logger.info("\nLoad completed in %.2f seconds\n" % (endTime2 - endTime1))
+            logger.debug("\nLoad completed in %.2f seconds\n" % (endTime2 - endTime1))
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()

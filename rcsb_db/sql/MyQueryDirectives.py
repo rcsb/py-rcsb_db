@@ -144,7 +144,7 @@ class MyQueryDirectives(object):
 
         '''
         if self.__verbose:
-            logger.info("\n+%s.%s() dom dictionary length domD %d\n" %
+            logger.debug("\n+%s.%s() dom dictionary length domD %d\n" %
                         (self.__class__.__name__, sys._getframe().f_code.co_name, len(domD)))
         tL = []
         qL = []
@@ -155,14 +155,14 @@ class MyQueryDirectives(object):
             tL.extend(qD.split(queryDirSeparator))
 
         # if self.__verbose:
-        #    logger.info("\n+%s.%s() tL %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, tL))
+        #     ("\n+%s.%s() tL %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, tL))
         #
         qL = self.__queryDirSub(inpQueryDirList=tL, domD=domD, domRefSeparator=domRefSeparator)
 
         if self.__debug:
-            logger.info("+%s.%s() length qL %d\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, len(qL)))
+            logger.debug("+%s.%s() length qL %d\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, len(qL)))
             for q in qL:
-                logger.info("+%s.%s() qL %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, q))
+                logger.debug("+%s.%s() qL %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, q))
         # Now parse the token list --
         #
         selectD, orderD, conditionD, self.__orgSelectCount = self.__parseTokenList(qL, appendValueConditonsToSelect)
@@ -185,7 +185,7 @@ class MyQueryDirectives(object):
                 tD[tL[i]] = tL[i + 1]
         except Exception as e:
             if self.__verbose:
-                logger.info("\n+%s.%s() fails with index %d nPairs %d tL %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, index, nPairs, tL))
+                logger.error("\n+%s.%s() fails with index %d nPairs %d tL %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, index, nPairs, tL))
                 logger.exception("Failing with %s" % str(e))
 
         return tD
@@ -219,9 +219,9 @@ class MyQueryDirectives(object):
                         selectD[ordinal] = (tdotc[0].upper(), tdotc[1].upper())
                     else:
                         if self.__verbose:
-                            logger.info("\n+%s.%s() selection incomplete at i = %d\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, i))
+                            logger.debug("\n+%s.%s() selection incomplete at i = %d\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, i))
                             for k, v in tD.items():
-                                logger.info(" --- tD --  %r %r\n" % (k, v))
+                                logger.debug(" --- tD --  %r %r\n" % (k, v))
                         # raise ValueError("Selection definition incomplete")
                     i += 4
                     continue
@@ -337,9 +337,9 @@ class MyQueryDirectives(object):
                         orderD[ordinal] = ((tdotc[0].upper(), tdotc[1].upper()), sf)
                     else:
                         if self.__verbose:
-                            logger.info("\n+%s.%s() orderby incomplete at i = %d\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, i))
+                            logger.debug("\n+%s.%s() orderby incomplete at i = %d\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, i))
                             for k, v in tD.items():
-                                logger.info(" --- tD --  %r %r\n" % (k, v))
+                                logger.debug(" --- tD --  %r %r\n" % (k, v))
                         # raise ValueError("Order definition incomplete")
                     i += 6
                     continue
@@ -347,10 +347,9 @@ class MyQueryDirectives(object):
                     pass
         except Exception as e:
             if self.__verbose:
-                logger.info("\n+%s.%s() fails at i = %d\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, i))
+                logger.error("\n+%s.%s() fails at i = %d\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, i))
                 for k, v in tD.items():
-                    logger.info(" --- tD --  %r %r\n" % (k, v))
-
+                    logger.error(" --- tD --  %r %r\n" % (k, v))
                 logger.exception("Failing with %s" % str(e))
 
         #
@@ -360,29 +359,29 @@ class MyQueryDirectives(object):
             condListId, keyValue, lOp = keyCond
             conditionD[ordinal] = {'cType': 'group', 'lOp': lOp, 'cObj': []}
             if condListId in condListD:
-                logger.info("++++condListId %r keyValue %r lOp %r\n" % (condListId, keyValue, lOp))
+                logger.debug("++++condListId %r keyValue %r lOp %r\n" % (condListId, keyValue, lOp))
                 if keyValue in condListD[condListId]:
                     for cond in condListD[condListId][keyValue]:
-                        logger.info("+++++++condListId %r keyValue %r lOp %r cond %r\n" % (condListId, keyValue, lOp, cond))
+                        logger.debug("+++++++condListId %r keyValue %r lOp %r cond %r\n" % (condListId, keyValue, lOp, cond))
                         # example : ('OR', ('PDBX_WEBSELECT', 'METHOD_TO_DETERMINE_STRUCT'), 'LIKE', ('MOLECULAR REPLACEMENT', 'char')
                         # using  condListD[ordinal][ky].append((tD['LOP'], (tableId, attributeId), cop, (tD['VALUE'], aType)))
                         conditionD[ordinal]['cObj'].append(cond)
         #
         if self.__verbose:
             for k, v in selectD.items():
-                logger.info("\n+%s.%s() select %r  %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, k, v))
+                logger.debug("\n+%s.%s() select %r  %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, k, v))
             for k, v in orderD.items():
-                logger.info("\n+%s.%s() order  %r  %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, k, v))
+                logger.debug("\n+%s.%s() order  %r  %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, k, v))
             #
             for k, v in keyCondD.items():
-                logger.info("\n+%s.%s() keycondD  %r  %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, k, v))
+                logger.debug("\n+%s.%s() keycondD  %r  %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, k, v))
             for k1, vD in condListD.items():
                 for k2, v in vD.items():
-                    logger.info("\n+%s.%s() condListD %r  %r  %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, k1, k2, v))
+                    logger.debug("\n+%s.%s() condListD %r  %r  %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, k1, k2, v))
             #
             for k1, vD in conditionD.items():
                 for k2, v in vD.items():
-                    logger.info("\n+%s.%s() ordinal %3d type %r: %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, k1, k2, v))
+                    logger.debug("\n+%s.%s() ordinal %3d type %r: %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, k1, k2, v))
 
         #
         orgSelectCount = len(selectD)
@@ -455,7 +454,7 @@ class MyQueryDirectives(object):
         #
         sqlS = sqlGen.getSql()
         if (self.__verbose):
-            logger.info("\n+%s.%s() sql:\n%s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, sqlS))
+            logger.debug("\n+%s.%s() sql:\n%s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, sqlS))
         sqlGen.clear()
         #
         return sqlS
@@ -506,9 +505,9 @@ class MyQueryDirectives(object):
                 i += 1
         except Exception as e:
             if self.__verbose:
-                logger.info("\n+%s.%s() fails at i = %d\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, i))
+                logger.error("\n+%s.%s() fails at i = %d\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, i))
                 for ii, qd in enumerate(inpQueryDirList):
-                    logger.info(" --- qd %4d  %r\n" % (ii, qd))
+                    logger.error(" --- qd %4d  %r\n" % (ii, qd))
                 logger.exception("Failing with %s" % str(e))
 
         return qL

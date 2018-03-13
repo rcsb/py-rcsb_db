@@ -123,64 +123,42 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
         sd = ChemCompSchemaDef()
         self.__schemaCreate(schemaDefObj=sd)
         #
-        sd = PdbxSchemaDef()
-        self.__schemaCreate(schemaDefObj=sd)
+        #sd = PdbxSchemaDef()
+        #self.__schemaCreate(schemaDefObj=sd)
 
     def testLoadBirdReference(self):
-        startTime = time.clock()
-        logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
         try:
             sd = BirdSchemaDef()
             self.__schemaCreate(schemaDefObj=sd)
             inputPathList = self.__getPrdPathList()
             inputPathList.extend(self.__getPrdFamilyPathList())
-            sdl = SchemaDefLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath='.',
+            sdl = SchemaDefLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath=os.path.join(HERE, "test-output"),
                                   cleanUp=False, warnings='default', verbose=self.__verbose)
-            sdl.load(inputPathList=inputPathList, loadType='batch-file')
+            ok = sdl.load(inputPathList=inputPathList, loadType='batch-file')
+            self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-        endTime = time.clock()
-        logger.info("\nCompleted %s %s at %s (%.2f seconds)\n" % (self.__class__.__name__,
-                                                                       sys._getframe().f_code.co_name,
-                                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                       endTime - startTime))
-
     def testReloadBirdReference(self):
-        startTime = time.clock()
-        logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
         try:
             sd = BirdSchemaDef()
             self.__schemaCreate(schemaDefObj=sd)
             inputPathList = self.__getPrdPathList()
-            sdl = SchemaDefLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath='.',
+            sdl = SchemaDefLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath=os.path.join(HERE, "test-output"),
                                   cleanUp=False, warnings='default', verbose=self.__verbose)
             sdl.load(inputPathList=inputPathList, loadType='batch-file')
             #
-            logger.info("\n\n\n+INFO BATCH FILE RELOAD TEST --------------------------------------------\n")
+            logger.debug("\n\n\n+INFO BATCH FILE RELOAD TEST --------------------------------------------\n")
             sdl.load(inputPathList=inputPathList, loadType='batch-file', deleteOpt='all')
-            logger.info("\n\n\n+INFO BATCH INSERT RELOAD TEST --------------------------------------------\n")
-            sdl.load(inputPathList=inputPathList, loadType='batch-file', deleteOpt='selected')
+            logger.debug("\n\n\n+INFO BATCH INSERT RELOAD TEST --------------------------------------------\n")
+            ok = sdl.load(inputPathList=inputPathList, loadType='batch-file', deleteOpt='selected')
+            self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-        endTime = time.clock()
-        logger.info("\nCompleted %s %s at %s (%.2f seconds)\n" % (self.__class__.__name__,
-                                                                       sys._getframe().f_code.co_name,
-                                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                       endTime - startTime))
-
     def testLoadBirdReferenceWithSequence(self):
-        startTime = time.clock()
-        logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
         try:
             sd = BirdSchemaDef()
             self.__schemaCreate(schemaDefObj=sd)
@@ -191,7 +169,7 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
             #
             for pth in self.__pathList:
                 prd.setFilePath(pth)
-            logger.info("PRD repository read completed\n")
+            logger.debug("PRD repository read completed\n")
             #
             prdU = PdbxPrdUtils(prd, verbose=self.__verbose)
             rD = prdU.getComponentSequences(addCategory=True)
@@ -203,7 +181,7 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
             #
             for pth in self.__familyPathList:
                 prdFam.setFilePath(pth)
-            logger.info("Family repository read completed\n")
+            logger.debug("Family repository read completed\n")
             #
             # combine containers -
             containerList = prd.getCurrentContainerList()
@@ -211,86 +189,83 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
             #
             # Run loader on container list --
             #
-            sdl = SchemaDefLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath='.', cleanUp=False, warnings='error', verbose=self.__verbose)
-            sdl.load(containerList=containerList, loadType='batch-file', deleteOpt='selected')
+            sdl = SchemaDefLoader(
+                schemaDefObj=sd,
+                ioObj=self.__ioObj,
+                dbCon=self.__dbCon,
+                workPath=os.path.join(HERE, "test-output"),
+                cleanUp=False,
+                warnings='error',
+                verbose=self.__verbose)
+            ok = sdl.load(containerList=containerList, loadType='batch-file', deleteOpt='selected')
+            self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-        endTime = time.clock()
-        logger.info("\nCompleted %s %s at %s (%.2f seconds)\n" % (self.__class__.__name__,
-                                                                       sys._getframe().f_code.co_name,
-                                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                       endTime - startTime))
-
     def testLoadChemCompReference(self):
-        startTime = time.clock()
-        logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
         try:
             sd = ChemCompSchemaDef()
             self.__schemaCreate(schemaDefObj=sd)
             inputPathList = self.__getChemCompPathList()
-            sdl = SchemaDefLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath='.', cleanUp=False, warnings='default', verbose=self.__verbose)
-            sdl.load(inputPathList=inputPathList, loadType='batch-file')
+            sdl = SchemaDefLoader(
+                schemaDefObj=sd,
+                ioObj=self.__ioObj,
+                dbCon=self.__dbCon,
+                workPath=os.path.join(
+                    HERE,
+                    "test-output"),
+                cleanUp=False,
+                warnings='default',
+                verbose=self.__verbose)
+            ok = sdl.load(inputPathList=inputPathList, loadType='batch-file')
+            self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-        endTime = time.clock()
-        logger.info("\nCompleted %s %s at %s (%.2f seconds)\n" % (self.__class__.__name__,
-                                                                       sys._getframe().f_code.co_name,
-                                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                       endTime - startTime))
-
+    @unittest.skip("PDBx test skipping")
     def testLoadPdbxFiles(self):
-        startTime = time.clock()
-        logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
         try:
             sd = PdbxSchemaDef()
             self.__schemaCreate(schemaDefObj=sd)
             inputPathList = self.__getPdbxPathList()
-            sdl = SchemaDefLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath='.', cleanUp=False, warnings='default', verbose=self.__verbose)
-            sdl.load(inputPathList=inputPathList, loadType='batch-insert', deleteOpt='all')
+            sdl = SchemaDefLoader(
+                schemaDefObj=sd,
+                ioObj=self.__ioObj,
+                dbCon=self.__dbCon,
+                workPath=os.path.join(
+                    HERE,
+                    "test-output"),
+                cleanUp=False,
+                warnings='default',
+                verbose=self.__verbose)
+            ok = sdl.load(inputPathList=inputPathList, loadType='batch-insert', deleteOpt='all')
+            self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-        endTime = time.clock()
-        logger.info("\nCompleted %s %s at %s (%.2f seconds)\n" % (self.__class__.__name__,
-                                                                       sys._getframe().f_code.co_name,
-                                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                       endTime - startTime))
-
     def testLoadChemCompExamples(self):
-        startTime = time.clock()
-        logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
         try:
             sd = ChemCompSchemaDef()
             self.__schemaCreate(schemaDefObj=sd)
             inputPathList = [os.path.join(self.__ccPath, fn) for fn in self.__ccFileList]
-            sdl = SchemaDefLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath='.', cleanUp=False, warnings='default', verbose=self.__verbose)
-            sdl.load(inputPathList=inputPathList, loadType='batch-insert', deleteOpt="selected")
+            sdl = SchemaDefLoader(
+                schemaDefObj=sd,
+                ioObj=self.__ioObj,
+                dbCon=self.__dbCon,
+                workPath=os.path.join(HERE, "test-output"),
+                cleanUp=False,
+                warnings='default',
+                verbose=self.__verbose)
+            ok = sdl.load(inputPathList=inputPathList, loadType='batch-insert', deleteOpt="selected")
+            self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-        endTime = time.clock()
-        logger.info("\nCompleted %s %s at %s (%.2f seconds)\n" % (self.__class__.__name__,
-                                                                       sys._getframe().f_code.co_name,
-                                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                       endTime - startTime))
-
     def testGenSchemaDaInternal(self):
-        startTime = time.clock()
-        logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
         try:
             sd = DaInternalSchemaDef()
             self.__schemaCreateSQL(schemaDefObj=sd)
@@ -298,19 +273,9 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-        endTime = time.clock()
-        logger.info("\nCompleted %s %s at %s (%.2f seconds)\n" % (self.__class__.__name__,
-                                                                       sys._getframe().f_code.co_name,
-                                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                       endTime - startTime))
-
     def __schemaCreateSQL(self, schemaDefObj):
         """Test case -  create table schema using schema definition
         """
-        startTime = time.clock()
-        logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
         try:
             tableIdList = schemaDefObj.getTableIdList()
             sqlGen = MyDbAdminSqlGen(self.__verbose, self.__lfh)
@@ -319,25 +284,15 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
                 tableDefObj = schemaDefObj.getTable(tableId)
                 sqlL.extend(sqlGen.createTableSQL(databaseName=schemaDefObj.getDatabaseName(), tableDefObj=tableDefObj))
 
-            logger.info("\nSchema creation SQL string\n %s\n\n" % '\n'.join(sqlL))
+            logger.debug("\nSchema creation SQL string\n %s\n\n" % '\n'.join(sqlL))
 
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-        endTime = time.clock()
-        logger.info("\nCompleted %s %s at %s (%.2f seconds)\n" % (self.__class__.__name__,
-                                                                       sys._getframe().f_code.co_name,
-                                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                       endTime - startTime))
-
     def __schemaCreate(self, schemaDefObj):
         """Test case -  create table schema using schema definition
         """
-        startTime = time.clock()
-        logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                       sys._getframe().f_code.co_name,
-                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
         try:
             tableIdList = schemaDefObj.getTableIdList()
             sqlGen = MyDbAdminSqlGen(self.__verbose, self.__lfh)
@@ -347,7 +302,7 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
                 sqlL.extend(sqlGen.createTableSQL(databaseName=schemaDefObj.getDatabaseName(), tableDefObj=tableDefObj))
 
             if (self.__debug):
-                logger.info("\nSchema creation SQL string\n %s\n\n" % '\n'.join(sqlL))
+                logger.debug("\nSchema creation SQL string\n %s\n\n" % '\n'.join(sqlL))
 
             myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
             #
@@ -356,26 +311,18 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
             myQ.setWarning('default')
             ret = myQ.sqlCommand(sqlCommandList=sqlL)
             if (self.__verbose):
-                logger.info("\n\n+INFO mysql server returns %r\n" % ret)
-
+                logger.debug("\n\n+INFO mysql server returns %r\n" % ret)
+            self.assertTrue(ret)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-        endTime = time.clock()
-        logger.info("\nCompleted %s %s at %s (%.2f seconds)\n" % (self.__class__.__name__,
-                                                                       sys._getframe().f_code.co_name,
-                                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                       endTime - startTime))
-
     def __getPdbxPathList(self):
         """Test case -  get the path list of PDBx instance example files -
         """
-        logger.info("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
         try:
             loadPathList = [os.path.join(self.__pdbxPath, v) for v in self.__pdbxFileList]
-            logger.info("Length of PDBx file path list %d\n" % len(loadPathList))
+            logger.debug("Length of PDBx file path list %d\n" % len(loadPathList))
             return loadPathList
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -384,13 +331,11 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
     def __getPrdPathList(self):
         """Test case -  get the path list of PRD definitions in the CVS repository.
         """
-        logger.info("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
         try:
             refIo = PdbxPrdIo(verbose=self.__verbose)
             refIo.setCachePath(self.__birdCachePath)
             loadPathList = refIo.makeDefinitionPathList()
-            logger.info("Length of CVS path list %d\n" % len(loadPathList))
+            logger.debug("Length of CVS path list %d\n" % len(loadPathList))
             return loadPathList
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -399,13 +344,11 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
     def __getPrdFamilyPathList(self):
         """Test case -  get the path list of PRD Family definitions in the CVS repository.
         """
-        logger.info("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
         try:
             refIo = PdbxFamilyIo(verbose=self.__verbose)
             refIo.setCachePath(self.__birdFamilyCachePath)
             loadPathList = refIo.makeDefinitionPathList()
-            logger.info("Length of CVS path list %d\n" % len(loadPathList))
+            logger.debug("Length of CVS path list %d\n" % len(loadPathList))
             return loadPathList
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -414,13 +357,11 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
     def __getChemCompPathList(self):
         """Test case -  get the path list of definitions in the CVS repository.
         """
-        logger.info("\nStarting %s %s\n" % (self.__class__.__name__,
-                                                 sys._getframe().f_code.co_name))
         try:
             refIo = PdbxChemCompIo(verbose=self.__verbose)
             refIo.setCachePath(self.__ccCachePath)
             loadPathList = refIo.makeComponentPathList()
-            logger.info("Length of CVS path list %d\n" % len(loadPathList))
+            logger.debug("Length of CVS path list %d\n" % len(loadPathList))
             return loadPathList
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -467,7 +408,7 @@ def genSchemaSQLSuite():
 
 if __name__ == '__main__':
     #
-    if False:
+    if True:
         mySuite = createSchemaSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 
@@ -483,5 +424,5 @@ if __name__ == '__main__':
         mySuite = loadReferenceWithSequenceSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-    mySuite = genSchemaSQLSuite()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
+        mySuite = genSchemaSQLSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)

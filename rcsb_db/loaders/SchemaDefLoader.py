@@ -120,7 +120,7 @@ class SchemaDefLoader(object):
         if (self.__verbose):
             if len(self.__overWrite) > 0:
                 for k, v in self.__overWrite.items():
-                    logger.info("+SchemaDefLoader(load) %r maximum width %r" % (k, v))
+                    logger.debug("+SchemaDefLoader(load) %r maximum width %r" % (k, v))
         #
         if loadType in ['batch-file', 'batch-file-append']:
             append = True if loadType == 'batch-file-append' else False
@@ -274,8 +274,8 @@ class SchemaDefLoader(object):
         #
         endTime = time.time()
         if self.__verbose:
-            logger.info("+SchemaDefLoader(loadBatchFiles) completed with status %r at %s (%.3f seconds)\n" %
-                        (ok, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+            logger.debug("+SchemaDefLoader(loadBatchFiles) completed with status %r at %s (%.3f seconds)\n" %
+                         (ok, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
         return ok
 
     def fetch(self, inputPathList):
@@ -304,9 +304,8 @@ class SchemaDefLoader(object):
             containerNameList.extend([myC.getName() for myC in myContainerList])
         #
         endTime = time.time()
-        if self.__verbose:
-            logger.info("completed at %s (%.3f seconds)" %
-                        (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+        logger.debug("completed at %s (%.3f seconds)" %
+                     (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
 
         return tableDataDict, containerNameList
 
@@ -330,12 +329,12 @@ class SchemaDefLoader(object):
         containerNameList.extend([myC.getName() for myC in containerList])
         #
         if (self.__debug):
-            logger.info(" container name list: %r\n" % containerNameList)
+            logger.debug(" container name list: %r\n" % containerNameList)
         #
         endTime = time.time()
         if self.__verbose:
-            logger.info("completed at %s (%.3f seconds)\n" %
-                        (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+            logger.debug("completed at %s (%.3f seconds)\n" %
+                         (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
 
         return tableDataDict, containerNameList
 
@@ -436,7 +435,7 @@ class SchemaDefLoader(object):
                         d[atId] = val if ((val != '?') and (val != '.')) else nullValueDict[atId]
                 except Exception as e:
                     if (self.__verbose):
-                        logger.info("\n+ERROR - processing table %s attribute %s row %r\n" % (schemaTableId, atId, row))
+                        logger.error("\n+ERROR - processing table %s attribute %s row %r\n" % (schemaTableId, atId, row))
                         logger.exception("Failing with %s" % str(e))
 
             retList.append(d)
@@ -495,7 +494,7 @@ class SchemaDefLoader(object):
                         if maxW > 0:
                             lenVal = len(val)
                             if lenVal > maxW:
-                                logger.info("+ERROR - Table %s attribute %s length %d exceeds %d\n" % (schemaTableId, atId, lenVal, maxW))
+                                logger.error("+ERROR - Table %s attribute %s length %d exceeds %d\n" % (schemaTableId, atId, lenVal, maxW))
                             d[atId] = val[:maxW] if ((val != '?') and (val != '.')) else nullValueDict[atId]
                         else:
                             d[atId] = val if ((val != '?') and (val != '.')) else nullValueDict[atId]
@@ -527,13 +526,13 @@ class SchemaDefLoader(object):
         #
         endTime = time.time()
         if (self.__verbose):
-            logger.info("+SchemaDefLoader(delete) table %s server returns %r\n" % (tableId, ret))
-            logger.info("+SchemaDefLoader(delete) completed at %s (%.3f seconds)\n" %
-                        (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+            logger.debug("+SchemaDefLoader(delete) table %s server returns %r\n" % (tableId, ret))
+            logger.debug("+SchemaDefLoader(delete) completed at %s (%.3f seconds)\n" %
+                         (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
             return ret
         else:
             if self.__verbose:
-                logger.info("+SchemaDefLoader(delete) failse for %s\n" % tableId)
+                logger.error("+SchemaDefLoader(delete) fails for %s\n" % tableId)
             return False
 
     def __getSqlDeleteList(self, tableId, containerNameList=None, deleteOpt='all'):
@@ -555,7 +554,7 @@ class SchemaDefLoader(object):
             sqlDeleteList = [sqlGen.truncateTableSQL(databaseName, tableName)]
 
         if (self.__verbose):
-            logger.info("+SchemaDefLoader(__getSqlDeleteList) delete SQL for %s : %r\n" % (tableId, sqlDeleteList))
+            logger.debug("+SchemaDefLoader(__getSqlDeleteList) delete SQL for %s : %r\n" % (tableId, sqlDeleteList))
         return sqlDeleteList
 
     def __batchFileImport(self, tableId, tableLoadPath, sqlFilePath=None, containerNameList=None, deleteOpt='all'):
@@ -585,7 +584,7 @@ class SchemaDefLoader(object):
             sqlCommandList.append(sqlGen.importTable(databaseName, tableDefObj, importPath=tableLoadPath))
 
             if (self.__verbose):
-                logger.info("+SchemaDefLoader(__batchFileImport) SQL import command\n%s\n" % sqlCommandList)
+                logger.debug("+SchemaDefLoader(__batchFileImport) SQL import command\n%s\n" % sqlCommandList)
             #
 
         if sqlFilePath is not None:
@@ -603,9 +602,9 @@ class SchemaDefLoader(object):
         #
         endTime = time.time()
         if (self.__verbose):
-            logger.info("+SchemaDefLoader(__batchFileImport) table %s server returns %r\n" % (tableId, ret))
-            logger.info("+SchemaDefLoader(__batchFileImport) completed at %s (%.3f seconds)\n" %
-                        (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+            logger.debug("+SchemaDefLoader(__batchFileImport) table %s server returns %r\n" % (tableId, ret))
+            logger.debug("+SchemaDefLoader(__batchFileImport) completed at %s (%.3f seconds)\n" %
+                         (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
         return ret
 
     def loadBatchData(self, tableId, rowList=None, containerNameList=None, deleteOpt='selected'):
@@ -657,14 +656,14 @@ class SchemaDefLoader(object):
         ret = myQ.sqlBatchTemplateCommand(sqlInsertList, prependSqlList=sqlDeleteList)
         if (self.__verbose):
             if (ret):
-                logger.info("+SchemaDefLoader(__batchInsertImport) batch insert completed for table %s rows %d\n" % (tableName, len(sqlInsertList)))
+                logger.debug("+SchemaDefLoader(__batchInsertImport) batch insert completed for table %s rows %d\n" % (tableName, len(sqlInsertList)))
             else:
-                logger.info("+SchemaDefLoader(__batchInsertImport) batch insert fails for table %s length %d\n" % (tableName, len(sqlInsertList)))
+                logger.error("+SchemaDefLoader(__batchInsertImport) batch insert fails for table %s length %d\n" % (tableName, len(sqlInsertList)))
 
         endTime = time.time()
         if (self.__verbose):
-            logger.info("+SchemaDefLoader(__batchInsertImport) completed at %s (%.3f seconds)\n" %
-                        (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+            logger.debug("+SchemaDefLoader(__batchInsertImport) completed at %s (%.3f seconds)\n" %
+                         (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
 
         return ret
 
@@ -724,7 +723,7 @@ class SchemaDefLoader(object):
             sqlRefresh = sqlGen.refreshTableSQLCrate(databaseName, tableName)
             crQ.sqlCommand(sqlRefresh)
         #
-        logger.info("Insert begins for table %s with row length %d" % (tableName, len(rowList)))
+        logger.debug("Insert begins for table %s with row length %d" % (tableName, len(rowList)))
         sqlInsertList = []
         tupL = list(zip(tableAttributeIdList, tableAttributeNameList))
         if sqlMode == 'many':
@@ -768,11 +767,11 @@ class SchemaDefLoader(object):
         #
         endTime = time.time()
         if (ret):
-            logger.info("Insert succeeds for table %s %d of %d rows at %s (%.3f seconds)" %
-                        (tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+            logger.debug("Insert succeeds for table %s %d of %d rows at %s (%.3f seconds)" %
+                         (tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
         else:
-            logger.info("Insert fails for table %s %d of %d rows at %s (%.3f seconds)" %
-                        (tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+            logger.error("Insert fails for table %s %d of %d rows at %s (%.3f seconds)" %
+                         (tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
 
         return ret
 
@@ -839,11 +838,11 @@ class SchemaDefLoader(object):
             ret = crQ.sqlTemplateCommandMany(sqlTemplate=sqlGen.idInsertTemplateSQL(databaseName, tableDefObj, aList), valueLists=vLists)
             endTime = time.time()
             if (ret):
-                logger.info("Insert succeeds for table %s %d rows at %s (%.3f seconds)" %
-                            (tableName, lenC, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - endTime1))
+                logger.debug("Insert succeeds for table %s %d rows at %s (%.3f seconds)" %
+                             (tableName, lenC, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - endTime1))
             else:
-                logger.info("Insert fails for table %s %d rows at %s (%.3f seconds)" %
-                            (tableName, lenC, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - endTime1))
+                logger.error("Insert fails for table %s %d rows at %s (%.3f seconds)" %
+                             (tableName, lenC, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - endTime1))
         else:
             lenT = -1
             lenR = -1
@@ -866,11 +865,11 @@ class SchemaDefLoader(object):
             ret = (lenR == lenT)
             endTime = time.time()
             if (ret):
-                logger.info("Insert succeeds for table %s %d of %d rows at %s (%.3f seconds)" %
-                            (tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - endTime1))
+                logger.debug("Insert succeeds for table %s %d of %d rows at %s (%.3f seconds)" %
+                             (tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - endTime1))
             else:
-                logger.info("Insert fails for table %s %d of %d rows at %s (%.3f seconds)" %
-                            (tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - endTime1))
+                logger.error("Insert fails for table %s %d of %d rows at %s (%.3f seconds)" %
+                             (tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - endTime1))
         #
 
         return ret

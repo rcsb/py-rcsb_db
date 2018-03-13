@@ -98,13 +98,13 @@ class StatusHistoryLoaderTests(unittest.TestCase):
                 tableDefObj = msd.getTable(tableId)
                 sqlL.extend(myAd.createTableSQL(databaseName=self.__databaseName, tableDefObj=tableDefObj))
 
-            if (self.__verbose):
-                logger.info("\n\n+Status history  table creation SQL string\n %s\n\n" % '\n'.join(sqlL))
+            logger.debug("\n\n+Status history  table creation SQL string\n %s\n\n" % '\n'.join(sqlL))
 
             myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
             ret = myQ.sqlCommand(sqlCommandList=sqlL)
             if (self.__verbose):
-                logger.info("\n\n+INFO mysql server returns %r\n" % ret)
+                logger.debug("\n\n+INFO mysql server returns %r\n" % ret)
+            self.assertTrue(ret)
 
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -123,13 +123,13 @@ class StatusHistoryLoaderTests(unittest.TestCase):
                 sqlL.extend(myAd.createTableSQL(databaseName=self.__databaseName, tableDefObj=tableDefObj))
 
             if (self.__verbose):
-                logger.info("\n\n+FileInventory table creation SQL string\n %s\n\n" % '\n'.join(sqlL))
+                logger.debug("\n\n+FileInventory table creation SQL string\n %s\n\n" % '\n'.join(sqlL))
 
             myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
             ret = myQ.sqlCommand(sqlCommandList=sqlL)
             if (self.__verbose):
-                logger.info("\n\n+INFO mysql server returns %r\n" % ret)
-
+                logger.debug("\n\n+INFO mysql server returns %r\n" % ret)
+            self.assertTrue(ret)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -143,7 +143,7 @@ class StatusHistoryLoaderTests(unittest.TestCase):
             sml = SchemaDefLoader(schemaDefObj=self.__msd, ioObj=self.__ioObj, dbCon=None, workPath='.', cleanUp=False, warnings='default', verbose=self.__verbose)
             containerNameList, tList = sml.makeLoadFiles(loadPathList)
             for tId, fn in tList:
-                logger.info("\nCreated table %s load file %s\n" % (tId, fn))
+                logger.debug("\nCreated table %s load file %s\n" % (tId, fn))
 
             self.open()
             sdl = SchemaDefLoader(schemaDefObj=self.__msd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath='.', cleanUp=False,

@@ -57,15 +57,11 @@ class MultiProcWorker(multiprocessing.Process):
             nextList = self.__taskQueue.get()
             if nextList is None:
                 # end of queue condition
-                if self.__verbose:
-                    logger.info("+MultiProcWorker(run)  %s completed task list\n" % processName)
-                    self.__lfh.flush()
+                logger.debug("+MultiProcWorker(run)  %s completed task list\n" % processName)
                 break
             #
             rTup = self.__workerFunc(dataList=nextList, procName=processName, optionsD=self.__optionsD, workingDir=self.__workingDir)
-            if self.__debug:
-                logger.info("+MultiProcWorker(run) %s task list length %d rTup length %d\n" % (processName, len(nextList), len(rTup)))
-            self.__lfh.flush
+            logger.debug("+MultiProcWorker(run) %s task list length %d rTup length %d\n" % (processName, len(nextList), len(rTup)))
             self.__successQueue.put(rTup[0])
             for ii, rq in enumerate(self.__resultQueueList):
                 rq.put(rTup[ii + 1])
@@ -102,7 +98,7 @@ class MultiProcUtil(object):
             self.__workerFunc = getattr(workerObj, workerMethod)
             return True
         except AttributeError:
-            logger.info("+MultiProcUtil.set() object/attribute error\n")
+            logger.error("+MultiProcUtil.set() object/attribute error\n")
             return False
 
     ##
@@ -132,9 +128,7 @@ class MultiProcUtil(object):
         #
         subLists = [dataList[i::numLists] for i in range(numLists)]
         #
-        if (self.__verbose):
-            logger.info("+MultiProcUtil.runMulti() with numProc %d  subtask count %d subtask length ~ %d\n" % (numProc, len(subLists), len(subLists[0])))
-            self.__lfh.flush()
+        logger.debug("+MultiProcUtil.runMulti() with numProc %d  subtask count %d subtask length ~ %d\n" % (numProc, len(subLists), len(subLists[0])))
         #
         taskQueue = multiprocessing.Queue()
         successQueue = multiprocessing.Queue()
@@ -193,25 +187,22 @@ class MultiProcUtil(object):
             np -= 1
         #
         diagList = list(set(tL))
-        if self.__verbose:
-            logger.info("+MultiProcUtil.runMulti() input task length %d success length %d\n" % (len(dataList), len(successList)))
+        logger.debug("+MultiProcUtil.runMulti() input task length %d success length %d\n" % (len(dataList), len(successList)))
         try:
             for w in workers:
                 w.terminate()
                 w.join(1)
         except Exception as e:
-            if self.__verbose:
-                logger.info("+MultiProcUtil.runMulti() termination/reaping failing\n")
-                logger.exception("Failing with %s" % str(e))
+            logger.error("+MultiProcUtil.runMulti() termination/reaping failing\n")
+            logger.exception("Failing with %s" % str(e))
 
         if len(dataList) == len(successList):
             if self.__verbose:
                 logger.info("+MultiProcUtil.runMulti() all tasks completed\n")
-                self.__lfh.flush()
             return True, [], retLists, diagList
         else:
             failList = list(set(dataList) - set(successList))
             if self.__verbose:
                 logger.info("+MultiProcUtil.runMulti() incomplete run\n")
-                self.__lfh.flush()
+
             return False, failList, retLists, diagList
