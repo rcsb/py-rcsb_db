@@ -7,22 +7,14 @@
 # 11-April-2014  jdw Generalized from WFTaskRequestDBAdapter.py
 # 13-April-2014  jdw working with workflow schema WFTaskRequest() -
 # 19-Feb  -2015  jdw various fixes
-# 10-Jul-2015    jdw Change method/class names from MySqlGen
+# 10-July -2015  jdw Change method/class names from MySqlGen
+# 10-March-2018  jdw  Py2->Py3 compatibility using driver fork described at https://mysqlclient.readthedocs.io/user_guide.html#
 #
 #
 ###
 ##
 """
-Database adapter for managing queries and persistent storage of workflow task status and tracking.
-
-This software was developed as part of the World Wide Protein Data Bank
-Common Deposition and Annotation System Project
-
-Copyright (c) 2010-2014 wwPDB
-
-This software is provided under a Creative Commons Attribution 3.0 Unported
-License described at http://creativecommons.org/licenses/by/3.0/.
-
+Database adapter for managing simple access and persistance queries using a MySQL relational database store.
 """
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -44,7 +36,7 @@ from rcsb_db.mysql.MyDbUtil import MyDbConnect, MyDbQuery
 
 class MyDbAdapter(object):
 
-    """ Database adapter for managing simple access and persistance queries using a relational database store.
+    """ Database adapter for managing simple access and persistance queries using a MySQL relational database store.
     """
 
     def __init__(self, schemaDefObj, verbose=False):

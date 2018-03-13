@@ -17,6 +17,8 @@
 # 11-Aug-2016 jdw  add connection pool wrapper
 # 11-Aug-2016 jdw  add chunked fetch method
 #
+# 10-Mar-2018 jdw  Py2->Py3 compatibility using driver fork described at https://mysqlclient.readthedocs.io/user_guide.html#
+#
 ##
 """
 Utility classes to create connections and process SQL commands with a MySQL RDBMS.
@@ -42,7 +44,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 #
-#
+#  Pooling seems to be broken for Py3 on MACos -
 if platform.system() == "Linux":
     try:
         import sqlalchemy.pool as pool
