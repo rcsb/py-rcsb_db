@@ -28,8 +28,8 @@ from rcsb_db.schema.SchemaDefBase import SchemaDefBase
 class BirdSchemaDef(SchemaDefBase):
     """ A data class containing schema definitions for deposition related messages.
     """
-    _databaseName = "prdv4"
-    _versionedDatabaseName = "prd_v4_0_1"
+    _databaseName = "birdv4"
+    _versionedDatabaseName = "bird_v4_0_1"
     _schemaDefDict = {
         'PDBX_FAMILY_PRD_AUDIT': {'ATTRIBUTES': {'ACTION_TYPE': 'action_type',
                                                  'ANNOTATOR': 'annotator',

@@ -47,6 +47,8 @@ class SchemaDefBase(object):
             self.__convertAttributeNames()
 
     def __filterName(self, name):
+        """  Provide some limited name remapping to handle reserved terms for various database systems.
+        """
         rName = str(name).lower()
         if rName[0].isdigit():
             rName = "the_" + rName

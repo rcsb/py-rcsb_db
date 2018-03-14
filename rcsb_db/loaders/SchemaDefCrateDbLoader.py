@@ -35,6 +35,8 @@ import time
 
 from rcsb_db.sql.MyDbSqlGen import MyDbAdminSqlGen
 from rcsb_db.crate.CrateDbUtil import CrateDbQuery
+from rcsb_db.loaders.SchemaDefDataPrep import SchemaDefDataPrep
+#
 #
 
 import logging
@@ -63,6 +65,7 @@ class SchemaDefLoader(object):
         #
         self.__warningAction = warnings
         self.__overWrite = {}
+        self.__sdp = SchemaDefDataPrep(schemaDefObj=schemaDefObj, ioObj=IoAdapter(), verbose=True)
 
     def setWarning(self, action):
         if action in ['error', 'ignore', 'default']:
@@ -107,15 +110,11 @@ class SchemaDefLoader(object):
         """
         tableIdSkipD = tableIdSkipD if tableIdSkipD is not None else {}
         if inputPathList is not None:
-            tableDataDict, containerNameList = self.__fetch(inputPathList)
+            tableDataDict, containerNameList = self.__sdp.fetch(inputPathList)
         elif containerList is not None:
-            tableDataDict, containerNameList = self.__process(containerList)
+            tableDataDict, containerNameList = self.__sdp.process(containerList)
         #
-        #
-        if (self.__verbose):
-            if len(self.__overWrite) > 0:
-                for k, v in self.__overWrite.items():
-                    logger.info("+SchemaDefLoader(load) %r maximum width %r" % (k, v))
+
         #
         if loadType in ['crate-insert', 'crate-insert-many']:
             sqlMode = 'single'
@@ -132,66 +131,6 @@ class SchemaDefLoader(object):
 
         return False
 
-    def fetch(self, inputPathList):
-        """ Return a dictionary of loadable data for each table defined in the current schema
-            definition object.   Data is extracted from the input file list.
-        """
-        return self.__fetch(inputPathList)
-
-    def __fetch(self, loadPathList):
-        """ Internal method to create loadable data corresponding to the table schema definition
-            from the input list of data files.
-
-            Returns: dicitonary d[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
-                                and
-                     container name list. []
-
-        """
-        startTime = time.time()
-        #
-        containerNameList = []
-        tableDataDict = {}
-        tableIdList = self.__sD.getTableIdList()
-        for lPath in loadPathList:
-            myContainerList = self.__ioObj.readFile(lPath)
-            self.__mapData(myContainerList, tableIdList, tableDataDict)
-            containerNameList.extend([myC.getName() for myC in myContainerList])
-        #
-        endTime = time.time()
-        if self.__verbose:
-            logger.info("completed at %s (%.3f seconds)" %
-                        (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
-
-        return tableDataDict, containerNameList
-
-    def process(self, containerList):
-        return self.__process(containerList)
-
-    def __process(self, containerList):
-        """ Internal method to create loadable data corresponding to the table schema definition
-            from the input container list.
-
-            Returns: dicitonary d[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
-                                and
-                     container name list. []
-        """
-        startTime = time.time()
-        #
-        containerNameList = []
-        tableDataDict = {}
-        tableIdList = self.__sD.getTableIdList()
-        self.__mapData(containerList, tableIdList, tableDataDict)
-        containerNameList.extend([myC.getName() for myC in containerList])
-        #
-        if (self.__debug):
-            logger.info(" container name list: %r\n" % containerNameList)
-        #
-        endTime = time.time()
-        if self.__verbose:
-            logger.info("completed at %s (%.3f seconds)\n" %
-                        (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
-
-        return tableDataDict, containerNameList
 
     def __export(self, tableDict, colSep='&##&\t', rowSep='$##$\n', append=False, partName='1'):
         modeOpt = 'a' if append else 'w'
@@ -209,182 +148,6 @@ class SchemaDefLoader(object):
                 ofh.close()
                 exportList.append((tableId, fn))
         return exportList
-
-    def __evalMapFunction(self, dataContainer, rowList, attributeId, functionName, functionArgs=None):
-        if (functionName == "datablockid()"):
-            val = dataContainer.getName()
-            for rowD in rowList:
-                rowD[attributeId] = val
-            return True
-        else:
-            return False
-
-    def __mapData(self, containerList, tableIdList, tableDataDict):
-        """
-           Process instance data in the input container list and map these data to the
-           table schema definitions in the input table list.
-
-           Returns: mapped data as a list of dictionaries with attribute Id key for
-                    each schema table.  Data are appended to any existing table in
-                    the input dictionary.
-
-
-        """
-        for myContainer in containerList:
-            for tableId in tableIdList:
-                if tableId not in tableDataDict:
-                    tableDataDict[tableId] = []
-                tObj = self.__sD.getTable(tableId)
-                #
-                # Instance categories that are mapped to the current table -
-                #
-                mapCategoryNameList = tObj.getMapInstanceCategoryList()
-                numMapCategories = len(mapCategoryNameList)
-                #
-                # Attribute Ids that are not directly mapped to the schema (e.g. functions)
-                #
-                otherAttributeIdList = tObj.getMapOtherAttributeIdList()
-
-                if numMapCategories == 1:
-                    rowList = self.__mapInstanceCategory(tObj, mapCategoryNameList[0], myContainer)
-                elif numMapCategories >= 1:
-                    rowList = self.__mapInstanceCategoryList(tObj, mapCategoryNameList, myContainer)
-
-                for atId in otherAttributeIdList:
-                    fName = tObj.getMapAttributeFunction(atId)
-                    fArgs = tObj.getMapAttributeFunctionArgs(atId)
-                    self.__evalMapFunction(dataContainer=myContainer, rowList=rowList, attributeId=atId, functionName=fName, functionArgs=fArgs)
-
-                tableDataDict[tableId].extend(rowList)
-        return tableDataDict
-
-    def __mapInstanceCategory(self, tObj, categoryName, myContainer):
-        """ Extract data from the input instance category and map these data to the organization
-            in the input table schema definition object.
-
-            No merging is performed by this method.
-
-            Return a list of dictionaries with schema attribute Id keys containing data
-            mapped from the input instance category.
-        """
-        #
-        retList = []
-        catObj = myContainer.getObj(categoryName)
-        if catObj is None:
-            return retList
-
-        attributeIndexDict = catObj.getAttributeIndexDict()
-        schemaTableId = tObj.getId()
-        schemaAttributeMapDict = tObj.getMapAttributeDict()
-        schemaAttributeIdList = tObj.getAttributeIdList()
-        nullValueDict = tObj.getSqlNullValueDict()
-        maxWidthDict = tObj.getStringWidthDict()
-        curAttributeIdList = tObj.getMapInstanceAttributeIdList(categoryName)
-
-        for row in catObj.getRowList():
-            d = {}
-            for atId in schemaAttributeIdList:
-                d[atId] = nullValueDict[atId]
-
-            for atId in curAttributeIdList:
-                try:
-                    atName = schemaAttributeMapDict[atId]
-                    if atName not in attributeIndexDict:
-                        continue
-                    val = row[attributeIndexDict[atName]]
-                    maxW = maxWidthDict[atId]
-                    if maxW > 0:
-                        lenVal = len(val)
-                        if lenVal > maxW:
-                            tup = (schemaTableId, atId)
-                            if tup in self.__overWrite:
-                                self.__overWrite[tup] = max(self.__overWrite[tup], lenVal)
-                            else:
-                                self.__overWrite[tup] = lenVal
-
-                        d[atId] = val[:maxW] if ((val != '?') and (val != '.')) else nullValueDict[atId]
-                    else:
-                        d[atId] = val if ((val != '?') and (val != '.')) else nullValueDict[atId]
-                except Exception as e:
-                    if (self.__verbose):
-                        logger.info("\n+ERROR - processing table %s attribute %s row %r\n" % (schemaTableId, atId, row))
-                        logger.exception("Failing with %s" % str(e))
-
-            retList.append(d)
-
-        return retList
-
-    def __mapInstanceCategoryList(self, tObj, categoryNameList, myContainer):
-        """ Extract data from the input instance categories and map these data to the organization
-            in the input table schema definition object.
-
-            Data from contributing categories is merged using attributes specified in
-            the merging index for the input table.
-
-            Return a list of dictionaries with schema attribute Id keys containing data
-            mapped from the input instance category.
-        """
-        #
-        mD = {}
-        for categoryName in categoryNameList:
-            catObj = myContainer.getObj(categoryName)
-            if catObj is None:
-                continue
-
-            attributeIndexDict = catObj.getAttributeIndexDict()
-            schemaTableId = tObj.getId()
-            schemaAttributeMapDict = tObj.getMapAttributeDict()
-            schemaAttributeIdList = tObj.getAttributeIdList()
-            nullValueDict = tObj.getSqlNullValueDict()
-            curAttributeIdList = tObj.getMapInstanceAttributeIdList(categoryName)
-            #
-            # dictionary of merging indices for each attribute in this category -
-            #
-            indL = tObj.getMapMergeIndexAttributes(categoryName)
-
-            for row in catObj.getRowList():
-                # initialize full table row --
-                d = {}
-                for atId in schemaAttributeIdList:
-                    d[atId] = nullValueDict[atId]
-
-                # assign merge index
-                mK = []
-                for atName in indL:
-                    try:
-                        mK.append(row[attributeIndexDict[atName]])
-                    except Exception as e:
-                        # would reflect a serious issue of missing key-
-                        if (self.__debug):
-                            logger.exception("Failing with %s" % str(e))
-
-                for atId in curAttributeIdList:
-                    try:
-                        atName = schemaAttributeMapDict[atId]
-                        val = row[attributeIndexDict[atName]]
-                        maxW = maxWidthDict[atId]
-                        if maxW > 0:
-                            lenVal = len(val)
-                            if lenVal > maxW:
-                                logger.info("+ERROR - Table %s attribute %s length %d exceeds %d\n" % (schemaTableId, atId, lenVal, maxW))
-                            d[atId] = val[:maxW] if ((val != '?') and (val != '.')) else nullValueDict[atId]
-                        else:
-                            d[atId] = val if ((val != '?') and (val != '.')) else nullValueDict[atId]
-                    except Exception as e:
-                        # only for testing -
-                        if (self.__debug):
-                            logger.exception("Failing with %s" % str(e))
-                #
-                # Update this row using exact matching of the merging key --
-                # jdw  - will later add more complex comparisons
-                #
-                tk = tuple(mK)
-                if tk not in mD:
-                    mD[tk] = {}
-
-                mD[tk].update(d)
-
-        return mD.values()
 
     def __crateInsertImport(self, tableId, rowList=None, containerNameList=None, deleteOpt='selected', sqlMode='many', refresh=True):
         """ Load the input table using sql crate templated inserts of the input rowlist of dictionaries (i.e. d[attributeId]=value).

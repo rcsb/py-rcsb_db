@@ -47,6 +47,7 @@ except Exception as e:
 
 from rcsb_db.sql.MyDbSqlGen import MyDbAdminSqlGen
 from rcsb_db.loaders.SchemaDefLoader import SchemaDefLoader
+from rcsb_db.loaders.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb_db.mysql.MyDbUtil import MyDbConnect, MyDbQuery
 from rcsb_db.schema.BirdSchemaDef import BirdSchemaDef
 
@@ -186,7 +187,7 @@ class BirdLoaderTests(unittest.TestCase):
         try:
             self.testPrdPathList()
             bsd = BirdSchemaDef()
-            sml = SchemaDefLoader(schemaDefObj=bsd, verbose=self.__verbose)
+            sml = SchemaDefDataPrep(schemaDefObj=bsd, verbose=self.__verbose)
             logger.debug("Length of path list %d\n" % len(self.__loadPathList))
             #
             tableDataDict, containerNameList = sml.fetch(self.__loadPathList)
@@ -229,7 +230,7 @@ class BirdLoaderTests(unittest.TestCase):
         try:
             self.testPrdPathList()
             bsd = BirdSchemaDef()
-            sml = SchemaDefLoader(schemaDefObj=bsd, verbose=self.__verbose)
+            sml = SchemaDefDataPrep(schemaDefObj=bsd, verbose=self.__verbose)
             logger.debug("Length of path list %d\n" % len(self.__loadPathList))
             #
             tableDataDict, containerNameList = sml.fetch(self.__loadPathList)
