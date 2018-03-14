@@ -54,6 +54,7 @@ class ConnectionBase(object):
         self.__dbPw = None
         self.__dbSocket = None
         self.__dbPort = None
+        self.__dbAdminDb = None
         self.__dbPort = 27017
         self.__dbServer = 'mongo'
 
@@ -66,6 +67,7 @@ class ConnectionBase(object):
             self.__dbPort = self._cI.get("SITE_EXCHANGE_DB_PORT_NUMBER")
             self.__dbUser = self._cI.get("SITE_EXCHANGE_DB_USER_NAME")
             self.__dbPw = self._cI.get("SITE_EXCHANGE_DB_PASSWORD")
+            self.__dbAdminDb = self._cI.get("SITE_EXCHANGE_ADMIN_DB_NAME")
         else:
             pass
 
@@ -77,8 +79,8 @@ class ConnectionBase(object):
         else:
             self.__dbPort = int(str(self.__dbPort))
 
-        logger.debug("+ConnectionBase(setResource) %s resource name %s server %s dns %s host %s user %s socket %s port %r" %
-                     (self.__siteId, resourceName, self.__dbServer, self.__databaseName, self.__dbHost, self.__dbUser, self.__dbSocket, self.__dbPort))
+        logger.debug("+ConnectionBase(setResource) %s resource name %s server %s dns %s host %s user %s socket %s port %r admindb %s" %
+                     (self.__siteId, resourceName, self.__dbServer, self.__databaseName, self.__dbHost, self.__dbUser, self.__dbSocket, self.__dbPort, self.__dbAdminDb))
         #
         self.__authD["DB_NAME"] = self.__databaseName
         self.__authD["DB_HOST"] = self.__dbHost
@@ -87,6 +89,7 @@ class ConnectionBase(object):
         self.__authD["DB_SOCKET"] = self.__dbSocket
         self.__authD["DB_PORT"] = int(str(self.__dbPort))
         self.__authD["DB_SERVER"] = self.__dbServer
+        self.__authD["DB_ADMIN_DB_NAME"] = self.__dbAdminDb
         #
 
     def getAuth(self):
@@ -101,6 +104,7 @@ class ConnectionBase(object):
             self.__dbPw = self.__authD.get("DB_PW", None)
             self.__dbSocket = self.__authD.get("DB_SOCKET", None)
             self.__dbServer = self.__authD.get("DB_SERVER", "mongo")
+            self.__dbAdminDb = self.__authD.get("DB_ADMIN_DB_NAME", "admin")
             port = self.__authD.get("DB_PORT", 27017)
             if port and len(str(port)) > 0:
                 self.__dbPort = int(str(port))
@@ -120,9 +124,10 @@ class ConnectionBase(object):
 
         try:
             if self.__dbUser and (len(self.__dbUser) > 0) and self.__dbPw and (len(self.__dbPw) > 0):
-                uri = "mongodb://%s:%s@%s" % (quote_plus(self.__dbUser), quote_plus(self.__dbPw), self.__dbHost)
+                uri = "mongodb://%s:%s@%s/%s" % (quote_plus(self.__dbUser), quote_plus(self.__dbPw), self.__dbHost, self.__dbAdminDb)
             else:
                 uri = "mongodb://%s:%d" % (self.__dbHost, self.__dbPort)
+
             logger.debug("URI is %s" % uri)
             self.__dbClient = MongoClient(uri)
         except Exception as e:

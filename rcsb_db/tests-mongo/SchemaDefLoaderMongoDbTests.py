@@ -53,7 +53,6 @@ from rcsb_db.mongo.ConnectionBase import ConnectionBase
 from rcsb_db.mongo.MongoDbUtil import MongoDbUtil
 
 
-
 class SchemaDefLoaderMongoDbTests(unittest.TestCase):
 
     def __init__(self, methodName='runTest'):
@@ -77,15 +76,17 @@ class SchemaDefLoaderMongoDbTests(unittest.TestCase):
         self.__pdbxPath = os.path.join(TOPDIR, "rcsb_db", "data")
         self.__pdbxFileList = ['1cbs.cif', '1o3q.cif', '1xbb.cif', '3of4.cif', '3oqp.cif', '3rer.cif', '3rij.cif', '5hoh.cif']
         #
-        self.__tableIdExcludeList = ['ATOM_SITE','ATOM_SITE_ANISOTROP']
+        self.__tableIdExcludeList = ['ATOM_SITE', 'ATOM_SITE_ANISOTROP']
 
-        dbUserId  = os.getenv("MONGO_DB_USER_NAME")
+        dbUserId = os.getenv("MONGO_DB_USER_NAME")
         dbUserPwd = os.getenv("MONGO_DB_PASSWORD")
         dbName = os.getenv("MONGO_DB_NAME")
         dbHost = os.getenv("MONGO_DB_HOST")
         dbPort = os.getenv("MONGO_DB_PORT")
+        dbAdminDb = os.getenv("MONGO_DB_ADMIN_DB_NAME")
         self.__myC = None
-        ok = self.__open(dbUserId=dbUserId, dbUserPwd=dbUserPwd, dbHost=dbHost, dbName=dbName, dbPort=dbPort)
+        ok = self.__open(dbUserId=dbUserId, dbUserPwd=dbUserPwd, dbHost=dbHost, dbName=dbName, dbPort=dbPort, dbAdminDb=dbAdminDb)
+
         self.assertTrue(ok)
         #
         self.__startTime = time.time()
@@ -144,10 +145,11 @@ class SchemaDefLoaderMongoDbTests(unittest.TestCase):
     # -------------- -------------- -------------- -------------- -------------- -------------- --------------
     #                                        ---  Supporting code follows ---
     #
-    def __open(self, dbUserId=None, dbUserPwd=None, dbHost=None, dbName=None, dbPort=None):
-        authD = {"DB_HOST": dbHost, 'DB_USER': dbUserId, 'DB_PW': dbUserPwd, 'DB_NAME': dbName, "DB_PORT": dbPort}
+    def __open(self, dbUserId=None, dbUserPwd=None, dbHost=None, dbName=None, dbPort=None, dbAdminDb=None):
+        authD = {"DB_HOST": dbHost, 'DB_USER': dbUserId, 'DB_PW': dbUserPwd, 'DB_NAME': dbName, "DB_PORT": dbPort, 'DB_ADMIN_DB_NAME': dbAdminDb}
         self.__myC = ConnectionBase()
         self.__myC.setAuth(authD)
+
         ok = self.__myC.openConnection()
         if ok:
             return True
@@ -376,6 +378,7 @@ class SchemaDefLoaderMongoDbTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
 
         return pathList
+
 
 def mongoLoadSuite():
     suiteSelect = unittest.TestSuite()
