@@ -22,9 +22,8 @@ __license__ = "Apache 2.0"
 import sys
 import os
 import time
-import unittest
 import scandir
-import pprint
+import json
 
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
@@ -133,11 +132,13 @@ class MongoDbLoaderWorker(object):
 
             maxDocumentBytes = -1
             for tD, cN in zip(tableDataDictList, containerNameList):
-                maxDocumentBytes = max(maxDocumentBytes, sys.getsizeof(tD))
-                megaBytes = float(maxDocumentBytes) / 1000000.0
+                documentBytes = sys.getsizeof(json.dumps(tD))
+                maxDocumentBytes = max(maxDocumentBytes, documentBytes)
+                megaBytes = float(documentBytes) / 1000000.0
+                #logger.info("Document %r %s  %.5f MB" % (tD['entry'], cN, megaBytes))
                 if megaBytes > 15.8:
                     logger.info("Large document %s  %.4f MB" % (cN, megaBytes))
-            logger.info("Maximum document size loaded %.4f KB" % (float(maxDocumentBytes) / 1000.0))
+            logger.info("Maximum document size loaded %.4f MB" % (float(maxDocumentBytes) / 1000000.0))
 
             ok = self.__loadDocuments(dbName, collectionName, authD, tableDataDictList, readBackCheck=readBackCheck)
             # all or nothing here
