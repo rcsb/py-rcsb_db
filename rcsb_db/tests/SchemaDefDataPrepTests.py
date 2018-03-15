@@ -59,6 +59,8 @@ class BirdLoaderTests(unittest.TestCase):
         self.__databaseName = 'prdv4'
         self.__birdCachePath = os.path.join(TOPDIR, "rcsb_db", "data", "MOCK_BIRD_REPO")
         #
+        self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width"
+        self.__fTypeCol = "drop-empty-tables|skip-max-width"
         self.__birdMockLen = 3
         self.__verbose = True
         self.__startTime = time.time()
@@ -91,6 +93,7 @@ class BirdLoaderTests(unittest.TestCase):
         """
 
         try:
+
             self.testPrdPathList()
             bsd = BirdSchemaDef(convertNames=True)
             sdp = SchemaDefDataPrep(schemaDefObj=bsd, verbose=self.__verbose)
@@ -98,19 +101,19 @@ class BirdLoaderTests(unittest.TestCase):
             logger.debug("Length of path list %d\n" % len(self.__loadPathList))
             self.assertGreaterEqual(len(self.__loadPathList), self.__birdMockLen)
 
-            tableDataDictList, containerNameList = sdp.fetchDocuments(self.__loadPathList, styleType="rowwise_by_name")
+            tableDataDictList, containerNameList = sdp.fetchDocuments(self.__loadPathList, styleType="rowwise_by_name", filterType=self.__fTypeRow)
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
             with open(os.path.join(HERE, "test-output", "bird-file-prep-rowwise-by-name.json"), 'w') as ofh:
                 ofh.write(json.dumps(tableDataDictList, indent=3))
 
-            tableDataDictList, containerNameList = sdp.fetchDocuments(self.__loadPathList, styleType="columnwise_by_name")
+            tableDataDictList, containerNameList = sdp.fetchDocuments(self.__loadPathList, styleType="columnwise_by_name", filterType=self.__fTypeCol)
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
             with open(os.path.join(HERE, "test-output", "bird-file-prep-columnwise-by-name.json"), 'w') as ofh:
                 ofh.write(json.dumps(tableDataDictList, indent=3))
 
-            tableDataDictList, containerNameList = sdp.fetchDocuments(self.__loadPathList, styleType="rowwise_no_name")
+            tableDataDictList, containerNameList = sdp.fetchDocuments(self.__loadPathList, styleType="rowwise_no_name", filterType=self.__fTypeCol)
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
             with open(os.path.join(HERE, "test-output", "bird-file-prep-rowwise-no-name.json"), 'w') as ofh:
@@ -138,19 +141,19 @@ class BirdLoaderTests(unittest.TestCase):
             #
             sdp = SchemaDefDataPrep(schemaDefObj=bsd, verbose=self.__verbose)
             #
-            tableDataDictList, containerNameList = sdp.processDocuments(containerList, styleType="rowwise_by_name")
+            tableDataDictList, containerNameList = sdp.processDocuments(containerList, styleType="rowwise_by_name", filterType=self.__fTypeRow)
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
             with open(os.path.join(HERE, "test-output", "bird-container-prep-rowwise-by-name.json"), 'w') as ofh:
                 ofh.write(json.dumps(tableDataDictList, indent=3))
 
-            tableDataDictList, containerNameList = sdp.processDocuments(containerList, styleType="columnwise_by_name")
+            tableDataDictList, containerNameList = sdp.processDocuments(containerList, styleType="columnwise_by_name", filterType=self.__fTypeCol)
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
             with open(os.path.join(HERE, "test-output", "bird-container-prep-columnwise-by-name.json"), 'w') as ofh:
                 ofh.write(json.dumps(tableDataDictList, indent=3))
 
-            tableDataDictList, containerNameList = sdp.processDocuments(containerList, styleType="rowwise_no_name")
+            tableDataDictList, containerNameList = sdp.processDocuments(containerList, styleType="rowwise_no_name", filterType=self.__fTypeCol)
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
             with open(os.path.join(HERE, "test-output", "bird-container-prep-rowwise-no-name.json"), 'w') as ofh:
@@ -159,6 +162,7 @@ class BirdLoaderTests(unittest.TestCase):
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
+
 
 def prepBirdSuite():
     suiteSelect = unittest.TestSuite()
@@ -172,4 +176,3 @@ if __name__ == '__main__':
     if True:
         mySuite = prepBirdSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
-
