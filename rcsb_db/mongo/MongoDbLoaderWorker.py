@@ -131,6 +131,14 @@ class MongoDbLoaderWorker(object):
                 fType = "drop-empty-tables|skip-max-width"
             tableDataDictList, containerNameList = sdp.fetchDocuments(dataList, styleType=styleType, filterType=fType)
 
+            maxDocumentBytes = -1
+            for tD, cN in zip(tableDataDictList, containerNameList):
+                maxDocumentBytes = max(maxDocumentBytes, sys.getsizeof(tD))
+                megaBytes = float(maxDocumentBytes) / 1000000.0
+                if megaBytes > 15.8:
+                    logger.info("Large document %s  %.4f MB" % (cN, megaBytes))
+            logger.info("Maximum document size loaded %.4f KB" % (float(maxDocumentBytes) / 1000.0))
+
             ok = self.__loadDocuments(dbName, collectionName, authD, tableDataDictList, readBackCheck=readBackCheck)
             # all or nothing here
             if ok:
@@ -242,10 +250,6 @@ class MongoDbLoaderWorker(object):
             client = self.__getClientConnection(cObj)
             mg = MongoDbUtil(client)
             #
-            maxDocumentBytes = -1
-            for d in dList:
-                maxDocumentBytes = max(maxDocumentBytes, sys.getsizeof(d))
-            logger.info("Maximum document size loaded %.4f MB" % (float(maxDocumentBytes) / 1000000.0))
 
             rIdL = mg.insertList(dbName, collectionName, dList)
             #
