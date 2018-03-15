@@ -26,7 +26,6 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-#from rcsb_db.utils.ConfigUtils import ConfigUtils
 from rcsb_db.mongo.MongoDbLoaderWorker import MongoDbLoaderWorker
 
 
