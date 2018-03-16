@@ -291,12 +291,11 @@ class SchemaDefDataPrep(object):
                             oRowDList.append(oRowD)
                         rD[tableName] = oRowDList
                 #
-                thisId = '?'
-                if 'ENTRY' in tableDataDictById and 'STRUCTURE_ID' in tableDataDictById['ENTRY']:
-                    thisId = tableDataDictById['ENTRY']['STRUCTURE_ID']
+                if 'ENTRY' in tableDataDictById:
+                    logger.debug("Table entry %r" % tableDataDictById['ENTRY'])
                 sTupL = sorted(tupL, key=itemgetter(1), reverse=True)
                 for tup in sTupL[:8]:
-                    logger.debug("Transforming %s table id %s size %.4f (of %.4f) MB" % (thisId, tup[0], tup[1], sum))
+                    logger.debug("Transforming table id %s size %.4f (of %.4f) MB" % (tup[0], tup[1], sum))
                     #
             elif styleType == "columnwise_by_name":
                 for tableId in tableDataDictById:
