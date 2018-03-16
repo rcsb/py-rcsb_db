@@ -43,7 +43,6 @@ from rcsb_db.loaders.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb_db.schema.BirdSchemaDef import BirdSchemaDef
 from rcsb_db.schema.ChemCompSchemaDef import ChemCompSchemaDef
 from rcsb_db.schema.PdbxSchemaDef import PdbxSchemaDef
-from rcsb_db.schema.DaInternalSchemaDef import DaInternalSchemaDef
 
 from mmcif_utils.bird.PdbxPrdIo import PdbxPrdIo
 from mmcif_utils.bird.PdbxFamilyIo import PdbxFamilyIo
@@ -262,13 +261,14 @@ class SchemaDefLoaderMongoDbTests(unittest.TestCase):
 
         return sd, dbName, collectionName, inputPathList, tableIdExcludeList
 
-    def __loadContentType(self, contentType, styleType='rowwise_by_name'):
+    def __loadContentType(self, contentType, styleType='rowwise_by_name_with_cardinality'):
 
         try:
+            fType = "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
             sd, dbName, collectionName, inputPathList, tableIdExcludeList = self.__getLoadInfo(contentType)
             sdp = SchemaDefDataPrep(schemaDefObj=sd, verbose=self.__verbose)
             sdp.setTableIdExcludeList(tableIdExcludeList)
-            tableDataDictList, containerNameList = sdp.fetchDocuments(inputPathList, styleType=styleType)
+            tableDataDictList, containerNameList = sdp.fetchDocuments(inputPathList, styleType=styleType, filterType=fType)
             self.__removeCollection(dbName, collectionName)
             self.__createCollection(dbName, collectionName)
             ok = self.__loadDocuments(dbName, collectionName, tableDataDictList)

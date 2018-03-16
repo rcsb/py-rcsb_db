@@ -9,7 +9,7 @@ from setuptools import setup, find_packages
 
 packages = []
 thisPackage = 'rcsb.db'
-requires = ['future', 'six', 'mmcif', 'mmcif.utils']
+requires = ['future', 'six', 'mmcif', 'mmcif.utils', 'python-dateutil', 'scandir']
 
 
 with open('rcsb_db/__init__.py', 'r') as fd:

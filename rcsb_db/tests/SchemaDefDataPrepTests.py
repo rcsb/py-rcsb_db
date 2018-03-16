@@ -48,10 +48,10 @@ from rcsb_db.schema.BirdSchemaDef import BirdSchemaDef
 from mmcif_utils.bird.PdbxPrdIo import PdbxPrdIo
 
 
-class BirdLoaderTests(unittest.TestCase):
+class SchemaDefDataPrepTests(unittest.TestCase):
 
     def __init__(self, methodName='runTest'):
-        super(BirdLoaderTests, self).__init__(methodName)
+        super(SchemaDefDataPrepTests, self).__init__(methodName)
         self.__loadPathList = []
         self.__verbose = True
 
@@ -91,9 +91,7 @@ class BirdLoaderTests(unittest.TestCase):
     def testPrepBirdDocumentsFromFiles(self):
         """Test case -  create loadable BIRD data from files
         """
-
         try:
-
             self.testPrdPathList()
             bsd = BirdSchemaDef(convertNames=True)
             sdp = SchemaDefDataPrep(schemaDefObj=bsd, verbose=self.__verbose)
@@ -105,6 +103,12 @@ class BirdLoaderTests(unittest.TestCase):
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
             with open(os.path.join(HERE, "test-output", "bird-file-prep-rowwise-by-name.json"), 'w') as ofh:
+                ofh.write(json.dumps(tableDataDictList, indent=3))
+
+            tableDataDictList, containerNameList = sdp.fetchDocuments(self.__loadPathList, styleType="rowwise_by_name_with_cardinality", filterType=self.__fTypeRow)
+            self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
+            self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
+            with open(os.path.join(HERE, "test-output", "bird-file-prep-rowwise-by-name-with-cardinality.json"), 'w') as ofh:
                 ofh.write(json.dumps(tableDataDictList, indent=3))
 
             tableDataDictList, containerNameList = sdp.fetchDocuments(self.__loadPathList, styleType="columnwise_by_name", filterType=self.__fTypeCol)
@@ -147,6 +151,12 @@ class BirdLoaderTests(unittest.TestCase):
             with open(os.path.join(HERE, "test-output", "bird-container-prep-rowwise-by-name.json"), 'w') as ofh:
                 ofh.write(json.dumps(tableDataDictList, indent=3))
 
+            tableDataDictList, containerNameList = sdp.processDocuments(containerList, styleType="rowwise_by_name_with_cardinality", filterType=self.__fTypeRow)
+            self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
+            self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
+            with open(os.path.join(HERE, "test-output", "bird-container-prep-rowwise-by-name-with-cardinality.json"), 'w') as ofh:
+                ofh.write(json.dumps(tableDataDictList, indent=3))
+
             tableDataDictList, containerNameList = sdp.processDocuments(containerList, styleType="columnwise_by_name", filterType=self.__fTypeCol)
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
@@ -166,8 +176,8 @@ class BirdLoaderTests(unittest.TestCase):
 
 def prepBirdSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(BirdLoaderTests("testPrepBirdDocumentsFromFiles"))
-    suiteSelect.addTest(BirdLoaderTests("testPrepBirdDocumentsFromContainers"))
+    suiteSelect.addTest(SchemaDefDataPrepTests("testPrepBirdDocumentsFromFiles"))
+    suiteSelect.addTest(SchemaDefDataPrepTests("testPrepBirdDocumentsFromContainers"))
     return suiteSelect
 
 

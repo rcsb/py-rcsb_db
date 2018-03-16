@@ -12,6 +12,8 @@
 #  7-Jan-2013  jdw add instance mapping data accessors
 #  9-Jan-2013  jdw add merging index attribute accessors
 #  2-Oct-2017  jdw escape null string '\N'
+# 15-Mar-2018  jdw add unit cardinality access methods
+# 16-Mar-2018  jdw add convenience method to detect date types
 #
 ##
 """
@@ -24,27 +26,38 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 
-import sys
 from operator import itemgetter
 
 import logging
 logger = logging.getLogger(__name__)
+
 
 class SchemaDefBase(object):
 
     """ A base class for schema definitions.
     """
 
-    def __init__(self, databaseName=None, schemaDefDict=None, convertNames=False, versionedDatabaseName=None, verbose=True):
+    def __init__(self, databaseName=None, schemaDefDict=None, convertNames=False, versionedDatabaseName=None, unitCardinalityList=None, verbose=True):
         self.__verbose = verbose
         self.__databaseName = databaseName if databaseName is not None else "unassigned"
         self.__schemaDefDict = schemaDefDict
         self.__convertNames = convertNames
         self.__versionedDatabaseName = versionedDatabaseName if versionedDatabaseName is not None else self.__databaseName
-
+        self.__unitCardinalityDict = self.__getCardinalityDetails(unitCardinalityList)
         if convertNames:
             self.__convertTableNames()
             self.__convertAttributeNames()
+
+    def hasUnitCardinality(self, tableId):
+        return tableId in self.__unitCardinalityDict
+
+    def __getCardinalityDetails(self, cardList):
+        rD = {}
+        try:
+            rD = {tableId: True for tableId in cardList}
+        except Exception as e:
+            pass
+        return rD
 
     def __filterName(self, name):
         """  Provide some limited name remapping to handle reserved terms for various database systems.
@@ -212,6 +225,12 @@ class TableDef(object):
     def isAttributeIntegerType(self, attributeId):
         try:
             return self.__isIntegerType(self.__tD['ATTRIBUTE_INFO'][attributeId]['SQL_TYPE'].upper())
+        except Exception as e:
+            return False
+
+    def isAttributeDateType(self, attributeId):
+        try:
+            return self.__isDateType(self.__tD['ATTRIBUTE_INFO'][attributeId]['SQL_TYPE'].upper())
         except Exception as e:
             return False
 

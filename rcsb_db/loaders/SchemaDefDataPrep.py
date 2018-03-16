@@ -9,6 +9,7 @@
 #      14-Mar-2018  jdw Add organization options for output loadable data -
 #      14-Mar-2018. jdw Add document oriented extractors, add table exclusion list
 #      15-Mar-2018  jdw Add filtering options for missing values  -
+#      16-Mar-2018  jdw add styleType = rowwise_by_name_with_cardinality
 #
 ##
 """
@@ -22,9 +23,9 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 
-import csv
-import os
 import time
+import pickle
+import dateutil.parser
 
 try:
     from mmcif.io.IoAdapterCore import IoAdapterCore as IoAdapter
@@ -80,7 +81,7 @@ class SchemaDefDataPrep(object):
                      rowwise_no_name:    dict[<tableName>] = {'attributes': [atName1, atName2,... ], 'data' : [[val1, val2, .. ],[val1, val2,... ]]}
                      columnwise_by_name: dict[<tableName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
 
-
+                filterTypes: "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
 
         """
         tableDataDictById, containerNameList = self.__fetch(inputPathList, filterType)
@@ -102,7 +103,7 @@ class SchemaDefDataPrep(object):
                      rowwise_no_name:    dict[<tableName>] = {'attributes': [atName1, atName2,... ], 'data' : [[val1, val2, .. ],[val1, val2,... ]]}
                      columnwise_by_name: dict[<tableName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
 
-                 filterTypes: "drop-empty-attributes|drop-empty-tables|skip-max-width"
+                 filterTypes: "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
 
         """
         tableDataDictList = []
@@ -130,6 +131,8 @@ class SchemaDefDataPrep(object):
                      rowwise_no_name:    dict[<tableName>] = {'attributes': [atName1, atName2,... ], 'data' : [[val1, val2, .. ],[val1, val2,... ]]}
                      columnwise_by_name: dict[<tableName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
 
+                filterTypes: "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
+
 
         """
         tableDataDictById, containerNameList = self.__process(containerList, filterType)
@@ -152,12 +155,13 @@ class SchemaDefDataPrep(object):
                      rowwise_no_name:    dict[<tableName>] = {'attributes': [atName1, atName2,... ], 'data' : [[val1, val2, .. ],[val1, val2,... ]]}
                      columnwise_by_name: dict[<tableName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
 
-            filterTypes:  "drop-empty-attributes|drop-empty-tables|skip-max-width"
+            filterTypes:  "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
         """
         tableDataDictList = []
         containerNameList = []
         for container in containerList:
             tableDataDictById, cnList = self.__process([container], filterType)
+            #
             tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType)
             tableDataDictList.append(tableDataDict)
             containerNameList.extend(cnList)
@@ -223,7 +227,7 @@ class SchemaDefDataPrep(object):
         else:
             tableDataDictF = tableDataDict
         #
-        logger.debug(" container name list: %r\n" % containerNameList)
+        logger.debug("Container name list: %r\n" % containerNameList)
         #
         endTime = time.time()
         logger.debug("completed at %s (%.3f seconds)\n" %
@@ -237,12 +241,14 @@ class SchemaDefDataPrep(object):
              Input: tableDataDictById  (styleType="rowwise_by_id")
                                          dict[<tableId>]   = [ row1asDict[attributeId]=value,  row2asDict[attribute]=value, .. ]
 
-             Output: rowwise_by_name:    dict[<tableName>] = [ row1Dict[attributeName]=value,  row2dict[], .. ]
+             Output: rowwise_by_name:     dict[<tableName>] = [ row1Dict[attributeName]=value,  row2dict[], .. ]
                      rowwise_no_name:    dict[<tableName>] = {'attributes': [atName1, atName2,... ], 'data' : [[val1, val2, .. ],[val1, val2,... ]]}
                      columnwise_by_name: dict[<tableName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
-
+      rowwise_by_name_with_cardinality:  same as rowwise_byName with special handing of tables with unit cardinality
+                                                          dict[<tableName>] = row1Dict[attributeName]=value (singleton row)
         """
         rD = {}
+
         try:
             if styleType == "rowwise_by_name":
                 for tableId in tableDataDictById:
@@ -257,6 +263,30 @@ class SchemaDefDataPrep(object):
                             oRowD[tableDef.getAttributeName(atId)] = iRowD[atId]
                         oRowDList.append(oRowD)
                     rD[tableName] = oRowDList
+            elif styleType == "rowwise_by_name_with_cardinality":
+                for tableId in tableDataDictById:
+                    tableDef = self.__sD.getTable(tableId)
+                    tableName = self.__sD.getTableName(tableId)
+                    unitCard = self.__sD.hasUnitCardinality(tableId)
+                    iRowDList = tableDataDictById[tableId]
+                    #
+                    megaBytes = float(len(pickle.dumps(iRowDList))) / 1000000.0
+                    logger.debug("Transforming table id %s to name %s size %.4f MB" % (tableId, tableName, megaBytes))
+                    #
+                    if unitCard and len(iRowDList) == 1:
+                        iRowD = iRowDList[0]
+                        oRowD = {}
+                        for atId in iRowD:
+                            oRowD[tableDef.getAttributeName(atId)] = iRowD[atId]
+                        rD[tableName] = oRowD
+                    else:
+                        oRowDList = []
+                        for iRowD in iRowDList:
+                            oRowD = {}
+                            for atId in iRowD:
+                                oRowD[tableDef.getAttributeName(atId)] = iRowD[atId]
+                            oRowDList.append(oRowD)
+                        rD[tableName] = oRowDList
             elif styleType == "columnwise_by_name":
                 for tableId in tableDataDictById:
                     tableDef = self.__sD.getTable(tableId)
@@ -372,7 +402,10 @@ class SchemaDefDataPrep(object):
         skipMaxWidthFlag = False
         if 'skip-max-width' in filterType:
             skipMaxWidthFlag = True
-        #
+        assignDateFlag = False
+        if 'assign-dates' in filterType:
+            assignDateFlag = True
+
         retList = []
         catObj = myContainer.getObj(categoryName)
         if catObj is None:
@@ -405,6 +438,9 @@ class SchemaDefDataPrep(object):
 
                     lenVal = len(val)
                     if dropEmptyFlag and ((lenVal == 0) or (val == '?') or (val == '.')):
+                        continue
+                    if assignDateFlag and tObj.isAttributeDateType(atId) and not ((lenVal == 0) or (val == '?') or (val == '.')):
+                        d[atId] = self.__assignDateType(atId, val)
                         continue
                     if maxW > 0:
                         if lenVal > maxW:
@@ -443,6 +479,9 @@ class SchemaDefDataPrep(object):
         skipMaxWidthFlag = False
         if 'skip-max-width' in filterType:
             skipMaxWidthFlag = True
+        assignDateFlag = False
+        if 'assign-dates' in filterType:
+            assignDateFlag = True
         #
         mD = {}
         for categoryName in categoryNameList:
@@ -490,6 +529,9 @@ class SchemaDefDataPrep(object):
                         lenVal = len(val)
                         if dropEmptyFlag and ((lenVal == 0) or (val == '?') or (val == '.')):
                             continue
+                        if assignDateFlag and tObj.isAttributeDateType(atId) and not ((lenVal == 0) or (val == '?') or (val == '.')):
+                            d[atId] = self.__assignDateType(atId, val)
+                            continue
                         if maxW > 0:
                             if lenVal > maxW:
                                 logger.error("+ERROR - Table %s attribute %s length %d exceeds %d\n" % (schemaTableId, atId, lenVal, maxW))
@@ -512,6 +554,15 @@ class SchemaDefDataPrep(object):
 
         return mD.values()
 
+    def __assignDateType(self, atId, value):
+        """   yyyy-mm-dd  or yyyy-mm-dd:hh:mm:ss
+        """
+        try:
+            value = value.replace(":", " ", 1)
+            return dateutil.parser.parse(value)
+        except Exception as e:
+            logger.exception("Attribute processing error %s %s : %s" % (atId, value, str(e)))
+        return value
 
 if __name__ == '__main__':
     pass

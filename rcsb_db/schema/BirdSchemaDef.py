@@ -5,7 +5,8 @@
 # Version: 0.001 Initial version
 #
 # Updates:
-# 2017-Dec-20 jdw PDBX_REFERENCE_MOLECULE_DETAILS text column width adjusted to 20000 mariadb max value
+# 20-DEC-2017 jdw PDBX_REFERENCE_MOLECULE_DETAILS text column width adjusted to 20000 mariadb max value
+# 16-MAR-2018 jdw add cardinality details
 ##
 """
 Database schema defintions for Bird PRD/FAMILY reference data.
@@ -16,8 +17,6 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
-
-import sys
 
 import logging
 logger = logging.getLogger(__name__)
@@ -30,6 +29,8 @@ class BirdSchemaDef(SchemaDefBase):
     """
     _databaseName = "birdv4"
     _versionedDatabaseName = "bird_v4_0_1"
+    _unitCardinalityList = ['PDBX_REFERENCE_MOLECULE', 'PDBX_REFERENCE_MOLECULE_FAMILY']
+
     _schemaDefDict = {
         'PDBX_FAMILY_PRD_AUDIT': {'ATTRIBUTES': {'ACTION_TYPE': 'action_type',
                                                  'ANNOTATOR': 'annotator',
@@ -1930,7 +1931,8 @@ class BirdSchemaDef(SchemaDefBase):
 
     def __init__(self, convertNames=False, verbose=True):
         super(BirdSchemaDef, self).__init__(databaseName=BirdSchemaDef._databaseName, schemaDefDict=BirdSchemaDef._schemaDefDict,
-                                            convertNames=convertNames, versionedDatabaseName=BirdSchemaDef._versionedDatabaseName, verbose=verbose)
+                                            convertNames=convertNames, versionedDatabaseName=BirdSchemaDef._versionedDatabaseName,
+                                            unitCardinalityList=BirdSchemaDef._unitCardinalityList, verbose=verbose)
         self.__verbose = verbose
 
 

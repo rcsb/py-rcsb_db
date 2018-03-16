@@ -23,7 +23,7 @@ import sys
 import os
 import time
 import scandir
-import json
+import pickle
 
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
@@ -80,7 +80,7 @@ class MongoDbLoaderWorker(object):
         """  Driver method for loading MongoDb content -
 
             contentType:  one of 'bird','bird-family','chem-comp','pdbx'
-            styleType:    one of 'rowwise_by_name', 'columnwise_by_name', 'rowwise_no_name'
+            styleType:    one of 'rowwise_by_name', 'columnwise_by_name', 'rowwise_no_name', 'rowwise_by_name_with_cardinality'
 
         """
         try:
@@ -125,14 +125,14 @@ class MongoDbLoaderWorker(object):
             readBackCheck = optionsD['readBackCheck']
             sdp = SchemaDefDataPrep(schemaDefObj=sd, verbose=self.__verbose)
             sdp.setTableIdExcludeList(tableIdExcludeList)
-            fType = "drop-empty-attributes|drop-empty-tables|skip-max-width"
+            fType = "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
             if styleType in ["columnwise_by_name", "rowwise_no_name"]:
-                fType = "drop-empty-tables|skip-max-width"
+                fType = "drop-empty-tables|skip-max-width|assign-dates"
             tableDataDictList, containerNameList = sdp.fetchDocuments(dataList, styleType=styleType, filterType=fType)
 
             maxDocumentBytes = -1
             for tD, cN in zip(tableDataDictList, containerNameList):
-                documentBytes = sys.getsizeof(json.dumps(tD))
+                documentBytes = sys.getsizeof(pickle.dumps(tD))
                 maxDocumentBytes = max(maxDocumentBytes, documentBytes)
                 megaBytes = float(documentBytes) / 1000000.0
                 #logger.info("Document %r %s  %.5f MB" % (tD['entry'], cN, megaBytes))

@@ -6,6 +6,7 @@
 #
 # Updates:
 #    5-Dec-2016 jdw add program and program version to pdbx_chem_comp_identifier table
+#   16-MAR-2018 jdw add cardinality details
 ##
 """
 Database schema defintions for chemical component definitions.
@@ -16,8 +17,6 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
-
-import sys
 
 import logging
 logger = logging.getLogger(__name__)
@@ -30,6 +29,7 @@ class ChemCompSchemaDef(SchemaDefBase):
     """
     _databaseName = "compv4"
     _versionedDatabaseName = "comp_v4_0_1"
+    _unitCardinalityList = ['CHEM_COMP']
     _schemaDefDict = {
         'CHEM_COMP': {'ATTRIBUTES': {'COMPONENT_ID': 'Component_ID',
                                      'FORMULA': 'formula',
@@ -1514,7 +1514,8 @@ class ChemCompSchemaDef(SchemaDefBase):
 
     def __init__(self, convertNames=False, verbose=True):
         super(ChemCompSchemaDef, self).__init__(databaseName=ChemCompSchemaDef._databaseName, schemaDefDict=ChemCompSchemaDef._schemaDefDict,
-                                                convertNames=convertNames, versionedDatabaseName=ChemCompSchemaDef._versionedDatabaseName, verbose=verbose)
+                                                convertNames=convertNames, versionedDatabaseName=ChemCompSchemaDef._versionedDatabaseName,
+                                                unitCardinalityList=ChemCompSchemaDef._unitCardinalityList, verbose=verbose)
         self.__verbose = verbose
 
 

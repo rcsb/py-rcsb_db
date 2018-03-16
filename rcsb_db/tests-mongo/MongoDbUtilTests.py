@@ -27,6 +27,7 @@ import sys
 import unittest
 import time
 import pprint
+import dateutil.parser
 
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
@@ -107,6 +108,13 @@ class MongoDbUtilTests(unittest.TestCase):
                     attribName = "attrib_%d" % attrib
                     d[attribName] = val
                 rD[catName].append(d)
+            d = {}
+            for attrib in range(Nattribs):
+                val = "2018-01-30 12:01"
+                attribName = "attrib_%d" % attrib
+                d[attribName] = dateutil.parser.parse(val)
+            rD[catName].append(d)
+
         return rD
 
     def testCreateDatabase(self):

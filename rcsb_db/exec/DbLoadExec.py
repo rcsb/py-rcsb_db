@@ -48,7 +48,7 @@ def main():
     parser.add_argument("--file_limit", default=None, help="File limit for testing")
 
     parser.add_argument("--db_type", default="mongo", help="Database server type")
-    parser.add_argument("--document_style", default="rowwise_by_name", help="Document organization (rowwise_by_name|columnwise_by_name|rowwise_by_id|rowwise_no_name")
+    parser.add_argument("--document_style", default="rowwise_by_name_with_cardinality", help="Document organization (rowwise_by_name_with_cardinality|rowwise_by_name|columnwise_by_name|rowwise_by_id|rowwise_no_name")
     parser.add_argument("--read_back_check", default=False, action='store_true', help="Perform read back check on all documents")
     parser.add_argument("--debug", default=False, action='store_true', help="Turn on verbose logging")
     args = parser.parse_args()
@@ -79,7 +79,7 @@ def main():
         if args.file_limit:
             fileLimit = int(args.file_limit)
 
-        if args.document_style not in ['rowwise_by_name', 'columnwise_by_name', 'rowwise_by_id', 'rowwise_no_name']:
+        if args.document_style not in ['rowwise_by_name', 'rowwise_by_name_with_cardinality', 'columnwise_by_name', 'rowwise_by_id', 'rowwise_no_name']:
             logger.error("Unsupported document style %s" % args.document_style)
         if args.db_type != "mongo":
             logger.error("Unsupported database server type %s" % args.db_type)
