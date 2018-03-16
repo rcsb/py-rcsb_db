@@ -26,6 +26,7 @@ __license__ = "Apache 2.0"
 import time
 import pickle
 import dateutil.parser
+from operator import itemgetter
 
 try:
     from mmcif.io.IoAdapterCore import IoAdapterCore as IoAdapter
@@ -264,6 +265,8 @@ class SchemaDefDataPrep(object):
                         oRowDList.append(oRowD)
                     rD[tableName] = oRowDList
             elif styleType == "rowwise_by_name_with_cardinality":
+                tupL = []
+                sum = 0.0
                 for tableId in tableDataDictById:
                     tableDef = self.__sD.getTable(tableId)
                     tableName = self.__sD.getTableName(tableId)
@@ -271,8 +274,8 @@ class SchemaDefDataPrep(object):
                     iRowDList = tableDataDictById[tableId]
                     #
                     megaBytes = float(len(pickle.dumps(iRowDList))) / 1000000.0
-                    logger.debug("Transforming table id %s to name %s size %.4f MB" % (tableId, tableName, megaBytes))
-                    #
+                    sum += megaBytes
+                    tupL.append((tableId, megaBytes))
                     if unitCard and len(iRowDList) == 1:
                         iRowD = iRowDList[0]
                         oRowD = {}
@@ -287,6 +290,11 @@ class SchemaDefDataPrep(object):
                                 oRowD[tableDef.getAttributeName(atId)] = iRowD[atId]
                             oRowDList.append(oRowD)
                         rD[tableName] = oRowDList
+                #
+                sTupL = sorted(tupL, key=itemgetter(1), reverse=True)
+                for tup in sTupL:
+                    logger.debug("Transforming table id %s size %.4f of %.4f MB" % (tup[0], tup[1], sum))
+                    #
             elif styleType == "columnwise_by_name":
                 for tableId in tableDataDictById:
                     tableDef = self.__sD.getTable(tableId)
