@@ -89,7 +89,7 @@ class SchemaDefDataPrep(object):
         tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType)
         return tableDataDict, containerNameList
 
-    def fetchDocuments(self, inputPathList, styleType="rowwise_by_id", filterType="none"):
+    def fetchDocuments(self, inputPathList, styleType="rowwise_by_id", filterType="none", logSize=False):
         """ Return a dictionary of loadable data for each table defined in the current schema
             definition object.   Data are extracted from the each input file, and each data
             set is stored in a separate schema instance (document).  The organization
@@ -111,7 +111,7 @@ class SchemaDefDataPrep(object):
         containerNameList = []
         for inputPath in inputPathList:
             tableDataDictById, cnList = self.__fetch([inputPath], filterType)
-            tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType)
+            tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType, logSize=logSize)
             tableDataDictList.append(tableDataDict)
             containerNameList.extend(cnList)
         #
@@ -141,7 +141,7 @@ class SchemaDefDataPrep(object):
 
         return tableDataDict, containerNameList
 
-    def processDocuments(self, containerList, styleType="rowwise_by_id", filterType="none"):
+    def processDocuments(self, containerList, styleType="rowwise_by_id", filterType="none", logSize=False):
         """ Return a dictionary of loadable data for each table defined in the current schema
             definition object.   Data are extracted from the each input container, and each data
             set is stored in a separate schema instance (document).  The organization of the loadable
@@ -163,7 +163,7 @@ class SchemaDefDataPrep(object):
         for container in containerList:
             tableDataDictById, cnList = self.__process([container], filterType)
             #
-            tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType)
+            tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType, logSize=logSize)
             tableDataDictList.append(tableDataDict)
             containerNameList.extend(cnList)
 
@@ -236,7 +236,7 @@ class SchemaDefDataPrep(object):
 
         return tableDataDictF, containerNameList
 
-    def __transformTableData(self, tableDataDictById, styleType="rowwise_by_name"):
+    def __transformTableData(self, tableDataDictById, styleType="rowwise_by_name", logSize=False):
         """  Reorganize and rename input table data object according to the input style preference:
 
              Input: tableDataDictById  (styleType="rowwise_by_id")
@@ -249,7 +249,9 @@ class SchemaDefDataPrep(object):
                                                           dict[<tableName>] = row1Dict[attributeName]=value (singleton row)
         """
         rD = {}
-
+        tupL = []
+        sum = 0.0
+        #
         try:
             if styleType == "rowwise_by_name":
                 for tableId in tableDataDictById:
@@ -264,18 +266,19 @@ class SchemaDefDataPrep(object):
                             oRowD[tableDef.getAttributeName(atId)] = iRowD[atId]
                         oRowDList.append(oRowD)
                     rD[tableName] = oRowDList
+                    #
+                    if logSize:
+                        megaBytes = float(len(pickle.dumps(iRowDList, protocol=0))) / 1000000.0
+                        tupL.append((tableId, megaBytes))
+                        sum += megaBytes
+
             elif styleType == "rowwise_by_name_with_cardinality":
-                tupL = []
-                sum = 0.0
                 for tableId in tableDataDictById:
                     tableDef = self.__sD.getTable(tableId)
                     tableName = self.__sD.getTableName(tableId)
                     unitCard = self.__sD.hasUnitCardinality(tableId)
                     iRowDList = tableDataDictById[tableId]
                     #
-                    megaBytes = float(len(pickle.dumps(iRowDList))) / 1000000.0
-                    sum += megaBytes
-                    tupL.append((tableId, megaBytes))
                     if unitCard and len(iRowDList) == 1:
                         iRowD = iRowDList[0]
                         oRowD = {}
@@ -290,13 +293,13 @@ class SchemaDefDataPrep(object):
                                 oRowD[tableDef.getAttributeName(atId)] = iRowD[atId]
                             oRowDList.append(oRowD)
                         rD[tableName] = oRowDList
-                #
-                if 'ENTRY' in tableDataDictById:
-                    logger.debug("Table entry %r" % tableDataDictById['ENTRY'])
-                sTupL = sorted(tupL, key=itemgetter(1), reverse=True)
-                for tup in sTupL[:8]:
-                    logger.debug("Transforming table id %s size %.4f (of %.4f) MB" % (tup[0], tup[1], sum))
                     #
+                    if logSize:
+                        megaBytes = float(len(pickle.dumps(iRowDList, protocol=0))) / 1000000.0
+                        tupL.append((tableId, megaBytes))
+                        sum += megaBytes
+
+                        #
             elif styleType == "columnwise_by_name":
                 for tableId in tableDataDictById:
                     tableDef = self.__sD.getTable(tableId)
@@ -310,6 +313,11 @@ class SchemaDefDataPrep(object):
                                 colD[atName] = []
                             colD[atName].append(iRowD[atId])
                     rD[tableName] = colD
+                    #
+                    if logSize:
+                        megaBytes = float(len(pickle.dumps(iRowDList, protocol=0))) / 1000000.0
+                        tupL.append((tableId, megaBytes))
+                        sum += megaBytes
             elif styleType == "rowwise_no_name":
                 for tableId in tableDataDictById:
                     tableDef = self.__sD.getTable(tableId)
@@ -326,6 +334,11 @@ class SchemaDefDataPrep(object):
                         oRowList.append(oRowL)
                     #
                     rD[tableName] = {'attributes': atNameList, 'data': oRowList}
+                    #
+                    if logSize:
+                        megaBytes = float(len(pickle.dumps(iRowDList, protocol=0))) / 1000000.0
+                        tupL.append((tableId, megaBytes))
+                        sum += megaBytes
             elif styleType == "rowwise_by_id":
                 rD = tableDataDictById
             else:
@@ -335,6 +348,13 @@ class SchemaDefDataPrep(object):
             logger.exception("Failing with %s" % str(e))
             rD = tableDataDictById
 
+        if logSize:
+            if 'ENTRY' in tableDataDictById:
+                logger.debug("Table entry %r" % tableDataDictById['ENTRY'])
+            sTupL = sorted(tupL, key=itemgetter(1), reverse=True)
+            for tup in sTupL[:8]:
+                logger.debug("Transforming table id %s size %.4f (of %.4f) MB" % (tup[0], tup[1], sum))
+        #
         return rD
 
     def __showOverwrite(self):

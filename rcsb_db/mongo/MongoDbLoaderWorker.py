@@ -74,7 +74,7 @@ class MongoDbLoaderWorker(object):
         self.__pdbxTableIdExcludeList = str(self.__cu.get('PDBX_EXCLUDE_TABLES', defaultValue="")).split(',')
         self.__readBackCheck = readBackCheck
         #
-        self.__authD = self.__assignCredentials(self.__cu)
+        self.__prefD = self.__assignPreferences(self.__cu)
 
     def loadContentType(self, contentType, styleType='rowwise_by_name'):
         """  Driver method for loading MongoDb content -
@@ -84,6 +84,7 @@ class MongoDbLoaderWorker(object):
 
         """
         try:
+            startTime = self.__begin(message="loading operation")
             sd, dbName, collectionName, inputPathList, tableIdExcludeList = self.__getLoadInfo(contentType)
             #
             optD = {}
@@ -92,11 +93,11 @@ class MongoDbLoaderWorker(object):
             optD['collectionName'] = collectionName
             optD['styleType'] = styleType
             optD['tableIdExcludeList'] = tableIdExcludeList
-            optD['authD'] = self.__authD
+            optD['prefD'] = self.__prefD
             optD['readBackCheck'] = self.__readBackCheck
             #
-            self.__removeCollection(dbName, collectionName, self.__authD)
-            self.__createCollection(dbName, collectionName, self.__authD)
+            self.__removeCollection(dbName, collectionName, self.__prefD)
+            self.__createCollection(dbName, collectionName, self.__prefD)
             #
             numProc = self.__numProc
             chunkSize = self.__chunkSize if self.__chunkSize < len(inputPathList) else 0
@@ -105,6 +106,7 @@ class MongoDbLoaderWorker(object):
             mpu.setOptions(optionsD=optD)
             mpu.set(workerObj=self, workerMethod="loadWorker")
             ok, failList, retLists, diagList = mpu.runMulti(dataList=inputPathList, numProc=numProc, numResults=1, chunkSize=chunkSize)
+            self.__end(startTime, "loading operation witn status " + str(ok))
             #
             return ok
         except Exception as e:
@@ -116,38 +118,43 @@ class MongoDbLoaderWorker(object):
         """ Multi-proc worker method for MongoDb loading -
         """
         try:
+            startTime = self.__begin(message=procName)
             sd = optionsD['sd']
             styleType = optionsD['styleType']
             tableIdExcludeList = optionsD['tableIdExcludeList']
             dbName = optionsD['dbName']
             collectionName = optionsD['collectionName']
-            authD = optionsD['authD']
+            prefD = optionsD['prefD']
             readBackCheck = optionsD['readBackCheck']
+            logSize = 'logSize' in optionsD
+
             sdp = SchemaDefDataPrep(schemaDefObj=sd, verbose=self.__verbose)
             sdp.setTableIdExcludeList(tableIdExcludeList)
             fType = "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
             if styleType in ["columnwise_by_name", "rowwise_no_name"]:
                 fType = "drop-empty-tables|skip-max-width|assign-dates"
             tableDataDictList, containerNameList = sdp.fetchDocuments(dataList, styleType=styleType, filterType=fType)
+            #
+            if logSize:
+                maxDocumentBytes = -1
+                for tD, cN in zip(tableDataDictList, containerNameList):
+                    documentBytes = sys.getsizeof(pickle.dumps(tD, protocol=0))
+                    maxDocumentBytes = max(maxDocumentBytes, documentBytes)
+                    megaBytes = float(documentBytes) / 1000000.0
+                    if megaBytes > 15.8:
+                        logger.info("Large document %s  %.4f MB" % (cN, megaBytes))
+                logger.info("Maximum document size loaded %.4f MB" % (float(maxDocumentBytes) / 1000000.0))
 
-            maxDocumentBytes = -1
-            for tD, cN in zip(tableDataDictList, containerNameList):
-                documentBytes = sys.getsizeof(pickle.dumps(tD))
-                maxDocumentBytes = max(maxDocumentBytes, documentBytes)
-                megaBytes = float(documentBytes) / 1000000.0
-                #logger.info("Document %r %s  %.5f MB" % (tD['entry'], cN, megaBytes))
-                if megaBytes > 15.8:
-                    logger.info("Large document %s  %.4f MB" % (cN, megaBytes))
-            logger.info("Maximum document size loaded %.4f MB" % (float(maxDocumentBytes) / 1000000.0))
-
-            ok = self.__loadDocuments(dbName, collectionName, authD, tableDataDictList, readBackCheck=readBackCheck)
+            ok = self.__loadDocuments(dbName, collectionName, prefD, tableDataDictList, readBackCheck=readBackCheck)
+            #
+            self.__end(startTime, procName + " with status " + str(ok))
             # all or nothing here
             if ok:
                 return dataList, dataList, []
             else:
                 return [], [], []
         except Exception as e:
-            logger.info("Failing with dataList %r" % dataList)
+            logger.error("Failing with dataList %r" % dataList)
             logger.exception("Failing with %s" % str(e))
 
         return [], [], []
@@ -156,7 +163,7 @@ class MongoDbLoaderWorker(object):
     #                                        ---  Supporting code follows ---
     #
 
-    def __assignCredentials(self, cfgObj, dbType="mongodb"):
+    def __assignPreferences(self, cfgObj, dbType="mongodb"):
         dbUserId = None
         dbHost = None
         dbUserPwd = None
@@ -172,24 +179,25 @@ class MongoDbLoaderWorker(object):
         else:
             pass
 
-        authD = {"DB_HOST": dbHost, 'DB_USER': dbUserId, 'DB_PW': dbUserPwd, 'DB_NAME': dbName, "DB_PORT": dbPort, 'DB_ADMIN_DB_NAME': dbAdminDb}
-        return authD
+        prefD = {"DB_HOST": dbHost, 'DB_USER': dbUserId, 'DB_PW': dbUserPwd, 'DB_NAME': dbName, "DB_PORT": dbPort, 'DB_ADMIN_DB_NAME': dbAdminDb}
+        return prefD
 
-    def __begin(self):
-        self.__startTime = time.time()
-        logger.debug("Running tests on version %s" % __version__)
-        logger.debug("Starting %s at %s" % (self.id(),
-                                            time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+    def __begin(self, message=""):
+        startTime = time.time()
+        ts = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
+        logger.debug("Running application version %s" % __version__)
+        logger.debug("Starting %s (%s) at %s" % (message, self.id(), ts))
+        return startTime
 
-    def __end(self):
+    def __end(self, startTime, message=""):
         endTime = time.time()
-        logger.debug("Completed %s at %s (%.4f seconds)\n" % (self.id(),
-                                                              time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                              endTime - self.__startTime))
+        ts = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
+        delta = endTime - startTime
+        logger.debug("Completed %s (%s) at %s (%.4f seconds)\n" % (message, self.id(), ts, delta))
 
-    def __open(self, authD):
+    def __open(self, prefD):
         cObj = ConnectionBase()
-        cObj.setAuth(authD)
+        cObj.setPreferences(prefD)
         ok = cObj.openConnection()
         if ok:
             return cObj
@@ -206,11 +214,11 @@ class MongoDbLoaderWorker(object):
     def __getClientConnection(self, cObj):
         return cObj.getClientConnection()
 
-    def __createCollection(self, dbName, collectionName, authD):
+    def __createCollection(self, dbName, collectionName, prefD):
         """Create database and collection -
         """
         try:
-            cObj = self.__open(authD)
+            cObj = self.__open(prefD)
             client = self.__getClientConnection(cObj)
             mg = MongoDbUtil(client)
             ok = mg.createCollection(dbName, collectionName)
@@ -223,12 +231,12 @@ class MongoDbLoaderWorker(object):
             logger.exception("Failing with %s" % str(e))
         return False
 
-    def __removeCollection(self, dbName, collectionName, authD):
+    def __removeCollection(self, dbName, collectionName, prefD):
         """Drop collection within database
 
         """
         try:
-            cObj = self.__open(authD)
+            cObj = self.__open(prefD)
             client = self.__getClientConnection(cObj)
             mg = MongoDbUtil(client)
             #
@@ -245,13 +253,12 @@ class MongoDbLoaderWorker(object):
             logger.exception("Failing with %s" % str(e))
         return False
 
-    def __loadDocuments(self, dbName, collectionName, authD, dList, readBackCheck=False):
+    def __loadDocuments(self, dbName, collectionName, prefD, dList, readBackCheck=False):
         try:
-            cObj = self.__open(authD)
+            cObj = self.__open(prefD)
             client = self.__getClientConnection(cObj)
             mg = MongoDbUtil(client)
             #
-
             rIdL = mg.insertList(dbName, collectionName, dList)
             #
             if readBackCheck:

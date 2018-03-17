@@ -145,9 +145,9 @@ class SchemaDefLoaderMongoDbTests(unittest.TestCase):
     #                                        ---  Supporting code follows ---
     #
     def __open(self, dbUserId=None, dbUserPwd=None, dbHost=None, dbName=None, dbPort=None, dbAdminDb=None):
-        authD = {"DB_HOST": dbHost, 'DB_USER': dbUserId, 'DB_PW': dbUserPwd, 'DB_NAME': dbName, "DB_PORT": dbPort, 'DB_ADMIN_DB_NAME': dbAdminDb}
+        prefD = {"DB_HOST": dbHost, 'DB_USER': dbUserId, 'DB_PW': dbUserPwd, 'DB_NAME': dbName, "DB_PORT": dbPort, 'DB_ADMIN_DB_NAME': dbAdminDb}
         self.__myC = ConnectionBase()
-        self.__myC.setAuth(authD)
+        self.__myC.setPreferences(prefD)
 
         ok = self.__myC.openConnection()
         if ok:

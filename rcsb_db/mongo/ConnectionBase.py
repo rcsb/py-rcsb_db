@@ -3,7 +3,7 @@
 # Date:  12-Mar-2018 J. Westbrook
 #
 # Update:
-#
+#    17-Mar-2018 jdw  add r/w sync controls - generalize auth to prefs
 ##
 """
 Base class for managing database connection which handles application specific authentication.
@@ -47,7 +47,7 @@ class ConnectionBase(object):
         self.__siteId = siteId
         self.__db = None
         self.__dbClient = None
-        self.__authD = {}
+        self.__prefD = {}
         self.__databaseName = None
         self.__dbHost = None
         self.__dbUser = None
@@ -82,30 +82,35 @@ class ConnectionBase(object):
         logger.debug("+ConnectionBase(setResource) %s resource name %s server %s dns %s host %s user %s socket %s port %r admindb %s" %
                      (self.__siteId, resourceName, self.__dbServer, self.__databaseName, self.__dbHost, self.__dbUser, self.__dbSocket, self.__dbPort, self.__dbAdminDb))
         #
-        self.__authD["DB_NAME"] = self.__databaseName
-        self.__authD["DB_HOST"] = self.__dbHost
-        self.__authD["DB_USER"] = self.__dbUser
-        self.__authD["DB_PW"] = self.__dbPw
-        self.__authD["DB_SOCKET"] = self.__dbSocket
-        self.__authD["DB_PORT"] = int(str(self.__dbPort))
-        self.__authD["DB_SERVER"] = self.__dbServer
-        self.__authD["DB_ADMIN_DB_NAME"] = self.__dbAdminDb
+        self.__prefD["DB_NAME"] = self.__databaseName
+        self.__prefD["DB_HOST"] = self.__dbHost
+        self.__prefD["DB_USER"] = self.__dbUser
+        self.__prefD["DB_PW"] = self.__dbPw
+        self.__prefD["DB_SOCKET"] = self.__dbSocket
+        self.__prefD["DB_PORT"] = int(str(self.__dbPort))
+        self.__prefD["DB_SERVER"] = self.__dbServer
+        self.__prefD["DB_ADMIN_DB_NAME"] = self.__dbAdminDb
         #
 
-    def getAuth(self):
-        return self.__authD
+    def getPreferences(self):
+        return self.__prefD
 
-    def setAuth(self, authD):
+    def setPreferences(self, prefD):
         try:
-            self.__authD = copy.deepcopy(authD)
-            self.__databaseName = self.__authD.get("DB_NAME", None)
-            self.__dbHost = self.__authD.get("DB_HOST", 'localhost')
-            self.__dbUser = self.__authD.get("DB_USER", None)
-            self.__dbPw = self.__authD.get("DB_PW", None)
-            self.__dbSocket = self.__authD.get("DB_SOCKET", None)
-            self.__dbServer = self.__authD.get("DB_SERVER", "mongo")
-            self.__dbAdminDb = self.__authD.get("DB_ADMIN_DB_NAME", "admin")
-            port = self.__authD.get("DB_PORT", 27017)
+            self.__prefD = copy.deepcopy(prefD)
+            self.__databaseName = self.__prefD.get("DB_NAME", None)
+            self.__dbHost = self.__prefD.get("DB_HOST", 'localhost')
+            self.__dbUser = self.__prefD.get("DB_USER", None)
+            self.__dbPw = self.__prefD.get("DB_PW", None)
+            self.__dbSocket = self.__prefD.get("DB_SOCKET", None)
+            self.__dbServer = self.__prefD.get("DB_SERVER", "mongo")
+            self.__dbAdminDb = self.__prefD.get("DB_ADMIN_DB_NAME", "admin")
+            self.__writeConcern = self.__prefD.get("DB_WRITE_CONCERN", "majority")
+            self.__readConcern = self.__prefD.get("DB_READ_CONCERN", "majority")
+            self.__readPreference = self.__prefD.get("DB_READ_PREFERENCE", "nearest")
+            self.__writeJournalOpt = self.__prefD.get("DB_WRITE_TO_JOURNAL", True)
+            #
+            port = self.__prefD.get("DB_PORT", 27017)
             if port and len(str(port)) > 0:
                 self.__dbPort = int(str(port))
         except Exception as e:
@@ -128,8 +133,15 @@ class ConnectionBase(object):
             else:
                 uri = "mongodb://%s:%d" % (self.__dbHost, self.__dbPort)
 
+            kw = {}
+            kw['w'] = self.__writeConcern
+            kw['j'] = True
+            kw['appname'] = 'dbloader'
+            kw['readConcernLevel'] = self.__readConcern
+            kw['readPreference'] = self.__readPreference
+            #
             logger.debug("URI is %s" % uri)
-            self.__dbClient = MongoClient(uri)
+            self.__dbClient = MongoClient(uri, **kw)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
 
