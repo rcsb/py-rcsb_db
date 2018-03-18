@@ -52,16 +52,13 @@ class ConnectionBaseTests(unittest.TestCase):
         self.__myC = None
         self.__startTime = time.time()
         logger.debug("Running tests on version %s" % __version__)
-        logger.debug("Starting %s at %s" % (self.id(),
-                                            time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+        logger.debug("Starting at %s" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
 
     def tearDown(self):
         # close any open connections -
         self.close()
         endTime = time.time()
-        logger.debug("Completed %s at %s (%.4f seconds)\n" % (self.id(),
-                                                              time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                              endTime - self.__startTime))
+        logger.debug("Completed at %s (%.4f seconds)" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime))
 
     def open(self, dbUserId=None, dbUserPwd=None, dbHost=None, dbName=None, dbPort=None, dbAdminDb=None):
         authD = {"DB_HOST": dbHost, 'DB_USER': dbUserId, 'DB_PW': dbUserPwd, 'DB_NAME': dbName, "DB_PORT": dbPort, 'DB_ADMIN_DB_NAME': dbAdminDb}

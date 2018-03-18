@@ -186,14 +186,14 @@ class MongoDbLoaderWorker(object):
         startTime = time.time()
         ts = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
         logger.debug("Running application version %s" % __version__)
-        logger.debug("Starting %s (%s) at %s" % (message, self.id(), ts))
+        logger.info("Starting %s at %s" % (message, ts))
         return startTime
 
     def __end(self, startTime, message=""):
         endTime = time.time()
         ts = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
         delta = endTime - startTime
-        logger.debug("Completed %s (%s) at %s (%.4f seconds)\n" % (message, self.id(), ts, delta))
+        logger.info("Completed %s at %s (%.4f seconds)\n" % (message, ts, delta))
 
     def __open(self, prefD):
         cObj = ConnectionBase()
