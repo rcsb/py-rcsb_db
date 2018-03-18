@@ -426,15 +426,10 @@ class SchemaDefDataPrep(object):
             mapped from the input instance category.
         """
         #
-        dropEmptyFlag = False
-        if 'drop-empty-attributes' in filterType:
-            dropEmptyFlag = True
-        skipMaxWidthFlag = False
-        if 'skip-max-width' in filterType:
-            skipMaxWidthFlag = True
-        assignDateFlag = False
-        if 'assign-dates' in filterType:
-            assignDateFlag = True
+        dropEmptyFlag = 'drop-empty-attributes' in filterType
+        skipMaxWidthFlag = 'skip-max-width' in filterType
+        assignDateFlag = 'assign-dates' in filterType
+        convertIterables = 'convert-iterables' in filterType
 
         retList = []
         catObj = myContainer.getObj(categoryName)
@@ -472,6 +467,9 @@ class SchemaDefDataPrep(object):
                     if assignDateFlag and tObj.isAttributeDateType(atId) and not ((lenVal == 0) or (val == '?') or (val == '.')):
                         d[atId] = self.__assignDateType(atId, val)
                         continue
+                    if convertIterables and tObj.isIterable(atId) and not ((lenVal == 0) or (val == '?') or (val == '.')):
+                        d[atId] = [v.strip() for v in val.split(tObj.getIterableSeparator(atId))]
+                        continue
                     if maxW > 0:
                         if lenVal > maxW:
                             tup = (schemaTableId, atId)
@@ -503,15 +501,10 @@ class SchemaDefDataPrep(object):
             mapped from the input instance category.
         """
         #
-        dropEmptyFlag = False
-        if 'drop-empty-attributes' in filterType:
-            dropEmptyFlag = True
-        skipMaxWidthFlag = False
-        if 'skip-max-width' in filterType:
-            skipMaxWidthFlag = True
-        assignDateFlag = False
-        if 'assign-dates' in filterType:
-            assignDateFlag = True
+        dropEmptyFlag = 'drop-empty-attributes' in filterType
+        skipMaxWidthFlag = 'skip-max-width' in filterType
+        assignDateFlag = 'assign-dates' in filterType
+        convertIterables = 'convert-iterables' in filterType
         #
         mD = {}
         for categoryName in categoryNameList:
@@ -561,6 +554,9 @@ class SchemaDefDataPrep(object):
                             continue
                         if assignDateFlag and tObj.isAttributeDateType(atId) and not ((lenVal == 0) or (val == '?') or (val == '.')):
                             d[atId] = self.__assignDateType(atId, val)
+                            continue
+                        if convertIterables and tObj.isIterable(atId) and not ((lenVal == 0) or (val == '?') or (val == '.')):
+                            d[atId] = [v.strip() for v in val.split(tObj.getIterableSeparator(atId))]
                             continue
                         if maxW > 0:
                             if lenVal > maxW:

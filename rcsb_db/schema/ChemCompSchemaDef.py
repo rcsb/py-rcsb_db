@@ -30,6 +30,8 @@ class ChemCompSchemaDef(SchemaDefBase):
     _databaseName = "compv4"
     _versionedDatabaseName = "comp_v4_0_1"
     _unitCardinalityList = ['CHEM_COMP']
+    _iterableAttributeList = [('CHEM_COMP', 'PDBX_SYNONYMS', ';'),
+                              ('CHEM_COMP', 'MON_NSTD_PARENT_COMP_ID', ',')]
     _schemaDefDict = {
         'CHEM_COMP': {'ATTRIBUTES': {'COMPONENT_ID': 'Component_ID',
                                      'FORMULA': 'formula',
@@ -1515,7 +1517,8 @@ class ChemCompSchemaDef(SchemaDefBase):
     def __init__(self, convertNames=False, verbose=True):
         super(ChemCompSchemaDef, self).__init__(databaseName=ChemCompSchemaDef._databaseName, schemaDefDict=ChemCompSchemaDef._schemaDefDict,
                                                 convertNames=convertNames, versionedDatabaseName=ChemCompSchemaDef._versionedDatabaseName,
-                                                unitCardinalityList=ChemCompSchemaDef._unitCardinalityList, verbose=verbose)
+                                                unitCardinalityList=ChemCompSchemaDef._unitCardinalityList,
+                                                iterableAttributeList=ChemCompSchemaDef._iterableAttributeList, verbose=verbose)
         self.__verbose = verbose
 
 

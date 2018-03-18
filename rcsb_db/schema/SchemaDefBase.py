@@ -37,13 +37,16 @@ class SchemaDefBase(object):
     """ A base class for schema definitions.
     """
 
-    def __init__(self, databaseName=None, schemaDefDict=None, convertNames=False, versionedDatabaseName=None, unitCardinalityList=None, verbose=True):
+    def __init__(self, databaseName=None, schemaDefDict=None, convertNames=False, versionedDatabaseName=None, unitCardinalityList=None, iterableAttributeList=None, verbose=True):
         self.__verbose = verbose
         self.__databaseName = databaseName if databaseName is not None else "unassigned"
         self.__schemaDefDict = schemaDefDict
         self.__convertNames = convertNames
         self.__versionedDatabaseName = versionedDatabaseName if versionedDatabaseName is not None else self.__databaseName
         self.__unitCardinalityDict = self.__getCardinalityDetails(unitCardinalityList)
+        self.__iterableAttributeList = iterableAttributeList if iterableAttributeList is not None else []
+        if self.__iterableAttributeList:
+            self.__addIterableAttributes()
         if convertNames:
             self.__convertTableNames()
             self.__convertAttributeNames()
@@ -78,6 +81,13 @@ class SchemaDefBase(object):
             aIdList = self.__schemaDefDict[tableId]['ATTRIBUTES'].keys()
             for aId in aIdList:
                 self.__schemaDefDict[tableId]['ATTRIBUTES'][aId] = self.__filterName(self.__schemaDefDict[tableId]['ATTRIBUTES'][aId])
+
+    def __addIterableAttributes(self):
+        try:
+            for tableId, attributeId, separator in self.__iterableAttributeList:
+                self.__schemaDefDict[tableId]['ATTRIBUTE_INFO'][attributeId]['ITERABLE'] = separator
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
 
     def getSchema(self):
         return self.__schemaDefDict
@@ -456,6 +466,18 @@ class TableDef(object):
             else:
                 d[atId] = 0
         return d
+
+    def isIterable(self, attributeId):
+        try:
+            return 'ITERABLE' in self.__tD[attributeId]
+        except Exception as e:
+            return False
+
+    def getIterableSeparator(self, attributeId):
+        try:
+            return self.__tD[attributeId]
+        except Exception as e:
+            return None
 
     def __isStringType(self, sqlType):
         """ Return if input type corresponds to a common SQL string data type.
