@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 #
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
+from rcsb_db.utils.ConfigUtil import ConfigUtil
 
 if platform.system() == "Linux":
     try:
@@ -61,13 +62,19 @@ class ConnectionBase(object):
     def setResource(self, resourceName=None, realm='RCSB'):
         #
         if (resourceName == "EXCHANGE_DB"):
-            self.__databaseName = self._cI.get("SITE_EXCHANGE_DB_NAME")
-            self.__dbHost = self._cI.get("SITE_EXCHANGE_DB_HOST_NAME")
-            self.__dbSocket = self._cI.get("SITE_EXCHANGE_DB_SOCKET")
-            self.__dbPort = self._cI.get("SITE_EXCHANGE_DB_PORT_NUMBER")
-            self.__dbUser = self._cI.get("SITE_EXCHANGE_DB_USER_NAME")
-            self.__dbPw = self._cI.get("SITE_EXCHANGE_DB_PASSWORD")
-            self.__dbAdminDb = self._cI.get("SITE_EXCHANGE_ADMIN_DB_NAME")
+            cu = ConfigUtil(configPath=None, sectionName=realm)
+            self.__databaseName = cu.get("SITE_EXCHANGE_DB_NAME")
+            self.__dbHost = cu.get("SITE_EXCHANGE_DB_HOST_NAME")
+            self.__dbSocket = cu.get("SITE_EXCHANGE_DB_SOCKET")
+            self.__dbPort = cu.get("SITE_EXCHANGE_DB_PORT_NUMBER")
+            self.__dbUser = cu.get("SITE_EXCHANGE_DB_USER_NAME")
+            self.__dbPw = cu.get("SITE_EXCHANGE_DB_PASSWORD")
+            self.__dbAdminDb = cu.get("SITE_EXCHANGE_ADMIN_DB_NAME", defaultValue='admin')
+            #
+            self.__writeConcern = cu.get("DB_WRITE_CONCERN", defaultValue="majority")
+            self.__readConcern = cu.get("DB_READ_CONCERN", defaultValue="majority")
+            self.__readPreference = cu.get("DB_READ_PREFERENCE", defaultValue="nearest")
+            self.__writeJournalOpt = cu.get("DB_WRITE_TO_JOURNAL", defaultValue=True)
         else:
             pass
 
@@ -79,7 +86,7 @@ class ConnectionBase(object):
         else:
             self.__dbPort = int(str(self.__dbPort))
 
-        logger.debug("+ConnectionBase(setResource) %s resource name %s server %s dns %s host %s user %s socket %s port %r admindb %s" %
+        logger.debug("%s resource name %s server %s dns %s host %s user %s socket %s port %r admindb %s" %
                      (self.__siteId, resourceName, self.__dbServer, self.__databaseName, self.__dbHost, self.__dbUser, self.__dbSocket, self.__dbPort, self.__dbAdminDb))
         #
         self.__prefD["DB_NAME"] = self.__databaseName
@@ -90,6 +97,10 @@ class ConnectionBase(object):
         self.__prefD["DB_PORT"] = int(str(self.__dbPort))
         self.__prefD["DB_SERVER"] = self.__dbServer
         self.__prefD["DB_ADMIN_DB_NAME"] = self.__dbAdminDb
+        self.__prefD["DB_WRITE_CONCERN"] = self.__writeConcern
+        self.__prefD["DB_READ_CONCERN"] = self.__readConcern
+        self.__prefD["DB_READ_PREFERENCE"] = self.__readPreference
+        self.__prefD["DB_WRITE_TO_JOURNAL"] = self.__writeJournalOpt
         #
 
     def getPreferences(self):
