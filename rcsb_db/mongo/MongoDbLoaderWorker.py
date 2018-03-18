@@ -130,9 +130,9 @@ class MongoDbLoaderWorker(object):
 
             sdp = SchemaDefDataPrep(schemaDefObj=sd, verbose=self.__verbose)
             sdp.setTableIdExcludeList(tableIdExcludeList)
-            fType = "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
+            fType = "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
             if styleType in ["columnwise_by_name", "rowwise_no_name"]:
-                fType = "drop-empty-tables|skip-max-width|assign-dates"
+                fType = "drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
             tableDataDictList, containerNameList = sdp.fetchDocuments(dataList, styleType=styleType, filterType=fType)
             #
             if logSize:
