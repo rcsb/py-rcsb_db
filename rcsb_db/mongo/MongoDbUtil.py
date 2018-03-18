@@ -18,6 +18,7 @@ __license__ = "Apache 2.0"
 import logging
 logger = logging.getLogger(__name__)
 #
+import pymongo
 #
 
 
@@ -26,6 +27,7 @@ class MongoDbUtil(object):
     def __init__(self, mongoClientObj, verbose=False):
         self.__verbose = verbose
         self.__mgObj = mongoClientObj
+        self.__mongoIndexTypes = {'DESCENDING': pymongo.DESCENDING, 'ASCENDING': pymongo.ASCENDING, 'TEXT': pymongo.TEXT}
 
     def databaseExists(self, databaseName):
         try:
@@ -168,10 +170,12 @@ class MongoDbUtil(object):
         return rIdL
 
     def createIndex(self, databaseName, collectionName, keyList, indexName="primary", indexType="DESCENDING", uniqueFlag=False):
+
         try:
-            iTupL = [(ky, indexType) for ky in keyList]
+            iTupL = [(ky, self.__mongoIndexTypes[indexType]) for ky in keyList]
             c = self.__mgObj[databaseName].get_collection(collectionName)
             c.create_index(iTupL, name=indexName, background=True, unique=uniqueFlag)
+            logger.debug("Current indexes for %s %s : %r" % (databaseName, collectionName, c.list_indexes()))
             return True
         except Exception as e:
             logger.exception("Failing %s and %s keyList %r with %s" % (databaseName, collectionName, keyList, str(e)))
@@ -181,6 +185,7 @@ class MongoDbUtil(object):
         try:
             c = self.__mgObj[databaseName].get_collection(collectionName)
             c.drop_index(indexName)
+            logger.debug("Current indexes for %s %s : %r" % (databaseName, collectionName, c.list_indexes()))
             return True
         except Exception as e:
             logger.exception("Failing %s and %s with %s" % (databaseName, collectionName, str(e)))
@@ -189,8 +194,23 @@ class MongoDbUtil(object):
     def reIndex(self, databaseName, collectionName):
         try:
             c = self.__mgObj[databaseName].get_collection(collectionName)
+            logger.debug("Current indexes for %s %s : %r" % (databaseName, collectionName, c.list_indexes()))
             c.reindex()
             return True
         except Exception as e:
             logger.exception("Failing %s and %s with %s" % (databaseName, collectionName, str(e)))
         return False
+
+    def fetch(self, databaseName, collectionName, selectL, queryD=None):
+        """ Fetch selections (selectL) from documents satisfying input
+            query constraints.
+        """
+        try:
+            qD = queryD if queryD is not None else {}
+            sD = {k: 1 for k in selectL}
+            c = self.__mgObj[databaseName].get_collection(collectionName)
+            dList = c.find(qD, sD)
+            return dList
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+        return None

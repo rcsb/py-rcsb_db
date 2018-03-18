@@ -30,7 +30,7 @@ import pprint
 import dateutil.parser
 
 import logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -104,13 +104,13 @@ class MongoDbUtilTests(unittest.TestCase):
                 d = {}
                 for attrib in range(Nattribs):
                     val = "val_%d_%d" % (row, attrib)
-                    attribName = "attrib_%d" % attrib
+                    attribName = "attribute_%d" % attrib
                     d[attribName] = val
                 rD[catName].append(d)
             d = {}
             for attrib in range(Nattribs):
                 val = "2018-01-30 12:01"
-                attribName = "attrib_%d" % attrib
+                attribName = "attribute_%d" % attrib
                 d[attribName] = dateutil.parser.parse(val)
             rD[catName].append(d)
 
@@ -308,7 +308,7 @@ class MongoDbUtilTests(unittest.TestCase):
                 dList.append(self.__makeDataObj(2, 5, 5))
             #
             rIdL = mg.insertList(self.__dbName, self.__collectionName, dList)
-            self.assertTrue(len(rIdL), len(dList))
+            self.assertEqual(len(rIdL), len(dList))
             # Note that dObj is mutated by additional key '_id' that is added on insert -
             #
             for ii, rId in enumerate(rIdL):
@@ -380,7 +380,7 @@ class MongoDbUtilTests(unittest.TestCase):
             self.fail()
 
     def testReplaceList(self):
-        """Test case -  create collection and insert document list - replace document list
+        """Test case -  create collection and insert document list - replace and upsert document list
 
         """
         try:
@@ -401,12 +401,11 @@ class MongoDbUtilTests(unittest.TestCase):
                 dList.append(dObj)
             #
             rIdL = mg.insertList(self.__dbName, self.__collectionName, dList)
-            self.assertTrue(len(rIdL), len(dList))
-            # Note that dObj is mutated by additional key '_id' that is added on insert -
+            self.assertEqual(len(rIdL), len(dList))
             #
             for ii, rId in enumerate(rIdL):
                 rObj = mg.fetchOne(self.__dbName, self.__collectionName, '_id', rId)
-                logger.debug("Return Object %s" % pprint.pformat(rObj))
+                # logger.debug("Return Object %s" % pprint.pformat(rObj))
                 self.assertEqual(len(dList[ii]), len(rObj))
                 self.assertEqual(dList[ii], rObj)
             #
@@ -427,11 +426,119 @@ class MongoDbUtilTests(unittest.TestCase):
             for ii in range(nDocs + nDocs):
                 kVal = 'KVAL_%d' % ii
                 rObj = mg.fetchOne(self.__dbName, self.__collectionName, 'THE_KEY', kVal)
-                logger.debug("Return Object %s" % pprint.pformat(rObj))
+                # logger.debug("Return Object %s" % pprint.pformat(rObj))
                 rObj.pop('_id', None)
                 dList[ii].pop('_id', None)
                 self.assertEqual(len(dList[ii]), len(rObj))
                 self.assertEqual(dList[ii], rObj)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
+    def testSingleIndex(self):
+        """Test case -  create collection, create simple single index, insert document list, read check documents
+
+        """
+        try:
+            nDocs = 100
+            client = self.getClientConnection()
+            mg = MongoDbUtil(client)
+            ok = mg.createCollection(self.__dbName, self.__collectionName)
+            self.assertTrue(ok)
+            ok = mg.databaseExists(self.__dbName)
+            self.assertTrue(ok)
+            ok = mg.collectionExists(self.__dbName, self.__collectionName)
+            self.assertTrue(ok)
+            #
+            # Create before insert
+            ok = mg.createIndex(self.__dbName, self.__collectionName, keyList=['THE_KEY'], indexName="primary", indexType="DESCENDING", uniqueFlag=True)
+            self.assertTrue(ok)
+
+            dList = []
+            for ii in range(nDocs):
+                dObj = self.__makeDataObj(2, 5, 5)
+                dObj['THE_KEY'] = 'KVAL_%d' % ii
+                dList.append(dObj)
+            #
+            rIdL = mg.insertList(self.__dbName, self.__collectionName, dList)
+            self.assertEqual(len(dList), len(rIdL))
+            #
+            for ii in range(nDocs):
+                kVal = 'KVAL_%d' % ii
+                rObj = mg.fetchOne(self.__dbName, self.__collectionName, 'THE_KEY', kVal)
+                # logger.debug("Return Object %s" % pprint.pformat(rObj))
+                rObj.pop('_id', None)
+                dList[ii].pop('_id', None)
+                self.assertEqual(len(dList[ii]), len(rObj))
+                self.assertEqual(dList[ii], rObj)
+            #
+            ok = mg.dropIndex(self.__dbName, self.__collectionName, indexName="primary")
+            self.assertTrue(ok)
+            ok = mg.createIndex(self.__dbName, self.__collectionName, keyList=['THE_KEY'], indexName="primary", indexType="DESCENDING", uniqueFlag=True)
+            self.assertTrue(ok)
+            ok = mg.reIndex(self.__dbName, self.__collectionName)
+            self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
+    def testSingleIndexSelect(self):
+        """Test case -  create collection, create simple single index, insert document list, read check documents.
+
+        """
+        try:
+            nDocs = 100
+            client = self.getClientConnection()
+            mg = MongoDbUtil(client)
+            ok = mg.createCollection(self.__dbName, self.__collectionName)
+            self.assertTrue(ok)
+            ok = mg.databaseExists(self.__dbName)
+            self.assertTrue(ok)
+            ok = mg.collectionExists(self.__dbName, self.__collectionName)
+            self.assertTrue(ok)
+            #
+            # Create before insert
+            ok = mg.createIndex(self.__dbName, self.__collectionName, keyList=['THE_KEY'], indexName="primary", indexType="DESCENDING", uniqueFlag=True)
+            self.assertTrue(ok)
+
+            dList = []
+            for ii in range(nDocs):
+                dObj = self.__makeDataObj(2, 5, 5)
+                dObj['THE_KEY'] = 'KVAL_%d' % ii
+                dList.append(dObj)
+            #
+            rIdL = mg.insertList(self.__dbName, self.__collectionName, dList)
+            self.assertEqual(len(dList), len(rIdL))
+            #
+            for ii in range(nDocs):
+                kVal = 'KVAL_%d' % ii
+                rObj = mg.fetchOne(self.__dbName, self.__collectionName, 'THE_KEY', kVal)
+                # logger.debug("Return Object %s" % pprint.pformat(rObj))
+                rObj.pop('_id', None)
+                dList[ii].pop('_id', None)
+                self.assertEqual(len(dList[ii]), len(rObj))
+                self.assertEqual(dList[ii], rObj)
+            #
+            ok = mg.dropIndex(self.__dbName, self.__collectionName, indexName="primary")
+            self.assertTrue(ok)
+            ok = mg.createIndex(self.__dbName, self.__collectionName, keyList=['THE_KEY'], indexName="primary", indexType="DESCENDING", uniqueFlag=True)
+            self.assertTrue(ok)
+            ok = mg.reIndex(self.__dbName, self.__collectionName)
+            self.assertTrue(ok)
+            #
+            #
+            cur = mg.fetch(self.__dbName, self.__collectionName, ['THE_KEY'])
+            self.assertEqual(cur.count(), nDocs)
+            logger.debug("Fetch length %d" % cur.count())
+            for ii, d in enumerate(cur):
+                logger.debug("Fetch num %d: %r" % (ii, d))
+            #
+            #
+            cur = mg.fetch(self.__dbName, self.__collectionName, ['category_0.attribute_0'], {'category_0.attribute_0': 'val_0_0'})
+            self.assertEqual(cur.count(), nDocs)
+            logger.debug("Fetch length %d" % cur.count())
+            for ii, d in enumerate(cur):
+                logger.debug("Fetch num %d: %r" % (ii, d))
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -461,6 +568,12 @@ def suiteReplace():
     return suiteSelect
 
 
+def suiteIndex():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(MongoDbUtilTests("testSingleIndex"))
+    suiteSelect.addTest(MongoDbUtilTests("testSingleIndexSelect"))
+    return suiteSelect
+
 if __name__ == '__main__':
     if (True):
         mySuite = suiteOps()
@@ -470,4 +583,7 @@ if __name__ == '__main__':
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 
         mySuite = suiteReplace()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+        mySuite = suiteIndex()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
