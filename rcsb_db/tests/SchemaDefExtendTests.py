@@ -51,7 +51,6 @@ from mmcif.api.PdbxContainers import CifName
 
 class SchemaDefDataPrepTests(unittest.TestCase):
 
-
     def __init__(self, methodName='runTest'):
         super(SchemaDefDataPrepTests, self).__init__(methodName)
         self.__loadPathList = []
@@ -73,7 +72,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                                                               endTime - self.__startTime))
 
     def testGetKeyRelationships(self):
-        """Test case -  dump methods for dictionary metadata
+        """Test case -  dump dicationary categories with unit cardinality
         """
 
         try:
@@ -98,10 +97,32 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
+    def testGetIterableItems(self):
+        """Test case -  dump dictionary items with iterable types
+        """
+
+        try:
+            iTypeList = ['ucode-alphanum-csv', 'id_list']
+            iL = []
+            myIo = IoAdapter(raiseExceptions=True)
+            self.__containerList = myIo.readFile(inputFilePath=self.__pathPdbxDictionary)
+            dApi = DictionaryApi(containerList=self.__containerList, consolidate=True, expandItemLinked=False, verbose=self.__verbose)
+            for categoryName in dApi.getCategoryList():
+                for attributeName in dApi.getAttributeNameList(categoryName):
+                    tc = dApi.getTypeCode(categoryName, attributeName)
+                    tcA = dApi.getTypeCodeAlt(categoryName, attributeName)
+                    dt = dApi.getDescription(categoryName, attributeName)
+                    if tc in iTypeList or tcA in iTypeList or 'comma separate' in dt.lower():
+                        iL.append((categoryName.upper(), attributeName.upper(), ','))
+
+            logger.info("Iterables : %r" % iL)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
     def testFindSchemaFeatures(self):
         """Test case -  create loadable BIRD data from files
         """
-
         try:
             sd = PdbxSchemaDef(convertNames=True)
         except Exception as e:
@@ -113,6 +134,7 @@ def schemaFeaturesSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(SchemaDefDataPrepTests("testGetKeyRelationships"))
     suiteSelect.addTest(SchemaDefDataPrepTests("testFindSchemaFeatures"))
+    suiteSelect.addTest(SchemaDefDataPrepTests("testGetIterableItems"))
     return suiteSelect
 
 if __name__ == '__main__':

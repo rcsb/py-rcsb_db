@@ -469,13 +469,13 @@ class TableDef(object):
 
     def isIterable(self, attributeId):
         try:
-            return 'ITERABLE' in self.__tD[attributeId]
+            return 'ITERABLE' in self.__tD['ATTRIBUTE_INFO'][attributeId]
         except Exception as e:
             return False
 
     def getIterableSeparator(self, attributeId):
         try:
-            return self.__tD[attributeId]
+            return self.__tD['ATTRIBUTE_INFO'][attributeId]['ITERABLE']
         except Exception as e:
             return None
 
