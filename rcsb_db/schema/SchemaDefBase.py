@@ -14,6 +14,7 @@
 #  2-Oct-2017  jdw escape null string '\N'
 # 15-Mar-2018  jdw add unit cardinality access methods
 # 16-Mar-2018  jdw add convenience method to detect date types
+# 19-Mar-2018  jdw consolidate document features in a common dictionary
 #
 ##
 """
@@ -35,29 +36,65 @@ logger = logging.getLogger(__name__)
 class SchemaDefBase(object):
 
     """ A base class for schema definitions.
+
+ 'SELECTION_FILTERS': {'BIRD_RELEASE_STATUS': [{'TABLE_ID': 'PDBX_REFERENCE_MOLECULE', 'ATTRIBUTE_ID': 'RELEASE_STATUS', 'VALUES': ['REL', 'OBS']}],
+                                            'BIRD_FAMILY_RELEASE_STATUS': [{'TABLE_ID': 'PDBX_REFERENCE_MOLECULE_FAMILY', 'ATTRIBUTE_ID': 'RELEASE_STATUS', 'VALUES': ['REL', 'OBS']}],
+
+                                            }
+
     """
 
-    def __init__(self, databaseName=None, schemaDefDict=None, convertNames=False, versionedDatabaseName=None, unitCardinalityList=None, iterableAttributeList=None, verbose=True):
+    def __init__(self, databaseName=None, schemaDefDict=None, convertNames=False, versionedDatabaseName=None, documentDefDict=None, verbose=True):
         self.__verbose = verbose
         self.__databaseName = databaseName if databaseName is not None else "unassigned"
-        self.__schemaDefDict = schemaDefDict
+        self.__schemaDefDict = schemaDefDict if schemaDefDict is not None else {}
         self.__convertNames = convertNames
         self.__versionedDatabaseName = versionedDatabaseName if versionedDatabaseName is not None else self.__databaseName
-        self.__unitCardinalityDict = self.__getCardinalityDetails(unitCardinalityList)
-        self.__iterableAttributeList = iterableAttributeList if iterableAttributeList is not None else []
-        if self.__iterableAttributeList:
-            self.__addIterableAttributes()
+        self.__documentDefDict = documentDefDict if documentDefDict is not None else {}
+        self.__tableCardinalityDict = self.__getCardinalityDetails(self.__documentDefDict)
+        self.__addIterableAttributes(self.__documentDefDict)
         if convertNames:
             self.__convertTableNames()
             self.__convertAttributeNames()
 
-    def hasUnitCardinality(self, tableId):
-        return tableId in self.__unitCardinalityDict
+    def getContentSelector(self, selectorName):
+        if 'SELECTION_FILTERS' in self.__documentDefDict and selectorName in self.__documentDefDict['SELECTION_FILTERS']:
+            sfDL = self.__documentDefDict['SELECTION_FILTERS'][selectorName]
+            oL = []
+            for sfD in sfDL:
+                d = {}
+                d['TABLE_NAME'] = self.getTableName(sfD['TABLE_ID'])
+                d['ATTRIBUTE_NAME'] = self.getAttributeName(sfD['TABLE_ID'], sfD['ATTRIBUTE_ID'])
+                d['VALUES'] = sfD['VALUES']
+                oL.append(d)
+            return oL
+        else:
+            return []
 
-    def __getCardinalityDetails(self, cardList):
+    def getDocumentKeyAttributeId(self, collectionName):
+        r = (None, None)
+        try:
+            return self.__documentDefDict['COLLECTION_DOCUMENT_ATTRIBUTE_ID'][collectionName]
+        except Exception as e:
+            pass
+        return r
+
+    def getDocumentKeyAttributeName(self, collectionName):
+        r = (None, None)
+        try:
+            tableId, attributeId = self.__documentDefDict['COLLECTION_DOCUMENT_ATTRIBUTE_ID'][collectionName]
+            return self.getTableName(tableId), self.getAttributeName(tableId, attributeId)
+        except Exception as e:
+            pass
+        return r
+
+    def hasUnitCardinality(self, tableId):
+        return tableId in self.__tableCardinalityDict
+
+    def __getCardinalityDetails(self, documentDefDict):
         rD = {}
         try:
-            rD = {tableId: True for tableId in cardList}
+            rD = {tableId: True for tableId in documentDefDict['UNIT_CARDINALITY_LIST']}
         except Exception as e:
             pass
         return rD
@@ -82,10 +119,12 @@ class SchemaDefBase(object):
             for aId in aIdList:
                 self.__schemaDefDict[tableId]['ATTRIBUTES'][aId] = self.__filterName(self.__schemaDefDict[tableId]['ATTRIBUTES'][aId])
 
-    def __addIterableAttributes(self):
+    def __addIterableAttributes(self, documentDefDict):
         try:
-            for tableId, attributeId, separator in self.__iterableAttributeList:
-                self.__schemaDefDict[tableId]['ATTRIBUTE_INFO'][attributeId]['ITERABLE'] = separator
+            if 'ITERABLE_ATTRIBUTE_LIST' in documentDefDict:
+                for tableId, attributeId, separator in documentDefDict['ITERABLE_ATTRIBUTE_LIST']:
+                    if tableId in self.__schemaDefDict and attributeId in self.__schemaDefDict[tableId]['ATTRIBUTE_INFO']:
+                        self.__schemaDefDict[tableId]['ATTRIBUTE_INFO'][attributeId]['ITERABLE'] = separator
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
 
@@ -102,7 +141,16 @@ class SchemaDefBase(object):
         return TableDef(tableDefDict=self.__schemaDefDict[tableId], verbose=self.__verbose)
 
     def getTableName(self, tableId):
-        return self.__schemaDefDict[tableId]['TABLE_NAME']
+        try:
+            return self.__schemaDefDict[tableId]['TABLE_NAME']
+        except Exception as e:
+            return None
+
+    def getAttributeName(self, tableId, attributeId):
+        try:
+            return self.__schemaDefDict[tableId]['ATTRIBUTES'][attributeId]
+        except Exception as e:
+            return None
 
     def getTableIdList(self):
         return self.__schemaDefDict.keys()

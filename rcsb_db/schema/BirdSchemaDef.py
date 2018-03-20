@@ -29,8 +29,15 @@ class BirdSchemaDef(SchemaDefBase):
     """
     _databaseName = "birdv4"
     _versionedDatabaseName = "bird_v4_0_1"
-    _unitCardinalityList = ['PDBX_REFERENCE_MOLECULE', 'PDBX_REFERENCE_MOLECULE_FAMILY']
-    _iterableAttributeList = []
+    _documentDefDict = {'UNIT_CARDINALITY_LIST': ['PDBX_REFERENCE_MOLECULE', 'PDBX_REFERENCE_MOLECULE_FAMILY'],
+                        'ITERABLE_ATTRIBUTE_LIST': [],
+                        'COLLECTION_DOCUMENT_ATTRIBUTE_ID': {'bird_v4_0_1': ('PDBX_REFERENCE_MOLECULE', 'PRD_ID'),
+                                                             'family_v4_0_1': ('PDBX_REFERENCE_MOLECULE_FAMILY', 'FAMILY_PRD_ID')},
+                        'SELECTION_FILTERS': {'BIRD_PUBLIC_RELEASE': [{'TABLE_ID': 'PDBX_REFERENCE_MOLECULE', 'ATTRIBUTE_ID': 'RELEASE_STATUS', 'VALUES': ['REL', 'OBS']}],
+                                              'BIRD_FAMILY_PUBLIC_RELEASE': [{'TABLE_ID': 'PDBX_REFERENCE_MOLECULE_FAMILY', 'ATTRIBUTE_ID': 'RELEASE_STATUS', 'VALUES': ['REL', 'OBS']}],
+
+                                              }
+                        }
     _schemaDefDict = {
         'PDBX_FAMILY_PRD_AUDIT': {'ATTRIBUTES': {'ACTION_TYPE': 'action_type',
                                                  'ANNOTATOR': 'annotator',
@@ -1932,8 +1939,7 @@ class BirdSchemaDef(SchemaDefBase):
     def __init__(self, convertNames=False, verbose=True):
         super(BirdSchemaDef, self).__init__(databaseName=BirdSchemaDef._databaseName, schemaDefDict=BirdSchemaDef._schemaDefDict,
                                             convertNames=convertNames, versionedDatabaseName=BirdSchemaDef._versionedDatabaseName,
-                                            unitCardinalityList=BirdSchemaDef._unitCardinalityList,
-                                            iterableAttributeList=BirdSchemaDef._iterableAttributeList, verbose=verbose)
+                                            documentDefDict=BirdSchemaDef._documentDefDict, verbose=verbose)
         self.__verbose = verbose
 
 

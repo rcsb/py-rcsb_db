@@ -10,6 +10,7 @@
 #      14-Mar-2018. jdw Add document oriented extractors, add table exclusion list
 #      15-Mar-2018  jdw Add filtering options for missing values  -
 #      16-Mar-2018  jdw add styleType = rowwise_by_name_with_cardinality
+#      19-Mar-2018  jdw add container name or input file path as a hidden document field
 #
 ##
 """
@@ -66,7 +67,7 @@ class SchemaDefDataPrep(object):
             logger.exception("Failing with %s" % str(e))
         return False
 
-    def fetch(self, inputPathList, styleType="rowwise_by_id", filterType="none"):
+    def fetch(self, inputPathList, styleType="rowwise_by_id", filterType="none", contentSelectors=None):
         """ Return a dictionary of loadable data for each table defined in the current schema
             definition object.   Data are extracted from all files in the input file list,
             and this is added in single schema instance such that data from multiple files are appended to a
@@ -85,11 +86,11 @@ class SchemaDefDataPrep(object):
                 filterTypes: "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
 
         """
-        tableDataDictById, containerNameList = self.__fetch(inputPathList, filterType)
+        tableDataDictById, containerNameList = self.__fetch(inputPathList, filterType, contentSelectors=contentSelectors)
         tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType)
         return tableDataDict, containerNameList
 
-    def fetchDocuments(self, inputPathList, styleType="rowwise_by_id", filterType="none", logSize=False):
+    def fetchDocuments(self, inputPathList, styleType="rowwise_by_id", filterType="none", logSize=False, contentSelectors=None):
         """ Return a dictionary of loadable data for each table defined in the current schema
             definition object.   Data are extracted from the each input file, and each data
             set is stored in a separate schema instance (document).  The organization
@@ -110,14 +111,15 @@ class SchemaDefDataPrep(object):
         tableDataDictList = []
         containerNameList = []
         for inputPath in inputPathList:
-            tableDataDictById, cnList = self.__fetch([inputPath], filterType)
+            tableDataDictById, cnList = self.__fetch([inputPath], filterType, contentSelectors=contentSelectors)
             tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType, logSize=logSize)
+            tableDataDict['__INPUT_PATH__'] = inputPath
             tableDataDictList.append(tableDataDict)
             containerNameList.extend(cnList)
         #
         return tableDataDictList, containerNameList
 
-    def process(self, containerList, styleType="rowwise_by_id", filterType="none"):
+    def process(self, containerList, styleType="rowwise_by_id", filterType="none", contentSelectors=None):
         """ Return a dictionary of loadable data for each table defined in the current schema
             definition object.   Data are extracted from all files in the input container list,
             and this is added in single schema instance such that data from multiple files are appended to a
@@ -136,12 +138,12 @@ class SchemaDefDataPrep(object):
 
 
         """
-        tableDataDictById, containerNameList = self.__process(containerList, filterType)
+        tableDataDictById, containerNameList = self.__process(containerList, filterType, contentSelectors=contentSelectors)
         tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType)
 
         return tableDataDict, containerNameList
 
-    def processDocuments(self, containerList, styleType="rowwise_by_id", filterType="none", logSize=False):
+    def processDocuments(self, containerList, styleType="rowwise_by_id", filterType="none", logSize=False, contentSelectors=None):
         """ Return a dictionary of loadable data for each table defined in the current schema
             definition object.   Data are extracted from the each input container, and each data
             set is stored in a separate schema instance (document).  The organization of the loadable
@@ -161,15 +163,16 @@ class SchemaDefDataPrep(object):
         tableDataDictList = []
         containerNameList = []
         for container in containerList:
-            tableDataDictById, cnList = self.__process([container], filterType)
+            tableDataDictById, cnList = self.__process([container], filterType, contentSelectors=contentSelectors)
             #
             tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType, logSize=logSize)
+            tableDataDict['__CONTAINER_NAME__'] = container.getName()
             tableDataDictList.append(tableDataDict)
             containerNameList.extend(cnList)
 
         return tableDataDictList, containerNameList
 
-    def __fetch(self, loadPathList, filterType):
+    def __fetch(self, loadPathList, filterType, contentSelectors=None):
         """ Internal method to create loadable data corresponding to the table schema definition
             from the input list of data files.
 
@@ -185,7 +188,11 @@ class SchemaDefDataPrep(object):
         tableIdList = self.__sD.getTableIdList()
         for lPath in loadPathList:
             myContainerList = self.__ioObj.readFile(lPath)
-            self.__mapData(myContainerList, tableIdList, tableDataDict, filterType)
+            cL = []
+            for c in myContainerList:
+                if self.__testContentSelectors(c, contentSelectors):
+                    cL.append(c)
+            self.__mapData(cL, tableIdList, tableDataDict, filterType)
             containerNameList.extend([myC.getName() for myC in myContainerList])
         #
         tableDataDictF = {}
@@ -203,7 +210,7 @@ class SchemaDefDataPrep(object):
 
         return tableDataDictF, containerNameList
 
-    def __process(self, containerList, filterType):
+    def __process(self, containerList, filterType, contentSelectors=None):
         """ Internal method to create loadable data corresponding to the table schema definition
             from the input container list.
 
@@ -216,7 +223,11 @@ class SchemaDefDataPrep(object):
         containerNameList = []
         tableDataDict = {}
         tableIdList = self.__sD.getTableIdList()
-        self.__mapData(containerList, tableIdList, tableDataDict, filterType)
+        cL = []
+        for c in containerList:
+            if self.__testContentSelectors(c, contentSelectors):
+                cL.append(c)
+        self.__mapData(cL, tableIdList, tableDataDict, filterType)
         containerNameList.extend([myC.getName() for myC in containerList])
         #
         #
@@ -235,6 +246,41 @@ class SchemaDefDataPrep(object):
                      (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
 
         return tableDataDictF, containerNameList
+
+    def __testContentSelectors(self, container, contentSelectors):
+        """ Test the if the input container satisfies the input content selectors.
+
+            Selection content must exist in the input container with the specified value.
+
+            Return:  True fo sucess or False otherwise
+        """
+        if not contentSelectors:
+            return True
+        try:
+            for cs in contentSelectors:
+                csDL = self.__sD.getContentSelector(cs)
+                for csD in csDL:
+                    tn = csD['TABLE_NAME']
+                    an = csD['ATTRIBUTE_NAME']
+                    vals = csD['VALUES']
+                    logger.debug("Applying selector %s: tn %s an %s vals %r" % (cs, tn, an, vals))
+                    catObj = container.getObj(tn)
+                    if catObj.getRowCount():
+                        for ii in range(catObj.getRowCount()):
+                            v = catObj.getValue(attributeName=an, rowIndex=ii)
+                            if v not in vals:
+                                logger.debug("Selector %s rejects : tn %s an %s value %r" % (cs, tn, an, v))
+                                return False
+                    else:
+                        logger.debug("Selector %s rejects container with missing category %s" % (cs, tn))
+                        return False
+            #
+            # all selectors satisfied
+            return True
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+
+        return False
 
     def __transformTableData(self, tableDataDictById, styleType="rowwise_by_name", logSize=False):
         """  Reorganize and rename input table data object according to the input style preference:

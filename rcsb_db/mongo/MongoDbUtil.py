@@ -3,7 +3,8 @@
 # Date:  12-Mar-2018 J. Westbrook
 #
 # Update:
-#      17-Mar-2018. jdw add replace and index ops
+#      17-Mar-2018  jdw add replace and index ops
+#      19-Mar-2018  jdw reorganize error handling for bulk insert
 ##
 """
 Base class for simple essential database operations for MongoDb.
@@ -111,19 +112,21 @@ class MongoDbUtil(object):
             logger.exception("Failing with %s" % str(e))
         return None
 
-    def insertList(self, databaseName, collectionName, dList):
+    def insertList(self, databaseName, collectionName, dList, ordered=False, bypassValidation=True):
         rIdL = []
         try:
             c = self.__mgObj[databaseName].get_collection(collectionName)
-            r = c.insert_many(dList)
-            try:
-                rIdL = r.inserted_ids
-                return rIdL
-            except Exception as e:
-                logger.debug("Insert ID recovery failing with %s" % str(e))
-                return rIdL
+            r = c.insert_many(dList, ordered=ordered, bypass_document_validation=bypassValidation)
         except Exception as e:
-            logger.exception("Insert operation failing with %s" % str(e))
+            logger.error("Insert operation failing with %s" % str(e))
+        #
+        try:
+            rIdL = r.inserted_ids
+            return rIdL
+        except Exception as e:
+            logger.error("Insert ID recovery failing with %s" % str(e))
+            return rIdL
+
         return rIdL
 
     def fetchOne(self, databaseName, collectionName, ky, val):

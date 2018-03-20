@@ -6,6 +6,7 @@
 # Version: 0.001
 #
 # Updates:
+#    19-Mar-2018 jdw remove any assumptions about the order of bulk inserts.
 ##
 """
 Test cases for simple MongoDb client opeations .
@@ -20,7 +21,6 @@ __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
-
 
 import os
 import sys
@@ -64,8 +64,7 @@ class MongoDbUtilTests(unittest.TestCase):
         self.assertTrue(ok)
         self.__startTime = time.time()
         logger.debug("Running tests on version %s" % __version__)
-        logger.debug("Starting %s at %s" % (self.id(),
-                                            time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+        logger.debug("Starting %s at %s" % (self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
 
     def tearDown(self):
         self.close()
@@ -95,7 +94,7 @@ class MongoDbUtilTests(unittest.TestCase):
     def getClientConnection(self):
         return self.__myC.getClientConnection()
 
-    def __makeDataObj(self, nCats, Nattribs, Nrows):
+    def __makeDataObj(self, nCats, Nattribs, Nrows, docId=1):
         rD = {}
         for cat in range(nCats):
             catName = "category_%d" % cat
@@ -113,7 +112,7 @@ class MongoDbUtilTests(unittest.TestCase):
                 attribName = "attribute_%d" % attrib
                 d[attribName] = dateutil.parser.parse(val)
             rD[catName].append(d)
-
+        rD['DOC_ID'] = "DOC_%d" % docId
         return rD
 
     def testCreateDatabase(self):
@@ -305,17 +304,19 @@ class MongoDbUtilTests(unittest.TestCase):
             #
             dList = []
             for ii in range(100):
-                dList.append(self.__makeDataObj(2, 5, 5))
+                dList.append(self.__makeDataObj(2, 5, 5, ii))
             #
             rIdL = mg.insertList(self.__dbName, self.__collectionName, dList)
             self.assertEqual(len(rIdL), len(dList))
+            #
             # Note that dObj is mutated by additional key '_id' that is added on insert -
             #
             for ii, rId in enumerate(rIdL):
                 rObj = mg.fetchOne(self.__dbName, self.__collectionName, '_id', rId)
                 logger.debug("Return Object %s" % pprint.pformat(rObj))
-                self.assertEqual(len(dList[ii]), len(rObj))
-                self.assertEqual(dList[ii], rObj)
+                jj = int(rObj['DOC_ID'][4:])
+                self.assertEqual(len(dList[jj]), len(rObj))
+                self.assertEqual(dList[jj], rObj)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -338,8 +339,7 @@ class MongoDbUtilTests(unittest.TestCase):
             ok = mg.collectionExists(self.__dbName, self.__collectionName)
             self.assertTrue(ok)
             #
-            dObj = self.__makeDataObj(2, 5, 5)
-            dObj['THE_KEY'] = 'ONE'
+            dObj = self.__makeDataObj(2, 5, 5, 1)
             rId = mg.insert(self.__dbName, self.__collectionName, dObj)
             self.assertTrue(rId is not None)
             # Note that dObj is mutated by additional key '_id' that is added on insert -
@@ -349,13 +349,13 @@ class MongoDbUtilTests(unittest.TestCase):
             self.assertEqual(len(dObj), len(rObj))
             self.assertEqual(dObj, rObj)
             #
-            # Now replace with a new document
-            dObj = self.__makeDataObj(3, 2, 2)
-            dObj['THE_KEY'] = 'ONE'
+            # Now replace with a new document with the same document id
+            dObj = self.__makeDataObj(3, 2, 2, 1)
             logger.debug("Replace Object %s" % pprint.pformat(dObj))
-            rId = mg.replace(self.__dbName, self.__collectionName, dObj, {'THE_KEY': 'ONE'}, upsertFlag=True)
+
+            rId = mg.replace(self.__dbName, self.__collectionName, dObj, {'DOC_ID': 'DOC_1'}, upsertFlag=True)
             # self.assertTrue(rId is not None)
-            rObj = mg.fetchOne(self.__dbName, self.__collectionName, 'THE_KEY', 'ONE')
+            rObj = mg.fetchOne(self.__dbName, self.__collectionName, 'DOC_ID', 'DOC_1')
             rObj.pop('_id', None)
             dObj.pop('_id', None)
             logger.debug("Return Object %s" % pprint.pformat(rObj))
@@ -363,12 +363,11 @@ class MongoDbUtilTests(unittest.TestCase):
             self.assertEqual(dObj, rObj)
             #
             # Now replace with a new document with a different key
-            dObj2 = self.__makeDataObj(5, 5, 5)
-            dObj2['THE_KEY'] = 'TWO'
+            dObj2 = self.__makeDataObj(5, 5, 5, 2)
             logger.debug("Replace Object %s" % pprint.pformat(dObj))
             #
-            rId = mg.replace(self.__dbName, self.__collectionName, dObj2, {'THE_KEY': 'TWO'}, upsertFlag=True)
-            rObj = mg.fetchOne(self.__dbName, self.__collectionName, 'THE_KEY', 'TWO')
+            rId = mg.replace(self.__dbName, self.__collectionName, dObj2, {'DOC_ID': 'DOC_2'}, upsertFlag=True)
+            rObj = mg.fetchOne(self.__dbName, self.__collectionName, 'DOC_ID', 'DOC_2')
             rObj.pop('_id', None)
             dObj2.pop('_id', None)
             logger.debug("Return Object %s" % pprint.pformat(rObj))
@@ -396,8 +395,7 @@ class MongoDbUtilTests(unittest.TestCase):
             #
             dList = []
             for ii in range(nDocs):
-                dObj = self.__makeDataObj(2, 5, 5)
-                dObj['THE_KEY'] = 'KVAL_%d' % ii
+                dObj = self.__makeDataObj(2, 5, 5, ii)
                 dList.append(dObj)
             #
             rIdL = mg.insertList(self.__dbName, self.__collectionName, dList)
@@ -409,23 +407,17 @@ class MongoDbUtilTests(unittest.TestCase):
                 self.assertEqual(len(dList[ii]), len(rObj))
                 self.assertEqual(dList[ii], rObj)
             #
-            dList = []
-            for ii in range(nDocs):
-                dObj = self.__makeDataObj(2, 5, 5)
-                dObj['THE_KEY'] = 'KVAL_%d' % ii
-                dList.append(dObj)
-            #
+            #  Replace with 2x the list length - half are duplicates id's
             dList = []
             for ii in range(nDocs + nDocs):
-                dObj = self.__makeDataObj(4, 10, 10)
-                dObj['THE_KEY'] = 'KVAL_%d' % ii
+                dObj = self.__makeDataObj(4, 10, 10, ii)
                 dList.append(dObj)
             #
-            updL = mg.replaceList(self.__dbName, self.__collectionName, dList, 'THE_KEY', upsertFlag=True)
+            updL = mg.replaceList(self.__dbName, self.__collectionName, dList, 'DOC_ID', upsertFlag=True)
             logger.debug("Upserted id list length %d" % len(updL))
             for ii in range(nDocs + nDocs):
-                kVal = 'KVAL_%d' % ii
-                rObj = mg.fetchOne(self.__dbName, self.__collectionName, 'THE_KEY', kVal)
+                kVal = 'DOC_%d' % ii
+                rObj = mg.fetchOne(self.__dbName, self.__collectionName, 'DOC_ID', kVal)
                 # logger.debug("Return Object %s" % pprint.pformat(rObj))
                 rObj.pop('_id', None)
                 dList[ii].pop('_id', None)
@@ -451,21 +443,20 @@ class MongoDbUtilTests(unittest.TestCase):
             self.assertTrue(ok)
             #
             # Create before insert
-            ok = mg.createIndex(self.__dbName, self.__collectionName, keyList=['THE_KEY'], indexName="primary", indexType="DESCENDING", uniqueFlag=True)
+            ok = mg.createIndex(self.__dbName, self.__collectionName, keyList=['DOC_ID'], indexName="primary", indexType="DESCENDING", uniqueFlag=True)
             self.assertTrue(ok)
 
             dList = []
             for ii in range(nDocs):
-                dObj = self.__makeDataObj(2, 5, 5)
-                dObj['THE_KEY'] = 'KVAL_%d' % ii
+                dObj = self.__makeDataObj(2, 5, 5, ii)
                 dList.append(dObj)
             #
             rIdL = mg.insertList(self.__dbName, self.__collectionName, dList)
             self.assertEqual(len(dList), len(rIdL))
             #
             for ii in range(nDocs):
-                kVal = 'KVAL_%d' % ii
-                rObj = mg.fetchOne(self.__dbName, self.__collectionName, 'THE_KEY', kVal)
+                kVal = 'DOC_%d' % ii
+                rObj = mg.fetchOne(self.__dbName, self.__collectionName, 'DOC_ID', kVal)
                 # logger.debug("Return Object %s" % pprint.pformat(rObj))
                 rObj.pop('_id', None)
                 dList[ii].pop('_id', None)
@@ -474,7 +465,7 @@ class MongoDbUtilTests(unittest.TestCase):
             #
             ok = mg.dropIndex(self.__dbName, self.__collectionName, indexName="primary")
             self.assertTrue(ok)
-            ok = mg.createIndex(self.__dbName, self.__collectionName, keyList=['THE_KEY'], indexName="primary", indexType="DESCENDING", uniqueFlag=True)
+            ok = mg.createIndex(self.__dbName, self.__collectionName, keyList=['DOC_ID'], indexName="primary", indexType="DESCENDING", uniqueFlag=True)
             self.assertTrue(ok)
             ok = mg.reIndex(self.__dbName, self.__collectionName)
             self.assertTrue(ok)
@@ -498,21 +489,20 @@ class MongoDbUtilTests(unittest.TestCase):
             self.assertTrue(ok)
             #
             # Create before insert
-            ok = mg.createIndex(self.__dbName, self.__collectionName, keyList=['THE_KEY'], indexName="primary", indexType="DESCENDING", uniqueFlag=True)
+            ok = mg.createIndex(self.__dbName, self.__collectionName, keyList=['DOC_ID'], indexName="primary", indexType="DESCENDING", uniqueFlag=True)
             self.assertTrue(ok)
 
             dList = []
             for ii in range(nDocs):
-                dObj = self.__makeDataObj(2, 5, 5)
-                dObj['THE_KEY'] = 'KVAL_%d' % ii
+                dObj = self.__makeDataObj(2, 5, 5, ii)
                 dList.append(dObj)
             #
             rIdL = mg.insertList(self.__dbName, self.__collectionName, dList)
             self.assertEqual(len(dList), len(rIdL))
             #
             for ii in range(nDocs):
-                kVal = 'KVAL_%d' % ii
-                rObj = mg.fetchOne(self.__dbName, self.__collectionName, 'THE_KEY', kVal)
+                kVal = 'DOC_%d' % ii
+                rObj = mg.fetchOne(self.__dbName, self.__collectionName, 'DOC_ID', kVal)
                 # logger.debug("Return Object %s" % pprint.pformat(rObj))
                 rObj.pop('_id', None)
                 dList[ii].pop('_id', None)
@@ -521,13 +511,13 @@ class MongoDbUtilTests(unittest.TestCase):
             #
             ok = mg.dropIndex(self.__dbName, self.__collectionName, indexName="primary")
             self.assertTrue(ok)
-            ok = mg.createIndex(self.__dbName, self.__collectionName, keyList=['THE_KEY'], indexName="primary", indexType="DESCENDING", uniqueFlag=True)
+            ok = mg.createIndex(self.__dbName, self.__collectionName, keyList=['DOC_ID'], indexName="primary", indexType="DESCENDING", uniqueFlag=True)
             self.assertTrue(ok)
             ok = mg.reIndex(self.__dbName, self.__collectionName)
             self.assertTrue(ok)
             #
             #
-            cur = mg.fetch(self.__dbName, self.__collectionName, ['THE_KEY'])
+            cur = mg.fetch(self.__dbName, self.__collectionName, ['DOC_ID'])
             self.assertEqual(cur.count(), nDocs)
             logger.debug("Fetch length %d" % cur.count())
             for ii, d in enumerate(cur):

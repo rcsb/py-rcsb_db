@@ -27,11 +27,16 @@ from rcsb_db.schema.SchemaDefBase import SchemaDefBase
 class ChemCompSchemaDef(SchemaDefBase):
     """ A data class containing schema definitions chemical component definitions.
     """
+
     _databaseName = "compv4"
     _versionedDatabaseName = "comp_v4_0_1"
-    _unitCardinalityList = ['CHEM_COMP']
-    _iterableAttributeList = [('CHEM_COMP', 'PDBX_SYNONYMS', ';'),
-                              ('CHEM_COMP', 'MON_NSTD_PARENT_COMP_ID', ',')]
+    _documentDefDict = {'UNIT_CARDINALITY_LIST': ['CHEM_COMP'],
+                        'ITERABLE_ATTRIBUTE_LIST': [('CHEM_COMP', 'PDBX_SYNONYMS', ';'),
+                                                    ('CHEM_COMP', 'MON_NSTD_PARENT_COMP_ID', ',')],
+                        'COLLECTION_DOCUMENT_ATTRIBUTE_ID': {'comp_v4_0_1': ('CHEM_COMP', 'COMPONENT_ID')},
+                        'SELECTION_FILTERS': {'CHEM_COMP_PUBLIC_RELEASE': [{'TABLE_ID': 'CHEM_COMP', 'ATTRIBUTE_ID': 'PDB_RELEASE_STATUS', 'VALUES': ['REL', 'OBS', 'REF_ONLY']}]
+                                              }
+                        }
     _schemaDefDict = {
         'CHEM_COMP': {'ATTRIBUTES': {'COMPONENT_ID': 'Component_ID',
                                      'FORMULA': 'formula',
@@ -1517,8 +1522,8 @@ class ChemCompSchemaDef(SchemaDefBase):
     def __init__(self, convertNames=False, verbose=True):
         super(ChemCompSchemaDef, self).__init__(databaseName=ChemCompSchemaDef._databaseName, schemaDefDict=ChemCompSchemaDef._schemaDefDict,
                                                 convertNames=convertNames, versionedDatabaseName=ChemCompSchemaDef._versionedDatabaseName,
-                                                unitCardinalityList=ChemCompSchemaDef._unitCardinalityList,
-                                                iterableAttributeList=ChemCompSchemaDef._iterableAttributeList, verbose=verbose)
+                                                documentDefDict=ChemCompSchemaDef._documentDefDict,
+                                                verbose=verbose)
         self.__verbose = verbose
 
 

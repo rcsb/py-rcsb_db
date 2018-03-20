@@ -53,8 +53,10 @@ def main():
     parser.add_argument("--debug", default=False, action='store_true', help="Turn on verbose logging")
     args = parser.parse_args()
     #
-    if args.debug:
+    debugFlag = args.debug
+    if debugFlag:
         logger.setLevel(logging.DEBUG)
+
     #
     configPath = args.config_path
     configName = args.config_name
@@ -91,16 +93,16 @@ def main():
     # -----------------------
     #
     if args.db_type == "mongo":
-        mw = MongoDbLoaderWorker(configPath, configName, numProc=numProc, chunkSize=chunkSize, fileLimit=fileLimit, readBackCheck=readBackCheck)
+        mw = MongoDbLoaderWorker(configPath, configName, numProc=numProc, chunkSize=chunkSize, fileLimit=fileLimit, verbose=debugFlag, readBackCheck=readBackCheck)
 
         if args.load_chem_comp_ref:
-            ok = mw.loadContentType('chem-comp', styleType=args.document_style)
+            ok = mw.loadContentType('chem-comp', styleType=args.document_style, contentSelectors="CHEM_COMP_PUBLIC_RELEASE")
 
         if args.load_bird_ref:
-            ok = mw.loadContentType('bird', styleType=args.document_style)
+            ok = mw.loadContentType('bird', styleType=args.document_style, contentSelectors="BIRD_PUBLIC_RELEASE")
 
         if args.load_bird_family_ref:
-            ok = mw.loadContentType('bird-family', styleType=args.document_style)
+            ok = mw.loadContentType('bird-family', styleType=args.document_style, contentSelectors="BIRD_FAMILY_PUBLIC_RELEASE")
 
         if args.load_entry_data:
             ok = mw.loadContentType('pdbx', styleType=args.document_style)

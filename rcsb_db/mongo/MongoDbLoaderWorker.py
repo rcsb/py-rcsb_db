@@ -5,7 +5,7 @@
 # Version: 0.001
 #
 # Updates:
-#
+#     20-Mar-2018 jdw  adding prdcc within chemical component collection
 ##
 """
 Worker methods for loading MongoDb using BIRD, CCD and PDBx/mmCIF data files
@@ -46,6 +46,7 @@ from rcsb_db.utils.MultiProcUtil import MultiProcUtil
 from rcsb_db.utils.ConfigUtil import ConfigUtil
 
 from mmcif_utils.bird.PdbxPrdIo import PdbxPrdIo
+from mmcif_utils.bird.PdbxPrdCcIo import PdbxPrdCcIo
 from mmcif_utils.bird.PdbxFamilyIo import PdbxFamilyIo
 from mmcif_utils.chemcomp.PdbxChemCompIo import PdbxChemCompIo
 
@@ -68,6 +69,7 @@ class MongoDbLoaderWorker(object):
         self.__cu = ConfigUtil(configPath=configPath, sectionName=configName)
         self.__birdCachePath = self.__cu.get('BIRD_REPO_PATH')
         self.__birdFamilyCachePath = self.__cu.get('BIRD_FAMILY_REPO_PATH')
+        self.__prdCcCachePath = self.__cu.get('BIRD_CHEM_COMP_REPO_PATH')
         self.__ccCachePath = self.__cu.get('CHEM_COMP_REPO_PATH')
         self.__pdbxFileCache = self.__cu.get('RCSB_PDBX_SANBOX_PATH')
         self.__pdbxLoadListPath = self.__cu.get('PDBX_LOAD_LIST_PATH')
@@ -76,7 +78,7 @@ class MongoDbLoaderWorker(object):
         #
         self.__prefD = self.__assignPreferences(self.__cu)
 
-    def loadContentType(self, contentType, styleType='rowwise_by_name'):
+    def loadContentType(self, contentType, styleType='rowwise_by_name', contentSelectors=None):
         """  Driver method for loading MongoDb content -
 
             contentType:  one of 'bird','bird-family','chem-comp','pdbx'
@@ -95,6 +97,8 @@ class MongoDbLoaderWorker(object):
             optD['tableIdExcludeList'] = tableIdExcludeList
             optD['prefD'] = self.__prefD
             optD['readBackCheck'] = self.__readBackCheck
+            optD['logSize'] = self.__verbose
+            optD['contentSelectors'] = contentSelectors
             #
             self.__removeCollection(dbName, collectionName, self.__prefD)
             self.__createCollection(dbName, collectionName, self.__prefD)
@@ -106,6 +110,7 @@ class MongoDbLoaderWorker(object):
             mpu.setOptions(optionsD=optD)
             mpu.set(workerObj=self, workerMethod="loadWorker")
             ok, failList, retLists, diagList = mpu.runMulti(dataList=inputPathList, numProc=numProc, numResults=1, chunkSize=chunkSize)
+            logger.info("Failing path list %r" % failList)
             self.__end(startTime, "loading operation witn status " + str(ok))
             #
             return ok
@@ -127,32 +132,34 @@ class MongoDbLoaderWorker(object):
             prefD = optionsD['prefD']
             readBackCheck = optionsD['readBackCheck']
             logSize = 'logSize' in optionsD
+            contentSelectors = optionsD['contentSelectors']
 
             sdp = SchemaDefDataPrep(schemaDefObj=sd, verbose=self.__verbose)
             sdp.setTableIdExcludeList(tableIdExcludeList)
             fType = "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
             if styleType in ["columnwise_by_name", "rowwise_no_name"]:
                 fType = "drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
-            tableDataDictList, containerNameList = sdp.fetchDocuments(dataList, styleType=styleType, filterType=fType)
+            tableDataDictList, containerNameList = sdp.fetchDocuments(dataList, styleType=styleType, filterType=fType, contentSelectors=contentSelectors)
             #
             if logSize:
-                maxDocumentBytes = -1
+                maxDocumentMegaBytes = -1
                 for tD, cN in zip(tableDataDictList, containerNameList):
-                    documentBytes = sys.getsizeof(pickle.dumps(tD, protocol=0))
-                    maxDocumentBytes = max(maxDocumentBytes, documentBytes)
-                    megaBytes = float(documentBytes) / 1000000.0
-                    if megaBytes > 15.8:
-                        logger.info("Large document %s  %.4f MB" % (cN, megaBytes))
-                logger.info("Maximum document size loaded %.4f MB" % (float(maxDocumentBytes) / 1000000.0))
+                    documentMegaBytes = float(sys.getsizeof(pickle.dumps(tD, protocol=0))) / 1000000.0
+                    maxDocumentMegaBytes = max(maxDocumentMegaBytes, documentMegaBytes)
+                    if documentMegaBytes > 15.8:
+                        logger.info("Large document %s  %.4f MB" % (cN, documentMegaBytes))
+                logger.info("Maximum document size loaded %.4f MB" % maxDocumentMegaBytes)
+            #
+            #  Get the tableId.attId holding the natural document Id
+            docIdD = {}
+            docIdD['tableName'], docIdD['attributeName'] = sd.getDocumentKeyAttributeName(collectionName)
 
-            ok = self.__loadDocuments(dbName, collectionName, prefD, tableDataDictList, readBackCheck=readBackCheck)
+            ok, successPathList = self.__loadDocuments(dbName, collectionName, prefD, tableDataDictList, docIdD, successKey='__INPUT_PATH__', readBackCheck=readBackCheck)
             #
             self.__end(startTime, procName + " with status " + str(ok))
-            # all or nothing here
-            if ok:
-                return dataList, dataList, []
-            else:
-                return [], [], []
+
+            return successPathList, [], []
+
         except Exception as e:
             logger.error("Failing with dataList %r" % dataList)
             logger.exception("Failing with %s" % str(e))
@@ -253,13 +260,36 @@ class MongoDbLoaderWorker(object):
             logger.exception("Failing with %s" % str(e))
         return False
 
-    def __loadDocuments(self, dbName, collectionName, prefD, dList, readBackCheck=False):
+    def __loadDocuments(self, dbName, collectionName, prefD, dList, docIdD, successKey=None, readBackCheck=False):
+        #
+        # Create index mapping documents in input list to the natural document identifier.
+        indD = {}
+        try:
+            for ii, d in enumerate(dList):
+                tn = docIdD['tableName']
+                an = docIdD['attributeName']
+                dId = d[tn][an]
+                indD[dId] = ii
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+
         try:
             cObj = self.__open(prefD)
             client = self.__getClientConnection(cObj)
             mg = MongoDbUtil(client)
             #
             rIdL = mg.insertList(dbName, collectionName, dList)
+            #
+            #  If there is a failure then determine the success list -
+            #
+            successList = [d[successKey] for d in dList]
+            if len(rIdL) != len(dList):
+                successList = []
+                for rId in rIdL:
+                    rObj = mg.fetchOne(dbName, collectionName, '_id', rId)
+                    docId = rObj[docIdD['tableName']][docIdD['attributeName']]
+                    jj = indD[docId]
+                    successList.append(dList[jj][successKey])
             #
             if readBackCheck:
                 #
@@ -268,17 +298,20 @@ class MongoDbLoaderWorker(object):
                 rbStatus = True
                 for ii, rId in enumerate(rIdL):
                     rObj = mg.fetchOne(dbName, collectionName, '_id', rId)
-                    if (rObj != dList[ii]):
+                    docId = rObj[docIdD['tableName']][docIdD['attributeName']]
+                    jj = indD[docId]
+                    if (rObj != dList[jj]):
                         rbStatus = False
                         break
             #
             ok = self.__close(cObj)
             if readBackCheck and not rbStatus:
-                return False
-            return len(rIdL) == len(dList)
+                return False, successList
+            #
+            return len(rIdL) == len(dList), successList
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
-        return False
+        return False, []
 
     def __getLoadInfo(self, contentType):
         sd = None
@@ -302,6 +335,7 @@ class MongoDbLoaderWorker(object):
                 dbName = sd.getDatabaseName()
                 collectionName = sd.getVersionedDatabaseName()
                 inputPathList = self.__getChemCompPathList()
+                inputPathList.extend(self.__getPrdCCPathList())
             elif contentType == 'pdbx':
                 sd = PdbxSchemaDef(convertNames=True)
                 dbName = sd.getDatabaseName()
@@ -323,7 +357,7 @@ class MongoDbLoaderWorker(object):
 # -------------
 
     def __getPrdPathList(self):
-        """Test case -  get the path list of PRD definitions in the CVS repository.
+        """Get the path list of PRD definitions in the CVS repository.
         """
         try:
             refIo = PdbxPrdIo(verbose=self.__verbose)
@@ -338,7 +372,7 @@ class MongoDbLoaderWorker(object):
             logger.exception("Failing with %s" % str(e))
 
     def __getPrdFamilyPathList(self):
-        """Test case -  get the path list of PRD Family definitions in the CVS repository.
+        """Get the path list of PRD Family definitions in the CVS repository.
         """
         try:
             refIo = PdbxFamilyIo(verbose=self.__verbose)
@@ -353,13 +387,28 @@ class MongoDbLoaderWorker(object):
             logger.exception("Failing with %s" % str(e))
 
     def __getChemCompPathList(self):
-        """Test case -  get the path list of definitions in the CVS repository.
+        """Get the path list of chemical component definitions in the repository.
         """
         try:
             refIo = PdbxChemCompIo(verbose=self.__verbose)
             refIo.setCachePath(self.__ccCachePath)
             loadPathList = refIo.makeComponentPathList()
             logger.debug("Length of CCD file path list %d (limit %r)" % (len(loadPathList), self.__fileLimit))
+            if self.__fileLimit:
+                return loadPathList[:self.__fileLimit]
+            else:
+                return loadPathList
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+
+    def __getPrdCCPathList(self):
+        """Get the path list of BIRD PRD CC definitions in therepository.
+        """
+        try:
+            refIo = PdbxPrdCcIo(verbose=self.__verbose)
+            refIo.setCachePath(self.__prdCcCachePath)
+            loadPathList = refIo.makeDefinitionPathList()
+            logger.debug("Length of PRD CC file path list %d (limit %r)" % (len(loadPathList), self.__fileLimit))
             if self.__fileLimit:
                 return loadPathList[:self.__fileLimit]
             else:
