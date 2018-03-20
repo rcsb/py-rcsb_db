@@ -34,7 +34,7 @@ class ChemCompSchemaDef(SchemaDefBase):
                         'ITERABLE_ATTRIBUTE_LIST': [('CHEM_COMP', 'PDBX_SYNONYMS', ';'),
                                                     ('CHEM_COMP', 'MON_NSTD_PARENT_COMP_ID', ',')],
                         'COLLECTION_DOCUMENT_ATTRIBUTE_ID': {'comp_v4_0_1': ('CHEM_COMP', 'COMPONENT_ID')},
-                        'SELECTION_FILTERS': {'CHEM_COMP_PUBLIC_RELEASE': [{'TABLE_ID': 'CHEM_COMP', 'ATTRIBUTE_ID': 'PDB_RELEASE_STATUS', 'VALUES': ['REL', 'OBS', 'REF_ONLY']}]
+                        'SELECTION_FILTERS': {'CHEM_COMP_PUBLIC_RELEASE': [{'TABLE_ID': 'CHEM_COMP', 'ATTRIBUTE_ID': 'PDBX_RELEASE_STATUS', 'VALUES': ['REL', 'OBS', 'REF_ONLY']}]
                                               }
                         }
     _schemaDefDict = {
