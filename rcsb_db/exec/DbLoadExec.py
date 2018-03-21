@@ -3,6 +3,9 @@
 # Date: 15-Mar-2018  jdw
 #
 #  Execution wrapper  --  database loading utilities --
+#  Updates:
+#
+#    21-Mar-2018 - jdw added content filters and separate collection for Bird chemical components
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -33,6 +36,7 @@ def main():
     parser = argparse.ArgumentParser()
     #
     parser.add_argument("--load_chem_comp_ref", default=False, action='store_true', help="Load Chemical Component Reference Data")
+    parser.add_argument("--load_bird_chem_comp_ref", default=False, action='store_true', help="Load Bird Chemical Component Reference Data")
     parser.add_argument("--load_bird_ref", default=False, action='store_true', help="Load Bird Reference Data")
     parser.add_argument("--load_bird_family_ref", default=False, action='store_true', help="Load Bird Family Reference Data")
     parser.add_argument("--load_entry_data", default=False, action='store_true', help="Load entry data on the current entry load list")
@@ -96,13 +100,16 @@ def main():
         mw = MongoDbLoaderWorker(configPath, configName, numProc=numProc, chunkSize=chunkSize, fileLimit=fileLimit, verbose=debugFlag, readBackCheck=readBackCheck)
 
         if args.load_chem_comp_ref:
-            ok = mw.loadContentType('chem-comp', styleType=args.document_style, contentSelectors="CHEM_COMP_PUBLIC_RELEASE")
+            ok = mw.loadContentType('chem-comp', styleType=args.document_style, contentSelectors=["CHEM_COMP_PUBLIC_RELEASE"])
+
+        if args.load_bird_chem_comp_ref:
+            ok = mw.loadContentType('bird-chem-comp', styleType=args.document_style, contentSelectors=["CHEM_COMP_PUBLIC_RELEASE"])
 
         if args.load_bird_ref:
-            ok = mw.loadContentType('bird', styleType=args.document_style, contentSelectors="BIRD_PUBLIC_RELEASE")
+            ok = mw.loadContentType('bird', styleType=args.document_style, contentSelectors=["BIRD_PUBLIC_RELEASE"])
 
         if args.load_bird_family_ref:
-            ok = mw.loadContentType('bird-family', styleType=args.document_style, contentSelectors="BIRD_FAMILY_PUBLIC_RELEASE")
+            ok = mw.loadContentType('bird-family', styleType=args.document_style, contentSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"])
 
         if args.load_entry_data:
             ok = mw.loadContentType('pdbx', styleType=args.document_style)

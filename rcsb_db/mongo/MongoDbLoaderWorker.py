@@ -6,6 +6,7 @@
 #
 # Updates:
 #     20-Mar-2018 jdw  adding prdcc within chemical component collection
+#     21-Mar-2018 jdw  content filtering options added from documents
 ##
 """
 Worker methods for loading MongoDb using BIRD, CCD and PDBx/mmCIF data files
@@ -131,7 +132,7 @@ class MongoDbLoaderWorker(object):
             collectionName = optionsD['collectionName']
             prefD = optionsD['prefD']
             readBackCheck = optionsD['readBackCheck']
-            logSize = 'logSize' in optionsD
+            logSize = 'logSize' in optionsD and optionsD['logSize']
             contentSelectors = optionsD['contentSelectors']
 
             sdp = SchemaDefDataPrep(schemaDefObj=sd, verbose=self.__verbose)
@@ -139,12 +140,13 @@ class MongoDbLoaderWorker(object):
             fType = "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
             if styleType in ["columnwise_by_name", "rowwise_no_name"]:
                 fType = "drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
-            tableDataDictList, containerNameList = sdp.fetchDocuments(dataList, styleType=styleType, filterType=fType, contentSelectors=contentSelectors)
+            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(dataList, styleType=styleType, filterType=fType, contentSelectors=contentSelectors)
             #
             if logSize:
                 maxDocumentMegaBytes = -1
                 for tD, cN in zip(tableDataDictList, containerNameList):
                     documentMegaBytes = float(sys.getsizeof(pickle.dumps(tD, protocol=0))) / 1000000.0
+                    logger.debug("Document %s  %.4f MB" % (cN, documentMegaBytes))
                     maxDocumentMegaBytes = max(maxDocumentMegaBytes, documentMegaBytes)
                     if documentMegaBytes > 15.8:
                         logger.info("Large document %s  %.4f MB" % (cN, documentMegaBytes))
@@ -153,9 +155,13 @@ class MongoDbLoaderWorker(object):
             #  Get the tableId.attId holding the natural document Id
             docIdD = {}
             docIdD['tableName'], docIdD['attributeName'] = sd.getDocumentKeyAttributeName(collectionName)
+            logger.debug("docIdD %r collectionName %r" % (docIdD, collectionName))
 
             ok, successPathList = self.__loadDocuments(dbName, collectionName, prefD, tableDataDictList, docIdD, successKey='__INPUT_PATH__', readBackCheck=readBackCheck)
             #
+            logger.info("%s SuccessList length = %d  rejected %d" % (procName, len(successPathList), len(rejectList)))
+            successPathList.extend(rejectList)
+            successPathList = list(set(successPathList))
             self.__end(startTime, procName + " with status " + str(ok))
 
             return successPathList, [], []
@@ -193,7 +199,7 @@ class MongoDbLoaderWorker(object):
         startTime = time.time()
         ts = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
         logger.debug("Running application version %s" % __version__)
-        logger.info("Starting %s at %s" % (message, ts))
+        logger.debug("Starting %s at %s" % (message, ts))
         return startTime
 
     def __end(self, startTime, message=""):
@@ -335,7 +341,11 @@ class MongoDbLoaderWorker(object):
                 dbName = sd.getDatabaseName()
                 collectionName = sd.getVersionedDatabaseName()
                 inputPathList = self.__getChemCompPathList()
-                inputPathList.extend(self.__getPrdCCPathList())
+            elif contentType == 'bird-chem-comp':
+                sd = ChemCompSchemaDef(convertNames=True)
+                dbName = sd.getDatabaseName()
+                collectionName = "bird_chem_comp_v4_0_1"
+                inputPathList = self.__getPrdCCPathList()
             elif contentType == 'pdbx':
                 sd = PdbxSchemaDef(convertNames=True)
                 dbName = sd.getDatabaseName()
@@ -435,7 +445,7 @@ class MongoDbLoaderWorker(object):
                     pathList.append(pth)
         except Exception as e:
             pass
-        logger.info("Reading path list length %d" % len(pathList))
+        logger.debug("Reading path list length %d" % len(pathList))
         return pathList
 
     def __makePdbxPathList(self, fileListPath, cachePath=None):

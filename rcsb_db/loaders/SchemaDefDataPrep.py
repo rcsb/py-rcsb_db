@@ -86,7 +86,7 @@ class SchemaDefDataPrep(object):
                 filterTypes: "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
 
         """
-        tableDataDictById, containerNameList = self.__fetch(inputPathList, filterType, contentSelectors=contentSelectors)
+        tableDataDictById, containerNameList, rejectList = self.__fetch(inputPathList, filterType, contentSelectors=contentSelectors)
         tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType)
         return tableDataDict, containerNameList
 
@@ -110,14 +110,18 @@ class SchemaDefDataPrep(object):
         """
         tableDataDictList = []
         containerNameList = []
+        rejectList = []
         for inputPath in inputPathList:
-            tableDataDictById, cnList = self.__fetch([inputPath], filterType, contentSelectors=contentSelectors)
+            tableDataDictById, cnList, rL = self.__fetch([inputPath], filterType, contentSelectors=contentSelectors)
+            rejectList.extend(rL)
+            if not tableDataDictById:
+                continue
             tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType, logSize=logSize)
             tableDataDict['__INPUT_PATH__'] = inputPath
             tableDataDictList.append(tableDataDict)
             containerNameList.extend(cnList)
         #
-        return tableDataDictList, containerNameList
+        return tableDataDictList, containerNameList, rejectList
 
     def process(self, containerList, styleType="rowwise_by_id", filterType="none", contentSelectors=None):
         """ Return a dictionary of loadable data for each table defined in the current schema
@@ -138,7 +142,7 @@ class SchemaDefDataPrep(object):
 
 
         """
-        tableDataDictById, containerNameList = self.__process(containerList, filterType, contentSelectors=contentSelectors)
+        tableDataDictById, containerNameList, rejectList = self.__process(containerList, filterType, contentSelectors=contentSelectors)
         tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType)
 
         return tableDataDict, containerNameList
@@ -162,15 +166,21 @@ class SchemaDefDataPrep(object):
         """
         tableDataDictList = []
         containerNameList = []
+        rejectList = []
         for container in containerList:
-            tableDataDictById, cnList = self.__process([container], filterType, contentSelectors=contentSelectors)
+            tableDataDictById, cnList, rL = self.__process([container], filterType, contentSelectors=contentSelectors)
+            rejectList.extend(rL)
+            if not tableDataDictById:
+                continue
             #
             tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType, logSize=logSize)
             tableDataDict['__CONTAINER_NAME__'] = container.getName()
             tableDataDictList.append(tableDataDict)
             containerNameList.extend(cnList)
 
-        return tableDataDictList, containerNameList
+        rejectList = list(set(rejectList))
+        #
+        return tableDataDictList, containerNameList, rejectList
 
     def __fetch(self, loadPathList, filterType, contentSelectors=None):
         """ Internal method to create loadable data corresponding to the table schema definition
@@ -183,6 +193,7 @@ class SchemaDefDataPrep(object):
         """
         startTime = time.time()
         #
+        rejectPathList = []
         containerNameList = []
         tableDataDict = {}
         tableIdList = self.__sD.getTableIdList()
@@ -192,6 +203,8 @@ class SchemaDefDataPrep(object):
             for c in myContainerList:
                 if self.__testContentSelectors(c, contentSelectors):
                     cL.append(c)
+                else:
+                    rejectPathList.append(lPath)
             self.__mapData(cL, tableIdList, tableDataDict, filterType)
             containerNameList.extend([myC.getName() for myC in myContainerList])
         #
@@ -203,12 +216,12 @@ class SchemaDefDataPrep(object):
         else:
             tableDataDictF = tableDataDict
         #
-
+        rejectPathList = list(set(rejectPathList))
         endTime = time.time()
         logger.debug("completed at %s (%.3f seconds)" %
                      (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
 
-        return tableDataDictF, containerNameList
+        return tableDataDictF, containerNameList, rejectPathList
 
     def __process(self, containerList, filterType, contentSelectors=None):
         """ Internal method to create loadable data corresponding to the table schema definition
@@ -220,6 +233,7 @@ class SchemaDefDataPrep(object):
         """
         startTime = time.time()
         #
+        rejectList = []
         containerNameList = []
         tableDataDict = {}
         tableIdList = self.__sD.getTableIdList()
@@ -227,6 +241,8 @@ class SchemaDefDataPrep(object):
         for c in containerList:
             if self.__testContentSelectors(c, contentSelectors):
                 cL.append(c)
+            else:
+                rejectList.append(c)
         self.__mapData(cL, tableIdList, tableDataDict, filterType)
         containerNameList.extend([myC.getName() for myC in containerList])
         #
@@ -245,7 +261,7 @@ class SchemaDefDataPrep(object):
         logger.debug("completed at %s (%.3f seconds)\n" %
                      (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
 
-        return tableDataDictF, containerNameList
+        return tableDataDictF, containerNameList, rejectList
 
     def __testContentSelectors(self, container, contentSelectors):
         """ Test the if the input container satisfies the input content selectors.
@@ -254,6 +270,7 @@ class SchemaDefDataPrep(object):
 
             Return:  True fo sucess or False otherwise
         """
+        logger.debug("Applying selectors: %r" % contentSelectors)
         if not contentSelectors:
             return True
         try:
@@ -269,7 +286,7 @@ class SchemaDefDataPrep(object):
                         for ii in range(catObj.getRowCount()):
                             v = catObj.getValue(attributeName=an, rowIndex=ii)
                             if v not in vals:
-                                logger.debug("Selector %s rejects : tn %s an %s value %r" % (cs, tn, an, v))
+                                logger.info("Selector %s rejects : tn %s an %s value %r" % (cs, tn, an, v))
                                 return False
                     else:
                         logger.debug("Selector %s rejects container with missing category %s" % (cs, tn))

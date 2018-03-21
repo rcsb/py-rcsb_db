@@ -99,28 +99,32 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             logger.debug("Length of path list %d\n" % len(self.__loadPathList))
             self.assertGreaterEqual(len(self.__loadPathList), self.__birdMockLen)
 
-            tableDataDictList, containerNameList = sdp.fetchDocuments(self.__loadPathList, styleType="rowwise_by_name", filterType=self.__fTypeRow)
+            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(self.__loadPathList, styleType="rowwise_by_name", filterType=self.__fTypeRow)
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
+            self.assertEqual(len(rejectList), 0)
             with open(os.path.join(HERE, "test-output", "bird-file-prep-rowwise-by-name.json"), 'w') as ofh:
                 ofh.write(json.dumps(tableDataDictList, indent=3))
 
-            tableDataDictList, containerNameList = sdp.fetchDocuments(self.__loadPathList, styleType="rowwise_by_name_with_cardinality",
-                                                                      filterType=self.__fTypeRow, contentSelectors=["BIRD_PUBLIC_RELEASE"])
+            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(self.__loadPathList, styleType="rowwise_by_name_with_cardinality",
+                                                                                  filterType=self.__fTypeRow, contentSelectors=["BIRD_PUBLIC_RELEASE"])
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
+            self.assertEqual(len(rejectList), 1)
             with open(os.path.join(HERE, "test-output", "bird-file-prep-rowwise-by-name-with-cardinality.json"), 'w') as ofh:
                 ofh.write(json.dumps(tableDataDictList, indent=3))
 
-            tableDataDictList, containerNameList = sdp.fetchDocuments(self.__loadPathList, styleType="columnwise_by_name", filterType=self.__fTypeCol)
+            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(self.__loadPathList, styleType="columnwise_by_name", filterType=self.__fTypeCol)
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
+            self.assertEqual(len(rejectList), 0)
             with open(os.path.join(HERE, "test-output", "bird-file-prep-columnwise-by-name.json"), 'w') as ofh:
                 ofh.write(json.dumps(tableDataDictList, indent=3))
 
-            tableDataDictList, containerNameList = sdp.fetchDocuments(self.__loadPathList, styleType="rowwise_no_name", filterType=self.__fTypeCol)
+            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(self.__loadPathList, styleType="rowwise_no_name", filterType=self.__fTypeCol)
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
+            self.assertEqual(len(rejectList), 0)
             with open(os.path.join(HERE, "test-output", "bird-file-prep-rowwise-no-name.json"), 'w') as ofh:
                 ofh.write(json.dumps(tableDataDictList, indent=3))
 
@@ -146,27 +150,32 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             #
             sdp = SchemaDefDataPrep(schemaDefObj=bsd, verbose=self.__verbose)
             #
-            tableDataDictList, containerNameList = sdp.processDocuments(containerList, styleType="rowwise_by_name", filterType=self.__fTypeRow)
+            tableDataDictList, containerNameList, rejectList = sdp.processDocuments(containerList, styleType="rowwise_by_name", filterType=self.__fTypeRow)
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
+            self.assertEqual(len(rejectList), 0)
             with open(os.path.join(HERE, "test-output", "bird-container-prep-rowwise-by-name.json"), 'w') as ofh:
                 ofh.write(json.dumps(tableDataDictList, indent=3))
 
-            tableDataDictList, containerNameList = sdp.processDocuments(containerList, styleType="rowwise_by_name_with_cardinality", filterType=self.__fTypeRow, contentSelectors=["BIRD_PUBLIC_RELEASE"])
+            tableDataDictList, containerNameList, rejectList = sdp.processDocuments(
+                containerList, styleType="rowwise_by_name_with_cardinality", filterType=self.__fTypeRow, contentSelectors=["BIRD_PUBLIC_RELEASE"])
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
+            self.assertEqual(len(rejectList), 1)
             with open(os.path.join(HERE, "test-output", "bird-container-prep-rowwise-by-name-with-cardinality.json"), 'w') as ofh:
                 ofh.write(json.dumps(tableDataDictList, indent=3))
 
-            tableDataDictList, containerNameList = sdp.processDocuments(containerList, styleType="columnwise_by_name", filterType=self.__fTypeCol)
+            tableDataDictList, containerNameList, rejectList = sdp.processDocuments(containerList, styleType="columnwise_by_name", filterType=self.__fTypeCol)
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
+            self.assertEqual(len(rejectList), 0)
             with open(os.path.join(HERE, "test-output", "bird-container-prep-columnwise-by-name.json"), 'w') as ofh:
                 ofh.write(json.dumps(tableDataDictList, indent=3))
 
-            tableDataDictList, containerNameList = sdp.processDocuments(containerList, styleType="rowwise_no_name", filterType=self.__fTypeCol)
+            tableDataDictList, containerNameList, rejectList = sdp.processDocuments(containerList, styleType="rowwise_no_name", filterType=self.__fTypeCol)
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
+            self.assertEqual(len(rejectList), 0)
             with open(os.path.join(HERE, "test-output", "bird-container-prep-rowwise-no-name.json"), 'w') as ofh:
                 ofh.write(json.dumps(tableDataDictList, indent=3))
 
