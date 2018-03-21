@@ -504,7 +504,6 @@ class SchemaDefDataPrep(object):
         schemaAttributeMapDict = tObj.getMapAttributeDict()
         schemaAttributeIdList = tObj.getAttributeIdList()
         nullValueDict = tObj.getSqlNullValueDict()
-        maxWidthDict = tObj.getStringWidthDict()
         curAttributeIdList = tObj.getMapInstanceAttributeIdList(categoryName)
 
         for row in catObj.getRowList():
@@ -519,31 +518,13 @@ class SchemaDefDataPrep(object):
                     if atName not in attributeIndexDict:
                         continue
                     val = row[attributeIndexDict[atName]]
-                    if skipMaxWidthFlag:
-                        maxW = 0
-                    else:
-                        maxW = maxWidthDict[atId]
-
                     lenVal = len(val)
-                    if dropEmptyFlag and ((lenVal == 0) or (val == '?') or (val == '.')):
+                    # Handle the Null values - note the implications of retaining null values accross types -
+                    if ((lenVal == 0) or (val == '?') or (val == '.')):
+                        if not dropEmptyFlag:
+                            d[atId] = nullValueDict[atId]
                         continue
-                    if assignDateFlag and tObj.isAttributeDateType(atId) and not ((lenVal == 0) or (val == '?') or (val == '.')):
-                        d[atId] = self.__assignDateType(atId, val)
-                        continue
-                    if convertIterables and tObj.isIterable(atId) and not ((lenVal == 0) or (val == '?') or (val == '.')):
-                        d[atId] = [v.strip() for v in val.split(tObj.getIterableSeparator(atId))]
-                        continue
-                    if maxW > 0:
-                        if lenVal > maxW:
-                            tup = (schemaTableId, atId)
-                            if tup in self.__overWrite:
-                                self.__overWrite[tup] = max(self.__overWrite[tup], lenVal)
-                            else:
-                                self.__overWrite[tup] = lenVal
-
-                        d[atId] = val[:maxW] if ((val != '?') and (val != '.')) else nullValueDict[atId]
-                    else:
-                        d[atId] = val if ((val != '?') and (val != '.')) else nullValueDict[atId]
+                    d[atId] = self.__assignType(val, lenVal, tObj, atId, skipMaxWidthFlag, assignDateFlag, convertIterables)
                 except Exception as e:
                     if (self.__verbose):
                         logger.error("\n+ERROR - processing table %s attribute %s row %r\n" % (schemaTableId, atId, row))
@@ -580,7 +561,6 @@ class SchemaDefDataPrep(object):
             schemaAttributeMapDict = tObj.getMapAttributeDict()
             schemaAttributeIdList = tObj.getAttributeIdList()
             nullValueDict = tObj.getSqlNullValueDict()
-            maxWidthDict = tObj.getStringWidthDict()
             curAttributeIdList = tObj.getMapInstanceAttributeIdList(categoryName)
             #
             # dictionary of merging indices for each attribute in this category -
@@ -608,25 +588,14 @@ class SchemaDefDataPrep(object):
                     try:
                         atName = schemaAttributeMapDict[atId]
                         val = row[attributeIndexDict[atName]]
-                        if skipMaxWidthFlag:
-                            maxW = 0
-                        else:
-                            maxW = maxWidthDict[atId]
                         lenVal = len(val)
-                        if dropEmptyFlag and ((lenVal == 0) or (val == '?') or (val == '.')):
+                        # Handle the Null values - note the implications of retaining null values accross types -
+                        if ((lenVal == 0) or (val == '?') or (val == '.')):
+                            if not dropEmptyFlag:
+                                d[atId] = nullValueDict[atId]
                             continue
-                        if assignDateFlag and tObj.isAttributeDateType(atId) and not ((lenVal == 0) or (val == '?') or (val == '.')):
-                            d[atId] = self.__assignDateType(atId, val)
-                            continue
-                        if convertIterables and tObj.isIterable(atId) and not ((lenVal == 0) or (val == '?') or (val == '.')):
-                            d[atId] = [v.strip() for v in val.split(tObj.getIterableSeparator(atId))]
-                            continue
-                        if maxW > 0:
-                            if lenVal > maxW:
-                                logger.error("+ERROR - Table %s attribute %s length %d exceeds %d\n" % (schemaTableId, atId, lenVal, maxW))
-                            d[atId] = val[:maxW] if ((val != '?') and (val != '.')) else nullValueDict[atId]
-                        else:
-                            d[atId] = val if ((val != '?') and (val != '.')) else nullValueDict[atId]
+                        d[atId] = self.__assignType(val, lenVal, tObj, atId, skipMaxWidthFlag, assignDateFlag, convertIterables)
+                        #
                     except Exception as e:
                         # only for testing -
                         if (self.__debug):
@@ -643,6 +612,36 @@ class SchemaDefDataPrep(object):
 
         return mD.values()
 
+    def __assignType(self, val, lenVal, tObj, atId, skipMaxWidthFlag, assignDateFlag, convertIterables):
+        """  Cast the input value according to type metadata details and control input -
+        """
+        try:
+            maxW = 0 if skipMaxWidthFlag else tObj.getAttributeWidth(atId)
+            #
+            if convertIterables and tObj.isIterable(atId):
+                if tObj.isAttributeStringType(atId):
+                    return [v.strip() for v in val.split(tObj.getIterableSeparator(atId))]
+                elif tObj.isAttributeIntegerType(atId):
+                    return [int(v.strip()) for v in val.split(tObj.getIterableSeparator(atId))]
+                elif tObj.isAttributeFloatType(atId):
+                    return [float(v.strip()) for v in val.split(tObj.getIterableSeparator(atId))]
+            #
+            if tObj.isAttributeStringType(atId) and maxW > 0:
+                return val[:maxW]
+            elif tObj.isAttributeStringType(atId):
+                return val
+            elif tObj.isAttributeIntegerType(atId):
+                return int(val)
+            elif tObj.isAttributeFloatType(atId):
+                return float(val)
+            elif assignDateFlag and tObj.isAttributeDateType(atId):
+                value = val.replace(":", " ", 1)
+                return dateutil.parser.parse(value)
+            else:
+                return str(val)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+
     def __assignDateType(self, atId, value):
         """   yyyy-mm-dd  or yyyy-mm-dd:hh:mm:ss
         """
@@ -652,6 +651,7 @@ class SchemaDefDataPrep(object):
         except Exception as e:
             logger.exception("Attribute processing error %s %s : %s" % (atId, value, str(e)))
         return value
+
 
 if __name__ == '__main__':
     pass
