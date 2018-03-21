@@ -112,7 +112,9 @@ class MongoDbLoaderWorker(object):
             mpu.set(workerObj=self, workerMethod="loadWorker")
             ok, failList, retLists, diagList = mpu.runMulti(dataList=inputPathList, numProc=numProc, numResults=1, chunkSize=chunkSize)
             logger.info("Failing path list %r" % failList)
-            self.__end(startTime, "loading operation witn status " + str(ok))
+            logger.info("Input path list length %d failed list length %d" % (len(inputPathList), len(failList)))
+            self.__end(startTime, "loading operation with status " + str(ok))
+
             #
             return ok
         except Exception as e:
