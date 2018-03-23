@@ -6,6 +6,7 @@
 #
 # Updates:
 #   22-Mar-2018 jdw  Revise all tests
+#   23-Mar-2018 jdw  Add reload test cases
 #
 ##
 """
@@ -119,7 +120,7 @@ class MongoDbLoaderWorkerTests(unittest.TestCase):
                                      fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
             ok = mw.loadContentType('bird-family', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                                     documentSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
-            self.assertTrue(ok)
+            self.assertFalse(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -150,6 +151,55 @@ class MongoDbLoaderWorkerTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
+    def testReLoadChemCompReference(self):
+        """ Test case -  Load and reload chemical component reference data
+        """
+        try:
+            mw = MongoDbLoaderWorker(self.__configPath, self.__configName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+                                     fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
+            ok = mw.loadContentType('chem-comp', loadType='full', inputPathList=None, styleType=self.__documentStyle,
+                                    documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+            self.assertTrue(ok)
+            ok = mw.loadContentType('chem-comp', loadType='replace', inputPathList=None, styleType=self.__documentStyle,
+                                    documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+            self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
+
+    def testReLoadPdbxEntryData(self):
+        """ Test case -  Load PDBx entry data
+        """
+        try:
+            mw = MongoDbLoaderWorker(self.__configPath, self.__configName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+                                     fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
+            ok = mw.loadContentType('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
+                                    documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+            self.assertTrue(ok)
+            ok = mw.loadContentType('pdbx', loadType='replace', inputPathList=None, styleType=self.__documentStyle,
+                                    documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+            self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
+    def testReLoadPdbxExtEntryData(self):
+        """ Test case -  Load PDBx extension entry data
+        """
+        try:
+            mw = MongoDbLoaderWorker(self.__configPath, self.__configName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+                                     fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
+            ok = mw.loadContentType('pdbx-ext', loadType='full', inputPathList=None, styleType=self.__documentStyle,
+                                    documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+            self.assertTrue(ok)
+            ok = mw.loadContentType('pdbx-ext', loadType='replace', inputPathList=None, styleType=self.__documentStyle,
+                                    documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+            self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
 
 def mongoLoadSuite():
     suiteSelect = unittest.TestSuite()
@@ -162,8 +212,20 @@ def mongoLoadSuite():
     return suiteSelect
 
 
+def mongoReLoadSuite():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(MongoDbLoaderWorkerTests("testReLoadChemCompReference"))
+    suiteSelect.addTest(MongoDbLoaderWorkerTests("testLoadPdbxEntryData"))
+    suiteSelect.addTest(MongoDbLoaderWorkerTests("testLoadPdbxExtEntryData"))
+    return suiteSelect
+
+
 if __name__ == '__main__':
     #
     if (True):
         mySuite = mongoLoadSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+    if (True):
+        mySuite = mongoReLoadSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)

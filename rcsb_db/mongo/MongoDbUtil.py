@@ -157,11 +157,15 @@ class MongoDbUtil(object):
         return None
 
     def replaceList(self, databaseName, collectionName, dList, keyName, upsertFlag=True):
+        """ Replace the list of input documents based on a selection query by keyName -
+            Note: splitting keyName (dot notation for Mongo) to divided keys for Python
+        """
         try:
             rIdL = []
             c = self.__mgObj[databaseName].get_collection(collectionName)
             for d in dList:
-                selectD = {keyName: d[keyName]}
+                kyVal = self.__dictGet(d, keyName)
+                selectD = {keyName: kyVal}
                 r = c.replace_one(selectD, d, upsert=upsertFlag)
                 try:
                     rIdL.append(r.upserted_id)
@@ -175,15 +179,17 @@ class MongoDbUtil(object):
     def deleteList(self, databaseName, collectionName, dList, keyName):
         """ Delete the list of input documents based on a selection query by keyName -
 
+            Note: splitting keyName (dot notation for Mongo) to divided keys for Python
         """
         try:
             delTupL = []
             c = self.__mgObj[databaseName].get_collection(collectionName)
             for d in dList:
-                selectD = {keyName: d[keyName]}
+                kyVal = self.__dictGet(d, keyName)
+                selectD = {keyName: kyVal}
                 r = c.delete_many(selectD)
                 try:
-                    delTupL.append((d[keyName], r.deleted_count))
+                    delTupL.append((kyVal, r.deleted_count))
                 except Exception as e:
                     logger.error("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, keyName, str(e)))
                 logger.debug("Deleted status %r" % delTupL)
@@ -193,6 +199,21 @@ class MongoDbUtil(object):
         #
         return delTupL
 
+    def __dictGet(self, dct, dotNotation):
+        """  Convert input dictionary key (dot notation) to divided Python format and return appropriate dictionary value.
+        """
+        try:
+            kys = dotNotation.split('.')
+            for key in kys:
+                try:
+                    dct = dct[key]
+                except KeyError:
+                    return None
+            return dct
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+
+        return None
 
     def createIndex(self, databaseName, collectionName, keyList, indexName="primary", indexType="DESCENDING", uniqueFlag=False):
 

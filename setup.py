@@ -41,17 +41,17 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ),
-    # entry_points={
-    #    'console_scripts': [
-    #        'onedep_validate_cli=onedep.cli.validate_cli:run',
-    #    ]
-    # },
-    #
-    install_requires=['future', 'six', 'mmcif', 'mmcif.utils'],
+    entry_points={
+        'console_scripts': [
+            'exdb_load_cli=rcsb_db.exec.DbLoadExec:main',
+        ]
+    },
+    # Py27 requires scandir
+    install_requires=['future', 'six', 'scandir', 'python-dateutil', 'mmcif', 'mmcif.utils'],
     packages=find_packages(exclude=['rcsb_db.tests', 'tests.*']),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:
-        '': ['*.md', '*.rst', "*.txt"],
+        '': ['*.md', '*.rst', "*.txt", "*.cfg"],
     },
     #
 

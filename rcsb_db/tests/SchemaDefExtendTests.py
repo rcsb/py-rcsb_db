@@ -1,18 +1,17 @@
 ##
-# File:    SchemaDefDataPrepTests.py
+# File:    SchemaDefExtendTests.py
 # Author:  J. Westbrook
 # Date:    13-Mar-2018
 # Version: 0.001
 #
 # Updates:
+#  22-Mar-2018 jdw adjust test conditions and cleanup logging
 #
 #
 #
 ##
 """
-Tests for preparing loadable data based on external schema definition.
-
-         No specific database conection depedencies -
+Tests for extracting schema details from metadata dictionary.
 
 """
 
@@ -26,11 +25,9 @@ import sys
 import os
 import time
 import unittest
-import pprint
-import json
 
 import logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -49,10 +46,10 @@ from mmcif.api.DictionaryApi import DictionaryApi
 from mmcif.api.PdbxContainers import CifName
 
 
-class SchemaDefDataPrepTests(unittest.TestCase):
+class SchemaDefExtendTests(unittest.TestCase):
 
     def __init__(self, methodName='runTest'):
-        super(SchemaDefDataPrepTests, self).__init__(methodName)
+        super(SchemaDefExtendTests, self).__init__(methodName)
         self.__loadPathList = []
         self.__verbose = True
 
@@ -84,14 +81,16 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 categoryName = CifName.categoryPart(itemName)
                 attributeName = CifName.attributePart(itemName)
                 childItemList = dApi.getFullChildList(categoryName, attributeName)
-                logger.info("Full child  list for  %s : %s\n" % (itemName, childItemList))
+                logger.debug("Full child  list for  %s : %s\n" % (itemName, childItemList))
+                logger.debug("Full child  list for  %s : %s\n" % (itemName, childItemList))
                 for childItem in childItemList:
                     childCategoryName = CifName.categoryPart(childItem)
                     pKyL = dApi.getCategoryKeyList(childCategoryName)
                     if len(pKyL) == 1:
-                        logger.info("Primary key list : %r" % pKyL)
+                        logger.debug("Primary key list : %r" % pKyL)
                         unitCardL.append(CifName.categoryPart(pKyL[0]))
-                logger.info("Unit Card Categories : %r" % unitCardL)
+                logger.debug("Unit Card Categories : %r" % unitCardL)
+                self.assertGreaterEqual(len(unitCardL), 2)
                 self.assertIsNotNone(dApi.getTypeCode(categoryName, attributeName))
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -115,7 +114,8 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                     if tc in iTypeList or tcA in iTypeList or 'comma separate' in dt.lower():
                         iL.append((categoryName.upper(), attributeName.upper(), ','))
 
-            logger.info("Iterables : %r" % iL)
+            logger.debug("Iterables %d : %r" % (len(iL), iL))
+            self.assertGreaterEqual(len(iL), 15)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -132,9 +132,9 @@ class SchemaDefDataPrepTests(unittest.TestCase):
 
 def schemaFeaturesSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(SchemaDefDataPrepTests("testGetKeyRelationships"))
-    suiteSelect.addTest(SchemaDefDataPrepTests("testFindSchemaFeatures"))
-    suiteSelect.addTest(SchemaDefDataPrepTests("testGetIterableItems"))
+    suiteSelect.addTest(SchemaDefExtendTests("testGetKeyRelationships"))
+    suiteSelect.addTest(SchemaDefExtendTests("testFindSchemaFeatures"))
+    suiteSelect.addTest(SchemaDefExtendTests("testGetIterableItems"))
     return suiteSelect
 
 if __name__ == '__main__':

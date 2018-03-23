@@ -24,6 +24,7 @@ import sys
 import os
 import time
 import pickle
+import bson
 
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
@@ -85,9 +86,9 @@ class MongoDbLoaderWorker(object):
             startTime = self.__begin(message="loading operation")
             sd, dbName, collectionName, pathList, tableIdIncludeList, tableIdExcludeList = self.__getLoadInfo(contentType, inputPathList=inputPathList)
             #
-            logger.info("contentType %s dbName %s collectionName %s" % (contentType, dbName, collectionName))
-            logger.info("contentType %s include List %r" % (contentType, tableIdIncludeList))
-            logger.info("contentType %s exclude List %r" % (contentType, tableIdExcludeList))
+            logger.debug("contentType %s dbName %s collectionName %s" % (contentType, dbName, collectionName))
+            logger.debug("contentType %s include List %r" % (contentType, tableIdIncludeList))
+            logger.debug("contentType %s exclude List %r" % (contentType, tableIdExcludeList))
 
             #
             optD = {}
@@ -114,12 +115,12 @@ class MongoDbLoaderWorker(object):
             mpu.setOptions(optionsD=optD)
             mpu.set(workerObj=self, workerMethod="loadWorker")
             ok, failList, retLists, diagList = mpu.runMulti(dataList=pathList, numProc=numProc, numResults=1, chunkSize=chunkSize)
-            logger.info("Failing path list %r" % failList)
+            logger.debug("Failing path list %r" % failList)
             logger.info("Load path list length %d failed load list length %d" % (len(pathList), len(failList)))
             #
             if failedFilePath and len(failList) > 0:
                 wOk = self.__writePathList(failedFilePath, failList)
-                logger.debug("Writing load failure path list to %s status %r" % (failedFilePath, wOk))
+                logger.info("Writing load failure path list to %s status %r" % (failedFilePath, wOk))
             #
             self.__end(startTime, "loading operation with status " + str(ok))
 
@@ -158,7 +159,8 @@ class MongoDbLoaderWorker(object):
             if logSize:
                 maxDocumentMegaBytes = -1
                 for tD, cN in zip(tableDataDictList, containerNameList):
-                    documentMegaBytes = float(sys.getsizeof(pickle.dumps(tD, protocol=0))) / 1000000.0
+                    # documentMegaBytes = float(sys.getsizeof(pickle.dumps(tD, protocol=0))) / 1000000.0
+                    documentMegaBytes = float(sys.getsizeof(bson.BSON.encode(tD))) / 1000000.0
                     logger.debug("Document %s  %.4f MB" % (cN, documentMegaBytes))
                     maxDocumentMegaBytes = max(maxDocumentMegaBytes, documentMegaBytes)
                     if documentMegaBytes > 15.8:
@@ -311,7 +313,7 @@ class MongoDbLoaderWorker(object):
             if loadType == 'replace':
                 keyName = docIdD['tableName'] + '.' + docIdD['attributeName']
                 dTupL = mg.deleteList(dbName, collectionName, dList, keyName)
-                logger.info("Deleted document status %r" % dTupL)
+                logger.debug("Deleted document status %r" % dTupL)
 
             rIdL = mg.insertList(dbName, collectionName, dList)
             #

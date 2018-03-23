@@ -8,6 +8,7 @@
 #  9-Jan-2013 jdw revise handling of mege index.
 # 11=Jan-2013 jdw add table and attribute abbreviation support.
 # 13-Jan-2013 jdw add test for mysql  index size maximum
+# 23-Mar-2018 jdw cleanup logging
 ##
 """
 Example reader for RCSB schema map data files exporting the data structure used by the
@@ -19,7 +20,6 @@ __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
-
 
 
 import logging
@@ -165,7 +165,7 @@ class PdbxSchemaMapReader(object):
 
             #
             if (self.__verbose and len(indexList) > 16):
-                logger.warning("+WARNING - %s index list exceeds MySQL max length %d\n" % (tableName, len(indexList)))
+                logger.warning("+WARNING - %s index list exceeds MySQL max length %d" % (tableName, len(indexList)))
             mergeDict = {}
             deleteAttributeList = []
             for atU in indexList:
@@ -198,10 +198,10 @@ class PdbxSchemaMapReader(object):
                 d['INDICES'] = {
                     "p1": {"TYPE": "UNIQUE", "ATTRIBUTES": tuple(indexList)}
                 }
-                logger.warning("+WARNING - No delete attribute for table %s\n" % tableName)
+                logger.warning("+WARNING - No delete attribute for table %s" % tableName)
 
             if (len(mergeDict) < 1):
-                logger.warning("+WARNING - No merge index possible for table %s\n" % tableName)
+                logger.warning("+WARNING - No merge index possible for table %s" % tableName)
 
             sD[tU] = d
         return sD

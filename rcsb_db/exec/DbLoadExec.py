@@ -50,34 +50,32 @@ def readPathList(self, fileListPath):
 def main():
     parser = argparse.ArgumentParser()
     #
-    parser.add_argument("--load_chem_comp_ref", default=False, action='store_true', help="Load Chemical Component Reference Data")
-    parser.add_argument("--load_bird_chem_comp_ref", default=False, action='store_true', help="Load Bird Chemical Component Reference Data")
-    parser.add_argument("--load_bird_ref", default=False, action='store_true', help="Load Bird Reference Data")
-    parser.add_argument("--load_bird_family_ref", default=False, action='store_true', help="Load Bird Family Reference Data")
-    parser.add_argument("--load_entry_data", default=False, action='store_true', help="Load entry data on the current entry load list")
     #
-    #parser.add_argument("--path_entry_load_list", default=None, help="Path to PDBx/mmCIF entry load path list")
-    #parser.add_argument("--make_entry_load_list", default=None, help="Create PDBx/mmCIF entry load path list")
-
+    parser.add_argument("--load_full", default=False, action='store_true', help="Fresh full load in a new tables/collections")
+    parser.add_argument("--load_with_replacement", default=False, action='store_true', help="Load with replacement in an existing table/collection (default)")
+    #
+    parser.add_argument("--load_chem_comp_ref", default=False, action='store_true', help="Load Chemical Component reference definitions (public subset)")
+    parser.add_argument("--load_bird_chem_comp_ref", default=False, action='store_true', help="Load Bird Chemical Component reference definitions (public subset)")
+    parser.add_argument("--load_bird_ref", default=False, action='store_true', help="Load Bird reference definitions (public subset)")
+    parser.add_argument("--load_bird_family_ref", default=False, action='store_true', help="Load Bird Family reference definitions (public subset)")
+    parser.add_argument("--load_entry_data", default=False, action='store_true', help="Load PDB entry data (current released subset)")
+    #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
     parser.add_argument("--config_name", default="DEFAULT", help="Configuration section name")
 
-    parser.add_argument("--num_proc", default=2, help="Number of processes to execute")
-    parser.add_argument("--chunk_size", default=10, help="Number of files loaded per process")
-    parser.add_argument("--file_limit", default=None, help="File limit for testing")
+    parser.add_argument("--db_type", default="mongo", help="Database server type (default=mongo)")
 
-    parser.add_argument("--db_type", default="mongo", help="Database server type")
     parser.add_argument("--document_style", default="rowwise_by_name_with_cardinality",
                         help="Document organization (rowwise_by_name_with_cardinality|rowwise_by_name|columnwise_by_name|rowwise_by_id|rowwise_no_name")
     parser.add_argument("--read_back_check", default=False, action='store_true', help="Perform read back check on all documents")
-    parser.add_argument("--debug", default=False, action='store_true', help="Turn on verbose logging")
     #
-    parser.add_argument("--load_full", default=False, action='store_true', help="Fresh full load in a new table/collection")
-    parser.add_argument("--load_with_replacement", default=False, action='store_true', help="Load with replacement in an existing table/collection (default)")
-    #
-    parser.add_argument("--load_file_list_path", default=None, help="Input file containing load file path list")
+    parser.add_argument("--load_file_list_path", default=None, help="Input file containing load file path list (override automatic repository scan)")
     parser.add_argument("--fail_file_list_path", default=None, help="Output file containing file paths that fail to load")
 
+    parser.add_argument("--num_proc", default=2, help="Number of processes to execute (default=2)")
+    parser.add_argument("--chunk_size", default=10, help="Number of files loaded per process")
+    parser.add_argument("--file_limit", default=None, help="Load file limit for testing")
+    parser.add_argument("--debug", default=False, action='store_true', help="Turn on verbose logging")
     args = parser.parse_args()
     #
     debugFlag = args.debug
@@ -151,7 +149,7 @@ def main():
 
         if args.load_entry_data:
             ok = mw.loadContentType('pdbx', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                                    contentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=failFilePath)
+                                    contentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
 
         logger.info("Operation completed with status %r " % ok)
 
