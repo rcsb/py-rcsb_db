@@ -46,6 +46,7 @@ from rcsb_db.loaders.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb_db.schema.BirdSchemaDef import BirdSchemaDef
 
 from mmcif_utils.bird.PdbxPrdIo import PdbxPrdIo
+from rcsb_db.utils.RepoPathUtil import RepoPathUtil
 
 
 class SchemaDefDataPrepTests(unittest.TestCase):
@@ -57,12 +58,13 @@ class SchemaDefDataPrepTests(unittest.TestCase):
 
     def setUp(self):
         self.__databaseName = 'prdv4'
-        self.__birdCachePath = os.path.join(TOPDIR, "rcsb_db", "data", "MOCK_BIRD_REPO")
+        self.__birdRepoPath = os.path.join(TOPDIR, "rcsb_db", "data", "MOCK_BIRD_REPO")
         #
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width"
         self.__fTypeCol = "drop-empty-tables|skip-max-width"
         self.__birdMockLen = 3
         self.__verbose = True
+        self.__fileLimit = 200
         self.__startTime = time.time()
         logger.debug("Running tests on version %s" % __version__)
         logger.debug("Starting %s at %s" % (self.id(),
@@ -78,9 +80,9 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         """Test case -  get the path list of PRD definitions in the CVS repository.
         """
         try:
-            prd = PdbxPrdIo(verbose=self.__verbose)
-            prd.setCachePath(self.__birdCachePath)
-            self.__loadPathList = prd.makeDefinitionPathList()
+            rpU = RepoPathUtil(fileLimit=self.__fileLimit)
+            self.__loadPathList = rpU.getPrdPathList(self.__birdRepoPath)
+
             logger.debug("Length of path list %d\n" % len(self.__loadPathList))
             self.assertGreaterEqual(len(self.__loadPathList), self.__birdMockLen)
 
@@ -107,7 +109,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 ofh.write(json.dumps(tableDataDictList, indent=3))
 
             tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(self.__loadPathList, styleType="rowwise_by_name_with_cardinality",
-                                                                                  filterType=self.__fTypeRow, contentSelectors=["BIRD_PUBLIC_RELEASE"])
+                                                                                  filterType=self.__fTypeRow, documentSelectors=["BIRD_PUBLIC_RELEASE"])
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
             self.assertEqual(len(rejectList), 1)
@@ -141,8 +143,9 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             bsd = BirdSchemaDef(convertNames=True)
 
             prd = PdbxPrdIo(verbose=self.__verbose)
-            prd.setCachePath(self.__birdCachePath)
+            prd.setCachePath(self.__birdRepoPath)
             self.__pathList = prd.makeDefinitionPathList()
+            #
             for pth in self.__pathList:
                 prd.setFilePath(pth)
             containerList = prd.getCurrentContainerList()
@@ -158,7 +161,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 ofh.write(json.dumps(tableDataDictList, indent=3))
 
             tableDataDictList, containerNameList, rejectList = sdp.processDocuments(
-                containerList, styleType="rowwise_by_name_with_cardinality", filterType=self.__fTypeRow, contentSelectors=["BIRD_PUBLIC_RELEASE"])
+                containerList, styleType="rowwise_by_name_with_cardinality", filterType=self.__fTypeRow, documentSelectors=["BIRD_PUBLIC_RELEASE"])
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
             self.assertEqual(len(rejectList), 1)

@@ -172,6 +172,28 @@ class MongoDbUtil(object):
         #
         return rIdL
 
+    def deleteList(self, databaseName, collectionName, dList, keyName):
+        """ Delete the list of input documents based on a selection query by keyName -
+
+        """
+        try:
+            delTupL = []
+            c = self.__mgObj[databaseName].get_collection(collectionName)
+            for d in dList:
+                selectD = {keyName: d[keyName]}
+                r = c.delete_many(selectD)
+                try:
+                    delTupL.append((d[keyName], r.deleted_count))
+                except Exception as e:
+                    logger.error("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, keyName, str(e)))
+                logger.debug("Deleted status %r" % delTupL)
+            return delTupL
+        except Exception as e:
+            logger.exception("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, keyName, str(e)))
+        #
+        return delTupL
+
+
     def createIndex(self, databaseName, collectionName, keyList, indexName="primary", indexType="DESCENDING", uniqueFlag=False):
 
         try:

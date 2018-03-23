@@ -6,6 +6,7 @@
 #  Updates:
 #
 #    21-Mar-2018 - jdw added content filters and separate collection for Bird chemical components
+#    22-May-2018 - jdw add replacment load type, add options for input file paths
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -32,6 +33,20 @@ except Exception as e:
 from rcsb_db.mongo.MongoDbLoaderWorker import MongoDbLoaderWorker
 
 
+def readPathList(self, fileListPath):
+    pathList = []
+    try:
+        with open(fileListPath, 'r') as ifh:
+            for line in ifh:
+                pth = str(line[:-1]).strip()
+                if len(pth) and not pth.startswith("#"):
+                    pathList.append(pth)
+    except Exception as e:
+        pass
+    logger.debug("Reading path list length %d" % len(pathList))
+    return pathList
+
+
 def main():
     parser = argparse.ArgumentParser()
     #
@@ -52,9 +67,17 @@ def main():
     parser.add_argument("--file_limit", default=None, help="File limit for testing")
 
     parser.add_argument("--db_type", default="mongo", help="Database server type")
-    parser.add_argument("--document_style", default="rowwise_by_name_with_cardinality", help="Document organization (rowwise_by_name_with_cardinality|rowwise_by_name|columnwise_by_name|rowwise_by_id|rowwise_no_name")
+    parser.add_argument("--document_style", default="rowwise_by_name_with_cardinality",
+                        help="Document organization (rowwise_by_name_with_cardinality|rowwise_by_name|columnwise_by_name|rowwise_by_id|rowwise_no_name")
     parser.add_argument("--read_back_check", default=False, action='store_true', help="Perform read back check on all documents")
     parser.add_argument("--debug", default=False, action='store_true', help="Turn on verbose logging")
+    #
+    parser.add_argument("--load_full", default=False, action='store_true', help="Fresh full load in a new table/collection")
+    parser.add_argument("--load_with_replacement", default=False, action='store_true', help="Load with replacement in an existing table/collection (default)")
+    #
+    parser.add_argument("--load_file_list_path", default=None, help="Input file containing load file path list")
+    parser.add_argument("--fail_file_list_path", default=None, help="Output file containing file paths that fail to load")
+
     args = parser.parse_args()
     #
     debugFlag = args.debug
@@ -82,6 +105,10 @@ def main():
         numProc = int(args.num_proc)
         chunkSize = int(args.chunk_size)
         fileLimit = args.file_limit
+        failedFilePath = args.fail_file_list_path
+        fPath = args.load_file_list_path
+        loadType = 'full' if args.load_full else 'replace'
+        loadType = 'replace' if args.load_with_replacement else 'full'
         if args.file_limit:
             fileLimit = int(args.file_limit)
 
@@ -93,26 +120,38 @@ def main():
         logger.exception("Argument processing problem %s" % str(e))
         parser.print_help(sys.stderr)
         exit(1)
-
-    # -----------------------
+    # ----------------------- - ----------------------- - ----------------------- - ----------------------- - ----------------------- -
     #
+    # Read any input path lists -
+    #
+
+    inputPathList = None
+    if fPath:
+        inputPathList = readPathList(fPath)
+    #
+    ##
     if args.db_type == "mongo":
         mw = MongoDbLoaderWorker(configPath, configName, numProc=numProc, chunkSize=chunkSize, fileLimit=fileLimit, verbose=debugFlag, readBackCheck=readBackCheck)
 
         if args.load_chem_comp_ref:
-            ok = mw.loadContentType('chem-comp', styleType=args.document_style, contentSelectors=["CHEM_COMP_PUBLIC_RELEASE"])
+            ok = mw.loadContentType('chem-comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+                                    contentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
 
         if args.load_bird_chem_comp_ref:
-            ok = mw.loadContentType('bird-chem-comp', styleType=args.document_style, contentSelectors=["CHEM_COMP_PUBLIC_RELEASE"])
+            ok = mw.loadContentType('bird-chem-comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+                                    contentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
 
         if args.load_bird_ref:
-            ok = mw.loadContentType('bird', styleType=args.document_style, contentSelectors=["BIRD_PUBLIC_RELEASE"])
+            ok = mw.loadContentType('bird', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+                                    contentSelectors=["BIRD_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
 
         if args.load_bird_family_ref:
-            ok = mw.loadContentType('bird-family', styleType=args.document_style, contentSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"])
+            ok = mw.loadContentType('bird-family', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+                                    contentSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
 
         if args.load_entry_data:
-            ok = mw.loadContentType('pdbx', styleType=args.document_style)
+            ok = mw.loadContentType('pdbx', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+                                    contentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=failFilePath)
 
         logger.info("Operation completed with status %r " % ok)
 

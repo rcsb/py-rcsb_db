@@ -37,11 +37,6 @@ class SchemaDefBase(object):
 
     """ A base class for schema definitions.
 
- 'SELECTION_FILTERS': {'BIRD_RELEASE_STATUS': [{'TABLE_ID': 'PDBX_REFERENCE_MOLECULE', 'ATTRIBUTE_ID': 'RELEASE_STATUS', 'VALUES': ['REL', 'OBS']}],
-                                            'BIRD_FAMILY_RELEASE_STATUS': [{'TABLE_ID': 'PDBX_REFERENCE_MOLECULE_FAMILY', 'ATTRIBUTE_ID': 'RELEASE_STATUS', 'VALUES': ['REL', 'OBS']}],
-
-                                            }
-
     """
 
     def __init__(self, databaseName=None, schemaDefDict=None, convertNames=False, versionedDatabaseName=None, documentDefDict=None, verbose=True):
@@ -57,7 +52,39 @@ class SchemaDefBase(object):
             self.__convertTableNames()
             self.__convertAttributeNames()
 
-    def getContentSelector(self, selectorName):
+    def getVersionedCollection(self, prefix):
+        try:
+            cL = list(self.__documentDefDict['COLLECTION_DOCUMENT_ATTRIBUTE_ID'].keys())
+            for c in cL:
+                if c.startswith(prefix):
+                    return c
+        except Exception as e:
+            logger.exception("Faling with %s" % str(e))
+        return None
+
+    def getCollectionExcludedTables(self, collectionName):
+        '''  For input collection, return the list of excluded tables.
+
+        '''
+        excludeL = []
+        try:
+            excludeL = self.__documentDefDict['COLLECTION_CONTENT'][collectionName]['EXCLUDE_TABLES']
+        except Exception as e:
+            logger.error("Collection %s Faling with %s" % (collectionName, str(e)))
+        return excludeL
+
+    def getCollectionSelectedTables(self, collectionName):
+        ''' For input collection, return the list of selected tables.
+        '''
+        selectL = []
+        try:
+            selectL = self.__documentDefDict['COLLECTION_CONTENT'][collectionName]['INCLUDE_TABLES']
+        except Exception as e:
+            logger.error("Collection %s faling with %s" % (collectionName, str(e)))
+
+        return selectL
+
+    def getDocumentSelector(self, selectorName):
         if 'SELECTION_FILTERS' in self.__documentDefDict and selectorName in self.__documentDefDict['SELECTION_FILTERS']:
             sfDL = self.__documentDefDict['SELECTION_FILTERS'][selectorName]
             oL = []

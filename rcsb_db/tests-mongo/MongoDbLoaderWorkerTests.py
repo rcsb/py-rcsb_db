@@ -5,6 +5,7 @@
 # Version: 0.001
 #
 # Updates:
+#   22-Mar-2018 jdw  Revise all tests
 #
 ##
 """
@@ -53,6 +54,7 @@ class MongoDbLoaderWorkerTests(unittest.TestCase):
         #
         self.__configPath = 'dbload-setup.cfg'
         self.__configName = 'DEFAULT'
+        self.__failedFilePath = os.path.join(HERE, 'test-output', 'failed-list.txt')
         self.__readBackCheck = True
         self.__numProc = 2
         self.__chunkSize = 10
@@ -76,7 +78,8 @@ class MongoDbLoaderWorkerTests(unittest.TestCase):
         try:
             mw = MongoDbLoaderWorker(self.__configPath, self.__configName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                                      fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
-            ok = mw.loadContentType('chem-comp', styleType=self.__documentStyle, contentSelectors=["CHEM_COMP_PUBLIC_RELEASE"])
+            ok = mw.loadContentType('chem-comp', loadType='full', inputPathList=None, styleType=self.__documentStyle,
+                                    documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -88,7 +91,8 @@ class MongoDbLoaderWorkerTests(unittest.TestCase):
         try:
             mw = MongoDbLoaderWorker(self.__configPath, self.__configName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                                      fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
-            ok = mw.loadContentType('bird-chem-comp', styleType=self.__documentStyle, contentSelectors=["CHEM_COMP_PUBLIC_RELEASE"])
+            ok = mw.loadContentType('bird-chem-comp', loadType='full', inputPathList=None, styleType=self.__documentStyle,
+                                    documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -100,7 +104,8 @@ class MongoDbLoaderWorkerTests(unittest.TestCase):
         try:
             mw = MongoDbLoaderWorker(self.__configPath, self.__configName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                                      fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
-            ok = mw.loadContentType('bird', styleType=self.__documentStyle, contentSelectors=["BIRD_PUBLIC_RELEASE"])
+            ok = mw.loadContentType('bird', loadType='full', inputPathList=None, styleType=self.__documentStyle,
+                                    documentSelectors=["BIRD_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -112,7 +117,8 @@ class MongoDbLoaderWorkerTests(unittest.TestCase):
         try:
             mw = MongoDbLoaderWorker(self.__configPath, self.__configName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                                      fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
-            ok = mw.loadContentType('bird-family', styleType=self.__documentStyle, contentSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"])
+            ok = mw.loadContentType('bird-family', loadType='full', inputPathList=None, styleType=self.__documentStyle,
+                                    documentSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -121,11 +127,24 @@ class MongoDbLoaderWorkerTests(unittest.TestCase):
     def testLoadPdbxEntryData(self):
         """ Test case -  Load PDBx entry data
         """
-
         try:
             mw = MongoDbLoaderWorker(self.__configPath, self.__configName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                                      fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
-            ok = mw.loadContentType('pdbx', styleType=self.__documentStyle)
+            ok = mw.loadContentType('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
+                                    documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+            self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
+    def testLoadPdbxExtEntryData(self):
+        """ Test case -  Load PDBx extension entry data
+        """
+        try:
+            mw = MongoDbLoaderWorker(self.__configPath, self.__configName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+                                     fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
+            ok = mw.loadContentType('pdbx-ext', loadType='full', inputPathList=None, styleType=self.__documentStyle,
+                                    documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -139,6 +158,7 @@ def mongoLoadSuite():
     suiteSelect.addTest(MongoDbLoaderWorkerTests("testLoadBirdReference"))
     suiteSelect.addTest(MongoDbLoaderWorkerTests("testLoadBirdFamilyReference"))
     suiteSelect.addTest(MongoDbLoaderWorkerTests("testLoadPdbxEntryData"))
+    suiteSelect.addTest(MongoDbLoaderWorkerTests("testLoadPdbxExtEntryData"))
     return suiteSelect
 
 
