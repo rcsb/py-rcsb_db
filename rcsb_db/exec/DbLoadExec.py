@@ -133,23 +133,23 @@ def main():
 
         if args.load_chem_comp_ref:
             ok = mw.loadContentType('chem-comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                                    contentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
+                                    documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
 
         if args.load_bird_chem_comp_ref:
             ok = mw.loadContentType('bird-chem-comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                                    contentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
+                                    documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
 
         if args.load_bird_ref:
             ok = mw.loadContentType('bird', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                                    contentSelectors=["BIRD_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
+                                    documentSelectors=["BIRD_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
 
         if args.load_bird_family_ref:
             ok = mw.loadContentType('bird-family', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                                    contentSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
+                                    documentSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
 
         if args.load_entry_data:
             ok = mw.loadContentType('pdbx', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                                    contentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
+                                    documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
 
         logger.info("Operation completed with status %r " % ok)
 
