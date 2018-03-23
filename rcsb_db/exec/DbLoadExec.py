@@ -33,7 +33,7 @@ except Exception as e:
 from rcsb_db.mongo.MongoDbLoaderWorker import MongoDbLoaderWorker
 
 
-def readPathList(self, fileListPath):
+def readPathList(fileListPath):
     pathList = []
     try:
         with open(fileListPath, 'r') as ifh:
