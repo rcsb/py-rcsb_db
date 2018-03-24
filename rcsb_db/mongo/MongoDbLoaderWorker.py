@@ -74,7 +74,8 @@ class MongoDbLoaderWorker(object):
         #
         self.__prefD = self.__assignPreferences(self.__cu)
 
-    def loadContentType(self, contentType, loadType='full', inputPathList=None, styleType='rowwise_by_name', documentSelectors=None, failedFilePath=None):
+    def loadContentType(self, contentType, loadType='full', inputPathList=None, styleType='rowwise_by_name', documentSelectors=None,
+                        failedFilePath=None, saveInputFileListPath=None):
         """  Driver method for loading MongoDb content -
 
             contentType:  one of 'bird','bird-family','bird-chem-comp', chem-comp','pdbx', 'pdbx-ext'
@@ -85,6 +86,10 @@ class MongoDbLoaderWorker(object):
         try:
             startTime = self.__begin(message="loading operation")
             sd, dbName, collectionName, pathList, tableIdIncludeList, tableIdExcludeList = self.__getLoadInfo(contentType, inputPathList=inputPathList)
+            #
+            if saveInputFileListPath:
+                self.__writePathList(saveInputFileListPath, pathList)
+                logger.input("Saving %d paths in %s" % (len(pathList), saveInputFileListPath))
             #
             logger.debug("contentType %s dbName %s collectionName %s" % (contentType, dbName, collectionName))
             logger.debug("contentType %s include List %r" % (contentType, tableIdIncludeList))
@@ -401,4 +406,3 @@ class MongoDbLoaderWorker(object):
             inputPathList = inputPathList[:self.__fileLimit]
 
         return sd, dbName, collectionName, outputPathList, tableIdIncludeList, tableIdExcludeList
-

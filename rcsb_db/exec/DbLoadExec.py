@@ -8,6 +8,7 @@
 #    21-Mar-2018 - jdw added content filters and separate collection for Bird chemical components
 #    22-May-2018 - jdw add replacment load type, add options for input file paths
 #    24-Mar-2018 - jdw add split collections for entries (preiliminary)
+#    24-Mar-2018 - jdw add option to preserve paths from automatic repo scan
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -73,6 +74,7 @@ def main():
     #
     parser.add_argument("--load_file_list_path", default=None, help="Input file containing load file path list (override automatic repository scan)")
     parser.add_argument("--fail_file_list_path", default=None, help="Output file containing file paths that fail to load")
+    parser.add_argument("--save_file_list_path", default=None, help="Save repo file paths from automatic file system scan in this path")
 
     parser.add_argument("--num_proc", default=2, help="Number of processes to execute (default=2)")
     parser.add_argument("--chunk_size", default=10, help="Number of files loaded per process")
@@ -109,6 +111,7 @@ def main():
         fPath = args.load_file_list_path
         loadType = 'full' if args.full else 'replace'
         loadType = 'replace' if args.replace else 'full'
+        saveInputFileListPath = args.save_file_list_path
         if args.file_limit:
             fileLimit = int(args.file_limit)
 
@@ -135,27 +138,27 @@ def main():
 
         if args.load_chem_comp_ref:
             ok = mw.loadContentType('chem-comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                                    documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
+                                    documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath, saveInputFileListPath=saveInputFileListPath)
 
         if args.load_bird_chem_comp_ref:
             ok = mw.loadContentType('bird-chem-comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                                    documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
+                                    documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath, saveInputFileListPath=saveInputFileListPath)
 
         if args.load_bird_ref:
             ok = mw.loadContentType('bird', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                                    documentSelectors=["BIRD_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
+                                    documentSelectors=["BIRD_PUBLIC_RELEASE"], failedFilePath=failedFilePath, saveInputFileListPath=saveInputFileListPath)
 
         if args.load_bird_family_ref:
             ok = mw.loadContentType('bird-family', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                                    documentSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
+                                    documentSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"], failedFilePath=failedFilePath, saveInputFileListPath=saveInputFileListPath)
 
         if args.load_entry_data:
             ok = mw.loadContentType('pdbx', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                                    documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
+                                    documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=failedFilePath, saveInputFileListPath=saveInputFileListPath)
 
         if args.load_entry_ext_data:
             ok = mw.loadContentType('pdbx-ext', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                                    documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
+                                    documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=failedFilePath, saveInputFileListPath=saveInputFileListPath)
 
         logger.info("Operation completed with status %r " % ok)
 
