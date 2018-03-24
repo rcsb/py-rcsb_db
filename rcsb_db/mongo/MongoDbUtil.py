@@ -96,7 +96,7 @@ class MongoDbUtil(object):
             logger.debug("Return from drop collection %r " % ok)
             return True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.error("Failing with %s" % str(e))
         return False
 
     def insert(self, databaseName, collectionName, dObj):
@@ -110,7 +110,7 @@ class MongoDbUtil(object):
                 logger.debug("Failing with %s" % str(e))
                 return None
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.error("Failing with %s" % str(e))
         return None
 
     def insertList(self, databaseName, collectionName, dList, keyName, ordered=False, bypassValidation=True):
@@ -174,7 +174,7 @@ class MongoDbUtil(object):
                 logger.debug("Replacement mathed %d modified %d with _id %s" % (numMatched, numModified, rId))
                 return rId
             except Exception as e:
-                logger.exception("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, selectD, str(e)))
+                logger.error("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, selectD, str(e)))
                 return None
         except Exception as e:
             logger.exception("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, selectD, str(e)))
@@ -196,7 +196,7 @@ class MongoDbUtil(object):
                 except Exception as e:
                     logger.error("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, keyName, str(e)))
         except Exception as e:
-            logger.exception("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, keyName, str(e)))
+            logger.error("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, keyName, str(e)))
         #
         return rIdL
 
@@ -219,7 +219,7 @@ class MongoDbUtil(object):
                 logger.debug("Deleted status %r" % delTupL)
             return delTupL
         except Exception as e:
-            logger.exception("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, keyName, str(e)))
+            logger.error("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, keyName, str(e)))
         #
         return delTupL
 
@@ -248,7 +248,7 @@ class MongoDbUtil(object):
             logger.debug("Current indexes for %s %s : %r" % (databaseName, collectionName, c.list_indexes()))
             return True
         except Exception as e:
-            logger.exception("Failing %s and %s keyList %r with %s" % (databaseName, collectionName, keyList, str(e)))
+            logger.error("Failing %s and %s keyList %r with %s" % (databaseName, collectionName, keyList, str(e)))
         return False
 
     def dropIndex(self, databaseName, collectionName, indexName="primary"):
@@ -258,7 +258,7 @@ class MongoDbUtil(object):
             logger.debug("Current indexes for %s %s : %r" % (databaseName, collectionName, c.list_indexes()))
             return True
         except Exception as e:
-            logger.exception("Failing %s and %s with %s" % (databaseName, collectionName, str(e)))
+            logger.error("Failing %s and %s with %s" % (databaseName, collectionName, str(e)))
         return False
 
     def reIndex(self, databaseName, collectionName):
@@ -282,5 +282,5 @@ class MongoDbUtil(object):
             dList = c.find(qD, sD)
             return dList
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.error("Failing with %s" % str(e))
         return None
