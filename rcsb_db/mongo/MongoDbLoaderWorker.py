@@ -89,7 +89,7 @@ class MongoDbLoaderWorker(object):
             #
             if saveInputFileListPath:
                 self.__writePathList(saveInputFileListPath, pathList)
-                logger.input("Saving %d paths in %s" % (len(pathList), saveInputFileListPath))
+                logger.info("Saving %d paths in %s" % (len(pathList), saveInputFileListPath))
             #
             logger.debug("contentType %s dbName %s collectionName %s" % (contentType, dbName, collectionName))
             logger.debug("contentType %s include List %r" % (contentType, tableIdIncludeList))
