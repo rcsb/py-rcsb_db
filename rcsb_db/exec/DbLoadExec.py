@@ -7,6 +7,7 @@
 #
 #    21-Mar-2018 - jdw added content filters and separate collection for Bird chemical components
 #    22-May-2018 - jdw add replacment load type, add options for input file paths
+#    24-Mar-2018 - jdw add split collections for entries (preiliminary)
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -59,6 +60,7 @@ def main():
     parser.add_argument("--load_bird_ref", default=False, action='store_true', help="Load Bird reference definitions (public subset)")
     parser.add_argument("--load_bird_family_ref", default=False, action='store_true', help="Load Bird Family reference definitions (public subset)")
     parser.add_argument("--load_entry_data", default=False, action='store_true', help="Load PDB entry data (current released subset)")
+    parser.add_argument("--load_entry_ext_data", default=False, action='store_true', help="Load PDB extended entry data (current released subset)")
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
     parser.add_argument("--config_name", default="DEFAULT", help="Configuration section name")
@@ -149,6 +151,10 @@ def main():
 
         if args.load_entry_data:
             ok = mw.loadContentType('pdbx', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+                                    documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
+
+        if args.load_entry_ext_data:
+            ok = mw.loadContentType('pdbx-ext', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                                     documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=failedFilePath)
 
         logger.info("Operation completed with status %r " % ok)
