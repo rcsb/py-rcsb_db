@@ -311,11 +311,10 @@ class MongoDbLoaderWorker(object):
             #
             keyName = docIdD['tableName'] + '.' + docIdD['attributeName']
             if loadType == 'replace':
-                keyName = docIdD['tableName'] + '.' + docIdD['attributeName']
                 dTupL = mg.deleteList(dbName, collectionName, dList, keyName)
                 logger.debug("Deleted document status %r" % dTupL)
 
-            rIdL = mg.insertList(dbName, collectionName, dList)
+            rIdL = mg.insertList(dbName, collectionName, dList, keyName)
             #
             #  If there is a failure then determine the success list -
             #

@@ -167,7 +167,6 @@ class MongoDbLoaderWorkerTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-
     def testReLoadPdbxEntryData(self):
         """ Test case -  Load PDBx entry data
         """

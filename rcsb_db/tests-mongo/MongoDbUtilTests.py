@@ -306,7 +306,8 @@ class MongoDbUtilTests(unittest.TestCase):
             for ii in range(100):
                 dList.append(self.__makeDataObj(2, 5, 5, ii))
             #
-            rIdL = mg.insertList(self.__dbName, self.__collectionName, dList)
+            keyName = 'DOC_ID'
+            rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyName)
             self.assertEqual(len(rIdL), len(dList))
             #
             # Note that dObj is mutated by additional key '_id' that is added on insert -
@@ -398,7 +399,8 @@ class MongoDbUtilTests(unittest.TestCase):
                 dObj = self.__makeDataObj(2, 5, 5, ii)
                 dList.append(dObj)
             #
-            rIdL = mg.insertList(self.__dbName, self.__collectionName, dList)
+            keyName = 'DOC_ID'
+            rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyName)
             self.assertEqual(len(rIdL), len(dList))
             #
             for ii, rId in enumerate(rIdL):
@@ -451,7 +453,8 @@ class MongoDbUtilTests(unittest.TestCase):
                 dObj = self.__makeDataObj(2, 5, 5, ii)
                 dList.append(dObj)
             #
-            rIdL = mg.insertList(self.__dbName, self.__collectionName, dList)
+            keyName = 'DOC_ID'
+            rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyName)
             self.assertEqual(len(dList), len(rIdL))
             #
             for ii in range(nDocs):
@@ -497,7 +500,8 @@ class MongoDbUtilTests(unittest.TestCase):
                 dObj = self.__makeDataObj(2, 5, 5, ii)
                 dList.append(dObj)
             #
-            rIdL = mg.insertList(self.__dbName, self.__collectionName, dList)
+            keyName = 'DOC_ID'
+            rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyName)
             self.assertEqual(len(dList), len(rIdL))
             #
             for ii in range(nDocs):

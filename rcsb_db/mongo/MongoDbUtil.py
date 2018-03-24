@@ -5,6 +5,7 @@
 # Update:
 #      17-Mar-2018  jdw add replace and index ops
 #      19-Mar-2018  jdw reorganize error handling for bulk insert
+#      24-Mar-2018  jdw add salvage path for bulk insert
 ##
 """
 Base class for simple essential database operations for MongoDb.
@@ -112,22 +113,45 @@ class MongoDbUtil(object):
             logger.exception("Failing with %s" % str(e))
         return None
 
-    def insertList(self, databaseName, collectionName, dList, ordered=False, bypassValidation=True):
+    def insertList(self, databaseName, collectionName, dList, keyName, ordered=False, bypassValidation=True):
         rIdL = []
         try:
             c = self.__mgObj[databaseName].get_collection(collectionName)
             r = c.insert_many(dList, ordered=ordered, bypass_document_validation=bypassValidation)
         except Exception as e:
-            logger.error("Insert operation failing with %s" % str(e))
+            logger.error("Bulk insert operation failing with %s" % str(e))
         #
         try:
             rIdL = r.inserted_ids
             return rIdL
         except Exception as e:
-            logger.error("Insert ID recovery failing with %s" % str(e))
-            return rIdL
+            logger.error("Bulk insert document Id recovery failing with %s" % str(e))
+            return self.___salvageInsertList(databaseName, collectionName, dList, keyName)
 
         return rIdL
+
+    def insertListSerial(self, databaseName, collectionName, dList, keyName):
+        rIdL = []
+        try:
+            for d in dList:
+                kyVal = self.__dictGet(d, keyName)
+                rId = self.insert(databaseName, collectionName, d)
+                if rId:
+                    rIdL.append(rId)
+                else:
+                    logger.error("Loading document %r failed" % kyVal)
+        except Exception as e:
+            logger.exception("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, keyName, str(e)))
+        #
+        return rIdL
+
+    def ___salvageInsertList(self, databaseName, collectionName, dList, keyName):
+        ''' Delete and serially insert the input document list.   Return the list list
+            of documents ids successfully loaded.
+        '''
+        dTupL = self.deleteList(databaseName, collectionName, dList, keyName)
+        logger.debug("Salvage bulk insert - deleting %d documents" % len(dTupL))
+        return self.insertListSerial(databaseName, collectionName, dList, keyName)
 
     def fetchOne(self, databaseName, collectionName, ky, val):
         try:
