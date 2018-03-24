@@ -125,7 +125,7 @@ class MongoDbUtil(object):
             rIdL = r.inserted_ids
             return rIdL
         except Exception as e:
-            logger.error("Bulk insert document Id recovery failing with %s" % str(e))
+            logger.debug("Bulk insert document Id recovery failing with %s" % str(e))
             return self.___salvageInsertList(databaseName, collectionName, dList, keyName)
 
         return rIdL

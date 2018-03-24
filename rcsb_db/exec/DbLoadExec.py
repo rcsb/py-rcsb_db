@@ -51,8 +51,8 @@ def main():
     parser = argparse.ArgumentParser()
     #
     #
-    parser.add_argument("--load_full", default=False, action='store_true', help="Fresh full load in a new tables/collections")
-    parser.add_argument("--load_with_replacement", default=False, action='store_true', help="Load with replacement in an existing table/collection (default)")
+    parser.add_argument("--full", default=False, action='store_true', help="Fresh full load in a new tables/collections")
+    parser.add_argument("--replace", default=False, action='store_true', help="Load with replacement in an existing table/collection (default)")
     #
     parser.add_argument("--load_chem_comp_ref", default=False, action='store_true', help="Load Chemical Component reference definitions (public subset)")
     parser.add_argument("--load_bird_chem_comp_ref", default=False, action='store_true', help="Load Bird Chemical Component reference definitions (public subset)")
@@ -105,8 +105,8 @@ def main():
         fileLimit = args.file_limit
         failedFilePath = args.fail_file_list_path
         fPath = args.load_file_list_path
-        loadType = 'full' if args.load_full else 'replace'
-        loadType = 'replace' if args.load_with_replacement else 'full'
+        loadType = 'full' if args.full else 'replace'
+        loadType = 'replace' if args.replace else 'full'
         if args.file_limit:
             fileLimit = int(args.file_limit)
 
