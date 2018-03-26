@@ -7,6 +7,7 @@
 # Updates:
 #    5-Dec-2016 jdw add program and program version to pdbx_chem_comp_identifier table
 #   16-MAR-2018 jdw add cardinality details
+#   24-Mar-2018 jdw extend collection mapping
 ##
 """
 Database schema defintions for chemical component definitions.
@@ -26,17 +27,18 @@ from rcsb_db.schema.SchemaDefBase import SchemaDefBase
 
 class ChemCompSchemaDef(SchemaDefBase):
     """ A data class containing schema definitions chemical component definitions.
-    'COLLECTION_DOCUMENT_ATTRIBUTE_ID': {'bird_v4_0_1': ('PDBX_REFERENCE_MOLECULE', 'PRD_ID'),
-                                                             'family_v4_0_1': ('PDBX_REFERENCE_MOLECULE_FAMILY', 'FAMILY_PRD_ID')},
+
     """
 
-    _databaseName = "compv4"
-    _versionedDatabaseName = "comp_v4_0_1"
-    _documentDefDict = {'UNIT_CARDINALITY_LIST': ['CHEM_COMP'],
+    _databaseName = "chem_comp_v5"
+    _versionedDatabaseName = "comp_v5_0_1"
+    _documentDefDict = {'CONTENT_TYPE_COLLECTION_MAP': {'chem_comp': ['chem_comp_v5_0_2'],
+                                                        'bird_chem_comp': ['bird_chem_comp_v5_0_2']},
+                        'UNIT_CARDINALITY_LIST': ['CHEM_COMP'],
                         'ITERABLE_ATTRIBUTE_LIST': [('CHEM_COMP', 'PDBX_SYNONYMS', ';'),
                                                     ('CHEM_COMP', 'MON_NSTD_PARENT_COMP_ID', ',')],
-                        'COLLECTION_DOCUMENT_ATTRIBUTE_ID': {'chem_comp_v4_0_1': ('CHEM_COMP', 'COMPONENT_ID'),
-                                                             'bird_chem_comp_v4_0_1': ('CHEM_COMP', 'COMPONENT_ID'),
+                        'COLLECTION_DOCUMENT_ATTRIBUTE_ID': {'chem_comp_v5_0_2': ('CHEM_COMP', 'COMPONENT_ID'),
+                                                             'bird_chem_comp_v5_0_2': ('CHEM_COMP', 'COMPONENT_ID'),
                                                              },
                         'SELECTION_FILTERS': {'CHEM_COMP_PUBLIC_RELEASE': [{'TABLE_ID': 'CHEM_COMP', 'ATTRIBUTE_ID': 'PDBX_RELEASE_STATUS', 'VALUES': ['REL', 'OBS', 'REF_ONLY']}]
                                               }

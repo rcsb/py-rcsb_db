@@ -15,6 +15,7 @@
 # 15-Mar-2018  jdw add unit cardinality access methods
 # 16-Mar-2018  jdw add convenience method to detect date types
 # 19-Mar-2018  jdw consolidate document features in a common dictionary
+# 24-Mar-2018  jdw add document content type to colletion name mapping accessors
 #
 ##
 """
@@ -38,11 +39,47 @@ class SchemaDefBase(object):
     """ A base class for schema definitions.
 
     """
+    # Preliminary anchor information for tracking document loading -
+    __baseTables = {'__LOAD_STATUS__': {'ATTRIBUTES': {'NAME': 'name',
+                                                       'LOAD_DATE': 'load_date',
+                                                       'LOAD_FILE_PATH': 'load_file_path'},
+                                        'ATTRIBUTE_INFO': {'NAME': {'NULLABLE': False,
+                                                                    'ORDER': 1,
+                                                                    'PRECISION': 0,
+                                                                    'PRIMARY_KEY': True,
+                                                                    'SQL_TYPE': 'VARCHAR',
+                                                                    'WIDTH': 20},
+                                                           'LOAD_DATE': {'NULLABLE': False,
+                                                                         'ORDER': 2,
+                                                                         'PRECISION': 0,
+                                                                         'PRIMARY_KEY': True,
+                                                                         'SQL_TYPE': 'DATETIME',
+                                                                         'WIDTH': 20},
+                                                           'LOAD_FILE_PATH': {'NULLABLE': False,
+                                                                              'ORDER': 3,
+                                                                              'PRECISION': 0,
+                                                                              'PRIMARY_KEY': True,
+                                                                              'SQL_TYPE': 'VARCHAR',
+                                                                              'WIDTH': 255},
+                                                           },
+                                        'ATTRIBUTE_MAP': {'NAME': ('__load_status__', 'name', None, None),
+                                                          'LOAD_DATE': ('__load_status__', 'load_date', None, None),
+                                                          'LOAD_FILE_PATH': ('__load_status__', 'load_file_path', None, None),
+                                                          },
+                                        'INDICES': {'p1': {'ATTRIBUTES': ('NAME', 'LOAD_DATE', 'LOAD_FILE_PATH'), 'TYPE': 'UNIQUE'},
+                                                    's1': {'ATTRIBUTES': ('LOAD_FILE_PATH',), 'TYPE': 'SEARCH'}},
+                                        'MAP_MERGE_INDICES': {},
+                                        'TABLE_DELETE_ATTRIBUTE': 'NAME',
+                                        'TABLE_ID': '__LOAD_STATUS__',
+                                        'TABLE_NAME': '__load_status__',
+                                        'TABLE_TYPE': 'transactional'}
+                    }
 
     def __init__(self, databaseName=None, schemaDefDict=None, convertNames=False, versionedDatabaseName=None, documentDefDict=None, verbose=True):
         self.__verbose = verbose
         self.__databaseName = databaseName if databaseName is not None else "unassigned"
         self.__schemaDefDict = schemaDefDict if schemaDefDict is not None else {}
+        self.__schemaDefDict.update(SchemaDefBase.__baseTables)
         self.__convertNames = convertNames
         self.__versionedDatabaseName = versionedDatabaseName if versionedDatabaseName is not None else self.__databaseName
         self.__documentDefDict = documentDefDict if documentDefDict is not None else {}
@@ -51,6 +88,16 @@ class SchemaDefBase(object):
         if convertNames:
             self.__convertTableNames()
             self.__convertAttributeNames()
+
+    def getContentTypeCollections(self, contentType):
+        """ Return the collections defined for the input content type.
+        """
+        cL = []
+        try:
+            cL = self.__documentDefDict['CONTENT_TYPE_COLLECTION_MAP'][contentType]
+        except Exception as e:
+            logger.error("Failing for content type %s with %s" % (contentType, str(e)))
+        return cL
 
     def getVersionedCollection(self, prefix):
         try:
@@ -70,19 +117,27 @@ class SchemaDefBase(object):
         try:
             excludeL = self.__documentDefDict['COLLECTION_CONTENT'][collectionName]['EXCLUDE_TABLES']
         except Exception as e:
-            logger.error("Collection %s Faling with %s" % (collectionName, str(e)))
+            logger.debug("Collection %s failing with %s" % (collectionName, str(e)))
         return excludeL
 
     def getCollectionSelectedTables(self, collectionName):
-        ''' For input collection, return the list of selected tables.
+        ''' For input collection, return the list of selected tables or the full table list if no selection is defined.
         '''
-        selectL = []
+        sL = []
         try:
-            selectL = self.__documentDefDict['COLLECTION_CONTENT'][collectionName]['INCLUDE_TABLES']
+            sL = self.__documentDefDict['COLLECTION_CONTENT'][collectionName]['INCLUDE_TABLES']
+            # if any tables are selected then append the base tables -
+            if sL:
+                for ky in SchemaDefBase.__baseTables:
+                    sL.append(ky)
+                sL = list(set(sL))
+            else:
+                sL = self.getTableIdList()
+            return sL
         except Exception as e:
-            logger.error("Collection %s faling with %s" % (collectionName, str(e)))
+            logger.debug("Collection %s failing with %s" % (collectionName, str(e)))
 
-        return selectL
+        return sL
 
     def getDocumentSelector(self, selectorName):
         if 'SELECTION_FILTERS' in self.__documentDefDict and selectorName in self.__documentDefDict['SELECTION_FILTERS']:
@@ -122,6 +177,8 @@ class SchemaDefBase(object):
         rD = {}
         try:
             rD = {tableId: True for tableId in documentDefDict['UNIT_CARDINALITY_LIST']}
+            for ky in SchemaDefBase.__baseTables:
+                rD[ky] = True
         except Exception as e:
             pass
         return rD
@@ -180,7 +237,7 @@ class SchemaDefBase(object):
             return None
 
     def getTableIdList(self):
-        return self.__schemaDefDict.keys()
+        return list(self.__schemaDefDict.keys())
 
     def getAttributeIdList(self, tableId):
         tD = self.__schemaDefDict[tableId]
@@ -371,7 +428,7 @@ class TableDef(object):
 
     def getIndexNames(self):
         try:
-            return self.__tD['INDICES'].keys()
+            return list(self.__tD['INDICES'].keys())
         except Exception as e:
             return []
 

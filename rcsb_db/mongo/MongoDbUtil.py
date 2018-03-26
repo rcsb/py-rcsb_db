@@ -87,7 +87,7 @@ class MongoDbUtil(object):
             logger.debug("Return from create collection %r " % ok)
             return True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing for databaseName %s collectionName %s with %s" % (databaseName, collectionName, str(e)))
         return False
 
     def dropCollection(self, databaseName, collectionName):
@@ -96,7 +96,7 @@ class MongoDbUtil(object):
             logger.debug("Return from drop collection %r " % ok)
             return True
         except Exception as e:
-            logger.error("Failing with %s" % str(e))
+            logger.error("Failing drop collection for databaseName %s collectionName %s with %s" % (databaseName, collectionName, str(e)))
         return False
 
     def insert(self, databaseName, collectionName, dObj):

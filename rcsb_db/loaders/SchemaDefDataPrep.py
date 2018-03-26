@@ -13,6 +13,7 @@
 #      19-Mar-2018  jdw add container name or input file path as a hidden document field
 #      22-Mar-2018  jdw add tableInclude details to limit the content scope
 #      22-Mar-2018  jdw change contentSelectors to documentSelectors ...
+#      25-Mar-2018  jdw improve handling of selected / excluded tables -
 #
 ##
 """
@@ -27,9 +28,11 @@ __license__ = "Apache 2.0"
 
 
 import time
+import datetime
 import pickle
 import dateutil.parser
 from operator import itemgetter
+from mmcif.api.DataCategory import DataCategory
 
 try:
     from mmcif.io.IoAdapterCore import IoAdapterCore as IoAdapter
@@ -58,6 +61,7 @@ class SchemaDefDataPrep(object):
         #
         self.__tableIdExcludeD = {}
         self.__tableIdIncludeD = {}
+        self.__statusTableIdList = ['__LOAD_STATUS__']
         #
 
     def setTableIdExcludeList(self, tableIdList):
@@ -82,6 +86,22 @@ class SchemaDefDataPrep(object):
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
         return False
+
+    def getContainerList(self, inputPathList, filterType="none"):
+        """
+        """
+        utcnow = datetime.datetime.utcnow()
+        ts = utcnow.strftime("%Y-%m-%d:%H:%M:%S")
+
+        cL = []
+        for lPath in inputPathList:
+            myContainerList = self.__ioObj.readFile(lPath)
+            for c in myContainerList:
+                dc = DataCategory('__load_status__', ['name', 'load_date', 'load_file_path'], [[c.getName(), ts, lPath]])
+                logger.debug("data category %r" % dc)
+                c.append(dc)
+                cL.append(c)
+        return cL
 
     def fetch(self, inputPathList, styleType="rowwise_by_id", filterType="none", documentSelectors=None):
         """ Return a dictionary of loadable data for each table defined in the current schema
@@ -133,7 +153,6 @@ class SchemaDefDataPrep(object):
             if not tableDataDictById:
                 continue
             tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType, logSize=logSize)
-            tableDataDict['__INPUT_PATH__'] = inputPath
             tableDataDictList.append(tableDataDict)
             containerNameList.extend(cnList)
         #
@@ -190,7 +209,6 @@ class SchemaDefDataPrep(object):
                 continue
             #
             tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType, logSize=logSize)
-            tableDataDict['__CONTAINER_NAME__'] = container.getName()
             tableDataDictList.append(tableDataDict)
             containerNameList.extend(cnList)
 
@@ -212,7 +230,6 @@ class SchemaDefDataPrep(object):
         rejectPathList = []
         containerNameList = []
         tableDataDict = {}
-        tableIdList = self.__sD.getTableIdList()
         for lPath in loadPathList:
             myContainerList = self.__ioObj.readFile(lPath)
             cL = []
@@ -221,7 +238,7 @@ class SchemaDefDataPrep(object):
                     cL.append(c)
                 else:
                     rejectPathList.append(lPath)
-            self.__mapData(cL, tableIdList, tableDataDict, filterType)
+            self.__mapData(cL, tableDataDict, filterType)
             containerNameList.extend([myC.getName() for myC in myContainerList])
         #
         tableDataDictF = {}
@@ -252,14 +269,13 @@ class SchemaDefDataPrep(object):
         rejectList = []
         containerNameList = []
         tableDataDict = {}
-        tableIdList = self.__sD.getTableIdList()
         cL = []
         for c in containerList:
             if self.__testdocumentSelectors(c, documentSelectors):
                 cL.append(c)
             else:
                 rejectList.append(c)
-        self.__mapData(cL, tableIdList, tableDataDict, filterType)
+        self.__mapData(cL, tableDataDict, filterType)
         containerNameList.extend([myC.getName() for myC in containerList])
         #
         #
@@ -452,10 +468,10 @@ class SchemaDefDataPrep(object):
         else:
             return False
 
-    def __mapData(self, containerList, tableIdList, tableDataDict, filterType="none"):
+    def __mapData(self, containerList, tableDataDict, filterType="none"):
         """
            Process instance data in the input container list and map these data to the
-           table schema definitions in the input table list.
+           table schema definitions to the current selected table list.
 
            Returns: mapped data as a list of dictionaries with attribute Id key for
                     each schema table.  Data are appended to any existing table in
@@ -463,9 +479,16 @@ class SchemaDefDataPrep(object):
 
 
         """
-        filteredTableIdList = self.__tableIdIncludeD if self.__tableIdIncludeD else tableIdList
+        # Respect any input selection otherwise use all schema defined tables -
+        if self.__tableIdIncludeD:
+            selectedTableIdList = list(self.__tableIdIncludeD.keys())
+        else:
+            selectedTableIdList = self.__sD.getTableIdList()
+        #
+        logger.debug("selectedTableIdList %r " % selectedTableIdList)
         for myContainer in containerList:
-            for tableId in filteredTableIdList:
+            # logger.debug("object name list %r " % myContainer.getObjNameList())
+            for tableId in selectedTableIdList:
                 if tableId in self.__tableIdExcludeD:
                     logger.debug("Skipping excluded table %s" % tableId)
                     continue

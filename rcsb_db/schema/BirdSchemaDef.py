@@ -5,8 +5,9 @@
 # Version: 0.001 Initial version
 #
 # Updates:
-# 20-DEC-2017 jdw PDBX_REFERENCE_MOLECULE_DETAILS text column width adjusted to 20000 mariadb max value
-# 16-MAR-2018 jdw add cardinality details
+#   20-Dec-2017 jdw PDBX_REFERENCE_MOLECULE_DETAILS text column width adjusted to 20000 mariadb max value
+#   16-Mar-2018 jdw add cardinality details
+#   24-Mar-2018 jdw extend collection mapping
 ##
 """
 Database schema defintions for Bird PRD/FAMILY reference data.
@@ -28,12 +29,14 @@ from rcsb_db.schema.SchemaDefBase import SchemaDefBase
 class BirdSchemaDef(SchemaDefBase):
     """ A data class containing schema definitions for deposition related messages.
     """
-    _databaseName = "birdv4"
-    _versionedDatabaseName = "bird_v4_0_1"
-    _documentDefDict = {'UNIT_CARDINALITY_LIST': ['PDBX_REFERENCE_MOLECULE', 'PDBX_REFERENCE_MOLECULE_FAMILY'],
+    _databaseName = "bird_v5"
+    _versionedDatabaseName = "bird_v5_0_1"
+    _documentDefDict = {'CONTENT_TYPE_COLLECTION_MAP': {'bird': ['bird_v5_0_2'],
+                                                        'bird_family': ['family_v5_0_2']},
+                        'UNIT_CARDINALITY_LIST': ['PDBX_REFERENCE_MOLECULE', 'PDBX_REFERENCE_MOLECULE_FAMILY'],
                         'ITERABLE_ATTRIBUTE_LIST': [],
-                        'COLLECTION_DOCUMENT_ATTRIBUTE_ID': {'bird_v4_0_1': ('PDBX_REFERENCE_MOLECULE', 'PRD_ID'),
-                                                             'family_v4_0_1': ('PDBX_REFERENCE_MOLECULE_FAMILY', 'FAMILY_PRD_ID')},
+                        'COLLECTION_DOCUMENT_ATTRIBUTE_ID': {'bird_v5_0_2': ('PDBX_REFERENCE_MOLECULE', 'PRD_ID'),
+                                                             'family_v5_0_2': ('PDBX_REFERENCE_MOLECULE_FAMILY', 'FAMILY_PRD_ID')},
                         'SELECTION_FILTERS': {'BIRD_PUBLIC_RELEASE': [{'TABLE_ID': 'PDBX_REFERENCE_MOLECULE', 'ATTRIBUTE_ID': 'RELEASE_STATUS', 'VALUES': ['REL', 'OBS']}],
                                               'BIRD_FAMILY_PUBLIC_RELEASE': [{'TABLE_ID': 'PDBX_REFERENCE_MOLECULE_FAMILY', 'ATTRIBUTE_ID': 'RELEASE_STATUS', 'VALUES': ['REL', 'OBS']}],
 
