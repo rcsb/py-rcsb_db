@@ -10,6 +10,7 @@
 # 21-Apr-2015 jdw change the termination and reaping protocol.
 #  9-Oct-2017 jdw add chunkSize option such that the input dataList to provide more granular distribution
 #                 data among the works.  Defaults to numProc if unspecified.
+# 27-Mar-2018 jdw add check for empty input
 ##
 """
 Multiprocessing execuction wrapper supporting tasks with list of inputs and a variable number of output lists.
@@ -128,7 +129,8 @@ class MultiProcUtil(object):
         #
         subLists = [dataList[i::numLists] for i in range(numLists)]
         #
-        logger.debug("+MultiProcUtil.runMulti() with numProc %d  subtask count %d subtask length ~ %d\n" % (numProc, len(subLists), len(subLists[0])))
+        if subLists and len(subLists) > 0:
+            logger.debug("+MultiProcUtil.runMulti() with numProc %d  subtask count %d subtask length ~ %d\n" % (numProc, len(subLists), len(subLists[0])))
         #
         taskQueue = multiprocessing.Queue()
         successQueue = multiprocessing.Queue()

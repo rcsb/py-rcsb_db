@@ -6,6 +6,8 @@
 #
 # Updates:
 #   22-Mar-2018  jdw add support for all repositories -
+#   26-Mar-2018  jdw internalize the use of externally provided configuration object -
+#   27-Mar-2018  jdw add path to support mock repositories for testing.
 ##
 """
  Utilites for scanning common data repository file systems.
@@ -35,9 +37,15 @@ from mmcif_utils.bird.PdbxFamilyIo import PdbxFamilyIo
 
 class RepoPathUtil(object):
 
-    def __init__(self, fileLimit=None, verbose=False):
+    def __init__(self, cfgOb, numProc=8, fileLimit=None, mockTopPath=None, verbose=False):
         self.__fileLimit = fileLimit
+        self.__numProc = numProc
         self.__verbose = verbose
+        self.__cfgOb = cfgOb
+        self.__mockTopPath = mockTopPath
+
+    def __cfgWrapper(self, ky):
+        return os.path.join(self.__mockTopPath, self.__cfgOb.get(ky)) if self.__mockTopPath else self.__cfgOb.get(ky)
 
     def _chemCompPathWorker(self, dataList, procName, optionsD, workingDir):
         """ Return the list of chemical component definition file paths in the current repository.
@@ -54,8 +62,11 @@ class RepoPathUtil(object):
                         pathList.append(os.path.join(root, name))
         return dataList, pathList, []
 
-    def getChemCompPathList(self, topRepoPath, numProc=8):
-        """Get the file list for the chemical component definition repo
+    def getChemCompPathList(self):
+        return self.__getChemCompPathList(self.__cfgWrapper('CHEM_COMP_REPO_PATH'), numProc=self.__numProc)
+
+    def __getChemCompPathList(self, topRepoPath, numProc=8):
+        """Get the path list for the chemical component definition repository
         """
         ts = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
         logger.debug("Starting at %s" % ts)
@@ -92,8 +103,11 @@ class RepoPathUtil(object):
                         pathList.append(os.path.join(root, name))
         return dataList, pathList, []
 
-    def getEntryPathList(self, topRepoPath, numProc=8):
-        """Get the file list for the chemical component definition repo
+    def getEntryPathList(self):
+        return self.__getEntryPathList(self.__cfgWrapper('RCSB_PDBX_SANBOX_PATH'), numProc=self.__numProc)
+
+    def __getEntryPathList(self, topRepoPath, numProc=8):
+        """Get the path list for the chemical component definition repository
         """
         ts = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
         logger.debug("Starting at %s" % ts)
@@ -123,8 +137,11 @@ class RepoPathUtil(object):
             logger.exception("Failing with %s" % str(e))
         return self.__applyFileLimit(pathList)
 
-    def getPrdPathList(self, topRepoPath):
-        """Get the path list of PRD definitions in the CVS repository.
+    def getBirdPathList(self):
+        return self.__getBirdPathList(self.__cfgWrapper('BIRD_REPO_PATH'))
+
+    def __getBirdPathList(self, topRepoPath):
+        """Get the path list of BIRD definitions in the repository.
         """
         pathList = []
         try:
@@ -135,8 +152,11 @@ class RepoPathUtil(object):
             logger.exception("Failing with %s" % str(e))
         return self.__applyFileLimit(pathList)
 
-    def getPrdFamilyPathList(self, topRepoPath):
-        """Get the path list of PRD Family definitions in the CVS repository.
+    def getBirdFamilyPathList(self):
+        return self.__getBirdFamilyPathList(self.__cfgWrapper('BIRD_FAMILY_REPO_PATH'))
+
+    def __getBirdFamilyPathList(self, topRepoPath):
+        """Get the path list of BIRD Family definitions in the repository.
         """
         pathList = []
         try:
@@ -148,8 +168,11 @@ class RepoPathUtil(object):
             logger.exception("Failing with %s" % str(e))
         return self.__applyFileLimit(pathList)
 
-    def getPrdCCPathList(self, topRepoPath):
-        """Get the path list of BIRD PRD CC definitions in therepository.
+    def getBirdChemCompPathList(self):
+        return self.__getBirdChemCompPathList(self.__cfgWrapper('BIRD_CHEM_COMP_REPO_PATH'))
+
+    def __getBirdChemCompPathList(self, topRepoPath):
+        """Get the path list of BIRD chemical component definitions in the repository.
         """
         pathList = []
         try:

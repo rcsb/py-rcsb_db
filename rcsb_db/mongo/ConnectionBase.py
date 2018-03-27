@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 #
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
-from rcsb_db.utils.ConfigUtil import ConfigUtil
+
 
 if platform.system() == "Linux":
     try:
@@ -42,13 +42,12 @@ if platform.system() == "Linux":
 
 class ConnectionBase(object):
 
-    def __init__(self, siteId=None, verbose=False):
+    def __init__(self, verbose=False):
         self.__verbose = verbose
         #
-        self.__siteId = siteId
-        self.__db = None
+        self.__infoD = {}
         self.__dbClient = None
-        self.__prefD = {}
+
         self.__databaseName = None
         self.__dbHost = None
         self.__dbUser = None
@@ -56,72 +55,37 @@ class ConnectionBase(object):
         self.__dbSocket = None
         self.__dbPort = None
         self.__dbAdminDb = None
-        self.__dbPort = 27017
+        self.__dbPort = None
+        self.__defaultPort = 27017
         self.__dbServer = 'mongo'
+        self.__resourceName = None
 
-    def setResource(self, resourceName=None, realm='RCSB'):
-        #
-        if (resourceName == "EXCHANGE_DB"):
-            cu = ConfigUtil(configPath=None, sectionName=realm)
-            self.__databaseName = cu.get("SITE_EXCHANGE_DB_NAME")
-            self.__dbHost = cu.get("SITE_EXCHANGE_DB_HOST_NAME")
-            self.__dbSocket = cu.get("SITE_EXCHANGE_DB_SOCKET")
-            self.__dbPort = cu.get("SITE_EXCHANGE_DB_PORT_NUMBER")
-            self.__dbUser = cu.get("SITE_EXCHANGE_DB_USER_NAME")
-            self.__dbPw = cu.get("SITE_EXCHANGE_DB_PASSWORD")
-            self.__dbAdminDb = cu.get("SITE_EXCHANGE_ADMIN_DB_NAME", defaultValue='admin')
-            #
-            self.__writeConcern = cu.get("DB_WRITE_CONCERN", defaultValue="majority")
-            self.__readConcern = cu.get("DB_READ_CONCERN", defaultValue="majority")
-            self.__readPreference = cu.get("DB_READ_PREFERENCE", defaultValue="nearest")
-            self.__writeJournalOpt = cu.get("DB_WRITE_TO_JOURNAL", defaultValue=True)
-        else:
-            pass
+    def assignResource(self, resourceName=None):
+        # implement in the derived class
+        self._assignResource(resourceName)
 
-        if self.__dbSocket is None or len(self.__dbSocket) < 2:
-            self.__dbSocket = None
-
-        if self.__dbPort is None:
-            self.__dbPort = 27017
-        else:
-            self.__dbPort = int(str(self.__dbPort))
-
-        logger.debug("%s resource name %s server %s dns %s host %s user %s socket %s port %r admindb %s" %
-                     (self.__siteId, resourceName, self.__dbServer, self.__databaseName, self.__dbHost, self.__dbUser, self.__dbSocket, self.__dbPort, self.__dbAdminDb))
-        #
-        self.__prefD["DB_NAME"] = self.__databaseName
-        self.__prefD["DB_HOST"] = self.__dbHost
-        self.__prefD["DB_USER"] = self.__dbUser
-        self.__prefD["DB_PW"] = self.__dbPw
-        self.__prefD["DB_SOCKET"] = self.__dbSocket
-        self.__prefD["DB_PORT"] = int(str(self.__dbPort))
-        self.__prefD["DB_SERVER"] = self.__dbServer
-        self.__prefD["DB_ADMIN_DB_NAME"] = self.__dbAdminDb
-        self.__prefD["DB_WRITE_CONCERN"] = self.__writeConcern
-        self.__prefD["DB_READ_CONCERN"] = self.__readConcern
-        self.__prefD["DB_READ_PREFERENCE"] = self.__readPreference
-        self.__prefD["DB_WRITE_TO_JOURNAL"] = self.__writeJournalOpt
-        #
+    def _assignResource(self, resourceName):
+        self.__resourceName = resourceName
 
     def getPreferences(self):
-        return self.__prefD
+        return self.__infoD
 
-    def setPreferences(self, prefD):
+    def setPreferences(self, infoD):
         try:
-            self.__prefD = copy.deepcopy(prefD)
-            self.__databaseName = self.__prefD.get("DB_NAME", None)
-            self.__dbHost = self.__prefD.get("DB_HOST", 'localhost')
-            self.__dbUser = self.__prefD.get("DB_USER", None)
-            self.__dbPw = self.__prefD.get("DB_PW", None)
-            self.__dbSocket = self.__prefD.get("DB_SOCKET", None)
-            self.__dbServer = self.__prefD.get("DB_SERVER", "mongo")
-            self.__dbAdminDb = self.__prefD.get("DB_ADMIN_DB_NAME", "admin")
-            self.__writeConcern = self.__prefD.get("DB_WRITE_CONCERN", "majority")
-            self.__readConcern = self.__prefD.get("DB_READ_CONCERN", "majority")
-            self.__readPreference = self.__prefD.get("DB_READ_PREFERENCE", "nearest")
-            self.__writeJournalOpt = self.__prefD.get("DB_WRITE_TO_JOURNAL", True)
+            self.__infoD = copy.deepcopy(infoD)
+            self.__databaseName = self.__infoD.get("DB_NAME", None)
+            self.__dbHost = self.__infoD.get("DB_HOST", 'localhost')
+            self.__dbUser = self.__infoD.get("DB_USER", None)
+            self.__dbPw = self.__infoD.get("DB_PW", None)
+            self.__dbSocket = self.__infoD.get("DB_SOCKET", None)
+            self.__dbServer = self.__infoD.get("DB_SERVER", "mongo")
+            self.__dbAdminDb = self.__infoD.get("DB_ADMIN_DB_NAME", "admin")
+            self.__writeConcern = self.__infoD.get("DB_WRITE_CONCERN", "majority")
+            self.__readConcern = self.__infoD.get("DB_READ_CONCERN", "majority")
+            self.__readPreference = self.__infoD.get("DB_READ_PREFERENCE", "nearest")
+            self.__writeJournalOpt = self.__infoD.get("DB_WRITE_TO_JOURNAL", True)
             #
-            port = self.__prefD.get("DB_PORT", 27017)
+            port = self.__infoD.get("DB_PORT", self.__defaultPort)
             if port and len(str(port)) > 0:
                 self.__dbPort = int(str(port))
         except Exception as e:
@@ -135,7 +99,7 @@ class ConnectionBase(object):
         #
         if self.__dbClient is not None:
             # Close an open connection -
-            logger.info("+MyDbConnect.connect() WARNING Closing an existing connection.")
+            logger.warning("Closing an existing open connection.")
             self.closeConnection()
 
         try:
@@ -151,10 +115,10 @@ class ConnectionBase(object):
             kw['readConcernLevel'] = self.__readConcern
             kw['readPreference'] = self.__readPreference
             #
-            logger.debug("URI is %s" % uri)
+            # logger.debug("URI is %s" % uri)
             self.__dbClient = MongoClient(uri, **kw)
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.error("Connection to resource %s failing with %s" % (self.__resourceName, str(e)))
 
         try:
             # The ismaster command is cheap and does not require auth.
@@ -162,8 +126,8 @@ class ConnectionBase(object):
             logger.debug("Server status: %r " % d)
             return True
         except ConnectionFailure:
-            logger.exception("Connection error to server %s host %s dsn %s user %s pw %s socket %s port %d \n" %
-                             (self.__dbServer, self.__dbHost, self.__databaseName, self.__dbUser, self.__dbPw, self.__dbSocket, self.__dbPort))
+            logger.exception("Connection failing to resource %s " % self.__resourceName)
+
         self.__dbClient = None
 
         return False

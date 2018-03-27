@@ -150,6 +150,8 @@ class MyDbSqlGenTests(unittest.TestCase):
             sqlGen = MyDbQuerySqlGen(schemaDefObj=msd, verbose=self.__verbose)
 
             for tableId in tableIdList:
+                if msd.isBaseTable(tableId):
+                    continue
                 sqlCondition = MyDbConditionSqlGen(schemaDefObj=msd, verbose=self.__verbose)
                 sqlCondition.addValueCondition((tableId, "DEP_ID"), 'EQ', ('D000001', 'CHAR'))
                 aIdList = msd.getAttributeIdList(tableId)

@@ -7,14 +7,10 @@
 #
 # Updates:
 #    19-Mar-2018 jdw remove any assumptions about the order of bulk inserts.
+#    27-Mar-2018 jdw connection configuration now via ConfigUtil -
 ##
 """
 Test cases for simple MongoDb client opeations .
-
-Adjust environment setup  -
-
-        . set-test-env.sh
-
 
 """
 __docformat__ = "restructuredtext en"
@@ -42,8 +38,9 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-from rcsb_db.mongo.ConnectionBase import ConnectionBase
+from rcsb_db.mongo.Connection import Connection
 from rcsb_db.mongo.MongoDbUtil import MongoDbUtil
+from rcsb_db.utils.ConfigUtil import ConfigUtil
 
 
 class MongoDbUtilTests(unittest.TestCase):
@@ -51,48 +48,47 @@ class MongoDbUtilTests(unittest.TestCase):
     def setUp(self):
         self.__dbName = 'test_database'
         self.__collectionName = 'test_collection'
-        self.__lfh = sys.stderr
-        self.__verbose = True
-        self.__myC = None
-        dbUserId = os.getenv("MONGO_DB_USER_NAME")
-        dbUserPwd = os.getenv("MONGO_DB_PASSWORD")
-        dbName = os.getenv("MONGO_DB_NAME")
-        dbHost = os.getenv("MONGO_DB_HOST")
-        dbPort = os.getenv("MONGO_DB_PORT")
-        dbAdminDb = os.getenv("MONGO_DB_ADMIN_DB_NAME")
-        ok = self.open(dbUserId=dbUserId, dbUserPwd=dbUserPwd, dbHost=dbHost, dbName=dbName, dbPort=dbPort, dbAdminDb=dbAdminDb)
-        self.assertTrue(ok)
+        #
+        configPath = os.path.join(TOPDIR, 'rcsb_db', 'data', 'dbload-setup-example.cfg')
+        configName = 'DEFAULT'
+        self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
+        self.__resourceName = "MONGO_DB"
+        self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName)
+        self.__cObj = self.__open(self.__connectD)
+        #
         self.__startTime = time.time()
         logger.debug("Running tests on version %s" % __version__)
         logger.debug("Starting %s at %s" % (self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
 
     def tearDown(self):
-        self.close()
+        self.__close(self.__cObj)
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)\n" % (self.id(),
                                                               time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                               endTime - self.__startTime))
 
-    def open(self, dbUserId=None, dbUserPwd=None, dbHost=None, dbName=None, dbPort=None, dbAdminDb=None):
-        prefD = {"DB_HOST": dbHost, 'DB_USER': dbUserId, 'DB_PW': dbUserPwd, 'DB_NAME': dbName, "DB_PORT": dbPort, 'DB_ADMIN_DB_NAME': dbAdminDb}
-        self.__myC = ConnectionBase()
-        self.__myC.setPreferences(prefD)
-        ok = self.__myC.openConnection()
-        if ok:
-            return True
-        else:
-            return False
+    def __assignResource(self, cfgOb, resourceName="MONGO_DB"):
+        cn = Connection(cfgOb=cfgOb)
+        return cn.assignResource(resourceName=resourceName)
 
-    def close(self):
-        if self.__myC is not None:
-            self.__myC.closeConnection()
-            self.__myC = None
+    def __open(self, connectD):
+        cObj = Connection()
+        cObj.setPreferences(connectD)
+        ok = cObj.openConnection()
+        if ok:
+            return cObj
+        else:
+            return None
+
+    def __close(self, cObj):
+        if cObj is not None:
+            cObj.closeConnection()
             return True
         else:
             return False
 
     def getClientConnection(self):
-        return self.__myC.getClientConnection()
+        return self.__cObj.getClientConnection()
 
     def __makeDataObj(self, nCats, Nattribs, Nrows, docId=1):
         rD = {}
@@ -118,10 +114,6 @@ class MongoDbUtilTests(unittest.TestCase):
     def testCreateDatabase(self):
         """Test case -  create database -
 
-        Environment setup --
-
-        . set-test-env.sh
-
         """
         try:
             client = self.getClientConnection()
@@ -136,11 +128,6 @@ class MongoDbUtilTests(unittest.TestCase):
 
     def testCreateCollection(self):
         """Test case -  create collection -
-
-        Environment setup --
-
-        . set-test-env.sh
-
         """
         try:
             client = self.getClientConnection()
@@ -164,11 +151,6 @@ class MongoDbUtilTests(unittest.TestCase):
 
     def testCreateDropDatabase(self):
         """Test case -  create/drop database -
-
-        Environment setup --
-
-        . set-test-env.sh
-
         """
         try:
             client = self.getClientConnection()
@@ -192,11 +174,6 @@ class MongoDbUtilTests(unittest.TestCase):
 
     def testCreateCollectionDropDatabase(self):
         """Test case -  create/drop collection -
-
-        Environment setup --
-
-        . set-test-env.sh
-
         """
         try:
             client = self.getClientConnection()
@@ -220,11 +197,6 @@ class MongoDbUtilTests(unittest.TestCase):
 
     def testCreateDropCollection(self):
         """Test case -  create/drop collection -
-
-        Environment setup --
-
-        . set-test-env.sh
-
         """
         try:
             client = self.getClientConnection()
@@ -256,10 +228,6 @@ class MongoDbUtilTests(unittest.TestCase):
     def testInsertSingle(self):
         """Test case -  create collection and insert data -
 
-        Environment setup --
-
-        . set-test-env.sh
-
         """
         try:
             client = self.getClientConnection()
@@ -286,10 +254,6 @@ class MongoDbUtilTests(unittest.TestCase):
 
     def testInsertList(self):
         """Test case -  create collection and insert data -
-
-        Environment setup --
-
-        . set-test-env.sh
 
         """
         try:
@@ -324,10 +288,6 @@ class MongoDbUtilTests(unittest.TestCase):
 
     def testReplaceSingle(self):
         """Test case -  create collection and insert document  and then replace document -
-
-        Environment setup --
-
-        . set-test-env.sh
 
         """
         try:

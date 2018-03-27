@@ -89,6 +89,9 @@ class SchemaDefBase(object):
             self.__convertTableNames()
             self.__convertAttributeNames()
 
+    def isBaseTable(self, tableId):
+        return tableId in SchemaDefBase.__baseTables
+
     def getContentTypeCollections(self, contentType):
         """ Return the collections defined for the input content type.
         """

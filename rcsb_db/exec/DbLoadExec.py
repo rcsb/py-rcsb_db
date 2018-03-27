@@ -9,6 +9,7 @@
 #    22-May-2018 - jdw add replacment load type, add options for input file paths
 #    24-Mar-2018 - jdw add split collections for entries (preiliminary)
 #    24-Mar-2018 - jdw add option to preserve paths from automatic repo scan
+#    27-Mar-2018 - jdw update configuration handling and add support for mocking repository paths
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -33,6 +34,7 @@ except Exception as e:
     from rcsb_db import __version__
 
 from rcsb_db.mongo.MongoDbLoaderWorker import MongoDbLoaderWorker
+from rcsb_db.utils.ConfigUtil import ConfigUtil
 
 
 def readPathList(fileListPath):
@@ -61,7 +63,6 @@ def main():
     parser.add_argument("--load_bird_ref", default=False, action='store_true', help="Load Bird reference definitions (public subset)")
     parser.add_argument("--load_bird_family_ref", default=False, action='store_true', help="Load Bird Family reference definitions (public subset)")
     parser.add_argument("--load_entry_data", default=False, action='store_true', help="Load PDB entry data (current released subset)")
-    parser.add_argument("--load_entry_ext_data", default=False, action='store_true', help="Load PDB extended entry data (current released subset)")
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
     parser.add_argument("--config_name", default="DEFAULT", help="Configuration section name")
@@ -80,13 +81,15 @@ def main():
     parser.add_argument("--chunk_size", default=10, help="Number of files loaded per process")
     parser.add_argument("--file_limit", default=None, help="Load file limit for testing")
     parser.add_argument("--debug", default=False, action='store_true', help="Turn on verbose logging")
+    parser.add_argument("--mock", default=False, action='store_true', help="Use MOCK repository configuration for testing")
     args = parser.parse_args()
     #
     debugFlag = args.debug
     if debugFlag:
         logger.setLevel(logging.DEBUG)
-
-    #
+        logger.debug("Using software version %s" % __version__)
+    # ----------------------- - ----------------------- - ----------------------- - ----------------------- - ----------------------- -
+    #                                       Configuration Details
     configPath = args.config_path
     configName = args.config_name
     if not configPath:
@@ -98,9 +101,12 @@ def main():
         else:
             logger.error("Missing or access issue with config file %r" % configPath)
             exit(1)
+
+        cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
     except Exception as e:
         logger.error("Missing or access issue with config file %r" % configPath)
         exit(1)
+
     #
     try:
         readBackCheck = args.read_back_check
@@ -112,6 +118,7 @@ def main():
         loadType = 'full' if args.full else 'replace'
         loadType = 'replace' if args.replace else 'full'
         saveInputFileListPath = args.save_file_list_path
+        mockTopPath = os.path.join(TOPDIR, "rcsb_db", "data") if args.mock else None
         if args.file_limit:
             fileLimit = int(args.file_limit)
 
@@ -134,14 +141,14 @@ def main():
     #
     ##
     if args.db_type == "mongo":
-        mw = MongoDbLoaderWorker(configPath, configName, numProc=numProc, chunkSize=chunkSize, fileLimit=fileLimit, verbose=debugFlag, readBackCheck=readBackCheck)
+        mw = MongoDbLoaderWorker(cfgOb, resourceName="MONGO_DB", numProc=numProc, chunkSize=chunkSize, fileLimit=fileLimit, mockTopPath=mockTopPath, verbose=debugFlag, readBackCheck=readBackCheck)
 
         if args.load_chem_comp_ref:
-            ok = mw.loadContentType('chem-comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+            ok = mw.loadContentType('chem_comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                                     documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath, saveInputFileListPath=saveInputFileListPath)
 
         if args.load_bird_chem_comp_ref:
-            ok = mw.loadContentType('bird-chem-comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+            ok = mw.loadContentType('bird_chem_comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                                     documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath, saveInputFileListPath=saveInputFileListPath)
 
         if args.load_bird_ref:
@@ -149,15 +156,11 @@ def main():
                                     documentSelectors=["BIRD_PUBLIC_RELEASE"], failedFilePath=failedFilePath, saveInputFileListPath=saveInputFileListPath)
 
         if args.load_bird_family_ref:
-            ok = mw.loadContentType('bird-family', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+            ok = mw.loadContentType('bird_family', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                                     documentSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"], failedFilePath=failedFilePath, saveInputFileListPath=saveInputFileListPath)
 
         if args.load_entry_data:
             ok = mw.loadContentType('pdbx', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                                    documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=failedFilePath, saveInputFileListPath=saveInputFileListPath)
-
-        if args.load_entry_ext_data:
-            ok = mw.loadContentType('pdbx-ext', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                                     documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=failedFilePath, saveInputFileListPath=saveInputFileListPath)
 
         logger.info("Operation completed with status %r " % ok)

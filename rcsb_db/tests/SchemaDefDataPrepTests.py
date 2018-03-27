@@ -47,6 +47,7 @@ from rcsb_db.schema.BirdSchemaDef import BirdSchemaDef
 
 from mmcif_utils.bird.PdbxPrdIo import PdbxPrdIo
 from rcsb_db.utils.RepoPathUtil import RepoPathUtil
+from rcsb_db.utils.ConfigUtil import ConfigUtil
 
 
 class SchemaDefDataPrepTests(unittest.TestCase):
@@ -57,7 +58,11 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__verbose = True
 
     def setUp(self):
-        self.__databaseName = 'prdv4'
+        self.__mockTopPath = os.path.join(TOPDIR, "rcsb_db", "data")
+        configPath = os.path.join(TOPDIR, "rcsb_db", "data", 'dbload-setup-example.cfg')
+        configName = 'DEFAULT'
+        self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
+
         self.__birdRepoPath = os.path.join(TOPDIR, "rcsb_db", "data", "MOCK_BIRD_REPO")
         #
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width"
@@ -76,12 +81,12 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                                                               time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                               endTime - self.__startTime))
 
-    def testPrdPathList(self):
+    def testBirdPathList(self):
         """Test case -  get the path list of PRD definitions in the CVS repository.
         """
         try:
-            rpU = RepoPathUtil(fileLimit=self.__fileLimit)
-            self.__loadPathList = rpU.getPrdPathList(self.__birdRepoPath)
+            rpU = RepoPathUtil(self.__cfgOb, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
+            self.__loadPathList = rpU.getBirdPathList()
 
             logger.debug("Length of path list %d\n" % len(self.__loadPathList))
             self.assertGreaterEqual(len(self.__loadPathList), self.__birdMockLen)
@@ -94,7 +99,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         """Test case -  create loadable BIRD data from files
         """
         try:
-            self.testPrdPathList()
+            self.testBirdPathList()
             bsd = BirdSchemaDef(convertNames=True)
             sdp = SchemaDefDataPrep(schemaDefObj=bsd, verbose=self.__verbose)
             #
@@ -139,7 +144,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         """
 
         try:
-            self.testPrdPathList()
+            #self.testBirdPathList()
             bsd = BirdSchemaDef(convertNames=True)
 
             prd = PdbxPrdIo(verbose=self.__verbose)

@@ -7,6 +7,7 @@
 # Updates:
 #   22-Mar-2018 jdw  Revise all tests
 #   23-Mar-2018 jdw  Add reload test cases
+#   27-Mar-2018 jdw  Update configuration handling and mocking
 #
 ##
 """
@@ -40,6 +41,7 @@ except Exception as e:
     from rcsb_db import __version__
 
 from rcsb_db.mongo.MongoDbLoaderWorker import MongoDbLoaderWorker
+from rcsb_db.utils.ConfigUtil import ConfigUtil
 
 
 class MongoDbLoaderWorkerTests(unittest.TestCase):
@@ -51,8 +53,11 @@ class MongoDbLoaderWorkerTests(unittest.TestCase):
     def setUp(self):
         #
         #
-        self.__configPath = 'dbload-setup.cfg'
-        self.__configName = 'DEFAULT'
+        self.__mockTopPath = os.path.join(TOPDIR, 'rcsb_db', 'data')
+        configPath = os.path.join(TOPDIR, 'rcsb_db', 'data', 'dbload-setup-example.cfg')
+        configName = 'DEFAULT'
+        self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
+        self.__resourceName = "MONGO_DB"
         self.__failedFilePath = os.path.join(HERE, 'test-output', 'failed-list.txt')
         self.__readBackCheck = True
         self.__numProc = 2
@@ -75,8 +80,8 @@ class MongoDbLoaderWorkerTests(unittest.TestCase):
         """ Test case -  Load chemical component reference data
         """
         try:
-            mw = MongoDbLoaderWorker(self.__configPath, self.__configName, numProc=self.__numProc, chunkSize=self.__chunkSize,
-                                     fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
+            mw = MongoDbLoaderWorker(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+                                     fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
             ok = mw.loadContentType('chem_comp', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                                     documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
@@ -88,8 +93,8 @@ class MongoDbLoaderWorkerTests(unittest.TestCase):
         """ Test case -  Load Bird chemical component reference data
         """
         try:
-            mw = MongoDbLoaderWorker(self.__configPath, self.__configName, numProc=self.__numProc, chunkSize=self.__chunkSize,
-                                     fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
+            mw = MongoDbLoaderWorker(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+                                     fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
             ok = mw.loadContentType('bird_chem_comp', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                                     documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
@@ -101,8 +106,8 @@ class MongoDbLoaderWorkerTests(unittest.TestCase):
         """ Test case -  Load Bird reference data
         """
         try:
-            mw = MongoDbLoaderWorker(self.__configPath, self.__configName, numProc=self.__numProc, chunkSize=self.__chunkSize,
-                                     fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
+            mw = MongoDbLoaderWorker(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+                                     fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
             ok = mw.loadContentType('bird', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                                     documentSelectors=["BIRD_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
@@ -114,8 +119,8 @@ class MongoDbLoaderWorkerTests(unittest.TestCase):
         """ Test case -  Load Bird family reference data
         """
         try:
-            mw = MongoDbLoaderWorker(self.__configPath, self.__configName, numProc=self.__numProc, chunkSize=self.__chunkSize,
-                                     fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
+            mw = MongoDbLoaderWorker(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+                                     fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
             ok = mw.loadContentType('bird_family', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                                     documentSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertFalse(ok)
@@ -127,8 +132,8 @@ class MongoDbLoaderWorkerTests(unittest.TestCase):
         """ Test case -  Load PDBx entry data
         """
         try:
-            mw = MongoDbLoaderWorker(self.__configPath, self.__configName, numProc=self.__numProc, chunkSize=self.__chunkSize,
-                                     fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
+            mw = MongoDbLoaderWorker(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+                                     fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
             ok = mw.loadContentType('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                                     documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
@@ -140,8 +145,8 @@ class MongoDbLoaderWorkerTests(unittest.TestCase):
         """ Test case -  Load and reload chemical component reference data
         """
         try:
-            mw = MongoDbLoaderWorker(self.__configPath, self.__configName, numProc=self.__numProc, chunkSize=self.__chunkSize,
-                                     fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
+            mw = MongoDbLoaderWorker(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+                                     fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
             ok = mw.loadContentType('chem_comp', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                                     documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
@@ -156,8 +161,8 @@ class MongoDbLoaderWorkerTests(unittest.TestCase):
         """ Test case -  Load PDBx entry data
         """
         try:
-            mw = MongoDbLoaderWorker(self.__configPath, self.__configName, numProc=self.__numProc, chunkSize=self.__chunkSize,
-                                     fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
+            mw = MongoDbLoaderWorker(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+                                     fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
             ok = mw.loadContentType('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                                     documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)

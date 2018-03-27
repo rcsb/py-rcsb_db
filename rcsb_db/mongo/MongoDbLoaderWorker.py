@@ -36,16 +36,15 @@ from rcsb_db.schema.BirdSchemaDef import BirdSchemaDef
 from rcsb_db.schema.ChemCompSchemaDef import ChemCompSchemaDef
 from rcsb_db.schema.PdbxSchemaDef import PdbxSchemaDef
 from rcsb_db.utils.MultiProcUtil import MultiProcUtil
-from rcsb_db.utils.ConfigUtil import ConfigUtil
 from rcsb_db.utils.RepoPathUtil import RepoPathUtil
 
-from rcsb_db.mongo.ConnectionBase import ConnectionBase
+from rcsb_db.mongo.Connection import Connection
 from rcsb_db.mongo.MongoDbUtil import MongoDbUtil
 
 
 class MongoDbLoaderWorker(object):
 
-    def __init__(self, configPath, configName, numProc=4, chunkSize=15, fileLimit=None, verbose=False, readBackCheck=False):
+    def __init__(self, cfgOb, resourceName="MONGO_DB", numProc=4, chunkSize=15, fileLimit=None, mockTopPath=None, verbose=False, readBackCheck=False):
         self.__verbose = verbose
         #
         # Limit the load length of each file type for testing  -  Set to None to remove -
@@ -55,16 +54,11 @@ class MongoDbLoaderWorker(object):
         self.__numProc = numProc
         self.__chunkSize = chunkSize
         #
-        self.__cu = ConfigUtil(configPath=configPath, sectionName=configName)
-        self.__birdRepoPath = self.__cu.get('BIRD_REPO_PATH')
-        self.__birdFamilyRepoPath = self.__cu.get('BIRD_FAMILY_REPO_PATH')
-        self.__birdChemCompRepoPath = self.__cu.get('BIRD_CHEM_COMP_REPO_PATH')
-        self.__chemCompRepoPath = self.__cu.get('CHEM_COMP_REPO_PATH')
-        self.__pdbxFileRepo = self.__cu.get('RCSB_PDBX_SANBOX_PATH')
+        self.__cfgOb = cfgOb
+        self.__connectD = self.__assignResource(self.__cfgOb, resourceName=resourceName)
         #
         self.__readBackCheck = readBackCheck
-        #
-        self.__prefD = self.__assignPreferences(self.__cu)
+        self.__mockTopPath = mockTopPath
 
     def loadContentType(self, contentType, loadType='full', inputPathList=None, styleType='rowwise_by_name', documentSelectors=None,
                         failedFilePath=None, saveInputFileListPath=None):
@@ -88,7 +82,7 @@ class MongoDbLoaderWorker(object):
             optD = {}
             optD['contentType'] = contentType
             optD['styleType'] = styleType
-            optD['prefD'] = self.__prefD
+            optD['connectD'] = self.__connectD
             optD['readBackCheck'] = self.__readBackCheck
             optD['logSize'] = self.__verbose
             optD['documentSelectors'] = documentSelectors
@@ -102,8 +96,8 @@ class MongoDbLoaderWorker(object):
             _, dbName, collectionNameList = self.__getSchemaInfo(contentType)
             for collectionName in collectionNameList:
                 if loadType == 'full':
-                    self.__removeCollection(dbName, collectionName, self.__prefD)
-                    self.__createCollection(dbName, collectionName, self.__prefD)
+                    self.__removeCollection(dbName, collectionName, self.__connectD)
+                    self.__createCollection(dbName, collectionName, self.__connectD)
             #
             mpu = MultiProcUtil(verbose=True)
             mpu.setOptions(optionsD=optD)
@@ -137,7 +131,7 @@ class MongoDbLoaderWorker(object):
             documentSelectors = optionsD['documentSelectors']
             loadType = optionsD['loadType']
             contentType = optionsD['contentType']
-            prefD = optionsD['prefD']
+            connectD = optionsD['connectD']
             #
             fType = "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
             if styleType in ["columnwise_by_name", "rowwise_no_name"]:
@@ -148,7 +142,8 @@ class MongoDbLoaderWorker(object):
             sdp = SchemaDefDataPrep(schemaDefObj=sd, verbose=self.__verbose)
             containerList = sdp.getContainerList(dataList, filterType=fType)
             #
-            logger.debug("%s contentType %s dbName %s collectionNameList %s pathlist length %d containerList length %d" % (procName, contentType, dbName, collectionNameList, len(dataList), len(containerList)))
+            logger.debug("%s contentType %s dbName %s collectionNameList %s pathlist length %d containerList length %d" %
+                         (procName, contentType, dbName, collectionNameList, len(dataList), len(containerList)))
             fullSuccessPathList = []
             fullFailedPathList = []
             for collectionName in collectionNameList:
@@ -180,7 +175,7 @@ class MongoDbLoaderWorker(object):
                 docIdD['tableName'], docIdD['attributeName'] = sd.getDocumentKeyAttributeName(collectionName)
                 logger.debug("%s docIdD %r collectionName %r" % (procName, docIdD, collectionName))
                 #
-                ok, successPathList, failedPathList = self.__loadDocuments(dbName, collectionName, prefD, tableDataDictList, docIdD,
+                ok, successPathList, failedPathList = self.__loadDocuments(dbName, collectionName, connectD, tableDataDictList, docIdD,
                                                                            loadType=loadType, successKey='__load_status__.load_file_path', readBackCheck=readBackCheck)
                 #
                 logger.info("%s database %s collection %s successList length = %d  failed %d rejected %d" %
@@ -213,29 +208,14 @@ class MongoDbLoaderWorker(object):
             logger.exception("Failing with %s" % str(e))
         return False
 
-    def __assignPreferences(self, cfgObj, dbType="mongodb"):
-        dbUserId = None
-        dbHost = None
-        dbUserPwd = None
-        dbName = None
-        dbAdminDb = None
-        if dbType == 'mongodb':
-            dbUserId = cfgObj.get("MONGO_DB_USER_NAME")
-            dbUserPwd = cfgObj.get("MONGO_DB_PASSWORD")
-            dbName = cfgObj.get("MONGO_DB_NAME")
-            dbHost = cfgObj.get("MONGO_DB_HOST")
-            dbPort = cfgObj.get("MONGO_DB_PORT")
-            dbAdminDb = cfgObj.get("MONGO_DB_ADMIN_DB_NAME")
-        else:
-            pass
-
-        prefD = {"DB_HOST": dbHost, 'DB_USER': dbUserId, 'DB_PW': dbUserPwd, 'DB_NAME': dbName, "DB_PORT": dbPort, 'DB_ADMIN_DB_NAME': dbAdminDb}
-        return prefD
+    def __assignResource(self, cfgOb, resourceName="MONGO_DB"):
+        cn = Connection(cfgOb=cfgOb)
+        return cn.assignResource(resourceName=resourceName)
 
     def __begin(self, message=""):
         startTime = time.time()
         ts = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
-        logger.debug("Starting %s at %s" % (message, ts))
+        logger.info("Starting %s at %s" % (message, ts))
         return startTime
 
     def __end(self, startTime, message=""):
@@ -244,9 +224,9 @@ class MongoDbLoaderWorker(object):
         delta = endTime - startTime
         logger.info("Completed %s at %s (%.4f seconds)" % (message, ts, delta))
 
-    def __open(self, prefD):
-        cObj = ConnectionBase()
-        cObj.setPreferences(prefD)
+    def __open(self, connectD):
+        cObj = Connection()
+        cObj.setPreferences(connectD)
         ok = cObj.openConnection()
         if ok:
             return cObj
@@ -263,12 +243,12 @@ class MongoDbLoaderWorker(object):
     def __getClientConnection(self, cObj):
         return cObj.getClientConnection()
 
-    def __createCollection(self, dbName, collectionName, prefD):
+    def __createCollection(self, dbName, collectionName, connectD):
         """Create database and collection -
         """
         try:
             logger.debug("Create collection database %s collection %s" % (dbName, collectionName))
-            cObj = self.__open(prefD)
+            cObj = self.__open(connectD)
             client = self.__getClientConnection(cObj)
             mg = MongoDbUtil(client)
             ok = mg.createCollection(dbName, collectionName)
@@ -281,12 +261,12 @@ class MongoDbLoaderWorker(object):
             logger.exception("Failing with %s" % str(e))
         return False
 
-    def __removeCollection(self, dbName, collectionName, prefD):
+    def __removeCollection(self, dbName, collectionName, connectD):
         """Drop collection within database
 
         """
         try:
-            cObj = self.__open(prefD)
+            cObj = self.__open(connectD)
             client = self.__getClientConnection(cObj)
             mg = MongoDbUtil(client)
             #
@@ -304,7 +284,7 @@ class MongoDbLoaderWorker(object):
             logger.exception("Failing with %s" % str(e))
         return False
 
-    def __loadDocuments(self, dbName, collectionName, prefD, dList, docIdD, loadType='full', successKey=None, readBackCheck=False):
+    def __loadDocuments(self, dbName, collectionName, connectD, dList, docIdD, loadType='full', successKey=None, readBackCheck=False):
         #
         # Load database/collection with input document list -
         #
@@ -324,7 +304,7 @@ class MongoDbLoaderWorker(object):
             logger.exception("Failing ii %d d %r with %s" % (ii, d, str(e)))
 
         try:
-            cObj = self.__open(prefD)
+            cObj = self.__open(connectD)
             client = self.__getClientConnection(cObj)
             mg = MongoDbUtil(client)
             #
@@ -374,19 +354,20 @@ class MongoDbLoaderWorker(object):
         return False, [], fullSuccessValueList
 
     def __getPathInfo(self, contentType, inputPathList=None):
+        outputPathList = []
         inputPathList = inputPathList if inputPathList else []
-        rpU = RepoPathUtil(fileLimit=self.__fileLimit)
+        rpU = RepoPathUtil(self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
         try:
             if contentType == "bird":
-                outputPathList = inputPathList if inputPathList else rpU.getPrdPathList(self.__birdRepoPath)
+                outputPathList = inputPathList if inputPathList else rpU.getBirdPathList()
             elif contentType == "bird_family":
-                outputPathList = inputPathList if inputPathList else rpU.getPrdFamilyPathList(self.__birdFamilyRepoPath)
+                outputPathList = inputPathList if inputPathList else rpU.getBirdFamilyPathList()
             elif contentType == 'chem_comp':
-                outputPathList = inputPathList if inputPathList else rpU.getChemCompPathList(self.__chemCompRepoPath)
+                outputPathList = inputPathList if inputPathList else rpU.getChemCompPathList()
             elif contentType == 'bird_chem_comp':
-                outputPathList = inputPathList if inputPathList else rpU.getPrdCCPathList(self.__birdChemCompRepoPath)
+                outputPathList = inputPathList if inputPathList else rpU.getBirdChemCompPathList()
             elif contentType == 'pdbx':
-                outputPathList = inputPathList if inputPathList else rpU.getEntryPathList(self.__pdbxFileRepo)
+                outputPathList = inputPathList if inputPathList else rpU.getEntryPathList()
             else:
                 logger.warning("Unsupported contentType %s" % contentType)
         except Exception as e:
