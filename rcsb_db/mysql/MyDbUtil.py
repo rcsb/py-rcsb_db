@@ -18,6 +18,7 @@
 # 11-Aug-2016 jdw  add chunked fetch method
 #
 # 10-Mar-2018 jdw  Py2->Py3 compatibility using driver fork described at https://mysqlclient.readthedocs.io/user_guide.html#
+# 25-Mar-2018 jdw  Connection class moved Connection/ConnectionBase
 #
 ##
 """
@@ -36,145 +37,19 @@ __license__ = "Apache 2.0"
 import MySQLdb
 # import _mysql_exceptions
 
-import sys
-import os
-import platform
+
 import warnings
 import logging
 logger = logging.getLogger(__name__)
 
 #
 #  Pooling seems to be broken for Py3 on MACos -
-if platform.system() == "Linux":
-    try:
-        import sqlalchemy.pool as pool
-        MySQLdb = pool.manage(MySQLdb, pool_size=12, max_overflow=12, timeout=30, echo=True, use_threadlocal=True)
-    except Exception as e:
-        pass
-
-
-class MyDbConnect(object):
-
-    """ Class to encapsulate RDBMS DBI connection.
-    """
-
-    def __init__(self, dbServer='mysql', dbHost='localhost', dbName=None, dbUser=None, dbPw=None, dbSocket=None, dbPort=None, verbose=False):
-        self.__verbose = verbose
-
-        if (dbName is None):
-            self.__dbName = os.getenv("MYSQL_DB_NAME")
-        else:
-            self.__dbName = dbName
-
-        if (dbUser is None):
-            self.__dbUser = os.getenv("MYSQL_DB_USER")
-        else:
-            self.__dbUser = dbUser
-
-        if (dbPw is None):
-            self.__dbPw = os.getenv("MYSQL_DB_PW")
-        else:
-            self.__dbPw = dbPw
-
-        if (dbHost is None):
-            self.__dbHost = os.getenv("MYSQL_DB_HOST")
-        else:
-            self.__dbHost = dbHost
-
-        if dbSocket is None:
-            # try from the environment -
-            tS = os.getenv("MYSQL_DB_SOCKET")
-            if (tS is not None):
-                self.__dbSocket = tS
-            else:
-                self.__dbSocket = None
-        else:
-            self.__dbSocket = dbSocket
-
-        if dbPort is None:
-            # try from the environment -
-            tS = os.getenv("MYSQL_DB_PORT")
-            if (tS is not None):
-                self.__dbPort = int(tS)
-            else:
-                self.__dbPort = 3306
-        else:
-            self.__dbPort = dbPort
-        #
-        self.__dbServer = dbServer
-
-        if (dbServer != 'mysql'):
-            logger.info("+MyDbConnect. Unsupported server %s\n" % dbServer)
-            sys.exit(1)
-
-        self.__dbcon = None
-
-    def setAuth(self, authD):
-        try:
-            self.__dbName = authD["DB_NAME"]
-            self.__dbHost = authD["DB_HOST"]
-            self.__dbUser = authD["DB_USER"]
-            self.__dbPw = authD["DB_PW"]
-            self.__dbSocket = authD["DB_SOCKET"]
-            self.__dbServer = authD["DB_SERVER"]
-            # treat port as optional with default of 3306
-            if 'DB_PORT' in authD:
-                self.__dbPort = authD["DB_PORT"]
-            else:
-                self.__dbPort = 3306
-        except Exception as e:
-            logger.info("+MyDbConnect.setAuth failing  %r\n" % authD.items())
-            logger.exception("Failing with %s" % str(e))
-
-    def connect(self):
-        """ Create a database connection and return a connection object.
-
-            Returns None on failure
-        """
-        #
-        if self.__dbcon is not None:
-            # Close an open connection -
-            logger.info("+MyDbConnect.connect() WARNING Closing an existing connection.\n")
-            self.close()
-
-        # logger.info("+MyDbConnect.connect() Connection to server %s host %s dsn %s user %s pw %s socket %s port %d \n" %
-        #                    (self.__dbServer, self.__dbHost, self.__dbName, self.__dbUser, self.__dbPw, self.__dbSocket, self.__dbPort))
-        try:
-            if self.__dbSocket is None:
-                dbcon = MySQLdb.connect(db="%s" % self.__dbName,
-                                        user="%s" % self.__dbUser,
-                                        passwd="%s" % self.__dbPw,
-                                        host="%s" % self.__dbHost,
-                                        port=self.__dbPort,
-                                        local_infile=1)
-            else:
-                dbcon = MySQLdb.connect(db="%s" % self.__dbName,
-                                        user="%s" % self.__dbUser,
-                                        passwd="%s" % self.__dbPw,
-                                        host="%s" % self.__dbHost,
-                                        port=self.__dbPort,
-                                        unix_socket="%s" % self.__dbSocket,
-                                        local_infile=1)
-
-            self.__dbcon = dbcon
-        except Exception as e:
-            logger.info("+MyDbConnect.connect() Connection error to server %s host %s dsn %s user %s pw %s socket %s port %d \n" %
-                        (self.__dbServer, self.__dbHost, self.__dbName, self.__dbUser, self.__dbPw, self.__dbSocket, self.__dbPort))
-            self.__dbcon = None
-
-        return self.__dbcon
-
-    def close(self):
-        """ Close any open database connection.
-        """
-        if self.__dbcon is not None:
-            try:
-                self.__dbcon.close()
-                self.__dbcon = None
-                return True
-            except Exception as e:
-                pass
-        return False
+#if platform.system() == "Linux":
+#    try:
+#        import sqlalchemy.pool as pool
+#        MySQLdb = pool.manage(MySQLdb, pool_size=12, max_overflow=12, timeout=30, echo=True, use_threadlocal=True)
+#    except Exception as e:
+#        pass
 
 
 class MyDbQuery(object):
@@ -288,20 +163,21 @@ class MyDbQuery(object):
 
     def __setWarningHandler(self):
         if self.__warningAction == 'error':
-            warnings.simplefilter("error", MySQLdb.Warning)
+            warnings.simplefilter("error", category=MySQLdb.Warning)
         elif self.__warningAction in ['ignore', 'default']:
             warnings.simplefilter(self.__warningAction)
         else:
             warnings.simplefilter('default')
 
-    def sqlCommand(self, sqlCommandList):
+    def sqlCommandX(self, sqlCommandList):
         """  Execute the input list of SQL commands catching exceptions from the server.
 
         The treatment of warning is controlled by a prior setting of self.setWarnings("error"|"ignore"|"default")
         """
 
         # warnings.simplefilter("error", MySQLdb.Warning)
-        self.__setWarningHandler()
+        # self.__setWarningHandler()
+        curs = None
         try:
             sqlCommand = ''
             curs = self.__dbcon.cursor()
@@ -316,26 +192,78 @@ class MyDbQuery(object):
                 logger.info("MyDbQuery.sqlCommand SQL command failed for:\n%s\n" % sqlCommand)
                 logger.info("MyDbQuery.sqlCommand MySQL warning is message is:\n%s\n" % e)
             # self.__dbcon.rollback()
-            curs.close()
+            if curs:
+                curs.close()
         except MySQLdb.Warning as e:
             if (self.__verbose):
                 logger.info("MyDbQuery.sqlCommand MySQL message is:\n%s\n" % e)
                 logger.info("MyDbQuery.sqlCommand generated warnings for command:\n%s\n" % sqlCommand)
                 logger.exception("Failing with %s" % str(e))
             # self.__dbcon.rollback()
-            curs.close()
+            if curs:
+                curs.close()
         except Exception as e:
             if (self.__verbose):
                 logger.info("MyDbQuery.sqlCommand SQL command failed for:\n%s\n" % sqlCommand)
                 logger.exception("Failing with %s" % str(e))
             # self.__dbcon.rollback()
-            curs.close()
+            if curs:
+                curs.close()
+
+        return False
+
+
+    def sqlCommand(self, sqlCommandList):
+        """  Execute the input list of SQL commands catching exceptions from the server.
+
+        The treatment of warning is controlled by a prior setting of self.setWarnings("error"|"ignore"|"default")
+
+        category=MySQLdb.Warning
+
+        """
+        with warnings.catch_warnings():
+            self.__setWarningHandler()
+            #warnings.simplefilter('error', category=MySQLdb.Warning)
+            curs = None
+            try:
+                sqlCommand = ''
+                curs = self.__dbcon.cursor()
+                for sqlCommand in sqlCommandList:
+                    curs.execute(sqlCommand)
+                #
+                self.__dbcon.commit()
+                curs.close()
+                return True
+            except MySQLdb.Error as e:
+                if (self.__verbose):
+                    logger.info("MyDbQuery.sqlCommand SQL command failed for:\n%s\n" % sqlCommand)
+                    logger.info("MyDbQuery.sqlCommand MySQL warning is message is:\n%s\n" % e)
+                # self.__dbcon.rollback()
+                if curs:
+                    curs.close()
+            except MySQLdb.Warning as e:
+                if (self.__verbose):
+                    logger.info("MyDbQuery.sqlCommand MySQL message is:\n%s\n" % e)
+                    logger.info("MyDbQuery.sqlCommand generated warnings for command:\n%s\n" % sqlCommand)
+                    # logger.exception("Failing with %s" % str(e))
+                # self.__dbcon.rollback()
+                if curs:
+                    curs.close()
+                return True
+            except Exception as e:
+                if (self.__verbose):
+                    logger.info("MyDbQuery.sqlCommand SQL command failed for:\n%s\n" % sqlCommand)
+                    logger.exception("Failing with %s" % str(e))
+                # self.__dbcon.rollback()
+                if curs:
+                    curs.close()
 
         return False
 
     def sqlCommand2(self, queryString):
         """   Execute SQL command catching exceptions returning no data from the server.
         """
+        curs = None
         with warnings.catch_warnings():
             warnings.simplefilter('error')
             #warnings.simplefilter('error', MySQLdb.Warning)
@@ -348,21 +276,25 @@ class MyDbQuery(object):
             except MySQLdb.ProgrammingError as e:
                 if (self.__verbose):
                     logger.info("MyDbQuery.sqlCommand MySQL warning is message is:\n%s\n" % e)
-                curs.close()
+                if curs:
+                    curs.close()
             except MySQLdb.OperationalError as e:
                 if (self.__verbose):
                     logger.info("MyDbQuery.sqlCommand SQL command failed for:\n%s\n" % queryString)
                     logger.info("MyDbQuery.sqlCommand MySQL warning is message is:\n%s\n" % e)
-                curs.close()
+                if curs:
+                    curs.close()
             except MySQLdb.Error as e:
                 if (self.__verbose):
                     logger.info("MyDbQuery.sqlCommand SQL command failed for:\n%s\n" % queryString)
                     logger.info("MyDbQuery.sqlCommand MySQL warning is message is:\n%s\n" % e)
-                curs.close()
+                if curs:
+                    curs.close()
             except Exception as e:
                 if (self.__verbose):
                     logger.info("MyDbQuery.sqlCommand SQL command failed for:\n%s\n" % queryString)
-                curs.close()
+                if curs:
+                    curs.close()
                 logger.exception("Failing with %s" % str(e))
         return []
 

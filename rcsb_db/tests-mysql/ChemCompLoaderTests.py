@@ -23,10 +23,9 @@ import sys
 import os
 import time
 import unittest
-import scandir
 
 import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -38,11 +37,17 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-from rcsb_db.mysql.MyDbUtil import MyDbConnect
+from rcsb_db.mysql.Connection import Connection
+from rcsb_db.mysql.MyDbUtil import MyDbQuery
 from rcsb_db.loaders.SchemaDefLoader import SchemaDefLoader
 from rcsb_db.schema.ChemCompSchemaDef import ChemCompSchemaDef
 
 from rcsb_db.utils.MultiProcUtil import MultiProcUtil
+from rcsb_db.utils.RepoPathUtil import RepoPathUtil
+from rcsb_db.utils.ConfigUtil import ConfigUtil
+from rcsb_db.sql.MyDbSqlGen import MyDbAdminSqlGen
+
+
 try:
     from mmcif.io.IoAdapterCore import IoAdapterCore as IoAdapter
 except Exception as e:
@@ -52,8 +57,17 @@ except Exception as e:
 class ChemCompLoaderTests(unittest.TestCase):
 
     def setUp(self):
-        self.__verbose = False
+        self.__verbose = True
         self.__loadPathList = []
+        #
+        self.__fileLimit = 100
+        self.__chemCompMockLen = 4
+        self.__mockTopPath = os.path.join(TOPDIR, "rcsb_db", "data")
+        configPath = os.path.join(TOPDIR, "rcsb_db", "data", 'dbload-setup-example.cfg')
+        configName = 'DEFAULT'
+        self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
+        self.__resourceName = "MYSQL_DB"
+        self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName)
         self.__ioObj = IoAdapter(verbose=self.__verbose)
         self.__topCachePath = os.path.join(TOPDIR, "rcsb_db", "data", "MOCK_CHEM_COMP_REPO")
         self.__startTime = time.time()
@@ -68,31 +82,46 @@ class ChemCompLoaderTests(unittest.TestCase):
                                                               time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                               endTime - self.__startTime))
 
-    def open(self, dbName=None, dbUserId=None, dbUserPwd=None):
-        myC = MyDbConnect(dbName=dbName, dbUser=dbUserId, dbPw=dbUserPwd, verbose=self.__verbose)
-        self.__dbCon = myC.connect()
-        if self.__dbCon is not None:
+    def __assignResource(self, cfgOb, resourceName="MYSQL_DB"):
+        cn = Connection(cfgOb=cfgOb)
+        return cn.assignResource(resourceName=resourceName)
+
+    def open(self, dbName):
+        return self.__open(self.__connectD)
+
+    def __open(self, connectD):
+        cObj = Connection()
+        cObj.setPreferences(connectD)
+        ok = cObj.openConnection()
+        if ok:
+            return cObj
+        else:
+            return None
+
+    def close(self, cObj):
+        if cObj is not None:
+            cObj.closeConnection()
+            self.__dbCon = None
             return True
         else:
             return False
 
-    def close(self):
-        if self.__dbCon is not None:
-            self.__dbCon.close()
+    def getClientConnection(self, cObj):
+        return cObj.getClientConnection()
 
     def __makeComponentPathList(self):
-        """ Return the list of chemical component definition file paths in the current repository.
+        """Test case -  get the path list of Chem Comp definitions in the repository.
         """
+        try:
+            rpU = RepoPathUtil(self.__cfgOb, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
+            loadPathList = rpU.getChemCompPathList()
 
-        pathList = []
-        for root, dirs, files in scandir.walk(self.__topCachePath, topdown=False):
-            if "REMOVE" in root:
-                continue
-            for name in files:
-                if name.endswith(".cif") and len(name) <= 7:
-                    pathList.append(os.path.join(root, name))
-        logger.debug("\nFound %d files in %s\n" % (len(pathList), self.__topCachePath))
-        return pathList
+            logger.debug("Length of path list %d\n" % len(loadPathList))
+            self.assertGreaterEqual(len(loadPathList), self.__chemCompMockLen)
+            return loadPathList
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
 
     def testListFiles(self):
         """Test case - for loading chemical component definition data files -
@@ -111,8 +140,31 @@ class ChemCompLoaderTests(unittest.TestCase):
 
         try:
             ccsd = ChemCompSchemaDef()
-            self.open(dbName=ccsd.getDatabaseName())
-            self.close()
+            cObj = self.open(dbName=ccsd.getDatabaseName())
+            self.close(cObj)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
+    def schemaCreate(self, schemaDefObj, dbCon):
+        """ -  create table schema using input schema definition
+        """
+        try:
+            dbName = schemaDefObj.getDatabaseName()
+            tableIdList = schemaDefObj.getTableIdList()
+            myAd = MyDbAdminSqlGen(self.__verbose)
+            sqlL = myAd.createDatabaseSQL(dbName)
+            for tableId in tableIdList:
+                tableDefObj = schemaDefObj.getTable(tableId)
+                sqlL.extend(myAd.createTableSQL(databaseName=schemaDefObj.getDatabaseName(), tableDefObj=tableDefObj))
+
+            logger.debug("Table creation SQL string\n %s\n\n" % '\n'.join(sqlL))
+
+            myQ = MyDbQuery(dbcon=dbCon, verbose=self.__verbose)
+            myQ.setWarning('ignore')
+            ret = myQ.sqlCommand(sqlCommandList=sqlL)
+            logger.debug("\n\n+INFO mysql server returns %r\n" % ret)
+            self.assertTrue(ret)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -129,63 +181,45 @@ class ChemCompLoaderTests(unittest.TestCase):
 
             containerNameList, tList = sml.makeLoadFiles(pathList, append=False)
             for tId, fn in tList:
-                logger.debug("\nCreated table %s load file %s\n" % (tId, fn))
+                logger.info("\nCreated table %s load file %s\n" % (tId, fn))
             #
 
-            self.open(dbName=ccsd.getDatabaseName())
-            sdl = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath=os.path.join(HERE, "test-output"), cleanUp=False,
+            cObj = self.open(dbName=ccsd.getDatabaseName())
+            dbCon = self.getClientConnection(cObj)
+            #
+            self.schemaCreate(ccsd, dbCon)
+            #
+            sdl = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=dbCon, workPath=os.path.join(HERE, "test-output"), cleanUp=False,
                                   warnings='default', verbose=self.__verbose)
 
             ok = sdl.loadBatchFiles(loadList=tList, containerNameList=containerNameList, deleteOpt='all')
             self.assertTrue(ok)
-            self.close()
+            self.close(cObj)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
     def loadBatchFilesMulti(self, dataList, procName, optionsD, workingDir):
         ccsd = ChemCompSchemaDef()
-        self.open(dbName=ccsd.getDatabaseName())
-        sdl = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath=os.path.join(HERE, 'test-output'), cleanUp=False,
+        cObj = self.open(dbName=ccsd.getDatabaseName())
+        dbCon = self.getClientConnection(cObj)
+        sdl = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=dbCon, workPath=os.path.join(HERE, 'test-output'), cleanUp=False,
                               warnings='default', verbose=self.__verbose)
         #
         ok = sdl.loadBatchFiles(loadList=dataList, containerNameList=None, deleteOpt=None)
         self.assertTrue(ok)
-        self.close()
+        self.close(cObj)
         return dataList, dataList, []
-
-    def makeComponentPathListMulti(self, dataList, procName, optionsD, workingDir):
-        """ Return the list of chemical component definition file paths in the current repository.
-        """
-        pathList = []
-        for subdir in dataList:
-            dd = os.path.join(self.__topCachePath, subdir)
-            for root, dirs, files in scandir.walk(dd, topdown=False):
-                if "REMOVE" in root:
-                    continue
-                for name in files:
-                    if name.endswith(".cif") and len(name) <= 7:
-                        pathList.append(os.path.join(root, name))
-        return dataList, pathList, []
 
     def testLoadFilesMulti(self):
         """Test case - create batch load files for all chemical component definition data files - (multiproc test)
         """
-        logger.debug("\nStarting %s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name))
         startTime = time.time()
         numProc = 2
         try:
-            dataS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-            dataList = [a for a in dataS]
-            mpu = MultiProcUtil(verbose=True)
-            mpu.set(workerObj=self, workerMethod="makeComponentPathListMulti")
-            ok, failList, retLists, diagList = mpu.runMulti(dataList=dataList, numProc=numProc, numResults=1)
-            pathList = retLists[0]
-            endTime0 = time.time()
-            logger.debug("\nPath list length %d  in %.2f seconds\n" % (len(pathList), endTime0 - startTime))
 
-            # logger.info("\nPath list %r\n" % pathList[:20])
-            # pathList=self.__makeComponentPathList()
+            pathList = self.__makeComponentPathList()
+            logger.info("\nPath list %r\n" % pathList[:20])
 
             ccsd = ChemCompSchemaDef()
             sml = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=None, workPath=os.path.join(HERE, "test-output"), cleanUp=False,
@@ -204,14 +238,17 @@ class ChemCompLoaderTests(unittest.TestCase):
             #
 
             endTime1 = time.time()
-            logger.debug("\nBatch files created in %.2f seconds\n" % (endTime1 - endTime0))
-            self.open(dbName=ccsd.getDatabaseName())
-            sdl = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath=os.path.join(HERE, "test-output"), cleanUp=False,
+            logger.debug("\nBatch files created in %.2f seconds\n" % (endTime1 - startTime))
+            cObj = self.open(dbName=ccsd.getDatabaseName())
+            dbCon = self.getClientConnection(cObj)
+            self.schemaCreate(ccsd, dbCon)
+
+            sdl = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=dbCon, workPath=os.path.join(HERE, "test-output"), cleanUp=False,
                                   warnings='default', verbose=self.__verbose)
             #
             for tId, fn in tList:
                 sdl.delete(tId, containerNameList=containerNameList, deleteOpt='all')
-            self.close()
+            self.close(cObj)
             #
             mpu = MultiProcUtil(verbose=True)
             mpu.set(workerObj=self, workerMethod="loadBatchFilesMulti")
@@ -227,8 +264,8 @@ class ChemCompLoaderTests(unittest.TestCase):
 def loadSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(ChemCompLoaderTests("testConnect"))
-    # suiteSelect.addTest(ChemCompLoaderTests("testListFiles"))
-    # suiteSelect.addTest(ChemCompLoaderTests("testLoadFiles"))
+    suiteSelect.addTest(ChemCompLoaderTests("testListFiles"))
+    suiteSelect.addTest(ChemCompLoaderTests("testLoadFiles"))
     suiteSelect.addTest(ChemCompLoaderTests("testLoadFilesMulti"))
     return suiteSelect
 

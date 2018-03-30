@@ -9,6 +9,7 @@
 # 19-Feb  -2015  jdw various fixes
 # 10-July -2015  jdw Change method/class names from MySqlGen
 # 10-March-2018  jdw  Py2->Py3 compatibility using driver fork described at https://mysqlclient.readthedocs.io/user_guide.html#
+# 29-March-2018  jdw remove dependency on wwPDB configuration  -   Use generic configuratio object in constructor -
 #
 #
 ###
@@ -28,10 +29,9 @@ import copy
 import logging
 logger = logging.getLogger(__name__)
 
-from wwpdb.api.facade.ConfigInfo import ConfigInfo, getSiteId
-
 from rcsb_db.mysql.MyDbSqlGen import MyDbAdminSqlGen, MyDbQuerySqlGen, MyDbConditionSqlGen
-from rcsb_db.mysql.MyDbUtil import MyDbConnect, MyDbQuery
+from rcsb_db.mysql.MyDbUtil import MyDbQuery
+from rcsb_db.mysql.Connection import Connection
 
 
 class MyDbAdapter(object):
@@ -39,19 +39,62 @@ class MyDbAdapter(object):
     """ Database adapter for managing simple access and persistance queries using a MySQL relational database store.
     """
 
-    def __init__(self, schemaDefObj, verbose=False):
+    def __init__(self, schemaDefObj, cfgOb=None, verbose=False):
         self.__verbose = verbose
         self.__debug = False
-        #
-        self.__siteId = getSiteId(defaultSiteId="WWPDB_DEPLOY_MACOSX")
-        self.__cI = ConfigInfo(self.__siteId)
         #
         self.__sd = schemaDefObj
         self.__databaseName = self.__sd.getDatabaseName()
         self.__dbCon = None
+        self.__cObj = None
         self.__defaultD = {}
         self.__attributeParameterMap = {}
         self.__attributeConstraintParameterMap = {}
+
+    def __open(self, infoD):
+        cObj = Connection()
+        cObj.setPreferences(infoD)
+        ok = cObj.openConnection()
+        if ok:
+            return cObj
+        else:
+            return None
+
+    def __close(self, cObj):
+        if cObj is not None:
+            cObj.closeConnection()
+            return True
+        else:
+            return False
+
+    def __getClientConnection(self, cObj):
+        return cObj.getClientConnection()
+
+    def _open(self, dbServer=None, dbHost=None, dbName=None, dbUser=None, dbPw=None, dbSocket=None, dbPort=None):
+        """  Open a connection to the data base server hosting WF status and tracking data -
+
+             Internal configuration details will be used if these are not externally supplied.
+        """
+        infoD = {}
+        infoD["DB_HOST"] = dbHost if dbHost is not None else self.__cI.get('SITE_DB_HOST_NAME')
+        infoD["DB_PORT"] = dbPort if dbPort is not None else self.__cI.get('SITE_DB_PORT_NUMBER')
+        infoD["DB_NAME"] = dbName if dbName is not None else self.__cI.get('SITE_DB_DATABASE_NAME')
+        infoD["DB_USER"] = dbUser if dbUser is not None else self.__cI.get('SITE_DB_USER_NAME')
+        infoD["DB_PW"] = dbPw if dbPw is not None else self.__cI.get('SITE_DB_PASSWORD')
+        infoD["DB_SERVER"] = dbServer if dbServer is not None else self.__cI.get('SITE_DB_SERVER')
+        infoD["DB_SOCKET"] = dbSocket if dbSocket is not None else self.__cI.get('SITE_DB_SOCKET')
+        #
+        self.__cObj = self.__open(infoD)
+        self.__dbCon = self.__getClientConnection(self.__cObj)
+        return self.__dbCon is not None
+
+    def _close(self):
+        """  Close connection to the data base server hosting WF status and tracking data -
+        """
+        if self.__dbCon is not None:
+            self.__close(self.__cObj)
+            self.__dbCon = None
+            self.__cObj = None
 
     def _setDebug(self, flag=True):
         self.__debug = flag
@@ -122,42 +165,6 @@ class MyDbAdapter(object):
         """
         self.__attributeConstraintParameterMap[tableId] = mapL
         return True
-
-    def _open(self, dbServer=None, dbHost=None, dbName=None, dbUser=None, dbPw=None, dbSocket=None, dbPort=None):
-        """  Open a connection to the data base server hosting WF status and tracking data -
-
-             Internal configuration details will be used if these are not externally supplied.
-        """
-        #
-        # WF Status and tracking data base connection details
-        #
-        dbHostX = dbHost if dbHost is not None else self.__cI.get('SITE_DB_HOST_NAME')
-        dbPortX = dbPort if dbPort is not None else self.__cI.get('SITE_DB_PORT_NUMBER')
-        dbNameX = dbName if dbName is not None else self.__cI.get('SITE_DB_DATABASE_NAME')
-        dbUserX = dbUser if dbUser is not None else self.__cI.get('SITE_DB_USER_NAME')
-        dbPwX = dbPw if dbPw is not None else self.__cI.get('SITE_DB_PASSWORD')
-        dbServerX = dbServer if dbServer is not None else self.__cI.get('SITE_DB_SERVER')
-        dbSocketX = dbSocket if dbSocket is not None else self.__cI.get('SITE_DB_SOCKET')
-        #
-        myC = MyDbConnect(dbServer=dbServerX,
-                          dbHost=dbHostX,
-                          dbName=dbNameX,
-                          dbUser=dbUserX,
-                          dbPw=dbPwX,
-                          dbSocket=dbSocketX,
-                          verbose=self.__verbose)
-        self.__dbCon = myC.connect()
-        if self.__dbCon is not None:
-            return True
-        else:
-            return False
-
-    def _close(self):
-        """  Close connection to the data base server hosting WF status and tracking data -
-        """
-        if self.__dbCon is not None:
-            self.__dbCon.close()
-            self.__dbCon = None
 
     def _createSchema(self):
         """ Create table schema using the current class schema definition

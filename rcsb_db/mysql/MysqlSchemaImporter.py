@@ -5,6 +5,8 @@
 # Create a skeleton schema map definition data structure from mysql
 # table descriptions.
 #
+# ** This is a command-line utility that is not part of the overall api
+#
 import os
 import sys
 import pprint

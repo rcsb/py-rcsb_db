@@ -40,12 +40,13 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-from rcsb_db.mysql.MyDbUtil import MyDbConnect, MyDbQuery
+from rcsb_db.mysql.MyDbUtil import MyDbQuery
+from rcsb_db.mysql.Connection import Connection
 from rcsb_db.schema.StatusHistorySchemaDef import StatusHistorySchemaDef
 from mmcif.io.IoAdapterPy import IoAdapterPy
 from rcsb_db.sql.MyDbSqlGen import MyDbAdminSqlGen
 from rcsb_db.loaders.SchemaDefLoader import SchemaDefLoader
-
+from rcsb_db.utils.ConfigUtil import ConfigUtil
 
 class StatusHistoryLoaderTests(unittest.TestCase):
 
@@ -61,30 +62,51 @@ class StatusHistoryLoaderTests(unittest.TestCase):
         self.__msd = StatusHistorySchemaDef(verbose=self.__verbose)
         self.__databaseName = 'da_internal'
 
-        self.open()
+        self.__mockTopPath = os.path.join(TOPDIR, "rcsb_db", "data")
+        configPath = os.path.join(TOPDIR, "rcsb_db", "data", 'dbload-setup-example.cfg')
+        configName = 'DEFAULT'
+        self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
+        self.__resourceName = "MYSQL_DB"
+        connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName)
+        #
+        self.__cObj = self.__open(connectD)
+        self.__dbCon = self.__getClientConnection(self.__cObj)
+
         self.__startTime = time.time()
         logger.debug("Running tests on version %s" % __version__)
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
 
     def tearDown(self):
-        self.close()
+        self.__close(self.__cObj)
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)\n" % (self.id(),
                                                               time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                               endTime - self.__startTime))
 
-    def open(self, dbUserId=None, dbUserPwd=None):
-        myC = MyDbConnect(dbName=self.__databaseName, dbUser=dbUserId, dbPw=dbUserPwd, verbose=self.__verbose)
-        self.__dbCon = myC.connect()
-        if self.__dbCon is not None:
+    def __assignResource(self, cfgOb, resourceName="MYSQL_DB"):
+        cn = Connection(cfgOb=cfgOb)
+        return cn.assignResource(resourceName=resourceName)
+
+    def __open(self, connectD):
+        cObj = Connection()
+        cObj.setPreferences(connectD)
+        ok = cObj.openConnection()
+        if ok:
+            return cObj
+        else:
+            return None
+
+    def __close(self, cObj):
+        if cObj is not None:
+            cObj.closeConnection()
+            self.__dbCon = None
             return True
         else:
             return False
 
-    def close(self):
-        if self.__dbCon is not None:
-            self.__dbCon.close()
+    def __getClientConnection(self, cObj):
+        return cObj.getClientConnection()
 
     def testStatusHistorySchemaCreate(self):
         """Test case -  create table schema using status history schema definition
@@ -140,17 +162,17 @@ class StatusHistoryLoaderTests(unittest.TestCase):
 
         try:
             loadPathList = [os.path.join(TOPDIR, "rcsb_db", "data", "test_file_inventory.cif")]
-            sml = SchemaDefLoader(schemaDefObj=self.__msd, ioObj=self.__ioObj, dbCon=None, workPath='.', cleanUp=False, warnings='default', verbose=self.__verbose)
+            workPath = os.path.join(HERE, "test-output")
+            sml = SchemaDefLoader(schemaDefObj=self.__msd, ioObj=self.__ioObj, dbCon=None, workPath=workPath, cleanUp=False, warnings='default', verbose=self.__verbose)
             containerNameList, tList = sml.makeLoadFiles(loadPathList)
             for tId, fn in tList:
                 logger.debug("\nCreated table %s load file %s\n" % (tId, fn))
 
-            self.open()
             sdl = SchemaDefLoader(schemaDefObj=self.__msd, ioObj=self.__ioObj, dbCon=self.__dbCon, workPath='.', cleanUp=False,
                                   warnings='default', verbose=self.__verbose)
 
             sdl.loadBatchFiles(loadList=tList, containerNameList=containerNameList, deleteOpt='all')
-            # self.close()
+
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -171,7 +193,7 @@ def createFileInventoryLoadSuite():
 
 if __name__ == '__main__':
     #
-    if False:
+    if True:
         mySuite = createHistoryFullSchemaSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
     #

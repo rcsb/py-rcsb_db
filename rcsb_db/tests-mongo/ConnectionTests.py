@@ -1,6 +1,6 @@
 ##
 #
-# File:    ConnectionBaseTests.py
+# File:    ConnectionTests.py
 # Author:  J. Westbrook
 # Date:    12-Mar-2018
 # Version: 0.001

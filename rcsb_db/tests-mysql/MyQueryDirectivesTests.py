@@ -38,10 +38,12 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-from rcsb_db.mysql.MyDbUtil import MyDbConnect, MyDbQuery
+from rcsb_db.mysql.MyDbUtil import MyDbQuery
+from rcsb_db.mysql.Connection import Connection
 from rcsb_db.schema.PdbDistroSchemaDef import PdbDistroSchemaDef
 from rcsb_db.schema.DaInternalSchemaDef import DaInternalSchemaDef
 from rcsb_db.sql.MyQueryDirectives import MyQueryDirectives
+from rcsb_db.utils.ConfigUtil import ConfigUtil
 
 
 class MyQueryDirectivesTests(unittest.TestCase):
@@ -49,6 +51,12 @@ class MyQueryDirectivesTests(unittest.TestCase):
     def setUp(self):
         self.__databaseName = 'stat'
         self.__verbose = True
+        configPath = os.path.join(TOPDIR, "rcsb_db", "data", 'dbload-setup-example.cfg')
+        configName = 'DEFAULT'
+        self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
+        self.__resourceName = "MYSQL_DB"
+        self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName)
+
         self.__domD = {'solution': 'sad',
                        'spaceg': 'P 21 21 21',
                        'software': 'REFMAC',
@@ -113,37 +121,44 @@ class MyQueryDirectivesTests(unittest.TestCase):
                                                               time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                               endTime - self.__startTime))
 
-    def open(self, dbUserId=None, dbUserPwd=None):
-        myC = MyDbConnect(dbName=self.__databaseName, dbUser=dbUserId, dbPw=dbUserPwd, verbose=self.__verbose)
-        self.__dbCon = myC.connect()
-        if self.__dbCon is not None:
-            logger.debug("\nDatabase connection opened %s %s at %s\n" % (self.__class__.__name__,
-                                                                         sys._getframe().f_code.co_name,
-                                                                         time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+    def __assignResource(self, cfgOb, resourceName="MYSQL_DB"):
+        cn = Connection(cfgOb=cfgOb)
+        return cn.assignResource(resourceName=resourceName)
+
+    def open(self):
+        return self.__open(self.__connectD)
+
+    def __open(self, connectD):
+        cObj = Connection()
+        cObj.setPreferences(connectD)
+        ok = cObj.openConnection()
+        if ok:
+            return cObj
+        else:
+            return None
+
+    def close(self, cObj):
+        if cObj is not None:
+            cObj.closeConnection()
+            self.__dbCon = None
             return True
         else:
             return False
 
-    def close(self):
-        if self.__dbCon is not None:
-            logger.debug("\nDatabase connection closed %s %s at %s\n" % (self.__class__.__name__,
-                                                                         sys._getframe().f_code.co_name,
-                                                                         time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
-            self.__dbCon.close()
+    def getClientConnection(self, cObj):
+        return cObj.getClientConnection()
 
     def testDirective1(self):
         """Test case -  selection everything for a simple condition -
         """
 
         try:
-            self.open()
             sd = PdbDistroSchemaDef(verbose=self.__verbose)
             mqd = MyQueryDirectives(schemaDefObj=sd, verbose=self.__verbose)
             sqlS = mqd.build(queryDirL=self.__qdL, domD=self.__domD)
             logger.debug("\n\n+testDirective1 SQL\n %s\n\n" % sqlS)
             logger.debug("Length query string %d " % len(sqlS))
             self.assertGreater(len(sqlS), 500)
-            self.close()
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -292,20 +307,21 @@ class MyQueryDirectivesTests(unittest.TestCase):
 
         try:
             self.__databaseName = 'stat'
-            self.open()
+            cObj = self.open()
+            dbCon = self.getClientConnection(cObj)
             sd = PdbDistroSchemaDef(verbose=self.__verbose)
             mqd = MyQueryDirectives(schemaDefObj=sd, verbose=self.__verbose)
             sqlS = mqd.build(queryDirL=qdL, domD=domD, appendValueConditonsToSelect=True)
             self.assertGreater(len(sqlS), 100)
             logger.debug("\n\n+testDirectiveWithDistroQuery SQL\n %s\n\n" % sqlS)
-            myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
+            myQ = MyDbQuery(dbcon=dbCon, verbose=self.__verbose)
             rowList = myQ.selectRows(queryString=sqlS)
             logger.debug("length rowlist %d" % len(rowList))
             if (self.__verbose):
                 logger.debug("\n+testDirectiveWithDistroQuery mysql server returns row length %d\n" % len(rowList))
                 for ii, row in enumerate(rowList[:30]):
                     logger.debug("   %6d  %r\n" % (ii, row))
-            self.close()
+            self.close(cObj)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -316,21 +332,22 @@ class MyQueryDirectivesTests(unittest.TestCase):
 
         try:
             self.__databaseName = 'da_internal'
-            self.open()
+            cObj = self.open()
+            dbCon = self.getClientConnection(cObj)
             sd = DaInternalSchemaDef(verbose=self.__verbose)
             mqd = MyQueryDirectives(schemaDefObj=sd, verbose=self.__verbose)
             sqlS = mqd.build(queryDirL=qdL, domD=domD, appendValueConditonsToSelect=True)
             self.assertGreater(len(sqlS), 100)
             if (self.__verbose):
                 logger.debug("\n\n+testDirectiveWithHistoryQuery SQL\n %s\n\n" % sqlS)
-            myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
+            myQ = MyDbQuery(dbcon=dbCon, verbose=self.__verbose)
             rowList = myQ.selectRows(queryString=sqlS)
             logger.debug("length rowlist %d" % len(rowList))
             if (self.__verbose):
                 logger.debug("\n+testDirectiveWithHistoryQuery mysql server returns row length %d\n" % len(rowList))
                 for ii, row in enumerate(rowList[:30]):
                     logger.debug("   %6d  %r\n" % (ii, row))
-            self.close()
+            self.close(cObj)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()

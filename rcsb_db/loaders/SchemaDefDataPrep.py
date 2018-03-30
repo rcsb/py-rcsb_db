@@ -634,6 +634,8 @@ class SchemaDefDataPrep(object):
                             if not dropEmptyFlag:
                                 d[atId] = nullValueDict[atId]
                             continue
+                        tObj.isAttributeStringType(atId) and maxW > 0
+
                         d[atId] = self.__assignType(val, lenVal, tObj, atId, skipMaxWidthFlag, assignDateFlag, convertIterables)
                         #
                     except Exception as e:

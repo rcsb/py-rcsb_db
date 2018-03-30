@@ -17,7 +17,6 @@ and external schema definition.
 These test database connections deferring to authentication details defined
 in the environment.   See class MyDbConnect() for the environment requirements.
 
-SchemaDefLoader() uses default native Python IoAdapter.
 
 """
 
@@ -48,11 +47,12 @@ except Exception as e:
 from rcsb_db.sql.MyDbSqlGen import MyDbAdminSqlGen
 from rcsb_db.loaders.SchemaDefLoader import SchemaDefLoader
 from rcsb_db.loaders.SchemaDefDataPrep import SchemaDefDataPrep
-from rcsb_db.mysql.MyDbUtil import MyDbConnect, MyDbQuery
+from rcsb_db.mysql.MyDbUtil import MyDbQuery
+from rcsb_db.mysql.Connection import Connection
 from rcsb_db.schema.BirdSchemaDef import BirdSchemaDef
 
-from mmcif_utils.bird.PdbxPrdIo import PdbxPrdIo
-
+from rcsb_db.utils.RepoPathUtil import RepoPathUtil
+from rcsb_db.utils.ConfigUtil import ConfigUtil
 
 class BirdLoaderTests(unittest.TestCase):
 
@@ -60,71 +60,95 @@ class BirdLoaderTests(unittest.TestCase):
         super(BirdLoaderTests, self).__init__(methodName)
         self.__loadPathList = []
         self.__tddFileList = []
-        self.__lfh = sys.stderr
         self.__verbose = True
 
     def setUp(self):
-        self.__lfh = sys.stderr
         self.__verbose = True
-        self.__databaseName = 'prdv4'
+        self.__databaseName = 'bird_v5'
         self.__topCachePath = os.path.join(TOPDIR, "rcsb_db", "data", "MOCK_BIRD_REPO")
-        self.open()
+        self.__fileLimit = 100
+        self.__birdMockLen = 4
+
+        self.__mockTopPath = os.path.join(TOPDIR, "rcsb_db", "data")
+        configPath = os.path.join(TOPDIR, "rcsb_db", "data", 'dbload-setup-example.cfg')
+        configName = 'DEFAULT'
+        self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
+        self.__resourceName = "MYSQL_DB"
+        connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName)
+        #
+        self.__cObj = self.__open(connectD)
+        self.__dbCon = self.__getClientConnection(self.__cObj)
+        #
         self.__startTime = time.time()
         logger.debug("Running tests on version %s" % __version__)
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
 
     def tearDown(self):
-        self.close()
+        self.__close(self.__cObj)
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)\n" % (self.id(),
                                                               time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                               endTime - self.__startTime))
 
-    def open(self, dbUserId=None, dbUserPwd=None):
-        myC = MyDbConnect(dbName=self.__databaseName, dbUser=dbUserId, dbPw=dbUserPwd, verbose=self.__verbose)
-        self.__dbCon = myC.connect()
-        if self.__dbCon is not None:
+    def __assignResource(self, cfgOb, resourceName="MYSQL_DB"):
+        cn = Connection(cfgOb=cfgOb)
+        return cn.assignResource(resourceName=resourceName)
+
+    def __open(self, connectD):
+        cObj = Connection()
+        cObj.setPreferences(connectD)
+        ok = cObj.openConnection()
+        if ok:
+            return cObj
+        else:
+            return None
+
+    def __close(self, cObj):
+        if cObj is not None:
+            cObj.closeConnection()
+            self.__dbCon = None
             return True
         else:
             return False
 
-    def close(self):
-        if self.__dbCon is not None:
-            self.__dbCon.close()
+    def __getClientConnection(self, cObj):
+        return cObj.getClientConnection()
+
+    def testBirdPathList(self):
+        """Test case -  get the path list of PRD definitions in the CVS repository.
+        """
+        try:
+            rpU = RepoPathUtil(self.__cfgOb, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
+            self.__loadPathList = rpU.getBirdPathList()
+
+            logger.debug("Length of path list %d\n" % len(self.__loadPathList))
+            self.assertGreaterEqual(len(self.__loadPathList), self.__birdMockLen)
+
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
 
     def testBirdSchemaCreate(self):
         """Test case -  create table schema using BIRD schema definition
         """
         try:
             msd = BirdSchemaDef(verbose=self.__verbose)
+            dbName = msd.getDatabaseName()
             tableIdList = msd.getTableIdList()
-            myAd = MyDbAdminSqlGen(self.__verbose, self.__lfh)
-            sqlL = []
+            myAd = MyDbAdminSqlGen(self.__verbose)
+            sqlL = myAd.createDatabaseSQL(dbName)
             for tableId in tableIdList:
                 tableDefObj = msd.getTable(tableId)
                 sqlL.extend(myAd.createTableSQL(databaseName=msd.getDatabaseName(), tableDefObj=tableDefObj))
 
-            logger.debug("\n\n+BIRD table creation SQL string\n %s\n\n" % '\n'.join(sqlL))
+            logger.debug("+BIRD table creation SQL string\n %s\n\n" % '\n'.join(sqlL))
 
             myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
+            myQ.setWarning('ignore')
             ret = myQ.sqlCommand(sqlCommandList=sqlL)
             logger.debug("\n\n+INFO mysql server returns %r\n" % ret)
             self.assertTrue(ret)
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-            self.fail()
-
-    def testPrdPathList(self):
-        """Test case -  get the path list of PRD definitions in the CVS repository.
-        """
-        try:
-            prd = PdbxPrdIo(verbose=self.__verbose)
-            prd.setCachePath(self.__topCachePath)
-            self.__loadPathList = prd.makeDefinitionPathList()
-            logger.debug("Length of path list %d\n" % len(self.__loadPathList))
-            self.assertGreaterEqual(len(self.__loadPathList), 3)
-
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -133,7 +157,7 @@ class BirdLoaderTests(unittest.TestCase):
         """Test case - for loading BIRD definition data files
         """
         try:
-            self.testPrdPathList()
+            self.testBirdPathList()
             bsd = BirdSchemaDef()
             sml = SchemaDefLoader(schemaDefObj=bsd, verbose=self.__verbose, workPath=os.path.join(HERE, "test-output"))
             logger.debug("Length of path list %d\n" % len(self.__loadPathList))
@@ -156,7 +180,7 @@ class BirdLoaderTests(unittest.TestCase):
             databaseName = bsd.getDatabaseName()
             tableIdList = bsd.getTableIdList()
 
-            myAd = MyDbAdminSqlGen(self.__verbose, self.__lfh)
+            myAd = MyDbAdminSqlGen(self.__verbose)
 
             for tableId in tableIdList:
                 fn = os.path.join(HERE, "test-output", tableId + "-1.tdd")
@@ -185,7 +209,7 @@ class BirdLoaderTests(unittest.TestCase):
         """
 
         try:
-            self.testPrdPathList()
+            self.testBirdPathList()
             bsd = BirdSchemaDef()
             sml = SchemaDefDataPrep(schemaDefObj=bsd, verbose=self.__verbose)
             logger.debug("Length of path list %d\n" % len(self.__loadPathList))
@@ -196,7 +220,7 @@ class BirdLoaderTests(unittest.TestCase):
             tableIdList = bsd.getTableIdList()
 
             myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
-            myAd = MyDbAdminSqlGen(self.__verbose, self.__lfh)
+            myAd = MyDbAdminSqlGen(self.__verbose)
             #
             for tableId in tableIdList:
                 tableDefObj = bsd.getTable(tableId)
@@ -210,9 +234,8 @@ class BirdLoaderTests(unittest.TestCase):
                         vList = []
                         aList = []
                         for id, nm in zip(tableAttributeIdList, tableAttributeNameList):
-                            if len(row[id]) > 0 and row[id] != r'\N':
-                                vList.append(row[id])
-                                aList.append(nm)
+                            vList.append(row[id])
+                            aList.append(nm)
                         insertTemplate = myAd.insertTemplateSQL(databaseName, tableName, aList)
 
                         ok = myQ.sqlTemplateCommand(sqlTemplate=insertTemplate, valueList=vList)
@@ -228,7 +251,7 @@ class BirdLoaderTests(unittest.TestCase):
         """
 
         try:
-            self.testPrdPathList()
+            self.testBirdPathList()
             bsd = BirdSchemaDef()
             sml = SchemaDefDataPrep(schemaDefObj=bsd, verbose=self.__verbose)
             logger.debug("Length of path list %d\n" % len(self.__loadPathList))
@@ -239,7 +262,7 @@ class BirdLoaderTests(unittest.TestCase):
             tableIdList = bsd.getTableIdList()
 
             myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
-            myAd = MyDbAdminSqlGen(self.__verbose, self.__lfh)
+            myAd = MyDbAdminSqlGen(self.__verbose)
             #
             for tableId in tableIdList:
                 tableDefObj = bsd.getTable(tableId)
@@ -254,9 +277,8 @@ class BirdLoaderTests(unittest.TestCase):
                         vList = []
                         aList = []
                         for id, nm in zip(tableAttributeIdList, tableAttributeNameList):
-                            if len(row[id]) > 0 and row[id] != r'\N':
-                                vList.append(row[id])
-                                aList.append(nm)
+                            vList.append(row[id])
+                            aList.append(nm)
                         sqlL.append((myAd.insertTemplateSQL(databaseName, tableName, aList), vList))
 
                     ok = myQ.sqlBatchTemplateCommand(sqlL)
@@ -293,12 +315,14 @@ def loadBatchInsertSuite2():
 
 if __name__ == '__main__':
     #
-    mySuite = loadBatchFileSuite()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
+    if True:
+        mySuite = loadBatchFileSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
     #
-    mySuite = loadBatchInsertSuite1()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
-    #
-    mySuite = loadBatchInsertSuite2()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
+    if True:
+        mySuite = loadBatchInsertSuite1()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
+        #
+        mySuite = loadBatchInsertSuite2()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
     #

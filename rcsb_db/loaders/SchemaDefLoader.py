@@ -19,6 +19,7 @@
 #  4-Jan-2018 jdw add table skipping filters
 #  4-Feb-2018 jdw add cockroach server support - 'cockroach-insert', 'cockroach-insert-many'
 # 13-Mar-2018 jdw split data loading and data processing operations.
+# 30-Mar-2018 jdw more refactoring -  changing expectations on explicit data types -
 ##
 """
 Generic mapper of PDBx/mmCIF instance data to SQL loadable data files based on external
@@ -196,13 +197,12 @@ class SchemaDefLoader(object):
 
             Return the containerNames for the input path list, and path list for load files that are created.
 
-
         """
         if exportFormat == 'tdd':
-            tableDataDict, containerNameList = self.__fetch(inputPathList)
+            tableDataDict, containerNameList = self.__sdp.fetch(inputPathList)
             return containerNameList, self.__exportTdd(tableDataDict, colSep=self.__colSep, rowSep=self.__rowSep, append=append, partName=partName)
         elif exportFormat == 'csv':
-            tableDataDict, containerNameList = self.__fetch(inputPathList)
+            tableDataDict, containerNameList = self.__sdp.fetch(inputPathList)
             return containerNameList, self.__exportCsv(tableDataDict, append=append, partName=partName)
         else:
             return [], []
@@ -243,7 +243,8 @@ class SchemaDefLoader(object):
                 fn = os.path.join(self.__workingPath, tableId + "-" + partName + ".tdd")
                 ofh = open(fn, modeOpt)
                 for rD in rowList:
-                    ofh.write("%s%s" % (colSep.join([rD[aId] for aId in schemaAttributeIdList]), rowSep))
+                    # logger.info("%r" % colSep.join([str(rD[aId]) for aId in schemaAttributeIdList]))
+                    ofh.write("%s%s" % (colSep.join([str(rD[aId]) for aId in schemaAttributeIdList]), rowSep))
                 ofh.close()
                 exportList.append((tableId, fn))
         return exportList
@@ -273,9 +274,8 @@ class SchemaDefLoader(object):
                 self.__cleanUpFile(loadPath)
         #
         endTime = time.time()
-        if self.__verbose:
-            logger.debug("+SchemaDefLoader(loadBatchFiles) completed with status %r at %s (%.3f seconds)\n" %
-                         (ok, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+        logger.debug("Completed with status %r at %s (%.3f seconds)\n" %
+                     (ok, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
         return ok
 
     def delete(self, tableId, containerNameList=None, deleteOpt='all'):
@@ -289,15 +289,11 @@ class SchemaDefLoader(object):
         #
         #
         endTime = time.time()
-        if (self.__verbose):
-            logger.debug("+SchemaDefLoader(delete) table %s server returns %r\n" % (tableId, ret))
-            logger.debug("+SchemaDefLoader(delete) completed at %s (%.3f seconds)\n" %
-                         (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
-            return ret
-        else:
-            if self.__verbose:
-                logger.error("+SchemaDefLoader(delete) fails for %s\n" % tableId)
-            return False
+
+        logger.debug("Delete table %s server returns %r\n" % (tableId, ret))
+        logger.debug("Completed at %s (%.3f seconds)\n" %
+                     (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+        return ret
 
     def __getSqlDeleteList(self, tableId, containerNameList=None, deleteOpt='all'):
         """ Return the SQL delete commands for the input table and container name list.
@@ -317,8 +313,7 @@ class SchemaDefLoader(object):
         elif deleteOpt in ['all', 'truncate']:
             sqlDeleteList = [sqlGen.truncateTableSQL(databaseName, tableName)]
 
-        if (self.__verbose):
-            logger.debug("+SchemaDefLoader(__getSqlDeleteList) delete SQL for %s : %r\n" % (tableId, sqlDeleteList))
+        logger.debug("Delete SQL for %s : %r\n" % (tableId, sqlDeleteList))
         return sqlDeleteList
 
     def __batchFileImport(self, tableId, tableLoadPath, sqlFilePath=None, containerNameList=None, deleteOpt='all'):
@@ -338,7 +333,7 @@ class SchemaDefLoader(object):
 
         #
         if deleteOpt:
-            sqlCommandList = self.__getSqlDeleteList(tableId, containerNameList=None, deleteOpt=deleteOpt)
+            sqlCommandList = self.__getSqlDeleteList(tableId, containerNameList=containerNameList, deleteOpt=deleteOpt)
         else:
             sqlCommandList = []
 
@@ -348,14 +343,13 @@ class SchemaDefLoader(object):
             sqlCommandList.append(sqlGen.importTable(databaseName, tableDefObj, importPath=tableLoadPath))
 
             if (self.__verbose):
-                logger.debug("+SchemaDefLoader(__batchFileImport) SQL import command\n%s\n" % sqlCommandList)
+                logger.debug("SQL import command\n%s\n" % sqlCommandList)
             #
 
         if sqlFilePath is not None:
             try:
-                ofh = open(sqlFilePath, 'w')
-                ofh.write("%s" % '\n'.join(sqlCommandList))
-                ofh.close()
+                with open(sqlFilePath, 'w') as ofh:
+                    ofh.write("%s" % '\n'.join(sqlCommandList))
             except Exception as e:
                 pass
         #
@@ -365,10 +359,9 @@ class SchemaDefLoader(object):
         #
         #
         endTime = time.time()
-        if (self.__verbose):
-            logger.debug("+SchemaDefLoader(__batchFileImport) table %s server returns %r\n" % (tableId, ret))
-            logger.debug("+SchemaDefLoader(__batchFileImport) completed at %s (%.3f seconds)\n" %
-                         (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+        logger.debug("Table %s server returns %r\n" % (tableId, ret))
+        logger.debug("Completed at %s (%.3f seconds)\n" %
+                     (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
         return ret
 
     def loadBatchData(self, tableId, rowList=None, containerNameList=None, deleteOpt='selected'):
@@ -403,7 +396,7 @@ class SchemaDefLoader(object):
             deleteAttributeName = tableDefObj.getDeleteAttributeName()
             sqlDeleteList = sqlGen.deleteFromListSQL(databaseName, tableName, deleteAttributeName, containerNameList, chunkSize=10)
             if (self.__verbose):
-                logger.debug("+SchemaDefLoader(batchInsertImport) delete SQL for %s : %r\n" % (tableId, sqlDeleteList))
+                logger.debug("Delete SQL for %s : %r\n" % (tableId, sqlDeleteList))
         elif deleteOpt in ['all', 'truncate']:
             sqlDeleteList = [sqlGen.truncateTableSQL(databaseName, tableName)]
 
@@ -412,21 +405,21 @@ class SchemaDefLoader(object):
             vList = []
             aList = []
             for id, nm in zip(tableAttributeIdList, tableAttributeNameList):
-                if len(row[id]) > 0 and row[id] != r'\N':
+                # if len(row[id]) > 0 and row[id] != r'\N':
+                if row[id] and row[id] != r'\N':
                     vList.append(row[id])
                     aList.append(nm)
             sqlInsertList.append((sqlGen.insertTemplateSQL(databaseName, tableName, aList), vList))
 
         ret = myQ.sqlBatchTemplateCommand(sqlInsertList, prependSqlList=sqlDeleteList)
-        if (self.__verbose):
-            if (ret):
-                logger.debug("+SchemaDefLoader(__batchInsertImport) batch insert completed for table %s rows %d\n" % (tableName, len(sqlInsertList)))
-            else:
-                logger.error("+SchemaDefLoader(__batchInsertImport) batch insert fails for table %s length %d\n" % (tableName, len(sqlInsertList)))
+        if (ret):
+            logger.debug("Batch insert completed for table %s rows %d\n" % (tableName, len(sqlInsertList)))
+        else:
+            logger.error("Batch insert fails for table %s length %d\n" % (tableName, len(sqlInsertList)))
 
         endTime = time.time()
         if (self.__verbose):
-            logger.debug("+SchemaDefLoader(__batchInsertImport) completed at %s (%.3f seconds)\n" %
+            logger.debug("Completed at %s (%.3f seconds)\n" %
                          (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
 
         return ret
