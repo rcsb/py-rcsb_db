@@ -125,7 +125,7 @@ class MongoDbUtil(object):
             rIdL = r.inserted_ids
             return rIdL
         except Exception as e:
-            logger.debug("Bulk insert document Id recovery failing with %s" % str(e))
+            logger.info("Bulk insert document Id recovery failing with %s" % str(e))
             return self.___salvageInsertList(databaseName, collectionName, dList, keyName)
 
         return rIdL
@@ -138,10 +138,11 @@ class MongoDbUtil(object):
                 rId = self.insert(databaseName, collectionName, d)
                 if rId:
                     rIdL.append(rId)
+                    logger.info("Insert suceeds for document %s" % kyVal)
                 else:
                     logger.error("Loading document %r failed" % kyVal)
         except Exception as e:
-            logger.exception("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, keyName, str(e)))
+            logger.exception("Failing %s and %s keyName %r with %s" % (databaseName, collectionName, keyName, str(e)))
         #
         return rIdL
 
@@ -149,9 +150,11 @@ class MongoDbUtil(object):
         ''' Delete and serially insert the input document list.   Return the list list
             of documents ids successfully loaded.
         '''
+        logger.info("Salvaging document list length %d" % len(dList))
         dTupL = self.deleteList(databaseName, collectionName, dList, keyName)
-        logger.debug("Salvage bulk insert - deleting %d documents" % len(dTupL))
-        return self.insertListSerial(databaseName, collectionName, dList, keyName)
+        logger.info("Salvage bulk insert - deleting %d documents" % len(dTupL))
+        rIdL = self.insertListSerial(databaseName, collectionName, dList, keyName)
+        logger.info("Salvage bulk insert - serlial insert length %d" % len(rIdL))
 
     def fetchOne(self, databaseName, collectionName, ky, val):
         try:
