@@ -91,11 +91,13 @@ class MongoDbLoaderWorker(object):
             numProc = self.__numProc
             chunkSize = self.__chunkSize if inputPathList and self.__chunkSize < len(inputPathList) else 0
             #
-            _, dbName, collectionNameList = self.__getSchemaInfo(contentType)
+            _, dbName, collectionNameList, primaryIndexD = self.__getSchemaInfo(contentType)
             for collectionName in collectionNameList:
                 if loadType == 'full':
                     self.__removeCollection(dbName, collectionName)
-                    self.__createCollection(dbName, collectionName)
+                    indAt = primaryIndexD[collectionName] if collectionName in primaryIndexD else None
+                    self.__createCollection(dbName, collectionName, indAt)
+
             #
             mpu = MultiProcUtil(verbose=True)
             mpu.setOptions(optionsD=optD)
@@ -135,7 +137,7 @@ class MongoDbLoaderWorker(object):
                 fType = "drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
             # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             #
-            sd, dbName, collectionNameList = self.__getSchemaInfo(contentType)
+            sd, dbName, collectionNameList, _ = self.__getSchemaInfo(contentType)
             sdp = SchemaDefDataPrep(schemaDefObj=sd, verbose=self.__verbose)
             containerList = sdp.getContainerList(dataList, filterType=fType)
             #
@@ -217,18 +219,21 @@ class MongoDbLoaderWorker(object):
         delta = endTime - startTime
         logger.info("Completed %s at %s (%.4f seconds)" % (message, ts, delta))
 
-    def __createCollection(self, dbName, collectionName):
-        """Create database and collection -
+    def __createCollection(self, dbName, collectionName, indexAttributeName=None):
+        """Create database and collection and optionally a primary index -
         """
         try:
-            logger.debug("Create collection database %s collection %s" % (dbName, collectionName))
+            logger.debug("Create database %s collection %s" % (dbName, collectionName))
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
-                ok = mg.createCollection(dbName, collectionName)
-                ok = mg.databaseExists(dbName)
-                ok = mg.collectionExists(dbName, collectionName)
+                ok1 = mg.createCollection(dbName, collectionName)
+                ok2 = mg.databaseExists(dbName)
+                ok3 = mg.collectionExists(dbName, collectionName)
+                okI = True
+                if indexAttributeName:
+                    okI = mg.createIndex(dbName, collectionName, [indexAttributeName], indexName="primary", indexType="DESCENDING", uniqueFlag=False)
 
-            return ok
+            return ok1 and ok2 and ok3 and okI
             #
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -351,34 +356,32 @@ class MongoDbLoaderWorker(object):
         sd = None
         dbName = None
         collectionNameList = []
+        primaryIndexD = {}
         try:
             if contentType == "bird":
                 sd = BirdSchemaDef(convertNames=True)
-                dbName = sd.getDatabaseName()
-                collectionNameList = sd.getContentTypeCollections(contentType)
             elif contentType == "bird_family":
                 sd = BirdSchemaDef(convertNames=True)
-                dbName = sd.getDatabaseName()
-                collectionNameList = sd.getContentTypeCollections(contentType)
             elif contentType == 'chem_comp':
                 sd = ChemCompSchemaDef(convertNames=True)
-                dbName = sd.getDatabaseName()
-                collectionNameList = sd.getContentTypeCollections(contentType)
             elif contentType == 'bird_chem_comp':
                 sd = ChemCompSchemaDef(convertNames=True)
-                dbName = sd.getDatabaseName()
-                collectionNameList = sd.getContentTypeCollections(contentType)
             elif contentType == 'pdbx':
                 sd = PdbxSchemaDef(convertNames=True)
-                dbName = sd.getDatabaseName()
-                collectionNameList = sd.getContentTypeCollections(contentType)
             else:
                 logger.warning("Unsupported contentType %s" % contentType)
+
+            dbName = sd.getDatabaseName()
+            collectionNameList = sd.getContentTypeCollections(contentType)
+            primaryIndexD = {}
+            for collectionName in collectionNameList:
+                (tn, an) = sd.getDocumentKeyAttributeName(collectionName)
+                primaryIndexD[collectionName] = tn + '.' + an
 
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
 
-        return sd, dbName, collectionNameList
+        return sd, dbName, collectionNameList, primaryIndexD
 
     def __dictGet(self, dct, dotNotation):
         """  Convert input dictionary key (dot notation) to divided Python format and return appropriate dictionary value.
