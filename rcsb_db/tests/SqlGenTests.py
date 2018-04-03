@@ -1,6 +1,6 @@
 ##
 #
-# File:    MyDbSqlGenTests.py
+# File:    SqlGenTests.py
 # Author:  J. Westbrook
 # Date:    31-Jan-2012
 # Version: 0.001
@@ -35,13 +35,13 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-from rcsb_db.sql.MyDbSqlGen import MyDbAdminSqlGen, MyDbQuerySqlGen, MyDbConditionSqlGen
+from rcsb_db.sql.SqlGen import SqlGenAdmin, SqlGenQuery, SqlGenCondition
 from rcsb_db.schema.MessageSchemaDef import MessageSchemaDef
 from rcsb_db.schema.BirdSchemaDef import BirdSchemaDef
 from rcsb_db.schema.PdbDistroSchemaDef import PdbDistroSchemaDef
 
 
-class MyDbSqlGenTests(unittest.TestCase):
+class SqlGenTests(unittest.TestCase):
 
     def setUp(self):
         self.__verbose = True
@@ -63,12 +63,12 @@ class MyDbSqlGenTests(unittest.TestCase):
         try:
             msd = MessageSchemaDef(verbose=self.__verbose)
             tableIdList = msd.getTableIdList()
-            myAd = MyDbAdminSqlGen(self.__verbose)
+            myAd = SqlGenAdmin(self.__verbose)
             sqlL = []
             for tableId in tableIdList:
                 tableDefObj = msd.getTable(tableId)
                 sqlL.extend(myAd.createTableSQL(databaseName=msd.getDatabaseName(), tableDefObj=tableDefObj))
-                logger.debug("\n\n+MyDbSqlGenTests table creation SQL string\n %s\n\n" % '\n'.join(sqlL))
+                logger.debug("\n\n+SqlGenTests table creation SQL string\n %s\n\n" % '\n'.join(sqlL))
             self.assertGreaterEqual(len(sqlL), 10)
 
         except Exception as e:
@@ -83,14 +83,14 @@ class MyDbSqlGenTests(unittest.TestCase):
             msd = MessageSchemaDef(verbose=self.__verbose)
             databaseName = msd.getDatabaseName()
             tableIdList = msd.getTableIdList()
-            myAd = MyDbAdminSqlGen(self.__verbose)
+            myAd = SqlGenAdmin(self.__verbose)
             for tableId in tableIdList:
                 tableDefObj = msd.getTable(tableId)
                 exportPath = os.path.join(HERE, "test-output", tableDefObj.getName() + ".tdd")
                 sqlExport = myAd.exportTable(databaseName, tableDefObj, exportPath=exportPath)
-                logger.debug("\n\n+MyDbSqlGenTests table export SQL string\n %s\n\n" % sqlExport)
+                logger.debug("\n\n+SqlGenTests table export SQL string\n %s\n\n" % sqlExport)
                 sqlImport = myAd.importTable(databaseName, tableDefObj, importPath=exportPath)
-                logger.debug("\n\n+MyDbSqlGenTests table import SQL string\n %s\n\n" % sqlImport)
+                logger.debug("\n\n+SqlGenTests table import SQL string\n %s\n\n" % sqlImport)
                 self.assertGreaterEqual(len(sqlImport), 100)
 
         except Exception as e:
@@ -104,12 +104,12 @@ class MyDbSqlGenTests(unittest.TestCase):
         try:
             msd = BirdSchemaDef(verbose=self.__verbose)
             tableIdList = msd.getTableIdList()
-            myAd = MyDbAdminSqlGen(self.__verbose)
+            myAd = SqlGenAdmin(self.__verbose)
             sqlL = []
             for tableId in tableIdList:
                 tableDefObj = msd.getTable(tableId)
                 sqlL.extend(myAd.createTableSQL(databaseName=msd.getDatabaseName(), tableDefObj=tableDefObj))
-                logger.debug("\n\n+MyDbSqlGenTests table creation SQL string\n %s\n\n" % '\n'.join(sqlL))
+                logger.debug("\n\n+SqlGenTests table creation SQL string\n %s\n\n" % '\n'.join(sqlL))
             self.assertGreaterEqual(len(sqlL), 90)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -123,15 +123,15 @@ class MyDbSqlGenTests(unittest.TestCase):
             msd = BirdSchemaDef(verbose=self.__verbose)
             databaseName = msd.getDatabaseName()
             tableIdList = msd.getTableIdList()
-            myAd = MyDbAdminSqlGen(self.__verbose)
+            myAd = SqlGenAdmin(self.__verbose)
 
             for tableId in tableIdList:
                 tableDefObj = msd.getTable(tableId)
                 exportPath = tableDefObj.getName() + ".tdd"
                 sqlExport = myAd.exportTable(databaseName, tableDefObj, exportPath=exportPath)
-                logger.debug("\n\n+MyDbSqlGenTests table export SQL string\n %s\n\n" % sqlExport)
+                logger.debug("\n\n+SqlGenTests table export SQL string\n %s\n\n" % sqlExport)
                 sqlImport = myAd.importTable(databaseName, tableDefObj, importPath=exportPath)
-                logger.debug("\n\n+MyDbSqlGenTests table import SQL string\n %s\n\n" % sqlImport)
+                logger.debug("\n\n+SqlGenTests table import SQL string\n %s\n\n" % sqlImport)
                 self.assertGreaterEqual(len(sqlImport), 100)
 
         except Exception as e:
@@ -147,12 +147,12 @@ class MyDbSqlGenTests(unittest.TestCase):
             #
             msd = MessageSchemaDef(verbose=self.__verbose)
             tableIdList = msd.getTableIdList()
-            sqlGen = MyDbQuerySqlGen(schemaDefObj=msd, verbose=self.__verbose)
+            sqlGen = SqlGenQuery(schemaDefObj=msd, verbose=self.__verbose)
 
             for tableId in tableIdList:
                 if msd.isBaseTable(tableId):
                     continue
-                sqlCondition = MyDbConditionSqlGen(schemaDefObj=msd, verbose=self.__verbose)
+                sqlCondition = SqlGenCondition(schemaDefObj=msd, verbose=self.__verbose)
                 sqlCondition.addValueCondition((tableId, "DEP_ID"), 'EQ', ('D000001', 'CHAR'))
                 aIdList = msd.getAttributeIdList(tableId)
                 for aId in aIdList:
@@ -160,7 +160,7 @@ class MyDbSqlGenTests(unittest.TestCase):
                 sqlGen.setCondition(sqlCondition)
                 sqlGen.addOrderByAttributeId(attributeTuple=(tableId, 'MESSAGE_ID'))
                 sqlS = sqlGen.getSql()
-                logger.debug("\n\n+MyDbSqlGenTests table creation SQL string\n %s\n\n" % sqlS)
+                logger.debug("\n\n+SqlGenTests table creation SQL string\n %s\n\n" % sqlS)
                 self.assertGreaterEqual(len(sqlS), 50)
                 sqlGen.clear()
         except Exception as e:
@@ -194,14 +194,14 @@ class MyDbSqlGenTests(unittest.TestCase):
             sd = PdbDistroSchemaDef(verbose=self.__verbose)
             # tableIdList = sd.getTableIdList()
             # aIdList = sd.getAttributeIdList(tableId)
-            sqlGen = MyDbQuerySqlGen(schemaDefObj=sd, verbose=self.__verbose)
+            sqlGen = SqlGenQuery(schemaDefObj=sd, verbose=self.__verbose)
 
             sTableIdList = []
             for sTup in sList:
                 sqlGen.addSelectAttributeId(attributeTuple=(sTup[0], sTup[1]))
                 sTableIdList.append(sTup[0])
 
-            sqlCondition = MyDbConditionSqlGen(schemaDefObj=sd, verbose=self.__verbose)
+            sqlCondition = SqlGenCondition(schemaDefObj=sd, verbose=self.__verbose)
             for cTup in cList:
                 sqlCondition.addValueCondition(cTup[0], cTup[1], cTup[2])
             sqlCondition.addGroupValueConditionList(gList, preOp='AND')
@@ -211,7 +211,7 @@ class MyDbSqlGenTests(unittest.TestCase):
             for oTup in oList:
                 sqlGen.addOrderByAttributeId(attributeTuple=oTup)
             sqlS = sqlGen.getSql()
-            logger.debug("\n\n+MyDbSqlGenTests table creation SQL string\n %s\n\n" % sqlS)
+            logger.debug("\n\n+SqlGenTests table creation SQL string\n %s\n\n" % sqlS)
             self.assertGreaterEqual(len(sqlS), 100)
             sqlGen.clear()
         except Exception as e:
@@ -220,27 +220,27 @@ class MyDbSqlGenTests(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(MyDbSqlGenTests, 'test')
+    return unittest.makeSuite(SqlGenTests, 'test')
 
 
 def suiteMessageSchema():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(MyDbSqlGenTests("testMessageSchemaCreate"))
-    suiteSelect.addTest(MyDbSqlGenTests("testMessageImportExport"))
+    suiteSelect.addTest(SqlGenTests("testMessageSchemaCreate"))
+    suiteSelect.addTest(SqlGenTests("testMessageImportExport"))
     return suiteSelect
 
 
 def suiteBirdSchema():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(MyDbSqlGenTests("testBirdSchemaCreate"))
-    suiteSelect.addTest(MyDbSqlGenTests("testBirdImportExport"))
+    suiteSelect.addTest(SqlGenTests("testBirdSchemaCreate"))
+    suiteSelect.addTest(SqlGenTests("testBirdImportExport"))
     return suiteSelect
 
 
 def suiteSelect():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(MyDbSqlGenTests("testSelect1"))
-    suiteSelect.addTest(MyDbSqlGenTests("testSelectDistro"))
+    suiteSelect.addTest(SqlGenTests("testSelect1"))
+    suiteSelect.addTest(SqlGenTests("testSelectDistro"))
     return suiteSelect
 
 

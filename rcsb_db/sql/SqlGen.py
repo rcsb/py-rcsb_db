@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 #
 
 
-class MyDbAdminSqlGen(object):
+class SqlGenAdmin(object):
 
     """ Builds SQL commands to create table schema from a schema definition derived from class SchemaDefBase.
 
@@ -592,7 +592,7 @@ class MyDbAdminSqlGen(object):
         return ' '.join(oL)
 
 
-class MyDbQuerySqlGen(object):
+class SqlGenQuery(object):
 
     """ Builds an the SQL command string for a selection query.
     """
@@ -656,7 +656,7 @@ class MyDbQuerySqlGen(object):
         return True
 
     def setCondition(self, conditionObj):
-        """ Set an instance of the condition object from the MyDbConditionSqlGen() class.
+        """ Set an instance of the condition object from the SqlGenCondition() class.
 
         """
         self.__conditionObj = conditionObj
@@ -713,7 +713,7 @@ class MyDbQuerySqlGen(object):
         return '\n'.join(oL)
 
 
-class MyDbConditionSqlGen(object):
+class SqlGenCondition(object):
 
     """ Builds the Condition portion of an SQL selection or related query.
     """
@@ -1028,7 +1028,7 @@ class MyDbConditionSqlGen(object):
         rKeyAttributeIdL = rTdef.getPrimaryKeyAttributeIdList()
         #
         commonAttributeIdSet = set(lKeyAttributeIdL) & set(rKeyAttributeIdL)
-        logger.debug("+MyDbConditionSqlGen.__addInterTableJoinConditions lTable %s rTable %s  common keys %r\n" % (lTableId, rTableId, commonAttributeIdSet))
+        logger.debug("+SqlGenCondition.__addInterTableJoinConditions lTable %s rTable %s  common keys %r\n" % (lTableId, rTableId, commonAttributeIdSet))
         #
         for attributeId in commonAttributeIdSet:
             lhsTuple = (lTableId, attributeId)

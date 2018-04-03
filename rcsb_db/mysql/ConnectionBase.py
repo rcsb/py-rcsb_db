@@ -73,7 +73,7 @@ class ConnectionBase(object):
             self.__dbUser = self.__infoD.get("DB_USER", None)
             self.__dbPw = self.__infoD.get("DB_PW", None)
             self.__dbSocket = self.__infoD.get("DB_SOCKET", None)
-            self.__dbServer = self.__infoD.get("DB_SERVER", "mongo")
+            self.__dbServer = self.__infoD.get("DB_SERVER", "mysql")
             #
             port = self.__infoD.get("DB_PORT", self.__defaultPort)
             if port and len(str(port)) > 0:

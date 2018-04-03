@@ -1,23 +1,12 @@
 ##
-# File:    SchemaDefCrateDbLoader.py
+# File:    CrateDbLoader.py
 # Author:  J. Westbrook
-# Date:    18-Jan-2018
+# Date:    1-Apr-2018
 #
-#  Variant to support stripped down support for Crate DB.
+#  Loader variant to support stripped down support for Crate DB.
 #
 # Updates:
-#  9-Jan-2013 jdw add merging index support for loading tables from multiple
-#                 instance categories.
-# 10-Jan-2013 jdw add null value filter and maximum string width checks.
-# 13-Jan-2013 jdw provide batch file and batch insert loading modes.
-# 15-Jan-2013 jdw add pre-load delete options
-# 19-Jan-2012 jdw add IoAdapter
-# 20-Jan-2013 jdw add append options for batch file loading
-# 20-Jan-2013 jdw provide methods for loading container lists
-#  2-Oct-2017 jdw escape null string '\N' and suppress print statements
-# 20-Dec-2017 jdw set to use python adapter -
-# 30-Dec-2017 jdw add crate server support - 'crate-insert', 'crate-insert-many'
-#  4-Jan-2018 jdw add table skipping filters
+#
 ##
 """
 Generic mapper of PDBx/mmCIF instance data to SQL loadable data files based on external
@@ -33,9 +22,14 @@ __license__ = "Apache 2.0"
 import os
 import time
 
-from rcsb_db.sql.MyDbSqlGen import MyDbAdminSqlGen
+from rcsb_db.sql.SqlGen import SqlGenAdmin
 from rcsb_db.crate.CrateDbUtil import CrateDbQuery
 from rcsb_db.loaders.SchemaDefDataPrep import SchemaDefDataPrep
+#
+try:
+    from mmcif.io.IoAdapterCore import IoAdapterCore as IoAdapter
+except Exception as e:
+    from mmcif.io.IoAdapterPy import IoAdapterPy as IoAdapter
 #
 #
 
@@ -44,7 +38,7 @@ logger = logging.getLogger(__name__)
 #
 
 
-class SchemaDefLoader(object):
+class CrateDbLoader(object):
 
     """ Map PDBx/mmCIF instance data to SQL loadable data using external schema definition.
     """
@@ -60,32 +54,11 @@ class SchemaDefLoader(object):
         self.__pathList = []
         self.__cleanUp = cleanUp
         #
-        self.__colSep = '&##&\t'
-        self.__rowSep = '$##$\n'
-        #
-        self.__warningAction = warnings
-        self.__overWrite = {}
         self.__sdp = SchemaDefDataPrep(schemaDefObj=schemaDefObj, ioObj=IoAdapter(), verbose=True)
-
-    def setWarning(self, action):
-        if action in ['error', 'ignore', 'default']:
-            self.__warningAction = action
-            return True
-        else:
-            self.__warningAction = 'default'
-            return False
-
-    def setDelimiters(self, colSep=None, rowSep=None):
-        """  Set column and row delimiters for intermediate data files used for
-             batch-file loading operations.
-        """
-        self.__colSep = colSep if colSep is not None else '&##&\t'
-        self.__rowSep = rowSep if rowSep is not None else '$##$\n'
-        return True
 
     def load(self, inputPathList=None, containerList=None, loadType='batch-file', deleteOpt=None, tableIdSkipD=None):
         """ Load data for each table defined in the current schema definition object.
-            Data are extracted from the input file list.
+            Data are extracted from the input path or container list.
 
             Data source options:
 
@@ -96,7 +69,7 @@ class SchemaDefLoader(object):
               containerList = [ data container, ...]
 
 
-            loadType  =  ['batch-file' | 'batch-insert']
+            loadType  =  ['crate-insert' | 'crate-insert-many']
             deleteOpt = 'selected' | 'all'
 
             tableIdSkipD - searchable container with tableIds to be skipped on loading -
@@ -131,24 +104,6 @@ class SchemaDefLoader(object):
 
         return False
 
-
-    def __export(self, tableDict, colSep='&##&\t', rowSep='$##$\n', append=False, partName='1'):
-        modeOpt = 'a' if append else 'w'
-
-        exportList = []
-        for tableId, rowList in tableDict.items():
-            tObj = self.__sD.getTable(tableId)
-            schemaAttributeIdList = tObj.getAttributeIdList()
-            #
-            if len(rowList) > 0:
-                fn = os.path.join(self.__workingPath, tableId + "-loadable-" + partName + ".tdd")
-                ofh = open(fn, modeOpt)
-                for rD in rowList:
-                    ofh.write("%s%s" % (colSep.join([rD[aId] for aId in schemaAttributeIdList]), rowSep))
-                ofh.close()
-                exportList.append((tableId, fn))
-        return exportList
-
     def __crateInsertImport(self, tableId, rowList=None, containerNameList=None, deleteOpt='selected', sqlMode='many', refresh=True):
         """ Load the input table using sql crate templated inserts of the input rowlist of dictionaries (i.e. d[attributeId]=value).
 
@@ -164,7 +119,7 @@ class SchemaDefLoader(object):
         startTime = time.time()
         sqlRefresh = None
         crQ = CrateDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
-        sqlGen = MyDbAdminSqlGen(self.__verbose)
+        sqlGen = SqlGenAdmin(self.__verbose)
         #
         databaseName = self.__sD.getVersionedDatabaseName()
         tableDefObj = self.__sD.getTable(tableId)
@@ -201,7 +156,7 @@ class SchemaDefLoader(object):
             for row in rowList:
                 vList = []
                 for id, nm in tupL:
-                    if len(row[id]) > 0 and row[id] != r'\N':
+                    if row[id] and row[id] != r'\N':
                         vList.append(row[id])
                     else:
                         vList.append(None)
@@ -218,7 +173,7 @@ class SchemaDefLoader(object):
             for row in rowList:
                 vList = []
                 for id, nm in tupL:
-                    if len(row[id]) > 0 and row[id] != r'\N':
+                    if row[id] and row[id] != r'\N':
                         vList.append(row[id])
                     else:
                         vList.append(None)

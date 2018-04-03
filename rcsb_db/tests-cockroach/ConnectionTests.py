@@ -35,7 +35,7 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-from rcsb_db.mongo.Connection import Connection
+from rcsb_db.cockroach.Connection import Connection
 from rcsb_db.utils.ConfigUtil import ConfigUtil
 
 
@@ -45,7 +45,7 @@ class ConnectionBaseTests(unittest.TestCase):
         configPath = os.path.join(TOPDIR, 'rcsb_db', 'data', 'dbload-setup-example.cfg')
         configName = 'DEFAULT'
         self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
-        self.__resourceName = "MONGO_DB"
+        self.__resourceName = "COCKROACH_DB"
 
         self.__startTime = time.time()
         logger.debug("Running tests on version %s" % __version__)

@@ -6,6 +6,7 @@
 # Version: 0.001
 #
 # Updates:
+#  30-Mar-2018 jdw add tests for context manager style opens
 ##
 """
 Test cases opening database connections.
@@ -85,6 +86,17 @@ class ConnectionTests(unittest.TestCase):
     def __getClientConnection(self, cObj):
         return cObj.getClientConnection()
 
+    def testCreateConnectionContext(self):
+        """Test case -  connection creation using context manager
+        """
+        try:
+            with Connection(cfgOb=self.__cfgOb, resourceName="MYSQL_DB") as client:
+                self.assertNotEqual(client, None)
+
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
     def testCreateConnection(self):
         """Test case -  connection creation
         """
@@ -112,6 +124,17 @@ class ConnectionTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
+    def testCreateMultipleConnectionsContext(self):
+        """Test case -  multiple connection creation
+        """
+        try:
+            for ii in range(100):
+                with Connection(cfgOb=self.__cfgOb, resourceName="MYSQL_DB") as client:
+                    self.assertNotEqual(client, None)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
     def testCreateMultipleConnectionsWithQuery(self):
         """Test case -  multiple connection creation
         """
@@ -130,6 +153,21 @@ class ConnectionTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
+    def testCreateMultipleConnectionsWithQueryContext(self):
+        """Test case -  multiple connection creation
+        """
+        try:
+            for ii in range(100):
+                with Connection(cfgOb=self.__cfgOb, resourceName="MYSQL_DB") as client:
+                    self.assertNotEqual(client, None)
+                    for jj in range(100):
+                        my = MyDbQuery(dbcon=client)
+                        ok = my.testSelectQuery(count=ii + jj)
+                        self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
 
 def suiteOpen():
     suiteSelect = unittest.TestSuite()
@@ -139,7 +177,18 @@ def suiteOpen():
     return suiteSelect
 
 
+def suiteOpenContext():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(ConnectionTests("testCreateConnectionContext"))
+    suiteSelect.addTest(ConnectionTests("testCreateMultipleConnectionsContext"))
+    suiteSelect.addTest(ConnectionTests("testCreateMultipleConnectionsWithQueryContext"))
+    return suiteSelect
+
+
 if __name__ == '__main__':
     if (True):
         mySuite = suiteOpen()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
+    if (True):
+        mySuite = suiteOpenContext()
         unittest.TextTestRunner(verbosity=2).run(mySuite)

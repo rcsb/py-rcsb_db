@@ -48,7 +48,7 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-from rcsb_db.sql.MyDbSqlGen import MyDbAdminSqlGen
+from rcsb_db.sql.SqlGen import SqlGenAdmin
 from rcsb_db.loaders.SchemaDefLoader import SchemaDefLoader
 
 from rcsb_db.cockroach.CockroachDbUtil import CockroachDbConnect, CockroachDbQuery
@@ -370,7 +370,7 @@ class SchemaDefLoaderCockroachImportDbMultiTests(unittest.TestCase):
         ret = 0
         try:
             tableIdList = schemaDefObj.getTableIdList()
-            sqlGen = MyDbAdminSqlGen(self.__verbose, serverType="cockroachdb")
+            sqlGen = SqlGenAdmin(self.__verbose, serverType="cockroachdb")
             sqlL = []
             for tableId in tableIdList:
                 tableDefObj = schemaDefObj.getTable(tableId)
@@ -396,7 +396,7 @@ class SchemaDefLoaderCockroachImportDbMultiTests(unittest.TestCase):
         ret = 0
         try:
             tableIdList = schemaDefObj.getTableIdList()
-            sqlGen = MyDbAdminSqlGen(self.__verbose, serverType="cockroachdb")
+            sqlGen = SqlGenAdmin(self.__verbose, serverType="cockroachdb")
             sqlL = []
             for tableId in tableIdList:
                 tableDefObj = schemaDefObj.getTable(tableId)

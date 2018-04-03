@@ -5,7 +5,8 @@
 # Version: 0.001 Initial version
 #
 # Updates:
-#    2012-06-05    RPS    Updated to accommodate "READ_STATUS" attribute
+#    2012-Jun-05    RPS    Updated to accommodate "READ_STATUS" attribute
+#    2018-Mar-31    jdw    add document details
 ##
 """
 Database schema defintions for deposition related message data.
@@ -29,6 +30,13 @@ class MessageSchemaDef(SchemaDefBase):
     """ A data class containing schema definitions for deposition related messages.
     """
     _databaseName = "wwpdb_message_v1"
+    _versionedDatabaseName = "wwpdb_message_v5_0_2"
+    _documentDefDict = {'CONTENT_TYPE_COLLECTION_MAP': {'message': ['message_v5_0_2']},
+                        'UNIT_CARDINALITY_LIST': [],
+                        'ITERABLE_ATTRIBUTE_LIST': [],
+                        'COLLECTION_DOCUMENT_ATTRIBUTE_ID': {'message_v5_0_2': ('DEP_MESSAGE_INFO', 'MESSAGE_ID')},
+                        'SELECTION_FILTERS': {}
+                        }
     _schemaDefDict = {
         "DEP_MESSAGE_INFO": {
             "TABLE_ID": "DEP_MESSAGE_INFO",
@@ -97,8 +105,12 @@ class MessageSchemaDef(SchemaDefBase):
         }
     }
 
-    def __init__(self, verbose=True):
-        super(MessageSchemaDef, self).__init__(databaseName=MessageSchemaDef._databaseName, schemaDefDict=MessageSchemaDef._schemaDefDict, verbose=verbose)
+    def __init__(self, convertNames=False, verbose=True):
+        super(MessageSchemaDef, self).__init__(databaseName=MessageSchemaDef._databaseName,
+                                               convertNames=convertNames,
+                                               schemaDefDict=MessageSchemaDef._schemaDefDict,
+                                               documentDefDict=MessageSchemaDef._documentDefDict,
+                                               verbose=verbose)
         self.__verbose = verbose
 
 

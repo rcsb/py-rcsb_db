@@ -5,6 +5,7 @@
 # Version: 0.001
 #
 # Updates:
+#   31-Mar-2018  jdw standardize argument names
 ##
 """
  Manage simple configuration options.
@@ -37,21 +38,21 @@ class ConfigUtil(object):
         if len(self.__cD) < 1:
             logger.warn("Missing or incomplete configuration information in file %s" % myConfigPath)
 
-    def get(self, name, defaultValue=None):
-        val = defaultValue
+    def get(self, name, default=None):
+        val = default
         try:
             val = str(self.__cD[name])
         except Exception as e:
-            logger.debug("Missing config option %r assigned default value %r" % (name, defaultValue))
+            logger.debug("Missing config option %r assigned default value %r" % (name, default))
         #
         return val
 
-    def getList(self, name, defaultValue=None):
-        valL = defaultValue if defaultValue is not None else []
+    def getList(self, name, default=None):
+        valL = default if default is not None else []
         try:
             valL = str(self.__cD[name]).split(',')
         except Exception as e:
-            logger.debug("Missing config option list %r assigned default value %r" % (name, defaultValue))
+            logger.debug("Missing config option list %r assigned default value %r" % (name, default))
         #
         return valL
 

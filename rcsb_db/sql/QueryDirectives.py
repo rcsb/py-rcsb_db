@@ -1,5 +1,5 @@
 ##
-# File:    MyQueryDirectives.py
+# File:    QueryDirectives.py
 # Author:  J. Westbrook
 # Date:    19-Jun-2015
 # Version: 0.001 Initial version
@@ -25,10 +25,10 @@ import sys
 import logging
 logger = logging.getLogger(__name__)
 
-from rcsb_db.sql.MyDbSqlGen import MyDbQuerySqlGen, MyDbConditionSqlGen
+from rcsb_db.sql.SqlGen import SqlGenQuery, SqlGenCondition
 
 
-class MyQueryDirectives(object):
+class QueryDirectives(object):
 
     """ Process query directives and generate SQL instructions.
 
@@ -405,7 +405,7 @@ class MyQueryDirectives(object):
 
     def __sqlGen(self, selectD, orderD, conditionD):
         #
-        sqlGen = MyDbQuerySqlGen(schemaDefObj=self.__sd, verbose=self.__verbose)
+        sqlGen = SqlGenQuery(schemaDefObj=self.__sd, verbose=self.__verbose)
 
         sTableIdList = []
         #        for sTup in sList:
@@ -415,7 +415,7 @@ class MyQueryDirectives(object):
             sTableIdList.append(sTup[0])
             self.__selectTupList.append(sTup)
 
-        sqlCondition = MyDbConditionSqlGen(schemaDefObj=self.__sd, verbose=self.__verbose)
+        sqlCondition = SqlGenCondition(schemaDefObj=self.__sd, verbose=self.__verbose)
         if len(conditionD) > 0:
 
             for k in sorted(conditionD.keys()):

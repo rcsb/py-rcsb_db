@@ -83,7 +83,7 @@ class RepoPathUtil(object):
             ok, failList, retLists, diagList = mpu.runMulti(dataList=dataList, numProc=numProc, numResults=1)
             pathList = retLists[0]
             endTime0 = time.time()
-            logger.info("Path list length %d  in %.4f seconds\n" % (len(pathList), endTime0 - startTime))
+            logger.debug("Path list length %d  in %.4f seconds\n" % (len(pathList), endTime0 - startTime))
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
         return self.__applyFileLimit(pathList)
@@ -132,7 +132,7 @@ class RepoPathUtil(object):
             ok, failList, retLists, diagList = mpu.runMulti(dataList=dataList, numProc=numProc, numResults=1)
             pathList = retLists[0]
             endTime0 = time.time()
-            logger.info("Path list length %d  in %.4f seconds\n" % (len(pathList), endTime0 - startTime))
+            logger.debug("Path list length %d  in %.4f seconds\n" % (len(pathList), endTime0 - startTime))
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
         return self.__applyFileLimit(pathList)

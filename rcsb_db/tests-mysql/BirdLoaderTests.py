@@ -5,8 +5,9 @@
 # Version: 0.001
 #
 # Updates:
-#  11-Jan-2013 jdw revise treatment of null values in inserts.
+#  11-Jan-2013  jdw revise treatment of null values in inserts.
 #   2-Oct-2017  jdw escape null string '\N'
+#  31-Mar-2018  jdw nuck and pave
 #
 #
 ##
@@ -44,21 +45,21 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-from rcsb_db.sql.MyDbSqlGen import MyDbAdminSqlGen
+from rcsb_db.sql.SqlGen import SqlGenAdmin
 from rcsb_db.loaders.SchemaDefLoader import SchemaDefLoader
 from rcsb_db.loaders.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb_db.mysql.MyDbUtil import MyDbQuery
 from rcsb_db.mysql.Connection import Connection
-from rcsb_db.schema.BirdSchemaDef import BirdSchemaDef
 
-from rcsb_db.utils.RepoPathUtil import RepoPathUtil
 from rcsb_db.utils.ConfigUtil import ConfigUtil
+from rcsb_db.utils.ContentTypeUtil import ContentTypeUtil
+
 
 class BirdLoaderTests(unittest.TestCase):
 
     def __init__(self, methodName='runTest'):
         super(BirdLoaderTests, self).__init__(methodName)
-        self.__loadPathList = []
+
         self.__tddFileList = []
         self.__verbose = True
 
@@ -67,6 +68,7 @@ class BirdLoaderTests(unittest.TestCase):
         self.__databaseName = 'bird_v5'
         self.__topCachePath = os.path.join(TOPDIR, "rcsb_db", "data", "MOCK_BIRD_REPO")
         self.__fileLimit = 100
+        self.__numProc = 2
         self.__birdMockLen = 4
 
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb_db", "data")
@@ -74,10 +76,8 @@ class BirdLoaderTests(unittest.TestCase):
         configName = 'DEFAULT'
         self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
         self.__resourceName = "MYSQL_DB"
-        connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName)
+        self.__ctU = ContentTypeUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
         #
-        self.__cObj = self.__open(connectD)
-        self.__dbCon = self.__getClientConnection(self.__cObj)
         #
         self.__startTime = time.time()
         logger.debug("Running tests on version %s" % __version__)
@@ -85,87 +85,50 @@ class BirdLoaderTests(unittest.TestCase):
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
 
     def tearDown(self):
-        self.__close(self.__cObj)
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)\n" % (self.id(),
                                                               time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                               endTime - self.__startTime))
 
-    def __assignResource(self, cfgOb, resourceName="MYSQL_DB"):
-        cn = Connection(cfgOb=cfgOb)
-        return cn.assignResource(resourceName=resourceName)
-
-    def __open(self, connectD):
-        cObj = Connection()
-        cObj.setPreferences(connectD)
-        ok = cObj.openConnection()
-        if ok:
-            return cObj
-        else:
-            return None
-
-    def __close(self, cObj):
-        if cObj is not None:
-            cObj.closeConnection()
-            self.__dbCon = None
-            return True
-        else:
-            return False
-
-    def __getClientConnection(self, cObj):
-        return cObj.getClientConnection()
-
-    def testBirdPathList(self):
-        """Test case -  get the path list of PRD definitions in the CVS repository.
-        """
-        try:
-            rpU = RepoPathUtil(self.__cfgOb, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
-            self.__loadPathList = rpU.getBirdPathList()
-
-            logger.debug("Length of path list %d\n" % len(self.__loadPathList))
-            self.assertGreaterEqual(len(self.__loadPathList), self.__birdMockLen)
-
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-            self.fail()
-
     def testBirdSchemaCreate(self):
         """Test case -  create table schema using BIRD schema definition
         """
         try:
-            msd = BirdSchemaDef(verbose=self.__verbose)
-            dbName = msd.getDatabaseName()
+            msd, dbName, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            #
             tableIdList = msd.getTableIdList()
-            myAd = MyDbAdminSqlGen(self.__verbose)
+            myAd = SqlGenAdmin(self.__verbose)
             sqlL = myAd.createDatabaseSQL(dbName)
             for tableId in tableIdList:
                 tableDefObj = msd.getTable(tableId)
                 sqlL.extend(myAd.createTableSQL(databaseName=msd.getDatabaseName(), tableDefObj=tableDefObj))
-
             logger.debug("+BIRD table creation SQL string\n %s\n\n" % '\n'.join(sqlL))
 
-            myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
-            myQ.setWarning('ignore')
-            ret = myQ.sqlCommand(sqlCommandList=sqlL)
-            logger.debug("\n\n+INFO mysql server returns %r\n" % ret)
-            self.assertTrue(ret)
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                myQ = MyDbQuery(dbcon=client, verbose=self.__verbose)
+                myQ.setWarning('ignore')
+                ret = myQ.sqlCommand(sqlCommandList=sqlL)
+                logger.debug("\n\n+INFO mysql server returns %r\n" % ret)
+                self.assertTrue(ret)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-    def testMakeLoadPrdFiles(self):
+    def __testMakeLoadPrdFiles(self):
         """Test case - for loading BIRD definition data files
         """
         try:
-            self.testBirdPathList()
-            bsd = BirdSchemaDef()
-            sml = SchemaDefLoader(schemaDefObj=bsd, verbose=self.__verbose, workPath=os.path.join(HERE, "test-output"))
-            logger.debug("Length of path list %d\n" % len(self.__loadPathList))
-            containerNameList, self.__tddFileList = sml.makeLoadFiles(self.__loadPathList)
-            for tId, tPath in self.__tddFileList:
-                logger.debug("\nCreate loadable file %s %s\n" % (tId, tPath))
-            self.assertGreaterEqual(len(self.__tddFileList), 6)
+            loadPathList = self.__ctU.getPathList(contentType='bird')
+            sd, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
 
+            sml = SchemaDefLoader(schemaDefObj=sd, verbose=self.__verbose, workPath=os.path.join(HERE, "test-output"))
+            logger.debug("Length of path list %d\n" % len(loadPathList))
+            containerNameList, tddFileList = sml.makeLoadFiles(loadPathList)
+            for tId, tPath in tddFileList:
+                logger.debug("\nCreate loadable file %s %s\n" % (tId, tPath))
+            self.assertGreaterEqual(len(tddFileList), 6)
+            #
+            return tddFileList
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -175,30 +138,29 @@ class BirdLoaderTests(unittest.TestCase):
         """
 
         try:
-            self.testMakeLoadPrdFiles()
-            bsd = BirdSchemaDef(verbose=self.__verbose)
-            databaseName = bsd.getDatabaseName()
-            tableIdList = bsd.getTableIdList()
+            tddFileList = self.__testMakeLoadPrdFiles()
+            sd, databaseName, _ = self.__ctU.getSchemaInfo(contentType='bird')
 
-            myAd = MyDbAdminSqlGen(self.__verbose)
+            myAd = SqlGenAdmin(self.__verbose)
 
-            for tableId in tableIdList:
-                fn = os.path.join(HERE, "test-output", tableId + "-1.tdd")
-                if os.access(fn, os.F_OK):
-                    logger.debug("+INFO - Found for %s\n" % fn)
-                    tableDefObj = bsd.getTable(tableId)
-                    sqlImport = myAd.importTable(databaseName, tableDefObj, importPath=fn, withTruncate=True)
-                    logger.debug("\n\n+MyDbSqlGenTests table import SQL string\n %s\n\n" % sqlImport)
+            for tableId, tPath in tddFileList:
+
+                if os.access(tPath, os.F_OK):
+                    logger.debug("+INFO - Found for %s\n" % tPath)
+                    tableDefObj = sd.getTable(tableId)
+                    sqlImport = myAd.importTable(databaseName, tableDefObj, importPath=tPath, withTruncate=True)
+                    logger.debug("\n\n+SqlGenTests table import SQL string\n %s\n\n" % sqlImport)
                     #
                     lfn = os.path.join(HERE, "test-output", tableId + "-load.sql")
                     with open(lfn, 'w') as ofh:
                         ofh.write("%s\n" % sqlImport)
                     #
-                    myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
-                    myQ.setWarning('error')
-                    ret = myQ.sqlCommand2(sqlImport)
-                    self.assertTrue(ret)
-                    logger.debug("mysql server returns %r\n" % ret)
+                    with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                        myQ = MyDbQuery(dbcon=client, verbose=self.__verbose)
+                        myQ.setWarning('error')
+                        ret = myQ.sqlCommand2(sqlImport)
+                        self.assertTrue(ret)
+                        logger.debug("mysql server returns %r\n" % ret)
 
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -209,38 +171,38 @@ class BirdLoaderTests(unittest.TestCase):
         """
 
         try:
-            self.testBirdPathList()
-            bsd = BirdSchemaDef()
-            sml = SchemaDefDataPrep(schemaDefObj=bsd, verbose=self.__verbose)
-            logger.debug("Length of path list %d\n" % len(self.__loadPathList))
+            loadPathList = self.__ctU.getPathList(contentType='bird')
+            sd, databaseName, _ = self.__ctU.getSchemaInfo(contentType='bird')
+
+            sml = SchemaDefDataPrep(schemaDefObj=sd, verbose=self.__verbose)
+            logger.debug("Length of path list %d\n" % len(loadPathList))
             #
-            tableDataDict, containerNameList = sml.fetch(self.__loadPathList)
+            tableDataDict, containerNameList = sml.fetch(loadPathList)
+            tableIdList = sd.getTableIdList()
 
-            databaseName = bsd.getDatabaseName()
-            tableIdList = bsd.getTableIdList()
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                myQ = MyDbQuery(dbcon=client, verbose=self.__verbose)
+                myAd = SqlGenAdmin(self.__verbose)
+                #
+                for tableId in tableIdList:
+                    tableDefObj = sd.getTable(tableId)
+                    tableName = tableDefObj.getName()
+                    tableAttributeIdList = tableDefObj.getAttributeIdList()
+                    tableAttributeNameList = tableDefObj.getAttributeNameList()
 
-            myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
-            myAd = MyDbAdminSqlGen(self.__verbose)
-            #
-            for tableId in tableIdList:
-                tableDefObj = bsd.getTable(tableId)
-                tableName = tableDefObj.getName()
-                tableAttributeIdList = tableDefObj.getAttributeIdList()
-                tableAttributeNameList = tableDefObj.getAttributeNameList()
+                    if tableId in tableDataDict:
+                        rowList = tableDataDict[tableId]
+                        for row in rowList:
+                            vList = []
+                            aList = []
+                            for id, nm in zip(tableAttributeIdList, tableAttributeNameList):
+                                vList.append(row[id])
+                                aList.append(nm)
+                            insertTemplate = myAd.insertTemplateSQL(databaseName, tableName, aList)
 
-                if tableId in tableDataDict:
-                    rowList = tableDataDict[tableId]
-                    for row in rowList:
-                        vList = []
-                        aList = []
-                        for id, nm in zip(tableAttributeIdList, tableAttributeNameList):
-                            vList.append(row[id])
-                            aList.append(nm)
-                        insertTemplate = myAd.insertTemplateSQL(databaseName, tableName, aList)
-
-                        ok = myQ.sqlTemplateCommand(sqlTemplate=insertTemplate, valueList=vList)
-                        self.assertTrue(ok)
-                        logger.debug("mysql server returns %r\n" % ok)
+                            ok = myQ.sqlTemplateCommand(sqlTemplate=insertTemplate, valueList=vList)
+                            self.assertTrue(ok)
+                            logger.debug("mysql server returns %r\n" % ok)
 
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -251,39 +213,41 @@ class BirdLoaderTests(unittest.TestCase):
         """
 
         try:
-            self.testBirdPathList()
-            bsd = BirdSchemaDef()
-            sml = SchemaDefDataPrep(schemaDefObj=bsd, verbose=self.__verbose)
-            logger.debug("Length of path list %d\n" % len(self.__loadPathList))
+            loadPathList = self.__ctU.getPathList(contentType='bird')
+            sd, databaseName, _ = self.__ctU.getSchemaInfo(contentType='bird')
+
+            sml = SchemaDefDataPrep(schemaDefObj=sd, verbose=self.__verbose)
+            logger.debug("Length of path list %d\n" % len(loadPathList))
             #
-            tableDataDict, containerNameList = sml.fetch(self.__loadPathList)
+            tableDataDict, containerNameList = sml.fetch(loadPathList)
 
-            databaseName = bsd.getDatabaseName()
-            tableIdList = bsd.getTableIdList()
+            databaseName = sd.getDatabaseName()
+            tableIdList = sd.getTableIdList()
 
-            myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
-            myAd = MyDbAdminSqlGen(self.__verbose)
-            #
-            for tableId in tableIdList:
-                tableDefObj = bsd.getTable(tableId)
-                tableName = tableDefObj.getName()
-                tableAttributeIdList = tableDefObj.getAttributeIdList()
-                tableAttributeNameList = tableDefObj.getAttributeNameList()
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                myQ = MyDbQuery(dbcon=client, verbose=self.__verbose)
+                myAd = SqlGenAdmin(self.__verbose)
+                #
+                for tableId in tableIdList:
+                    tableDefObj = sd.getTable(tableId)
+                    tableName = tableDefObj.getName()
+                    tableAttributeIdList = tableDefObj.getAttributeIdList()
+                    tableAttributeNameList = tableDefObj.getAttributeNameList()
 
-                sqlL = []
-                if tableId in tableDataDict:
-                    rowList = tableDataDict[tableId]
-                    for row in rowList:
-                        vList = []
-                        aList = []
-                        for id, nm in zip(tableAttributeIdList, tableAttributeNameList):
-                            vList.append(row[id])
-                            aList.append(nm)
-                        sqlL.append((myAd.insertTemplateSQL(databaseName, tableName, aList), vList))
+                    sqlL = []
+                    if tableId in tableDataDict:
+                        rowList = tableDataDict[tableId]
+                        for row in rowList:
+                            vList = []
+                            aList = []
+                            for id, nm in zip(tableAttributeIdList, tableAttributeNameList):
+                                vList.append(row[id])
+                                aList.append(nm)
+                            sqlL.append((myAd.insertTemplateSQL(databaseName, tableName, aList), vList))
 
-                    ok = myQ.sqlBatchTemplateCommand(sqlL)
-                    self.assertTrue(ok)
-                    logger.debug("mysql server returns %r\n" % ok)
+                        ok = myQ.sqlBatchTemplateCommand(sqlL)
+                        self.assertTrue(ok)
+                        logger.debug("mysql server returns %r\n" % ok)
 
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -293,8 +257,6 @@ class BirdLoaderTests(unittest.TestCase):
 def loadBatchFileSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(BirdLoaderTests("testBirdSchemaCreate"))
-    # suiteSelect.addTest(BirdLoaderTests("testPrdPathList"))
-    suiteSelect.addTest(BirdLoaderTests("testMakeLoadPrdFiles"))
     suiteSelect.addTest(BirdLoaderTests("testBirdBatchImport"))
     return suiteSelect
 

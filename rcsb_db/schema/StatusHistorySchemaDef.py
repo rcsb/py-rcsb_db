@@ -30,6 +30,12 @@ class StatusHistorySchemaDef(SchemaDefBase):
     """
     _databaseName = "da_internal"
     _versionedDatabaseName = "da_internal_v5_0_1"
+    _documentDefDict = {'CONTENT_TYPE_COLLECTION_MAP': {'status_history': ['status_history_v5_0_2']},
+                        'UNIT_CARDINALITY_LIST': [],
+                        'ITERABLE_ATTRIBUTE_LIST': [],
+                        'COLLECTION_DOCUMENT_ATTRIBUTE_ID': {'status_history_v5_0_2': ('PDBX_DATABASE_STATUS_HISTORY', 'ENTRY_ID')},
+                        'SELECTION_FILTERS': {}
+                        }
     _schemaDefDict = {
         "PDBX_DATABASE_STATUS_HISTORY": {
             "TABLE_ID": "PDBX_DATABASE_STATUS_HISTORY",
@@ -130,12 +136,11 @@ class StatusHistorySchemaDef(SchemaDefBase):
     }
 
     def __init__(self, convertNames=False, verbose=True):
-        super(
-            StatusHistorySchemaDef,
-            self).__init__(
-            databaseName=StatusHistorySchemaDef._databaseName,
-            schemaDefDict=StatusHistorySchemaDef._schemaDefDict, convertNames=convertNames, versionedDatabaseName=StatusHistorySchemaDef._versionedDatabaseName,
-            verbose=verbose)
+        super(StatusHistorySchemaDef, self).__init__(databaseName=StatusHistorySchemaDef._databaseName,
+                                                     schemaDefDict=StatusHistorySchemaDef._schemaDefDict, convertNames=convertNames,
+                                                     versionedDatabaseName=StatusHistorySchemaDef._versionedDatabaseName,
+                                                     documentDefDict=StatusHistorySchemaDef._documentDefDict,
+                                                     verbose=verbose)
         self.__verbose = verbose
 
 

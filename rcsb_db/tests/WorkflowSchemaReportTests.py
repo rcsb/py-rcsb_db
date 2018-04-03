@@ -32,7 +32,7 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-from rcsb_db.sql.MyDbSqlGen import MyDbQuerySqlGen, MyDbConditionSqlGen
+from rcsb_db.sql.SqlGen import SqlGenQuery, SqlGenCondition
 from rcsb_db.schema.WorkflowSchemaDef import WorkflowSchemaDef
 
 
@@ -57,7 +57,7 @@ class WorkflowSchemaReportTests(unittest.TestCase):
         try:
             sd = WorkflowSchemaDef(verbose=self.__verbose)
             tableIdList = sd.getTableIdList()
-            sqlGen = MyDbQuerySqlGen(schemaDefObj=sd, verbose=self.__verbose)
+            sqlGen = SqlGenQuery(schemaDefObj=sd, verbose=self.__verbose)
 
             for tableId in tableIdList:
                 aIdList = sd.getAttributeIdList(tableId)
@@ -65,13 +65,13 @@ class WorkflowSchemaReportTests(unittest.TestCase):
                     sqlGen.addSelectAttributeId(attributeTuple=(tableId, aId))
 
                 if 'DEP_SET_ID' in aIdList:
-                    sqlCondition = MyDbConditionSqlGen(schemaDefObj=sd, verbose=self.__verbose)
+                    sqlCondition = SqlGenCondition(schemaDefObj=sd, verbose=self.__verbose)
                     sqlCondition.addValueCondition((tableId, "DEP_SET_ID"), 'EQ', ('D_1000000000', 'CHAR'))
                     sqlGen.setCondition(sqlCondition)
                 if 'ORDINAL_ID' in aIdList:
                     sqlGen.addOrderByAttributeId(attributeTuple=(tableId, 'ORDINAL_ID'))
                 sqlS = sqlGen.getSql()
-                logger.debug("\n\n+MyDbSqlGenTests table creation SQL string\n %s\n\n" % sqlS)
+                logger.debug("\n\n+SqlGenTests table creation SQL string\n %s\n\n" % sqlS)
                 self.assertGreaterEqual(len(sqlS), 50)
 
                 sqlGen.clear()

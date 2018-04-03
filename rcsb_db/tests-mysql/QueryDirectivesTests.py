@@ -1,6 +1,6 @@
 ##
 #
-# File:    MyQueryDirectivesTests.py
+# File:    QueryDirectivesTests.py
 # Author:  J. Westbrook
 # Date:    20-June-2015
 # Version: 0.001
@@ -42,11 +42,11 @@ from rcsb_db.mysql.MyDbUtil import MyDbQuery
 from rcsb_db.mysql.Connection import Connection
 from rcsb_db.schema.PdbDistroSchemaDef import PdbDistroSchemaDef
 from rcsb_db.schema.DaInternalSchemaDef import DaInternalSchemaDef
-from rcsb_db.sql.MyQueryDirectives import MyQueryDirectives
+from rcsb_db.sql.QueryDirectives import QueryDirectives
 from rcsb_db.utils.ConfigUtil import ConfigUtil
 
 
-class MyQueryDirectivesTests(unittest.TestCase):
+class QueryDirectivesTests(unittest.TestCase):
 
     def setUp(self):
         self.__databaseName = 'stat'
@@ -154,7 +154,7 @@ class MyQueryDirectivesTests(unittest.TestCase):
 
         try:
             sd = PdbDistroSchemaDef(verbose=self.__verbose)
-            mqd = MyQueryDirectives(schemaDefObj=sd, verbose=self.__verbose)
+            mqd = QueryDirectives(schemaDefObj=sd, verbose=self.__verbose)
             sqlS = mqd.build(queryDirL=self.__qdL, domD=self.__domD)
             logger.debug("\n\n+testDirective1 SQL\n %s\n\n" % sqlS)
             logger.debug("Length query string %d " % len(sqlS))
@@ -310,7 +310,7 @@ class MyQueryDirectivesTests(unittest.TestCase):
             cObj = self.open()
             dbCon = self.getClientConnection(cObj)
             sd = PdbDistroSchemaDef(verbose=self.__verbose)
-            mqd = MyQueryDirectives(schemaDefObj=sd, verbose=self.__verbose)
+            mqd = QueryDirectives(schemaDefObj=sd, verbose=self.__verbose)
             sqlS = mqd.build(queryDirL=qdL, domD=domD, appendValueConditonsToSelect=True)
             self.assertGreater(len(sqlS), 100)
             logger.debug("\n\n+testDirectiveWithDistroQuery SQL\n %s\n\n" % sqlS)
@@ -335,7 +335,7 @@ class MyQueryDirectivesTests(unittest.TestCase):
             cObj = self.open()
             dbCon = self.getClientConnection(cObj)
             sd = DaInternalSchemaDef(verbose=self.__verbose)
-            mqd = MyQueryDirectives(schemaDefObj=sd, verbose=self.__verbose)
+            mqd = QueryDirectives(schemaDefObj=sd, verbose=self.__verbose)
             sqlS = mqd.build(queryDirL=qdL, domD=domD, appendValueConditonsToSelect=True)
             self.assertGreater(len(sqlS), 100)
             if (self.__verbose):
@@ -355,19 +355,19 @@ class MyQueryDirectivesTests(unittest.TestCase):
 
 def suiteSelect():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(MyQueryDirectivesTests("testDirective1"))
+    suiteSelect.addTest(QueryDirectivesTests("testDirective1"))
     return suiteSelect
 
 
 def suiteSelectQuery():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(MyQueryDirectivesTests("testDirectiveWithQuery1"))
-    suiteSelect.addTest(MyQueryDirectivesTests("testDirectiveWithQuery2"))
-    suiteSelect.addTest(MyQueryDirectivesTests("testDirectiveWithQuery3"))
-    suiteSelect.addTest(MyQueryDirectivesTests("testDirectiveWithQuery4"))
-    suiteSelect.addTest(MyQueryDirectivesTests("testDirectiveWithQuery5"))
-    suiteSelect.addTest(MyQueryDirectivesTests("testDirectiveWithQuery6"))
-    suiteSelect.addTest(MyQueryDirectivesTests("testDirectiveWithQuery7"))
+    suiteSelect.addTest(QueryDirectivesTests("testDirectiveWithQuery1"))
+    suiteSelect.addTest(QueryDirectivesTests("testDirectiveWithQuery2"))
+    suiteSelect.addTest(QueryDirectivesTests("testDirectiveWithQuery3"))
+    suiteSelect.addTest(QueryDirectivesTests("testDirectiveWithQuery4"))
+    suiteSelect.addTest(QueryDirectivesTests("testDirectiveWithQuery5"))
+    suiteSelect.addTest(QueryDirectivesTests("testDirectiveWithQuery6"))
+    suiteSelect.addTest(QueryDirectivesTests("testDirectiveWithQuery7"))
     return suiteSelect
 
 if __name__ == '__main__':

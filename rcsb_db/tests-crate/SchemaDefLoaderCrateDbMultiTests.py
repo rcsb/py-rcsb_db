@@ -1,21 +1,28 @@
 ##
 # File:    SchemaDefLoaderCrateDbMultiTests.py
 # Author:  J. Westbrook
-# Date:    1-Jan-2017
+# Date:    10-Feb-2018
 # Version: 0.001
 #
-# Update:
+# Updates:
+#      2-Apr-2018 jdw update for refactored api's an utils
+#
 ##
 """
 Tests for creating and loading distributed rdbms database using PDBx/mmCIF data files
-and external schema definitions using CrateDb services -  Covers BIRD, CCD and PDBx/mmCIF
-model files.   This version divides parsing and loading tasks in multiple processes, see
-numProc and chunkSize.
+and external schema definitions using crateDb services -  Covers BIRD, CCD and PDBx/mmCIF
+model files - Multiprocessor mode tests
 
-The following test settings from the enviroment will be used will a fallback to localhost/4200.
+The following test settings from the configuration file be used will a fallback to localhost/26257.
 
+    CRATE_DB_USER_NAME
+      [CRATE_DB_PW]
+    CRATE_DB_NAME
     CRATE_DB_HOST
-    CRATE_DB_HOST
+
+See also the load length limit for each file type for testing  -  Set to None to remove -
+
+        self.__fileLimit = 100
 
 """
 
@@ -43,69 +50,48 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
+from rcsb_db.crate.CrateDbUtil import CrateDbQuery
+from rcsb_db.crate.CrateDbLoader import CrateDbLoader
+from rcsb_db.crate.Connection import Connection
+#
+from rcsb_db.sql.SqlGen import SqlGenAdmin
 
-from rcsb_db.sql.MyDbSqlGen import MyDbAdminSqlGen
-from rcsb_db.loaders.SchemaDefLoader import SchemaDefLoader
-
-from rcsb_db.crate.CrateDbUtil import CrateDbConnect, CrateDbQuery
-from rcsb_db.schema.BirdSchemaDef import BirdSchemaDef
-from rcsb_db.schema.PdbxSchemaDef import PdbxSchemaDef
-
-from rcsb_db.schema.ChemCompSchemaDef import ChemCompSchemaDef
-
-from mmcif_utils.bird.PdbxPrdIo import PdbxPrdIo
-from mmcif_utils.bird.PdbxFamilyIo import PdbxFamilyIo
-from mmcif_utils.chemcomp.PdbxChemCompIo import PdbxChemCompIo
-
-from rcsb_db.utils.MultiProcUtil import MultiProcUtil
 try:
     from mmcif.io.IoAdapterCore import IoAdapterCore as IoAdapter
 except Exception as e:
     from mmcif.io.IoAdapterPy import IoAdapterPy as IoAdapter
 
+from rcsb_db.utils.MultiProcUtil import MultiProcUtil
+from rcsb_db.utils.ConfigUtil import ConfigUtil
+from rcsb_db.utils.ContentTypeUtil import ContentTypeUtil
 
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
 
 
-class SchemaDefLoaderCrateDbMultiTests(unittest.TestCase):
+class SchemaDefLoadercrateDbMultiTests(unittest.TestCase):
 
     def __init__(self, methodName='runTest'):
-        super(SchemaDefLoaderCrateDbMultiTests, self).__init__(methodName)
-        self.__loadPathList = []
-        self.__lfh = sys.stderr
+        super(SchemaDefLoadercrateDbMultiTests, self).__init__(methodName)
         self.__verbose = True
-        self.__debug = False
-        self.__dbCon = None
+        self.__createFlag = True
 
     def setUp(self):
-        self.__lfh = sys.stderr
         self.__verbose = True
-        #
-        # default database
-        #
-        self.__dbHost = os.getenv("CRATE_DB_HOST", 'localhost')
-        self.__dbPort = os.getenv("CRATE_DB_PORT", 4200)
-        #
-        # Limit the load length of each file type for testing  -  Set to None to remove -
-        self.__fileLimit = None
-        self.__numProc = 4
-        # Default to divide the load evenly across mulitple processes.
+        self.__numProc = 2
+        self.__fileLimit = 100
         self.__chunkSize = 0
+        self.__workPath = os.path.join(HERE, "test-output")
+        self.__mockTopPath = os.path.join(TOPDIR, "rcsb_db", "data")
+        configPath = os.path.join(TOPDIR, 'rcsb_db', 'data', 'dbload-setup-example.cfg')
+        configName = 'DEFAULT'
+        self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
+        self.__resourceName = "CRATE_DB"
+        self.__ctU = ContentTypeUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
         #
-        self.__birdCachePath = os.path.join(TOPDIR, "rcsb_db", "data", "MOCK_BIRD_REPO")
-        self.__birdFamilyCachePath = os.path.join(TOPDIR, "rcsb_db", "data", "MOCK_BIRD_FAMILY_REPO")
-        self.__ccCachePath = os.path.join(TOPDIR, "rcsb_db", "data", "MOCK_CHEM_COMP_REPO")
-        #
-        self.__ccPath = os.path.join(TOPDIR, "rcsb_db", "data")
-        #
-        # Local model files for testing -
-        self.__pdbxPath = os.path.join(TOPDIR, "rcsb_db", "data")
-        self.__pdbxFileList = ['1cbs.cif', '1o3q.cif', '1xbb.cif', '3of4.cif', '3oqp.cif', '3rer.cif', '3rij.cif', '5hoh.cif']
-        self.__tableIdSkipD = {'ATOM_SITE': True, 'ATOM_SITE_ANISOTROP': True}
+        self.__tableIdSkipD = {'ATOM_SITE': True, 'ATOM_SITE_ANISOTROP': True, '__LOAD_STATUS__': True}
         self.__ioObj = IoAdapter(verbose=self.__verbose)
-        #
         #
         self.__startTime = time.time()
         logger.debug("Running tests on version %s" % __version__)
@@ -118,33 +104,30 @@ class SchemaDefLoaderCrateDbMultiTests(unittest.TestCase):
                                                               time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                               endTime - self.__startTime))
 
-    def open(self, dbHost, dbPort):
-        self.close()
-        try:
-            myC = CrateDbConnect(dbHost=dbHost, dbPort=dbPort)
-            self.__dbCon = myC.connect()
-            if self.__dbCon is not None:
-                return True
-            else:
-                return False
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-            return False
-
-    def close(self):
-        try:
-            if self.__dbCon is not None:
-                self.__dbCon.close()
-                self.__dbCon = None
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-            self.__dbCon = None
-
     def testConnection(self):
         try:
-            ok = self.open(self.__dbHost, self.__dbPort)
-            self.close()
-            self.assertEqual(ok, True)
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                self.assertNotEqual(client, None)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
+    def testSchemaCreate(self):
+        """  Create table schema (live) for BIRD, chemical component, and PDBx data.
+        """
+        try:
+            sd, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            ret = self.__schemaCreate(schemaDefObj=sd)
+            self.assertEqual(ret, True)
+            #
+            sd, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
+            ret = self.__schemaCreate(schemaDefObj=sd)
+            self.assertEqual(ret, True)
+            #
+            sd, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
+            ret = self.__schemaCreate(schemaDefObj=sd)
+            self.assertEqual(ret, True)
+            #
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -153,15 +136,15 @@ class SchemaDefLoaderCrateDbMultiTests(unittest.TestCase):
         """  Remove table schema (live) for BIRD, chemical component, and PDBx data.
         """
         try:
-            sd = BirdSchemaDef(convertNames=True)
+            sd, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd = ChemCompSchemaDef(convertNames=True)
+            sd, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd = PdbxSchemaDef(convertNames=True)
+            sd, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
@@ -169,29 +152,37 @@ class SchemaDefLoaderCrateDbMultiTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-    def testLoadCCMulti(self):
-        sd = ChemCompSchemaDef(convertNames=True)
-        self.__testLoadFilesMulti(sd, fType="cc")
+    def testLoadChemCompMulti(self):
+        self.__testLoadFilesMulti(contentType="chem_comp")
 
     def testLoadBirdMulti(self):
-        sd = BirdSchemaDef(convertNames=True)
-        self.__testLoadFilesMulti(sd, fType="bird")
+        self.__testLoadFilesMulti(contentType="bird")
 
     def testLoadPdbxMulti(self):
-        sd = PdbxSchemaDef(convertNames=True)
-        self.__testLoadFilesMulti(sd, fType="pdbx")
+        self.__testLoadFilesMulti(contentType="pdbx")
+
+    def __getPathList(self, fType):
+        pathList = []
+        if fType == "chem_comp":
+            pathList = self.__ctU.getPathList(contentType='chem_comp')
+        elif fType == "bird":
+            pathList = self.__ctU.getPathList(contentType='bird')
+            pathList.extend(self.__ctU.getPathList(contentType='bird_family'))
+        elif fType == "pdbx":
+            pathList = self.__ctU.getPathList(contentType='pdbx')
+        return pathList
 
     def loadInsertMany(self, dataList, procName, optionsD, workingDir):
 
         try:
-            ioObj = IoAdapter(verbose=self.__verbose)
-            myC = CrateDbConnect(dbHost=self.__dbHost, dbPort=self.__dbPort)
-            dbCon = myC.connect()
+            ret = None
             sd = optionsD['sd']
             skipD = optionsD['skip']
-            sdl = SchemaDefLoader(schemaDefObj=sd, ioObj=ioObj, dbCon=dbCon, workPath='.', cleanUp=False, warnings='default', verbose=self.__verbose)
-            ret = sdl.load(inputPathList=dataList, loadType='crate-insert-many', deleteOpt='selected', tableIdSkipD=skipD)
-            myC.close()
+            ioObj = IoAdapter(verbose=self.__verbose)
+            logger.debug("%s pathlist %r" % (procName, dataList))
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                sdl = CrateDbLoader(schemaDefObj=sd, ioObj=ioObj, dbCon=client, workPath=self.__workPath, cleanUp=False, warnings='default', verbose=self.__verbose)
+                ret = sdl.load(inputPathList=dataList, loadType='crate-insert-many', deleteOpt='selected', tableIdSkipD=skipD)
             # all or nothing here
             if ret:
                 return dataList, dataList, []
@@ -203,109 +194,32 @@ class SchemaDefLoaderCrateDbMultiTests(unittest.TestCase):
 
         return [], [], []
 
-    def __testLoadFilesMulti(self, sd, fType):
+    def __testLoadFilesMulti(self, contentType):
         """Test case - create load w/insert-many all chemical component definition data files - (multiproc test)
         """
         numProc = self.__numProc
         chunkSize = self.__chunkSize
         try:
             #
+            sd, _, _ = self.__ctU.getSchemaInfo(contentType=contentType)
+            if (self.__createFlag):
+                self.__schemaCreate(schemaDefObj=sd)
+
             optD = {}
             optD['sd'] = sd
-            if fType == 'pdbx':
+            if contentType == 'pdbx':
                 optD['skip'] = self.__tableIdSkipD
             else:
                 optD['skip'] = {}
-            ret = self.__schemaCreate(schemaDefObj=optD['sd'])
-            self.assertEqual(ret, True)
+
             #
-            pathList = self.__getPathList(fType=fType)
+            pathList = self.__getPathList(fType=contentType)
+            logger.debug("Input path list %r" % pathList)
             mpu = MultiProcUtil(verbose=True)
             mpu.setOptions(optionsD=optD)
             mpu.set(workerObj=self, workerMethod="loadInsertMany")
             ok, failList, retLists, diagList = mpu.runMulti(dataList=pathList, numProc=numProc, numResults=1, chunkSize=chunkSize)
             self.assertEqual(ok, True)
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-            self.fail()
-
-    def __getPathList(self, fType):
-        pathList = []
-        if fType == "cc":
-            pathList = self.__getChemCompPathList()
-        elif fType == "bird":
-            pathList = self.__getPrdPathList()
-            pathList.extend(self.__getPrdFamilyPathList())
-        elif fType == "pdbx":
-            pathList = self.__getPdbxPathList()
-
-        return pathList
-
-    def __getChemCompPathList(self):
-        """Test case -  get the path list of definitions in the CVS repository.
-        """
-        logger.info("\nStarting %s %s\n" % (self.__class__.__name__,
-                                            sys._getframe().f_code.co_name))
-        try:
-            refIo = PdbxChemCompIo(verbose=self.__verbose)
-            refIo.setCachePath(self.__ccCachePath)
-            loadPathList = refIo.makeComponentPathList()
-            logger.info("Length of CCD file path list %d (limit %r)" % (len(loadPathList), self.__fileLimit))
-            if self.__fileLimit:
-                return loadPathList[:self.__fileLimit]
-            else:
-                return loadPathList
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-            self.fail()
-
-    def __getPdbxPathList(self):
-        """Test case -  get the path list of PDBx instance example files -
-        """
-
-        try:
-            loadPathList = [os.path.join(self.__pdbxPath, v) for v in self.__pdbxFileList]
-            logger.info("Length of PDBx file path list %d (limit %r)" % (len(loadPathList), self.__fileLimit))
-            if self.__fileLimit:
-                return loadPathList[:self.__fileLimit]
-            else:
-                return loadPathList
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-            self.fail()
-
-    def __getPrdPathList(self):
-        """Test case -  get the path list of PRD definitions in the CVS repository.
-        """
-        logger.info("\nStarting %s %s\n" % (self.__class__.__name__,
-                                            sys._getframe().f_code.co_name))
-        try:
-            refIo = PdbxPrdIo(verbose=self.__verbose)
-            refIo.setCachePath(self.__birdCachePath)
-            loadPathList = refIo.makeDefinitionPathList()
-            logger.info("Length of BIRD file path list %d (limit %r)" % (len(loadPathList), self.__fileLimit))
-            if self.__fileLimit:
-                return loadPathList[:self.__fileLimit]
-            else:
-                return loadPathList
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-            self.fail()
-
-    def __getPrdFamilyPathList(self):
-        """Test case -  get the path list of PRD Family definitions in the CVS repository.
-        """
-        logger.info("\nStarting %s %s\n" % (self.__class__.__name__,
-                                            sys._getframe().f_code.co_name))
-        try:
-            refIo = PdbxFamilyIo(verbose=self.__verbose)
-            refIo.setCachePath(self.__birdFamilyCachePath)
-            loadPathList = refIo.makeDefinitionPathList()
-            logger.info("Length of BIRD FAMILY file path list %d (limit %r)" % (len(loadPathList), self.__fileLimit))
-            if self.__fileLimit:
-                return loadPathList[:self.__fileLimit]
-            else:
-                return loadPathList
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -316,20 +230,21 @@ class SchemaDefLoaderCrateDbMultiTests(unittest.TestCase):
         ret = 0
         try:
             tableIdList = schemaDefObj.getTableIdList()
-            sqlGen = MyDbAdminSqlGen(self.__verbose, self.__lfh, serverType="cratedb")
+            sqlGen = SqlGenAdmin(self.__verbose, serverType="cratedb")
             sqlL = []
             for tableId in tableIdList:
+                if tableId in self.__tableIdSkipD:
+                    continue
                 tableDefObj = schemaDefObj.getTable(tableId)
                 sqlL.extend(sqlGen.createTableSQL(databaseName=schemaDefObj.getVersionedDatabaseName(), tableDefObj=tableDefObj))
 
             logger.debug("\nSchema creation SQL string\n %s\n\n" % '\n'.join(sqlL))
-            myC = CrateDbConnect(dbHost=self.__dbHost, dbPort=self.__dbPort)
-            dbCon = myC.connect()
-            crQ = CrateDbQuery(dbcon=dbCon, verbose=self.__verbose)
-            ret = crQ.sqlCommandList(sqlCommandList=sqlL)
-            myC.close()
+            logger.info("Creating schema using database %s" % schemaDefObj.getVersionedDatabaseName())
             #
-            logger.debug("Schema create command returns %r\n" % ret)
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                crQ = CrateDbQuery(dbcon=client, verbose=self.__verbose)
+                ret = crQ.sqlCommandList(sqlCommandList=sqlL)
+                logger.debug("Schema create command returns %r\n" % ret)
             return ret
             #
         except Exception as e:
@@ -342,20 +257,20 @@ class SchemaDefLoaderCrateDbMultiTests(unittest.TestCase):
         ret = 0
         try:
             tableIdList = schemaDefObj.getTableIdList()
-            sqlGen = MyDbAdminSqlGen(self.__verbose, self.__lfh, serverType="cratedb")
+            sqlGen = SqlGenAdmin(self.__verbose, serverType="cratedb")
             sqlL = []
             for tableId in tableIdList:
+                if tableId in self.__tableIdSkipD:
+                    continue
                 tableDefObj = schemaDefObj.getTable(tableId)
                 sqlL.extend(sqlGen.dropTableSQL(databaseName=schemaDefObj.getVersionedDatabaseName(), tableDefObj=tableDefObj))
                 sqlL.extend(sqlGen.dropTableSQL(databaseName=schemaDefObj.getDatabaseName(), tableDefObj=tableDefObj))
 
             logger.debug("Schema Remove SQL string\n %s" % '\n'.join(sqlL))
-            myC = CrateDbConnect(dbHost=self.__dbHost, dbPort=self.__dbPort)
-            dbCon = myC.connect()
-            crQ = CrateDbQuery(dbcon=dbCon, verbose=self.__verbose)
-            ret = crQ.sqlCommandList(sqlCommandList=sqlL)
-            myC.close()
-            logger.debug("Schema remove command returns %r\n" % ret)
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                crQ = CrateDbQuery(dbcon=client, verbose=self.__verbose)
+                ret = crQ.sqlCommandList(sqlCommandList=sqlL)
+                logger.debug("Schema remove command returns %r\n" % ret)
             return ret
             #
         except Exception as e:
@@ -363,16 +278,27 @@ class SchemaDefLoaderCrateDbMultiTests(unittest.TestCase):
             self.fail()
 
 
+def baseSuite():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(SchemaDefLoadercrateDbMultiTests("testConnection"))
+    suiteSelect.addTest(SchemaDefLoadercrateDbMultiTests("testSchemaCreate"))
+    suiteSelect.addTest(SchemaDefLoadercrateDbMultiTests("testSchemaRemove"))
+    return suiteSelect
+
+
 def loadSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(SchemaDefLoaderCrateDbMultiTests("testConnection"))
-    suiteSelect.addTest(SchemaDefLoaderCrateDbMultiTests("testSchemaRemove"))
-    suiteSelect.addTest(SchemaDefLoaderCrateDbMultiTests("testLoadCCMulti"))
-    suiteSelect.addTest(SchemaDefLoaderCrateDbMultiTests("testLoadBirdMulti"))
-    suiteSelect.addTest(SchemaDefLoaderCrateDbMultiTests("testLoadPdbxMulti"))
+    suiteSelect.addTest(SchemaDefLoadercrateDbMultiTests("testConnection"))
+    suiteSelect.addTest(SchemaDefLoadercrateDbMultiTests("testLoadChemCompMulti"))
+    suiteSelect.addTest(SchemaDefLoadercrateDbMultiTests("testLoadBirdMulti"))
+    suiteSelect.addTest(SchemaDefLoadercrateDbMultiTests("testLoadPdbxMulti"))
     return suiteSelect
 
 
 if __name__ == '__main__':
-    mySuite = loadSuite()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
+    if True:
+        mySuite = baseSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
+    if True:
+        mySuite = loadSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)

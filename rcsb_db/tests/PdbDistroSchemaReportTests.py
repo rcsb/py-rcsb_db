@@ -35,7 +35,7 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-from rcsb_db.sql.MyDbSqlGen import MyDbQuerySqlGen, MyDbConditionSqlGen
+from rcsb_db.sql.SqlGen import SqlGenQuery, SqlGenCondition
 from rcsb_db.schema.PdbDistroSchemaDef import PdbDistroSchemaDef
 
 
@@ -81,14 +81,14 @@ class PdbDistroSchemaReportTests(unittest.TestCase):
             sd = PdbDistroSchemaDef(verbose=self.__verbose)
             # tableIdList = sd.getTableIdList()
             # aIdList = sd.getAttributeIdList(tableId)
-            sqlGen = MyDbQuerySqlGen(schemaDefObj=sd, verbose=self.__verbose)
+            sqlGen = SqlGenQuery(schemaDefObj=sd, verbose=self.__verbose)
 
             sTableIdList = []
             for sTup in sList:
                 sqlGen.addSelectAttributeId(attributeTuple=(sTup[0], sTup[1]))
                 sTableIdList.append(sTup[0])
 
-            sqlCondition = MyDbConditionSqlGen(schemaDefObj=sd, verbose=self.__verbose)
+            sqlCondition = SqlGenCondition(schemaDefObj=sd, verbose=self.__verbose)
             for cTup in cList:
                 sqlCondition.addValueCondition(cTup[0], cTup[1], cTup[2])
             sqlCondition.addGroupValueConditionList(gList, preOp='AND')
@@ -98,7 +98,7 @@ class PdbDistroSchemaReportTests(unittest.TestCase):
             for oTup in oList:
                 sqlGen.addOrderByAttributeId(attributeTuple=oTup)
             sqlS = sqlGen.getSql()
-            logger.debug("\n\n+MyDbSqlGenTests table creation SQL string\n %s\n\n" % sqlS)
+            logger.debug("\n\n+SqlGenTests table creation SQL string\n %s\n\n" % sqlS)
             self.assertGreaterEqual(len(sqlS), 1000)
             sqlGen.clear()
         except Exception as e:

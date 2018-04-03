@@ -24,7 +24,6 @@ __license__ = "Apache 2.0"
 
 import sys
 import time
-# import pickle
 import bson
 
 import logging
@@ -55,7 +54,7 @@ class MongoDbLoaderWorker(object):
         self.__chunkSize = chunkSize
         #
         self.__cfgOb = cfgOb
-        self.__connectD = self.__assignResource(self.__cfgOb, resourceName=resourceName)
+        self.__resourceName = resourceName
         #
         self.__readBackCheck = readBackCheck
         self.__mockTopPath = mockTopPath
@@ -82,7 +81,6 @@ class MongoDbLoaderWorker(object):
             optD = {}
             optD['contentType'] = contentType
             optD['styleType'] = styleType
-            optD['connectD'] = self.__connectD
             optD['readBackCheck'] = self.__readBackCheck
             optD['logSize'] = self.__verbose
             optD['documentSelectors'] = documentSelectors
@@ -96,8 +94,8 @@ class MongoDbLoaderWorker(object):
             _, dbName, collectionNameList = self.__getSchemaInfo(contentType)
             for collectionName in collectionNameList:
                 if loadType == 'full':
-                    self.__removeCollection(dbName, collectionName, self.__connectD)
-                    self.__createCollection(dbName, collectionName, self.__connectD)
+                    self.__removeCollection(dbName, collectionName)
+                    self.__createCollection(dbName, collectionName)
             #
             mpu = MultiProcUtil(verbose=True)
             mpu.setOptions(optionsD=optD)
@@ -131,7 +129,6 @@ class MongoDbLoaderWorker(object):
             documentSelectors = optionsD['documentSelectors']
             loadType = optionsD['loadType']
             contentType = optionsD['contentType']
-            connectD = optionsD['connectD']
             #
             fType = "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
             if styleType in ["columnwise_by_name", "rowwise_no_name"]:
@@ -175,7 +172,7 @@ class MongoDbLoaderWorker(object):
                 docIdD['tableName'], docIdD['attributeName'] = sd.getDocumentKeyAttributeName(collectionName)
                 logger.debug("%s docIdD %r collectionName %r" % (procName, docIdD, collectionName))
                 #
-                ok, successPathList, failedPathList = self.__loadDocuments(dbName, collectionName, connectD, tableDataDictList, docIdD,
+                ok, successPathList, failedPathList = self.__loadDocuments(dbName, collectionName, tableDataDictList, docIdD,
                                                                            loadType=loadType, successKey='__load_status__.load_file_path', readBackCheck=readBackCheck)
                 #
                 logger.info("%s database %s collection %s successList length = %d  failed %d rejected %d" %
@@ -208,10 +205,6 @@ class MongoDbLoaderWorker(object):
             logger.exception("Failing with %s" % str(e))
         return False
 
-    def __assignResource(self, cfgOb, resourceName="MONGO_DB"):
-        cn = Connection(cfgOb=cfgOb)
-        return cn.assignResource(resourceName=resourceName)
-
     def __begin(self, message=""):
         startTime = time.time()
         ts = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
@@ -224,67 +217,45 @@ class MongoDbLoaderWorker(object):
         delta = endTime - startTime
         logger.info("Completed %s at %s (%.4f seconds)" % (message, ts, delta))
 
-    def __open(self, connectD):
-        cObj = Connection()
-        cObj.setPreferences(connectD)
-        ok = cObj.openConnection()
-        if ok:
-            return cObj
-        else:
-            return None
-
-    def __close(self, cObj):
-        if cObj is not None:
-            cObj.closeConnection()
-            return True
-        else:
-            return False
-
-    def __getClientConnection(self, cObj):
-        return cObj.getClientConnection()
-
-    def __createCollection(self, dbName, collectionName, connectD):
+    def __createCollection(self, dbName, collectionName):
         """Create database and collection -
         """
         try:
             logger.debug("Create collection database %s collection %s" % (dbName, collectionName))
-            cObj = self.__open(connectD)
-            client = self.__getClientConnection(cObj)
-            mg = MongoDbUtil(client)
-            ok = mg.createCollection(dbName, collectionName)
-            ok = mg.databaseExists(dbName)
-            ok = mg.collectionExists(dbName, collectionName)
-            ok = self.__close(cObj)
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                ok = mg.createCollection(dbName, collectionName)
+                ok = mg.databaseExists(dbName)
+                ok = mg.collectionExists(dbName, collectionName)
+
             return ok
             #
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
         return False
 
-    def __removeCollection(self, dbName, collectionName, connectD):
+    def __removeCollection(self, dbName, collectionName):
         """Drop collection within database
 
         """
         try:
-            cObj = self.__open(connectD)
-            client = self.__getClientConnection(cObj)
-            mg = MongoDbUtil(client)
-            #
-            logger.debug("Remove collection database %s collection %s" % (dbName, collectionName))
-            logger.debug("Starting databases = %r" % mg.getDatabaseNames())
-            logger.debug("Starting collections = %r" % mg.getCollectionNames(dbName))
-            ok = mg.dropCollection(dbName, collectionName)
-            logger.debug("Databases = %r" % mg.getDatabaseNames())
-            logger.debug("Post drop collections = %r" % mg.getCollectionNames(dbName))
-            ok = mg.collectionExists(dbName, collectionName)
-            logger.debug("Post drop collections = %r" % mg.getCollectionNames(dbName))
-            ok = self.__close(cObj)
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                #
+                logger.debug("Remove collection database %s collection %s" % (dbName, collectionName))
+                logger.debug("Starting databases = %r" % mg.getDatabaseNames())
+                logger.debug("Starting collections = %r" % mg.getCollectionNames(dbName))
+                ok = mg.dropCollection(dbName, collectionName)
+                logger.debug("Databases = %r" % mg.getDatabaseNames())
+                logger.debug("Post drop collections = %r" % mg.getCollectionNames(dbName))
+                ok = mg.collectionExists(dbName, collectionName)
+                logger.debug("Post drop collections = %r" % mg.getCollectionNames(dbName))
             return ok
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
         return False
 
-    def __loadDocuments(self, dbName, collectionName, connectD, dList, docIdD, loadType='full', successKey=None, readBackCheck=False):
+    def __loadDocuments(self, dbName, collectionName, dList, docIdD, loadType='full', successKey=None, readBackCheck=False):
         #
         # Load database/collection with input document list -
         #
@@ -304,50 +275,48 @@ class MongoDbLoaderWorker(object):
             logger.exception("Failing ii %d d %r with %s" % (ii, d, str(e)))
 
         try:
-            cObj = self.__open(connectD)
-            client = self.__getClientConnection(cObj)
-            mg = MongoDbUtil(client)
-            #
-            keyName = docIdD['tableName'] + '.' + docIdD['attributeName']
-            if loadType == 'replace':
-                dTupL = mg.deleteList(dbName, collectionName, dList, keyName)
-                logger.debug("Deleted document status %r" % dTupL)
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                #
+                keyName = docIdD['tableName'] + '.' + docIdD['attributeName']
+                if loadType == 'replace':
+                    dTupL = mg.deleteList(dbName, collectionName, dList, keyName)
+                    logger.debug("Deleted document status %r" % dTupL)
 
-            rIdL = mg.insertList(dbName, collectionName, dList, keyName)
-            logger.debug("Insert returns rIdL length %r" % len(rIdL))
+                rIdL = mg.insertList(dbName, collectionName, dList, keyName)
+                logger.debug("Insert returns rIdL length %r" % len(rIdL))
 
-            # ---
-            #  If there is a failure then determine the specific successes and failures -
-            #
-            successList = fullSuccessValueList
-            if len(rIdL) != len(dList):
-                sList = []
-                for rId in rIdL:
-                    rObj = mg.fetchOne(dbName, collectionName, '_id', rId)
-                    docId = rObj[docIdD['tableName']][docIdD['attributeName']]
-                    jj = indD[docId]
-                    sList.append(self.__dictGet(dList[jj], successKey))
+                # ---
+                #  If there is a failure then determine the specific successes and failures -
                 #
-                failList = list(set(fullSuccessValueList) - set(sList))
-                successList = list(set(sList))
-            #
-            if readBackCheck:
+                successList = fullSuccessValueList
+                if len(rIdL) != len(dList):
+                    sList = []
+                    for rId in rIdL:
+                        rObj = mg.fetchOne(dbName, collectionName, '_id', rId)
+                        docId = rObj[docIdD['tableName']][docIdD['attributeName']]
+                        jj = indD[docId]
+                        sList.append(self.__dictGet(dList[jj], successKey))
+                    #
+                    failList = list(set(fullSuccessValueList) - set(sList))
+                    successList = list(set(sList))
                 #
-                # Note that objects in dList are mutated by additional key '_id' that is added on insert -
+                if readBackCheck:
+                    #
+                    # Note that objects in dList are mutated by additional key '_id' that is added on insert -
+                    #
+                    rbStatus = True
+                    for ii, rId in enumerate(rIdL):
+                        rObj = mg.fetchOne(dbName, collectionName, '_id', rId)
+                        docId = rObj[docIdD['tableName']][docIdD['attributeName']]
+                        jj = indD[docId]
+                        if (rObj != dList[jj]):
+                            rbStatus = False
+                            break
                 #
-                rbStatus = True
-                for ii, rId in enumerate(rIdL):
-                    rObj = mg.fetchOne(dbName, collectionName, '_id', rId)
-                    docId = rObj[docIdD['tableName']][docIdD['attributeName']]
-                    jj = indD[docId]
-                    if (rObj != dList[jj]):
-                        rbStatus = False
-                        break
-            #
-            ok = self.__close(cObj)
-            if readBackCheck and not rbStatus:
-                return False, successList, failList
-            #
+                if readBackCheck and not rbStatus:
+                    return False, successList, failList
+                #
             return len(rIdL) == len(dList), successList, failList
         except Exception as e:
             logger.exception("Failing with %s" % str(e))

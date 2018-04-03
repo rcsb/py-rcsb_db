@@ -36,7 +36,7 @@ import csv
 import os
 import time
 
-from rcsb_db.sql.MyDbSqlGen import MyDbAdminSqlGen
+from rcsb_db.sql.SqlGen import SqlGenAdmin
 from rcsb_db.mysql.MyDbUtil import MyDbQuery
 from rcsb_db.crate.CrateDbUtil import CrateDbQuery
 from rcsb_db.cockroach.CockroachDbUtil import CockroachDbQuery
@@ -300,7 +300,7 @@ class SchemaDefLoader(object):
 
         """
         databaseName = self.__sD.getDatabaseName()
-        sqlGen = MyDbAdminSqlGen(self.__verbose)
+        sqlGen = SqlGenAdmin(self.__verbose)
 
         databaseName = self.__sD.getDatabaseName()
         tableDefObj = self.__sD.getTable(tableId)
@@ -325,7 +325,7 @@ class SchemaDefLoader(object):
         """
         startTime = time.time()
         databaseName = self.__sD.getDatabaseName()
-        sqlGen = MyDbAdminSqlGen(self.__verbose)
+        sqlGen = SqlGenAdmin(self.__verbose)
 
         databaseName = self.__sD.getDatabaseName()
         tableDefObj = self.__sD.getTable(tableId)
@@ -383,7 +383,7 @@ class SchemaDefLoader(object):
 
         myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
         myQ.setWarning(self.__warningAction)
-        sqlGen = MyDbAdminSqlGen(self.__verbose)
+        sqlGen = SqlGenAdmin(self.__verbose)
         #
         databaseName = self.__sD.getDatabaseName()
         tableDefObj = self.__sD.getTable(tableId)
@@ -430,7 +430,7 @@ class SchemaDefLoader(object):
 
         """
         sqlList = []
-        sqlGen = MyDbAdminSqlGen(self.__verbose)
+        sqlGen = SqlGenAdmin(self.__verbose)
         for tableId in tableIdList:
             tableName = self.__sD.getTableName(tableId)
             tableDefObj = self.__sD.getTable(tableId)
@@ -455,7 +455,7 @@ class SchemaDefLoader(object):
         startTime = time.time()
         sqlRefresh = None
         crQ = CrateDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
-        sqlGen = MyDbAdminSqlGen(self.__verbose)
+        sqlGen = SqlGenAdmin(self.__verbose)
         #
         databaseName = self.__sD.getVersionedDatabaseName()
         tableDefObj = self.__sD.getTable(tableId)
@@ -546,7 +546,7 @@ class SchemaDefLoader(object):
         """
         startTime = time.time()
         crQ = CockroachDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
-        sqlGen = MyDbAdminSqlGen(self.__verbose)
+        sqlGen = SqlGenAdmin(self.__verbose)
         #
         databaseName = self.__sD.getVersionedDatabaseName()
         tableDefObj = self.__sD.getTable(tableId)

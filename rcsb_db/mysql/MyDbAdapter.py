@@ -29,7 +29,7 @@ import copy
 import logging
 logger = logging.getLogger(__name__)
 
-from rcsb_db.mysql.MyDbSqlGen import MyDbAdminSqlGen, MyDbQuerySqlGen, MyDbConditionSqlGen
+from rcsb_db.mysql.SqlGen import SqlGenAdmin, SqlGenQuery, SqlGenCondition
 from rcsb_db.mysql.MyDbUtil import MyDbQuery
 from rcsb_db.mysql.Connection import Connection
 
@@ -183,7 +183,7 @@ class MyDbAdapter(object):
             #
             tableIdList = self.__sd.getTableIdList()
             myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
-            myAd = MyDbAdminSqlGen(self.__verbose)
+            myAd = SqlGenAdmin(self.__verbose)
 
             for tableId in tableIdList:
                 sqlL = []
@@ -240,7 +240,7 @@ class MyDbAdapter(object):
             tableDefObj = self.__sd.getTable(tableId)
             #
             myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
-            myAd = MyDbAdminSqlGen(self.__verbose)
+            myAd = SqlGenAdmin(self.__verbose)
             defaultValD = self._getParameterDefaultValues(contextId=contextId)
             #
             # Create the attribute and value list for template --
@@ -308,7 +308,7 @@ class MyDbAdapter(object):
             tableDefObj = self.__sd.getTable(tableId)
             #
             myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
-            myAd = MyDbAdminSqlGen(self.__verbose)
+            myAd = SqlGenAdmin(self.__verbose)
             defaultValD = self._getParameterDefaultValues(contextId=contextId)
             cIdList = self._getConstraintParameterMap(tableId)
 
@@ -373,9 +373,9 @@ class MyDbAdapter(object):
             #
             tableDefObj = self.__sd.getTable(tableId)
             myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
-            sqlGen = MyDbQuerySqlGen(schemaDefObj=self.__sd, verbose=self.__verbose)
+            sqlGen = SqlGenQuery(schemaDefObj=self.__sd, verbose=self.__verbose)
             sqlGen.setDatabase(databaseName=self.__databaseName)
-            sqlConstraint = MyDbConditionSqlGen(schemaDefObj=self.__sd, verbose=self.__verbose)
+            sqlConstraint = SqlGenCondition(schemaDefObj=self.__sd, verbose=self.__verbose)
             #
             atMapL = self._getAttributeParameterMap(tableId=tableId)
             for kwArg, kwVal in kwargs.items():
@@ -451,7 +451,7 @@ class MyDbAdapter(object):
             #
             #
             myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
-            myAd = MyDbAdminSqlGen(self.__verbose)
+            myAd = SqlGenAdmin(self.__verbose)
             #
             # Create the attribute and value list for template --
             #
