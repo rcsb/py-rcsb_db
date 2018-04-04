@@ -120,7 +120,7 @@ def main():
         loadType = 'full' if args.full else 'replace'
         loadType = 'replace' if args.replace else 'full'
         saveInputFileListPath = args.save_file_list_path
-        pruneDocumentSize = args.prune_document_size
+        pruneDocumentSize = float(args.prune_document_size)
         mockTopPath = os.path.join(TOPDIR, "rcsb_db", "data") if args.mock else None
         if args.file_limit:
             fileLimit = int(args.file_limit)
