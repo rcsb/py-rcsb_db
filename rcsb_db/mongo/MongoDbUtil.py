@@ -119,7 +119,7 @@ class MongoDbUtil(object):
             c = self.__mgObj[databaseName].get_collection(collectionName)
             r = c.insert_many(dList, ordered=ordered, bypass_document_validation=bypassValidation)
         except Exception as e:
-            logger.error("Bulk insert operation failing with %s" % str(e))
+            logger.error("Bulk insert of %d operation failing with %s" % (len(dList), str(e)))
         #
         try:
             rIdL = r.inserted_ids
@@ -150,11 +150,12 @@ class MongoDbUtil(object):
         ''' Delete and serially insert the input document list.   Return the list list
             of documents ids successfully loaded.
         '''
-        logger.info("Salvaging document list length %d" % len(dList))
+        logger.info("Salvaging %s %s document list length %d" % (databaseName, collectionName, len(dList)))
         dTupL = self.deleteList(databaseName, collectionName, dList, keyName)
         logger.info("Salvage bulk insert - deleting %d documents" % len(dTupL))
         rIdL = self.insertListSerial(databaseName, collectionName, dList, keyName)
         logger.info("Salvage bulk insert - serlial insert length %d" % len(rIdL))
+        return rIdL
 
     def fetchOne(self, databaseName, collectionName, ky, val):
         try:
