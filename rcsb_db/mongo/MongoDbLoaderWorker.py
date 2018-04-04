@@ -146,6 +146,9 @@ class MongoDbLoaderWorker(object):
             fullSuccessPathList = []
             fullFailedPathList = []
             for collectionName in collectionNameList:
+                successPathList = []
+                failedPathList = []
+                ok = True
                 # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
                 tableIdExcludeList = sd.getCollectionExcludedTables(collectionName)
                 tableIdIncludeList = sd.getCollectionSelectedTables(collectionName)
@@ -174,17 +177,20 @@ class MongoDbLoaderWorker(object):
                 docIdD['tableName'], docIdD['attributeName'] = sd.getDocumentKeyAttributeName(collectionName)
                 logger.debug("%s docIdD %r collectionName %r" % (procName, docIdD, collectionName))
                 #
-                ok, successPathList, failedPathList = self.__loadDocuments(dbName, collectionName, tableDataDictList, docIdD,
-                                                                           loadType=loadType, successKey='__load_status__.load_file_path', readBackCheck=readBackCheck)
+                if tableDataDictList:
+                    ok, successPathList, failedPathList = self.__loadDocuments(dbName, collectionName, tableDataDictList, docIdD,
+                                                                               loadType=loadType, successKey='__load_status__.load_file_path', readBackCheck=readBackCheck)
                 #
-                logger.info("%s database %s collection %s successList length = %d  failed %d rejected %d" %
-                            (procName, dbName, collectionName, len(successPathList), len(failedPathList), len(rejectList)))
+                logger.info("%s database %s collection %s inputList length %d successList length %d  failed %d rejected %d" %
+                            (procName, dbName, collectionName, len(tableDataDictList), len(successPathList), len(failedPathList), len(rejectList)))
                 #
                 successPathList.extend(rejectList)
                 fullSuccessPathList.extend(successPathList)
                 fullFailedPathList.extend(failedPathList)
             #
             retList = list(set(fullSuccessPathList) - set(fullFailedPathList))
+            logger.info("%s database %s collectionList %r full successList %s full failed list %d " % (procName, dbName, collectionNameList,
+                                                                                                       len(set(fullSuccessPathList)), len(set(fullFailedPathList))))
             self.__end(startTime, procName + " with status " + str(ok))
             return retList, [], []
 

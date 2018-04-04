@@ -99,7 +99,7 @@ class MultiProcUtil(object):
             self.__workerFunc = getattr(workerObj, workerMethod)
             return True
         except AttributeError:
-            logger.error("+MultiProcUtil.set() object/attribute error\n")
+            logger.error("Object/attribute error")
             return False
 
     ##
@@ -130,7 +130,7 @@ class MultiProcUtil(object):
         subLists = [dataList[i::numLists] for i in range(numLists)]
         #
         if subLists and len(subLists) > 0:
-            logger.debug("+MultiProcUtil.runMulti() with numProc %d  subtask count %d subtask length ~ %d\n" % (numProc, len(subLists), len(subLists[0])))
+            logger.debug("Running with numProc %d  subtask count %d subtask length ~ %d" % (numProc, len(subLists), len(subLists[0])))
         #
         taskQueue = multiprocessing.Queue()
         successQueue = multiprocessing.Queue()
@@ -189,22 +189,20 @@ class MultiProcUtil(object):
             np -= 1
         #
         diagList = list(set(tL))
-        logger.debug("+MultiProcUtil.runMulti() input task length %d success length %d\n" % (len(dataList), len(successList)))
+        logger.debug("+MultiProcUtil.runMulti() input task length %d success length %d" % (len(dataList), len(successList)))
         try:
             for w in workers:
                 w.terminate()
                 w.join(1)
         except Exception as e:
-            logger.error("+MultiProcUtil.runMulti() termination/reaping failing\n")
+            logger.error("termination/reaping failing\n")
             logger.exception("Failing with %s" % str(e))
 
         if len(dataList) == len(successList):
-            if self.__verbose:
-                logger.info("+MultiProcUtil.runMulti() all tasks completed\n")
+            logger.info("Complete run  - innput task length %d success length %d" % (len(dataList), len(successList)))
             return True, [], retLists, diagList
         else:
             failList = list(set(dataList) - set(successList))
-            if self.__verbose:
-                logger.info("+MultiProcUtil.runMulti() incomplete run\n")
+            logger.info("Incomplete run  - innput task length %d success length %d" % (len(dataList), len(successList)))
 
             return False, failList, retLists, diagList
