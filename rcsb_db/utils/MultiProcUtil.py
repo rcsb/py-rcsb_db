@@ -202,6 +202,8 @@ class MultiProcUtil(object):
             logger.info("Complete run  - input task length %d success length %d" % (len(dataList), len(successList)))
             return True, [], retLists, diagList
         else:
+            logger.info("data list %r " % dataList[:4])
+            logger.info("successlist %r " % successList[:4])
             failList = list(set(dataList) - set(successList))
             logger.info("Incomplete run  - input task length %d success length %d fail list %d" % (len(dataList), len(successList), len(failList)))
 
