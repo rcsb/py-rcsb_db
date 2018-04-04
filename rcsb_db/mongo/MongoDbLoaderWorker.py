@@ -166,7 +166,7 @@ class MongoDbLoaderWorker(object):
                 rejectPathList = []
                 for c in rejectList:
                     catObj = c.getObj('__load_status__')
-                    rejectPathList.append(catObj('load_file_path', 0))
+                    rejectPathList.append(catObj.getValue('load_file_path', 0))
                 rejectPathList = list(set(rejectPathList))
                 #
                 if logSize:
