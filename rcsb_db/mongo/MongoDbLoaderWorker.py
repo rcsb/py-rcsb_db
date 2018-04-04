@@ -161,6 +161,14 @@ class MongoDbLoaderWorker(object):
                 #
                 tableDataDictList, containerNameList, rejectList = sdp.processDocuments(containerList, styleType=styleType, filterType=fType, documentSelectors=documentSelectors)
                 #
+                # Get the unique paths for the rejected  container list -
+                #
+                rejectPathList = []
+                for c in rejectList:
+                    catObj = c.getObj('__load_status__')
+                    rejectPathList.append(catObj('load_file_path', 0))
+                rejectPathList = list(set(rejectPathList))
+                #
                 if logSize:
                     maxDocumentMegaBytes = -1
                     for tD, cN in zip(tableDataDictList, containerNameList):
@@ -184,7 +192,7 @@ class MongoDbLoaderWorker(object):
                 logger.info("%s database %s collection %s inputList length %d successList length %d  failed %d rejected %d" %
                             (procName, dbName, collectionName, len(tableDataDictList), len(successPathList), len(failedPathList), len(rejectList)))
                 #
-                successPathList.extend(rejectList)
+                successPathList.extend(rejectPathList)
                 fullSuccessPathList.extend(successPathList)
                 fullFailedPathList.extend(failedPathList)
             #
