@@ -10,6 +10,7 @@
 #    24-Mar-2018 - jdw add split collections for entries (preiliminary)
 #    24-Mar-2018 - jdw add option to preserve paths from automatic repo scan
 #    27-Mar-2018 - jdw update configuration handling and add support for mocking repository paths
+#     4-Apr-2018 - jdw added option to prune documents to a size limit
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -80,6 +81,7 @@ def main():
     parser.add_argument("--num_proc", default=2, help="Number of processes to execute (default=2)")
     parser.add_argument("--chunk_size", default=10, help="Number of files loaded per process")
     parser.add_argument("--file_limit", default=None, help="Load file limit for testing")
+    parser.add_argument("--prune_document_size", default=None, help="Prune large documents to this size limit (MB)")
     parser.add_argument("--debug", default=False, action='store_true', help="Turn on verbose logging")
     parser.add_argument("--mock", default=False, action='store_true', help="Use MOCK repository configuration for testing")
     args = parser.parse_args()
@@ -118,6 +120,7 @@ def main():
         loadType = 'full' if args.full else 'replace'
         loadType = 'replace' if args.replace else 'full'
         saveInputFileListPath = args.save_file_list_path
+        pruneDocumentSize = args.prune_document_size
         mockTopPath = os.path.join(TOPDIR, "rcsb_db", "data") if args.mock else None
         if args.file_limit:
             fileLimit = int(args.file_limit)
@@ -141,27 +144,40 @@ def main():
     #
     ##
     if args.db_type == "mongo":
-        mw = MongoDbLoaderWorker(cfgOb, resourceName="MONGO_DB", numProc=numProc, chunkSize=chunkSize, fileLimit=fileLimit, mockTopPath=mockTopPath, verbose=debugFlag, readBackCheck=readBackCheck)
+        mw = MongoDbLoaderWorker(
+            cfgOb,
+            resourceName="MONGO_DB",
+            numProc=numProc,
+            chunkSize=chunkSize,
+            fileLimit=fileLimit,
+            mockTopPath=mockTopPath,
+            verbose=debugFlag,
+            readBackCheck=readBackCheck)
 
         if args.load_chem_comp_ref:
             ok = mw.loadContentType('chem_comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                                    documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath, saveInputFileListPath=saveInputFileListPath)
+                                    documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath,
+                                    saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
 
         if args.load_bird_chem_comp_ref:
             ok = mw.loadContentType('bird_chem_comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                                    documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath, saveInputFileListPath=saveInputFileListPath)
+                                    documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath,
+                                    saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
 
         if args.load_bird_ref:
             ok = mw.loadContentType('bird', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                                    documentSelectors=["BIRD_PUBLIC_RELEASE"], failedFilePath=failedFilePath, saveInputFileListPath=saveInputFileListPath)
+                                    documentSelectors=["BIRD_PUBLIC_RELEASE"], failedFilePath=failedFilePath,
+                                    saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
 
         if args.load_bird_family_ref:
             ok = mw.loadContentType('bird_family', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                                    documentSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"], failedFilePath=failedFilePath, saveInputFileListPath=saveInputFileListPath)
+                                    documentSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"], failedFilePath=failedFilePath,
+                                    saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
 
         if args.load_entry_data:
             ok = mw.loadContentType('pdbx', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                                    documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=failedFilePath, saveInputFileListPath=saveInputFileListPath)
+                                    documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=failedFilePath,
+                                    saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
 
         logger.info("Operation completed with status %r " % ok)
 

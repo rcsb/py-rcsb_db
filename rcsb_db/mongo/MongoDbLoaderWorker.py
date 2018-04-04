@@ -25,6 +25,7 @@ __license__ = "Apache 2.0"
 import sys
 import time
 import bson
+import operator
 
 import logging
 logger = logging.getLogger(__name__)
@@ -60,7 +61,7 @@ class MongoDbLoaderWorker(object):
         self.__mockTopPath = mockTopPath
 
     def loadContentType(self, contentType, loadType='full', inputPathList=None, styleType='rowwise_by_name', documentSelectors=None,
-                        failedFilePath=None, saveInputFileListPath=None):
+                        failedFilePath=None, saveInputFileListPath=None, pruneDocumentSize=None):
         """  Driver method for loading MongoDb content -
 
             contentType:  one of 'bird','bird_family','bird_chem_comp', chem_comp','pdbx'
@@ -85,6 +86,7 @@ class MongoDbLoaderWorker(object):
             optD['logSize'] = self.__verbose
             optD['documentSelectors'] = documentSelectors
             optD['loadType'] = loadType
+            optD['pruneDocumentSize'] = pruneDocumentSize
             # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             #
 
@@ -131,6 +133,7 @@ class MongoDbLoaderWorker(object):
             documentSelectors = optionsD['documentSelectors']
             loadType = optionsD['loadType']
             contentType = optionsD['contentType']
+            pruneDocumentSize = optionsD['pruneDocumentSize']
             #
             fType = "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
             if styleType in ["columnwise_by_name", "rowwise_no_name"]:
@@ -187,7 +190,8 @@ class MongoDbLoaderWorker(object):
                 #
                 if tableDataDictList:
                     ok, successPathList, failedPathList = self.__loadDocuments(dbName, collectionName, tableDataDictList, docIdD,
-                                                                               loadType=loadType, successKey='__load_status__.load_file_path', readBackCheck=readBackCheck)
+                                                                               loadType=loadType, successKey='__load_status__.load_file_path',
+                                                                               readBackCheck=readBackCheck, pruneDocumentSize=pruneDocumentSize)
                 #
                 logger.info("%s database %s collection %s inputList length %d successList length %d  failed %d rejected %d" %
                             (procName, dbName, collectionName, len(tableDataDictList), len(successPathList), len(failedPathList), len(rejectList)))
@@ -274,7 +278,39 @@ class MongoDbLoaderWorker(object):
             logger.exception("Failing with %s" % str(e))
         return False
 
-    def __loadDocuments(self, dbName, collectionName, dList, docIdD, loadType='full', successKey=None, readBackCheck=False):
+    def __pruneBySize(self, dList, limitMB=15.9):
+        """ For the input list of objects (dictionaries).objects
+            Return a pruned list satisfying the input total object size limit -
+
+        """
+        oL = []
+        try:
+            for d in dList:
+                sD = {}
+                sumMB = 0.0
+                for ky in d:
+                    dMB = float(sys.getsizeof(bson.BSON.encode({ky: d[ky]}))) / 1000000.0
+                    sumMB += dMB
+                    sD[ky] = dMB
+                if sumMB < limitMB:
+                    oL.append(d)
+                    continue
+                #
+                sorted_sD = sorted(sD.items(), key=operator.itemgetter(1))
+                prunedSum = 0.0
+                for ky, sMB in sorted_sD:
+                    prunedSum += sMB
+                    if prunedSum > limitMB:
+                        d.pop(ky, None)
+                        logger.info("Pruning ky %s size(MB) %.2f" % (ky, sMB))
+                oL.append(d)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            #
+        logger.info("Pruning returns document list length %d" % len(dList))
+        return oL
+
+    def __loadDocuments(self, dbName, collectionName, dList, docIdD, loadType='full', successKey=None, readBackCheck=False, pruneDocumentSize=None):
         #
         # Load database/collection with input document list -
         #
@@ -301,7 +337,9 @@ class MongoDbLoaderWorker(object):
                 if loadType == 'replace':
                     dTupL = mg.deleteList(dbName, collectionName, dList, keyName)
                     logger.debug("Deleted document status %r" % dTupL)
-
+                if pruneDocumentSize:
+                    dList = self.__pruneBySize(dList, limitMB=pruneDocumentSize)
+                #
                 rIdL = mg.insertList(dbName, collectionName, dList, keyName)
                 logger.debug("Insert returns rIdL length %r" % len(rIdL))
 

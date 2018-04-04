@@ -189,7 +189,7 @@ class MultiProcUtil(object):
             np -= 1
         #
         diagList = list(set(tL))
-        logger.debug("+MultiProcUtil.runMulti() input task length %d success length %d" % (len(dataList), len(successList)))
+        logger.debug("Input task length %d success length %d" % (len(dataList), len(successList)))
         try:
             for w in workers:
                 w.terminate()
@@ -202,8 +202,8 @@ class MultiProcUtil(object):
             logger.info("Complete run  - input task length %d success length %d" % (len(dataList), len(successList)))
             return True, [], retLists, diagList
         else:
-            logger.info("data list %r " % dataList[:4])
-            logger.info("successlist %r " % successList[:4])
+            # logger.debug("data list %r " % dataList[:4])
+            # logger.debug("successlist %r " % successList[:4])
             failList = list(set(dataList) - set(successList))
             logger.info("Incomplete run  - input task length %d success length %d fail list %d" % (len(dataList), len(successList), len(failList)))
 

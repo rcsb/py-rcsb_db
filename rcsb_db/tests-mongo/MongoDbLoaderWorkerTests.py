@@ -8,6 +8,7 @@
 #   22-Mar-2018 jdw  Revise all tests
 #   23-Mar-2018 jdw  Add reload test cases
 #   27-Mar-2018 jdw  Update configuration handling and mocking
+#    4-Apr-2018 jdw  Add size pruning tests
 #
 ##
 """
@@ -173,6 +174,19 @@ class MongoDbLoaderWorkerTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
+    def testLoadPdbxEntryDataSizeLimit(self):
+        """ Test case -  Load PDBx entry data
+        """
+        try:
+            mw = MongoDbLoaderWorker(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+                                     fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
+            ok = mw.loadContentType('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
+                                    documentSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath, pruneDocumentSize=0.10)
+            self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
 
 def mongoLoadSuite():
     suiteSelect = unittest.TestSuite()
@@ -186,6 +200,12 @@ def mongoLoadSuite():
 def mongoLoadPdbxSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(MongoDbLoaderWorkerTests("testLoadPdbxEntryData"))
+    return suiteSelect
+
+
+def mongoLoadPdbxLimitSizeSuite():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(MongoDbLoaderWorkerTests("testLoadPdbxEntryDataSizeLimit"))
     return suiteSelect
 
 
@@ -208,4 +228,8 @@ if __name__ == '__main__':
 
     if (True):
         mySuite = mongoReLoadSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+    if (True):
+        mySuite = mongoLoadPdbxLimitSizeSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
