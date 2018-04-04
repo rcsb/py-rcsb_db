@@ -199,10 +199,10 @@ class MultiProcUtil(object):
             logger.exception("Failing with %s" % str(e))
 
         if len(dataList) == len(successList):
-            logger.info("Complete run  - innput task length %d success length %d" % (len(dataList), len(successList)))
+            logger.info("Complete run  - input task length %d success length %d" % (len(dataList), len(successList)))
             return True, [], retLists, diagList
         else:
             failList = list(set(dataList) - set(successList))
-            logger.info("Incomplete run  - innput task length %d success length %d" % (len(dataList), len(successList)))
+            logger.info("Incomplete run  - input task length %d success length %d fail list %d" % (len(dataList), len(successList), len(failList)))
 
             return False, failList, retLists, diagList
