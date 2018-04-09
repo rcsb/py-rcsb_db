@@ -24,7 +24,6 @@ __license__ = "Apache 2.0"
 
 
 import multiprocessing
-
 import logging
 logger = logging.getLogger(__name__)
 
@@ -51,6 +50,7 @@ class MultiProcWorker(multiprocessing.Process):
         #
         self.__optionsD = optionsD if optionsD is not None else {}
         self.__workingDir = workingDir
+        #
 
     def run(self):
         processName = self.name
@@ -58,11 +58,11 @@ class MultiProcWorker(multiprocessing.Process):
             nextList = self.__taskQueue.get()
             if nextList is None:
                 # end of queue condition
-                logger.debug("+MultiProcWorker(run)  %s completed task list\n" % processName)
+                logger.debug("%s completed task list" % processName)
                 break
             #
             rTup = self.__workerFunc(dataList=nextList, procName=processName, optionsD=self.__optionsD, workingDir=self.__workingDir)
-            logger.debug("+MultiProcWorker(run) %s task list length %d rTup length %d\n" % (processName, len(nextList), len(rTup)))
+            logger.debug("%s task list length %d rTup length %d" % (processName, len(nextList), len(rTup)))
             self.__successQueue.put(rTup[0])
             for ii, rq in enumerate(self.__resultQueueList):
                 rq.put(rTup[ii + 1])
@@ -71,12 +71,13 @@ class MultiProcWorker(multiprocessing.Process):
 
 
 class MultiProcUtil(object):
-
     def __init__(self, verbose=True):
         self.__verbose = verbose
         self.__workFunc = None
         self.__optionsD = {}
         self.__workingDir = '.'
+        self.__loggingMP = True
+        self.__sentinel = None
 
     def setOptions(self, optionsD):
         """ A dictionary of options that is passed as an argument to the worker function
@@ -93,7 +94,7 @@ class MultiProcUtil(object):
 
              Worker method must support the following prototype -
 
-             sucessList,resultList,diagList=workerFunc(runList=nextList,procName, optionsD, workingDir)
+             sucessList,resultList,diagList=workerFunc(runList=nextList, procName, optionsD, workingDir)
         """
         try:
             self.__workerFunc = getattr(workerObj, workerMethod)
@@ -119,18 +120,19 @@ class MultiProcUtil(object):
         if numProc < 1:
             numProc = multiprocessing.cpu_count() * 2
 
-        if numProc > len(dataList):
-            numProc = len(dataList)
-        #
+        lenData = len(dataList)
+        numProc = min(numProc, lenData)
+        chunkSize = min(lenData, chunkSize)
+
         if chunkSize <= 0:
             numLists = numProc
         else:
-            numLists = int(len(dataList) / int(chunkSize))
+            numLists = int(lenData / int(chunkSize))
         #
         subLists = [dataList[i::numLists] for i in range(numLists)]
         #
         if subLists and len(subLists) > 0:
-            logger.debug("Running with numProc %d  subtask count %d subtask length ~ %d" % (numProc, len(subLists), len(subLists[0])))
+            logger.debug("Running with numProc %d subtask count %d subtask length ~ %d" % (numProc, len(subLists), len(subLists[0])))
         #
         taskQueue = multiprocessing.Queue()
         successQueue = multiprocessing.Queue()
@@ -143,7 +145,7 @@ class MultiProcUtil(object):
             retLists.append([])
 
         #
-        # Create list of worker processes
+        #  Create list of worker processes
         #
         workers = [
             MultiProcWorker(
@@ -198,6 +200,7 @@ class MultiProcUtil(object):
             logger.error("termination/reaping failing\n")
             logger.exception("Failing with %s" % str(e))
 
+        #
         if len(dataList) == len(successList):
             logger.info("Complete run  - input task length %d success length %d" % (len(dataList), len(successList)))
             return True, [], retLists, diagList
