@@ -114,16 +114,14 @@ def main():
         readBackCheck = args.read_back_check
         numProc = int(args.num_proc)
         chunkSize = int(args.chunk_size)
-        fileLimit = args.file_limit
+        fileLimit = int(args.file_limit) if args.file_limit else None
         failedFilePath = args.fail_file_list_path
         fPath = args.load_file_list_path
         loadType = 'full' if args.full else 'replace'
         loadType = 'replace' if args.replace else 'full'
         saveInputFileListPath = args.save_file_list_path
-        pruneDocumentSize = float(args.prune_document_size)
+        pruneDocumentSize = float(args.prune_document_size) if args.prune_document_size else None
         mockTopPath = os.path.join(TOPDIR, "rcsb_db", "data") if args.mock else None
-        if args.file_limit:
-            fileLimit = int(args.file_limit)
 
         if args.document_style not in ['rowwise_by_name', 'rowwise_by_name_with_cardinality', 'columnwise_by_name', 'rowwise_by_id', 'rowwise_no_name']:
             logger.error("Unsupported document style %s" % args.document_style)
