@@ -114,7 +114,7 @@ class ChemCompLoaderTests(unittest.TestCase):
         """
 
         try:
-            ccsd, dbName, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
+            ccsd, dbName, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
             pathList = self.__ctU.getPathList(contentType='chem_comp')
 
             sml = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=None, workPath=os.path.join(HERE, "test-output"), cleanUp=False,
@@ -138,7 +138,7 @@ class ChemCompLoaderTests(unittest.TestCase):
             self.fail()
 
     def loadBatchFilesMulti(self, dataList, procName, optionsD, workingDir):
-        ccsd, dbName, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
+        ccsd, dbName, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
         with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
             sdl = SchemaDefLoader(schemaDefObj=ccsd, ioObj=self.__ioObj, dbCon=client, workPath=os.path.join(HERE, 'test-output'), cleanUp=False,
                                   warnings='error', verbose=self.__verbose)
@@ -153,7 +153,7 @@ class ChemCompLoaderTests(unittest.TestCase):
         startTime = time.time()
 
         try:
-            ccsd, dbName, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
+            ccsd, dbName, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
             pathList = self.__ctU.getPathList(contentType='chem_comp')
             logger.debug("\nPath list %r\n" % pathList)
 

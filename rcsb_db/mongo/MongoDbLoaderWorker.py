@@ -9,6 +9,7 @@
 #     21-Mar-2018 jdw  content filtering options added from documents
 #     25-Mar-2018 jdw  add support for loading multiple collections for a content type.
 #     26-Mar-2018 jdw  improve how successful loads are tracked accross collections -
+#      9-Apr-2018  jdw folding in improved schema path utility apis
 ##
 """
 Worker methods for loading MongoDb using BIRD, CCD and PDBx/mmCIF data files
@@ -32,12 +33,8 @@ logger = logging.getLogger(__name__)
 
 
 from rcsb_db.loaders.SchemaDefDataPrep import SchemaDefDataPrep
-from rcsb_db.schema.BirdSchemaDef import BirdSchemaDef
-from rcsb_db.schema.ChemCompSchemaDef import ChemCompSchemaDef
-from rcsb_db.schema.PdbxSchemaDef import PdbxSchemaDef
+from rcsb_db.utils.ContentTypeUtil import ContentTypeUtil
 from rcsb_db.utils.MultiProcUtil import MultiProcUtil
-from rcsb_db.utils.RepoPathUtil import RepoPathUtil
-
 from rcsb_db.mongo.Connection import Connection
 from rcsb_db.mongo.MongoDbUtil import MongoDbUtil
 
@@ -59,6 +56,10 @@ class MongoDbLoaderWorker(object):
         #
         self.__readBackCheck = readBackCheck
         self.__mockTopPath = mockTopPath
+        self.__mpFormat = '[%(levelname)s] %(asctime)s %(processName)s-%(module)s.%(funcName)s: %(message)s'
+        #
+        self.__ctU = ContentTypeUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
+        #
 
     def loadContentType(self, contentType, loadType='full', inputPathList=None, styleType='rowwise_by_name', documentSelectors=None,
                         failedFilePath=None, saveInputFileListPath=None, pruneDocumentSize=None):
@@ -73,7 +74,8 @@ class MongoDbLoaderWorker(object):
         try:
             startTime = self.__begin(message="loading operation")
             #
-            pathList = self.__getPathInfo(contentType, inputPathList=inputPathList)
+            pathList = self.__ctU.getPathList(contentType=contentType, inputPathList=inputPathList)
+            # pathList = self.__getPathInfo(contentType, inputPathList=inputPathList)
             #
             if saveInputFileListPath:
                 self.__writePathList(saveInputFileListPath, pathList)
@@ -93,7 +95,7 @@ class MongoDbLoaderWorker(object):
             numProc = self.__numProc
             chunkSize = self.__chunkSize if inputPathList and self.__chunkSize < len(inputPathList) else 0
             #
-            _, dbName, collectionNameList, primaryIndexD = self.__getSchemaInfo(contentType)
+            _, dbName, collectionNameList, primaryIndexD = self.__ctU.getSchemaInfo(contentType)
             for collectionName in collectionNameList:
                 if loadType == 'full':
                     self.__removeCollection(dbName, collectionName)
@@ -140,7 +142,7 @@ class MongoDbLoaderWorker(object):
                 fType = "drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
             # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             #
-            sd, dbName, collectionNameList, _ = self.__getSchemaInfo(contentType)
+            sd, dbName, collectionNameList, _ = self.__ctU.getSchemaInfo(contentType)
             sdp = SchemaDefDataPrep(schemaDefObj=sd, verbose=self.__verbose)
             containerList = sdp.getContainerList(dataList, filterType=fType)
             #
@@ -378,62 +380,6 @@ class MongoDbLoaderWorker(object):
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
         return False, [], fullSuccessValueList
-
-    def __getPathInfo(self, contentType, inputPathList=None):
-        outputPathList = []
-        inputPathList = inputPathList if inputPathList else []
-        rpU = RepoPathUtil(self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
-        try:
-            if contentType == "bird":
-                outputPathList = inputPathList if inputPathList else rpU.getBirdPathList()
-            elif contentType == "bird_family":
-                outputPathList = inputPathList if inputPathList else rpU.getBirdFamilyPathList()
-            elif contentType == 'chem_comp':
-                outputPathList = inputPathList if inputPathList else rpU.getChemCompPathList()
-            elif contentType == 'bird_chem_comp':
-                outputPathList = inputPathList if inputPathList else rpU.getBirdChemCompPathList()
-            elif contentType == 'pdbx':
-                outputPathList = inputPathList if inputPathList else rpU.getEntryPathList()
-            else:
-                logger.warning("Unsupported contentType %s" % contentType)
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-
-        if self.__fileLimit:
-            inputPathList = inputPathList[:self.__fileLimit]
-
-        return outputPathList
-
-    def __getSchemaInfo(self, contentType):
-        sd = None
-        dbName = None
-        collectionNameList = []
-        primaryIndexD = {}
-        try:
-            if contentType == "bird":
-                sd = BirdSchemaDef(convertNames=True)
-            elif contentType == "bird_family":
-                sd = BirdSchemaDef(convertNames=True)
-            elif contentType == 'chem_comp':
-                sd = ChemCompSchemaDef(convertNames=True)
-            elif contentType == 'bird_chem_comp':
-                sd = ChemCompSchemaDef(convertNames=True)
-            elif contentType == 'pdbx':
-                sd = PdbxSchemaDef(convertNames=True)
-            else:
-                logger.warning("Unsupported contentType %s" % contentType)
-
-            dbName = sd.getDatabaseName()
-            collectionNameList = sd.getContentTypeCollections(contentType)
-            primaryIndexD = {}
-            for collectionName in collectionNameList:
-                (tn, an) = sd.getDocumentKeyAttributeName(collectionName)
-                primaryIndexD[collectionName] = tn + '.' + an
-
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-
-        return sd, dbName, collectionNameList, primaryIndexD
 
     def __dictGet(self, dct, dotNotation):
         """  Convert input dictionary key (dot notation) to divided Python format and return appropriate dictionary value.

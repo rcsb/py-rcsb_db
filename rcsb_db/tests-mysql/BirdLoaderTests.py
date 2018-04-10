@@ -94,7 +94,7 @@ class BirdLoaderTests(unittest.TestCase):
         """Test case -  create table schema using BIRD schema definition
         """
         try:
-            msd, dbName, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            msd, dbName, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
             #
             tableIdList = msd.getTableIdList()
             myAd = SqlGenAdmin(self.__verbose)
@@ -119,7 +119,7 @@ class BirdLoaderTests(unittest.TestCase):
         """
         try:
             loadPathList = self.__ctU.getPathList(contentType='bird')
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
 
             sml = SchemaDefLoader(schemaDefObj=sd, verbose=self.__verbose, workPath=os.path.join(HERE, "test-output"))
             logger.debug("Length of path list %d\n" % len(loadPathList))
@@ -139,7 +139,7 @@ class BirdLoaderTests(unittest.TestCase):
 
         try:
             tddFileList = self.__testMakeLoadPrdFiles()
-            sd, databaseName, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            sd, databaseName, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
 
             myAd = SqlGenAdmin(self.__verbose)
 
@@ -172,7 +172,7 @@ class BirdLoaderTests(unittest.TestCase):
 
         try:
             loadPathList = self.__ctU.getPathList(contentType='bird')
-            sd, databaseName, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            sd, databaseName, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
 
             sml = SchemaDefDataPrep(schemaDefObj=sd, verbose=self.__verbose)
             logger.debug("Length of path list %d\n" % len(loadPathList))
@@ -214,7 +214,7 @@ class BirdLoaderTests(unittest.TestCase):
 
         try:
             loadPathList = self.__ctU.getPathList(contentType='bird')
-            sd, databaseName, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            sd, databaseName, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
 
             sml = SchemaDefDataPrep(schemaDefObj=sd, verbose=self.__verbose)
             logger.debug("Length of path list %d\n" % len(loadPathList))

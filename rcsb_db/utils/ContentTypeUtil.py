@@ -5,6 +5,7 @@
 # Version: 0.001
 #
 # Updates:
+#  9-Apr-2018 jdw update to provide indices and include remaining schema
 ##
 """
  A collection of schema and repo path convenience methods.
@@ -24,6 +25,7 @@ from rcsb_db.schema.ChemCompSchemaDef import ChemCompSchemaDef
 from rcsb_db.schema.PdbxSchemaDef import PdbxSchemaDef
 from rcsb_db.schema.PdbDistroSchemaDef import PdbDistroSchemaDef
 from rcsb_db.schema.StatusHistorySchemaDef import StatusHistorySchemaDef
+from rcsb_db.schema.DaInternalSchemaDef import DaInternalSchemaDef
 
 from rcsb_db.utils.RepoPathUtil import RepoPathUtil
 
@@ -55,6 +57,8 @@ class ContentTypeUtil(object):
                 outputPathList = inputPathList if inputPathList else rpU.getBirdChemCompPathList()
             elif contentType == 'pdbx':
                 outputPathList = inputPathList if inputPathList else rpU.getEntryPathList()
+            elif contentType in ['pdb_distro', 'da_internal', 'status_history']:
+                outputPathList = inputPathList if inputPathList else []
             else:
                 logger.warning("Unsupported contentType %s" % contentType)
         except Exception as e:
@@ -65,7 +69,7 @@ class ContentTypeUtil(object):
 
         return outputPathList
 
-    def getSchemaInfo(self, contentType):
+    def xgetSchemaInfo(self, contentType):
         sd = None
         dbName = None
         collectionNameList = []
@@ -105,3 +109,41 @@ class ContentTypeUtil(object):
             logger.exception("Failing with %s" % str(e))
 
         return sd, dbName, collectionNameList
+
+
+    def getSchemaInfo(self, contentType):
+        sd = None
+        dbName = None
+        collectionNameList = []
+        primaryIndexD = {}
+        try:
+            if contentType == "bird":
+                sd = BirdSchemaDef(convertNames=True)
+            elif contentType == "bird_family":
+                sd = BirdSchemaDef(convertNames=True)
+            elif contentType == 'chem_comp':
+                sd = ChemCompSchemaDef(convertNames=True)
+            elif contentType == 'bird_chem_comp':
+                sd = ChemCompSchemaDef(convertNames=True)
+            elif contentType == 'pdbx':
+                sd = PdbxSchemaDef(convertNames=True)
+            elif contentType == 'pdb_distro':
+                sd = PdbDistroSchemaDef(convertNames=True)
+            elif contentType == 'status_history':
+                sd = StatusHistorySchemaDef(convertNames=True)
+            elif contentType == 'da_internal':
+                sd = DaInternalSchemaDef(convertNames=True)
+            else:
+                logger.warning("Unsupported contentType %s" % contentType)
+
+            dbName = sd.getDatabaseName()
+            collectionNameList = sd.getContentTypeCollections(contentType)
+            primaryIndexD = {}
+            for collectionName in collectionNameList:
+                (tn, an) = sd.getDocumentKeyAttributeName(collectionName)
+                primaryIndexD[collectionName] = tn + '.' + an
+
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+
+        return sd, dbName, collectionNameList, primaryIndexD

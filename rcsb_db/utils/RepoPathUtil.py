@@ -43,6 +43,7 @@ class RepoPathUtil(object):
         self.__verbose = verbose
         self.__cfgOb = cfgOb
         self.__mockTopPath = mockTopPath
+        self.__mpFormat = '[%(levelname)s] %(asctime)s %(processName)s-%(module)s.%(funcName)s: %(message)s'
 
     def __cfgWrapper(self, ky):
         return os.path.join(self.__mockTopPath, self.__cfgOb.get(ky)) if self.__mockTopPath else self.__cfgOb.get(ky)

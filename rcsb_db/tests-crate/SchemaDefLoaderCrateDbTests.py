@@ -111,15 +111,15 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
         """  Create table schema (live) for BIRD, chemical component, and PDBx data.
         """
         try:
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
@@ -131,15 +131,15 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
         """  Remove table schema (live) for BIRD, chemical component, and PDBx data.
         """
         try:
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
@@ -150,7 +150,7 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
     def testLoadInsertBirdReference(self):
 
         try:
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
             self.__schemaCreate(schemaDefObj=sd)
             inputPathList = self.__ctU.getPathList(contentType='bird')
             inputPathList.extend(self.__ctU.getPathList(contentType='bird_family'))
@@ -165,7 +165,7 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
 
     def testLoadInsertManyBirdReference(self):
         try:
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
             self.__schemaCreate(schemaDefObj=sd)
             inputPathList = self.__ctU.getPathList(contentType='bird')
             inputPathList.extend(self.__ctU.getPathList(contentType='bird_family'))
@@ -181,7 +181,7 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
     def testLoadInsertChemCompReference(self):
 
         try:
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
             self.__schemaCreate(schemaDefObj=sd)
             inputPathList = self.__ctU.getPathList(contentType='chem_comp')
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
@@ -195,7 +195,7 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
     def testLoadInsertManyChemCompReference(self):
 
         try:
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
             self.__schemaCreate(schemaDefObj=sd)
             inputPathList = self.__ctU.getPathList(contentType='chem_comp')
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
@@ -208,7 +208,7 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
 
     def testLoadInsertPdbxExampleFiles(self):
         try:
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
             self.__schemaCreate(schemaDefObj=sd)
             inputPathList = self.__ctU.getPathList(contentType='pdbx')
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
@@ -221,7 +221,7 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
 
     def testLoadInsertManyPdbxExampleFiles(self):
         try:
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
             self.__schemaCreate(schemaDefObj=sd)
             inputPathList = self.__ctU.getPathList(contentType='pdbx')
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:

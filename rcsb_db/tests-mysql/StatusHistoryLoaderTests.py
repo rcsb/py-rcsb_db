@@ -91,7 +91,7 @@ class StatusHistoryLoaderTests(unittest.TestCase):
         """Test case - create table schema using status history schema definition
         """
         try:
-            msd, databaseName, _ = self.__ctU.getSchemaInfo(contentType='status_history')
+            msd, databaseName, _, _ = self.__ctU.getSchemaInfo(contentType='status_history')
             tableIdList = msd.getTableIdList()
             myAd = SqlGenAdmin(self.__verbose)
             sqlL = []
@@ -114,7 +114,7 @@ class StatusHistoryLoaderTests(unittest.TestCase):
         """Test case -  create table schema for file inventory table using status history schema definition
         """
         try:
-            msd, databaseName, _ = self.__ctU.getSchemaInfo(contentType='status_history')
+            msd, databaseName, _, _ = self.__ctU.getSchemaInfo(contentType='status_history')
             tableIdList = ['PDBX_ARCHIVE_FILE_INVENTORY']
             myAd = SqlGenAdmin(self.__verbose)
             sqlL = []

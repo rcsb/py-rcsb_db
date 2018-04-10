@@ -16,6 +16,7 @@
 # 16-Mar-2018  jdw add convenience method to detect date types
 # 19-Mar-2018  jdw consolidate document features in a common dictionary
 # 24-Mar-2018  jdw add document content type to colletion name mapping accessors
+#  9-Apr-2018  jdw add support for attribute level filter type -
 #
 ##
 """
@@ -400,6 +401,12 @@ class TableDef(object):
     def getAttributeIsPrimaryKey(self, attributeId):
         try:
             return self.__tD['ATTRIBUTE_INFO'][attributeId]['PRIMARY_KEY']
+        except Exception as e:
+            return None
+
+    def getAttributeFilterType(self, attributeId):
+        try:
+            return self.__tD['ATTRIBUTE_INFO'][attributeId]['FILTER_TYPE']
         except Exception as e:
             return None
 

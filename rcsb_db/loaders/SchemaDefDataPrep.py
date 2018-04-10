@@ -14,6 +14,7 @@
 #      22-Mar-2018  jdw add tableInclude details to limit the content scope
 #      22-Mar-2018  jdw change contentSelectors to documentSelectors ...
 #      25-Mar-2018  jdw improve handling of selected / excluded tables -
+#       9-Apr-2018  jdw add attribute level filtering
 #
 ##
 """
@@ -30,6 +31,7 @@ __license__ = "Apache 2.0"
 import time
 import datetime
 import pickle
+import re
 import dateutil.parser
 from operator import itemgetter
 from mmcif.api.DataCategory import DataCategory
@@ -546,6 +548,11 @@ class SchemaDefDataPrep(object):
         nullValueDict = tObj.getSqlNullValueDict()
         curAttributeIdList = tObj.getMapInstanceAttributeIdList(categoryName)
 
+        wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
+        wsStripFlagD = {}
+        for atId in curAttributeIdList:
+            wsStripFlagD[atId] = tObj.getAttributeFilterType(atId) == "STRIP_WS"
+        #
         for row in catObj.getRowList():
             d = {}
             if not dropEmptyFlag:
@@ -558,6 +565,8 @@ class SchemaDefDataPrep(object):
                     if atName not in attributeIndexDict:
                         continue
                     val = row[attributeIndexDict[atName]]
+                    if wsStripFlagD[atId]:
+                        val = wsPattern.sub("", val)
                     lenVal = len(val)
                     # Handle the Null values - note the implications of retaining null values accross types -
                     if ((lenVal == 0) or (val == '?') or (val == '.')):
@@ -590,6 +599,8 @@ class SchemaDefDataPrep(object):
         assignDateFlag = 'assign-dates' in filterType
         convertIterables = 'convert-iterables' in filterType
         #
+
+        #
         mD = {}
         for categoryName in categoryNameList:
             catObj = myContainer.getObj(categoryName)
@@ -602,6 +613,11 @@ class SchemaDefDataPrep(object):
             schemaAttributeIdList = tObj.getAttributeIdList()
             nullValueDict = tObj.getSqlNullValueDict()
             curAttributeIdList = tObj.getMapInstanceAttributeIdList(categoryName)
+            #
+            wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
+            wsStripFlagD = {}
+            for atId in curAttributeIdList:
+                wsStripFlagD[atId] = tObj.getAttributeFilterType(atId) == "STRIP_WS"
             #
             # dictionary of merging indices for each attribute in this category -
             #
@@ -628,14 +644,14 @@ class SchemaDefDataPrep(object):
                     try:
                         atName = schemaAttributeMapDict[atId]
                         val = row[attributeIndexDict[atName]]
+                        if wsStripFlagD[atId]:
+                            val = wsPattern.sub("", val)
                         lenVal = len(val)
                         # Handle the Null values - note the implications of retaining null values accross types -
                         if ((lenVal == 0) or (val == '?') or (val == '.')):
                             if not dropEmptyFlag:
                                 d[atId] = nullValueDict[atId]
                             continue
-                        tObj.isAttributeStringType(atId) and maxW > 0
-
                         d[atId] = self.__assignType(val, lenVal, tObj, atId, skipMaxWidthFlag, assignDateFlag, convertIterables)
                         #
                     except Exception as e:
@@ -660,6 +676,7 @@ class SchemaDefDataPrep(object):
         try:
             maxW = 0 if skipMaxWidthFlag else tObj.getAttributeWidth(atId)
             #
+            #  Iterables are not currently composable with specialt types/filtering
             if convertIterables and tObj.isIterable(atId):
                 if tObj.isAttributeStringType(atId):
                     return [v.strip() for v in val.split(tObj.getIterableSeparator(atId))]

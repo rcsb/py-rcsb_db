@@ -47,7 +47,7 @@ class MultiProcLoggingTests(unittest.TestCase):
         self.__logRecordMax = 5
         self.__startTime = time.time()
         self.__testLogPath = os.path.join(HERE, "test-output", "TESTLOGFILE.LOG")
-        self.__mpFormat = '%(asctime)s [%(levelname)s]-%(processName)s-%(module)s.%(funcName)s: %(message)s'
+        self.__mpFormat = '[%(levelname)s] %(asctime)s %(processName)s-%(module)s.%(funcName)s: %(message)s'
         logger.debug("Running tests on version %s" % __version__)
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))

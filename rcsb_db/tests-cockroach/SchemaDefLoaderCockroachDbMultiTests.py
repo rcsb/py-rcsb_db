@@ -116,15 +116,15 @@ class SchemaDefLoaderCockroachDbMultiTests(unittest.TestCase):
         """  Create table schema (live) for BIRD, chemical component, and PDBx data.
         """
         try:
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
@@ -136,15 +136,15 @@ class SchemaDefLoaderCockroachDbMultiTests(unittest.TestCase):
         """  Remove table schema (live) for BIRD, chemical component, and PDBx data.
         """
         try:
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
@@ -201,7 +201,7 @@ class SchemaDefLoaderCockroachDbMultiTests(unittest.TestCase):
         chunkSize = self.__chunkSize
         try:
             #
-            sd, _, _ = self.__ctU.getSchemaInfo(contentType=contentType)
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType=contentType)
             if (self.__createFlag):
                 self.__schemaCreate(schemaDefObj=sd)
 
