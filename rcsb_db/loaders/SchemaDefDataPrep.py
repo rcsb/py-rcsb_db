@@ -600,7 +600,7 @@ class SchemaDefDataPrep(object):
         convertIterables = 'convert-iterables' in filterType
         #
 
-        #
+        # Consider mD as orderdict
         mD = {}
         for categoryName in categoryNameList:
             catObj = myContainer.getObj(categoryName)

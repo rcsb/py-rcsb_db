@@ -103,6 +103,92 @@ class MongoDbLoaderWorker(object):
                     self.__createCollection(dbName, collectionName, indAt)
 
             #
+
+            numPaths = len(pathList)
+            logger.info("Processing %d total paths" % numPaths)
+            numProc = min(numProc, numPaths)
+            maxStepLength = 2000
+            if numPaths > maxStepLength:
+                numLists = int(numPaths / maxStepLength)
+                subLists = [pathList[i::numLists] for i in range(numLists)]
+            else:
+                subLists = [pathList]
+            #
+            if subLists and len(subLists) > 0:
+                logger.info("Starting with numProc %d outer subtask count %d subtask length ~ %d" % (numProc, len(subLists), len(subLists[0])))
+            #
+            failList = []
+            retLists = []
+            diagList = []
+            for ii, subList in enumerate(subLists):
+                logger.info("Running outer subtask %d or %d length %d" % (ii + 1, len(subLists), len(subList)))
+                #
+                mpu = MultiProcUtil(verbose=True)
+                mpu.setOptions(optionsD=optD)
+                mpu.set(workerObj=self, workerMethod="loadWorker")
+                ok, failListT, retListsT, diagListT = mpu.runMulti(dataList=subList, numProc=numProc, numResults=1, chunkSize=chunkSize)
+                failList.extend(failListT)
+                retLists.extend(retListsT)
+                diagList.extend(diagListT)
+            logger.debug("Failing path list %r" % failList)
+            logger.info("Load path list length %d failed load list length %d" % (len(pathList), len(failList)))
+            #
+            if failedFilePath and len(failList) > 0:
+                wOk = self.__writePathList(failedFilePath, failList)
+                logger.info("Writing load failure path list to %s status %r" % (failedFilePath, wOk))
+            #
+            self.__end(startTime, "loading operation with status " + str(ok))
+
+            #
+            return ok
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+
+        return False
+
+    def loadContentTypePrev(self, contentType, loadType='full', inputPathList=None, styleType='rowwise_by_name', documentSelectors=None,
+                            failedFilePath=None, saveInputFileListPath=None, pruneDocumentSize=None):
+        """  Driver method for loading MongoDb content -
+
+            contentType:  one of 'bird','bird_family','bird_chem_comp', chem_comp','pdbx'
+            #
+            loadType:     "full" or "replace"
+            styleType:    one of 'rowwise_by_name', 'columnwise_by_name', 'rowwise_no_name', 'rowwise_by_name_with_cardinality'
+
+        """
+        try:
+            startTime = self.__begin(message="loading operation")
+            #
+            pathList = self.__ctU.getPathList(contentType=contentType, inputPathList=inputPathList)
+            # pathList = self.__getPathInfo(contentType, inputPathList=inputPathList)
+            #
+            if saveInputFileListPath:
+                self.__writePathList(saveInputFileListPath, pathList)
+                logger.info("Saving %d paths in %s" % (len(pathList), saveInputFileListPath))
+            #
+            optD = {}
+            optD['contentType'] = contentType
+            optD['styleType'] = styleType
+            optD['readBackCheck'] = self.__readBackCheck
+            optD['logSize'] = self.__verbose
+            optD['documentSelectors'] = documentSelectors
+            optD['loadType'] = loadType
+            optD['pruneDocumentSize'] = pruneDocumentSize
+            # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
+            #
+
+            numProc = self.__numProc
+            chunkSize = self.__chunkSize if inputPathList and self.__chunkSize < len(inputPathList) else 0
+            #
+            _, dbName, collectionNameList, primaryIndexD = self.__ctU.getSchemaInfo(contentType)
+            for collectionName in collectionNameList:
+                if loadType == 'full':
+                    self.__removeCollection(dbName, collectionName)
+                    indAt = primaryIndexD[collectionName] if collectionName in primaryIndexD else None
+                    self.__createCollection(dbName, collectionName, indAt)
+
+            #
+            #
             mpu = MultiProcUtil(verbose=True)
             mpu.setOptions(optionsD=optD)
             mpu.set(workerObj=self, workerMethod="loadWorker")

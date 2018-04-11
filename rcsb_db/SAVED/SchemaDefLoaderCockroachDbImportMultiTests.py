@@ -49,7 +49,7 @@ except Exception as e:
     from rcsb_db import __version__
 
 from rcsb_db.sql.SqlGen import SqlGenAdmin
-from rcsb_db.loaders.SchemaDefLoader import SchemaDefLoader
+from rcsb_db.mysql.SchemaDefLoaderimport SchemaDefLoader
 
 from rcsb_db.cockroach.CockroachDbUtil import CockroachDbConnect, CockroachDbQuery
 from rcsb_db.schema.BirdSchemaDef import BirdSchemaDef

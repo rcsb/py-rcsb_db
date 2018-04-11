@@ -327,6 +327,12 @@ class TableDef(object):
         except Exception as e:
             return {}
 
+    def getAttributeNameMap(self):
+        try:
+            return {v: k for k, v in self.__tD['ATTRIBUTES'].items()}
+        except Exception as e:
+            return {}
+
     def getAttributeName(self, attributeId):
         try:
             return self.__tD['ATTRIBUTES'][attributeId]

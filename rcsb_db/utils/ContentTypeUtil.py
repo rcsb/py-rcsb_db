@@ -65,7 +65,7 @@ class ContentTypeUtil(object):
             logger.exception("Failing with %s" % str(e))
 
         if self.__fileLimit:
-            inputPathList = inputPathList[:self.__fileLimit]
+            outputPathList = outputPathList[:self.__fileLimit]
 
         return outputPathList
 

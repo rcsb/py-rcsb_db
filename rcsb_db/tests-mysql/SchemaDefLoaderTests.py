@@ -36,7 +36,7 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-from rcsb_db.loaders.SchemaDefLoader import SchemaDefLoader
+from rcsb_db.mysql.SchemaDefLoaderimport SchemaDefLoader
 from rcsb_db.schema.BirdSchemaDef import BirdSchemaDef
 
 from mmcif.io.IoAdapterPy import IoAdapterPy

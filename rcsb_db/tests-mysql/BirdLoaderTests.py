@@ -46,7 +46,7 @@ except Exception as e:
     from rcsb_db import __version__
 
 from rcsb_db.sql.SqlGen import SqlGenAdmin
-from rcsb_db.loaders.SchemaDefLoader import SchemaDefLoader
+from rcsb_db.mysql.SchemaDefLoaderimport SchemaDefLoader
 from rcsb_db.loaders.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb_db.mysql.MyDbUtil import MyDbQuery
 from rcsb_db.mysql.Connection import Connection

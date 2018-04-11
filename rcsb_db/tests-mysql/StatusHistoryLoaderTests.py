@@ -45,7 +45,7 @@ from rcsb_db.mysql.MyDbUtil import MyDbQuery
 from rcsb_db.mysql.Connection import Connection
 from rcsb_db.schema.StatusHistorySchemaDef import StatusHistorySchemaDef
 from rcsb_db.sql.SqlGen import SqlGenAdmin
-from rcsb_db.loaders.SchemaDefLoader import SchemaDefLoader
+from rcsb_db.mysql.SchemaDefLoaderimport SchemaDefLoader
 from rcsb_db.utils.ConfigUtil import ConfigUtil
 from rcsb_db.utils.ContentTypeUtil import ContentTypeUtil
 
