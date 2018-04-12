@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 
 from rcsb_db.loaders.SchemaDefDataPrep import SchemaDefDataPrep
+from rcsb_db.loaders.DataTransformFactory import DataTransformFactory
 from rcsb_db.utils.ContentTypeUtil import ContentTypeUtil
 from rcsb_db.utils.MultiProcUtil import MultiProcUtil
 from rcsb_db.mongo.Connection import Connection
@@ -41,11 +42,12 @@ from rcsb_db.mongo.MongoDbUtil import MongoDbUtil
 
 class MongoDbLoaderWorker(object):
 
-    def __init__(self, cfgOb, resourceName="MONGO_DB", numProc=4, chunkSize=15, fileLimit=None, mockTopPath=None, verbose=False, readBackCheck=False):
+    def __init__(self, cfgOb, resourceName="MONGO_DB", numProc=4, chunkSize=15, fileLimit=None, mockTopPath=None, verbose=False, readBackCheck=False, maxStepLength=2000):
         self.__verbose = verbose
         #
         # Limit the load length of each file type for testing  -  Set to None to remove -
         self.__fileLimit = fileLimit
+        self.__maxStepLength = maxStepLength
         #
         # Controls for multiprocessing execution -
         self.__numProc = numProc
@@ -81,9 +83,14 @@ class MongoDbLoaderWorker(object):
                 self.__writePathList(saveInputFileListPath, pathList)
                 logger.info("Saving %d paths in %s" % (len(pathList), saveInputFileListPath))
             #
+            filterType = "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
+            if styleType in ["columnwise_by_name", "rowwise_no_name"]:
+                filterType = "drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
+            #
             optD = {}
             optD['contentType'] = contentType
             optD['styleType'] = styleType
+            optD['filterType'] = filterType
             optD['readBackCheck'] = self.__readBackCheck
             optD['logSize'] = self.__verbose
             optD['documentSelectors'] = documentSelectors
@@ -95,7 +102,7 @@ class MongoDbLoaderWorker(object):
             numProc = self.__numProc
             chunkSize = self.__chunkSize if inputPathList and self.__chunkSize < len(inputPathList) else 0
             #
-            _, dbName, collectionNameList, primaryIndexD = self.__ctU.getSchemaInfo(contentType)
+            sd, dbName, collectionNameList, primaryIndexD = self.__ctU.getSchemaInfo(contentType)
             for collectionName in collectionNameList:
                 if loadType == 'full':
                     self.__removeCollection(dbName, collectionName)
@@ -103,11 +110,16 @@ class MongoDbLoaderWorker(object):
                     self.__createCollection(dbName, collectionName, indAt)
 
             #
-
+            dtf = DataTransformFactory(schemaDefObj=sd, filterType=filterType)
+            optD['schemaDefObj'] = sd
+            optD['dataTransformFactory'] = dtf
+            optD['collectionNameList'] = collectionNameList
+            optD['dbName'] = dbName
+            # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             numPaths = len(pathList)
             logger.info("Processing %d total paths" % numPaths)
             numProc = min(numProc, numPaths)
-            maxStepLength = 2000
+            maxStepLength = self.__maxStepLength
             if numPaths > maxStepLength:
                 numLists = int(numPaths / maxStepLength)
                 subLists = [pathList[i::numLists] for i in range(numLists)]
@@ -146,69 +158,6 @@ class MongoDbLoaderWorker(object):
 
         return False
 
-    def loadContentTypePrev(self, contentType, loadType='full', inputPathList=None, styleType='rowwise_by_name', documentSelectors=None,
-                            failedFilePath=None, saveInputFileListPath=None, pruneDocumentSize=None):
-        """  Driver method for loading MongoDb content -
-
-            contentType:  one of 'bird','bird_family','bird_chem_comp', chem_comp','pdbx'
-            #
-            loadType:     "full" or "replace"
-            styleType:    one of 'rowwise_by_name', 'columnwise_by_name', 'rowwise_no_name', 'rowwise_by_name_with_cardinality'
-
-        """
-        try:
-            startTime = self.__begin(message="loading operation")
-            #
-            pathList = self.__ctU.getPathList(contentType=contentType, inputPathList=inputPathList)
-            # pathList = self.__getPathInfo(contentType, inputPathList=inputPathList)
-            #
-            if saveInputFileListPath:
-                self.__writePathList(saveInputFileListPath, pathList)
-                logger.info("Saving %d paths in %s" % (len(pathList), saveInputFileListPath))
-            #
-            optD = {}
-            optD['contentType'] = contentType
-            optD['styleType'] = styleType
-            optD['readBackCheck'] = self.__readBackCheck
-            optD['logSize'] = self.__verbose
-            optD['documentSelectors'] = documentSelectors
-            optD['loadType'] = loadType
-            optD['pruneDocumentSize'] = pruneDocumentSize
-            # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
-            #
-
-            numProc = self.__numProc
-            chunkSize = self.__chunkSize if inputPathList and self.__chunkSize < len(inputPathList) else 0
-            #
-            _, dbName, collectionNameList, primaryIndexD = self.__ctU.getSchemaInfo(contentType)
-            for collectionName in collectionNameList:
-                if loadType == 'full':
-                    self.__removeCollection(dbName, collectionName)
-                    indAt = primaryIndexD[collectionName] if collectionName in primaryIndexD else None
-                    self.__createCollection(dbName, collectionName, indAt)
-
-            #
-            #
-            mpu = MultiProcUtil(verbose=True)
-            mpu.setOptions(optionsD=optD)
-            mpu.set(workerObj=self, workerMethod="loadWorker")
-            ok, failList, retLists, diagList = mpu.runMulti(dataList=pathList, numProc=numProc, numResults=1, chunkSize=chunkSize)
-            logger.debug("Failing path list %r" % failList)
-            logger.info("Load path list length %d failed load list length %d" % (len(pathList), len(failList)))
-            #
-            if failedFilePath and len(failList) > 0:
-                wOk = self.__writePathList(failedFilePath, failList)
-                logger.info("Writing load failure path list to %s status %r" % (failedFilePath, wOk))
-            #
-            self.__end(startTime, "loading operation with status " + str(ok))
-
-            #
-            return ok
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-
-        return False
-
     def loadWorker(self, dataList, procName, optionsD, workingDir):
         """ Multi-proc worker method for MongoDb loading -
         """
@@ -216,6 +165,7 @@ class MongoDbLoaderWorker(object):
             startTime = self.__begin(message=procName)
             # Recover common options
             styleType = optionsD['styleType']
+            filterType = optionsD['filterType']
             readBackCheck = optionsD['readBackCheck']
             logSize = 'logSize' in optionsD and optionsD['logSize']
             documentSelectors = optionsD['documentSelectors']
@@ -223,14 +173,18 @@ class MongoDbLoaderWorker(object):
             contentType = optionsD['contentType']
             pruneDocumentSize = optionsD['pruneDocumentSize']
             #
+            sd = optionsD['schemaDefObj']
+            dtf = optionsD['dataTransformFactory']
+            collectionNameList = optionsD['collectionNameList']
+            dbName = optionsD['dbName']
+            #
             fType = "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
             if styleType in ["columnwise_by_name", "rowwise_no_name"]:
                 fType = "drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
             # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             #
-            sd, dbName, collectionNameList, _ = self.__ctU.getSchemaInfo(contentType)
-            sdp = SchemaDefDataPrep(schemaDefObj=sd, verbose=self.__verbose)
-            containerList = sdp.getContainerList(dataList, filterType=fType)
+            sdp = SchemaDefDataPrep(schemaDefObj=sd, dtObj=dtf, verbose=self.__verbose)
+            containerList = sdp.getContainerList(dataList, filterType=filterType)
             #
             logger.debug("%s contentType %s dbName %s collectionNameList %s pathlist length %d containerList length %d" %
                          (procName, contentType, dbName, collectionNameList, len(dataList), len(containerList)))

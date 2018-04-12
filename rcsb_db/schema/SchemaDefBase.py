@@ -321,13 +321,13 @@ class TableDef(object):
         except Exception as e:
             return None
 
-    def getAttributeIdMap(self):
+    def getAttributeIdDict(self):
         try:
             return self.__tD['ATTRIBUTES']
         except Exception as e:
             return {}
 
-    def getAttributeNameMap(self):
+    def getAttributeNameDict(self):
         try:
             return {v: k for k, v in self.__tD['ATTRIBUTES'].items()}
         except Exception as e:
@@ -551,12 +551,26 @@ class TableDef(object):
         except Exception as e:
             return None
 
-    def getMapAttributeDict(self):
+    def getMapAttributeIdDict(self):
         """ Return the dictionary of d[schema attribute id] = mapped instance category attribute
+
+            Exclude and attributes that lack a schema mapping (e.g. functional mappings )
         """
         d = {}
         for k, v in self.__tD['ATTRIBUTE_MAP'].items():
-            d[k] = v[1]
+            if v[1]:
+                d[k] = v[1]
+        return d
+
+    def getMapAttributeNameDict(self):
+        """ Return the dictionary of d[schema attribute id] = mapped instance category attribute
+
+            Exclude and attributes that lack a schema mapping (e.g. functional mappings )
+        """
+        d = {}
+        for k, v in self.__tD['ATTRIBUTE_MAP'].items():
+            if v[1]:
+                d[v[1]] = k
         return d
 
     def getMapMergeIndexAttributes(self, categoryName):
@@ -618,6 +632,14 @@ class TableDef(object):
     def isIterable(self, attributeId):
         try:
             return 'ITERABLE' in self.__tD['ATTRIBUTE_INFO'][attributeId]
+        except Exception as e:
+            return False
+
+    def isOtherAttributeType(self, attributeId):
+        """ Get the list of attributes that have no assigned instance mapping.
+        """
+        try:
+            return self.__tD['ATTRIBUTE_MAP'][attributeId][0] is None
         except Exception as e:
             return False
 

@@ -15,6 +15,7 @@
 #      22-Mar-2018  jdw change contentSelectors to documentSelectors ...
 #      25-Mar-2018  jdw improve handling of selected / excluded tables -
 #       9-Apr-2018  jdw add attribute level filtering
+#      11-Apr-2018  jdw integrate DataTransformFactory()
 #
 ##
 """
@@ -53,11 +54,12 @@ class SchemaDefDataPrep(object):
         with an external schema definition defined in class SchemaDefBase().
     """
 
-    def __init__(self, schemaDefObj, ioObj=IoAdapter(), verbose=True):
+    def __init__(self, schemaDefObj, ioObj=IoAdapter(), dtObj=None, verbose=True):
         self.__verbose = verbose
         self.__debug = False
         self.__sD = schemaDefObj
         self.__ioObj = ioObj
+        self.__dtObj = dtObj
         #
         self.__overWrite = {}
         #
@@ -531,54 +533,14 @@ class SchemaDefDataPrep(object):
             mapped from the input instance category.
         """
         #
-        dropEmptyFlag = 'drop-empty-attributes' in filterType
-        skipMaxWidthFlag = 'skip-max-width' in filterType
-        assignDateFlag = 'assign-dates' in filterType
-        convertIterables = 'convert-iterables' in filterType
-
         retList = []
         catObj = myContainer.getObj(categoryName)
         if catObj is None:
             return retList
-
-        attributeIndexDict = catObj.getAttributeIndexDict()
-        schemaTableId = tObj.getId()
-        schemaAttributeMapDict = tObj.getMapAttributeDict()
-        schemaAttributeIdList = tObj.getAttributeIdList()
-        nullValueDict = tObj.getSqlNullValueDict()
-        curAttributeIdList = tObj.getMapInstanceAttributeIdList(categoryName)
-
-        wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
-        wsStripFlagD = {}
-        for atId in curAttributeIdList:
-            wsStripFlagD[atId] = tObj.getAttributeFilterType(atId) == "STRIP_WS"
+        attributeNameList = catObj.getAttributeList()
         #
         for row in catObj.getRowList():
-            d = {}
-            if not dropEmptyFlag:
-                for atId in schemaAttributeIdList:
-                    d[atId] = nullValueDict[atId]
-
-            for atId in curAttributeIdList:
-                try:
-                    atName = schemaAttributeMapDict[atId]
-                    if atName not in attributeIndexDict:
-                        continue
-                    val = row[attributeIndexDict[atName]]
-                    if wsStripFlagD[atId]:
-                        val = wsPattern.sub("", val)
-                    lenVal = len(val)
-                    # Handle the Null values - note the implications of retaining null values accross types -
-                    if ((lenVal == 0) or (val == '?') or (val == '.')):
-                        if not dropEmptyFlag:
-                            d[atId] = nullValueDict[atId]
-                        continue
-                    d[atId] = self.__assignType(val, lenVal, tObj, atId, skipMaxWidthFlag, assignDateFlag, convertIterables)
-                except Exception as e:
-                    if (self.__verbose):
-                        logger.error("\n+ERROR - processing table %s attribute %s row %r\n" % (schemaTableId, atId, row))
-                        logger.exception("Failing with %s" % str(e))
-
+            d = self.__dtObj.processRecord(tObj.getId(), row, attributeNameList)
             retList.append(d)
 
         return retList
@@ -593,43 +555,20 @@ class SchemaDefDataPrep(object):
             Return a list of dictionaries with schema attribute Id keys containing data
             mapped from the input instance category.
         """
-        #
-        dropEmptyFlag = 'drop-empty-attributes' in filterType
-        skipMaxWidthFlag = 'skip-max-width' in filterType
-        assignDateFlag = 'assign-dates' in filterType
-        convertIterables = 'convert-iterables' in filterType
-        #
-
         # Consider mD as orderdict
         mD = {}
         for categoryName in categoryNameList:
             catObj = myContainer.getObj(categoryName)
             if catObj is None:
                 continue
-
+            attributeNameList = catObj.getAttributeList()
             attributeIndexDict = catObj.getAttributeIndexDict()
-            schemaTableId = tObj.getId()
-            schemaAttributeMapDict = tObj.getMapAttributeDict()
-            schemaAttributeIdList = tObj.getAttributeIdList()
-            nullValueDict = tObj.getSqlNullValueDict()
-            curAttributeIdList = tObj.getMapInstanceAttributeIdList(categoryName)
-            #
-            wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
-            wsStripFlagD = {}
-            for atId in curAttributeIdList:
-                wsStripFlagD[atId] = tObj.getAttributeFilterType(atId) == "STRIP_WS"
             #
             # dictionary of merging indices for each attribute in this category -
             #
             indL = tObj.getMapMergeIndexAttributes(categoryName)
 
             for row in catObj.getRowList():
-                # initialize full table row --
-                d = {}
-                if not dropEmptyFlag:
-                    for atId in schemaAttributeIdList:
-                        d[atId] = nullValueDict[atId]
-
                 # assign merge index
                 mK = []
                 for atName in indL:
@@ -639,25 +578,10 @@ class SchemaDefDataPrep(object):
                         # would reflect a serious issue of missing key-
                         if (self.__debug):
                             logger.exception("Failing with %s" % str(e))
+                #
 
-                for atId in curAttributeIdList:
-                    try:
-                        atName = schemaAttributeMapDict[atId]
-                        val = row[attributeIndexDict[atName]]
-                        if wsStripFlagD[atId]:
-                            val = wsPattern.sub("", val)
-                        lenVal = len(val)
-                        # Handle the Null values - note the implications of retaining null values accross types -
-                        if ((lenVal == 0) or (val == '?') or (val == '.')):
-                            if not dropEmptyFlag:
-                                d[atId] = nullValueDict[atId]
-                            continue
-                        d[atId] = self.__assignType(val, lenVal, tObj, atId, skipMaxWidthFlag, assignDateFlag, convertIterables)
-                        #
-                    except Exception as e:
-                        # only for testing -
-                        if (self.__debug):
-                            logger.exception("Failing with %s" % str(e))
+                d = self.__dtObj.processRecord(tObj.getId(), row, attributeNameList)
+
                 #
                 # Update this row using exact matching of the merging key --
                 # jdw  - will later add more complex comparisons
@@ -669,47 +593,6 @@ class SchemaDefDataPrep(object):
                 mD[tk].update(d)
 
         return mD.values()
-
-    def __assignType(self, val, lenVal, tObj, atId, skipMaxWidthFlag, assignDateFlag, convertIterables):
-        """  Cast the input value according to type metadata details and control input -
-        """
-        try:
-            maxW = 0 if skipMaxWidthFlag else tObj.getAttributeWidth(atId)
-            #
-            #  Iterables are not currently composable with specialt types/filtering
-            if convertIterables and tObj.isIterable(atId):
-                if tObj.isAttributeStringType(atId):
-                    return [v.strip() for v in val.split(tObj.getIterableSeparator(atId))]
-                elif tObj.isAttributeIntegerType(atId):
-                    return [int(v.strip()) for v in val.split(tObj.getIterableSeparator(atId))]
-                elif tObj.isAttributeFloatType(atId):
-                    return [float(v.strip()) for v in val.split(tObj.getIterableSeparator(atId))]
-            #
-            if tObj.isAttributeStringType(atId) and maxW > 0:
-                return val[:maxW]
-            elif tObj.isAttributeStringType(atId):
-                return val
-            elif tObj.isAttributeIntegerType(atId):
-                return int(val)
-            elif tObj.isAttributeFloatType(atId):
-                return float(val)
-            elif assignDateFlag and tObj.isAttributeDateType(atId):
-                value = val.replace(":", " ", 1)
-                return dateutil.parser.parse(value)
-            else:
-                return str(val)
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-
-    def __assignDateType(self, atId, value):
-        """   yyyy-mm-dd  or yyyy-mm-dd:hh:mm:ss
-        """
-        try:
-            value = value.replace(":", " ", 1)
-            return dateutil.parser.parse(value)
-        except Exception as e:
-            logger.exception("Attribute processing error %s %s : %s" % (atId, value, str(e)))
-        return value
 
 
 if __name__ == '__main__':

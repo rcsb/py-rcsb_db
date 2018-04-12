@@ -8,6 +8,7 @@
 #
 #   9-Apr-2018 jdw add new schema and file management
 #   9-Apr-2019 jdw add pdbx prep examples -
+#  11-Apr-2018  jdw integrate DataTransformFactory()
 #
 ##
 """
@@ -30,7 +31,7 @@ import unittest
 import json
 
 import logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -43,6 +44,7 @@ except Exception as e:
     from rcsb_db import __version__
 #
 from rcsb_db.loaders.SchemaDefDataPrep import SchemaDefDataPrep
+from rcsb_db.loaders.DataTransformFactory import DataTransformFactory
 from rcsb_db.utils.ConfigUtil import ConfigUtil
 from rcsb_db.utils.ContentTypeUtil import ContentTypeUtil
 
@@ -67,6 +69,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         #
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width"
         self.__fTypeCol = "drop-empty-tables|skip-max-width"
+        self.__chemCompMockLen = 4
         self.__birdMockLen = 3
         self.__pdbxMockLen = 8
         self.__verbose = True
@@ -81,14 +84,64 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                             endTime - self.__startTime))
 
+    def testPrepChemCompDocumentsFromFiles(self):
+        """Test case -  create loadable BIRD data from files
+        """
+        try:
+            inputPathList = self.__ctU.getPathList(contentType='chem_comp')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
+            #
+            dtf = DataTransformFactory(schemaDefObj=sd, filterType=self.__fTypeRow)
+            sdp = SchemaDefDataPrep(schemaDefObj=sd, dtObj=dtf, verbose=self.__verbose)
+            #
+            #
+            logger.debug("Length of path list %d\n" % len(inputPathList))
+            self.assertGreaterEqual(len(inputPathList), self.__birdMockLen)
+
+            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_by_name", filterType=self.__fTypeRow)
+            self.assertGreaterEqual(len(tableDataDictList), self.__chemCompMockLen)
+            self.assertGreaterEqual(len(containerNameList), self.__chemCompMockLen)
+            self.assertEqual(len(rejectList), 0)
+            with open(os.path.join(HERE, "test-output", "chem-comp-file-prep-rowwise-by-name.json"), 'w') as ofh:
+                ofh.write(json.dumps(tableDataDictList, indent=3))
+            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_by_name_with_cardinality",
+                                                                                  filterType=self.__fTypeRow, documentSelectors=["CHEM_COMP_PUBLIC_RELEASE"])
+            self.assertGreaterEqual(len(tableDataDictList), self.__chemCompMockLen)
+            self.assertGreaterEqual(len(containerNameList), self.__chemCompMockLen)
+            self.assertEqual(len(rejectList), 0)
+            with open(os.path.join(HERE, "test-output", "chem-comp-file-prep-rowwise-by-name-with-cardinality.json"), 'w') as ofh:
+                ofh.write(json.dumps(tableDataDictList, indent=3))
+
+            dtf = DataTransformFactory(schemaDefObj=sd, filterType=self.__fTypeCol)
+            sdp = SchemaDefDataPrep(schemaDefObj=sd, dtObj=dtf, verbose=self.__verbose)
+            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="columnwise_by_name", filterType=self.__fTypeCol)
+            self.assertGreaterEqual(len(tableDataDictList), self.__chemCompMockLen)
+            self.assertGreaterEqual(len(containerNameList), self.__chemCompMockLen)
+            self.assertEqual(len(rejectList), 0)
+            with open(os.path.join(HERE, "test-output", "chem-comp-file-prep-columnwise-by-name.json"), 'w') as ofh:
+                ofh.write(json.dumps(tableDataDictList, indent=3))
+
+            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_no_name", filterType=self.__fTypeCol)
+            self.assertGreaterEqual(len(tableDataDictList), self.__chemCompMockLen)
+            self.assertGreaterEqual(len(containerNameList), self.__chemCompMockLen)
+            self.assertEqual(len(rejectList), 0)
+            with open(os.path.join(HERE, "test-output", "chem-comp-file-prep-rowwise-no-name.json"), 'w') as ofh:
+                ofh.write(json.dumps(tableDataDictList, indent=3))
+
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
     def testPrepBirdDocumentsFromFiles(self):
         """Test case -  create loadable BIRD data from files
         """
         try:
             inputPathList = self.__ctU.getPathList(contentType='bird')
-            bsd, _, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
             #
-            sdp = SchemaDefDataPrep(schemaDefObj=bsd, verbose=self.__verbose)
+            dtf = DataTransformFactory(schemaDefObj=sd, filterType=self.__fTypeRow)
+            sdp = SchemaDefDataPrep(schemaDefObj=sd, dtObj=dtf, verbose=self.__verbose)
+            #
             #
             logger.debug("Length of path list %d\n" % len(inputPathList))
             self.assertGreaterEqual(len(inputPathList), self.__birdMockLen)
@@ -108,6 +161,8 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             with open(os.path.join(HERE, "test-output", "bird-file-prep-rowwise-by-name-with-cardinality.json"), 'w') as ofh:
                 ofh.write(json.dumps(tableDataDictList, indent=3))
 
+            dtf = DataTransformFactory(schemaDefObj=sd, filterType=self.__fTypeCol)
+            sdp = SchemaDefDataPrep(schemaDefObj=sd, dtObj=dtf, verbose=self.__verbose)
             tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="columnwise_by_name", filterType=self.__fTypeCol)
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
@@ -131,11 +186,11 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         """
 
         try:
-            # self.testBirdPathList()
             inputPathList = self.__ctU.getPathList(contentType='bird')
-            bsd, _, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            dtf = DataTransformFactory(schemaDefObj=sd, filterType=self.__fTypeRow)
+            sdp = SchemaDefDataPrep(schemaDefObj=sd, dtObj=dtf, verbose=self.__verbose)
             #
-            sdp = SchemaDefDataPrep(schemaDefObj=bsd, verbose=self.__verbose)
             containerList = sdp.getContainerList(inputPathList, filterType="none")
             self.assertGreaterEqual(len(containerList), self.__birdMockLen)
             #
@@ -153,7 +208,10 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.assertEqual(len(rejectList), 1)
             with open(os.path.join(HERE, "test-output", "bird-container-prep-rowwise-by-name-with-cardinality.json"), 'w') as ofh:
                 ofh.write(json.dumps(tableDataDictList, indent=3))
-
+            #
+            #
+            dtf = DataTransformFactory(schemaDefObj=sd, filterType=self.__fTypeCol)
+            sdp = SchemaDefDataPrep(schemaDefObj=sd, dtObj=dtf, verbose=self.__verbose)
             tableDataDictList, containerNameList, rejectList = sdp.processDocuments(containerList, styleType="columnwise_by_name", filterType=self.__fTypeCol)
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
@@ -179,7 +237,8 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             inputPathList = self.__ctU.getPathList(contentType='pdbx')
             sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
             #
-            sdp = SchemaDefDataPrep(schemaDefObj=sd, verbose=self.__verbose)
+            dtf = DataTransformFactory(schemaDefObj=sd, filterType=self.__fTypeRow)
+            sdp = SchemaDefDataPrep(schemaDefObj=sd, dtObj=dtf, verbose=self.__verbose)
             #
             logger.debug("Length of path list %d\n" % len(inputPathList))
             self.assertGreaterEqual(len(inputPathList), self.__pdbxMockLen)
@@ -198,7 +257,9 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.assertEqual(len(rejectList), 0)
             with open(os.path.join(HERE, "test-output", "pdbx-file-prep-rowwise-by-name-with-cardinality.json"), 'w') as ofh:
                 ofh.write(json.dumps(tableDataDictList, indent=3))
-
+            # ---------------------  change global filters ----------------------------
+            dtf = DataTransformFactory(schemaDefObj=sd, filterType=self.__fTypeCol)
+            sdp = SchemaDefDataPrep(schemaDefObj=sd, dtObj=dtf, verbose=self.__verbose)
             tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="columnwise_by_name", filterType=self.__fTypeCol)
             self.assertGreaterEqual(len(tableDataDictList), self.__pdbxMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__pdbxMockLen)
@@ -218,6 +279,12 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.fail()
 
 
+def prepChemCompSuite():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(SchemaDefDataPrepTests("testPrepChemCompDocumentsFromFiles"))
+    return suiteSelect
+
+
 def prepBirdSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(SchemaDefDataPrepTests("testPrepBirdDocumentsFromFiles"))
@@ -232,8 +299,10 @@ def prepPdbxSuite():
 
 
 if __name__ == '__main__':
-    #
-    if False:
+    if True:
+        mySuite = prepChemCompSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
+    if True:
         mySuite = prepBirdSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
     if True:

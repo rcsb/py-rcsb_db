@@ -1,0 +1,276 @@
+##
+# File:    DataTransformFactory.py
+# Author:  J. Westbrook
+# Date:    10-Apr-2018
+#
+#
+# Updates:
+#
+##
+"""
+Factory for functional elements of the transformations between input data and
+and loadable data using specifications from the schema map definition.
+
+"""
+__docformat__ = "restructuredtext en"
+__author__ = "John Westbrook"
+__email__ = "jwest@rcsb.rutgers.edu"
+__license__ = "Apache 2.0"
+
+
+import time
+import datetime
+
+import re
+import dateutil.parser
+import collections
+from functools import reduce
+TrfValue = collections.namedtuple('TrfValue', 'value, atId, origLength, isNull')
+
+
+import logging
+logger = logging.getLogger(__name__)
+#
+
+
+class DataTransformFactory(object):
+    """Factory for functional elements of the transformations between input data and
+        and loadable data using specifications from the schema map definition.
+
+        input string value -> (Null Handling -> cast type ->)
+
+        input string iterable value ->
+
+
+    """
+
+    def __init__(self, schemaDefObj, filterType):
+        self.__sD = schemaDefObj
+        self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
+        logger.debug("filterType %r" % filterType)
+        logger.debug("Schema database %r" % self.__sD.getDatabaseName())
+        self.__FLAGS = {}
+        self.__FLAGS['dropEmpty'] = 'drop-empty-attributes' in filterType
+        self.__FLAGS['skipMaxWidth'] = 'skip-max-width' in filterType
+        self.__FLAGS['assignDates'] = 'assign-dates' in filterType
+        self.__FLAGS['convertIterables'] = 'convert-iterables' in filterType
+        #
+        self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
+        self.__dT = self.__build()
+
+    def __build(self):
+        """  fD[tableId] -> {atId1: [f1,f2,.. ], atId2: [f1,f2,...], ...}
+        """
+        fD = {}
+        for tableId in self.__sD.getTableIdList():
+            tD = {}
+            tObj = self.__sD.getTable(tableId)
+            dt = DataTransform(tObj)
+            aD = {}
+            for atId in tObj.getAttributeIdList():
+                if tObj.isOtherAttributeType(atId):
+                    # skip attributes with no mapping correspondence
+                    continue
+                #
+                aD[atId] = []
+                #
+                if self.__FLAGS['convertIterables'] and tObj.isIterable(atId):
+                    if tObj.isAttributeStringType(atId):
+                        aD[atId].append(dt.castIterableString)
+                    elif tObj.isAttributeIntegerType(atId):
+                        aD[atId].append(dt.castIterableInteger)
+                    elif tObj.isAttributeFloatType(atId):
+                        aD[atId].append(dt.castIterableFloat)
+                #
+                elif tObj.isAttributeStringType(atId):
+                    aD[atId].append(dt.castString)
+                    if not self.__FLAGS['skipMaxWidth']:
+                        aD[atId].append(dt.truncateString)
+                    if tObj.getAttributeFilterType(atId) == "STRIP_WS":
+                        aD[atId].append(dt.stripWhiteSpace)
+                elif tObj.isAttributeIntegerType(atId):
+                    aD[atId].append(dt.castInteger)
+                elif tObj.isAttributeFloatType(atId):
+                    aD[atId].append(dt.castFloat)
+                elif self.__FLAGS['assignDates'] and tObj.isAttributeDateType(atId):
+                    aD[atId].append(dt.castDateToObj)
+                else:
+                    aD[atId].append(dt.castString)
+            #
+            # Transformation functions keyed by attribute 'name'
+            tD['atIdD'] = tObj.getMapAttributeIdDict()
+            tD['atNameD'] = tObj.getMapAttributeNameDict()
+            tD['atNullValues'] = tObj.getSqlNullValueDict()
+            tD['atFuncD'] = {tD['atIdD'][k]: v for k, v in aD.items()}
+            #
+            fD[tableId] = tD
+        #
+        return fD
+
+    def get(self, tableId):
+        try:
+            return self.__dT[tableId]
+        except Exception as e:
+            logger.error("Missing table %r" % tableId)
+        return {}
+
+    def processRecord(self, tableId, row, attributeNameList):
+        """
+            Input row data ordered according to the input attribute names list.
+
+        from functools import reduce
+        [reduce(lambda x, y: y(x), reversed(cfL), v) for v in dL]
+
+        return   d[atId]=rowdata
+
+        """
+        # get the transform object for the current table
+
+        dT = self.get(tableId)
+        #
+        atName = None
+        try:
+            d = {} if self.__FLAGS['dropEmpty'] else {k: v for k, v in dT['atNullValues'].items()}
+            for ii, atName in enumerate(attributeNameList):
+                if atName not in dT['atNameD']:
+                    continue
+                vT = reduce(lambda x, y: y(x), dT['atFuncD'][atName], TrfValue(row[ii], dT['atNameD'][atName], 0, False))
+                if self.__FLAGS['dropEmpty'] and vT.isNull:
+                    continue
+                d[dT['atNameD'][atName]] = vT.value
+        except Exception as e:
+            logger.exception("Failing with %s for table %s atName %s" % (str(e), tableId, atName))
+
+        return d
+
+
+class DataTransform(object):
+    """ Factory for functional elements of the transformations between input data and
+        and loadable data using specifications from the schema map definition.
+
+        input string value -> (Null Handling -> cast type ->)
+
+        input string iterable value ->
+    """
+
+    def __init__(self, tObj):
+        #
+        self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
+
+        # SchemaDef Table Object -
+        self.__tObj = tObj
+        #
+
+    def castString(self, trfTup):
+        """
+            Return:  TrfValue tuple
+        """
+        if trfTup.isNull:
+            return trfTup
+        origLength = len(trfTup.value)
+        if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
+            return TrfValue(self.__tObj.getSqlNullValue(trfTup.atId), trfTup.atId, origLength, True)
+        return TrfValue(trfTup.value, trfTup.atId, origLength, False)
+
+    def castIterableString(self, trfTup):
+        """
+            Return:  TrfValue tuple
+        """
+        if trfTup.isNull:
+            return trfTup
+        origLength = len(trfTup.value)
+        if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
+            return TrfValue(self.__tObj.getSqlNullValue(trfTup.atId), trfTup.atId, origLength, True)
+        vL = [v.strip() for v in trfTup.value.split(self.__tObj.getIterableSeparator(trfTup.atId))]
+        return TrfValue(vL, trfTup.atId, origLength, False)
+
+    def castInteger(self, trfTup):
+        """
+            Return:  TrfValue tuple
+        """
+        if trfTup.isNull:
+            return trfTup
+        origLength = len(trfTup.value)
+        if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
+            return TrfValue(self.__tObj.getSqlNullValue(trfTup.atId), trfTup.atId, origLength, True)
+        return TrfValue(int(trfTup.value), trfTup.atId, origLength, False)
+
+    def castIterableInteger(self, trfTup):
+        """
+            Return:  TrfValue tuple
+        """
+        if trfTup.isNull:
+            return trfTup
+        origLength = len(trfTup.value)
+        if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
+            return TrfValue(self.__tObj.getSqlNullValue(trfTup.atId), trfTup.atId, origLength, True)
+        vL = [int(v.strip()) for v in trfTup.value.split(self.__tObj.getIterableSeparator(trfTup.atId))]
+        return TrfValue(vL, trfTup.atId, origLength, False)
+
+    def castFloat(self, trfTup):
+        """
+            Return:  TrfValue tuple
+        """
+        if trfTup.isNull:
+            return trfTup
+        origLength = len(trfTup.value)
+        if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
+            return TrfValue(self.__tObj.getSqlNullValue(trfTup.atId), trfTup.atId, origLength, True)
+        return TrfValue(float(trfTup.value), trfTup.atId, origLength, False)
+
+    def castIterableFloat(self, trfTup):
+        """
+            Return:  TrfValue tuple
+        """
+        if trfTup.isNull:
+            return trfTup
+        origLength = len(trfTup.value)
+        if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
+            return TrfValue(self.__tObj.getSqlNullValue(trfTup.atId), trfTup.atId, origLength, True)
+        vL = [float(v.strip()) for v in trfTup.value.split(self.__tObj.getIterableSeparator(trfTup.atId))]
+        return TrfValue(vL, trfTup.atId, origLength, False)
+
+    def castDateToObj(self, trfTup):
+        """ Cast the input date (optional time) string (yyyy-mm-dd:hh::mm:ss) to a Python DateTime object -
+
+            Return:  TrfValue tuple
+        """
+        if trfTup.isNull:
+            return trfTup
+        origLength = len(trfTup.value)
+        if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
+            return TrfValue(self.__tObj.getSqlNullValue(trfTup.atId), trfTup.atId, origLength, True)
+        tv = trfTup.value.replace(":", " ", 1)
+        return TrfValue(dateutil.parser.parse(tv), trfTup.atId, origLength, False)
+
+    def castDateToString(self, trfTup):
+        """ Cast the input date (optional time) string (yyyy-mm-dd:hh::mm:ss) as a string unchanged -
+
+            Return:  TrfValue tuple
+        """
+        if trfTup.isNull:
+            return trfTup
+        origLength = len(trfTup.value)
+        if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
+            return TrfValue(self.__tObj.getSqlNullValue(trfTup.atId), trfTup.atId, origLength, True)
+        return TrfValue(trfTup.value, trfTup.atId, origLength, False)
+
+    def stripWhiteSpace(self, trfTup):
+        """ Remove all white space from the input value.
+
+            Return:  ReturnValue tuple
+        """
+        if trfTup.isNull:
+            return trfTup
+        value = self.__wsPattern.sub("", trfTup.value)
+        return TrfValue(value, trfTup.atId, trfTup.origLength, False)
+
+    def truncateString(self, trfTup):
+        """ Truncate string value to maximum length setting.
+
+            Return:  ReturnValue tuple
+        """
+        if trfTup.isNull:
+            return trfTup
+        return TrfValue(trfTup.value[:self.__tObj.getAttributeWidth(trfTup.atId)], trfTup.atId, trfTup.origLength, False)
+
