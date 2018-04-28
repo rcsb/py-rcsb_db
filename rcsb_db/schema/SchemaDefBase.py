@@ -216,8 +216,8 @@ class SchemaDefBase(object):
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
 
-    def getSchema(self):
-        return self.__schemaDefDict
+    #def getSchema(self):
+    #    return self.__schemaDefDict
 
     def getDatabaseName(self):
         return self.__databaseName
@@ -226,7 +226,7 @@ class SchemaDefBase(object):
         return self.__versionedDatabaseName
 
     def getTable(self, tableId):
-        return TableDef(tableDefDict=self.__schemaDefDict[tableId], verbose=self.__verbose)
+        return SchemaDef(schemaDefDict=self.__schemaDefDict[tableId], verbose=self.__verbose)
 
     def getTableName(self, tableId):
         try:
@@ -294,14 +294,14 @@ class SchemaDefBase(object):
         return qAN
 
 
-class TableDef(object):
+class SchemaDef(object):
 
     """  Wrapper class for table schema definition.
     """
 
-    def __init__(self, tableDefDict={}, verbose=True):
+    def __init__(self, schemaDefDict={}, verbose=True):
         self.__verbose = verbose
-        self.__tD = tableDefDict
+        self.__tD = schemaDefDict
 
     def getName(self):
         try:
