@@ -64,6 +64,7 @@ class SchemaMapBuildTests(unittest.TestCase):
         try:
             smb = SchemaDefBuild(dictPath=self.__pathPdbxDictionaryFile, cardinalityKeyItem='_entry.id')
             cD = smb.create(applicationName="ANY", blockAttributeName="Structure_ID")
+            #
             logger.info("Dictionary category length %d" % len(cD))
             self.__saveSchemaMapDef(self.__pathSaveDefJson, cD)
         except Exception as e:

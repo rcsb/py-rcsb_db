@@ -53,8 +53,8 @@ class SchemaDictInfo(object):
         self.__dictSchema = {catName: self.getCategoryAttributes(catName) for catName in self.__categoryList}
         #
         unitCardinalityList = self.__getUnitCardinalityCategories(cardinalityKeyItem)
-        self.__categoryFeatures = {catName: self.getCategoryFeatures(catName, unitCardinalityList) for catName in self.__categoryList}
-        self.__attributeFeatures = {catName: self.getAttributeFeatures(catName, iTypeCodes, iQueryStrings) for catName in self.__categoryList}
+        self.__categoryFeatures = {catName: self.__getCategoryFeatures(catName, unitCardinalityList) for catName in self.__categoryList}
+        self.__attributeFeatures = {catName: self.__getAttributeFeatures(catName, iTypeCodes, iQueryStrings) for catName in self.__categoryList}
 
     def getCategories(self):
         """
@@ -73,7 +73,21 @@ class SchemaDictInfo(object):
         """
         return self.__dApi.getAttributeNameList(catName)
 
-    def getAttributeFeatures(self, catName, iTypeCodes, iQueryStrings):
+    def getCategoryFeatures(self, catName):
+        try:
+            return self.__categoryFeatures[catName]
+        except Exception as e:
+            logger.error("Missing category %s %s" % (catName, str(e)))
+        return {}
+
+    def getAttributeFeatures(self, catName):
+        try:
+            return self.__attributeFeatures[catName]
+        except Exception as e:
+            logger.error("Missing category %s %s" % (catName, str(e)))
+        return {}
+
+    def __getAttributeFeatures(self, catName, iTypeCodes, iQueryStrings):
         """
         Args:
             catName (string): Description
@@ -107,7 +121,7 @@ class SchemaDictInfo(object):
         #
         return aD
 
-    def getCategoryFeatures(self, catName, unitCardinalityList):
+    def __getCategoryFeatures(self, catName, unitCardinalityList):
         cD = {'KEY_ATTRIBUTES': []}
         cD['KEY_ATTRIBUTES'] = [CifName.attributePart(keyItem) for keyItem in self.__dApi.getCategoryKeyList(catName)]
         cD['UNIT_CARDINALITY'] = catName in unitCardinalityList
@@ -275,9 +289,9 @@ class SchemaDefBuild(object):
         for catName, atNameList in dictSchema.items():
             if catName in categoryExcludeList:
                 continue
-            if catName not in categoryIncludeList:
+            if categoryIncludeList and catName not in categoryIncludeList:
                 continue
-            cfD = self.__sdi.categoryFeatures(catName)
+            cfD = self.__sdi.getCategoryFeatures(catName)
             sName = self.__convertName(catName)
             sId = sName.upper()
             d = {}
@@ -303,8 +317,9 @@ class SchemaDefBuild(object):
                 atIdIndexList.append((self.__convertName(blockAttributeName)).upper())
             #
             #
-            fD = self.__attributeFeatures(catName)
+            aD = self.__sdi.getAttributeFeatures(catName)
             for ii, atName in enumerate(sorted(atNameList), iOrder):
+                fD = aD[atName]
                 if fD['IS_KEY']:
                     appType = self.__dtInfo.getAppTypeName(fD['TYPE_CODE'])
                     appPrecision = self.__dtInfo.getAppTypePrecision(fD['TYPE_CODE'])
