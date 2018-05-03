@@ -120,8 +120,9 @@ class ScanRepoUtil(object):
             if subLists and len(subLists) > 0:
                 logger.info("Starting with numProc %d outer subtask count %d subtask length ~ %d" % (numProc, len(subLists), len(subLists[0])))
             #
+            numResults = 1
             failList = []
-            retLists = []
+            retLists = [[] for ii in range(numResults)]
             diagList = []
             for ii, subList in enumerate(subLists):
                 logger.info("Running outer subtask %d or %d length %d" % (ii + 1, len(subLists), len(subList)))
@@ -129,9 +130,11 @@ class ScanRepoUtil(object):
                 mpu = MultiProcUtil(verbose=True)
                 mpu.setOptions(optionsD=optD)
                 mpu.set(workerObj=self, workerMethod="scanWorker")
-                ok, failListT, retListsT, diagListT = mpu.runMulti(dataList=subList, numProc=numProc, numResults=1, chunkSize=chunkSize)
+                ok, failListT, retListsT, diagListT = mpu.runMulti(dataList=subList, numProc=numProc, numResults=numResults, chunkSize=chunkSize)
                 failList.extend(failListT)
-                retLists.extend(retListsT)
+                # retLists is a list of lists -
+                for ii in range(numResults):
+                    retLists[ii].extend(retListsT[ii])
                 diagList.extend(diagListT)
             logger.debug("Scan failed path list %r" % failList)
             logger.info("Scan path list length %d failed load list length %d" % (len(pathList), len(failList)))
