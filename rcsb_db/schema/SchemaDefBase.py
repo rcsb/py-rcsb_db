@@ -48,19 +48,19 @@ class SchemaDefBase(object):
                                                                     'ORDER': 1,
                                                                     'PRECISION': 0,
                                                                     'PRIMARY_KEY': True,
-                                                                    'SQL_TYPE': 'VARCHAR',
+                                                                    'APP_TYPE': 'VARCHAR',
                                                                     'WIDTH': 20},
                                                            'LOAD_DATE': {'NULLABLE': False,
                                                                          'ORDER': 2,
                                                                          'PRECISION': 0,
                                                                          'PRIMARY_KEY': True,
-                                                                         'SQL_TYPE': 'DATETIME',
+                                                                         'APP_TYPE': 'DATETIME',
                                                                          'WIDTH': 20},
                                                            'LOAD_FILE_PATH': {'NULLABLE': False,
                                                                               'ORDER': 3,
                                                                               'PRECISION': 0,
                                                                               'PRIMARY_KEY': True,
-                                                                              'SQL_TYPE': 'VARCHAR',
+                                                                              'APP_TYPE': 'VARCHAR',
                                                                               'WIDTH': 255},
                                                            },
                                         'ATTRIBUTE_MAP': {'NAME': ('__load_status__', 'name', None, None),
@@ -70,10 +70,10 @@ class SchemaDefBase(object):
                                         'INDICES': {'p1': {'ATTRIBUTES': ('NAME', 'LOAD_DATE', 'LOAD_FILE_PATH'), 'TYPE': 'UNIQUE'},
                                                     's1': {'ATTRIBUTES': ('LOAD_FILE_PATH',), 'TYPE': 'SEARCH'}},
                                         'MAP_MERGE_INDICES': {},
-                                        'TABLE_DELETE_ATTRIBUTE': 'NAME',
-                                        'TABLE_ID': '__LOAD_STATUS__',
-                                        'TABLE_NAME': '__load_status__',
-                                        'TABLE_TYPE': 'transactional'}
+                                        'SCHEMA_DELETE_ATTRIBUTE': 'NAME',
+                                        'SCHEMA_ID': '__LOAD_STATUS__',
+                                        'SCHEMA_NAME': '__load_status__',
+                                        'SCHEMA_TYPE': 'transactional'}
                     }
 
     def __init__(self, databaseName=None, schemaDefDict=None, convertNames=False, versionedDatabaseName=None, documentDefDict=None, verbose=True):
@@ -149,8 +149,8 @@ class SchemaDefBase(object):
             oL = []
             for sfD in sfDL:
                 d = {}
-                d['TABLE_NAME'] = self.getTableName(sfD['TABLE_ID'])
-                d['ATTRIBUTE_NAME'] = self.getAttributeName(sfD['TABLE_ID'], sfD['ATTRIBUTE_ID'])
+                d['SCHEMA_NAME'] = self.getTableName(sfD['SCHEMA_ID'])
+                d['ATTRIBUTE_NAME'] = self.getAttributeName(sfD['SCHEMA_ID'], sfD['ATTRIBUTE_ID'])
                 d['VALUES'] = sfD['VALUES']
                 oL.append(d)
             return oL
@@ -199,7 +199,7 @@ class SchemaDefBase(object):
 
     def __convertTableNames(self):
         for tableId in self.getTableIdList():
-            self.__schemaDefDict[tableId]['TABLE_NAME'] = self.__filterName(self.__schemaDefDict[tableId]['TABLE_NAME'])
+            self.__schemaDefDict[tableId]['SCHEMA_NAME'] = self.__filterName(self.__schemaDefDict[tableId]['SCHEMA_NAME'])
 
     def __convertAttributeNames(self):
         for tableId in self.getTableIdList():
@@ -230,7 +230,7 @@ class SchemaDefBase(object):
 
     def getTableName(self, tableId):
         try:
-            return self.__schemaDefDict[tableId]['TABLE_NAME']
+            return self.__schemaDefDict[tableId]['SCHEMA_NAME']
         except Exception as e:
             return None
 
@@ -288,7 +288,7 @@ class SchemaDefBase(object):
         tableId = tableAttributeTuple[0]
         attributeId = tableAttributeTuple[1]
         tD = self.__schemaDefDict[tableId]
-        tableName = tD['TABLE_NAME']
+        tableName = tD['SCHEMA_NAME']
         attributeName = tD['ATTRIBUTES'][attributeId]
         qAN = tableName + '.' + attributeName
         return qAN
@@ -305,19 +305,19 @@ class SchemaDef(object):
 
     def getName(self):
         try:
-            return self.__tD['TABLE_NAME']
+            return self.__tD['SCHEMA_NAME']
         except Exception as e:
             return None
 
     def getType(self):
         try:
-            return self.__tD['TABLE_TYPE']
+            return self.__tD['SCHEMA_TYPE']
         except Exception as e:
             return None
 
     def getId(self):
         try:
-            return self.__tD['TABLE_ID']
+            return self.__tD['SCHEMA_ID']
         except Exception as e:
             return None
 
@@ -349,13 +349,13 @@ class SchemaDef(object):
 
     def getAttributeType(self, attributeId):
         try:
-            return self.__tD['ATTRIBUTE_INFO'][attributeId]['SQL_TYPE']
+            return self.__tD['ATTRIBUTE_INFO'][attributeId]['APP_TYPE']
         except Exception as e:
             return None
 
     def isAutoIncrementType(self, attributeId):
         try:
-            tL = [tt.upper() for tt in self.__tD['ATTRIBUTE_INFO'][attributeId]['SQL_TYPE'].split()]
+            tL = [tt.upper() for tt in self.__tD['ATTRIBUTE_INFO'][attributeId]['APP_TYPE'].split()]
             if 'AUTO_INCREMENT' in tL:
                 return True
         except Exception as e:
@@ -364,25 +364,25 @@ class SchemaDef(object):
 
     def isAttributeStringType(self, attributeId):
         try:
-            return self.__isStringType(self.__tD['ATTRIBUTE_INFO'][attributeId]['SQL_TYPE'].upper())
+            return self.__isStringType(self.__tD['ATTRIBUTE_INFO'][attributeId]['APP_TYPE'].upper())
         except Exception as e:
             return False
 
     def isAttributeFloatType(self, attributeId):
         try:
-            return self.__isFloatType(self.__tD['ATTRIBUTE_INFO'][attributeId]['SQL_TYPE'].upper())
+            return self.__isFloatType(self.__tD['ATTRIBUTE_INFO'][attributeId]['APP_TYPE'].upper())
         except Exception as e:
             return False
 
     def isAttributeIntegerType(self, attributeId):
         try:
-            return self.__isIntegerType(self.__tD['ATTRIBUTE_INFO'][attributeId]['SQL_TYPE'].upper())
+            return self.__isIntegerType(self.__tD['ATTRIBUTE_INFO'][attributeId]['APP_TYPE'].upper())
         except Exception as e:
             return False
 
     def isAttributeDateType(self, attributeId):
         try:
-            return self.__isDateType(self.__tD['ATTRIBUTE_INFO'][attributeId]['SQL_TYPE'].upper())
+            return self.__isDateType(self.__tD['ATTRIBUTE_INFO'][attributeId]['APP_TYPE'].upper())
         except Exception as e:
             return False
 
@@ -593,9 +593,9 @@ class SchemaDef(object):
         """ Return the appropriate NULL value for this attribute:.
         """
         try:
-            if self.__isStringType(self.__tD['ATTRIBUTE_INFO'][attributeId]['SQL_TYPE'].upper()):
+            if self.__isStringType(self.__tD['ATTRIBUTE_INFO'][attributeId]['APP_TYPE'].upper()):
                 return ''
-            elif self.__isDateType(self.__tD['ATTRIBUTE_INFO'][attributeId]['SQL_TYPE'].upper()):
+            elif self.__isDateType(self.__tD['ATTRIBUTE_INFO'][attributeId]['APP_TYPE'].upper()):
                 return r'\N'
             else:
                 return r'\N'
@@ -608,9 +608,9 @@ class SchemaDef(object):
         d = {}
         for atId, atInfo in self.__tD['ATTRIBUTE_INFO'].items():
 
-            if self.__isStringType(atInfo['SQL_TYPE'].upper()):
+            if self.__isStringType(atInfo['APP_TYPE'].upper()):
                 d[atId] = ''
-            elif self.__isDateType(atInfo['SQL_TYPE'].upper()):
+            elif self.__isDateType(atInfo['APP_TYPE'].upper()):
                 d[atId] = r'\N'
             else:
                 d[atId] = r'\N'
@@ -623,7 +623,7 @@ class SchemaDef(object):
         """
         d = {}
         for atId, atInfo in self.__tD['ATTRIBUTE_INFO'].items():
-            if self.__isStringType(atInfo['SQL_TYPE'].upper()):
+            if self.__isStringType(atInfo['APP_TYPE'].upper()):
                 d[atId] = int(atInfo['WIDTH'])
             else:
                 d[atId] = 0
@@ -675,7 +675,7 @@ class SchemaDef(object):
             this schema definition (e.g. entry, definition, ...).
         """
         try:
-            return self.__tD['TABLE_DELETE_ATTRIBUTE']
+            return self.__tD['SCHEMA_DELETE_ATTRIBUTE']
         except Exception as e:
             return None
 
@@ -685,6 +685,6 @@ class SchemaDef(object):
             this schema definition (e.g. entry, definition, ...).
         """
         try:
-            return self.__tD['ATTRIBUTES'][self.__tD['TABLE_DELETE_ATTRIBUTE']]
+            return self.__tD['ATTRIBUTES'][self.__tD['SCHEMA_DELETE_ATTRIBUTE']]
         except Exception as e:
             return None

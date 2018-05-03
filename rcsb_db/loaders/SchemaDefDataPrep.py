@@ -313,7 +313,7 @@ class SchemaDefDataPrep(object):
             for cs in documentSelectors:
                 csDL = self.__sD.getDocumentSelector(cs)
                 for csD in csDL:
-                    tn = csD['TABLE_NAME']
+                    tn = csD['SCHEMA_NAME']
                     an = csD['ATTRIBUTE_NAME']
                     vals = csD['VALUES']
                     logger.debug("Applying selector %s: tn %s an %s vals %r" % (cs, tn, an, vals))

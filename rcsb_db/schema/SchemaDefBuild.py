@@ -232,19 +232,19 @@ class SchemaDefBuild(object):
                                                    'ORDER': 2,
                                                    'PRECISION': 0,
                                                    'PRIMARY_KEY': False,
-                                                   'SQL_TYPE': 'VARCHAR',
+                                                   'APP_TYPE': 'VARCHAR',
                                                    'WIDTH': 200},
                                        'ID': {'NULLABLE': False,
                                               'ORDER': 3,
                                               'PRECISION': 0,
                                               'PRIMARY_KEY': True,
-                                              'SQL_TYPE': 'VARCHAR',
+                                              'APP_TYPE': 'VARCHAR',
                                               'WIDTH': 10},
                                        'STRUCTURE_ID': {'NULLABLE': False,
                                                         'ORDER': 1,
                                                         'PRECISION': 0,
                                                         'PRIMARY_KEY': True,
-                                                        'SQL_TYPE': 'VARCHAR',
+                                                        'APP_TYPE': 'VARCHAR',
                                                         'WIDTH': 10}},
                     'ATTRIBUTE_MAP': {'DETAILS': ('atom_sites_alt', 'details', None, None),
                                       'ID': ('atom_sites_alt', 'id', None, None),
@@ -252,7 +252,7 @@ class SchemaDefBuild(object):
                     'INDICES': {'p1': {'ATTRIBUTES': ('STRUCTURE_ID', 'ID'), 'TYPE': 'UNIQUE'},
                                 's1': {'ATTRIBUTES': ('STRUCTURE_ID',), 'TYPE': 'SEARCH'}},
                     'MAP_MERGE_INDICES': {'atom_sites_alt': {'ATTRIBUTES': ('id',), 'TYPE': 'EQUI-JOIN'}},
-                    'SCHEMA_DELETE_ATTRIBUTES': 'STRUCTURE_ID',
+                    'SCHEMA_DELETE_ATTRIBUT': 'STRUCTURE_ID',
                     'SCHEMA_ID': 'ATOM_SITES_ALT',
                     'SCHEMA_NAME': 'atom_sites_alt',
                     'SCHEMA_TYPE': 'transactional'}
@@ -292,6 +292,8 @@ class SchemaDefBuild(object):
             if categoryIncludeList and catName not in categoryIncludeList:
                 continue
             cfD = self.__sdi.getCategoryFeatures(catName)
+            aD = self.__sdi.getAttributeFeatures(catName)
+            #
             sName = self.__convertName(catName)
             sId = sName.upper()
             d = {}
@@ -307,6 +309,7 @@ class SchemaDefBuild(object):
                                                                                      'METHOD_NAME': 'datablockid()', 'ARGUMENTS': None}} if blockAttributeName else {}
             d['ATTRIBUTE_MAP'].update({(self.__convertName(at)).upper(): {'CATEGORY': catName, 'ATTRIBUTE': at, 'METHOD_NAME': None, 'ARGUMENTS': None} for at in atNameList})
             #
+
             d['ATTRIBUTE_INFO'] = {}
             atIdIndexList = []
             atNameIndexList = []
@@ -314,17 +317,18 @@ class SchemaDefBuild(object):
             if blockAttributeName:
                 td = {'ORDER': iOrder, 'NULLABLE': False, 'PRECISION': 0, 'PRIMARY_KEY': True, 'APP_TYPE': 'VARCHAR', 'WIDTH': 12, 'ITERABLE': False}
                 iOrder += 1
-                atIdIndexList.append((self.__convertName(blockAttributeName)).upper())
+                atId = (self.__convertName(blockAttributeName)).upper()
+                atIdIndexList.append(atId)
+                atNameIndexList.append(blockAttributeName)
+                d['ATTRIBUTE_INFO'][atId] = td
             #
-            #
-            aD = self.__sdi.getAttributeFeatures(catName)
-            for ii, atName in enumerate(sorted(atNameList), iOrder):
+            for atName in sorted(atNameList):
                 fD = aD[atName]
                 if fD['IS_KEY']:
                     appType = self.__dtInfo.getAppTypeName(fD['TYPE_CODE'])
                     appPrecision = self.__dtInfo.getAppTypePrecision(fD['TYPE_CODE'])
                     appWidth = self.__dtInfo.getAppTypeWidth(fD['TYPE_CODE'])
-                    td = {'ORDER': ii,
+                    td = {'ORDER': iOrder,
                           'NULLABLE': fD['IS_MANDATORY'],
                           'PRECISION': appPrecision,
                           'PRIMARY_KEY': fD['IS_KEY'],
@@ -335,7 +339,23 @@ class SchemaDefBuild(object):
                     d['ATTRIBUTE_INFO'][atId] = td
                     atIdIndexList.append(atId)
                     atNameIndexList.append(atName)
-
+                    iOrder += 1
+            for atName in sorted(atNameList):
+                fD = aD[atName]
+                if not fD['IS_KEY']:
+                    appType = self.__dtInfo.getAppTypeName(fD['TYPE_CODE'])
+                    appPrecision = self.__dtInfo.getAppTypePrecision(fD['TYPE_CODE'])
+                    appWidth = self.__dtInfo.getAppTypeWidth(fD['TYPE_CODE'])
+                    td = {'ORDER': iOrder,
+                          'NULLABLE': fD['IS_MANDATORY'],
+                          'PRECISION': appPrecision,
+                          'PRIMARY_KEY': fD['IS_KEY'],
+                          'APP_TYPE': appType,
+                          'WIDTH': appWidth,
+                          'ITERABLE': False}
+                    atId = (self.__convertName(atName)).upper()
+                    d['ATTRIBUTE_INFO'][atId] = td
+                    iOrder += 1
             #
             atIdDeleteList = [self.__convertName(blockAttributeName).upper()] if blockAttributeName else atIdIndexList
             d['SCHEMA_DELETE_ATTRIBUTES'] = atIdDeleteList
@@ -353,9 +373,9 @@ class SchemaDefBuild(object):
     def __convertNameDefault(self, name):
         """ Default schema name converter -
         """
-        self.__re0 = re.compile('(database|cell|order|partition|group)$', flags=re.IGNORECASE)
-        self.__re1 = re.compile('[-/%[]')
-        self.__re2 = re.compile('[\]]')
+        #self.__re0 = re.compile('(database|cell|order|partition|group)$', flags=re.IGNORECASE)
+        #self.__re1 = re.compile('[-/%[]')
+        #self.__re2 = re.compile('[\]]')
 
         if self.__re0.match(name):
             name = 'the_' + name

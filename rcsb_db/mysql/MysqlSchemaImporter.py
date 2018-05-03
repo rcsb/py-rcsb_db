@@ -76,7 +76,7 @@ class MysqlSchemaImporter(object):
                               'ORDER': ii,
                               'PRECISION': precision,
                               'PRIMARY_KEY': keyFlag,
-                              'SQL_TYPE': sqlType.upper(),
+                              'APP_TYPE': sqlType.upper(),
                               'WIDTH': width}
         #
         d = {}
@@ -88,10 +88,10 @@ class MysqlSchemaImporter(object):
         defD['ATTRIBUTE_INFO'] = attInfo
         defD['ATTRIBUTE_MAP'] = attMap
         #
-        defD['TABLE_DELETE_ATTRIBUTE'] = attIdKeyList[0]
-        defD['TABLE_ID'] = tableId
-        defD['TABLE_NAME'] = tableName
-        defD['TABLE_TYPE'] = 'transactional'
+        defD['SCHEMA_DELETE_ATTRIBUTE'] = attIdKeyList[0]
+        defD['SCHEMA_ID'] = tableId
+        defD['SCHEMA_NAME'] = tableName
+        defD['SCHEMA_TYPE'] = 'transactional'
         # 'MAP_MERGE_INDICES': {'valence_ref': {'ATTRIBUTES': ('id',), 'TYPE': 'EQUI-JOIN'}},
         tD = {}
         tD['ATTRIBUTES'] = tuple(attIdKeyList)

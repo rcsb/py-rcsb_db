@@ -38,9 +38,9 @@ class StatusHistorySchemaDef(SchemaDefBase):
                         }
     _schemaDefDict = {
         "PDBX_DATABASE_STATUS_HISTORY": {
-            "TABLE_ID": "PDBX_DATABASE_STATUS_HISTORY",
-            "TABLE_NAME": "pdbx_database_status_history",
-            "TABLE_TYPE": "transactional",
+            'SCHEMA_ID': "PDBX_DATABASE_STATUS_HISTORY",
+            'SCHEMA_NAME': "pdbx_database_status_history",
+            'SCHEMA_TYPE': "transactional",
             "ATTRIBUTES": {
                 "ORDINAL": "ordinal",
                 "ENTRY_ID": "entry_id",
@@ -54,16 +54,16 @@ class StatusHistorySchemaDef(SchemaDefBase):
                 "DELTA_DAYS": "delta_days",
             },
             "ATTRIBUTE_INFO": {
-                "ORDINAL": {"SQL_TYPE": "INT UNSIGNED", "WIDTH": 0, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": True, "ORDER": 1},
-                "ENTRY_ID": {"SQL_TYPE": "CHAR", "WIDTH": 15, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": True, "ORDER": 2},
-                "PDB_ID": {"SQL_TYPE": "CHAR", "WIDTH": 10, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 3},
-                "DATE_BEGIN": {"SQL_TYPE": "DATETIME", "WIDTH": 10, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 4},
-                "DATE_END": {"SQL_TYPE": "DATETIME", "WIDTH": 10, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 5},
-                "STATUS_CODE_BEGIN": {"SQL_TYPE": "VARCHAR", "WIDTH": 24, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 6},
-                "STATUS_CODE_END": {"SQL_TYPE": "VARCHAR", "WIDTH": 24, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 7},
-                "ANNOTATOR": {"SQL_TYPE": "VARCHAR", "WIDTH": 10, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 8},
-                "DETAILS": {"SQL_TYPE": "VARCHAR", "WIDTH": 80, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 9},
-                "DELTA_DAYS": {"SQL_TYPE": "FLOAT", "WIDTH": 10, "PRECISION": 4, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 10},
+                "ORDINAL": {'APP_TYPE': "INT UNSIGNED", "WIDTH": 0, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": True, "ORDER": 1},
+                "ENTRY_ID": {'APP_TYPE': "CHAR", "WIDTH": 15, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": True, "ORDER": 2},
+                "PDB_ID": {'APP_TYPE': "CHAR", "WIDTH": 10, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 3},
+                "DATE_BEGIN": {'APP_TYPE': "DATETIME", "WIDTH": 10, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 4},
+                "DATE_END": {'APP_TYPE': "DATETIME", "WIDTH": 10, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 5},
+                "STATUS_CODE_BEGIN": {'APP_TYPE': "VARCHAR", "WIDTH": 24, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 6},
+                "STATUS_CODE_END": {'APP_TYPE': "VARCHAR", "WIDTH": 24, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 7},
+                "ANNOTATOR": {'APP_TYPE': "VARCHAR", "WIDTH": 10, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 8},
+                "DETAILS": {'APP_TYPE': "VARCHAR", "WIDTH": 80, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 9},
+                "DELTA_DAYS": {'APP_TYPE': "FLOAT", "WIDTH": 10, "PRECISION": 4, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 10},
             },
             'ATTRIBUTE_MAP': {
                 'ORDINAL': ('pdbx_database_status_history', 'ordinal', None, None),
@@ -87,12 +87,12 @@ class StatusHistorySchemaDef(SchemaDefBase):
                                                                                   'pdb_id',
                                                                                   'status_code_begin', 'status_code_end'),
                                                                    'TYPE': 'EQUI-JOIN'}},
-            'TABLE_DELETE_ATTRIBUTE': 'ENTRY_ID',
+            'SCHEMA_DELETE_ATTRIBUTE': 'ENTRY_ID',
         },
         "PDBX_ARCHIVE_FILE_INVENTORY": {
-            "TABLE_ID": "PDBX_ARCHIVE_FILE_INVENTORY",
-            "TABLE_NAME": "pdbx_archive_file_inventory",
-            "TABLE_TYPE": "transactional",
+            'SCHEMA_ID': "PDBX_ARCHIVE_FILE_INVENTORY",
+            'SCHEMA_NAME': "pdbx_archive_file_inventory",
+            'SCHEMA_TYPE': "transactional",
             "ATTRIBUTES": {
                 "ORDINAL": "ordinal",
                 "ENTRY_ID": "entry_id",
@@ -104,14 +104,14 @@ class StatusHistorySchemaDef(SchemaDefBase):
                 "FILE_SIZE": "file_size"
             },
             "ATTRIBUTE_INFO": {
-                "ORDINAL": {"SQL_TYPE": "INT UNSIGNED", "WIDTH": 0, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": True, "ORDER": 1},
-                "ENTRY_ID": {"SQL_TYPE": "CHAR", "WIDTH": 15, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": True, "ORDER": 2},
-                "CONTENT_TYPE": {"SQL_TYPE": "CHAR", "WIDTH": 50, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 3},
-                "PARTITION_NUMBER": {"SQL_TYPE": "INT UNSIGNED", "WIDTH": 0, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 4},
-                "VERSION_NUMBER": {"SQL_TYPE": "INT UNSIGNED", "WIDTH": 0, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 5},
-                "FORMAT_TYPE": {"SQL_TYPE": "CHAR", "WIDTH": 15, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 6},
-                "TIMESTAMP": {"SQL_TYPE": "DATETIME", "WIDTH": 30, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 7},
-                "FILE_SIZE": {"SQL_TYPE": "FLOAT", "WIDTH": 12, "PRECISION": 4, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 8},
+                "ORDINAL": {'APP_TYPE': "INT UNSIGNED", "WIDTH": 0, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": True, "ORDER": 1},
+                "ENTRY_ID": {'APP_TYPE': "CHAR", "WIDTH": 15, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": True, "ORDER": 2},
+                "CONTENT_TYPE": {'APP_TYPE': "CHAR", "WIDTH": 50, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 3},
+                "PARTITION_NUMBER": {'APP_TYPE': "INT UNSIGNED", "WIDTH": 0, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 4},
+                "VERSION_NUMBER": {'APP_TYPE': "INT UNSIGNED", "WIDTH": 0, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 5},
+                "FORMAT_TYPE": {'APP_TYPE': "CHAR", "WIDTH": 15, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 6},
+                "TIMESTAMP": {'APP_TYPE': "DATETIME", "WIDTH": 30, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 7},
+                "FILE_SIZE": {'APP_TYPE': "FLOAT", "WIDTH": 12, "PRECISION": 4, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 8},
             },
             'ATTRIBUTE_MAP': {
                 'ORDINAL': ('pdbx_archive_file_inventory', 'ordinal', None, None),
@@ -131,7 +131,7 @@ class StatusHistorySchemaDef(SchemaDefBase):
                         },
             'MAP_MERGE_INDICES': {'pdbx_database_status_history': {'ATTRIBUTES': ('ordinal', 'entry_id'),
                                                                    'TYPE': 'EQUI-JOIN'}},
-            'TABLE_DELETE_ATTRIBUTE': 'ENTRY_ID',
+            'SCHEMA_DELETE_ATTRIBUTE': 'ENTRY_ID',
         }
     }
 

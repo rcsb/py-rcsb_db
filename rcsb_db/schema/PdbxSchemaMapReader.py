@@ -104,9 +104,9 @@ class PdbxSchemaMapReader(object):
             d = {}
             tableAbbrev = self.__getTableAbbrev(tableName)
             tU = tableAbbrev.upper()
-            d['TABLE_ID'] = tU
-            d['TABLE_NAME'] = tableAbbrev
-            d['TABLE_TYPE'] = 'transactional'
+            d['SCHEMA_ID'] = tU
+            d['SCHEMA_NAME'] = tableAbbrev
+            d['SCHEMA_TYPE'] = 'transactional'
             d['ATTRIBUTES'] = {}
             d['ATTRIBUTE_INFO'] = {}
             d['ATTRIBUTE_MAP'] = {}
@@ -148,7 +148,7 @@ class PdbxSchemaMapReader(object):
                     #
                     td = {}
                     # 'data_type','index_flag','null_flag','width','precision','populated'
-                    td['SQL_TYPE'] = self.__convertDataType(atD['data_type'], width=int(atD['width']))
+                    td['APP_TYPE'] = self.__convertDataType(atD['data_type'], width=int(atD['width']))
                     td['WIDTH'] = int(atD['width'])
                     td['PRECISION'] = int(atD['precision'])
                     td['NULLABLE'] = not self.__toBool(atD['null_flag'])
@@ -189,7 +189,7 @@ class PdbxSchemaMapReader(object):
                 d['MAP_MERGE_INDICES'] = {k: {"TYPE": "EQUI-JOIN", "ATTRIBUTES": tuple(v)}}
 
             if (len(deleteAttributeList) > 0):
-                d['TABLE_DELETE_ATTRIBUTE'] = deleteAttributeList[0]
+                d['SCHEMA_DELETE_ATTRIBUTE'] = deleteAttributeList[0]
                 d['INDICES'] = {
                     "p1": {"TYPE": "UNIQUE", "ATTRIBUTES": tuple(indexList)},
                     "s1": {"TYPE": "SEARCH", "ATTRIBUTES": tuple(deleteAttributeList)}

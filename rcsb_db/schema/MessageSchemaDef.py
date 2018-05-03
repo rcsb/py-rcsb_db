@@ -39,9 +39,9 @@ class MessageSchemaDef(SchemaDefBase):
                         }
     _schemaDefDict = {
         "DEP_MESSAGE_INFO": {
-            "TABLE_ID": "DEP_MESSAGE_INFO",
-            "TABLE_NAME": "deposition_message_info",
-            "TABLE_TYPE": "transactional",
+            'SCHEMA_ID': "DEP_MESSAGE_INFO",
+            'SCHEMA_NAME': "deposition_message_info",
+            'SCHEMA_TYPE': "transactional",
             "ATTRIBUTES": {
                 "ORDINAL_ID": "ordinal_id",
                 "MESSAGE_ID": "message_id",
@@ -56,17 +56,17 @@ class MessageSchemaDef(SchemaDefBase):
                 "READ_STATUS": "read_status"
             },
             "ATTRIBUTE_INFO": {
-                "ORDINAL_ID": {"SQL_TYPE": "INT UNSIGNED AUTO_INCREMENT", "WIDTH": 0, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": True, "ORDER": 1},
-                "MESSAGE_ID": {"SQL_TYPE": "CHAR", "WIDTH": 36, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 2},
-                "DEP_ID": {"SQL_TYPE": "VARCHAR", "WIDTH": 10, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 3},
-                "TIMESTAMP": {"SQL_TYPE": "DATETIME", "WIDTH": 10, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 4},
-                "SENDER": {"SQL_TYPE": "VARCHAR", "WIDTH": 15, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 5},
-                "CONTEXT_TYPE": {"SQL_TYPE": "VARCHAR", "WIDTH": 15, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 6},
-                "CONTEXT_VALUE": {"SQL_TYPE": "VARCHAR", "WIDTH": 40, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 7},
-                "PARENT_MESSAGE_ID": {"SQL_TYPE": "VARCHAR", "WIDTH": 36, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 8},
-                "MESSAGE_SUBJECT": {"SQL_TYPE": "VARCHAR", "WIDTH": 132, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 9},
-                "MESSAGE_TEXT": {"SQL_TYPE": "VARCHAR", "WIDTH": 65000, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 10},
-                "READ_STATUS": {"SQL_TYPE": "CHAR", "WIDTH": 1, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 11},
+                "ORDINAL_ID": {'APP_TYPE': "INT UNSIGNED AUTO_INCREMENT", "WIDTH": 0, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": True, "ORDER": 1},
+                "MESSAGE_ID": {'APP_TYPE': "CHAR", "WIDTH": 36, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 2},
+                "DEP_ID": {'APP_TYPE': "VARCHAR", "WIDTH": 10, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 3},
+                "TIMESTAMP": {'APP_TYPE': "DATETIME", "WIDTH": 10, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 4},
+                "SENDER": {'APP_TYPE': "VARCHAR", "WIDTH": 15, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 5},
+                "CONTEXT_TYPE": {'APP_TYPE': "VARCHAR", "WIDTH": 15, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 6},
+                "CONTEXT_VALUE": {'APP_TYPE': "VARCHAR", "WIDTH": 40, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 7},
+                "PARENT_MESSAGE_ID": {'APP_TYPE': "VARCHAR", "WIDTH": 36, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 8},
+                "MESSAGE_SUBJECT": {'APP_TYPE': "VARCHAR", "WIDTH": 132, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 9},
+                "MESSAGE_TEXT": {'APP_TYPE': "VARCHAR", "WIDTH": 65000, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 10},
+                "READ_STATUS": {'APP_TYPE': "CHAR", "WIDTH": 1, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 11},
             },
             "INDICES": {"p1": {"TYPE": "UNIQUE", "ATTRIBUTES": ["MESSAGE_ID"]},
                         "i1": {"TYPE": "SEARCH", "ATTRIBUTES": ["MESSAGE_ID", "DEP_ID", "TIMESTAMP", "SENDER", "CONTEXT_TYPE", "CONTEXT_VALUE"]},
@@ -76,9 +76,9 @@ class MessageSchemaDef(SchemaDefBase):
         },
 
         "DEP_MESSAGE_DATA": {
-            "TABLE_ID": "DEP_MESSAGE_DATA",
-            "TABLE_NAME": "deposition_message_data",
-            "TABLE_TYPE": "transactional",
+            'SCHEMA_ID': "DEP_MESSAGE_DATA",
+            'SCHEMA_NAME': "deposition_message_data",
+            'SCHEMA_TYPE': "transactional",
             "ATTRIBUTES": {
                 "ORDINAL_ID": "ordinal_id",
                 "MESSAGE_ID": "message_id",
@@ -88,12 +88,12 @@ class MessageSchemaDef(SchemaDefBase):
                 "MESSAGE_TEXT": "message_text"
             },
             "ATTRIBUTE_INFO": {
-                "ORDINAL_ID": {"SQL_TYPE": "INT UNSIGNED AUTO_INCREMENT", "WIDTH": 0, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": True, "ORDER": 1},
-                "MESSAGE_ID": {"SQL_TYPE": "CHAR", "WIDTH": 36, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 2},
-                "DEP_ID": {"SQL_TYPE": "VARCHAR", "WIDTH": 10, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 3},
-                "MESSAGE_TYPE": {"SQL_TYPE": "VARCHAR", "WIDTH": 10, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 4},
-                "MESSAGE_SUBJECT": {"SQL_TYPE": "VARCHAR", "WIDTH": 132, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 5},
-                "MESSAGE_TEXT": {"SQL_TYPE": "VARCHAR", "WIDTH": 65000, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 6}
+                "ORDINAL_ID": {'APP_TYPE': "INT UNSIGNED AUTO_INCREMENT", "WIDTH": 0, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": True, "ORDER": 1},
+                "MESSAGE_ID": {'APP_TYPE': "CHAR", "WIDTH": 36, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 2},
+                "DEP_ID": {'APP_TYPE': "VARCHAR", "WIDTH": 10, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 3},
+                "MESSAGE_TYPE": {'APP_TYPE': "VARCHAR", "WIDTH": 10, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 4},
+                "MESSAGE_SUBJECT": {'APP_TYPE': "VARCHAR", "WIDTH": 132, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 5},
+                "MESSAGE_TEXT": {'APP_TYPE': "VARCHAR", "WIDTH": 65000, "PRECISION": 0, "NULLABLE": False, "PRIMARY_KEY": False, "ORDER": 6}
             },
             "INDICES": {"p1": {"TYPE": "UNIQUE", "ATTRIBUTES": ["MESSAGE_ID"]},
                         "i1": {"TYPE": "SEARCH", "ATTRIBUTES": ["MESSAGE_ID", "DEP_ID", "MESSAGE_TYPE"]},
