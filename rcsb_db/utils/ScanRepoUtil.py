@@ -5,11 +5,12 @@
 # Version: 0.001
 #
 # Updates:
-
+#  9-May-2018 jdw implement incremental update of scanned data
+# 18-May-2018 jdw move IO to IoUtils.py
+# 23-May-2018 jdw remove proxy to ContentTypeUtil(), go directly to RepoPathUtil() for paths
 ##
 """
-Tools for for scanning repositories and collecting coverage and type data for
-schema construction.
+Tools for for scanning repositories and collecting coverage and type data information.
 
 """
 
@@ -20,24 +21,21 @@ __license__ = "Apache 2.0"
 
 
 import time
-import re
 import datetime
 
-import json
-import pickle
-import pprint
 
 import collections
 import logging
 logger = logging.getLogger(__name__)
 
 ScanValue = collections.namedtuple('ScanValue', 'containerId, catName, atName, minWidth, maxWidth, minPrec, maxPrec')
-ScanSummary = collections.namedtuple('ScanSummary', 'containerId, fromPath, scanDate, scanDictcatName')
+ScanSummary = collections.namedtuple('ScanSummary', 'containerId, fromPath, scanDate, scanCategoryDict')
 
-from rcsb_db.schema.SchemaDefBuild import SchemaDictInfo
-from rcsb_db.utils.ContentTypeUtil import ContentTypeUtil
 from rcsb_db.utils.MultiProcUtil import MultiProcUtil
+from rcsb_db.utils.IoUtil import IoUtil
+from rcsb_db.utils.RepoPathUtil import RepoPathUtil
 from mmcif.api.DataCategory import DataCategory
+
 
 try:
     from mmcif.io.IoAdapterCore import IoAdapterCore as IoAdapter
@@ -47,14 +45,24 @@ except Exception as e:
 
 
 class ScanRepoUtil(object):
-    """Tools for for scanning repositories and collecting coverage and type data for
-       schema construction.
+    """Tools for for scanning repositories and collecting coverage and type data information.
 
     """
 
-    def __init__(self, cfgOb, dictPath, cardinalityKeyItem='_entry.id', numProc=4, chunkSize=15, fileLimit=None, mockTopPath=None, maxStepLength=2000, convertNameFunc=None):
+    def __init__(self, cfgOb, dataTypeD=None, numProc=4, chunkSize=15, fileLimit=None, mockTopPath=None, maxStepLength=2000):
+        """
+        Args:
+            cfgOb (object): Configuration object (ConfigUtil)
+            dictPath (str): Path to supporting data dictionary
+            numProc (int, optional): Number of parallel worker processes used.
+            chunkSize (int, optional): Size of files processed in a single multi-proc process
+            fileLimit (int, optional): maximum file scanned or None for no limit
+            mockTopPath (str, optional): Path to directory containing mock repositories or None
+            maxStepLength (int, optional): maximum number of multi-proc runs to perform
+            convertNameFunc (func, optional): alternative method to standardize/simplify dictionary item names
+        """
         #
-        self.__sdi = SchemaDictInfo(dictPath=dictPath, cardinalityKeyItem=cardinalityKeyItem, iTypeCodes=('ucode-alphanum-csv', 'id_list'), iQueryStrings=['comma separate'])
+        self.__dataTypeD = dataTypeD if dataTypeD else {}
         # Limit the load length of each file type for testing  -  Set to None to remove -
         self.__fileLimit = fileLimit
         self.__maxStepLength = maxStepLength
@@ -65,32 +73,34 @@ class ScanRepoUtil(object):
         #
         self.__cfgOb = cfgOb
         #
-        self.__convertName = convertNameFunc if convertNameFunc else self.__convertNameDefault
-        self.__re0 = re.compile('(database|cell|order|partition|group)$', flags=re.IGNORECASE)
-        self.__re1 = re.compile('[-/%[]')
-        self.__re2 = re.compile('[\]]')
-        #
-        #
         self.__mockTopPath = mockTopPath
         self.__mpFormat = '[%(levelname)s] %(asctime)s %(processName)s-%(module)s.%(funcName)s: %(message)s'
-        #
-        self.__ctU = ContentTypeUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
-        #
+
         self.__ioObj = IoAdapter()
+        self.__ioU = IoUtil()
 
-    def scanContentType(self, contentType, scanType='full', inputPathList=None, outputFilePath=None, failedFilePath=None, saveInputFileListPath=None):
-        """  Driver method for loading MongoDb content -
+    def scanContentType(self, contentType, scanType='full', inputPathList=None, scanDataFilePath=None, failedFilePath=None, saveInputFileListPath=None):
+        """Driver method for scan operation
 
-            contentType:  one of 'bird','bird_family','bird_chem_comp', chem_comp','pdbx'
-            #
-            scanType:     "full" or "replace"
+        Args:
+            contentType (str):  one of 'bird','bird_family','bird_chem_comp', chem_comp','pdbx'
+            scanType (str, optional): 'full' [or 'incr' to be supported]
+            inputPathList (list, optional):  list of input file paths to scan
+            scanDataFilePath (str, optional): file path for serialized scan data (Pickle format)
+            failedFilePath (str, optional): file path for list of files that fail scanning operation
+            saveInputFileListPath str, optional): Path to store file path list that is scanned
+
+        Returns:
+            bool: True for success or False otherwise
 
         """
         try:
             startTime = self.__begin(message="scanning operation")
             #
-            pathList = self.__ctU.getPathList(contentType=contentType, inputPathList=inputPathList)
+            rpU = RepoPathUtil(self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
+            pathList = rpU.getRepoPathList(contentType=contentType, inputPathList=inputPathList)
             #
+
             if saveInputFileListPath:
                 self.__writePathList(saveInputFileListPath, pathList)
                 logger.info("Saving %d paths in %s" % (len(pathList), saveInputFileListPath))
@@ -137,17 +147,29 @@ class ScanRepoUtil(object):
                     retLists[ii].extend(retListsT[ii])
                 diagList.extend(diagListT)
             logger.debug("Scan failed path list %r" % failList)
-            logger.info("Scan path list length %d failed load list length %d" % (len(pathList), len(failList)))
+            logger.info("Scan path list success length %d load list failed length %d" % (len(pathList), len(failList)))
             logger.info("Returned metadata length %r" % len(retLists[0]))
             #
             if failedFilePath and len(failList):
                 wOk = self.__writePathList(failedFilePath, failList)
                 logger.info("Writing scan failure path list to %s status %r" % (failedFilePath, wOk))
             #
-            if outputFilePath and len(retLists[0]):
-                ok = self.__serialize(outputFilePath, dObj=retLists[0], pickleProtocol=0)
-                tLists = self.__deserialize(outputFilePath)
-                ok = tLists == retLists[0]
+            if scanType == 'incr':
+                scanDataD = self.__ioU.deserialize(scanDataFilePath, default=None)
+            else:
+                scanDataD = {}
+            #
+            if scanDataFilePath and len(retLists[0]):
+                for ssTup in retLists[0]:
+                    cId = ssTup.containerId
+                    if scanType == 'full' and cId in scanDataD:
+                        logger.error("Duplicate container id %s in %r and %r" % (cId, ssTup.fromPath, scanDataD[cId].fromPath))
+                    #
+                    scanDataD[cId] = ssTup
+
+                ok = self.__ioU.serialize(scanDataFilePath, dObj=scanDataD, pickleProtocol=0)
+                tscanDataD = self.__ioU.deserialize(scanDataFilePath)
+                ok = tscanDataD == scanDataD
 
             self.__end(startTime, "scanning operation with status " + str(ok))
 
@@ -160,27 +182,28 @@ class ScanRepoUtil(object):
 
     def evalScan(self, scanDataFilePath, evalJsonFilePath, evalType='data_type'):
 
-        ssTupL = self.__deserialize(scanDataFilePath)
+        scanDataD = self.__ioU.deserialize(scanDataFilePath)
         if evalType in ['data_type']:
-            rD = self.__evalScanDataType(ssTupL)
+            rD = self.__evalScanDataType(scanDataD)
         elif evalType in ['data_coverage']:
-            rD = self.__evalScanDataCoverage(ssTupL)
+            rD = self.__evalScanDataCoverage(scanDataD)
         else:
             logger.info("Unknown evalType %r " % evalType)
-        ok = self.__saveData(evalJsonFilePath, rD)
+        ok = self.__ioU.serializeJson(evalJsonFilePath, rD)
 
         return ok
 
-    def __evalScanDataType(self, ssTupL):
+    def __evalScanDataType(self, scanDataD):
         """
         ScanValue = collections.namedtuple('ScanValue', 'containerId, catName, atName, minWidth, maxWidth, minPrec, maxPrec')
-        ScanSummary = collections.namedtuple('ScanSummary', 'containerId, fromPath, scanDate, scanDictcatName')
+        ScanSummary = collections.namedtuple('ScanSummary', 'containerId, fromPath, scanDate, scanCategoryDict')
 
         """
         # for populated sD[category] -> d[atName]->{minWidth: , maxWidth:, minPrec:, maxPrec: , count}
         sD = {}
-        for ssTup in ssTupL:
-            d = ssTup.scanDictcatName
+        for cId in scanDataD:
+            ssTup = scanDataD[cId]
+            d = ssTup.scanCategoryDict
             for catName in d:
                 if catName not in sD:
                     sD[catName] = {}
@@ -195,17 +218,18 @@ class ScanRepoUtil(object):
                     sD[catName][svTup.atName]['count'] += 1
         return sD
 
-    def __evalScanDataCoverage(self, ssTupL):
+    def __evalScanDataCoverage(self, scanDataD):
         """
         ScanValue = collections.namedtuple('ScanValue', 'containerId, catName, atName, minWidth, maxWidth, minPrec, maxPrec')
-        ScanSummary = collections.namedtuple('ScanSummary', 'containerId, fromPath, scanDate, scanDictcatName')
+        ScanSummary = collections.namedtuple('ScanSummary', 'containerId, fromPath, scanDate, scanCategoryDict')
 
         """
 
         # for populated sD[category] -> d[atName]->{count: #, instances: [id,id,id]}
         sD = {}
-        for ssTup in ssTupL:
-            d = ssTup.scanDictcatName
+        for cId in scanDataD:
+            ssTup = scanDataD[cId]
+            d = ssTup.scanCategoryDict
             for catName in d:
                 if catName not in sD:
                     sD[catName] = {}
@@ -215,39 +239,6 @@ class ScanRepoUtil(object):
                     sD[catName][svTup.atName]['instances'].append(svTup.containerId)
                     sD[catName][svTup.atName]['count'] += 1
         return sD
-
-    def __saveData(self, savePath, sdObj, format="json"):
-        """Persist the schema map  data structure -
-        """
-        try:
-            if format == "json":
-                sOut = json.dumps(sdObj, sort_keys=True, indent=3)
-            else:
-                sOut = pprint.pformat(sdObj, indent=1, width=120)
-            with open(savePath, 'w') as ofh:
-                ofh.write("\n%s\n" % sOut)
-            return True
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-        return False
-
-    def __serialize(self, filePath='scan_data.pic', dObj=None, pickleProtocol=pickle.HIGHEST_PROTOCOL):
-        try:
-            with open(filePath, 'wb') as ofh:
-                pickle.dump(dObj, ofh, pickleProtocol)
-            return True
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-        return False
-
-    def __deserialize(self, filePath='scan_data.pic', default=None):
-        try:
-            with open(filePath, 'rb') as ifh:
-                dObj = pickle.load(ifh)
-            return dObj
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-        return default
 
     def scanWorker(self, dataList, procName, optionsD, workingDir):
         """ Multi-proc worker method for scanning repository data files-
@@ -314,7 +305,7 @@ class ScanRepoUtil(object):
             if objName == '__load_status__':
                 continue
             obj = container.getObj(objName)
-            afD = self.__sdi.getAttributeFeatures(objName)
+            afD = self.__dataTypeD[objName] if objName in self.__dataTypeD else {}
             atNameList = obj.getAttributeList()
             wMin = {atName: 100000 for atName in atNameList}
             wMax = {atName: -1 for atName in atNameList}
@@ -328,7 +319,7 @@ class ScanRepoUtil(object):
                     atName = atNameList[ii]
                     wMin[atName] = min(wMin[atName], valLen)
                     wMax[atName] = max(wMax[atName], valLen)
-                    if atName in afD and afD[atName]['TYPE_CODE'] == 'float':
+                    if atName in afD and afD[atName] == 'float':
                         vPrec = 0
                         try:
                             fields = val.split('.')
@@ -336,6 +327,7 @@ class ScanRepoUtil(object):
                             pMin[atName] = min(pMin[atName], vPrec)
                             pMax[atName] = max(pMax[atName], vPrec)
                         except Exception as e:
+                            logger.debug("Failed to process float %s %r %r %s" % (atName, val, vPrec, str(e)))
                             pMin[atName] = 0
                             pMax[atName] = 0
                         logger.debug("Got float for %s %r %r" % (atName, val, vPrec))
@@ -345,32 +337,11 @@ class ScanRepoUtil(object):
 
             # ScanValue - containerId, catName, atName, minWidth, maxWidth, minPrec, maxPrec
             oD[objName] = [ScanValue(cName, objName, atN, wMin[atN], wMax[atN], pMin[atN], pMax[atN]) for atN in wMax if wMax[atN] != -1]
-        # ScanSummary containerId, fromPath, scanDictcatName
+        # ScanSummary containerId, fromPath, scanCategoryDict
         #
         ret = ScanSummary(lName, lFilePath, lDate, oD)
         #
         return ret
-
-    def __convertNameDefault(self, name):
-        """ Default schema name converter -
-        """
-        if self.__re0.match(name):
-            name = 'the_' + name
-        return self.__re1.sub('_', self.__re2.sub('', name))
-    #
-    # -------------- -------------- -------------- -------------- -------------- -------------- --------------
-    #                                        ---  Supporting code follows ---
-    #
-
-    def __writePathList(self, filePath, pathList):
-        try:
-            with open(filePath, 'w') as ofh:
-                for pth in pathList:
-                    ofh.write("%s\n" % pth)
-            return True
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-        return False
 
     def __begin(self, message=""):
         startTime = time.time()

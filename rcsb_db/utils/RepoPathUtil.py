@@ -8,6 +8,7 @@
 #   22-Mar-2018  jdw add support for all repositories -
 #   26-Mar-2018  jdw internalize the use of externally provided configuration object -
 #   27-Mar-2018  jdw add path to support mock repositories for testing.
+#   23-May-2018  jdw add getRepoPathList() convenience method
 ##
 """
  Utilites for scanning common data repository file systems.
@@ -32,7 +33,6 @@ from rcsb_db.utils.MultiProcUtil import MultiProcUtil
 from mmcif_utils.bird.PdbxPrdIo import PdbxPrdIo
 from mmcif_utils.bird.PdbxPrdCcIo import PdbxPrdCcIo
 from mmcif_utils.bird.PdbxFamilyIo import PdbxFamilyIo
-# from mmcif_utils.chemcomp.PdbxChemCompIo import PdbxChemCompIo
 
 
 class RepoPathUtil(object):
@@ -44,6 +44,34 @@ class RepoPathUtil(object):
         self.__cfgOb = cfgOb
         self.__mockTopPath = mockTopPath
         self.__mpFormat = '[%(levelname)s] %(asctime)s %(processName)s-%(module)s.%(funcName)s: %(message)s'
+
+    def getRepoPathList(self, contentType, inputPathList=None):
+        """ Convenience method to return repository path list by content type:
+        """
+        outputPathList = []
+        inputPathList = inputPathList if inputPathList else []
+        try:
+            if contentType == "bird":
+                outputPathList = inputPathList if inputPathList else self.getBirdPathList()
+            elif contentType == "bird_family":
+                outputPathList = inputPathList if inputPathList else self.getBirdFamilyPathList()
+            elif contentType == 'chem_comp':
+                outputPathList = inputPathList if inputPathList else self.getChemCompPathList()
+            elif contentType == 'bird_chem_comp':
+                outputPathList = inputPathList if inputPathList else self.getBirdChemCompPathList()
+            elif contentType == 'pdbx':
+                outputPathList = inputPathList if inputPathList else self.getEntryPathList()
+            elif contentType in ['pdb_distro', 'da_internal', 'status_history']:
+                outputPathList = inputPathList if inputPathList else []
+            else:
+                logger.warning("Unsupported contentType %s" % contentType)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+
+        if self.__fileLimit:
+            outputPathList = outputPathList[:self.__fileLimit]
+
+        return outputPathList
 
     def __cfgWrapper(self, ky):
         return os.path.join(self.__mockTopPath, self.__cfgOb.get(ky)) if self.__mockTopPath else self.__cfgOb.get(ky)

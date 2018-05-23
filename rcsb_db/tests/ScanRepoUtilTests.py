@@ -5,11 +5,12 @@
 # Version: 0.001
 #
 # Updates:
-#
+#  9-May-2018 jdw add tests for incremental scanning.
+# 23-May-2018 jdw simplify dependencies - Get input paths internally in ScanRepoUtil()
 ##
 """
 Tests for scanning BIRD, CCD and PDBx/mmCIF data files for essential
-data type features.
+data type and coverage features.  Generate data sets used to construct schema maps.
 """
 
 __docformat__ = "restructuredtext en"
@@ -38,7 +39,7 @@ except Exception as e:
 
 from rcsb_db.utils.ScanRepoUtil import ScanRepoUtil
 from rcsb_db.utils.ConfigUtil import ConfigUtil
-from rcsb_db.utils.ContentTypeUtil import ContentTypeUtil
+from rcsb_db.schema.SchemaDefDictInfo import SchemaDefDictInfo
 
 
 class ScanRepoUtilTests(unittest.TestCase):
@@ -64,7 +65,6 @@ class ScanRepoUtilTests(unittest.TestCase):
         self.__chunkSize = 10
         self.__fileLimit = 10
         #
-        self.__ctU = ContentTypeUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
         self.__startTime = time.time()
         logger.debug("Running tests on version %s" % __version__)
         logger.debug("Starting %s at %s" % (self.id(),
@@ -100,8 +100,16 @@ class ScanRepoUtilTests(unittest.TestCase):
         ok = self.__testScanRepo(contentType='pdbx')
         self.assertTrue(ok)
 
-    def __testScanRepo(self, contentType):
-        """ Utility method to scan repo for input content type.
+    def testScanPdbxRepoIncr(self):
+        """ Test case - scan PDBx structure model data
+        """
+        ok = self.__testScanRepo(contentType='pdbx', scanType='incr')
+        self.assertTrue(ok)
+
+    def __testScanRepo(self, contentType, scanType='full'):
+        """ Utility method to scan repo for data type and coverage content.
+
+            Using mock repos for tests.
         """
         try:
             failedFilePath = os.path.join(HERE, 'test-output', '%s-failed-list.txt' % contentType)
@@ -112,19 +120,21 @@ class ScanRepoUtilTests(unittest.TestCase):
             dataCoverageFilePath = os.path.join(HERE, 'test-output', '%s-scan-data-coverage.json' % contentType)
             dataTypeFilePath = os.path.join(HERE, 'test-output', '%s-scan-data-type.json' % contentType)
             #
-            inputPathList = self.__ctU.getPathList(contentType=contentType)
+            sdi = SchemaDefDictInfo(dictPath=self.__pathPdbxDictionaryFile)
+            dataTypeD = sdi.getDataTypeD()
+            #
             sr = ScanRepoUtil(
                 self.__cfgOb,
-                dictPath=self.__pathPdbxDictionaryFile,
+                dataTypeD=dataTypeD,
                 numProc=self.__numProc,
                 chunkSize=self.__chunkSize,
                 fileLimit=self.__fileLimit,
                 mockTopPath=self.__mockTopPath)
             ok = sr.scanContentType(
                 contentType,
-                scanType='full',
-                inputPathList=inputPathList,
-                outputFilePath=scanDataFilePath,
+                scanType=scanType,
+                inputPathList=None,
+                scanDataFilePath=scanDataFilePath,
                 failedFilePath=failedFilePath,
                 saveInputFileListPath=savedFilePath)
             self.assertTrue(ok)
@@ -145,6 +155,7 @@ def scanSuite():
     suiteSelect.addTest(ScanRepoUtilTests("testScanBirdRepo"))
     suiteSelect.addTest(ScanRepoUtilTests("testScanBirdFamilyRepo"))
     suiteSelect.addTest(ScanRepoUtilTests("testScanPdbxRepo"))
+    suiteSelect.addTest(ScanRepoUtilTests("testScanPdbxRepoIncr"))
     return suiteSelect
 
 

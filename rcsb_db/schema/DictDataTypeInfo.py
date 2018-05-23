@@ -1,10 +1,12 @@
 ##
-# File:    DataTypeInfo.py
+# File:    DictDataTypeInfo.py
 # Author:  J. Westbrook
 # Date:    19-Apr-2018
 # Version: 0.001 Initial version
 #
 # Updates:
+#  22-May-2018 jdw standardize data names and fix alignment in default data sections
+#  23-May-2018 jdw change assumptions for update method and add tests.
 #
 ##
 """
@@ -25,7 +27,7 @@ from mmcif.api.DataCategory import DataCategory
 from mmcif.api.PdbxContainers import DataContainer
 
 
-class DataTypeInfo(object):
+class DictDataTypeInfo(object):
 
     cifTypes = [
         "code", "ucode", "line", "uline", "text", "int", "float", "name",
@@ -46,13 +48,13 @@ class DataTypeInfo(object):
     defaultWidths = [
         "10", "10", "80", "80", "200", "10", "10", "80", "80", "255", "15", "4",
         "2", "10", "6", "20", "25", "25", "80", "30", "30", "30", "20", "10",
-        "25", "20", "80", "100", "10", "10", "10", "15", "20", "20", "5", "80", "20", "80", ""
+        "25", "20", "80", "100", "10", "10", "10", "15", "20", "20", "20", "5", "80", "20", "80", ""
     ]
 
     defaultPrecisions = [
         "0", "0", "0", "0", "0", "0", "6", "0", "0", "0", "0", "0", "0", "0",
         "0", "0", "0", "0", "0", "0", "0", "0", "0", "0",
-        "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", ""
+        "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", ""
     ]
 
     #
@@ -71,16 +73,19 @@ class DataTypeInfo(object):
     def getDefaultDataTypeMap(self, applicationName='ANY'):
         try:
             mapD = {}
-            for (cifType, simpleType, defWidth, defPrecision) in zip(DataTypeInfo.cifTypes,
-                                                                     DataTypeInfo.appTypes,
-                                                                     DataTypeInfo.defaultWidths,
-                                                                     DataTypeInfo.defaultPrecisions):
+            for (cifType, simpleType, defWidth, defPrecision) in zip(DictDataTypeInfo.cifTypes,
+                                                                     DictDataTypeInfo.appTypes,
+                                                                     DictDataTypeInfo.defaultWidths,
+                                                                     DictDataTypeInfo.defaultPrecisions):
+                if self.__isNull(cifType):
+                    continue
                 mapD[cifType] = {
                     'app_type_code': simpleType,
-                    'app_precision': defPrecision,
-                    'app_width': defWidth,
+                    'app_precision_default': defPrecision,
+                    'app_width_default': defWidth,
                     'type_code': cifType,
                     'application_name': applicationName}
+            return mapD
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
         return {}
@@ -125,24 +130,26 @@ class DataTypeInfo(object):
                     _pdbx_data_type_application_map.application_name
                     _pdbx_data_type_application_map.type_code
                     _pdbx_data_type_application_map.app_type_code
-                    _pdbx_data_type_application_map.app_precision
-                    _pdbx_data_type_application_map.app_width
+                    _pdbx_data_type_application_map.app_precision_default
+                    _pdbx_data_type_application_map.app_width_default
                     # .... type mapping data ...
         """
         try:
             #
             containerList = []
             curContainer = DataContainer("rcsb_data_type_map")
-            aCat = DataCategory("pdbx_application_data_type_map")
+            aCat = DataCategory("pdbx_data_type_application_map")
             aCat.appendAttribute("application_name")
             aCat.appendAttribute("type_code")
             aCat.appendAttribute("app_type_code")
-            aCat.appendAttribute("app_width")
-            aCat.appendAttribute("app_precision")
-            for (cifType, simpleType, defWidth, defPrecision) in zip(DataTypeInfo.cifTypes,
-                                                                     DataTypeInfo.appTypes,
-                                                                     DataTypeInfo.defaultWidths,
-                                                                     DataTypeInfo.defaultPrecisions):
+            aCat.appendAttribute("app_width_default")
+            aCat.appendAttribute("app_precision_default")
+            for (cifType, simpleType, defWidth, defPrecision) in zip(DictDataTypeInfo.cifTypes,
+                                                                     DictDataTypeInfo.appTypes,
+                                                                     DictDataTypeInfo.defaultWidths,
+                                                                     DictDataTypeInfo.defaultPrecisions):
+                if self.__isNull(cifType):
+                    continue
                 aCat.append([applicationName, cifType, simpleType, defWidth, defPrecision])
             curContainer.append(aCat)
             containerList.append(curContainer)
@@ -158,15 +165,15 @@ class DataTypeInfo(object):
         """ Update data file containing application default data type mapping with any
             updates from the input type mapping dictionary
 
-           mapD['cif_type_code'] -> ['application_name', 'app_type_code', 'app_precision', 'app_width', 'type_code']
+           mapD['cif_type_code'] -> ['application_name', 'app_type_code', 'app_precision_default', 'app_width_default', 'type_code']
 
                   data_rcsb_data_type_map
                     loop_
                     _pdbx_data_type_application_map.application_name
                     _pdbx_data_type_application_map.type_code
                     _pdbx_data_type_application_map.app_type_code
-                    _pdbx_data_type_application_map.app_precision
-                    _pdbx_data_type_application_map.app_width
+                    _pdbx_data_type_application_map.app_precision_default
+                    _pdbx_data_type_application_map.app_width_default
                     # .... type mapping data ...
         """
         try:
@@ -182,14 +189,10 @@ class DataTypeInfo(object):
                         d = catObj.getRowAttributeDict(ii)
                         if d['application_name'] == applicationName:
                             rIL.append(ii)
-                        if d['application_name'] == applicationName and d['type_code'] in mD:
-                            mD[d['type_code']] = {k: d[k] for k in ['application_name', 'type_code']}
+                            mD[d['type_code']] = {k: d[k] for k in ['application_name', 'app_type_code', 'app_precision_default', 'app_width_default', 'type_code']}
                             continue
-                        elif d['application_name'] == applicationName:
-                            # types unique to the file for this application so add these
-                            mD[d['type_code']] = {k: d[k] for k in ['application_name', 'app_type_code', 'app_precision', 'app_width', 'type_code']}
                     ok = catObj.removeRows(rIL)
-                    atNameL = catObj.getAttributes()
+                    atNameL = catObj.getAttributeList()
                     for ky in mapD:
                         r = [mapD[ky][atN] for atN in atNameL]
                         catObj.append(r)
@@ -210,12 +213,12 @@ class DataTypeInfo(object):
                     _pdbx_data_type_application_map.application_name
                     _pdbx_data_type_application_map.type_code
                     _pdbx_data_type_application_map.app_type_code
-                    _pdbx_data_type_application_map.app_precision
-                    _pdbx_data_type_application_map.app_width
+                    _pdbx_data_type_application_map.app_precision_default
+                    _pdbx_data_type_application_map.app_width_default
                     # .... type mapping data ...
 
             Return (dict):  map[cifType] -> appType, width, precision
-                        mapD['cif_type_code'] -> ['application_name', 'app_type_code', 'app_precision', 'app_width', 'type_code']
+                        mapD['cif_type_code'] -> ['application_name', 'app_type_code', 'app_precision_default', 'app_width_default', 'type_code']
         """
         try:
             #
@@ -228,9 +231,17 @@ class DataTypeInfo(object):
                     for ii in range(catObj.getRowCount()):
                         d = catObj.getRowAttributeDict(ii)
                         if d['application_name'] == applicationName:
-                            mapD[d['type_code']] = {k: d[k] for k in ['app_type_code', 'app_precision', 'app_width', 'application_name', 'type_code']}
+                            mapD[d['type_code']] = {k: d[k] for k in ['app_type_code', 'app_precision_default', 'app_width_default', 'application_name', 'type_code']}
 
             return mapD
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
         return {}
+
+    def __isNull(self, value):
+        if not value:
+            return True
+        if (len(value) == 0) or (value == '?') or (value == '.'):
+            return True
+        return False
+

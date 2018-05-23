@@ -1,10 +1,13 @@
-##
+______________##
 # File:    SchemaMapBuildTests.py.py
 # Author:  J. Westbrook
 # Date:    13-April-2013
 # Version: 0.001
 #
 # Update:
+#
+#  9-May-2018. jdw revised for full schema construction pipeline (dictionary + data file type/coverage)
+#
 #
 ##
 """
