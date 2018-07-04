@@ -1,0 +1,1627 @@
+{
+   "NAME": "bird_chem_comp",
+   "APP_NAME": "ANY",
+   "DATABASE_NAME": "chem_comp_v5",
+   "DATABASE_VERSION": "0_1",
+   "SELECTION_FILTERS": {
+      "PUBLIC_RELEASE": [
+         {
+            "CATEGORY_NAME": "pdbx_database_status",
+            "ATTRIBUTE_NAME": "status_code",
+            "VALUES": [
+               "REL"
+            ]
+         }
+      ]
+   },
+   "SCHEMA_DICT": {
+      "CHEM_COMP": {
+         "SCHEMA_ID": "CHEM_COMP",
+         "SCHEMA_NAME": "chem_comp",
+         "SCHEMA_TYPE": "transactional",
+         "SCHEMA_UNIT_CARDINALITY": true,
+         "SCHEMA_CONTENT_CLASSES": [],
+         "ATTRIBUTES": {
+            "COMPONENT_ID": "component_id",
+            "FORMULA": "formula",
+            "FORMULA_WEIGHT": "formula_weight",
+            "ID": "id",
+            "MODEL_DETAILS": "model_details",
+            "MODEL_ERF": "model_erf",
+            "MODEL_SOURCE": "model_source",
+            "MON_NSTD_CLASS": "mon_nstd_class",
+            "MON_NSTD_DETAILS": "mon_nstd_details",
+            "MON_NSTD_FLAG": "mon_nstd_flag",
+            "MON_NSTD_PARENT": "mon_nstd_parent",
+            "MON_NSTD_PARENT_COMP_ID": "mon_nstd_parent_comp_id",
+            "NAME": "name",
+            "NUMBER_ATOMS_ALL": "number_atoms_all",
+            "NUMBER_ATOMS_NH": "number_atoms_nh",
+            "ONE_LETTER_CODE": "one_letter_code",
+            "PDBX_AMBIGUOUS_FLAG": "pdbx_ambiguous_flag",
+            "PDBX_CASNUM": "pdbx_casnum",
+            "PDBX_CLASS_1": "pdbx_class_1",
+            "PDBX_CLASS_2": "pdbx_class_2",
+            "PDBX_COMP_TYPE": "pdbx_comp_type",
+            "PDBX_COMPONENT_NO": "pdbx_component_no",
+            "PDBX_FORMAL_CHARGE": "pdbx_formal_charge",
+            "PDBX_IDEAL_COORDINATES_DETAILS": "pdbx_ideal_coordinates_details",
+            "PDBX_IDEAL_COORDINATES_MISSING_FLAG": "pdbx_ideal_coordinates_missing_flag",
+            "PDBX_INITIAL_DATE": "pdbx_initial_date",
+            "PDBX_MODEL_COORDINATES_DB_CODE": "pdbx_model_coordinates_db_code",
+            "PDBX_MODEL_COORDINATES_DETAILS": "pdbx_model_coordinates_details",
+            "PDBX_MODEL_COORDINATES_MISSING_FLAG": "pdbx_model_coordinates_missing_flag",
+            "PDBX_MODIFICATION_DETAILS": "pdbx_modification_details",
+            "PDBX_MODIFIED_DATE": "pdbx_modified_date",
+            "PDBX_NSCNUM": "pdbx_nscnum",
+            "PDBX_NUMBER_SUBCOMPONENTS": "pdbx_number_subcomponents",
+            "PDBX_PROCESSING_SITE": "pdbx_processing_site",
+            "PDBX_RELEASE_STATUS": "pdbx_release_status",
+            "PDBX_REPLACED_BY": "pdbx_replaced_by",
+            "PDBX_REPLACES": "pdbx_replaces",
+            "PDBX_RESERVED_NAME": "pdbx_reserved_name",
+            "PDBX_SMILES": "pdbx_smiles",
+            "PDBX_STATUS": "pdbx_status",
+            "PDBX_SUBCOMPONENT_LIST": "pdbx_subcomponent_list",
+            "PDBX_SYNONYMS": "pdbx_synonyms",
+            "PDBX_TYPE": "pdbx_type",
+            "PDBX_TYPE_MODIFIED": "pdbx_type_modified",
+            "THREE_LETTER_CODE": "three_letter_code",
+            "TYPE": "type"
+         },
+         "ATTRIBUTE_MAP": {
+            "COMPONENT_ID": {
+               "CATEGORY": null,
+               "ATTRIBUTE": null,
+               "METHOD_NAME": "datablockid()",
+               "ARGUMENTS": null
+            },
+            "ID": {
+               "CATEGORY": "chem_comp",
+               "ATTRIBUTE": "id",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "FORMULA": {
+               "CATEGORY": "chem_comp",
+               "ATTRIBUTE": "formula",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "FORMULA_WEIGHT": {
+               "CATEGORY": "chem_comp",
+               "ATTRIBUTE": "formula_weight",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "NAME": {
+               "CATEGORY": "chem_comp",
+               "ATTRIBUTE": "name",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_AMBIGUOUS_FLAG": {
+               "CATEGORY": "chem_comp",
+               "ATTRIBUTE": "pdbx_ambiguous_flag",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_FORMAL_CHARGE": {
+               "CATEGORY": "chem_comp",
+               "ATTRIBUTE": "pdbx_formal_charge",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_IDEAL_COORDINATES_DETAILS": {
+               "CATEGORY": "chem_comp",
+               "ATTRIBUTE": "pdbx_ideal_coordinates_details",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_IDEAL_COORDINATES_MISSING_FLAG": {
+               "CATEGORY": "chem_comp",
+               "ATTRIBUTE": "pdbx_ideal_coordinates_missing_flag",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_INITIAL_DATE": {
+               "CATEGORY": "chem_comp",
+               "ATTRIBUTE": "pdbx_initial_date",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_MODEL_COORDINATES_MISSING_FLAG": {
+               "CATEGORY": "chem_comp",
+               "ATTRIBUTE": "pdbx_model_coordinates_missing_flag",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_MODIFIED_DATE": {
+               "CATEGORY": "chem_comp",
+               "ATTRIBUTE": "pdbx_modified_date",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_RELEASE_STATUS": {
+               "CATEGORY": "chem_comp",
+               "ATTRIBUTE": "pdbx_release_status",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "TYPE": {
+               "CATEGORY": "chem_comp",
+               "ATTRIBUTE": "type",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            }
+         },
+         "ATTRIBUTE_INFO": {
+            "COMPONENT_ID": {
+               "ORDER": 1,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": [
+                  "BLOCK_ATTRIBUTE"
+               ]
+            },
+            "ID": {
+               "ORDER": 2,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 12,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "FORMULA": {
+               "ORDER": 3,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 26,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "FORMULA_WEIGHT": {
+               "ORDER": 4,
+               "NULLABLE": true,
+               "PRECISION": 6,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "float",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": false,
+               "CONTENT_CLASSES": []
+            },
+            "NAME": {
+               "ORDER": 5,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 1089,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_AMBIGUOUS_FLAG": {
+               "ORDER": 6,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_FORMAL_CHARGE": {
+               "ORDER": 7,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "int",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": false,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_IDEAL_COORDINATES_DETAILS": {
+               "ORDER": 8,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_IDEAL_COORDINATES_MISSING_FLAG": {
+               "ORDER": 9,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_INITIAL_DATE": {
+               "ORDER": 10,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "datetime",
+               "WIDTH": 12,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_MODEL_COORDINATES_MISSING_FLAG": {
+               "ORDER": 11,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_MODIFIED_DATE": {
+               "ORDER": 12,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "datetime",
+               "WIDTH": 12,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_RELEASE_STATUS": {
+               "ORDER": 13,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "TYPE": {
+               "ORDER": 14,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 14,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            }
+         },
+         "SCHEMA_DELETE_ATTRIBUTE": "COMPONENT_ID",
+         "INDICES": {
+            "p1": {
+               "TYPE": "UNIQUE",
+               "ATTRIBUTES": [
+                  "COMPONENT_ID",
+                  "ID"
+               ]
+            },
+            "s1": {
+               "TYPE": "SEARCH",
+               "ATTRIBUTES": [
+                  "COMPONENT_ID"
+               ]
+            }
+         },
+         "MAP_MERGE_INDICES": {
+            "chem_comp": {
+               "ATTRIBUTES": [
+                  "component_id",
+                  "id"
+               ],
+               "TYPE": "EQUI-JOIN"
+            }
+         }
+      },
+      "CHEM_COMP_ATOM": {
+         "SCHEMA_ID": "CHEM_COMP_ATOM",
+         "SCHEMA_NAME": "chem_comp_atom",
+         "SCHEMA_TYPE": "transactional",
+         "SCHEMA_UNIT_CARDINALITY": false,
+         "SCHEMA_CONTENT_CLASSES": [],
+         "ATTRIBUTES": {
+            "COMPONENT_ID": "component_id",
+            "ALT_ATOM_ID": "alt_atom_id",
+            "ATOM_ID": "atom_id",
+            "CHARGE": "charge",
+            "COMP_ID": "comp_id",
+            "MODEL_CARTN_X": "model_Cartn_x",
+            "MODEL_CARTN_X_ESD": "model_Cartn_x_esd",
+            "MODEL_CARTN_Y": "model_Cartn_y",
+            "MODEL_CARTN_Y_ESD": "model_Cartn_y_esd",
+            "MODEL_CARTN_Z": "model_Cartn_z",
+            "MODEL_CARTN_Z_ESD": "model_Cartn_z_esd",
+            "PARTIAL_CHARGE": "partial_charge",
+            "PDBX_ALIGN": "pdbx_align",
+            "PDBX_ALT_ATOM_ID": "pdbx_alt_atom_id",
+            "PDBX_ALT_COMP_ID": "pdbx_alt_comp_id",
+            "PDBX_AROMATIC_FLAG": "pdbx_aromatic_flag",
+            "PDBX_COMPONENT_ATOM_ID": "pdbx_component_atom_id",
+            "PDBX_COMPONENT_COMP_ID": "pdbx_component_comp_id",
+            "PDBX_COMPONENT_ENTITY_ID": "pdbx_component_entity_id",
+            "PDBX_COMPONENT_ID": "pdbx_component_id",
+            "PDBX_LEAVING_ATOM_FLAG": "pdbx_leaving_atom_flag",
+            "PDBX_MODEL_CARTN_X_IDEAL": "pdbx_model_Cartn_x_ideal",
+            "PDBX_MODEL_CARTN_Y_IDEAL": "pdbx_model_Cartn_y_ideal",
+            "PDBX_MODEL_CARTN_Z_IDEAL": "pdbx_model_Cartn_z_ideal",
+            "PDBX_ORDINAL": "pdbx_ordinal",
+            "PDBX_POLYMER_TYPE": "pdbx_polymer_type",
+            "PDBX_REF_ID": "pdbx_ref_id",
+            "PDBX_RESIDUE_NUMBERING": "pdbx_residue_numbering",
+            "PDBX_STEREO_CONFIG": "pdbx_stereo_config",
+            "SUBSTRUCT_CODE": "substruct_code",
+            "TYPE_SYMBOL": "type_symbol"
+         },
+         "ATTRIBUTE_MAP": {
+            "COMPONENT_ID": {
+               "CATEGORY": null,
+               "ATTRIBUTE": null,
+               "METHOD_NAME": "datablockid()",
+               "ARGUMENTS": null
+            },
+            "ATOM_ID": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "atom_id",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "COMP_ID": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "comp_id",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "ALT_ATOM_ID": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "alt_atom_id",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "CHARGE": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "charge",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "MODEL_CARTN_X": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "model_Cartn_x",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "MODEL_CARTN_Y": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "model_Cartn_y",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "MODEL_CARTN_Z": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "model_Cartn_z",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_ALIGN": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "pdbx_align",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_AROMATIC_FLAG": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "pdbx_aromatic_flag",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_COMPONENT_ATOM_ID": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "pdbx_component_atom_id",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_COMPONENT_COMP_ID": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "pdbx_component_comp_id",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_COMPONENT_ID": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "pdbx_component_id",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_LEAVING_ATOM_FLAG": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "pdbx_leaving_atom_flag",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_MODEL_CARTN_X_IDEAL": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "pdbx_model_Cartn_x_ideal",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_MODEL_CARTN_Y_IDEAL": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "pdbx_model_Cartn_y_ideal",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_MODEL_CARTN_Z_IDEAL": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "pdbx_model_Cartn_z_ideal",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_ORDINAL": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "pdbx_ordinal",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_POLYMER_TYPE": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "pdbx_polymer_type",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_REF_ID": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "pdbx_ref_id",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_RESIDUE_NUMBERING": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "pdbx_residue_numbering",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_STEREO_CONFIG": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "pdbx_stereo_config",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "TYPE_SYMBOL": {
+               "CATEGORY": "chem_comp_atom",
+               "ATTRIBUTE": "type_symbol",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            }
+         },
+         "ATTRIBUTE_INFO": {
+            "COMPONENT_ID": {
+               "ORDER": 1,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": [
+                  "BLOCK_ATTRIBUTE"
+               ]
+            },
+            "ATOM_ID": {
+               "ORDER": 2,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "COMP_ID": {
+               "ORDER": 3,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 12,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "ALT_ATOM_ID": {
+               "ORDER": 4,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "CHARGE": {
+               "ORDER": 5,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "int",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": false,
+               "CONTENT_CLASSES": []
+            },
+            "MODEL_CARTN_X": {
+               "ORDER": 6,
+               "NULLABLE": true,
+               "PRECISION": 6,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "float",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": false,
+               "CONTENT_CLASSES": []
+            },
+            "MODEL_CARTN_Y": {
+               "ORDER": 7,
+               "NULLABLE": true,
+               "PRECISION": 6,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "float",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": false,
+               "CONTENT_CLASSES": []
+            },
+            "MODEL_CARTN_Z": {
+               "ORDER": 8,
+               "NULLABLE": true,
+               "PRECISION": 6,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "float",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": false,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_ALIGN": {
+               "ORDER": 9,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "int",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": false,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_AROMATIC_FLAG": {
+               "ORDER": 10,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_COMPONENT_ATOM_ID": {
+               "ORDER": 11,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_COMPONENT_COMP_ID": {
+               "ORDER": 12,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 12,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_COMPONENT_ID": {
+               "ORDER": 13,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "int",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": false,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_LEAVING_ATOM_FLAG": {
+               "ORDER": 14,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_MODEL_CARTN_X_IDEAL": {
+               "ORDER": 15,
+               "NULLABLE": true,
+               "PRECISION": 6,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "float",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": false,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_MODEL_CARTN_Y_IDEAL": {
+               "ORDER": 16,
+               "NULLABLE": true,
+               "PRECISION": 6,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "float",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": false,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_MODEL_CARTN_Z_IDEAL": {
+               "ORDER": 17,
+               "NULLABLE": true,
+               "PRECISION": 6,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "float",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": false,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_ORDINAL": {
+               "ORDER": 18,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "int",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": false,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_POLYMER_TYPE": {
+               "ORDER": 19,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 13,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_REF_ID": {
+               "ORDER": 20,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_RESIDUE_NUMBERING": {
+               "ORDER": 21,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "int",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": false,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_STEREO_CONFIG": {
+               "ORDER": 22,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "TYPE_SYMBOL": {
+               "ORDER": 23,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            }
+         },
+         "SCHEMA_DELETE_ATTRIBUTE": "COMPONENT_ID",
+         "INDICES": {
+            "p1": {
+               "TYPE": "UNIQUE",
+               "ATTRIBUTES": [
+                  "COMPONENT_ID",
+                  "ATOM_ID",
+                  "COMP_ID"
+               ]
+            },
+            "s1": {
+               "TYPE": "SEARCH",
+               "ATTRIBUTES": [
+                  "COMPONENT_ID"
+               ]
+            }
+         },
+         "MAP_MERGE_INDICES": {
+            "chem_comp_atom": {
+               "ATTRIBUTES": [
+                  "component_id",
+                  "atom_id",
+                  "comp_id"
+               ],
+               "TYPE": "EQUI-JOIN"
+            }
+         }
+      },
+      "CHEM_COMP_BOND": {
+         "SCHEMA_ID": "CHEM_COMP_BOND",
+         "SCHEMA_NAME": "chem_comp_bond",
+         "SCHEMA_TYPE": "transactional",
+         "SCHEMA_UNIT_CARDINALITY": false,
+         "SCHEMA_CONTENT_CLASSES": [],
+         "ATTRIBUTES": {
+            "COMPONENT_ID": "component_id",
+            "ATOM_ID_1": "atom_id_1",
+            "ATOM_ID_2": "atom_id_2",
+            "COMP_ID": "comp_id",
+            "PDBX_AROMATIC_FLAG": "pdbx_aromatic_flag",
+            "PDBX_ORDINAL": "pdbx_ordinal",
+            "PDBX_STEREO_CONFIG": "pdbx_stereo_config",
+            "VALUE_DIST": "value_dist",
+            "VALUE_DIST_ESD": "value_dist_esd",
+            "VALUE_ORDER": "value_order"
+         },
+         "ATTRIBUTE_MAP": {
+            "COMPONENT_ID": {
+               "CATEGORY": null,
+               "ATTRIBUTE": null,
+               "METHOD_NAME": "datablockid()",
+               "ARGUMENTS": null
+            },
+            "ATOM_ID_1": {
+               "CATEGORY": "chem_comp_bond",
+               "ATTRIBUTE": "atom_id_1",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "ATOM_ID_2": {
+               "CATEGORY": "chem_comp_bond",
+               "ATTRIBUTE": "atom_id_2",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "COMP_ID": {
+               "CATEGORY": "chem_comp_bond",
+               "ATTRIBUTE": "comp_id",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_AROMATIC_FLAG": {
+               "CATEGORY": "chem_comp_bond",
+               "ATTRIBUTE": "pdbx_aromatic_flag",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_ORDINAL": {
+               "CATEGORY": "chem_comp_bond",
+               "ATTRIBUTE": "pdbx_ordinal",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PDBX_STEREO_CONFIG": {
+               "CATEGORY": "chem_comp_bond",
+               "ATTRIBUTE": "pdbx_stereo_config",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "VALUE_ORDER": {
+               "CATEGORY": "chem_comp_bond",
+               "ATTRIBUTE": "value_order",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            }
+         },
+         "ATTRIBUTE_INFO": {
+            "COMPONENT_ID": {
+               "ORDER": 1,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": [
+                  "BLOCK_ATTRIBUTE"
+               ]
+            },
+            "ATOM_ID_1": {
+               "ORDER": 2,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "ATOM_ID_2": {
+               "ORDER": 3,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "COMP_ID": {
+               "ORDER": 4,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 12,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_AROMATIC_FLAG": {
+               "ORDER": 5,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_ORDINAL": {
+               "ORDER": 6,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "int",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": false,
+               "CONTENT_CLASSES": []
+            },
+            "PDBX_STEREO_CONFIG": {
+               "ORDER": 7,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "VALUE_ORDER": {
+               "ORDER": 8,
+               "NULLABLE": true,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            }
+         },
+         "SCHEMA_DELETE_ATTRIBUTE": "COMPONENT_ID",
+         "INDICES": {
+            "p1": {
+               "TYPE": "UNIQUE",
+               "ATTRIBUTES": [
+                  "COMPONENT_ID",
+                  "ATOM_ID_1",
+                  "ATOM_ID_2",
+                  "COMP_ID"
+               ]
+            },
+            "s1": {
+               "TYPE": "SEARCH",
+               "ATTRIBUTES": [
+                  "COMPONENT_ID"
+               ]
+            }
+         },
+         "MAP_MERGE_INDICES": {
+            "chem_comp_bond": {
+               "ATTRIBUTES": [
+                  "component_id",
+                  "atom_id_1",
+                  "atom_id_2",
+                  "comp_id"
+               ],
+               "TYPE": "EQUI-JOIN"
+            }
+         }
+      },
+      "PDBX_CHEM_COMP_AUDIT": {
+         "SCHEMA_ID": "PDBX_CHEM_COMP_AUDIT",
+         "SCHEMA_NAME": "pdbx_chem_comp_audit",
+         "SCHEMA_TYPE": "transactional",
+         "SCHEMA_UNIT_CARDINALITY": false,
+         "SCHEMA_CONTENT_CLASSES": [],
+         "ATTRIBUTES": {
+            "COMPONENT_ID": "component_id",
+            "ACTION_TYPE": "action_type",
+            "ANNOTATOR": "annotator",
+            "COMP_ID": "comp_id",
+            "DATE": "date",
+            "DETAILS": "details",
+            "PROCESSING_SITE": "processing_site"
+         },
+         "ATTRIBUTE_MAP": {
+            "COMPONENT_ID": {
+               "CATEGORY": null,
+               "ATTRIBUTE": null,
+               "METHOD_NAME": "datablockid()",
+               "ARGUMENTS": null
+            },
+            "ACTION_TYPE": {
+               "CATEGORY": "pdbx_chem_comp_audit",
+               "ATTRIBUTE": "action_type",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "COMP_ID": {
+               "CATEGORY": "pdbx_chem_comp_audit",
+               "ATTRIBUTE": "comp_id",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "DATE": {
+               "CATEGORY": "pdbx_chem_comp_audit",
+               "ATTRIBUTE": "date",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            }
+         },
+         "ATTRIBUTE_INFO": {
+            "COMPONENT_ID": {
+               "ORDER": 1,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": [
+                  "BLOCK_ATTRIBUTE"
+               ]
+            },
+            "ACTION_TYPE": {
+               "ORDER": 2,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 19,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "COMP_ID": {
+               "ORDER": 3,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 12,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "DATE": {
+               "ORDER": 4,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "datetime",
+               "WIDTH": 12,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            }
+         },
+         "SCHEMA_DELETE_ATTRIBUTE": "COMPONENT_ID",
+         "INDICES": {
+            "p1": {
+               "TYPE": "UNIQUE",
+               "ATTRIBUTES": [
+                  "COMPONENT_ID",
+                  "ACTION_TYPE",
+                  "COMP_ID",
+                  "DATE"
+               ]
+            },
+            "s1": {
+               "TYPE": "SEARCH",
+               "ATTRIBUTES": [
+                  "COMPONENT_ID"
+               ]
+            }
+         },
+         "MAP_MERGE_INDICES": {
+            "pdbx_chem_comp_audit": {
+               "ATTRIBUTES": [
+                  "component_id",
+                  "action_type",
+                  "comp_id",
+                  "date"
+               ],
+               "TYPE": "EQUI-JOIN"
+            }
+         }
+      },
+      "PDBX_CHEM_COMP_DESCRIPTOR": {
+         "SCHEMA_ID": "PDBX_CHEM_COMP_DESCRIPTOR",
+         "SCHEMA_NAME": "pdbx_chem_comp_descriptor",
+         "SCHEMA_TYPE": "transactional",
+         "SCHEMA_UNIT_CARDINALITY": false,
+         "SCHEMA_CONTENT_CLASSES": [],
+         "ATTRIBUTES": {
+            "COMPONENT_ID": "component_id",
+            "COMP_ID": "comp_id",
+            "DESCRIPTOR": "descriptor",
+            "ORDINAL": "ordinal",
+            "PROGRAM": "program",
+            "PROGRAM_VERSION": "program_version",
+            "TYPE": "type"
+         },
+         "ATTRIBUTE_MAP": {
+            "COMPONENT_ID": {
+               "CATEGORY": null,
+               "ATTRIBUTE": null,
+               "METHOD_NAME": "datablockid()",
+               "ARGUMENTS": null
+            },
+            "COMP_ID": {
+               "CATEGORY": "pdbx_chem_comp_descriptor",
+               "ATTRIBUTE": "comp_id",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PROGRAM": {
+               "CATEGORY": "pdbx_chem_comp_descriptor",
+               "ATTRIBUTE": "program",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PROGRAM_VERSION": {
+               "CATEGORY": "pdbx_chem_comp_descriptor",
+               "ATTRIBUTE": "program_version",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "TYPE": {
+               "CATEGORY": "pdbx_chem_comp_descriptor",
+               "ATTRIBUTE": "type",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "DESCRIPTOR": {
+               "CATEGORY": "pdbx_chem_comp_descriptor",
+               "ATTRIBUTE": "descriptor",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            }
+         },
+         "ATTRIBUTE_INFO": {
+            "COMPONENT_ID": {
+               "ORDER": 1,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": [
+                  "BLOCK_ATTRIBUTE"
+               ]
+            },
+            "COMP_ID": {
+               "ORDER": 2,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 12,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PROGRAM": {
+               "ORDER": 3,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 21,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PROGRAM_VERSION": {
+               "ORDER": 4,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "TYPE": {
+               "ORDER": 5,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 19,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "DESCRIPTOR": {
+               "ORDER": 6,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 2761,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            }
+         },
+         "SCHEMA_DELETE_ATTRIBUTE": "COMPONENT_ID",
+         "INDICES": {
+            "p1": {
+               "TYPE": "UNIQUE",
+               "ATTRIBUTES": [
+                  "COMPONENT_ID",
+                  "COMP_ID",
+                  "PROGRAM",
+                  "PROGRAM_VERSION",
+                  "TYPE"
+               ]
+            },
+            "s1": {
+               "TYPE": "SEARCH",
+               "ATTRIBUTES": [
+                  "COMPONENT_ID"
+               ]
+            }
+         },
+         "MAP_MERGE_INDICES": {
+            "pdbx_chem_comp_descriptor": {
+               "ATTRIBUTES": [
+                  "component_id",
+                  "comp_id",
+                  "program",
+                  "program_version",
+                  "type"
+               ],
+               "TYPE": "EQUI-JOIN"
+            }
+         }
+      },
+      "PDBX_CHEM_COMP_IDENTIFIER": {
+         "SCHEMA_ID": "PDBX_CHEM_COMP_IDENTIFIER",
+         "SCHEMA_NAME": "pdbx_chem_comp_identifier",
+         "SCHEMA_TYPE": "transactional",
+         "SCHEMA_UNIT_CARDINALITY": false,
+         "SCHEMA_CONTENT_CLASSES": [],
+         "ATTRIBUTES": {
+            "COMPONENT_ID": "component_id",
+            "COMP_ID": "comp_id",
+            "IDENTIFIER": "identifier",
+            "ORDINAL": "ordinal",
+            "PROGRAM": "program",
+            "PROGRAM_VERSION": "program_version",
+            "TYPE": "type"
+         },
+         "ATTRIBUTE_MAP": {
+            "COMPONENT_ID": {
+               "CATEGORY": null,
+               "ATTRIBUTE": null,
+               "METHOD_NAME": "datablockid()",
+               "ARGUMENTS": null
+            },
+            "COMP_ID": {
+               "CATEGORY": "pdbx_chem_comp_identifier",
+               "ATTRIBUTE": "comp_id",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PROGRAM": {
+               "CATEGORY": "pdbx_chem_comp_identifier",
+               "ATTRIBUTE": "program",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "PROGRAM_VERSION": {
+               "CATEGORY": "pdbx_chem_comp_identifier",
+               "ATTRIBUTE": "program_version",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "TYPE": {
+               "CATEGORY": "pdbx_chem_comp_identifier",
+               "ATTRIBUTE": "type",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            },
+            "IDENTIFIER": {
+               "CATEGORY": "pdbx_chem_comp_identifier",
+               "ATTRIBUTE": "identifier",
+               "METHOD_NAME": null,
+               "ARGUMENTS": null
+            }
+         },
+         "ATTRIBUTE_INFO": {
+            "COMPONENT_ID": {
+               "ORDER": 1,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": [
+                  "BLOCK_ATTRIBUTE"
+               ]
+            },
+            "COMP_ID": {
+               "ORDER": 2,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 12,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PROGRAM": {
+               "ORDER": 3,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 21,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "PROGRAM_VERSION": {
+               "ORDER": 4,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "TYPE": {
+               "ORDER": 5,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 18,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            },
+            "IDENTIFIER": {
+               "ORDER": 6,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 2258,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": []
+            }
+         },
+         "SCHEMA_DELETE_ATTRIBUTE": "COMPONENT_ID",
+         "INDICES": {
+            "p1": {
+               "TYPE": "UNIQUE",
+               "ATTRIBUTES": [
+                  "COMPONENT_ID",
+                  "COMP_ID",
+                  "PROGRAM",
+                  "PROGRAM_VERSION",
+                  "TYPE"
+               ]
+            },
+            "s1": {
+               "TYPE": "SEARCH",
+               "ATTRIBUTES": [
+                  "COMPONENT_ID"
+               ]
+            }
+         },
+         "MAP_MERGE_INDICES": {
+            "pdbx_chem_comp_identifier": {
+               "ATTRIBUTES": [
+                  "component_id",
+                  "comp_id",
+                  "program",
+                  "program_version",
+                  "type"
+               ],
+               "TYPE": "EQUI-JOIN"
+            }
+         }
+      },
+      "RCSB_LOAD_STATUS": {
+         "SCHEMA_ID": "RCSB_LOAD_STATUS",
+         "SCHEMA_NAME": "rcsb_load_status",
+         "SCHEMA_TYPE": "transactional",
+         "SCHEMA_UNIT_CARDINALITY": true,
+         "SCHEMA_CONTENT_CLASSES": [
+            "ADMIN_CATEGORY"
+         ],
+         "ATTRIBUTES": {
+            "COMPONENT_ID": "component_id",
+            "DATABLOCK_NAME": "datablock_name",
+            "LOAD_DATE": "load_date",
+            "LOCATOR": "locator"
+         },
+         "ATTRIBUTE_MAP": {
+            "COMPONENT_ID": {
+               "CATEGORY": null,
+               "ATTRIBUTE": null,
+               "METHOD_NAME": "datablockid()",
+               "ARGUMENTS": null
+            },
+            "DATABLOCK_NAME": {
+               "CATEGORY": null,
+               "ATTRIBUTE": null,
+               "METHOD_NAME": "datablockid()",
+               "ARGUMENTS": null
+            },
+            "LOAD_DATE": {
+               "CATEGORY": null,
+               "ATTRIBUTE": null,
+               "METHOD_NAME": "getDateTime()",
+               "ARGUMENTS": null
+            },
+            "LOCATOR": {
+               "CATEGORY": null,
+               "ATTRIBUTE": null,
+               "METHOD_NAME": "getLocator()",
+               "ARGUMENTS": null
+            }
+         },
+         "ATTRIBUTE_INFO": {
+            "COMPONENT_ID": {
+               "ORDER": 1,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": [
+                  "BLOCK_ATTRIBUTE"
+               ]
+            },
+            "DATABLOCK_NAME": {
+               "ORDER": 2,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": true,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": [
+                  "ADMIN_CATEGORY"
+               ]
+            },
+            "LOAD_DATE": {
+               "ORDER": 3,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "datetime",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": [
+                  "ADMIN_CATEGORY"
+               ]
+            },
+            "LOCATOR": {
+               "ORDER": 4,
+               "NULLABLE": false,
+               "PRECISION": 0,
+               "PRIMARY_KEY": false,
+               "APP_TYPE": "char",
+               "WIDTH": 10,
+               "ITERABLE_DELIMITER": null,
+               "FILTER_TYPES": [],
+               "IS_CHAR_TYPE": true,
+               "CONTENT_CLASSES": [
+                  "ADMIN_CATEGORY"
+               ]
+            }
+         },
+         "SCHEMA_DELETE_ATTRIBUTE": "COMPONENT_ID",
+         "INDICES": {
+            "p1": {
+               "TYPE": "UNIQUE",
+               "ATTRIBUTES": [
+                  "COMPONENT_ID",
+                  "DATABLOCK_NAME"
+               ]
+            },
+            "s1": {
+               "TYPE": "SEARCH",
+               "ATTRIBUTES": [
+                  "COMPONENT_ID"
+               ]
+            }
+         },
+         "MAP_MERGE_INDICES": {
+            "rcsb_load_status": {
+               "ATTRIBUTES": [
+                  "component_id",
+                  "datablock_name"
+               ],
+               "TYPE": "EQUI-JOIN"
+            }
+         }
+      }
+   },
+   "DOCUMENT_DICT": {
+      "CONTENT_TYPE_COLLECTION_MAP": {
+         "bird_chem_comp": [
+            "bird_chem_comp_v5_0_2"
+         ]
+      },
+      "COLLECTION_DOCUMENT_ATTRIBUTE_NAME": {
+         "bird_chem_comp_v5_0_2": "Chem_comp.component_id"
+      },
+      "COLLECTION_CONTENT": {
+         "bird_chem_comp_v5_0_2": {
+            "INCLUDE": [],
+            "EXCLUDE": []
+         }
+      }
+   }
+}
