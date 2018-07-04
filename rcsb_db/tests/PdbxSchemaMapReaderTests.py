@@ -9,6 +9,7 @@
 #  11=Jan-2013  jdw add table and attribute abbreviation support.
 #  12-Jan-2013  jdw add Chemical component and PDBx schema map examples
 #  14-Jan-2013  jdw installed in wwpdb.utils.db/
+#  28-Jun-2018  jdw repath schema map data files
 ##
 """
 Tests for reader of RCSB schema map data files exporting the data structure used by the
@@ -22,15 +23,12 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 
-import sys
-import unittest
-import pprint
-import os
-import time
-
 import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
-logger = logging.getLogger()
+import os
+import pprint
+import sys
+import time
+import unittest
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(HERE))
@@ -41,16 +39,20 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-from rcsb_db.schema.PdbxSchemaMapReader import PdbxSchemaMapReader
+from rcsb_db.utils.PdbxSchemaMapReader import PdbxSchemaMapReader
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 class PdbxSchemaMapReaderTests(unittest.TestCase):
 
     def setUp(self):
         self.__verbose = True
-        self.__pathPrdSchemaMapFile = os.path.join(HERE, "data-schema", "schema_map_pdbx_prd_v5.cif")
-        self.__pathPdbxSchemaMapFile = os.path.join(HERE, "data-schema", "schema_map_pdbx_v5_rc.cif")
-        self.__pathCcSchemaMapFile = os.path.join(HERE, "data-schema", "schema_map_pdbx_cc.cif")
+        self.__pathPrdSchemaMapFile = os.path.join(TOPDIR, 'rcsb_db', 'data', 'schema-maps', 'schema_map_pdbx_prd_v5.cif')
+        self.__pathPdbxSchemaMapFile = os.path.join(TOPDIR, 'rcsb_db', 'data', 'schema-maps', 'schema_map_pdbx_v5_rc.cif')
+        self.__pathCcSchemaMapFile = os.path.join(TOPDIR, 'rcsb_db', 'data', 'schema-maps', 'schema_map_pdbx_cc.cif')
         self.__startTime = time.time()
         logger.debug("Running tests on version %s" % __version__)
         logger.debug("Starting %s at %s" % (self.id(),
@@ -90,6 +92,7 @@ def schemaSuite():
     suiteSelect.addTest(PdbxSchemaMapReaderTests("testReadCcMap"))
     suiteSelect.addTest(PdbxSchemaMapReaderTests("testReadPdbxMap"))
     return suiteSelect
+
 
 if __name__ == '__main__':
     #

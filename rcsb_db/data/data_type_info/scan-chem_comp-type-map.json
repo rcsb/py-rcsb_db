@@ -1,0 +1,521 @@
+
+{
+   "chem_comp": {
+      "formula": {
+         "count": 29615,
+         "maxPrec": 0,
+         "maxWidth": 26,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "formula_weight": {
+         "count": 29613,
+         "maxPrec": 3,
+         "maxWidth": 8,
+         "minPrec": 3,
+         "minWidth": 5
+      },
+      "id": {
+         "count": 29616,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "mon_nstd_parent_comp_id": {
+         "count": 1565,
+         "maxPrec": 0,
+         "maxWidth": 18,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "name": {
+         "count": 29615,
+         "maxPrec": 0,
+         "maxWidth": 815,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "one_letter_code": {
+         "count": 1407,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_ambiguous_flag": {
+         "count": 28344,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_formal_charge": {
+         "count": 29616,
+         "maxPrec": 0,
+         "maxWidth": 2,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_ideal_coordinates_details": {
+         "count": 23059,
+         "maxPrec": 0,
+         "maxWidth": 25,
+         "minPrec": 0,
+         "minWidth": 6
+      },
+      "pdbx_ideal_coordinates_missing_flag": {
+         "count": 29616,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_initial_date": {
+         "count": 29616,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "pdbx_model_coordinates_db_code": {
+         "count": 27490,
+         "maxPrec": 0,
+         "maxWidth": 19,
+         "minPrec": 0,
+         "minWidth": 4
+      },
+      "pdbx_model_coordinates_details": {
+         "count": 276,
+         "maxPrec": 0,
+         "maxWidth": 12,
+         "minPrec": 0,
+         "minWidth": 4
+      },
+      "pdbx_model_coordinates_missing_flag": {
+         "count": 29616,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_modified_date": {
+         "count": 29616,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "pdbx_processing_site": {
+         "count": 29611,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "pdbx_release_status": {
+         "count": 29616,
+         "maxPrec": 0,
+         "maxWidth": 8,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "pdbx_replaced_by": {
+         "count": 346,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_replaces": {
+         "count": 268,
+         "maxPrec": 0,
+         "maxWidth": 8,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_subcomponent_list": {
+         "count": 626,
+         "maxPrec": 0,
+         "maxWidth": 75,
+         "minPrec": 0,
+         "minWidth": 7
+      },
+      "pdbx_synonyms": {
+         "count": 5539,
+         "maxPrec": 0,
+         "maxWidth": 567,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_type": {
+         "count": 29334,
+         "maxPrec": 0,
+         "maxWidth": 6,
+         "minPrec": 0,
+         "minWidth": 5
+      },
+      "three_letter_code": {
+         "count": 29510,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "type": {
+         "count": 29616,
+         "maxPrec": 0,
+         "maxWidth": 32,
+         "minPrec": 0,
+         "minWidth": 10
+      }
+   },
+   "chem_comp_atom": {
+      "alt_atom_id": {
+         "count": 29613,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "atom_id": {
+         "count": 29613,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "charge": {
+         "count": 29611,
+         "maxPrec": 0,
+         "maxWidth": 2,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "comp_id": {
+         "count": 29613,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "model_Cartn_x": {
+         "count": 29539,
+         "maxPrec": 3,
+         "maxWidth": 8,
+         "minPrec": 3,
+         "minWidth": 5
+      },
+      "model_Cartn_y": {
+         "count": 29539,
+         "maxPrec": 3,
+         "maxWidth": 8,
+         "minPrec": 3,
+         "minWidth": 5
+      },
+      "model_Cartn_z": {
+         "count": 29539,
+         "maxPrec": 3,
+         "maxWidth": 8,
+         "minPrec": 3,
+         "minWidth": 5
+      },
+      "pdbx_align": {
+         "count": 29613,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_aromatic_flag": {
+         "count": 29613,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_component_atom_id": {
+         "count": 29612,
+         "maxPrec": 0,
+         "maxWidth": 5,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_component_comp_id": {
+         "count": 29612,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_component_id": {
+         "count": 2,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_leaving_atom_flag": {
+         "count": 29613,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_model_Cartn_x_ideal": {
+         "count": 29210,
+         "maxPrec": 3,
+         "maxWidth": 8,
+         "minPrec": 3,
+         "minWidth": 5
+      },
+      "pdbx_model_Cartn_y_ideal": {
+         "count": 29210,
+         "maxPrec": 3,
+         "maxWidth": 7,
+         "minPrec": 3,
+         "minWidth": 5
+      },
+      "pdbx_model_Cartn_z_ideal": {
+         "count": 29210,
+         "maxPrec": 3,
+         "maxWidth": 7,
+         "minPrec": 3,
+         "minWidth": 5
+      },
+      "pdbx_ordinal": {
+         "count": 29613,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_polymer_type": {
+         "count": 2,
+         "maxPrec": 0,
+         "maxWidth": 7,
+         "minPrec": 0,
+         "minWidth": 7
+      },
+      "pdbx_residue_numbering": {
+         "count": 2,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_stereo_config": {
+         "count": 29613,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "type_symbol": {
+         "count": 29613,
+         "maxPrec": 0,
+         "maxWidth": 2,
+         "minPrec": 0,
+         "minWidth": 1
+      }
+   },
+   "chem_comp_bond": {
+      "atom_id_1": {
+         "count": 29505,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "atom_id_2": {
+         "count": 29505,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "comp_id": {
+         "count": 29505,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_aromatic_flag": {
+         "count": 29505,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_ordinal": {
+         "count": 29505,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_stereo_config": {
+         "count": 29505,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "value_order": {
+         "count": 29505,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 4
+      }
+   },
+   "pdbx_chem_comp_audit": {
+      "action_type": {
+         "count": 29110,
+         "maxPrec": 0,
+         "maxWidth": 29,
+         "minPrec": 0,
+         "minWidth": 11
+      },
+      "annotator": {
+         "count": 16888,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "comp_id": {
+         "count": 29110,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "date": {
+         "count": 29110,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 8
+      },
+      "details": {
+         "count": 1486,
+         "maxPrec": 0,
+         "maxWidth": 472,
+         "minPrec": 0,
+         "minWidth": 2
+      },
+      "processing_site": {
+         "count": 29110,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 2
+      }
+   },
+   "pdbx_chem_comp_descriptor": {
+      "comp_id": {
+         "count": 29613,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "descriptor": {
+         "count": 29613,
+         "maxPrec": 0,
+         "maxWidth": 1304,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "program": {
+         "count": 29613,
+         "maxPrec": 0,
+         "maxWidth": 18,
+         "minPrec": 0,
+         "minWidth": 5
+      },
+      "program_version": {
+         "count": 29613,
+         "maxPrec": 0,
+         "maxWidth": 5,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "type": {
+         "count": 29613,
+         "maxPrec": 0,
+         "maxWidth": 16,
+         "minPrec": 0,
+         "minWidth": 5
+      }
+   },
+   "pdbx_chem_comp_feature": {
+      "comp_id": {
+         "count": 5,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "source": {
+         "count": 5,
+         "maxPrec": 0,
+         "maxWidth": 15,
+         "minPrec": 0,
+         "minWidth": 2
+      },
+      "type": {
+         "count": 5,
+         "maxPrec": 0,
+         "maxWidth": 17,
+         "minPrec": 0,
+         "minWidth": 4
+      },
+      "value": {
+         "count": 5,
+         "maxPrec": 0,
+         "maxWidth": 86,
+         "minPrec": 0,
+         "minWidth": 3
+      }
+   },
+   "pdbx_chem_comp_identifier": {
+      "comp_id": {
+         "count": 29205,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "identifier": {
+         "count": 29205,
+         "maxPrec": 0,
+         "maxWidth": 815,
+         "minPrec": 0,
+         "minWidth": 4
+      },
+      "program": {
+         "count": 29205,
+         "maxPrec": 0,
+         "maxWidth": 18,
+         "minPrec": 0,
+         "minWidth": 7
+      },
+      "program_version": {
+         "count": 29205,
+         "maxPrec": 0,
+         "maxWidth": 5,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "type": {
+         "count": 29205,
+         "maxPrec": 0,
+         "maxWidth": 15,
+         "minPrec": 0,
+         "minWidth": 15
+      }
+   }
+}

@@ -5,6 +5,7 @@
 #  Get the current list of release entry files in our data release file system.
 #
 ##
+import logging
 import os
 
 try:
@@ -12,7 +13,6 @@ try:
 except Exception as e:
     import scandir
 
-import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
 

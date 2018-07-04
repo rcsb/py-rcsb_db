@@ -14,14 +14,11 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
+import logging
 import os
 import sys
-import unittest
 import time
-
-import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
-logger = logging.getLogger()
+import unittest
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(HERE))
@@ -32,8 +29,12 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-from rcsb_db.sql.SqlGen import SqlGenQuery, SqlGenCondition
 from rcsb_db.schema.WorkflowSchemaDef import WorkflowSchemaDef
+from rcsb_db.sql.SqlGen import SqlGenCondition, SqlGenQuery
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 class WorkflowSchemaReportTests(unittest.TestCase):

@@ -18,16 +18,15 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 import logging
-import sys
+import multiprocessing
+import threading
+import time
 
 # try:
 #    import Queue as queue
 # except ImportError:
 #    import queue
 
-import threading
-import time
-import multiprocessing
 #
 # import queue for exception definitions
 try:
@@ -57,7 +56,7 @@ class MultiProcLogging(object):
 
     def __setup(self):
         #
-        #  replace current handlers with queue
+        #  Replace current handlers with queue
         for i, hi in enumerate(list(self.logger.handlers)):
             # name = 'wrapped-{0}'.format(i)
             fmt = hi.formatter
@@ -109,6 +108,8 @@ class MultiProcLogging(object):
 
 
 # The following handler and listener classes are provided for Py2 compatibility
+# and come from the Python 2 distribution.  They are mimimally adapted here.
+#
 #
 class MultiProcLogQueueHandler(logging.Handler):
     """
@@ -173,7 +174,7 @@ class MultiProcLogQueueHandler(logging.Handler):
             self.enqueue(self.prepare(record))
         except (KeyboardInterrupt, SystemExit):
             raise
-        except:
+        except Exception:
             self.handleError(record)
 
 
@@ -273,5 +274,3 @@ class MultiProcLogQueueListener(object):
         self.queue.put_nowait(self._sentinel)
         self._thread.join(5.0)
         self._thread = None
-
-

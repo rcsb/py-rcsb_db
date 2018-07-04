@@ -15,8 +15,12 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 
-import platform
 import copy
+import logging
+import platform
+
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure
 
 try:
     # Python 3.x
@@ -25,12 +29,7 @@ except ImportError:
     # Python 2.x
     from urllib import quote_plus
 
-import logging
 logger = logging.getLogger(__name__)
-#
-#
-from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure
 
 
 if platform.system() == "Linux":

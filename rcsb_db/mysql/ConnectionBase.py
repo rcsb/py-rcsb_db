@@ -15,12 +15,12 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 
-
-import platform
-import MySQLdb
 import copy
-
 import logging
+import platform
+
+import MySQLdb
+
 logger = logging.getLogger(__name__)
 #
 #

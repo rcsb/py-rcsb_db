@@ -18,10 +18,10 @@ __license__ = "Apache 2.0"
 
 
 import logging
-logger = logging.getLogger(__name__)
-#
+
 import pymongo
-#
+
+logger = logging.getLogger(__name__)
 
 
 class MongoDbUtil(object):
@@ -51,6 +51,7 @@ class MongoDbUtil(object):
                 logger.debug("Dropping existing database %s" % databaseName)
                 self.__mgObj.drop_database(databaseName)
             db = self.__mgObj[databaseName]
+            logger.debug("Creating database %s %r" % (databaseName, db))
             return True
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -113,20 +114,21 @@ class MongoDbUtil(object):
             logger.error("Failing with %s" % str(e))
         return None
 
-    def insertList(self, databaseName, collectionName, dList, keyName, ordered=False, bypassValidation=True):
+    def insertList(self, databaseName, collectionName, dList, ordered=False, bypassValidation=True, keyName=None, salvage=False):
         rIdL = []
         try:
             c = self.__mgObj[databaseName].get_collection(collectionName)
             r = c.insert_many(dList, ordered=ordered, bypass_document_validation=bypassValidation)
         except Exception as e:
-            logger.error("Bulk insert of %d operation failing with %s" % (len(dList), str(e)))
+            logger.exception("Bulk insert document length %d failing with %s" % (len(dList), str(e)))
         #
         try:
             rIdL = r.inserted_ids
             return rIdL
         except Exception as e:
-            logger.info("Bulk insert document Id recovery failing with %s" % str(e))
-            return self.___salvageInsertList(databaseName, collectionName, dList, keyName)
+            logger.info("Bulk insert document recovery failing with %s" % str(e))
+            if salvage and keyName:
+                return self.__salvageinsertList(databaseName, collectionName, dList, keyName)
 
         return rIdL
 
@@ -146,7 +148,7 @@ class MongoDbUtil(object):
         #
         return rIdL
 
-    def ___salvageInsertList(self, databaseName, collectionName, dList, keyName):
+    def __salvageinsertList(self, databaseName, collectionName, dList, keyName):
         ''' Delete and serially insert the input document list.   Return the list list
             of documents ids successfully loaded.
         '''

@@ -1,5 +1,6 @@
 # RCSB_DB HISTORY
 
 11-Mar-2018  - Py2->Py3 and refactored for python packaging tools
-
+ 4-Jul-2018  - V0.12 reformulate schema definitions directly from dictionary
+               metadata and targeted helper functions.
 

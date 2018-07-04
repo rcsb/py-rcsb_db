@@ -19,16 +19,14 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
-import os
-import sys
-import unittest
-import time
-import pprint
-import dateutil.parser
-
 import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
-logger = logging.getLogger()
+import os
+import pprint
+import sys
+import time
+import unittest
+
+import dateutil.parser
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(HERE))
@@ -42,6 +40,9 @@ except Exception as e:
 from rcsb_db.mongo.Connection import Connection
 from rcsb_db.mongo.MongoDbUtil import MongoDbUtil
 from rcsb_db.utils.ConfigUtil import ConfigUtil
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
+logger = logging.getLogger()
 
 
 class MongoDbUtilTests(unittest.TestCase):
@@ -272,7 +273,7 @@ class MongoDbUtilTests(unittest.TestCase):
                     dList.append(self.__makeDataObj(2, 5, 5, ii))
                 #
                 keyName = 'DOC_ID'
-                rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyName)
+                rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyName=keyName, salvage=True)
                 self.assertEqual(len(rIdL), len(dList))
                 #
                 # Note that dObj is mutated by additional key '_id' that is added on insert -
@@ -361,7 +362,7 @@ class MongoDbUtilTests(unittest.TestCase):
                     dList.append(dObj)
                 #
                 keyName = 'DOC_ID'
-                rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyName)
+                rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyName=keyName, salvage=True)
                 self.assertEqual(len(rIdL), len(dList))
                 #
                 for ii, rId in enumerate(rIdL):
@@ -415,7 +416,7 @@ class MongoDbUtilTests(unittest.TestCase):
                     dList.append(dObj)
                 #
                 keyName = 'DOC_ID'
-                rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyName)
+                rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyName=keyName, salvage=True)
                 self.assertEqual(len(dList), len(rIdL))
                 #
                 for ii in range(nDocs):
@@ -462,7 +463,7 @@ class MongoDbUtilTests(unittest.TestCase):
                     dList.append(dObj)
                 #
                 keyName = 'DOC_ID'
-                rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyName)
+                rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyName=keyName, salvage=True)
                 self.assertEqual(len(dList), len(rIdL))
                 #
                 for ii in range(nDocs):
@@ -528,6 +529,7 @@ def suiteIndex():
     suiteSelect.addTest(MongoDbUtilTests("testSingleIndex"))
     suiteSelect.addTest(MongoDbUtilTests("testSingleIndexSelect"))
     return suiteSelect
+
 
 if __name__ == '__main__':
     if (True):

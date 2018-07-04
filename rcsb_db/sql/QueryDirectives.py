@@ -21,11 +21,12 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 
-import sys
 import logging
-logger = logging.getLogger(__name__)
+import sys
 
-from rcsb_db.sql.SqlGen import SqlGenQuery, SqlGenCondition
+from rcsb_db.sql.SqlGen import SqlGenCondition, SqlGenQuery
+
+logger = logging.getLogger(__name__)
 
 
 class QueryDirectives(object):
@@ -145,7 +146,7 @@ class QueryDirectives(object):
         '''
         if self.__verbose:
             logger.debug("\n+%s.%s() dom dictionary length domD %d\n" %
-                        (self.__class__.__name__, sys._getframe().f_code.co_name, len(domD)))
+                         (self.__class__.__name__, sys._getframe().f_code.co_name, len(domD)))
         tL = []
         qL = []
         self.__selectTupList = []
@@ -233,7 +234,7 @@ class QueryDirectives(object):
                             tdotc = str(tD['ITEM']).split('.')
                             tableId = tdotc[0].upper()
                             attributeId = tdotc[1].upper()
-                            tObj = self.__sd.getTable(tableId)
+                            tObj = self.__sD.getSchemaObject(tableId)
                             aType = tObj.getAttributeType(attributeId)
                             cop = str(tD['COP']).upper()
                             conditionD[ordinal] = {'cType': 'value', 'lOp': tD['LOP'], 'cObj': ((tableId, attributeId), cop, (tD['VALUE'], aType))}
@@ -251,7 +252,7 @@ class QueryDirectives(object):
                             tdotc = str(tD['ITEM']).split('.')
                             tableId = tdotc[0].upper()
                             attributeId = tdotc[1].upper()
-                            tObj = self.__sd.getTable(tableId)
+                            tObj = self.__sD.getSchemaObject(tableId)
                             aType = tObj.getAttributeType(attributeId)
                             cop = str(tD['COP']).upper()
                             vLop = str(tD['VALUE_LOP']).upper()
@@ -291,7 +292,7 @@ class QueryDirectives(object):
                             tdotc = str(tD['ITEM']).split('.')
                             tableId = tdotc[0].upper()
                             attributeId = tdotc[1].upper()
-                            tObj = self.__sd.getTable(tableId)
+                            tObj = self.__sD.getSchemaObject(tableId)
                             aType = tObj.getAttributeType(attributeId)
                             cop = str(tD['COP']).upper()
                             ky = str(tD['KEY'])

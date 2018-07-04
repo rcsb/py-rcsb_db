@@ -17,14 +17,11 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 
+import logging
 import os
 import sys
-import unittest
 import time
-
-import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
-logger = logging.getLogger()
+import unittest
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(HERE))
@@ -37,6 +34,9 @@ except Exception as e:
 
 from rcsb_db.cockroach.Connection import Connection
 from rcsb_db.utils.ConfigUtil import ConfigUtil
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
+logger = logging.getLogger()
 
 
 class ConnectionBaseTests(unittest.TestCase):

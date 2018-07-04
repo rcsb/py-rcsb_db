@@ -5,11 +5,11 @@
 # Version: 0.001
 #
 # Updates:
-#
+#   20-Jun-2018  jdw updates for new schema generation and data preparation tools
 #
 ##
 """
-Tests for creating and loading rdbms database using PDBx/mmCIF data files
+Tests for creating and loading rdbms database (mysql) using PDBx/mmCIF data files
 and external schema definition.
 
 """
@@ -20,14 +20,11 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 
-import sys
+import logging
 import os
+import sys
 import time
 import unittest
-
-import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
-logger = logging.getLogger()
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(HERE))
@@ -38,18 +35,20 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-from rcsb_db.sql.SqlGen import SqlGenAdmin
-from rcsb_db.mysql.SchemaDefLoaderimport SchemaDefLoader
-from rcsb_db.mysql.MyDbUtil import MyDbQuery
 from rcsb_db.mysql.Connection import Connection
+from rcsb_db.mysql.MyDbUtil import MyDbQuery
+from rcsb_db.mysql.SchemaDefLoader import SchemaDefLoader
+from rcsb_db.sql.SqlGen import SqlGenAdmin
+from rcsb_db.utils.ConfigUtil import ConfigUtil
+from rcsb_db.utils.SchemaDefUtil import SchemaDefUtil
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
+logger = logging.getLogger()
 
 try:
     from mmcif.io.IoAdapterCore import IoAdapterCore as IoAdapter
 except Exception as e:
     from mmcif.io.IoAdapterPy import IoAdapterPy as IoAdapter
-
-from rcsb_db.utils.ConfigUtil import ConfigUtil
-from rcsb_db.utils.ContentTypeUtil import ContentTypeUtil
 
 
 class SchemaDefLoaderDbTests(unittest.TestCase):
@@ -63,15 +62,17 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
         # default database
         self.__ioObj = IoAdapter(verbose=self.__verbose)
         #
-        self.__fileLimit = 100
-        self.__numProc = 2
-        self.__mockTopPath = os.path.join(TOPDIR, "rcsb_db", "data")
+        fileLimit = 100
+        numProc = 2
+        workPath = os.path.join(HERE, 'test-output')
+        mockTopPath = os.path.join(TOPDIR, "rcsb_db", "data")
         configPath = os.path.join(TOPDIR, "rcsb_db", "data", 'dbload-setup-example.cfg')
+        #
         configName = 'DEFAULT'
-        self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
+        self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName, mockTopPath=mockTopPath)
         self.__resourceName = "MYSQL_DB"
         #
-        self.__ctU = ContentTypeUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
+        self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=numProc, fileLimit=fileLimit, workPath=workPath)
         #
         self.__startTime = time.time()
         logger.debug("Running tests on version %s" % __version__)
@@ -88,11 +89,11 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
         """ Create table schema using schema definition
         """
         try:
-            tableIdList = schemaDefObj.getTableIdList()
+            tableIdList = schemaDefObj.getSchemaIdList()
             sqlGen = SqlGenAdmin(self.__verbose)
             sqlL = sqlGen.createDatabaseSQL(schemaDefObj.getDatabaseName())
             for tableId in tableIdList:
-                tableDefObj = schemaDefObj.getTable(tableId)
+                tableDefObj = schemaDefObj.getSchemaObject(tableId)
                 sqlL.extend(sqlGen.createTableSQL(databaseName=schemaDefObj.getDatabaseName(), tableDefObj=tableDefObj))
 
             logger.debug("Schema creation SQL string\n %s\n\n" % '\n'.join(sqlL))
@@ -113,31 +114,25 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
     def testSchemaCreate(self):
         """  Create table schema for BIRD, chemical component, and PDBx data.
         """
-        sd, dbName, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
+        sd, dbName, _, _ = self.__schU.getSchemaInfo(schemaName='bird', applicationName='SQL')
         self.__schemaCreate(schemaDefObj=sd)
         #
-        sd, dbName, _, _ = self.__ctU.getSchemaInfo(contentType='bird_family')
+        sd, dbName, _, _ = self.__schU.getSchemaInfo(schemaName='chem_comp', applicationName='SQL')
         self.__schemaCreate(schemaDefObj=sd)
-
-        sd, dbName, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
-        self.__schemaCreate(schemaDefObj=sd)
-
-        sd, dbName, _, _ = self.__ctU.getSchemaInfo(contentType='bird_chem_comp')
-        self.__schemaCreate(schemaDefObj=sd)
-
-        sd, dbName, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
+        #
+        sd, dbName, _, _ = self.__schU.getSchemaInfo(schemaName='pdbx', applicationName='SQL')
         self.__schemaCreate(schemaDefObj=sd)
 
     def testLoadBirdReference(self):
         try:
-            sd, dbName, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            sd, dbName, _, _ = self.__schU.getSchemaInfo(schemaName='bird', applicationName='SQL')
             self.__schemaCreate(schemaDefObj=sd)
 
-            inputPathList = self.__ctU.getPathList(contentType='bird')
-            inputPathList.extend(self.__ctU.getPathList(contentType='bird_family'))
+            inputPathList = self.__schU.getPathList(schemaName='bird')
+            inputPathList.extend(self.__schU.getPathList(schemaName='bird_family'))
             #
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
-                sdl = SchemaDefLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=os.path.join(HERE, "test-output"),
+                sdl = SchemaDefLoader(schemaDefObj=sd, dbCon=client, workPath=os.path.join(HERE, "test-output"),
                                       cleanUp=False, warnings='error', verbose=self.__verbose)
                 ok = sdl.load(inputPathList=inputPathList, loadType='batch-file')
                 self.assertTrue(ok)
@@ -147,14 +142,14 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
 
     def testReLoadBirdReference(self):
         try:
-            sd, dbName, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            sd, dbName, _, _ = self.__schU.getSchemaInfo(schemaName='bird', applicationName='SQL')
             self.__schemaCreate(schemaDefObj=sd)
 
-            inputPathList = self.__ctU.getPathList(contentType='bird')
-            inputPathList.extend(self.__ctU.getPathList(contentType='bird_family'))
+            inputPathList = self.__schU.getPathList(schemaName='bird')
+            inputPathList.extend(self.__schU.getPathList(schemaName='bird_family'))
             #
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
-                sdl = SchemaDefLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=os.path.join(HERE, "test-output"),
+                sdl = SchemaDefLoader(schemaDefObj=sd, dbCon=client, workPath=os.path.join(HERE, "test-output"),
                                       cleanUp=False, warnings='error', verbose=self.__verbose)
                 sdl.load(inputPathList=inputPathList, loadType='batch-file')
                 #
@@ -171,11 +166,11 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
 
     def testLoadChemCompReference(self):
         try:
-            sd, dbName, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
+            sd, dbName, _, _ = self.__schU.getSchemaInfo(schemaName='chem_comp', applicationName='SQL')
             self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__ctU.getPathList(contentType='chem_comp')
+            inputPathList = self.__schU.getPathList(schemaName='chem_comp')
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
-                sdl = SchemaDefLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=os.path.join(HERE, "test-output"),
+                sdl = SchemaDefLoader(schemaDefObj=sd, dbCon=client, workPath=os.path.join(HERE, "test-output"),
                                       cleanUp=False, warnings='error', verbose=self.__verbose)
                 ok = sdl.load(inputPathList=inputPathList, loadType='batch-file')
                 self.assertTrue(ok)
@@ -185,11 +180,12 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
 
     def testLoadPdbxFiles(self):
         try:
-            sd, dbName, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
+            sd, dbName, _, _ = self.__schU.getSchemaInfo(schemaName='pdbx', applicationName='SQL')
             self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__ctU.getPathList(contentType='pdbx')
+            inputPathList = self.__schU.getPathList(schemaName='pdbx')
+            logger.debug("Input path list %r " % inputPathList)
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
-                sdl = SchemaDefLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=os.path.join(HERE, "test-output"),
+                sdl = SchemaDefLoader(schemaDefObj=sd, dbCon=client, workPath=os.path.join(HERE, "test-output"),
                                       cleanUp=False, warnings='error', verbose=self.__verbose)
                 ok = sdl.load(inputPathList=inputPathList, loadType='batch-insert', deleteOpt='all')
                 self.assertTrue(ok)

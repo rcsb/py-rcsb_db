@@ -23,8 +23,9 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 
-import multiprocessing
 import logging
+import multiprocessing
+
 logger = logging.getLogger(__name__)
 
 
@@ -202,12 +203,12 @@ class MultiProcUtil(object):
 
         #
         if len(dataList) == len(successList):
-            logger.info("Complete run  - input task length %d success length %d" % (len(dataList), len(successList)))
+            logger.debug("Complete run  - input task length %d success length %d" % (len(dataList), len(successList)))
             return True, [], retLists, diagList
         else:
             # logger.debug("data list %r " % dataList[:4])
             # logger.debug("successlist %r " % successList[:4])
             failList = list(set(dataList) - set(successList))
-            logger.info("Incomplete run  - input task length %d success length %d fail list %d" % (len(dataList), len(successList), len(failList)))
+            logger.debug("Incomplete run  - input task length %d success length %d fail list %d" % (len(dataList), len(successList), len(failList)))
 
             return False, failList, retLists, diagList

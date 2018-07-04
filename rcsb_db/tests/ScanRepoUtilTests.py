@@ -7,6 +7,10 @@
 # Updates:
 #  9-May-2018 jdw add tests for incremental scanning.
 # 23-May-2018 jdw simplify dependencies - Get input paths internally in ScanRepoUtil()
+# 16-Jun-2018 jdw update DictInfo() prototype
+# 18-Jun-2018 jdw update ScanRepoUtil prototype
+# 28-Jun-2018 jdw update ScanRepoUtil prototype with workPath
+#  2-Jul-2018 jdw remove dependency on mmcif_utils.
 ##
 """
 Tests for scanning BIRD, CCD and PDBx/mmCIF data files for essential
@@ -19,14 +23,11 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 
-import sys
+import logging
 import os
+import sys
 import time
 import unittest
-
-import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
-logger = logging.getLogger()
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(HERE))
@@ -37,29 +38,30 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-from rcsb_db.utils.ScanRepoUtil import ScanRepoUtil
+from rcsb_db.define.DictInfo import DictInfo
 from rcsb_db.utils.ConfigUtil import ConfigUtil
-from rcsb_db.schema.SchemaDefDictInfo import SchemaDefDictInfo
+from rcsb_db.utils.ScanRepoUtil import ScanRepoUtil
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 class ScanRepoUtilTests(unittest.TestCase):
 
-    def __init__(self, methodName='runTest'):
-        super(ScanRepoUtilTests, self).__init__(methodName)
-        self.__verbose = True
-
     def setUp(self):
         #
         #
-        self.__mockTopPath = os.path.join(TOPDIR, 'rcsb_db', 'data')
+        mockTopPath = os.path.join(TOPDIR, 'rcsb_db', 'data')
         configPath = os.path.join(TOPDIR, 'rcsb_db', 'data', 'dbload-setup-example.cfg')
         configName = 'DEFAULT'
-        self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb_db', 'data', 'mmcif_pdbx_v5_next.dic')
-        self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
+        self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb_db', 'data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
+        self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName, mockTopPath=mockTopPath)
         #
         self.__failedFilePath = os.path.join(HERE, 'test-output', 'failed-list.txt')
         self.__savedFilePath = os.path.join(HERE, 'test-output', 'path-list.txt')
         self.__scanDataFilePath = os.path.join(HERE, 'test-output', 'scan-data.pic')
+        self.__workPath = os.path.join(HERE, 'test-output')
 
         self.__numProc = 2
         self.__chunkSize = 10
@@ -120,16 +122,16 @@ class ScanRepoUtilTests(unittest.TestCase):
             dataCoverageFilePath = os.path.join(HERE, 'test-output', '%s-scan-data-coverage.json' % contentType)
             dataTypeFilePath = os.path.join(HERE, 'test-output', '%s-scan-data-type.json' % contentType)
             #
-            sdi = SchemaDefDictInfo(dictPath=self.__pathPdbxDictionaryFile)
-            dataTypeD = sdi.getDataTypeD()
+            dI = DictInfo(dictLocators=[self.__pathPdbxDictionaryFile])
+            attributeDataTypeD = dI.getAttributeDataTypeD()
             #
             sr = ScanRepoUtil(
                 self.__cfgOb,
-                dataTypeD=dataTypeD,
+                attributeDataTypeD=attributeDataTypeD,
                 numProc=self.__numProc,
                 chunkSize=self.__chunkSize,
                 fileLimit=self.__fileLimit,
-                mockTopPath=self.__mockTopPath)
+                workPath=self.__workPath)
             ok = sr.scanContentType(
                 contentType,
                 scanType=scanType,

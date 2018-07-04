@@ -1,0 +1,606 @@
+
+{
+   "pdbx_prd_audit": {
+      "action_type": {
+         "count": 1189,
+         "maxPrec": 0,
+         "maxWidth": 21,
+         "minPrec": 0,
+         "minWidth": 11
+      },
+      "annotator": {
+         "count": 1159,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 2
+      },
+      "date": {
+         "count": 1189,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "details": {
+         "count": 928,
+         "maxPrec": 0,
+         "maxWidth": 751,
+         "minPrec": 0,
+         "minWidth": 2
+      },
+      "prd_id": {
+         "count": 1189,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "processing_site": {
+         "count": 1177,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 4
+      }
+   },
+   "pdbx_reference_entity_link": {
+      "atom_id_1": {
+         "count": 52,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "atom_id_2": {
+         "count": 52,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "comp_id_1": {
+         "count": 52,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "comp_id_2": {
+         "count": 52,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 2
+      },
+      "component_1": {
+         "count": 52,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "component_2": {
+         "count": 52,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "entity_seq_num_1": {
+         "count": 48,
+         "maxPrec": 0,
+         "maxWidth": 2,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "link_class": {
+         "count": 52,
+         "maxPrec": 0,
+         "maxWidth": 2,
+         "minPrec": 0,
+         "minWidth": 2
+      },
+      "link_id": {
+         "count": 52,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "prd_id": {
+         "count": 52,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "ref_entity_id_1": {
+         "count": 52,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "ref_entity_id_2": {
+         "count": 52,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "value_order": {
+         "count": 52,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 4
+      }
+   },
+   "pdbx_reference_entity_list": {
+      "component_id": {
+         "count": 1187,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "details": {
+         "count": 602,
+         "maxPrec": 0,
+         "maxWidth": 121,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "prd_id": {
+         "count": 1187,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "ref_entity_id": {
+         "count": 1187,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "type": {
+         "count": 1187,
+         "maxPrec": 0,
+         "maxWidth": 12,
+         "minPrec": 0,
+         "minWidth": 7
+      }
+   },
+   "pdbx_reference_entity_nonpoly": {
+      "chem_comp_id": {
+         "count": 295,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 2
+      },
+      "name": {
+         "count": 295,
+         "maxPrec": 0,
+         "maxWidth": 214,
+         "minPrec": 0,
+         "minWidth": 6
+      },
+      "prd_id": {
+         "count": 295,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "ref_entity_id": {
+         "count": 295,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      }
+   },
+   "pdbx_reference_entity_poly": {
+      "db_code": {
+         "count": 155,
+         "maxPrec": 0,
+         "maxWidth": 8,
+         "minPrec": 0,
+         "minWidth": 6
+      },
+      "db_name": {
+         "count": 155,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "prd_id": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "ref_entity_id": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "type": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 19,
+         "minPrec": 0,
+         "minWidth": 12
+      }
+   },
+   "pdbx_reference_entity_poly_link": {
+      "atom_id_1": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "atom_id_2": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "comp_id_1": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "comp_id_2": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 2
+      },
+      "component_id": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "entity_seq_num_1": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 2,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "entity_seq_num_2": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 2,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "link_id": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 2,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "prd_id": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "ref_entity_id": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "value_order": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 4
+      }
+   },
+   "pdbx_reference_entity_poly_seq": {
+      "hetero": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "mon_id": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 2
+      },
+      "num": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 2,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "observed": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "parent_mon_id": {
+         "count": 786,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "prd_id": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "ref_entity_id": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      }
+   },
+   "pdbx_reference_entity_sequence": {
+      "NRP_flag": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "one_letter_codes": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 49,
+         "minPrec": 0,
+         "minWidth": 2
+      },
+      "prd_id": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "ref_entity_id": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "type": {
+         "count": 942,
+         "maxPrec": 0,
+         "maxWidth": 19,
+         "minPrec": 0,
+         "minWidth": 12
+      }
+   },
+   "pdbx_reference_entity_src_nat": {
+      "atcc": {
+         "count": 22,
+         "maxPrec": 0,
+         "maxWidth": 12,
+         "minPrec": 0,
+         "minWidth": 5
+      },
+      "db_code": {
+         "count": 132,
+         "maxPrec": 0,
+         "maxWidth": 27,
+         "minPrec": 0,
+         "minWidth": 4
+      },
+      "db_name": {
+         "count": 133,
+         "maxPrec": 0,
+         "maxWidth": 9,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "ordinal": {
+         "count": 346,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "organism_scientific": {
+         "count": 345,
+         "maxPrec": 0,
+         "maxWidth": 97,
+         "minPrec": 0,
+         "minWidth": 7
+      },
+      "prd_id": {
+         "count": 348,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "ref_entity_id": {
+         "count": 348,
+         "maxPrec": 0,
+         "maxWidth": 1,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "source": {
+         "count": 162,
+         "maxPrec": 0,
+         "maxWidth": 12,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "source_id": {
+         "count": 151,
+         "maxPrec": 0,
+         "maxWidth": 59,
+         "minPrec": 0,
+         "minWidth": 5
+      },
+      "taxid": {
+         "count": 323,
+         "maxPrec": 0,
+         "maxWidth": 6,
+         "minPrec": 0,
+         "minWidth": 3
+      }
+   },
+   "pdbx_reference_entity_subcomponents": {
+      "chem_comp_id": {
+         "count": 357,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "prd_id": {
+         "count": 357,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "seq": {
+         "count": 357,
+         "maxPrec": 0,
+         "maxWidth": 31,
+         "minPrec": 0,
+         "minWidth": 7
+      }
+   },
+   "pdbx_reference_molecule": {
+      "chem_comp_id": {
+         "count": 727,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 2
+      },
+      "class": {
+         "count": 1188,
+         "maxPrec": 0,
+         "maxWidth": 40,
+         "minPrec": 0,
+         "minWidth": 5
+      },
+      "compound_details": {
+         "count": 113,
+         "maxPrec": 0,
+         "maxWidth": 1437,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "description": {
+         "count": 113,
+         "maxPrec": 0,
+         "maxWidth": 1156,
+         "minPrec": 0,
+         "minWidth": 11
+      },
+      "formula": {
+         "count": 1189,
+         "maxPrec": 0,
+         "maxWidth": 22,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "formula_weight": {
+         "count": 1189,
+         "maxPrec": 5,
+         "maxWidth": 10,
+         "minPrec": 1,
+         "minWidth": 6
+      },
+      "name": {
+         "count": 1188,
+         "maxPrec": 0,
+         "maxWidth": 908,
+         "minPrec": 0,
+         "minWidth": 4
+      },
+      "prd_id": {
+         "count": 1189,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "release_status": {
+         "count": 1189,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "replaced_by": {
+         "count": 1,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "replaces": {
+         "count": 1,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "represent_as": {
+         "count": 1189,
+         "maxPrec": 0,
+         "maxWidth": 15,
+         "minPrec": 0,
+         "minWidth": 7
+      },
+      "representative_PDB_id_code": {
+         "count": 1189,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 4
+      },
+      "type": {
+         "count": 1189,
+         "maxPrec": 0,
+         "maxWidth": 51,
+         "minPrec": 0,
+         "minWidth": 9
+      }
+   }
+}

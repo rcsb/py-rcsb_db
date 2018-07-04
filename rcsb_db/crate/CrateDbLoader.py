@@ -19,23 +19,20 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 
-import os
+import logging
 import time
 
-from rcsb_db.sql.SqlGen import SqlGenAdmin
 from rcsb_db.crate.CrateDbUtil import CrateDbQuery
 from rcsb_db.loaders.SchemaDefDataPrep import SchemaDefDataPrep
+from rcsb_db.sql.SqlGen import SqlGenAdmin
+
 #
 try:
     from mmcif.io.IoAdapterCore import IoAdapterCore as IoAdapter
 except Exception as e:
     from mmcif.io.IoAdapterPy import IoAdapterPy as IoAdapter
-#
-#
 
-import logging
 logger = logging.getLogger(__name__)
-#
 
 
 class CrateDbLoader(object):
@@ -122,7 +119,7 @@ class CrateDbLoader(object):
         sqlGen = SqlGenAdmin(self.__verbose)
         #
         databaseName = self.__sD.getVersionedDatabaseName()
-        tableDefObj = self.__sD.getTable(tableId)
+        tableDefObj = self.__sD.getSchemaObject(tableId)
         tableName = tableDefObj.getName()
         tableAttributeIdList = tableDefObj.getAttributeIdList()
         tableAttributeNameList = tableDefObj.getAttributeNameList()

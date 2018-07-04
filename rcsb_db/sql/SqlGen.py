@@ -14,7 +14,8 @@
 #  2-Oct-2017 jdw py3 compatibility use zip_longest
 #  2-Oct-2017 jdw fix obvious error with missing len() in addKeyAttributeEquiJoinConditions()
 # 30-Dec-2017 jdw add crate specific SQL generators
-# 5-Jan-2018  jdw add default replication factor for crate -
+#  5-Jan-2018 jdw add default replication factor for crate -
+# 20-Jun-2018 jdw adjustments for dynamic schema generation
 #
 #
 ##
@@ -28,15 +29,16 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 
-import itertools
 import copy
+import itertools
+import logging
+
 # from operator import itemgetter, attrgetter
 try:
     from itertools import zip_longest as zip_longest
 except Exception as e:
     from itertools import izip_longest as zip_longest
 
-import logging
 logger = logging.getLogger(__name__)
 #
 
@@ -185,15 +187,6 @@ class SqlGenAdmin(object):
         tS = "REFRESH TABLE %s.%s;" % (databaseName, tableName)
         return tS
 
-
-    def refreshTableSQLCrate(self, databaseName, tableName):
-        """ Return the SQL string to refresh named table.
-
-        """
-        #
-        tS = "REFRESH TABLE %s.%s;" % (databaseName, tableName)
-        return tS
-
     def deleteTemplateSQL(self, databaseName, tableName, attributeNameList=[]):
         """ Return the SQL string template for deleting table records constrained by the input attributes.
 
@@ -308,7 +301,7 @@ class SqlGenAdmin(object):
             #
             name = tableDefObj.getAttributeName(attributeId)
 
-            sqlType = tableDefObj.getAttributeType(attributeId)
+            sqlType = str(tableDefObj.getAttributeType(attributeId)).upper()
             width = int(tableDefObj.getAttributeWidth(attributeId))
             precision = int(tableDefObj.getAttributePrecision(attributeId))
             notNull = "not null" if not tableDefObj.getAttributeNullable(attributeId) else "    null default null"
@@ -364,7 +357,7 @@ class SqlGenAdmin(object):
             #
             name = tableDefObj.getAttributeName(attributeId)
 
-            sqlType = tableDefObj.getAttributeType(attributeId)
+            sqlType = str(tableDefObj.getAttributeType(attributeId)).upper()
             width = int(tableDefObj.getAttributeWidth(attributeId))
             precision = int(tableDefObj.getAttributePrecision(attributeId))
             notNull = "not null" if not tableDefObj.getAttributeNullable(attributeId) else "    null default null"
@@ -441,9 +434,9 @@ class SqlGenAdmin(object):
             #
             name = self.__filterColumnName(tableDefObj.getAttributeName(attributeId))
 
-            sqlType = tableDefObj.getAttributeType(attributeId)
-            #width = int(tableDefObj.getAttributeWidth(attributeId))
-            #precision = int(tableDefObj.getAttributePrecision(attributeId))
+            sqlType = str(tableDefObj.getAttributeType(attributeId)).upper()
+            # width = int(tableDefObj.getAttributeWidth(attributeId))
+            # precision = int(tableDefObj.getAttributePrecision(attributeId))
             notNull = "not null" if not tableDefObj.getAttributeNullable(attributeId) else " "
 
             if tableDefObj.getAttributeIsPrimaryKey(attributeId):
@@ -509,7 +502,6 @@ class SqlGenAdmin(object):
             tL.append(");")
             oL.append(' '.join(tL))
 
-       #
         return oL
 
     def __createTableIndicesCrate(self, tableDefObj):
@@ -527,7 +519,7 @@ class SqlGenAdmin(object):
             attributeIdList = tableDefObj.getIndexAttributeIdList(indexName)
             attributeIdListS = []
             for ii, attributeId in enumerate(attributeIdList):
-                sqlType = tableDefObj.getAttributeType(attributeId)
+                sqlType = str(tableDefObj.getAttributeType(attributeId)).upper()
                 if sqlType in ['VARCHAR', 'CHAR', 'TEXT', 'DATE', 'DATETIME', 'MEDIUMTEXT', 'LONGTEXT']:
                     attributeIdListS.append(attributeId)
             #
@@ -539,11 +531,10 @@ class SqlGenAdmin(object):
                     tL.append(tS + ",")
                 else:
                     tL.append(tS)
-            #tL.append(") with (analyzer = 'english'),")
+            # tL.append(") with (analyzer = 'english'),")
             tL.append(") ,")
             oL.append(' '.join(tL))
 
-       #
         return oL
 
     def exportTable(self, databaseName, tableDefObj, exportPath, withDoubleQuotes=False):

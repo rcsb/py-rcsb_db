@@ -9,6 +9,7 @@
 #   26-Mar-2018  jdw internalize the use of externally provided configuration object -
 #   27-Mar-2018  jdw add path to support mock repositories for testing.
 #   23-May-2018  jdw add getRepoPathList() convenience method
+#   18-Jun-2018  jdw move mock support to the configuration module
 ##
 """
  Utilites for scanning common data repository file systems.
@@ -19,30 +20,28 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
+import logging
 import os
 import time
-try:
-    import os.scandir as scandir
-except Exception as e:
-    import scandir
-
-import logging
-logger = logging.getLogger(__name__)
 
 from rcsb_db.utils.MultiProcUtil import MultiProcUtil
-from mmcif_utils.bird.PdbxPrdIo import PdbxPrdIo
-from mmcif_utils.bird.PdbxPrdCcIo import PdbxPrdCcIo
-from mmcif_utils.bird.PdbxFamilyIo import PdbxFamilyIo
+
+try:
+    from os import walk
+except ImportError:
+    from scandir import walk
+
+
+logger = logging.getLogger(__name__)
 
 
 class RepoPathUtil(object):
 
-    def __init__(self, cfgOb, numProc=8, fileLimit=None, mockTopPath=None, verbose=False):
+    def __init__(self, cfgOb, numProc=8, fileLimit=None, verbose=False):
         self.__fileLimit = fileLimit
         self.__numProc = numProc
         self.__verbose = verbose
         self.__cfgOb = cfgOb
-        self.__mockTopPath = mockTopPath
         self.__mpFormat = '[%(levelname)s] %(asctime)s %(processName)s-%(module)s.%(funcName)s: %(message)s'
 
     def getRepoPathList(self, contentType, inputPathList=None):
@@ -73,9 +72,6 @@ class RepoPathUtil(object):
 
         return outputPathList
 
-    def __cfgWrapper(self, ky):
-        return os.path.join(self.__mockTopPath, self.__cfgOb.get(ky)) if self.__mockTopPath else self.__cfgOb.get(ky)
-
     def _chemCompPathWorker(self, dataList, procName, optionsD, workingDir):
         """ Return the list of chemical component definition file paths in the current repository.
         """
@@ -83,7 +79,7 @@ class RepoPathUtil(object):
         pathList = []
         for subdir in dataList:
             dd = os.path.join(topRepoPath, subdir)
-            for root, dirs, files in scandir.walk(dd, topdown=False):
+            for root, dirs, files in walk(dd, topdown=False):
                 if "REMOVE" in root:
                     continue
                 for name in files:
@@ -92,7 +88,7 @@ class RepoPathUtil(object):
         return dataList, pathList, []
 
     def getChemCompPathList(self):
-        return self.__getChemCompPathList(self.__cfgWrapper('CHEM_COMP_REPO_PATH'), numProc=self.__numProc)
+        return self.__getChemCompPathList(self.__cfgOb.getPath('CHEM_COMP_REPO_PATH'), numProc=self.__numProc)
 
     def __getChemCompPathList(self, topRepoPath, numProc=8):
         """Get the path list for the chemical component definition repository
@@ -124,7 +120,7 @@ class RepoPathUtil(object):
         pathList = []
         for subdir in dataList:
             dd = os.path.join(topRepoPath, subdir)
-            for root, dirs, files in scandir.walk(dd, topdown=False):
+            for root, dirs, files in walk(dd, topdown=False):
                 if "REMOVE" in root:
                     continue
                 for name in files:
@@ -133,7 +129,7 @@ class RepoPathUtil(object):
         return dataList, pathList, []
 
     def getEntryPathList(self):
-        return self.__getEntryPathList(self.__cfgWrapper('RCSB_PDBX_SANBOX_PATH'), numProc=self.__numProc)
+        return self.__getEntryPathList(self.__cfgOb.getPath('RCSB_PDBX_SANBOX_PATH'), numProc=self.__numProc)
 
     def __getEntryPathList(self, topRepoPath, numProc=8):
         """Get the path list for the chemical component definition repository
@@ -167,49 +163,81 @@ class RepoPathUtil(object):
         return self.__applyFileLimit(pathList)
 
     def getBirdPathList(self):
-        return self.__getBirdPathList(self.__cfgWrapper('BIRD_REPO_PATH'))
+        return self.__getBirdPathList(self.__cfgOb.getPath('BIRD_REPO_PATH'))
 
     def __getBirdPathList(self, topRepoPath):
-        """Get the path list of BIRD definitions in the repository.
+        """ Return the list of definition file paths in the current repository.
+
+            List is ordered in increasing PRD ID numerical code.
         """
         pathList = []
         try:
-            refIo = PdbxPrdIo(verbose=self.__verbose)
-            refIo.setCachePath(topRepoPath)
-            pathList = refIo.makeDefinitionPathList()
+            sd = {}
+            for root, dirs, files in os.walk(topRepoPath, topdown=False):
+                if "REMOVE" in root:
+                    continue
+                for name in files:
+                    if name.startswith("PRD_") and name.endswith(".cif") and len(name) <= 14:
+                        pth = os.path.join(root, name)
+                        sd[int(name[4:-4])] = pth
+            #
+            for k in sorted(sd.keys()):
+                pathList.append(sd[k])
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
+        #
         return self.__applyFileLimit(pathList)
 
     def getBirdFamilyPathList(self):
-        return self.__getBirdFamilyPathList(self.__cfgWrapper('BIRD_FAMILY_REPO_PATH'))
+        return self.__getBirdFamilyPathList(self.__cfgOb.getPath('BIRD_FAMILY_REPO_PATH'))
 
     def __getBirdFamilyPathList(self, topRepoPath):
-        """Get the path list of BIRD Family definitions in the repository.
+        """ Return the list of definition file paths in the current repository.
+
+            List is ordered in increasing PRD ID numerical code.
         """
         pathList = []
         try:
-            refIo = PdbxFamilyIo(verbose=self.__verbose)
-            refIo.setCachePath(topRepoPath)
-            pathList = refIo.makeDefinitionPathList()
-
+            sd = {}
+            for root, dirs, files in os.walk(topRepoPath, topdown=False):
+                if "REMOVE" in root:
+                    continue
+                for name in files:
+                    if name.startswith("FAM_") and name.endswith(".cif") and len(name) <= 14:
+                        pth = os.path.join(root, name)
+                        sd[int(name[4:-4])] = pth
+            #
+            for k in sorted(sd.keys()):
+                pathList.append(sd[k])
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
+        #
         return self.__applyFileLimit(pathList)
 
     def getBirdChemCompPathList(self):
-        return self.__getBirdChemCompPathList(self.__cfgWrapper('BIRD_CHEM_COMP_REPO_PATH'))
+        return self.__getBirdChemCompPathList(self.__cfgOb.getPath('BIRD_CHEM_COMP_REPO_PATH'))
 
     def __getBirdChemCompPathList(self, topRepoPath):
-        """Get the path list of BIRD chemical component definitions in the repository.
+        """ Return the list of definition file paths in the current repository.
+
+            List is ordered in increasing PRD ID numerical code.
         """
         pathList = []
         try:
-            refIo = PdbxPrdCcIo(verbose=self.__verbose)
-            refIo.setCachePath(topRepoPath)
-            pathList = refIo.makeDefinitionPathList()
+            sd = {}
+            for root, dirs, files in os.walk(topRepoPath, topdown=False):
+                if "REMOVE" in root:
+                    continue
+                for name in files:
+                    if name.startswith("PRDCC_") and name.endswith(".cif") and len(name) <= 16:
+                        pth = os.path.join(root, name)
+                        sd[int(name[6:-4])] = pth
+            #
+            for k in sorted(sd.keys()):
+                pathList.append(sd[k])
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
+        #
         return self.__applyFileLimit(pathList)
 
     def __applyFileLimit(self, pathList):

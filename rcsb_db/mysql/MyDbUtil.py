@@ -28,17 +28,16 @@ Utility classes to create connections and process SQL commands with a MySQL RDBM
 """
 from __future__ import generators
 
+import logging
+import warnings
+
+import MySQLdb
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
-#
-
-import MySQLdb
-import warnings
-
-import logging
 logger = logging.getLogger(__name__)
 
 #

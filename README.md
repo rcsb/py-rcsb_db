@@ -2,10 +2,9 @@
 
 ### Introduction
 
-This module contains a collection of utility classes used by the RDSB Protein Data Bank
-for loading and accessing various PDB content using relational and document database
-servers.  These tools provide one approach to loading data into the RCSB Exchange database
-currently hosted in MongoDB.
+This module contains a collection of utility classes for processing and loading PDB repository and
+derived data content using relational and document database servers.  One target data store for
+these tools is a document database used to exchange content within the RCSB PDB data pipeline.
 
 ### Installation
 
@@ -17,12 +16,14 @@ git clone  https://github.com/rcsb/py-rcsb_db.git
 
 ```
 
-Optionally, run test suite (Python versions 2.7 or 3.6) using setuptools or tox:
+Optionally, run test suite (Python versions 2.7, 3.6, and 3.7) using
+[setuptools](https://setuptools.readthedocs.io/en/latest/) or
+[tox](http://tox.readthedocs.io/en/latest/example/platform.html):
 
 ```bash
 python setup.py test
 
-or
+or simply run
 
 tox
 ```
@@ -33,23 +34,29 @@ Installation is via the program [pip](https://pypi.python.org/pypi/pip).
 pip install .
 ```
 
-A convenience CLI `exdb_load_cli` is provided currently to support loading various PDB content types
-as document collections into a MongoDB server.
+### Command Line Interfaces
+
+A convenience CLI `exdb_repo_load_cli` is provided to support loading PDB repositories
+containing entry and chemical reference data content types in the form of document collections
+compatible with MongoDB.
+
 
 ```bash
-exdb_load_cli --help
+exdb_repo_load_cli --help
 
-usage: exdb_load_cli [-h] [--full] [--replace] [--load_chem_comp_ref]
-                     [--load_bird_chem_comp_ref] [--load_bird_ref]
-                     [--load_bird_family_ref] [--load_entry_data]
-                     [--config_path CONFIG_PATH] [--config_name CONFIG_NAME]
-                     [--db_type DB_TYPE] [--document_style DOCUMENT_STYLE]
-                     [--read_back_check]
-                     [--load_file_list_path LOAD_FILE_LIST_PATH]
-                     [--fail_file_list_path FAIL_FILE_LIST_PATH]
-                     [--save_file_list_path SAVE_FILE_LIST_PATH]
-                     [--num_proc NUM_PROC] [--chunk_size CHUNK_SIZE]
-                     [--file_limit FILE_LIMIT] [--debug] [--mock]
+usage:  exdb_repo_load_cli [-h] [--full] [--replace] [--load_chem_comp_ref]
+                           [--load_bird_chem_comp_ref] [--load_bird_ref]
+                           [--load_bird_family_ref] [--load_entry_data]
+                           [--config_path CONFIG_PATH] [--config_name CONFIG_NAME]
+                           [--db_type DB_TYPE] [--document_style DOCUMENT_STYLE]
+                           [--read_back_check]
+                           [--load_file_list_path LOAD_FILE_LIST_PATH]
+                           [--fail_file_list_path FAIL_FILE_LIST_PATH]
+                           [--save_file_list_path SAVE_FILE_LIST_PATH]
+                           [--num_proc NUM_PROC] [--chunk_size CHUNK_SIZE]
+                           [--file_limit FILE_LIMIT]
+                           [--prune_document_size PRUNE_DOCUMENT_SIZE] [--debug]
+                           [--mock] [--working_path WORKING_PATH]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -88,18 +95,180 @@ optional arguments:
                         Number of files loaded per process
   --file_limit FILE_LIMIT
                         Load file limit for testing
+  --prune_document_size PRUNE_DOCUMENT_SIZE
+                        Prune large documents to this size limit (MB)
   --debug               Turn on verbose logging
   --mock                Use MOCK repository configuration for testing
+  --working_path WORKING_PATH
+                        Working path for temporary files
+
+```
+
+Part of the schema definition process supported by this module involves refining
+the dictionary metadata with more specific data typing and coverage details.
+A scanning tools is provided to collect and organize these details for the
+other ETL tools in this package.  The following convenience CLI, `repo_scan_cli`,
+is provided to scan supported PDB repository content and update data type and coverage details.
+
+
+```bash
+repo_scan_cli --help
+
+usage: repo_scan_cli   [-h] [--dict_file_path DICT_FILE_PATH]
+                       [--scan_chem_comp_ref | --scan_bird_chem_comp_ref | --scan_bird_ref | --scan_bird_family_ref | --scan_entry_data]
+                       [--config_path CONFIG_PATH] [--config_name CONFIG_NAME]
+                       [--input_file_list_path INPUT_FILE_LIST_PATH]
+                       [--output_file_list_path OUTPUT_FILE_LIST_PATH]
+                       [--fail_file_list_path FAIL_FILE_LIST_PATH]
+                       [--scan_data_file_path SCAN_DATA_FILE_PATH]
+                       [--coverage_file_path COVERAGE_FILE_PATH]
+                       [--type_map_file_path TYPE_MAP_FILE_PATH]
+                       [--num_proc NUM_PROC] [--chunk_size CHUNK_SIZE]
+                       [--file_limit FILE_LIMIT] [--debug] [--mock]
+                       [--working_path WORKING_PATH]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --dict_file_path DICT_FILE_PATH
+                        PDBx/mmCIF dictionary file path
+  --scan_chem_comp_ref  Scan Chemical Component reference definitions (public
+                        subset)
+  --scan_bird_chem_comp_ref
+                        Scan Bird Chemical Component reference definitions
+                        (public subset)
+  --scan_bird_ref       Scan Bird reference definitions (public subset)
+  --scan_bird_family_ref
+                        Scan Bird Family reference definitions (public subset)
+  --scan_entry_data     Scan PDB entry data (current released subset)
+  --config_path CONFIG_PATH
+                        Path to configuration options file
+  --config_name CONFIG_NAME
+                        Configuration section name
+  --input_file_list_path INPUT_FILE_LIST_PATH
+                        Input file containing file paths to scan
+  --output_file_list_path OUTPUT_FILE_LIST_PATH
+                        Output file containing file paths scanned
+  --fail_file_list_path FAIL_FILE_LIST_PATH
+                        Output file containing file paths that fail scan
+  --scan_data_file_path SCAN_DATA_FILE_PATH
+                        Output working file storing scan data (Pickle)
+  --coverage_file_path COVERAGE_FILE_PATH
+                        Coverage map (JSON) output path
+  --type_map_file_path TYPE_MAP_FILE_PATH
+                        Type map (JSON) output path
+  --num_proc NUM_PROC   Number of processes to execute (default=2)
+  --chunk_size CHUNK_SIZE
+                        Number of files loaded per process
+  --file_limit FILE_LIMIT
+                        Load file limit for testing
+  --debug               Turn on verbose logging
+  --mock                Use MOCK repository configuration for testing
+  --working_path WORKING_PATH
+                        Working path for temporary files
+```
+
+The following CLI provides a preliminary access to ETL functions for processing
+derived content types such as sequence comparative data.
+
+```bash
+etl_exec_cli  --help
+
+usage: etl_exec_cli   [-h] [--full] [--etl_entity_sequence_clusters]
+                      [--data_set_id DATA_SET_ID]
+                      [--sequence_cluster_data_path SEQUENCE_CLUSTER_DATA_PATH]
+                      [--config_path CONFIG_PATH] [--config_name CONFIG_NAME]
+                      [--db_type DB_TYPE] [--read_back_check]
+                      [--num_proc NUM_PROC] [--chunk_size CHUNK_SIZE]
+                      [--document_limit DOCUMENT_LIMIT]
+                      [--prune_document_size PRUNE_DOCUMENT_SIZE] [--debug]
+                      [--mock] [--working_path WORKING_PATH]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --full                Fresh full load in a new tables/collections (Default)
+  --etl_entity_sequence_clusters
+                        ETL entity sequence clusters
+  --data_set_id DATA_SET_ID
+                        Data set identifier (e.g., 2018_14)
+  --sequence_cluster_data_path SEQUENCE_CLUSTER_DATA_PATH
+                        Sequence cluster data path
+  --config_path CONFIG_PATH
+                        Path to configuration options file
+  --config_name CONFIG_NAME
+                        Configuration section name
+  --db_type DB_TYPE     Database server type (default=mongo)
+  --read_back_check     Perform read back check on all documents
+  --num_proc NUM_PROC   Number of processes to execute (default=2)
+  --chunk_size CHUNK_SIZE
+                        Number of files loaded per process
+  --document_limit DOCUMENT_LIMIT
+                        Load document limit for testing
+  --prune_document_size PRUNE_DOCUMENT_SIZE
+                        Prune large documents to this size limit (MB)
+  --debug               Turn on verbose logging
+  --mock                Use MOCK repository configuration for testing
+  --working_path WORKING_PATH
+                        Working path for temporary files
+```
+
+### Examples
+
+If you are working in the source repository, then you can run the CLI commands in the following manner.
+The following examples load data in the mock repositories in source distribution assuming you have a local
+default installation of MongoDb (no user/pw assigned).
+
+To run the command-line interface `exdb_repo_load_cli` outside of the source distribution, you will need to
+create a configuration file with the appropriate path details and authentication credentials.
+
+For instance, to perform a fresh/full load of all of the chemical component definitions in the mock repository:
+
+```bash
+
+cd rcsb_db/exec
+python RepoLoadExec.py --full  --load_chem_comp_ref  \
+                      --config_path ../data/dbload-setup-example.cfg \
+                      --config_name DEFAULT \
+                      --fail_file_list_path failed-cc-path-list.txt \
+                      --read_back_check
 ```
 
 
-RCSB/PDB repository path details are stored as configuration options.  An example
-configuration file is shown below which assumes a local MongoDB instance and
-using the mock repositories installed with this software module.
+The following illustrates, a full load of the mock structure data repository followed by a reload with replacement of
+this same data.
 
 ```bash
-# File: db-load-setup-example.cfg
-# Function: Template configuration file for rcsb_db utilities using MOCK repository paths
+
+cd rcsb_db/exec
+python RepoLoadExec.py  --mock --full  --load_entry_data \
+                     --config_path ../data/dbload-setup-example.cfg \
+                     --config_name DEFAULT \
+                     --save_file_list_path  LATEST_PDBX_LOAD_LIST.txt \
+                     --fail_file_list_path failed-entry-path-list.txt
+
+python RepoLoadExec.py --mock --replace  --load_entry_data \
+                      --config_path ../data/dbload-setup-example.cfg \
+                      --config_name DEFAULT \
+                      --load_file_list_path  LATEST_PDBX_LOAD_LIST.txt \
+                      --fail_file_list_path failed-entry-path-list.txt
+```
+
+
+
+### Configuration Example
+
+RCSB/PDB repository path details are stored as configuration options.
+An example configuration file included in this package is shown below.
+This example is references dictionary resources and mock repository data
+provided in the package in `rcsb_db/data/*`.
+The `DEFAULT` section provides database server connection details.  This is
+followed by sections specifying the dictionaries and helper functions used
+to define the schema for the each supported content type (e.g., pdbx, chem_comp,
+bird, bird_family,.. ).
+
+
+```bash
+#File: rcsb_db/data/dbload-setup-example.cfg
+# -------------------------------------------------------------------------
 #
 [DEFAULT]
 #
@@ -111,50 +280,122 @@ RCSB_PDBX_SANBOX_PATH=MOCK_PDBX_SANDBOX
 #
 MONGO_DB_HOST=localhost
 MONGO_DB_PORT=27017
-#
 MONGO_DB_USER=
 MONGO_DB_PASSWORD=
-MONGO_DB_ADMIN_DB_NAME=
 #
-MONGO_DB_WRITE_CONCERN=majority
-MONGO_DB_READ_CONCERN=majority
-MONGO_DB_READ_PREFERENCE=nearest
-MONGO_DB_WRITE_TO_JOURNAL=True
+#
+MYSQL_DB_HOST_NAME=localhost
+MYSQL_DB_PORT_NUMBER=3306
+#MYSQL_DB_USER_NAME=wwpdbmgr
+#MYSQL_DB_PASSWORD=wwpdb0000
+MYSQL_DB_USER_NAME=root
+MYSQL_DB_PASSWORD=mysql0000
+MYSQL_DB_DATABASE_NAME=mysql
+#
+CRATE_DB_HOST=localhost
+CRATE_DB_PORT=4200
+#
+COCKROACH_DB_HOST=localhost
+COCKROACH_DB_PORT=26257
+COCKROACH_DB_NAME=system
+COCKROACH_DB_USER_NAME=root
+#
+PDBX_DICT_LOCATOR=dictionaries/mmcif_pdbx_v5_next.dic
+RCSB_DICT_LOCATOR=dictionaries/rcsb_mmcif_ext_v1.dic
+PROVENANCE_INFO_LOCATOR=provenance/rcsb_extend_provenance_info.json
+
+## -------------------
+[pdbx]
+PDBX_DICT_LOCATOR=dictionaries/mmcif_pdbx_v5_next.dic
+RCSB_DICT_LOCATOR=dictionaries/rcsb_mmcif_ext_v1.dic
+PROVENANCE_INFO_LOCATOR=provenance/rcsb_extend_provenance_info.json
+#
+SCHEMA_NAME=pdbx
+SCHEMA_DEF_LOCATOR_SQL=schema/schema_def-pdbx-SQL.json
+SCHEMA_DEF_LOCATOR_ANY=schema/schema_def-pdbx-ANY.json
+INSTANCE_DATA_TYPE_INFO_LOCATOR=data_type_info/scan-pdbx-type-map.json
+APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
+
+DICT_HELPER_MODULE=rcsb_db.helpers.DictInfoHelper
+SCHEMADEF_HELPER_MODULE=rcsb_db.helpers.SchemaDefHelper
+DOCUMENT_HELPER_MODULE=rcsb_db.helpers.SchemaDocumentHelper
+
+## -------------------
+[chem_comp]
+PDBX_DICT_LOCATOR =dictionaries/mmcif_pdbx_v5_next.dic
+RCSB_DICT_LOCATOR=dictionaries/rcsb_mmcif_ext_v1.dic
+PROVENANCE_INFO_LOCATOR=provenance/rcsb_extend_provenance_info.json
+#
+SCHEMA_NAME=chem_comp
+SCHEMA_DEF_LOCATOR_SQL=schema/schema_def-chem_comp-SQL.json
+SCHEMA_DEF_LOCATOR_ANY=schema/schema_def-chem_comp-ANY.json
+INSTANCE_DATA_TYPE_INFO_LOCATOR=data_type_info/scan-chem_comp-type-map.json
+APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
+
+DICT_HELPER_MODULE=rcsb_db.helpers.DictInfoHelper
+SCHEMADEF_HELPER_MODULE=rcsb_db.helpers.SchemaDefHelper
+DOCUMENT_HELPER_MODULE=rcsb_db.helpers.SchemaDocumentHelper
+
+## -------------------
+[bird_chem_comp]
+PDBX_DICT_LOCATOR=dictionaries/mmcif_pdbx_v5_next.dic
+RCSB_DICT_LOCATOR=dictionaries/rcsb_mmcif_ext_v1.dic
+PROVENANCE_INFO_LOCATOR=provenance/rcsb_extend_provenance_info.json
+#
+SCHEMA_NAME=bird_chem_comp
+SCHEMA_DEF_LOCATOR_SQL=schema/schema_def-bird_chem_comp-SQL.json
+SCHEMA_DEF_LOCATOR_ANY=schema/schema_def-bird_chem_comp-ANY.json
+INSTANCE_DATA_TYPE_INFO_LOCATOR=data_type_info/scan-bird_chem_comp-type-map.json
+APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
+
+DICT_HELPER_MODULE=rcsb_db.helpers.DictInfoHelper
+SCHEMADEF_HELPER_MODULE=rcsb_db.helpers.SchemaDefHelper
+DOCUMENT_HELPER_MODULE=rcsb_db.helpers.SchemaDocumentHelper
+
+## -------------------
+[bird]
+PDBX_DICT_LOCATOR=dictionaries/mmcif_pdbx_v5_next.dic
+RCSB_DICT_LOCATOR=dictionaries/rcsb_mmcif_ext_v1.dic
+PROVENANCE_INFO_LOCATOR=provenance/rcsb_extend_provenance_info.json
+#
+SCHEMA_NAME=bird
+SCHEMA_DEF_LOCATOR_SQL=schema/schema_def-bird-SQL.json
+SCHEMA_DEF_LOCATOR_ANY=schema/schema_def-bird-ANY.json
+INSTANCE_DATA_TYPE_INFO_LOCATOR=data_type_info/scan-bird-type-map.json
+APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
+
+DICT_HELPER_MODULE=rcsb_db.helpers.DictInfoHelper
+SCHEMADEF_HELPER_MODULE=rcsb_db.helpers.SchemaDefHelper
+DOCUMENT_HELPER_MODULE=rcsb_db.helpers.SchemaDocumentHelper
+
+## -------------------
+[bird_family]
+PDBX_DICT_LOCATOR=dictionaries/mmcif_pdbx_v5_next.dic
+RCSB_DICT_LOCATOR=dictionaries/rcsb_mmcif_ext_v1.dic
+PROVENANCE_INFO_LOCATOR=provenance/rcsb_extend_provenance_info.json
+#
+SCHEMA_NAME=bird_family
+SCHEMA_DEF_LOCATOR_SQL=schema/schema_def-bird_family-SQL.json
+SCHEMA_DEF_LOCATOR_ANY=schema/schema_def-bird_family-ANY.json
+INSTANCE_DATA_TYPE_INFO_LOCATOR=data_type_info/scan-bird_family-type-map.json
+APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
+
+DICT_HELPER_MODULE=rcsb_db.helpers.DictInfoHelper
+SCHEMADEF_HELPER_MODULE=rcsb_db.helpers.SchemaDefHelper
+DOCUMENT_HELPER_MODULE=rcsb_db.helpers.SchemaDocumentHelper
+
+## -------------------
+[entity_sequence_clusters]
+DATABASE_NAME=sequence_clusters
+DATABASE_VERSION_STRING=v5
+COLLECTION_ENTITY_MEMBERS=entity_members
+COLLECTION_ENTITY_MEMBERS_INDEX=data_set_id,entry_id,entity_id
+COLLECTION_CLUSTER_MEMBERS=cluster_members
+COLLECTION_CLUSTER_MEMBERS_INDEX=data_set_id,identity,cluster_id
+COLLECTION_VERSION_STRING=v0_1
+ENTITY_SCHEMA_NAME=rcsb_sequence_cluster_entity_list
+CLUSTER_SCHEMA_NAME=rcsb_sequence_cluster_identifer_list
+SEQUENCE_IDENTITY_LEVELS=100,95,90,70,50,30
+## -------------------
 
 ```
-
-If you are working in the source repository, then you can run the CLI commands in the following manner.
-These examples load data in the mock repositories in source distribution assuming you have a local
-default installation of MongoDb (no user/pw assigned).
-
-To run the command-line interface `exdb_load_cli` outside of the source distribution, you will need to
-create a configuration file with the appropriate path and credential details.
-
-For instance, to perform a fresh/full load of all of the chemical component definitions in the mock repository:
-```
-cd rcsb_db/exec
-python DbLoadExec.py  --mock --full  --load_chem_comp_ref  \
-                      --config_path ../data/dbload-setup-example.cfg \
-                      --config_name DEFAULT
-                      --fail_file_list_path failed-cc-path-list.txt \
-                      --read_back_check
-```
-
-
-The following illustrates, a full of the mock structure data followed by are reload with replacement of
-this same data.
-```
-python DbLoadExec.py --mock --full  --load_entry_data \
-                     --config_path ../data/dbload-setup-example.cfg
-                     --config_name DEFAULT
-                     --save_file_list_path  LATEST_PDBX_LOAD_LIST.txt
-                     --fail_file_list_path failed-entry-path-list.txt
-
-python DbLoadExec.py  --mock --replace  --load_entry_data \
-                      --config_path ../data/dbload-setup-example.cfg
-                      --config_name DEFAULT
-                      --load_file_list_path  LATEST_PDBX_LOAD_LIST.txt
-                      --fail_file_list_path failed-entry-path-list.txt
-```
-
-

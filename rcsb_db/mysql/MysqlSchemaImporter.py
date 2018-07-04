@@ -7,10 +7,11 @@
 #
 # ** This is a command-line utility that is not part of the overall api
 #
-import os
-import sys
-import pprint
 import logging
+import os
+import pprint
+import sys
+
 logger = logging.getLogger(__name__)
 
 
@@ -48,7 +49,6 @@ class MysqlSchemaImporter(object):
         defD = {}
         tableId = str(tableName).upper()
         attIdKeyList = []
-        attIdDel = None
         attMap = {}
         indD = {}
         attInfo = {}
@@ -116,26 +116,6 @@ class MysqlSchemaImporter(object):
 
 
 def importxxx(self):
-    tableNameList0 = ['diffrn_radiation_wavelength',
-                      'exptl_crystal',
-                      'exptl_crystal_grow',
-                      'geometry',
-                      'pdb_entry',
-                      'pdb_entry_tmp',
-                      'pdbx_density',
-                      'pdbx_density_corr',
-                      'pdbx_rscc_mapman',
-                      'pdbx_rscc_mapman_overall',
-                      'pdbx_webselect',
-                      'refine',
-                      'refine_analyze',
-                      'refine_ls_shell',
-                      'reflns',
-                      'reflns_shell',
-                      'rscc',
-                      'struct_conf',
-                      'struct_sheet_range',
-                      'weight_in_asu']
     tableNameList = ["entity",
                      "entity_poly",
                      "entity_src_gen",

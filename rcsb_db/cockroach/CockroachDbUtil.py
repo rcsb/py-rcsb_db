@@ -17,20 +17,17 @@ the PostgreSQL DB API 2 compatible driver.
 """
 from __future__ import generators
 
+import logging
+
+import psycopg2
+import psycopg2.extras
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
-#
-import psycopg2
-import psycopg2.extras
-#
-import os
-
-import logging
 logger = logging.getLogger(__name__)
-
 
 
 class CockroachDbQuery(object):
@@ -74,7 +71,7 @@ class CockroachDbQuery(object):
             logger.error("Database error is:\n%s" % str(e))
             curs.close()
         except Warning as e:
-            logger.warn("Warning is:\n%s" % str(e))
+            logger.warning("Warning is:\n%s" % str(e))
             curs.close()
         except Exception as e:
             logger.exception("Exception is:\n%s" % str(e))
@@ -281,5 +278,5 @@ class CockroachDbQuery(object):
             rowL = self.selectRows(queryString=tSQL)
             tup = rowL[0]
             return int(str(tup[0])) == count
-        except Exception as e:
+        except Exception:
             return False

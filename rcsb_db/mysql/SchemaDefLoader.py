@@ -20,6 +20,7 @@
 #  4-Feb-2018 jdw add cockroach server support - 'cockroach-insert', 'cockroach-insert-many'
 # 13-Mar-2018 jdw split data loading and data processing operations.
 # 30-Mar-2018 jdw more refactoring -  changing expectations on explicit data types -
+#  2-Jul-2018 jdw fix working path
 ##
 """
 Generic mapper of PDBx/mmCIF instance data to SQL loadable data files based on external
@@ -33,22 +34,15 @@ __license__ = "Apache 2.0"
 
 
 import csv
+import logging
 import os
 import time
 
-from rcsb_db.sql.SqlGen import SqlGenAdmin
-from rcsb_db.mysql.MyDbUtil import MyDbQuery
-from rcsb_db.crate.CrateDbUtil import CrateDbQuery
-from rcsb_db.cockroach.CockroachDbUtil import CockroachDbQuery
-try:
-    from mmcif.io.IoAdapterCore import IoAdapterCore as IoAdapter
-except Exception as e:
-    from mmcif.io.IoAdapterPy import IoAdapterPy as IoAdapter
-#
-#
+from rcsb_db.loaders.DataTransformFactory import DataTransformFactory
 from rcsb_db.loaders.SchemaDefDataPrep import SchemaDefDataPrep
-#
-import logging
+from rcsb_db.mysql.MyDbUtil import MyDbQuery
+from rcsb_db.sql.SqlGen import SqlGenAdmin
+
 logger = logging.getLogger(__name__)
 #
 
@@ -58,11 +52,10 @@ class SchemaDefLoader(object):
     """ Map PDBx/mmCIF instance data to SQL loadable data using external schema definition.
     """
 
-    def __init__(self, schemaDefObj, ioObj=IoAdapter(), dbCon=None, workPath='.', cleanUp=False, warnings='default', verbose=True):
+    def __init__(self, schemaDefObj, dbCon=None, workPath='.', cleanUp=False, warnings='default', verbose=True):
         self.__verbose = verbose
         self.__debug = False
         self.__sD = schemaDefObj
-        self.__ioObj = ioObj
         #
         self.__dbCon = dbCon
         self.__workingPath = workPath
@@ -72,8 +65,13 @@ class SchemaDefLoader(object):
         self.__colSep = '&##&\t'
         self.__rowSep = '$##$\n'
         #
+        #
+        self.__fTypeRow = "skip-max-width"
+        self.__fTypeCol = "skip-max-width"
+        #
         self.__warningAction = warnings
-        self.__sdp = SchemaDefDataPrep(schemaDefObj=schemaDefObj, ioObj=IoAdapter(), verbose=True)
+        dtf = DataTransformFactory(schemaDefObj=self.__sD, filterType=self.__fTypeRow)
+        self.__sdp = SchemaDefDataPrep(schemaDefObj=self.__sD, dtObj=dtf, workPath=self.__workingPath, verbose=self.__verbose)
 
     def setWarning(self, action):
         if action in ['error', 'ignore', 'default']:
@@ -140,26 +138,6 @@ class SchemaDefLoader(object):
                 if deleteOpt in ['all', 'selected'] or len(rowList) > 0:
                     self.__batchInsertImport(tableId, rowList=rowList, containerNameList=containerNameList, deleteOpt=deleteOpt)
             return True
-        elif loadType in ['crate-insert', 'crate-insert-many']:
-            sqlMode = 'single'
-            if loadType in ['crate-insert-many']:
-                sqlMode = 'many'
-            for tableId, rowList in tableDataDict.items():
-                if tableId in tableIdSkipD:
-                    continue
-                if deleteOpt in ['all', 'selected'] or len(rowList) > 0:
-                    self.__crateInsertImport(tableId, rowList=rowList, containerNameList=containerNameList, deleteOpt=deleteOpt, sqlMode=sqlMode)
-            return True
-        elif loadType in ['cockroach-insert', 'cockroach-insert-many']:
-            sqlMode = 'single'
-            if loadType in ['cockroach-insert-many']:
-                sqlMode = 'many'
-            for tableId, rowList in tableDataDict.items():
-                if tableId in tableIdSkipD:
-                    continue
-                if deleteOpt in ['all', 'truncate', 'selected'] or len(rowList) > 0:
-                    self.__cockroachInsertImport(tableId, rowList=rowList, containerNameList=containerNameList, deleteOpt=deleteOpt, sqlMode=sqlMode)
-            return True
         else:
             pass
 
@@ -168,7 +146,7 @@ class SchemaDefLoader(object):
     def __cleanUpFile(self, filePath):
         try:
             os.remove(filePath)
-        except Exception as e:
+        except Exception:
             pass
 
     def makeLoadFilesMulti(self, dataList, procName, optionsD, workingDir):
@@ -217,7 +195,7 @@ class SchemaDefLoader(object):
         for tableId, rowList in tableDict.items():
             if len(rowList) == 0:
                 continue
-            tObj = self.__sD.getTable(tableId)
+            tObj = self.__sD.getSchemaObject(tableId)
             schemaAttributeIdList = tObj.getAttributeIdList()
             attributeNameList = tObj.getAttributeNameList()
             #
@@ -236,7 +214,7 @@ class SchemaDefLoader(object):
 
         exportList = []
         for tableId, rowList in tableDict.items():
-            tObj = self.__sD.getTable(tableId)
+            tObj = self.__sD.getSchemaObject(tableId)
             schemaAttributeIdList = tObj.getAttributeIdList()
             #
             if len(rowList) > 0:
@@ -303,7 +281,7 @@ class SchemaDefLoader(object):
         sqlGen = SqlGenAdmin(self.__verbose)
 
         databaseName = self.__sD.getDatabaseName()
-        tableDefObj = self.__sD.getTable(tableId)
+        tableDefObj = self.__sD.getSchemaObject(tableId)
         tableName = tableDefObj.getName()
 
         sqlDeleteList = []
@@ -328,8 +306,8 @@ class SchemaDefLoader(object):
         sqlGen = SqlGenAdmin(self.__verbose)
 
         databaseName = self.__sD.getDatabaseName()
-        tableDefObj = self.__sD.getTable(tableId)
-        tableName = tableDefObj.getName()
+        tableDefObj = self.__sD.getSchemaObject(tableId)
+        # tableName = tableDefObj.getName()
 
         #
         if deleteOpt:
@@ -338,7 +316,7 @@ class SchemaDefLoader(object):
             sqlCommandList = []
 
         if os.access(tableLoadPath, os.R_OK):
-            tableDefObj = self.__sD.getTable(tableId)
+            tableDefObj = self.__sD.getSchemaObject(tableId)
 
             sqlCommandList.append(sqlGen.importTable(databaseName, tableDefObj, importPath=tableLoadPath))
 
@@ -350,7 +328,7 @@ class SchemaDefLoader(object):
             try:
                 with open(sqlFilePath, 'w') as ofh:
                     ofh.write("%s" % '\n'.join(sqlCommandList))
-            except Exception as e:
+            except Exception:
                 pass
         #
         myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
@@ -386,7 +364,7 @@ class SchemaDefLoader(object):
         sqlGen = SqlGenAdmin(self.__verbose)
         #
         databaseName = self.__sD.getDatabaseName()
-        tableDefObj = self.__sD.getTable(tableId)
+        tableDefObj = self.__sD.getSchemaObject(tableId)
         tableName = tableDefObj.getName()
         tableAttributeIdList = tableDefObj.getAttributeIdList()
         tableAttributeNameList = tableDefObj.getAttributeNameList()
@@ -432,205 +410,10 @@ class SchemaDefLoader(object):
         sqlList = []
         sqlGen = SqlGenAdmin(self.__verbose)
         for tableId in tableIdList:
-            tableName = self.__sD.getTableName(tableId)
-            tableDefObj = self.__sD.getTable(tableId)
+            tableName = self.__sD.getSchemaName(tableId)
+            tableDefObj = self.__sD.getSchemaObject(tableId)
             atName = tableDefObj.getDeleteAttributeName()
             sqlTemp = sqlGen.deleteTemplate(tableName, [atName])
-            sqlList.append(sqlTemp % keyId)
+            sqlList.append(sqlTemp % deleteValue)
         #
         return sqlList
-
-    def __crateInsertImport(self, tableId, rowList=None, containerNameList=None, deleteOpt='selected', sqlMode='many', refresh=False):
-        """ Load the input table using sql crate templated inserts of the input rowlist of dictionaries (i.e. d[attributeId]=value).
-
-            The containerNameList corresponding to the data within loadable data in rowList can be provided
-            if 'selected' deletions are to performed prior to the the batch data inserts.
-
-            deleteOpt = ['selected','all'] where 'selected' deletes rows corresponding to the input container
-                        list before insert.   The 'all' options truncates the table prior to insert.
-
-                        Deletions are performed in the absence of loadable data.
-
-        """
-        startTime = time.time()
-        sqlRefresh = None
-        crQ = CrateDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
-        sqlGen = SqlGenAdmin(self.__verbose)
-        #
-        databaseName = self.__sD.getVersionedDatabaseName()
-        tableDefObj = self.__sD.getTable(tableId)
-        tableName = tableDefObj.getName()
-        tableAttributeIdList = tableDefObj.getAttributeIdList()
-        tableAttributeNameList = tableDefObj.getAttributeNameList()
-        #
-        sqlDeleteList = None
-        if deleteOpt in ['selected', 'delete'] and containerNameList is not None:
-            deleteAttributeName = tableDefObj.getDeleteAttributeName()
-            sqlDeleteList = sqlGen.deleteFromListSQL(databaseName, tableName, deleteAttributeName, containerNameList, chunkSize=10)
-            logger.debug("Delete SQL for %s : %r" % (tableId, sqlDeleteList))
-        elif deleteOpt in ['all', 'truncate']:
-            sqlDeleteList = [sqlGen.truncateTableSQL(databaseName, tableName)]
-        #
-        logger.debug("Deleting from table %s length %d" % (tableName, len(containerNameList)))
-        crQ.sqlCommandList(sqlDeleteList)
-        logger.debug("Delete commands %s" % sqlDeleteList)
-        if len(rowList) == 0:
-            return True
-        if refresh:
-            sqlRefresh = sqlGen.refreshTableSQLCrate(databaseName, tableName)
-            crQ.sqlCommand(sqlRefresh)
-        #
-        logger.debug("Insert begins for table %s with row length %d" % (tableName, len(rowList)))
-        sqlInsertList = []
-        tupL = list(zip(tableAttributeIdList, tableAttributeNameList))
-        if sqlMode == 'many':
-            aList = []
-            for id, nm in tupL:
-                aList.append(nm)
-            #
-            vLists = []
-            for row in rowList:
-                vList = []
-                for id, nm in tupL:
-                    if len(row[id]) > 0 and row[id] != r'\N':
-                        vList.append(row[id])
-                    else:
-                        vList.append(None)
-                vLists.append(vList)
-            #
-            lenT = len(vLists)
-            lenR = crQ.sqlTemplateCommandMany(sqlTemplate=sqlGen.insertTemplateSQLCrate(databaseName, tableName, aList), valueLists=vLists)
-            ret = (lenR == len(vLists))
-        else:
-            aList = []
-            for id, nm in tupL:
-                aList.append(nm)
-            #
-            for row in rowList:
-                vList = []
-                for id, nm in tupL:
-                    if len(row[id]) > 0 and row[id] != r'\N':
-                        vList.append(row[id])
-                    else:
-                        vList.append(None)
-                sqlInsertList.append((sqlGen.insertTemplateSQLCrate(databaseName, tableName, aList), vList))
-            #
-            lenT = len(sqlInsertList)
-            lenR = crQ.sqlTemplateCommandList(sqlInsertList)
-            ret = (lenR == lenT)
-        if refresh:
-            sqlRefresh = sqlGen.refreshTableSQLCrate(databaseName, tableName)
-            crQ.sqlCommand(sqlRefresh)
-        #
-        endTime = time.time()
-        if (ret):
-            logger.debug("Insert succeeds for table %s %d of %d rows at %s (%.3f seconds)" %
-                         (tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
-        else:
-            logger.error("Insert fails for table %s %d of %d rows at %s (%.3f seconds)" %
-                         (tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
-
-        return ret
-
-    def __cockroachInsertImport(self, tableId, rowList=None, containerNameList=None, deleteOpt='selected', sqlMode='many'):
-        """ Load the input table using sql crate templated inserts of the input rowlist of dictionaries (i.e. d[attributeId]=value).
-
-            The containerNameList corresponding to the data within loadable data in rowList can be provided
-            if 'selected' deletions are to performed prior to the the batch data inserts.
-
-            deleteOpt = ['selected','all'] where 'selected' deletes rows corresponding to the input container
-                        list before insert.   The 'all' options truncates the table prior to insert.
-
-                        Deletions are performed in the absence of loadable data.
-
-        """
-        startTime = time.time()
-        crQ = CockroachDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
-        sqlGen = SqlGenAdmin(self.__verbose)
-        #
-        databaseName = self.__sD.getVersionedDatabaseName()
-        tableDefObj = self.__sD.getTable(tableId)
-        tableName = tableDefObj.getName()
-        tableAttributeIdList = tableDefObj.getAttributeIdList()
-        tableAttributeNameList = tableDefObj.getAttributeNameList()
-        #
-        sqlDeleteList = None
-        if deleteOpt in ['selected', 'delete'] and containerNameList is not None:
-            deleteAttributeName = tableDefObj.getDeleteAttributeName()
-            sqlDeleteList = sqlGen.deleteFromListSQL(databaseName, tableName, deleteAttributeName, containerNameList, chunkSize=10)
-            # logger.debug("Delete SQL for %s : %r" % (tableId, sqlDeleteList))
-        elif deleteOpt in ['all', 'truncate']:
-            sqlDeleteList = [sqlGen.truncateTableSQL(databaseName, tableName)]
-        #
-        lenC = len(rowList)
-        logger.debug("Deleting from table %s length %d" % (tableName, lenC))
-        crQ.sqlCommandList(sqlDeleteList)
-        endTime1 = time.time()
-        logger.debug("Deleting succeeds for table %s %d rows at %s (%.3f seconds)" %
-                     (tableName, lenC, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime1 - startTime))
-        logger.debug("Delete commands %s" % sqlDeleteList)
-
-        if len(rowList) == 0:
-            logger.debug("Skipping insert for table %s length %d" % (tableName, len(containerNameList)))
-            return True
-        #
-        logger.debug("Insert begins for table %s with row length %d" % (tableName, len(rowList)))
-        sqlInsertList = []
-        tupL = list(zip(tableAttributeIdList, tableAttributeNameList))
-        if sqlMode == 'many':
-            aList = []
-            for id, nm in tupL:
-                aList.append(id)
-            #
-            vLists = []
-            for row in rowList:
-                vList = []
-                for id, nm in tupL:
-                    if len(row[id]) > 0 and row[id] != r'\N':
-                        vList.append(row[id])
-                    else:
-                        vList.append(None)
-                vLists.append(vList)
-            #
-            ret = crQ.sqlTemplateCommandMany(sqlTemplate=sqlGen.idInsertTemplateSQL(databaseName, tableDefObj, aList), valueLists=vLists)
-            endTime = time.time()
-            if (ret):
-                logger.debug("Insert succeeds for table %s %d rows at %s (%.3f seconds)" %
-                             (tableName, lenC, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - endTime1))
-            else:
-                logger.error("Insert fails for table %s %d rows at %s (%.3f seconds)" %
-                             (tableName, lenC, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - endTime1))
-        else:
-            lenT = -1
-            lenR = -1
-            aList = []
-            for id, nm in tupL:
-                aList.append(nm)
-            #
-            for row in rowList:
-                vList = []
-                for id, nm in tupL:
-                    if len(row[id]) > 0 and row[id] != r'\N':
-                        vList.append(row[id])
-                    else:
-                        vList.append(None)
-                sqlInsertList.append((sqlGen.insertTemplateSQL(databaseName, tableName, aList), vList))
-            #
-            lenT = len(sqlInsertList)
-            lenR = crQ.sqlTemplateCommandList(sqlInsertList)
-            #
-            ret = (lenR == lenT)
-            endTime = time.time()
-            if (ret):
-                logger.debug("Insert succeeds for table %s %d of %d rows at %s (%.3f seconds)" %
-                             (tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - endTime1))
-            else:
-                logger.error("Insert fails for table %s %d of %d rows at %s (%.3f seconds)" %
-                             (tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - endTime1))
-        #
-
-        return ret
-
-
-if __name__ == '__main__':
-    pass

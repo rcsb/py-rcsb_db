@@ -2,22 +2,21 @@
 # File: RepoScanExec.py
 #
 #  Execution wrapper  --  repository scanning utilities --
+#
 #  Updates:
 #
-#
+# 28-Jun-2018 jdw update ScanRepoUtil prototype with workPath
+#  3-Jul-2018 jdw update to latest ScanRepoUtil() prototype
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
+import argparse
+import logging
 import os
 import sys
-import argparse
-
-import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
-logger = logging.getLogger()
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(HERE))
@@ -28,33 +27,28 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-
+from rcsb_db.define.DictInfo import DictInfo
+from rcsb_db.io.MarshalUtil import MarshalUtil
 from rcsb_db.utils.ConfigUtil import ConfigUtil
 from rcsb_db.utils.ScanRepoUtil import ScanRepoUtil
 
-
-def readPathList(fileListPath):
-    pathList = []
-    try:
-        with open(fileListPath, 'r') as ifh:
-            for line in ifh:
-                pth = str(line[:-1]).strip()
-                if len(pth) and not pth.startswith("#"):
-                    pathList.append(pth)
-    except Exception as e:
-        pass
-    logger.debug("Reading path list length %d" % len(pathList))
-    return pathList
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
+logger = logging.getLogger()
 
 
-def scanRepo(cfgOb, contentType, scanDataFilePath, dictFilePath, numProc, chunkSize, fileLimit, mockTopPath,
-             inputPathList=None, pathListFilePath=None, dataCoverageFilePath=None, dataTypeFilePath=None, failedFilePath=None):
-    """ Utility method to scan repo for the input content type.
+def scanRepo(cfgOb, contentType, scanDataFilePath, dictFilePath, numProc, chunkSize, fileLimit,
+             inputPathList=None, pathListFilePath=None, dataCoverageFilePath=None, dataTypeFilePath=None,
+             failedFilePath=None, workPath=None):
+    """ Utility method to scan the data repository of the input content type and store type and coverage details.
     """
     try:
         #
-        sr = ScanRepoUtil(cfgOb, dictPath=dictFilePath, numProc=numProc, chunkSize=chunkSize, fileLimit=fileLimit, mockTopPath=mockTopPath)
-        ok = sr.scanContentType(contentType, scanType='full', inputPathList=inputPathList, outputFilePath=scanDataFilePath,
+        #
+        dI = DictInfo(dictLocators=[dictFilePath])
+        attributeDataTypeD = dI.getAttributeDataTypeD()
+        #
+        sr = ScanRepoUtil(cfgOb, attributeDataTypeD=attributeDataTypeD, numProc=numProc, chunkSize=chunkSize, fileLimit=fileLimit, workPath=workPath)
+        ok = sr.scanContentType(contentType, scanType='full', inputPathList=inputPathList, scanDataFilePath=scanDataFilePath,
                                 failedFilePath=failedFilePath, saveInputFileListPath=pathListFilePath)
         if dataTypeFilePath:
             ok = sr.evalScan(scanDataFilePath, dataTypeFilePath, evalType='data_type')
@@ -96,6 +90,7 @@ def main():
     parser.add_argument("--file_limit", default=None, help="Load file limit for testing")
     parser.add_argument("--debug", default=False, action='store_true', help="Turn on verbose logging")
     parser.add_argument("--mock", default=False, action='store_true', help="Use MOCK repository configuration for testing")
+    parser.add_argument("--working_path", default=None, help="Working path for temporary files")
     args = parser.parse_args()
     #
     debugFlag = args.debug
@@ -115,8 +110,8 @@ def main():
         else:
             logger.error("Missing or access issue with config file %r" % configPath)
             exit(1)
-
-        cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
+        mockTopPath = os.path.join(TOPDIR, "rcsb_db", "data") if args.mock else None
+        cfgOb = ConfigUtil(configPath=configPath, sectionName=configName, mockTopPath=mockTopPath)
     except Exception as e:
         logger.error("Missing or access issue with config file %r" % configPath)
         exit(1)
@@ -137,8 +132,8 @@ def main():
         scanDataFilePath = args.scan_data_file_path
         dataCoverageFilePath = args.coverage_file_path
         dataTypeFilePath = args.type_map_file_path
-        mockTopPath = os.path.join(TOPDIR, "rcsb_db", "data") if args.mock else None
-        dictFilePath = args.dict_file_path if args.dict_file_path else os.path.join(TOPDIR, 'rcsb_db', 'data', 'mmcif_pdbx_v5_next.dic')
+        dictFilePath = args.dict_file_path if args.dict_file_path else os.path.join(TOPDIR, 'rcsb_db', 'data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
+        workPath = args.working_path if args.working_path else '.'
     except Exception as e:
         logger.exception("Argument processing problem %s" % str(e))
         parser.print_help(sys.stderr)
@@ -149,7 +144,8 @@ def main():
     #
     inputPathList = None
     if inputFileListPath:
-        inputPathList = readPathList(inputFileListPath)
+        mu = MarshalUtil(workPath=workPath)
+        inputPathList = mu.doImport(inputFileListPath, format='list')
     #
     ##
 
@@ -160,7 +156,7 @@ def main():
         contentType = 'bird_chem_comp'
 
     elif args.scan_bird_ref:
-        contentType = 'bird_chem_comp'
+        contentType = 'bird'
 
     elif args.scan_bird_family_ref:
         contentType = 'bird_family'
@@ -168,9 +164,9 @@ def main():
     elif args.scan_entry_data:
         contentType = 'pdbx'
 
-    ok = scanRepo(cfgOb, contentType, scanDataFilePath, dictFilePath, numProc, chunkSize, fileLimit, mockTopPath,
+    ok = scanRepo(cfgOb, contentType, scanDataFilePath, dictFilePath, numProc, chunkSize, fileLimit,
                   inputPathList=inputPathList, pathListFilePath=outputFileListPath, dataCoverageFilePath=dataCoverageFilePath,
-                  dataTypeFilePath=dataTypeFilePath, failedFilePath=failedFilePath)
+                  dataTypeFilePath=dataTypeFilePath, failedFilePath=failedFilePath, workPath=workPath)
 
     logger.info("Operation completed with status %r " % ok)
 

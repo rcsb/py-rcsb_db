@@ -13,19 +13,16 @@ Utility classes to create connections and process SQL commands with CrateDb.
 """
 from __future__ import generators
 
+import logging
+
+from crate.client.exceptions import (DatabaseError, OperationalError,
+                                     ProgrammingError, Warning)
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
-#
-
-from crate import client
-from crate.client.exceptions import DatabaseError, OperationalError, ProgrammingError, Warning
-#
-import os
-
-import logging
 logger = logging.getLogger(__name__)
 
 
@@ -81,7 +78,7 @@ class CrateDbQuery(object):
             logger.error("error is:\n%s" % str(e))
             curs.close()
         except Warning as e:
-            logger.warn("warning is:\n%s" % str(e))
+            logger.warning("warning is:\n%s" % str(e))
             curs.close()
         except Exception as e:
             logger.exception("Exception is:\n%s" % str(e))

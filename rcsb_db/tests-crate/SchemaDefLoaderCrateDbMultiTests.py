@@ -32,14 +32,11 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 
-import sys
+import logging
 import os
+import sys
 import time
 import unittest
-
-import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
-logger = logging.getLogger()
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(HERE))
@@ -50,22 +47,24 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-from rcsb_db.crate.CrateDbUtil import CrateDbQuery
-from rcsb_db.crate.CrateDbLoader import CrateDbLoader
 from rcsb_db.crate.Connection import Connection
+from rcsb_db.crate.CrateDbLoader import CrateDbLoader
+from rcsb_db.crate.CrateDbUtil import CrateDbQuery
 #
 from rcsb_db.sql.SqlGen import SqlGenAdmin
+from rcsb_db.utils.ConfigUtil import ConfigUtil
+from rcsb_db.utils.MultiProcUtil import MultiProcUtil
+from rcsb_db.utils.SchemaDefUtil import SchemaDefUtil
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
+logger = logging.getLogger()
 
 try:
     from mmcif.io.IoAdapterCore import IoAdapterCore as IoAdapter
 except Exception as e:
     from mmcif.io.IoAdapterPy import IoAdapterPy as IoAdapter
 
-from rcsb_db.utils.MultiProcUtil import MultiProcUtil
-from rcsb_db.utils.ConfigUtil import ConfigUtil
-from rcsb_db.utils.ContentTypeUtil import ContentTypeUtil
 
-import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
 
@@ -88,7 +87,7 @@ class SchemaDefLoadercrateDbMultiTests(unittest.TestCase):
         configName = 'DEFAULT'
         self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
         self.__resourceName = "CRATE_DB"
-        self.__ctU = ContentTypeUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
+        self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
         #
         self.__tableIdSkipD = {'ATOM_SITE': True, 'ATOM_SITE_ANISOTROP': True, '__LOAD_STATUS__': True}
         self.__ioObj = IoAdapter(verbose=self.__verbose)
@@ -116,15 +115,15 @@ class SchemaDefLoadercrateDbMultiTests(unittest.TestCase):
         """  Create table schema (live) for BIRD, chemical component, and PDBx data.
         """
         try:
-            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='bird')
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
+            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='chem_comp')
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
+            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='pdbx')
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
@@ -136,15 +135,15 @@ class SchemaDefLoadercrateDbMultiTests(unittest.TestCase):
         """  Remove table schema (live) for BIRD, chemical component, and PDBx data.
         """
         try:
-            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='bird')
+            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='bird')
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='chem_comp')
+            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='chem_comp')
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType='pdbx')
+            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='pdbx')
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
@@ -164,12 +163,12 @@ class SchemaDefLoadercrateDbMultiTests(unittest.TestCase):
     def __getPathList(self, fType):
         pathList = []
         if fType == "chem_comp":
-            pathList = self.__ctU.getPathList(contentType='chem_comp')
+            pathList = self.__schU.getPathList(schemaName='chem_comp')
         elif fType == "bird":
-            pathList = self.__ctU.getPathList(contentType='bird')
-            pathList.extend(self.__ctU.getPathList(contentType='bird_family'))
+            pathList = self.__schU.getPathList(schemaName='bird')
+            pathList.extend(self.__schU.getPathList(schemaName='bird_family'))
         elif fType == "pdbx":
-            pathList = self.__ctU.getPathList(contentType='pdbx')
+            pathList = self.__schU.getPathList(schemaName='pdbx')
         return pathList
 
     def loadInsertMany(self, dataList, procName, optionsD, workingDir):
@@ -201,7 +200,7 @@ class SchemaDefLoadercrateDbMultiTests(unittest.TestCase):
         chunkSize = self.__chunkSize
         try:
             #
-            sd, _, _, _ = self.__ctU.getSchemaInfo(contentType=contentType)
+            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName=contentType)
             if (self.__createFlag):
                 self.__schemaCreate(schemaDefObj=sd)
 

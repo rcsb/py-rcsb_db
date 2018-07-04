@@ -2,15 +2,15 @@
 # Date: 9-Mar-2018
 #
 # Update:
+#   3-Jul-2018  jdw update CLI entry points and dependencies
 #
 import re
-from setuptools import setup, find_packages
 
+from setuptools import find_packages
+from setuptools import setup
 
 packages = []
 thisPackage = 'rcsb.db'
-requires = ['future', 'six', 'mmcif', 'mmcif.utils', 'python-dateutil', 'scandir']
-
 
 with open('rcsb_db/__init__.py', 'r') as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
@@ -22,11 +22,11 @@ if not version:
 setup(
     name=thisPackage,
     version=version,
-    description='RCSB Python Database Utility Classes',
+    description='RCSB Python Database Access and Loading Utility Classes',
     long_description="See:  README.md",
     author='John Westbrook',
     author_email='john.westbrook@rcsb.org',
-    url='http://mmcif.wwpdb.org',
+    url='https://github.com/rcsb/py-rcsb_db',
     #
     license='Apache 2.0',
     classifiers=(
@@ -38,24 +38,25 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ),
     entry_points={
         'console_scripts': [
-            'exdb_load_cli=rcsb_db.exec.DbLoadExec:main',
+            'exdb_repo_load_cli=rcsb_db.exec.RepoLoadExec:main',
+            'repo_scan_cli=rcsb_db.exec.RepoScanExec:main',
+            'etl_exec_cli'='rcsb_db.exec.ETLExec:main',
         ]
     },
-    # Py27 requires scandir
-    install_requires=['future', 'six', 'scandir', 'python-dateutil', 'mmcif', 'mmcif.utils'],
-    packages=find_packages(exclude=['rcsb_db.tests', 'tests.*']),
+    #
+    install_requires=['future', 'six', 'python-dateutil', 'mmcif', 'scandir; python_version < "3.0"', 'configparser; python_version < "3.0"'],
+    packages=find_packages(exclude=['rcsb_db.tests', 'rcsb_db.tests-*', 'tests.*']),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:
         '': ['*.md', '*.rst', "*.txt", "*.cfg"],
     },
     #
-
-    #
+    # These basic tests require no database services -
     test_suite="rcsb_db.tests",
     tests_require=['tox'],
     #

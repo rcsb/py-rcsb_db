@@ -16,12 +16,14 @@ __license__ = "Apache 2.0"
 
 import copy
 import logging
-logger = logging.getLogger(__name__)
 
 from rcsb_db.mongo.ConnectionBase import ConnectionBase
 
+logger = logging.getLogger(__name__)
+
 
 class Connection(ConnectionBase):
+
     def __init__(self, cfgOb=None, infoD=None, resourceName=None, verbose=False):
         super(Connection, self).__init__(verbose=verbose)
         #

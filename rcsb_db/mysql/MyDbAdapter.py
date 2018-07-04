@@ -23,15 +23,16 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 
-import sys
-import time
 import copy
 import logging
-logger = logging.getLogger(__name__)
+import sys
+import time
 
-from rcsb_db.mysql.SqlGen import SqlGenAdmin, SqlGenQuery, SqlGenCondition
-from rcsb_db.mysql.MyDbUtil import MyDbQuery
 from rcsb_db.mysql.Connection import Connection
+from rcsb_db.mysql.MyDbUtil import MyDbQuery
+from rcsb_db.mysql.SqlGen import SqlGenAdmin, SqlGenCondition, SqlGenQuery
+
+logger = logging.getLogger(__name__)
 
 
 class MyDbAdapter(object):
@@ -181,13 +182,13 @@ class MyDbAdapter(object):
                 self._open()
                 iOpened = True
             #
-            tableIdList = self.__sd.getTableIdList()
+            tableIdList = self.__sD.getSchemaIdList()
             myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
             myAd = SqlGenAdmin(self.__verbose)
 
             for tableId in tableIdList:
                 sqlL = []
-                tableDefObj = self.__sd.getTable(tableId)
+                tableDefObj = self.__sD.getSchemaObject(tableId)
                 sqlL.extend(myAd.createTableSQL(databaseName=self.__databaseName, tableDefObj=tableDefObj))
 
                 ret = myQ.sqlCommand(sqlCommandList=sqlL)
@@ -236,8 +237,7 @@ class MyDbAdapter(object):
                 self._open()
                 iOpened = True
             #
-            tableName = self.__sd.getTableName(tableId)
-            tableDefObj = self.__sd.getTable(tableId)
+            tableDefObj = self.__sD.getSchemaObject(tableId)
             #
             myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
             myAd = SqlGenAdmin(self.__verbose)
@@ -304,8 +304,7 @@ class MyDbAdapter(object):
                 self._open()
                 iOpened = True
             #
-            tableName = self.__sd.getTableName(tableId)
-            tableDefObj = self.__sd.getTable(tableId)
+            tableDefObj = self.__sD.getSchemaObject(tableId)
             #
             myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
             myAd = SqlGenAdmin(self.__verbose)
@@ -371,7 +370,7 @@ class MyDbAdapter(object):
                 self._open()
                 iOpened = True
             #
-            tableDefObj = self.__sd.getTable(tableId)
+            tableDefObj = self.__sD.getSchemaObject(tableId)
             myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
             sqlGen = SqlGenQuery(schemaDefObj=self.__sd, verbose=self.__verbose)
             sqlGen.setDatabase(databaseName=self.__databaseName)
@@ -446,8 +445,7 @@ class MyDbAdapter(object):
                 self._open()
                 iOpened = True
 
-            tableName = self.__sd.getTableName(tableId)
-            tableDefObj = self.__sd.getTable(tableId)
+            tableDefObj = self.__sD.getSchemaObject(tableId)
             #
             #
             myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)

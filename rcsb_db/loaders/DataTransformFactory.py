@@ -18,19 +18,41 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 
-import time
-import datetime
-
-import re
-import dateutil.parser
 import collections
+import logging
+import re
 from functools import reduce
+
+import dateutil.parser
+
 TrfValue = collections.namedtuple('TrfValue', 'value, atId, origLength, isNull')
 
-
-import logging
 logger = logging.getLogger(__name__)
-#
+
+
+class DataTransformInfo(object):
+    """ Map transformation attribute filter names to data transformation filter implementations.
+
+    """
+
+    def __init(self):
+        # mapD {<external attribute filter name>: <implementation names>, ...}
+        self.__mapD = {'STRIP_WS': 'STRIP_WS'}
+
+    def isImplemented(self, attributeFilter):
+        try:
+            if attributeFilter in self.__mapD:
+                return True
+        except Exception:
+            pass
+        return False
+
+    def getTransformFilterName(self, attributeFilter):
+        try:
+            return self.__mapD[attributeFilter]
+        except Exception:
+            pass
+        return None
 
 
 class DataTransformFactory(object):
@@ -56,15 +78,19 @@ class DataTransformFactory(object):
         self.__FLAGS['convertIterables'] = 'convert-iterables' in filterType
         #
         self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
+        self.__dti = DataTransformInfo()
         self.__dT = self.__build()
 
     def __build(self):
-        """  fD[tableId] -> {atId1: [f1,f2,.. ], atId2: [f1,f2,...], ...}
+        """ Internal method that stores transformations for each table so that these may
+            be later repeatedly applied to a data stream.
+
+           fD[tableId]'atFuncD'] -> {atId1: [f1,f2,.. ], atId2: [f1,f2,...], ...}
         """
         fD = {}
-        for tableId in self.__sD.getTableIdList():
+        for tableId in self.__sD.getSchemaIdList():
             tD = {}
-            tObj = self.__sD.getTable(tableId)
+            tObj = self.__sD.getSchemaObject(tableId)
             dt = DataTransform(tObj)
             aD = {}
             for atId in tObj.getAttributeIdList():
@@ -86,7 +112,8 @@ class DataTransformFactory(object):
                     aD[atId].append(dt.castString)
                     if not self.__FLAGS['skipMaxWidth']:
                         aD[atId].append(dt.truncateString)
-                    if tObj.getAttributeFilterType(atId) == "STRIP_WS":
+                    # JDW THIS IS WRONG
+                    if self.__dti.getTransformFilterName(tObj.getAttributeFilterType(atId)) == "STRIP_WS":
                         aD[atId].append(dt.stripWhiteSpace)
                 elif tObj.isAttributeIntegerType(atId):
                     aD[atId].append(dt.castInteger)
@@ -111,21 +138,20 @@ class DataTransformFactory(object):
         try:
             return self.__dT[tableId]
         except Exception as e:
-            logger.error("Missing table %r" % tableId)
+            logger.error("Missing table %r with error %s" % (tableId, str(e)))
         return {}
 
     def processRecord(self, tableId, row, attributeNameList):
         """
-            Input row data ordered according to the input attribute names list.
+            Input row data (list) ordered according to the input attribute names list.
 
-        from functools import reduce
-        [reduce(lambda x, y: y(x), reversed(cfL), v) for v in dL]
+            Processing respects various null handling policies.
 
-        return   d[atId]=rowdata
+
+            return   d[atId]=rowdata for the input row list
 
         """
         # get the transform object for the current table
-
         dT = self.get(tableId)
         #
         atName = None
@@ -134,6 +160,7 @@ class DataTransformFactory(object):
             for ii, atName in enumerate(attributeNameList):
                 if atName not in dT['atNameD']:
                     continue
+                # Apply list of functions on an initial value (i.e. TrfValue for the ii(th) element of the row.
                 vT = reduce(lambda x, y: y(x), dT['atFuncD'][atName], TrfValue(row[ii], dT['atNameD'][atName], 0, False))
                 if self.__FLAGS['dropEmpty'] and vT.isNull:
                     continue
@@ -273,4 +300,3 @@ class DataTransform(object):
         if trfTup.isNull:
             return trfTup
         return TrfValue(trfTup.value[:self.__tObj.getAttributeWidth(trfTup.atId)], trfTup.atId, trfTup.origLength, False)
-

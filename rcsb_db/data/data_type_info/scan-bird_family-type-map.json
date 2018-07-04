@@ -1,0 +1,443 @@
+
+{
+   "citation": {
+      "id": {
+         "count": 110,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "journal_abbrev": {
+         "count": 110,
+         "maxPrec": 0,
+         "maxWidth": 120,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "journal_volume": {
+         "count": 110,
+         "maxPrec": 0,
+         "maxWidth": 11,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "page_first": {
+         "count": 110,
+         "maxPrec": 0,
+         "maxWidth": 6,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "page_last": {
+         "count": 109,
+         "maxPrec": 0,
+         "maxWidth": 5,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "pdbx_database_id_DOI": {
+         "count": 96,
+         "maxPrec": 0,
+         "maxWidth": 68,
+         "minPrec": 0,
+         "minWidth": 13
+      },
+      "pdbx_database_id_PubMed": {
+         "count": 104,
+         "maxPrec": 0,
+         "maxWidth": 8,
+         "minPrec": 0,
+         "minWidth": 5
+      },
+      "title": {
+         "count": 110,
+         "maxPrec": 0,
+         "maxWidth": 288,
+         "minPrec": 0,
+         "minWidth": 9
+      },
+      "year": {
+         "count": 110,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 4
+      }
+   },
+   "citation_author": {
+      "citation_id": {
+         "count": 110,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "name": {
+         "count": 110,
+         "maxPrec": 0,
+         "maxWidth": 30,
+         "minPrec": 0,
+         "minWidth": 6
+      },
+      "ordinal": {
+         "count": 110,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      }
+   },
+   "pdbx_family_prd_audit": {
+      "action_type": {
+         "count": 456,
+         "maxPrec": 0,
+         "maxWidth": 28,
+         "minPrec": 0,
+         "minWidth": 7
+      },
+      "annotator": {
+         "count": 456,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 2
+      },
+      "date": {
+         "count": 456,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "details": {
+         "count": 309,
+         "maxPrec": 0,
+         "maxWidth": 289,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "family_prd_id": {
+         "count": 456,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "processing_site": {
+         "count": 456,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 4
+      }
+   },
+   "pdbx_reference_molecule_annotation": {
+      "chem_comp_id": {
+         "count": 31,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 2
+      },
+      "family_prd_id": {
+         "count": 324,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "ordinal": {
+         "count": 324,
+         "maxPrec": 0,
+         "maxWidth": 2,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "prd_id": {
+         "count": 300,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "source": {
+         "count": 324,
+         "maxPrec": 0,
+         "maxWidth": 94,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "text": {
+         "count": 324,
+         "maxPrec": 0,
+         "maxWidth": 1398,
+         "minPrec": 0,
+         "minWidth": 9
+      },
+      "type": {
+         "count": 324,
+         "maxPrec": 0,
+         "maxWidth": 22,
+         "minPrec": 0,
+         "minWidth": 6
+      }
+   },
+   "pdbx_reference_molecule_details": {
+      "family_prd_id": {
+         "count": 301,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "ordinal": {
+         "count": 301,
+         "maxPrec": 0,
+         "maxWidth": 2,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "prd_id": {
+         "count": 1,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "source": {
+         "count": 301,
+         "maxPrec": 0,
+         "maxWidth": 12,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "source_id": {
+         "count": 301,
+         "maxPrec": 0,
+         "maxWidth": 119,
+         "minPrec": 0,
+         "minWidth": 4
+      },
+      "text": {
+         "count": 301,
+         "maxPrec": 0,
+         "maxWidth": 8902,
+         "minPrec": 0,
+         "minWidth": 15
+      }
+   },
+   "pdbx_reference_molecule_family": {
+      "family_prd_id": {
+         "count": 456,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "name": {
+         "count": 402,
+         "maxPrec": 0,
+         "maxWidth": 84,
+         "minPrec": 0,
+         "minWidth": 2
+      },
+      "release_status": {
+         "count": 456,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "replaced_by": {
+         "count": 11,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "replaces": {
+         "count": 1,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      }
+   },
+   "pdbx_reference_molecule_features": {
+      "chem_comp_id": {
+         "count": 189,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 2
+      },
+      "family_prd_id": {
+         "count": 350,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "ordinal": {
+         "count": 350,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "prd_id": {
+         "count": 350,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "source": {
+         "count": 350,
+         "maxPrec": 0,
+         "maxWidth": 52,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "source_ordinal": {
+         "count": 350,
+         "maxPrec": 0,
+         "maxWidth": 2,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "type": {
+         "count": 350,
+         "maxPrec": 0,
+         "maxWidth": 21,
+         "minPrec": 0,
+         "minWidth": 3
+      },
+      "value": {
+         "count": 350,
+         "maxPrec": 0,
+         "maxWidth": 1007,
+         "minPrec": 0,
+         "minWidth": 2
+      }
+   },
+   "pdbx_reference_molecule_list": {
+      "family_prd_id": {
+         "count": 456,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "prd_id": {
+         "count": 456,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      }
+   },
+   "pdbx_reference_molecule_related_structures": {
+      "citation_id": {
+         "count": 45,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "db_accession": {
+         "count": 23,
+         "maxPrec": 0,
+         "maxWidth": 6,
+         "minPrec": 0,
+         "minWidth": 4
+      },
+      "db_code": {
+         "count": 43,
+         "maxPrec": 0,
+         "maxWidth": 8,
+         "minPrec": 0,
+         "minWidth": 6
+      },
+      "db_name": {
+         "count": 45,
+         "maxPrec": 0,
+         "maxWidth": 4,
+         "minPrec": 0,
+         "minWidth": 4
+      },
+      "family_prd_id": {
+         "count": 45,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "formula": {
+         "count": 44,
+         "maxPrec": 0,
+         "maxWidth": 100,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "name": {
+         "count": 45,
+         "maxPrec": 0,
+         "maxWidth": 449,
+         "minPrec": 0,
+         "minWidth": 9
+      },
+      "ordinal": {
+         "count": 45,
+         "maxPrec": 0,
+         "maxWidth": 2,
+         "minPrec": 0,
+         "minWidth": 1
+      }
+   },
+   "pdbx_reference_molecule_synonyms": {
+      "chem_comp_id": {
+         "count": 234,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 2
+      },
+      "family_prd_id": {
+         "count": 356,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "name": {
+         "count": 356,
+         "maxPrec": 0,
+         "maxWidth": 915,
+         "minPrec": 0,
+         "minWidth": 2
+      },
+      "ordinal": {
+         "count": 356,
+         "maxPrec": 0,
+         "maxWidth": 3,
+         "minPrec": 0,
+         "minWidth": 1
+      },
+      "prd_id": {
+         "count": 356,
+         "maxPrec": 0,
+         "maxWidth": 10,
+         "minPrec": 0,
+         "minWidth": 10
+      },
+      "source": {
+         "count": 356,
+         "maxPrec": 0,
+         "maxWidth": 61,
+         "minPrec": 0,
+         "minWidth": 3
+      }
+   }
+}
