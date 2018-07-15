@@ -38,6 +38,7 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
+from rcsb_db.mongo.DocumentLoader import DocumentLoader
 from rcsb_db.mongo.PdbxLoader import PdbxLoader
 from rcsb_db.utils.ConfigUtil import ConfigUtil
 
@@ -88,6 +89,8 @@ class PdbxLoaderTests(unittest.TestCase):
             ok = mw.load('chem_comp', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
+            ok = self.__loadStatus(mw.getLoadStatus())
+            self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -100,6 +103,8 @@ class PdbxLoaderTests(unittest.TestCase):
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('bird_chem_comp', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+            self.assertTrue(ok)
+            ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -114,6 +119,8 @@ class PdbxLoaderTests(unittest.TestCase):
             ok = mw.load('bird', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["BIRD_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
+            ok = self.__loadStatus(mw.getLoadStatus())
+            self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -127,6 +134,8 @@ class PdbxLoaderTests(unittest.TestCase):
             ok = mw.load('bird_family', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertFalse(ok)
+            ok = self.__loadStatus(mw.getLoadStatus())
+            self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -139,6 +148,8 @@ class PdbxLoaderTests(unittest.TestCase):
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+            self.assertTrue(ok)
+            ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -156,6 +167,8 @@ class PdbxLoaderTests(unittest.TestCase):
             ok = mw.load('chem_comp', loadType='replace', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
+            ok = self.__loadStatus(mw.getLoadStatus())
+            self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -172,6 +185,8 @@ class PdbxLoaderTests(unittest.TestCase):
             ok = mw.load('pdbx', loadType='replace', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
+            ok = self.__loadStatus(mw.getLoadStatus())
+            self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -185,9 +200,23 @@ class PdbxLoaderTests(unittest.TestCase):
             ok = mw.load('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath, pruneDocumentSize=0.10)
             self.assertTrue(ok)
+            ok = self.__loadStatus(mw.getLoadStatus())
+            self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
+
+    def __loadStatus(self, statusList):
+        sectionName = 'data_exchange_status'
+        dl = DocumentLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+                            documentLimit=None, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
+        #
+        databaseName = self.__cfgOb.get('DATABASE_NAME', sectionName=sectionName) + '_' + self.__cfgOb.get('DATABASE_VERSION_STRING', sectionName=sectionName)
+        collectionVersion = self.__cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
+        collectionName = self.__cfgOb.get('COLLECTION_UPDATE_STATUS', sectionName=sectionName) + '_' + collectionVersion
+        ok = dl.load(databaseName, collectionName, loadType='append', documentList=statusList,
+                     indexAttributeList=['update_id', 'database_name', 'object_name'], keyName=None)
+        return ok
 
 
 def mongoLoadSuite():

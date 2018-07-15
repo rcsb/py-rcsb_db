@@ -1,4 +1,4 @@
-# File:    ClusterDataPrepTests.py.py
+# File:    ClusterDataPrepTests.py
 # Author:  J. Westbrook
 # Date:    24-Jun-2018
 # Version: 0.001
@@ -32,7 +32,7 @@ except Exception as e:
     from rcsb_db import __version__
 
 from rcsb_db.io.MarshalUtil import MarshalUtil
-from rcsb_db.loaders.ClusterDataPrep import ClusterDataPrep
+from rcsb_db.processors.ClusterDataPrep import ClusterDataPrep
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()

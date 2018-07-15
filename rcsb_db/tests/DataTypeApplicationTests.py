@@ -1,4 +1,4 @@
-# File:    DataTypeApplicationInfoTests.py.py
+# File:    DataTypeApplicationInfoTests.py
 # Author:  J. Westbrook
 # Date:    22-May-2013
 # Version: 0.001

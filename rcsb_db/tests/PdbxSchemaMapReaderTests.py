@@ -1,5 +1,5 @@
 ##
-# File:    PdbxSchemaMapReaderTests.py.py
+# File:    PdbxSchemaMapReaderTests.py
 # Author:  J. Westbrook
 # Date:    4-Jan-2013
 # Version: 0.001

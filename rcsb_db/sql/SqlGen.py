@@ -16,6 +16,7 @@
 # 30-Dec-2017 jdw add crate specific SQL generators
 #  5-Jan-2018 jdw add default replication factor for crate -
 # 20-Jun-2018 jdw adjustments for dynamic schema generation
+#  7-Jul-2018 jdw update for new schema def prototypes
 #
 #
 ##
@@ -555,7 +556,7 @@ class SqlGenAdmin(object):
         return '\n'.join(oL)
 
     def importTable(self, databaseName, tableDefObj, importPath, withTruncate=False, withDoubleQuotes=False):
-        """ Create the SQL commands to data files stored in charactore delimited data files into the
+        """ Create the SQL commands to import data files stored in charactore delimited data files into the
             in put database and table.    Input data may be optionally enclosed in double quotes.
 
             An options is provied to  pre-truncate the table before loading.
@@ -684,7 +685,7 @@ class SqlGenQuery(object):
             oNames = [self.__schemaDefObj.getQualifiedAttributeName(aTup) + " " + sortFlag for aTup, sortFlag in self.__orderList]
         #
         tIds = list(set(tIds))
-        tNames = [self.__databaseName + '.' + self.__schemaDefObj.getTableName(tId) for tId in tIds]
+        tNames = [self.__databaseName + '.' + self.__schemaDefObj.getSchemaName(tId) for tId in tIds]
         #
         oL = []
         oL.append("SELECT %s " % ','.join(aNames))
@@ -1013,9 +1014,9 @@ class SqlGenCondition(object):
     def __addInterTableJoinContraints(self, lTableId, rTableId):
         """ The ...
         """
-        lTdef = self.__schemaDefObj.getTable(lTableId)
+        lTdef = self.__schemaDefObj.getSchemaObject(lTableId)
         lKeyAttributeIdL = lTdef.getPrimaryKeyAttributeIdList()
-        rTdef = self.__schemaDefObj.getTable(rTableId)
+        rTdef = self.__schemaDefObj.getSchemaObject(rTableId)
         rKeyAttributeIdL = rTdef.getPrimaryKeyAttributeIdList()
         #
         commonAttributeIdSet = set(lKeyAttributeIdL) & set(rKeyAttributeIdL)

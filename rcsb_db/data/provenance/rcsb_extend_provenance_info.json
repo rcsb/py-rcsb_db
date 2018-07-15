@@ -1,7 +1,6 @@
 {
-"entity_sequence_clusters": {
-"software": [
-{
+"rcsb_entity_sequence_cluster_prov": {
+"software": {
 "pdbx_ordinal": 1,
 "name": "MMseq2",
 "version": "7d26617002d155353b375b47404621d4b07e196a",
@@ -13,10 +12,8 @@
 "location": "https://github.com/soedinglab/MMseqs2",
 "language": "C++",
 "citation_id": "mmseq2"
-}
-],
-"citation": [
-{
+},
+"citation": {
 "id": "mmseq2",
 "title": "MMseqs2 enables sensitive protein sequence searching for the analysis of massive data sets.",
 "journal_abbrev": "Nat Biotechnol.",
@@ -26,8 +23,7 @@
 "year": 2017,
 "pdbx_database_id_PubMed": "29035372",
 "pdbx_database_id_DOI": "10.1038/nbt.3988"
-}
-],
+},
 "citation_author": [
 {
 "citation_id": "mmseq2",

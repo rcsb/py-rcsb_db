@@ -31,7 +31,7 @@ __license__ = "Apache 2.0"
 import logging
 
 from rcsb_db.helpers.DictInfoHelperBase import DictInfoHelperBase
-from rcsb_db.loaders.DataTransformFactory import DataTransformInfo
+from rcsb_db.processors.DataTransformFactory import DataTransformInfo
 
 logger = logging.getLogger(__name__)
 

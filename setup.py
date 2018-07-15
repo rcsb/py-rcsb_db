@@ -45,11 +45,11 @@ setup(
         'console_scripts': [
             'exdb_repo_load_cli=rcsb_db.exec.RepoLoadExec:main',
             'repo_scan_cli=rcsb_db.exec.RepoScanExec:main',
-            'etl_exec_cli'='rcsb_db.exec.ETLExec:main',
+            'etl_exec_cli=rcsb_db.exec.ETLExec:main',
         ]
     },
     #
-    install_requires=['future', 'six', 'python-dateutil', 'mmcif', 'scandir; python_version < "3.0"', 'configparser; python_version < "3.0"'],
+    install_requires=['future', 'six', 'python-dateutil', 'pytz', 'mmcif', 'scandir; python_version < "3.0"', 'configparser; python_version < "3.0"'],
     packages=find_packages(exclude=['rcsb_db.tests', 'rcsb_db.tests-*', 'tests.*']),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:

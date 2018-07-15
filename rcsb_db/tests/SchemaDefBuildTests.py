@@ -1,5 +1,5 @@
 ##
-# File:    SchemaDefBuildTests.py.py
+# File:    SchemaDefBuildTests.py
 # Author:  J. Westbrook
 # Date:    9-Jun-2018
 # Version: 0.001

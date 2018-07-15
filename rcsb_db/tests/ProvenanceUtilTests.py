@@ -1,10 +1,10 @@
-# File:    ProvenanceUtilTests.py.py
+# File:    ProvenanceUtilTests.py
 # Author:  J. Westbrook
 # Date:    24-Jun-2018
 # Version: 0.001
 #
 # Update:
-
+#   6-Jul-2018. jdw generalize test case.
 #
 ##
 """
@@ -34,7 +34,7 @@ except Exception as e:
 from rcsb_db.utils.ConfigUtil import ConfigUtil
 from rcsb_db.utils.ProvenanceUtil import ProvenanceUtil
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -49,7 +49,40 @@ class ProvenanceUtilTests(unittest.TestCase):
         self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, mockTopPath=self.__mockTopPath)
         #
         # Sanple provenance data -
+        self.__provKeyName = 'rcsb_entity_sequence_cluster_prov'
         self.__provInfo = {
+            'software': {'pdbx_ordinal': 1,
+                         'name': 'MMseq2',
+                         'version': '7d26617002d155353b375b47404621d4b07e196a',
+                         'date': '2017',
+                         'type': 'package',
+                         'contact_author': 'Martin Steinegger',
+                         'contact_author_email': 'martin.steinegger@mpibpc.mpg.de',
+                         'classification': 'bioinformatics',
+                         'location': 'https://github.com/soedinglab/MMseqs2',
+                         'language': 'C++',
+                         'citation_id': 'mmseq2'},
+            #
+            'citation': {'id': 'mmseq2',
+                         'title': 'MMseqs2 enables sensitive protein sequence searching for the analysis of massive data sets.',
+                         'journal_abbrev': 'Nat Biotechnol.',
+                         'journal_volume': '35',
+                         'page_first': '1026',
+                         'page_last': '1028',
+                         'year': 2017,
+                         'pdbx_database_id_PubMed': '29035372',
+                         'pdbx_database_id_DOI': '10.1038/nbt.3988'},
+            #
+            'citation_author': [{'citation_id': 'mmseq2',
+                                 'name': 'Steinegger, M.',
+                                 'ordinal': 1},
+                                {'citation_id': 'mmseq2',
+                                 'name': 'Soding, J.',
+                                 'ordinal': 2}],
+
+        }
+
+        self.__provInfoL = {
             'software': [{'pdbx_ordinal': 1,
                           'name': 'MMseq2',
                           'version': '7d26617002d155353b375b47404621d4b07e196a',
@@ -96,7 +129,7 @@ class ProvenanceUtilTests(unittest.TestCase):
         """
         try:
             provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
-            pD = {'entity_sequence_clusters': self.__provInfo}
+            pD = {self.__provKeyName: self.__provInfo}
             ok = provU.store(pD, schemaName='DEFAULT')
             #
             self.assertTrue(ok)
@@ -109,12 +142,12 @@ class ProvenanceUtilTests(unittest.TestCase):
         """
         try:
             provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
-            pD = {'entity_sequence_clusters': self.__provInfo}
+            pD = {self.__provKeyName: self.__provInfo}
             ok = provU.store(pD, schemaName='DEFAULT')
             self.assertTrue(ok)
             #
             fD = provU.fetch(schemaName='DEFAULT')
-            self.assertTrue('entity_sequence_clusters' in fD)
+            self.assertTrue(self.__provKeyName in fD)
             self.assertDictEqual(pD, fD)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -125,7 +158,7 @@ class ProvenanceUtilTests(unittest.TestCase):
         """
         try:
             provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
-            pD = {'entity_sequence_clusters': self.__provInfo}
+            pD = {self.__provKeyName: self.__provInfo}
             ok = provU.store(pD, schemaName='DEFAULT')
             self.assertTrue(ok)
             #
@@ -133,7 +166,7 @@ class ProvenanceUtilTests(unittest.TestCase):
             self.assertTrue(ok)
             #
             fD = provU.fetch(schemaName='DEFAULT')
-            self.assertTrue('entity_sequence_clusters' in fD)
+            self.assertTrue(self.__provKeyName in fD)
             self.assertDictEqual(pD, fD)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))

@@ -5,6 +5,7 @@
 #  Execution wrapper  --  ETL utilities for derived and remote data sources -
 #
 #  Updates:
+#  15-Jul-2018 jdw add repository holdings, move all path configuration to a separate site dependent config section.
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -26,96 +27,28 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-from rcsb_db.io.MarshalUtil import MarshalUtil
-from rcsb_db.loaders.ClusterDataPrep import ClusterDataPrep
+from rcsb_db.exec.RepoHoldingsEtlWorker import RepoHoldingsEtlWorker
+from rcsb_db.exec.SequenceClustersEtlWorker import SequenceClustersEtlWorker
 from rcsb_db.mongo.DocumentLoader import DocumentLoader
 from rcsb_db.utils.ConfigUtil import ConfigUtil
+from rcsb_db.utils.TimeUtil import TimeUtil
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
 
 
-class ClusterEtlWorker(object):
-    """
-        Note: relevant configuration options -
-        [entity_sequence_clusters]
-        DATABASE_NAME=sequence_clusters
-        DATABASE_VERSION_STRING=v5
-        COLLECTION_ENTITY_MEMBERS=entity_members
-        COLLECTION_CLUSTER_MEMBERS=cluster_members
-        COLLECTION_VERSION_STRING=v0_1
-        ENTITY_SCHEMA_NAME=rcsb_sequence_cluster_entity_list
-        CLUSTER_SCHEMA_NAME=rcsb_sequence_cluster_identifer_list
-        COLLECTION_ENTITY_MEMBERS_INDEX=data_set_id,entry_id,entity_id
-        COLLECTION_CLUSTER_MEMBERS_INDEX=data_set_id,identity,cluster_id
-        SEQUENCE_IDENTITY_LEVELS=100,95,90,70,50,30
-
-        """
-
-    def __init__(self, cfgOb, workPath=None, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False):
-        self.__cfgOb = cfgOb
-        self.__workPath = workPath
-        self.__readBackCheck = readBackCheck
-        self.__numProc = numProc
-        self.__chunkSize = chunkSize
-        self.__documentLimit = documentLimit
-        self.__resourceName = "MONGO_DB"
-        self.__verbose = verbose
-        #
-        sectionCluster = 'entity_sequence_clusters'
-        self.__databaseName = self.__cfgOb.get('DATABASE_NAME', sectionName=sectionCluster, default='sequence_clusters')
-        self.__databaseVersion = self.__cfgOb.get('DATABASE_NAME', sectionName=sectionCluster, default='v5')
-        self.__entityMemberCollection = self.__cfgOb.get('COLLECTION_ENTITY_MEMBERS', sectionName=sectionCluster, default='entity_members')
-        self.__clusterMembersCollection = self.__cfgOb.get('COLLECTION_CLUSTER_MEMBERS', sectionName=sectionCluster, default='cluster_members')
-        self.__collectionVersion = self.__cfgOb.get('DATABASE_NAME', sectionName=sectionCluster, default='v0_1')
-#
-        self.__entitySchemaName = self.__cfgOb.get('ENTITY_SCHEMA_NAME', sectionName=sectionCluster, default='rcsb_sequence_cluster_entity_list')
-        self.__clusterSchemaName = self.__cfgOb.get('CLUSTER_SCHEMA_NAME', sectionName=sectionCluster, default='rcsb_sequence_cluster_identifer_list')
-        #
-        tS = self.__cfgOb.get('COLLECTION_ENTITY_MEMBERS_INDEX', sectionName=sectionCluster, default=None)
-        self.__entityMemberCollectionIndexL = tS.split(',') if tS else None
-        tS = self.__cfgOb.get('COLLECTION_CLUSTER_MEMBERS_INDEX', sectionName=sectionCluster, default=None)
-        self.__clusterMembersCollectionIndexL = tS.split(',') if tS else None
-        # sample data set
-        #
-        tS = self.__cfgOb.get('SEQUENCE_IDENTITY_LEVELS', sectionName=sectionCluster, default=None)
-        self.__identityLevels = tS.split(',') if tS else ['100', '95', '90', '70', '50', '30']
-        #
-
-    def __extract(self, dataSetId, dataLocator, levels):
-        """ Extract sequence cluster data set  (mmseq2 or blastclust organization)
-        """
-        try:
-            cdp = ClusterDataPrep(workPath=self.__workPath, entitySchemaName=self.__entitySchemaName, clusterSchemaName=self.__clusterSchemaName)
-            cifD, docBySequenceD, docByClusterD = cdp.extract(dataSetId, clusterSetLocator=dataLocator, levels=levels, clusterType='entity')
-            return docBySequenceD, docByClusterD
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-
-        return {}, {}
-
-    def etl(self, dataSetId, dataLocator):
-        """ Load sequence cluster data in documents
-        """
-        try:
-            docBySequenceD, docByClusterD = self.__extract(dataSetId=dataSetId, dataLocator=dataLocator, levels=self.__identityLevels)
-            #
-            dl = DocumentLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
-                                documentLimit=self.__documentLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
-            #
-            dbName = self.__databaseName + '_' + self.__databaseVersion
-            cName = self.__entityMemberCollection + '_' + self.__collectionVersion
-            dList = docBySequenceD[self.__entitySchemaName]
-            ok1 = dl.load(dbName, cName, loadType='full', documentList=dList, indexAttributeList=self.__entityMemberCollectionIndexL, keyName=None)
-
-            cName = self.__entityMemberCollection + '_' + self.__collectionVersion
-            dList = docByClusterD[self.__clusterSchemaName]
-            ok2 = dl.load(dbName, cName, loadType='full', documentList=dList, indexAttributeList=self.__clusterMembersCollectionIndexL, keyName=None)
-            #
-            return ok1 and ok2
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-        return False
+def loadStatus(statusList, cfgOb, readBackCheck=True):
+    sectionName = 'data_exchange_status'
+    dl = DocumentLoader(cfgOb, "MONGO_DB", numProc=2, chunkSize=2,
+                        documentLimit=None, verbose=False, readBackCheck=readBackCheck)
+    #
+    databaseName = cfgOb.get('DATABASE_NAME', sectionName=sectionName) + '_' + cfgOb.get('DATABASE_VERSION_STRING', sectionName=sectionName)
+    collectionVersion = cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
+    collectionName = cfgOb.get('COLLECTION_UPDATE_STATUS', sectionName=sectionName) + '_' + collectionVersion
+    ok = dl.load(databaseName, collectionName, loadType='append', documentList=statusList,
+                 indexAttributeList=['update_id', 'database_name', 'object_name'], keyName=None)
+    return ok
 
 
 def main():
@@ -123,12 +56,14 @@ def main():
     #
     #
     parser.add_argument("--full", default=True, action='store_true', help="Fresh full load in a new tables/collections (Default)")
-    #parser.add_argument("--replace", default=False, action='store_true', help="Load with replacement in an existing table/collection (default)")
     #
     parser.add_argument("--etl_entity_sequence_clusters", default=False, action='store_true', help="ETL entity sequence clusters")
+    parser.add_argument("--etl_repository_holdings", default=False, action='store_true', help="ETL repository holdings")
 
-    parser.add_argument("--data_set_id", default=None, help="Data set identifier (e.g., 2018_14)")
-    parser.add_argument("--sequence_cluster_data_path", default=None, help="Sequence cluster data path")
+    parser.add_argument("--data_set_id", default=None, help="Data set identifier (default= 2018_14 for current week)")
+    #
+    parser.add_argument("--sequence_cluster_data_path", default=None, help="Sequence cluster data path (default set by configuration")
+    parser.add_argument("--sandbox_data_path", default=None, help="Date exchange sandboxPath data path (default set by configuration")
 
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
@@ -175,16 +110,16 @@ def main():
     #
     try:
         readBackCheck = args.read_back_check
-
-        dataSetId = args.data_set_id
-        seqDataLocator = args.sequence_cluster_data_path
-
+        tU = TimeUtil()
+        dataSetId = args.data_set_id if args.data_set_id else tU.getCurrentWeekSignature()
+        seqDataLocator = args.sequence_cluster_data_path if args.sequence_cluster_data_path else cfgOb.getPath('RCSB_SEQUENCE_CLUSTER_DATA_PATH', sectionName=configName)
+        sandboxPath = args.sandbox_data_path if args.sandbox_data_path else cfgOb.getPath('RCSB_EXCHANGE_SANDBOX_PATH', sectionName=configName)
         numProc = int(args.num_proc)
         chunkSize = int(args.chunk_size)
         documentLimit = int(args.document_limit) if args.document_limit else None
 
         loadType = 'full' if args.full else 'replace'
-        loadType = 'replace' if args.replace else 'full'
+        # loadType = 'replace' if args.replace else 'full'
 
         workPath = args.working_path if args.working_path else '.'
 
@@ -201,7 +136,7 @@ def main():
     ##
     if args.db_type == "mongo":
         if args.etl_entity_sequence_clusters:
-            cw = ClusterEtlWorker(
+            cw = SequenceClustersEtlWorker(
                 cfgOb,
                 numProc=numProc,
                 chunkSize=chunkSize,
@@ -209,9 +144,23 @@ def main():
                 verbose=debugFlag,
                 readBackCheck=readBackCheck,
                 workPath=workPath)
-            ok = cw.etl(dataSetId, seqDataLocator)
+            ok = cw.etl(dataSetId, seqDataLocator, loadType=loadType)
+            okS = loadStatus(cw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
-        logger.info("Operation completed with status %r " % ok)
+        if args.etl_repository_holdings:
+            rhw = RepoHoldingsEtlWorker(
+                cfgOb,
+                sandboxPath=sandboxPath,
+                numProc=numProc,
+                chunkSize=chunkSize,
+                documentLimit=documentLimit,
+                verbose=debugFlag,
+                readBackCheck=readBackCheck,
+                workPath=workPath)
+            ok = rhw.load(dataSetId, loadType=loadType)
+            okS = loadStatus(rhw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+
+        logger.info("Operation completed with status %r " % ok and okS)
 
 
 if __name__ == '__main__':

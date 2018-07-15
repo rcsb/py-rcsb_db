@@ -41,13 +41,13 @@ except Exception as e:
     from rcsb_db import __version__
 
 from rcsb_db.io.MarshalUtil import MarshalUtil
-from rcsb_db.loaders.DataTransformFactory import DataTransformFactory
+from rcsb_db.processors.DataTransformFactory import DataTransformFactory
 #
-from rcsb_db.loaders.SchemaDefDataPrep import SchemaDefDataPrep
+from rcsb_db.processors.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb_db.utils.ConfigUtil import ConfigUtil
 from rcsb_db.utils.SchemaDefUtil import SchemaDefUtil
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 

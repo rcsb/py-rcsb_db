@@ -166,7 +166,7 @@ class IoUtil(object):
         try:
             with open(filePath, 'r') as ifh:
                 for line in ifh:
-                    pth = str(line[:-1]).strip()
+                    pth = str(line[:-1])
                     if len(pth) and not pth.startswith("#"):
                         aList.append(pth)
         except Exception as e:

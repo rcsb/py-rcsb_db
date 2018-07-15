@@ -23,7 +23,7 @@ import logging
 import time
 
 from rcsb_db.crate.CrateDbUtil import CrateDbQuery
-from rcsb_db.loaders.SchemaDefDataPrep import SchemaDefDataPrep
+from rcsb_db.processors.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb_db.sql.SqlGen import SqlGenAdmin
 
 #

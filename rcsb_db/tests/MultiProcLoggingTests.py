@@ -1,5 +1,4 @@
 ##
-#
 # File:    MultiProcLoggingTests.py
 # Author:  J. Westbrook
 # Date:    5-Apr-2018

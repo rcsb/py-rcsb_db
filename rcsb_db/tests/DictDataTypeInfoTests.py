@@ -1,4 +1,4 @@
-# File:    DictDataTypeApplicationInfoTests.py.py
+# File:    DictDataTypeApplicationInfoTests.py
 # Author:  J. Westbrook
 # Date:    22-May-2013
 # Version: 0.001

@@ -38,9 +38,9 @@ import logging
 import os
 import time
 
-from rcsb_db.loaders.DataTransformFactory import DataTransformFactory
-from rcsb_db.loaders.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb_db.mysql.MyDbUtil import MyDbQuery
+from rcsb_db.processors.DataTransformFactory import DataTransformFactory
+from rcsb_db.processors.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb_db.sql.SqlGen import SqlGenAdmin
 
 logger = logging.getLogger(__name__)

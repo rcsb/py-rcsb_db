@@ -10,6 +10,7 @@
 #   27-Mar-2018  jdw add path to support mock repositories for testing.
 #   23-May-2018  jdw add getRepoPathList() convenience method
 #   18-Jun-2018  jdw move mock support to the configuration module
+#   12-Jul-2018  jdw correct config for PDBX_REPO_PATH
 ##
 """
  Utilites for scanning common data repository file systems.
@@ -129,7 +130,7 @@ class RepoPathUtil(object):
         return dataList, pathList, []
 
     def getEntryPathList(self):
-        return self.__getEntryPathList(self.__cfgOb.getPath('RCSB_PDBX_SANBOX_PATH'), numProc=self.__numProc)
+        return self.__getEntryPathList(self.__cfgOb.getPath('PDBX_REPO_PATH'), numProc=self.__numProc)
 
     def __getEntryPathList(self, topRepoPath, numProc=8):
         """Get the path list for the chemical component definition repository

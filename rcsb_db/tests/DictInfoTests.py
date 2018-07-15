@@ -1,4 +1,4 @@
-# File:    DictInfoTests.py.py
+# File:    DictInfoTests.py
 # Author:  J. Westbrook
 # Date:    22-May-2013
 # Version: 0.001
@@ -41,7 +41,7 @@ from rcsb_db.define.DictInfo import DictInfo
 from rcsb_db.helpers.DictInfoHelper import DictInfoHelper
 from rcsb_db.io.IoUtil import IoUtil
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 

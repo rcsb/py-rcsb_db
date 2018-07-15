@@ -12,6 +12,7 @@
 #    27-Mar-2018 - jdw update configuration handling and add support for mocking repository paths
 #     4-Apr-2018 - jdw added option to prune documents to a size limit
 #     3-Jul-2018 - jdw specialize for repository loading.
+#    14-Jul-2018 - jdw add loading of separate
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -33,11 +34,25 @@ except Exception as e:
     from rcsb_db import __version__
 
 from rcsb_db.io.MarshalUtil import MarshalUtil
+from rcsb_db.mongo.DocumentLoader import DocumentLoader
 from rcsb_db.mongo.PdbxLoader import PdbxLoader
 from rcsb_db.utils.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
+
+
+def loadStatus(statusList, cfgOb, readBackCheck=True):
+    sectionName = 'data_exchange_status'
+    dl = DocumentLoader(cfgOb, "MONGO_DB", numProc=2, chunkSize=2,
+                        documentLimit=None, verbose=False, readBackCheck=readBackCheck)
+    #
+    databaseName = cfgOb.get('DATABASE_NAME', sectionName=sectionName) + '_' + cfgOb.get('DATABASE_VERSION_STRING', sectionName=sectionName)
+    collectionVersion = cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
+    collectionName = cfgOb.get('COLLECTION_UPDATE_STATUS', sectionName=sectionName) + '_' + collectionVersion
+    ok = dl.load(databaseName, collectionName, loadType='append', documentList=statusList,
+                 indexAttributeList=['update_id', 'database_name', 'object_name'], keyName=None)
+    return ok
 
 
 def main():
@@ -145,28 +160,33 @@ def main():
             ok = mw.load('chem_comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath,
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
         if args.load_bird_chem_comp_ref:
             ok = mw.load('bird_chem_comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath,
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
         if args.load_bird_ref:
             ok = mw.load('bird', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["BIRD_PUBLIC_RELEASE"], failedFilePath=failedFilePath,
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
         if args.load_bird_family_ref:
             ok = mw.load('bird_family', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"], failedFilePath=failedFilePath,
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
         if args.load_entry_data:
             ok = mw.load('pdbx', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=failedFilePath,
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
-        logger.info("Operation completed with status %r " % ok)
+        logger.info("Operation completed with status %r " % ok and okS)
 
 
 if __name__ == '__main__':

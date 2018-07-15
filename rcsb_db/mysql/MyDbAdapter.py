@@ -10,7 +10,7 @@
 # 10-July -2015  jdw Change method/class names from MySqlGen
 # 10-March-2018  jdw  Py2->Py3 compatibility using driver fork described at https://mysqlclient.readthedocs.io/user_guide.html#
 # 29-March-2018  jdw remove dependency on wwPDB configuration  -   Use generic configuratio object in constructor -
-#
+#  9-July -2018  jdw flip back to time.time()
 #
 ###
 ##
@@ -171,7 +171,7 @@ class MyDbAdapter(object):
         """ Create table schema using the current class schema definition
         """
         if (self.__debug):
-            startTime = time.clock()
+            startTime = time.time()
             logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
                                                       sys._getframe().f_code.co_name,
                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
@@ -205,7 +205,7 @@ class MyDbAdapter(object):
                 logger.exception("Failing with %s" % str(e))
 
         if (self.__debug):
-            endTime = time.clock()
+            endTime = time.time()
             logger.info("\nCompleted %s %s at %s (%.3f seconds)\n" % (self.__class__.__name__,
                                                                       sys._getframe().f_code.co_name,
                                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
@@ -225,7 +225,7 @@ class MyDbAdapter(object):
 
             The contextId controls the handling default values for unspecified parameters.
         """
-        startTime = time.clock()
+        startTime = time.time()
         if self.__debug:
             logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
                                                       sys._getframe().f_code.co_name,
@@ -278,7 +278,7 @@ class MyDbAdapter(object):
             if (self.__verbose):
                 logger.exception("Failing with %s" % str(e))
         if self.__debug:
-            endTime = time.clock()
+            endTime = time.time()
             logger.info("\nCompleted %s %s at %s (%.3f seconds)\n" % (self.__class__.__name__,
                                                                       sys._getframe().f_code.co_name,
                                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
@@ -292,7 +292,7 @@ class MyDbAdapter(object):
              The contextId controls the handling default values for unspecified parameters.
 
         """
-        startTime = time.clock()
+        startTime = time.time()
         if self.__debug:
             logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
                                                       sys._getframe().f_code.co_name,
@@ -347,7 +347,7 @@ class MyDbAdapter(object):
             if (self.__verbose):
                 logger.exception("Failing with %s" % str(e))
         if self.__debug:
-            endTime = time.clock()
+            endTime = time.time()
             logger.info("\nCompleted %s %s at %s (%.3f seconds)\n" % (self.__class__.__name__,
                                                                       sys._getframe().f_code.co_name,
                                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
@@ -358,7 +358,7 @@ class MyDbAdapter(object):
         """ Construct a selection query for input table and optional constraints provided as keyword value pairs in the
             input arguments.  Return a list of dictionaries of these query details including all table attributes.
         """
-        startTime = time.clock()
+        startTime = time.time()
         if self.__debug:
             logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
                                                       sys._getframe().f_code.co_name,
@@ -423,7 +423,7 @@ class MyDbAdapter(object):
                 logger.exception("Failing with %s" % str(e))
 
         if self.__debug:
-            endTime = time.clock()
+            endTime = time.time()
             logger.info("\nCompleted %s %s at %s (%.3f seconds)\n" % (self.__class__.__name__,
                                                                       sys._getframe().f_code.co_name,
                                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
@@ -433,7 +433,7 @@ class MyDbAdapter(object):
     def _deleteRequest(self, tableId, **kwargs):
         """ Delete from input table records identified by the keyword value pairs provided as input arguments -
         """
-        startTime = time.clock()
+        startTime = time.time()
         if self.__debug:
             logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
                                                       sys._getframe().f_code.co_name,
@@ -476,7 +476,7 @@ class MyDbAdapter(object):
                 logger.exception("Failing with %s" % str(e))
 
         if self.__debug:
-            endTime = time.clock()
+            endTime = time.time()
             logger.info("\nCompleted %s %s at %s (%.3f seconds)\n" % (self.__class__.__name__,
                                                                       sys._getframe().f_code.co_name,
                                                                       time.strftime("%Y %m %d %H:%M:%S", time.localtime()),

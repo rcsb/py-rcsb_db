@@ -1,5 +1,5 @@
 ##
-# File:    SchemaDefAccessTests.py.py
+# File:    SchemaDefAccessTests.py
 # Author:  J. Westbrook
 # Date:    15-Jun-2018
 # Version: 0.001

@@ -4,7 +4,8 @@
 # Date: 23-Jun-2018
 #
 # Update:
-#    24-Jun-2018 jdw
+#    24-Jun-2018 jdw update organization of extracted data sets
+#     6-Jul-2018 jdw harmonize naming with extension dictionary
 #
 ##
 
@@ -28,17 +29,17 @@ class ClusterDataPrep(object):
 
 
     For example -
-     _rcsb_sequence_cluster_entity_list.data_set_id
+     _rcsb_entity_sequence_cluster_list.data_set_id
 
     These items are assigned to sub_category = 'sequence_membership':
 
-     _rcsb_sequence_cluster_entity_list.entry_id
-     _rcsb_sequence_cluster_entity_list.entity_id
+     _rcsb_entity_sequence_cluster_list.entry_id
+     _rcsb_entity_sequence_cluster_list.entity_id
 
     These following items are assigned to 'sub_category'  = 'cluster_membership'
 
-     _rcsb_sequence_cluster_entity_list.identity
-     _rcsb_sequence_cluster_entity_list.cluster_id
+     _rcsb_entity_sequence_cluster_list.identity
+     _rcsb_entity_sequence_cluster_list.cluster_id
 
     This above table definition is delivered as described and in a more compressed form in which
     the sub_category items are rolled-up into membership dictioanries:
@@ -51,17 +52,15 @@ class ClusterDataPrep(object):
 
      [{'data_set_id': str, 'identity': int, cluster_id': int, 'sequence_membership': [{'entry_id': str,  'entity_id': str }] }, ...]
 
-
-
     """
 
     def __init__(self, **kwargs):
         self.__workPath = kwargs.get('workPath', None)
-        self.__instanceSchemaName = kwargs.get('instanceSchemaName', 'rcsb_sequence_cluster_instance_list')
-        self.__entitySchemaName = kwargs.get('entitySchemaName', 'rcsb_sequence_cluster_entity_list')
-        self.__clusterSchemaName = kwargs.get('clusterSchemaName', 'rcsb_sequence_cluster_identifer_list')
+        self.__instanceSchemaName = kwargs.get('instanceSchemaName', 'rcsb_instance_sequence_cluster_list')
+        self.__entitySchemaName = kwargs.get('entitySchemaName', 'rcsb_entity_sequence_cluster_list')
+        self.__clusterSchemaName = kwargs.get('clusterSchemaName', 'rcsb_entity_sequence_cluster_identifer_list')
         self.__entityAttributeName = kwargs.get('entityAttributeName', 'entity_id')
-        self.__instanceAttributeName = kwargs.get('instanceAttributeName', 'asym_id')
+        self.__instanceAttributeName = kwargs.get('instanceAttributeName', 'instance_id')
         # Just a note for the assumned naming conventions clusters-by-%(clusterType)s-%(level)s.txt of the cluster data files
         self.__clusterFileNameTemplate = kwargs.get('clusterFileNameTemplate ', 'clusters-by-%(clusterType)s-%(level)s.txt')
 
@@ -95,7 +94,7 @@ class ClusterDataPrep(object):
             if clusterType.lower() == 'entity':
                 clusterTypeKey = self.__entityAttributeName
                 schemaNameMembership = self.__entitySchemaName
-            elif clusterType.lowe() in ['chain', 'instance']:
+            elif clusterType.lower() in ['chain', 'instance']:
                 clusterTypeKey = self.__instanceAttributeName
                 schemaNameMembership = self.__instanceSchemaName
             else:

@@ -1,19 +1,16 @@
 ##
-# File:    DocumentLoaderTests.py
+# File:    SequenceClusterLoaderTests.py
 # Author:  J. Westbrook
-# Date:    14-Mar-2018
+# Date:    25-Jun-2018
 # Version: 0.001
 #
 # Updates:
-#   22-Mar-2018 jdw  Revise all tests
-#   23-Mar-2018 jdw  Add reload test cases
-#   27-Mar-2018 jdw  Update configuration handling and mocking
-#    4-Apr-2018 jdw  Add size pruning tests
+#  6-Jul-2018 jdw rename methods and incorporate provenance details -
+#
 #
 ##
 """
-Tests for creating and loading MongoDb using BIRD, CCD and PDBx/mmCIF data files
-and following external schema definitions.
+Tests for ETL on sequence cluster data set following external schema definitions.
 
 """
 
@@ -38,18 +35,19 @@ except Exception as e:
     sys.path.insert(0, TOPDIR)
     from rcsb_db import __version__
 
-from rcsb_db.loaders.ClusterDataPrep import ClusterDataPrep
 from rcsb_db.mongo.DocumentLoader import DocumentLoader
+from rcsb_db.processors.ClusterDataPrep import ClusterDataPrep
 from rcsb_db.utils.ConfigUtil import ConfigUtil
+from rcsb_db.utils.ProvenanceUtil import ProvenanceUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
 
 
-class DocumentLoaderTests(unittest.TestCase):
+class SequenceClusterLoaderTests(unittest.TestCase):
 
     def __init__(self, methodName='runTest'):
-        super(DocumentLoaderTests, self).__init__(methodName)
+        super(SequenceClusterLoaderTests, self).__init__(methodName)
         self.__verbose = True
 
     def setUp(self):
@@ -77,8 +75,10 @@ class DocumentLoaderTests(unittest.TestCase):
         self.__pathSaveStyleDocSequence = os.path.join(HERE, 'test-output', 'cluster-data-doc-sequence.json')
         self.__pathSaveStyleDocCluster = os.path.join(HERE, 'test-output', 'cluster-data-doc-cluster.json')
         #
-        self.__entitySchemaName = 'rcsb_sequence_cluster_entity_list'
-        self.__clusterSchemaName = 'rcsb_sequence_cluster_identifer_list'
+        self.__entitySchemaName = 'rcsb_entity_sequence_cluster_list'
+        self.__clusterSchemaName = 'rcsb_entity_sequence_cluster_identifer_list'
+        self.__provKeyName = 'rcsb_entity_sequence_cluster_prov'
+        #
         #
         self.__startTime = time.time()
         logger.debug("Running tests on version %s" % __version__)
@@ -90,6 +90,17 @@ class DocumentLoaderTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)\n" % (self.id(),
                                                               time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                               endTime - self.__startTime))
+
+    def __fetchProvenance(self):
+        """ Test case for fetching a provenance dictionary content.
+        """
+        try:
+            provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
+            pD = provU.fetch(schemaName='DEFAULT')
+            return pD[self.__provKeyName] if self.__provKeyName in pD else {}
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
 
     def __testExtract(self, dataSetId, dataLocator, levels):
         """ Test extraction on an example sequence cluster data set.
@@ -117,10 +128,16 @@ class DocumentLoaderTests(unittest.TestCase):
             docBySequenceD, docByClusterD = self.__testExtract(dataSetId=self.__dataSetId, dataLocator=self.__pathClusterData, levels=self.__levels)
             #
             dList = docBySequenceD[self.__entitySchemaName]
-            ok = dl.load('sequence_clusters', 'entity_members_v0_1', loadType='full', documentList=dList, indexAttributeList=['data_set_id','entry_id','entity_id'], keyName=None)
+            ok = dl.load('sequence_clusters', 'entity_members_v0_1', loadType='full', documentList=dList,
+                         indexAttributeList=['data_set_id', 'entry_id', 'entity_id'], keyName=None)
             self.assertTrue(ok)
             dList = docByClusterD[self.__clusterSchemaName]
-            ok = dl.load('sequence_clusters', 'cluster_members_v0_1', loadType='full', documentList=dList, indexAttributeList=['data_set_id','identity','cluster_id'], keyName=None)
+            ok = dl.load('sequence_clusters', 'cluster_members_v0_1', loadType='full', documentList=dList,
+                         indexAttributeList=['data_set_id', 'identity', 'cluster_id'], keyName=None)
+            self.assertTrue(ok)
+            pD = self.__fetchProvenance()
+            ok = dl.load('sequence_clusters', 'cluster_provenance_v0_1', loadType='full', documentList=[pD],
+                         indexAttributeList=None, keyName=None)
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -129,7 +146,7 @@ class DocumentLoaderTests(unittest.TestCase):
 
 def clusterLoadSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(DocumentLoaderTests("testLoadCluster"))
+    suiteSelect.addTest(SequenceClusterLoaderTests("testLoadCluster"))
     return suiteSelect
 
 

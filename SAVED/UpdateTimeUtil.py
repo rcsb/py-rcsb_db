@@ -30,7 +30,9 @@ logger = logging.getLogger(__name__)
 
 
 class UpdateTimeUtil(object):
-    """
+    """ >>> import datetime
+        >>> datetime.date(2010, 6, 16).strftime("%V")
+       '24'
     """
 
     def __init__(self, verbose):

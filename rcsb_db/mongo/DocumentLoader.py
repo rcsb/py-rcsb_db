@@ -5,7 +5,7 @@
 # Version: 0.001
 #
 # Updates:
-#
+#  13-July-2018 jdw add append mode
 ##
 """
 Worker methods for loading document sets into MongoDb.
@@ -74,14 +74,16 @@ class DocumentLoader(object):
             numProc = self.__numProc
             chunkSize = self.__chunkSize if docList and self.__chunkSize < len(docList) else 0
             #
+            indAtList = indexAttributeList if indexAttributeList else []
             if loadType == 'full':
                 self.__removeCollection(databaseName, collectionName)
-                indAtList = indexAttributeList if indexAttributeList else []
                 ok = self.__createCollection(databaseName, collectionName, indAtList)
                 logger.debug("Collection create status %r" % ok)
-
-            #
-            # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
+            elif loadType == 'append':
+                # create only if object does not exist -
+                ok = self.__createCollection(databaseName, collectionName, indexAttributeNames=indAtList, checkExists=True)
+                logger.debug("Collection create status %r" % ok)
+                # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             numDocs = len(docList)
             logger.debug("Processing %d total documents" % numDocs)
             numProc = min(numProc, numDocs)
@@ -163,14 +165,17 @@ class DocumentLoader(object):
         delta = endTime - startTime
         logger.debug("Completed %s at %s (%.4f seconds)" % (message, ts, delta))
 
-    def __createCollection(self, dbName, collectionName, indexAttributeNames=None):
+    def __createCollection(self, dbName, collectionName, indexAttributeNames=None, checkExists=False):
         """Create database and collection and optionally a primary index -
         """
         try:
             logger.debug("Create database %s collection %s" % (dbName, collectionName))
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
-                ok1 = mg.createCollection(dbName, collectionName)
+                if checkExists and mg.databaseExists(dbName) and mg.collectionExists(dbName, collectionName):
+                    ok1 = True
+                else:
+                    ok1 = mg.createCollection(dbName, collectionName)
                 ok2 = mg.databaseExists(dbName)
                 ok3 = mg.collectionExists(dbName, collectionName)
                 okI = True

@@ -14,6 +14,7 @@
 #     22-Jun-2018 jdw  change collection attribute specification to dot notation
 #     22-Jun-2018 jdw  separate cases where the loading success can be easily mapped to the source data object.
 #     24-Jun-2018 jdw  rename and specialize function
+#     14-Jul-2018 jdw  add methods to return data exchange status objects for load operrations
 ##
 """
 Worker methods for loading PDBx resident data sets (e.g., BIRD, CCD and PDBx/mmCIF data files)
@@ -34,10 +35,11 @@ import time
 
 import bson
 
-from rcsb_db.loaders.DataTransformFactory import DataTransformFactory
-from rcsb_db.loaders.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb_db.mongo.Connection import Connection
 from rcsb_db.mongo.MongoDbUtil import MongoDbUtil
+from rcsb_db.processors.DataExchangeStatus import DataExchangeStatus
+from rcsb_db.processors.DataTransformFactory import DataTransformFactory
+from rcsb_db.processors.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb_db.utils.MultiProcUtil import MultiProcUtil
 from rcsb_db.utils.SchemaDefUtil import SchemaDefUtil
 
@@ -66,6 +68,7 @@ class PdbxLoader(object):
         #
         self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit)
         #
+        self.__statusList = []
 
     def load(self, schemaName, loadType='full', inputPathList=None, styleType='rowwise_by_name', dataSelectors=None,
              failedFilePath=None, saveInputFileListPath=None, pruneDocumentSize=None, locatorKey='rcsb_load_status.locator'):
@@ -78,6 +81,11 @@ class PdbxLoader(object):
 
         """
         try:
+            #
+            self.__statusList = []
+            desp = DataExchangeStatus()
+            statusStartTimestamp = desp.setStartTime()
+            #
             startTime = self.__begin(message="loading operation")
             #
             pathList = self.__schU.getPathList(schemaName=schemaName, inputPathList=inputPathList)
@@ -156,14 +164,27 @@ class PdbxLoader(object):
                 wOk = self.__writePathList(failedFilePath, failList)
                 logger.info("Writing load failure path list to %s status %r" % (failedFilePath, wOk))
             #
-            self.__end(startTime, "loading operation with status " + str(ok))
-
+            ok = len(failList) == 0
+            self.__end(startTime, "Loading operation with status " + str(ok))
+            #
+            # Create the status objects for the current operations
+            # ----
+            sFlag = 'Y' if ok else 'N'
+            for collectionName in collectionNameList:
+                desp.setStartTime(tS=statusStartTimestamp)
+                desp.setObject(dbName, collectionName)
+                desp.setStatus(updateId=None, successFlag=sFlag)
+                desp.setEndTime()
+                self.__statusList.append(desp.getStatus())
             #
             return ok
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
 
         return False
+
+    def getLoadStatus(self):
+        return self.__statusList
 
     def loadWorker(self, dataList, procName, optionsD, workingDir):
         """ Multi-proc worker method for MongoDb loading -
