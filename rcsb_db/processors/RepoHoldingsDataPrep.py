@@ -4,7 +4,7 @@
 # Date:  12-Jul-2018
 #
 # Update:
-#
+# 16-Jul-2018 jdw adjust naming to current sandbox conventions.
 #
 ##
 
@@ -180,7 +180,7 @@ class RepoHoldingsDataPrep(object):
         sD = {}
         dirPath = dirPath if dirPath else self.__sandboxPath
         try:
-            fp = os.path.join(dirPath, 'status', 'obsolete_entry.json')
+            fp = os.path.join(dirPath, 'status', 'obsolete_entry.json_2')
             dD = self.__mU.doImport(fp, 'json')
             for d in dD:
                 rbL = d['obsoletedBy'] if 'obsoletedBy' in d else []
