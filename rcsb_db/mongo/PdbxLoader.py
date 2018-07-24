@@ -214,6 +214,7 @@ class PdbxLoader(object):
             #
             sdp = SchemaDefDataPrep(schemaDefObj=sd, dtObj=dtf, workPath=workingDir, verbose=self.__verbose)
             containerList = sdp.getContainerList(dataList, filterType=filterType)
+            #
             logger.debug("%s container list length is %d" % (procName, len(containerList)))
             #
             logger.debug("%s schemaName %s dbName %s collectionNameList %s pathlist length %d containerList length %d" %
@@ -234,14 +235,10 @@ class PdbxLoader(object):
                 logger.debug("%s schemaName %s include list %r" % (procName, schemaName, tableIdIncludeList))
                 logger.debug("%s schemaName %s exclude list %r" % (procName, schemaName, tableIdExcludeList))
                 #
-                tableDataDictList, containerNameList, rejectList = sdp.processDocuments(containerList, styleType=styleType, filterType=fType, dataSelectors=dataSelectors)
+                tableDataDictList, containerNameList, rejectPathList = sdp.processDocuments(containerList, styleType=styleType, filterType=fType, dataSelectors=dataSelectors)
                 #
                 # Get the unique paths for the rejected  container list -
                 #
-                rejectPathList = []
-                for c in rejectList:
-                    catObj = c.getObj('rcsb_load_status')
-                    rejectPathList.append(catObj.getValue('locator', 0))
                 rejectPathList = list(set(rejectPathList))
                 #
                 if logSize:
@@ -265,7 +262,7 @@ class PdbxLoader(object):
                                                                                readBackCheck=readBackCheck, pruneDocumentSize=pruneDocumentSize)
                 #
                 logger.debug("%s database %s collection %s inputList length %d successList length %d  failed %d rejected %d" %
-                             (procName, dbName, collectionName, len(tableDataDictList), len(successPathList), len(failedPathList), len(rejectList)))
+                             (procName, dbName, collectionName, len(tableDataDictList), len(successPathList), len(failedPathList), len(rejectPathList)))
                 #
                 successPathList.extend(rejectPathList)
                 fullSuccessPathList.extend(successPathList)

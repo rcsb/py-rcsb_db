@@ -101,7 +101,7 @@ class DataExchangeStatusLoaderTests(unittest.TestCase):
                 self.assertGreaterEqual(len(tS), 15)
                 dList.append(desp.getStatus())
                 #
-                self.assertEquals(len(dList), 1)
+                self.assertEqual(len(dList), 1)
                 logger.debug("Status record %r" % dList[0])
 
                 sectionName = 'data_exchange_status'

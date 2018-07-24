@@ -10,6 +10,7 @@
 #   9-Apr-2019 jdw add pdbx prep examples -
 #  11-Apr-2018 jdw integrate DataTransformFactory()
 #  19-Jun-2018 jdw Add MarshalUtil() for for serialization
+#  24-Jul-2018 jdw Update selection filter names.
 #
 ##
 """
@@ -72,8 +73,8 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit)
         self.__birdRepoPath = os.path.join(TOPDIR, "rcsb_db", "data", "MOCK_BIRD_REPO")
         #
-        self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width"
-        self.__fTypeCol = "drop-empty-tables|skip-max-width"
+        self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables"
+        self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables"
         self.__chemCompMockLen = 4
         self.__birdMockLen = 4
         self.__pdbxMockLen = 8
@@ -110,7 +111,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.__mU.doExport(os.path.join(HERE, "test-output", "chem-comp-file-prep-rowwise-by-name.json"), tableDataDictList, format="json", indent=3)
 
             tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_by_name_with_cardinality",
-                                                                                  filterType=self.__fTypeRow, dataSelectors=["CHEM_COMP_PUBLIC_RELEASE"])
+                                                                                  filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"])
             self.assertGreaterEqual(len(tableDataDictList), self.__chemCompMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__chemCompMockLen)
             self.assertEqual(len(rejectList), 0)
@@ -155,10 +156,10 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.__mU.doExport(os.path.join(HERE, "test-output", "bird-file-prep-rowwise-by-name.json"), tableDataDictList, format="json", indent=3)
 
             tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_by_name_with_cardinality",
-                                                                                  filterType=self.__fTypeRow, dataSelectors=["BIRD_PUBLIC_RELEASE"])
-            self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
-            self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
-            self.assertEqual(len(rejectList), 0)
+                                                                                  filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"])
+            self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen - 1)
+            self.assertGreaterEqual(len(containerNameList), self.__birdMockLen - 1)
+            self.assertEqual(len(rejectList), 1)
             self.__mU.doExport(os.path.join(HERE, "test-output", "bird-file-prep-rowwise-by-name-with-cardinality.json"), tableDataDictList, format="json", indent=3)
 
             dtf = DataTransformFactory(schemaDefObj=sd, filterType=self.__fTypeCol)
@@ -199,10 +200,10 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.__mU.doExport(os.path.join(HERE, "test-output", "bird-container-prep-rowwise-by-name.json"), tableDataDictList, format="json", indent=3)
 
             tableDataDictList, containerNameList, rejectList = sdp.processDocuments(
-                containerList, styleType="rowwise_by_name_with_cardinality", filterType=self.__fTypeRow, dataSelectors=["BIRD_PUBLIC_RELEASE"])
-            self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
-            self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
-            self.assertEqual(len(rejectList), 0)
+                containerList, styleType="rowwise_by_name_with_cardinality", filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"])
+            self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen - 1)
+            self.assertGreaterEqual(len(containerNameList), self.__birdMockLen - 1)
+            self.assertEqual(len(rejectList), 1)
             self.__mU.doExport(os.path.join(HERE, "test-output", "bird-container-prep-rowwise-by-name-with-cardinality.json"), tableDataDictList, format="json", indent=3)
 
             #
@@ -245,10 +246,10 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.__mU.doExport(os.path.join(HERE, "test-output", "pdbx-file-prep-rowwise-by-name.json"), tableDataDictList, format="json", indent=3)
 
             tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_by_name_with_cardinality",
-                                                                                  filterType=self.__fTypeRow, dataSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"])
-            self.assertGreaterEqual(len(tableDataDictList), self.__pdbxMockLen)
-            self.assertGreaterEqual(len(containerNameList), self.__pdbxMockLen)
-            self.assertEqual(len(rejectList), 0)
+                                                                                  filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"])
+            self.assertGreaterEqual(len(tableDataDictList), self.__pdbxMockLen - 1)
+            self.assertGreaterEqual(len(containerNameList), self.__pdbxMockLen - 1)
+            self.assertEqual(len(rejectList), 1)
             self.__mU.doExport(os.path.join(HERE, "test-output", "pdbx-file-prep-rowwise-by-name-with-cardinality.json"), tableDataDictList, format="json", indent=3)
 
             # ---------------------  change global filters ----------------------------

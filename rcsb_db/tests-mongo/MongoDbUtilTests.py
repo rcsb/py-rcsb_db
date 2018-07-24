@@ -484,15 +484,15 @@ class MongoDbUtilTests(unittest.TestCase):
                 #
                 #
                 cur = mg.fetch(self.__dbName, self.__collectionName, ['DOC_ID'])
-                self.assertEqual(cur.count(), nDocs)
-                logger.debug("Fetch length %d" % cur.count())
+                self.assertEqual(cur.count_documents(), nDocs)
+                logger.debug("Fetch length %d" % cur.count_documents())
                 for ii, d in enumerate(cur):
                     logger.debug("Fetch num %d: %r" % (ii, d))
                 #
                 #
                 cur = mg.fetch(self.__dbName, self.__collectionName, ['category_0.attribute_0'], {'category_0.attribute_0': 'val_0_0'})
-                self.assertEqual(cur.count(), nDocs)
-                logger.debug("Fetch length %d" % cur.count())
+                self.assertEqual(cur.count_documents(), nDocs)
+                logger.debug("Fetch length %d" % cur.count_documents())
                 for ii, d in enumerate(cur):
                     logger.debug("Fetch num %d: %r" % (ii, d))
         except Exception as e:

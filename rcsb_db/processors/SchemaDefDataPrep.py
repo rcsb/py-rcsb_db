@@ -125,7 +125,7 @@ class SchemaDefDataPrep(object):
                 filterTypes: "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
 
         """
-        tableDataDictById, containerNameList, rejectList = self.__fetch(locatorList, filterType, dataSelectors=dataSelectors)
+        tableDataDictById, containerNameList, _ = self.__fetch(locatorList, filterType, dataSelectors=dataSelectors)
         tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType)
         return tableDataDict, containerNameList
 
@@ -149,17 +149,17 @@ class SchemaDefDataPrep(object):
         """
         tableDataDictList = []
         containerNameList = []
-        rejectList = []
+        rejectPathList = []
         for locator in locatorList:
             tableDataDictById, cnList, rL = self.__fetch([locator], filterType, dataSelectors=dataSelectors)
-            rejectList.extend(rL)
+            rejectPathList.extend(rL)
             if not tableDataDictById:
                 continue
             tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType, logSize=logSize)
             tableDataDictList.append(tableDataDict)
             containerNameList.extend(cnList)
         #
-        return tableDataDictList, containerNameList, rejectList
+        return tableDataDictList, containerNameList, rejectPathList
 
     def process(self, containerList, styleType="rowwise_by_id", filterType="none", dataSelectors=None):
         """ Return a dictionary of loadable data for each table defined in the current schema
@@ -180,7 +180,7 @@ class SchemaDefDataPrep(object):
 
 
         """
-        tableDataDictById, containerNameList, rejectList = self.__process(containerList, filterType, dataSelectors=dataSelectors)
+        tableDataDictById, containerNameList, _ = self.__process(containerList, filterType, dataSelectors=dataSelectors)
         tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType)
 
         return tableDataDict, containerNameList
@@ -270,7 +270,7 @@ class SchemaDefDataPrep(object):
             Returns: dicitonary d[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
                                 and
                      processed container name list. []
-                     list of rejected containers. []
+                     list of paths or names of rejected containers. []
 
         """
         startTime = time.time()
@@ -283,7 +283,10 @@ class SchemaDefDataPrep(object):
             if self.__testdataSelectors(c, dataSelectors):
                 cL.append(c)
             else:
-                rejectList.append(c)
+                try:
+                    rejectList.append(self.__loadInfo[c.getName()]['locator'])
+                except Exception:
+                    rejectList.append(c.getName())
         #
         self.__mapData(cL, tableDataDict, filterType)
         containerNameList.extend([myC.getName() for myC in containerList])

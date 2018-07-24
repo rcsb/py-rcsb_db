@@ -128,15 +128,15 @@ class SequenceClusterLoaderTests(unittest.TestCase):
             docBySequenceD, docByClusterD = self.__testExtract(dataSetId=self.__dataSetId, dataLocator=self.__pathClusterData, levels=self.__levels)
             #
             dList = docBySequenceD[self.__entitySchemaName]
-            ok = dl.load('sequence_clusters', 'entity_members_v0_1', loadType='full', documentList=dList,
+            ok = dl.load('sequence_clusters_v5', 'entity_members_v0_1', loadType='full', documentList=dList,
                          indexAttributeList=['data_set_id', 'entry_id', 'entity_id'], keyName=None)
             self.assertTrue(ok)
             dList = docByClusterD[self.__clusterSchemaName]
-            ok = dl.load('sequence_clusters', 'cluster_members_v0_1', loadType='full', documentList=dList,
+            ok = dl.load('sequence_clusters_v5', 'cluster_members_v0_1', loadType='full', documentList=dList,
                          indexAttributeList=['data_set_id', 'identity', 'cluster_id'], keyName=None)
             self.assertTrue(ok)
             pD = self.__fetchProvenance()
-            ok = dl.load('sequence_clusters', 'cluster_provenance_v0_1', loadType='full', documentList=[pD],
+            ok = dl.load('sequence_clusters_v5', 'cluster_provenance_v0_1', loadType='full', documentList=[pD],
                          indexAttributeList=None, keyName=None)
             self.assertTrue(ok)
         except Exception as e:

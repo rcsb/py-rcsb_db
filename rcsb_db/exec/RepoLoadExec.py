@@ -158,19 +158,19 @@ def main():
 
         if args.load_chem_comp_ref:
             ok = mw.load('chem_comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                         dataSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
         if args.load_bird_chem_comp_ref:
             ok = mw.load('bird_chem_comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                         dataSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=failedFilePath,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
         if args.load_bird_ref:
             ok = mw.load('bird', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                         dataSelectors=["BIRD_PUBLIC_RELEASE"], failedFilePath=failedFilePath,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
@@ -182,7 +182,7 @@ def main():
 
         if args.load_entry_data:
             ok = mw.load('pdbx', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
-                         dataSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=failedFilePath,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 

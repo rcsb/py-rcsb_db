@@ -6,10 +6,12 @@
    "SELECTION_FILTERS": {
       "PUBLIC_RELEASE": [
          {
-            "CATEGORY_NAME": "pdbx_database_status",
-            "ATTRIBUTE_NAME": "status_code",
+            "CATEGORY_NAME": "chem_comp",
+            "ATTRIBUTE_NAME": "pdbx_release_status",
             "VALUES": [
-               "REL"
+               "REL",
+               "OBS",
+               "REF_ONLY"
             ]
          }
       ]

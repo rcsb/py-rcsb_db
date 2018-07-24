@@ -52,7 +52,7 @@ class SchemaDefBuildTests(unittest.TestCase):
         self.__verbose = True
         self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb_db', 'data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
         self.__pathRcsbDictionaryFile = os.path.join(TOPDIR, 'rcsb_db', 'data', 'dictionaries', 'rcsb_mmcif_ext_v1.dic')
-
+        #
         self.__startTime = time.time()
         logger.debug("Running tests on version %s" % __version__)
         logger.debug("Starting %s at %s" % (self.id(),

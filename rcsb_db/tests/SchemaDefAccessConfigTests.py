@@ -8,8 +8,7 @@
 #
 ##
 """
-Tests the accessor methods for schema meta data using configuration details externally
-stored.
+Tests the accessor methods for schema meta data using externally store configuration details.
 
 """
 

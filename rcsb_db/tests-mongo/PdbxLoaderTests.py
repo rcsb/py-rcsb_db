@@ -87,7 +87,7 @@ class PdbxLoaderTests(unittest.TestCase):
             mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('chem_comp', loadType='full', inputPathList=None, styleType=self.__documentStyle,
-                         dataSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
@@ -102,7 +102,7 @@ class PdbxLoaderTests(unittest.TestCase):
             mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('bird_chem_comp', loadType='full', inputPathList=None, styleType=self.__documentStyle,
-                         dataSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
@@ -117,7 +117,7 @@ class PdbxLoaderTests(unittest.TestCase):
             mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('bird', loadType='full', inputPathList=None, styleType=self.__documentStyle,
-                         dataSelectors=["BIRD_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
@@ -147,7 +147,7 @@ class PdbxLoaderTests(unittest.TestCase):
             mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
-                         dataSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
@@ -162,10 +162,10 @@ class PdbxLoaderTests(unittest.TestCase):
             mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('chem_comp', loadType='full', inputPathList=None, styleType=self.__documentStyle,
-                         dataSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
             ok = mw.load('chem_comp', loadType='replace', inputPathList=None, styleType=self.__documentStyle,
-                         dataSelectors=["CHEM_COMP_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
@@ -180,10 +180,10 @@ class PdbxLoaderTests(unittest.TestCase):
             mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
-                         dataSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
             ok = mw.load('pdbx', loadType='replace', inputPathList=None, styleType=self.__documentStyle,
-                         dataSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
@@ -198,7 +198,7 @@ class PdbxLoaderTests(unittest.TestCase):
             mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
-                         dataSelectors=["PDBX_ENTRY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath, pruneDocumentSize=0.10)
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath, pruneDocumentSize=0.10)
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)

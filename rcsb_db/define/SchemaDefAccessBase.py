@@ -331,9 +331,9 @@ class SchemaDef(object):
         except Exception:
             return None
 
-    def getAttributeFilterType(self, attributeId):
+    def getAttributeFilterTypes(self, attributeId):
         try:
-            return self.__tD['ATTRIBUTE_INFO'][attributeId]['FILTER_TYPE']
+            return self.__tD['ATTRIBUTE_INFO'][attributeId]['FILTER_TYPES']
         except Exception:
             return None
 

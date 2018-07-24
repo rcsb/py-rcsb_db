@@ -68,7 +68,7 @@ class MongoDbUtil(object):
 
     def collectionExists(self, databaseName, collectionName):
         try:
-            if self.databaseExists(databaseName) and (collectionName in self.__mgObj[databaseName].collection_names()):
+            if self.databaseExists(databaseName) and (collectionName in self.__mgObj[databaseName].list_collection_names()):
                 return True
             else:
                 return False
@@ -77,7 +77,7 @@ class MongoDbUtil(object):
         return False
 
     def getCollectionNames(self, databaseName):
-        return self.__mgObj[databaseName].collection_names()
+        return self.__mgObj[databaseName].list_collection_names()
 
     def createCollection(self, databaseName, collectionName, overWrite=True):
         try:

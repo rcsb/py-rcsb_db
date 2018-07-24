@@ -1392,9 +1392,9 @@
             }
          }
       },
-      "THE_CELL": {
-         "SCHEMA_ID": "THE_CELL",
-         "SCHEMA_NAME": "the_cell",
+      "CELL": {
+         "SCHEMA_ID": "CELL",
+         "SCHEMA_NAME": "cell",
          "SCHEMA_TYPE": "transactional",
          "SCHEMA_UNIT_CARDINALITY": true,
          "SCHEMA_CONTENT_CLASSES": [],
@@ -5945,7 +5945,7 @@
          "SCHEMA_CONTENT_CLASSES": [],
          "ATTRIBUTES": {
             "STRUCTURE_ID": "structure_id",
-            "THE_3D_FITTING_ID": "the_3d_fitting_id",
+            "3D_FITTING_ID": "3d_fitting_id",
             "DETAILS": "details",
             "ID": "id",
             "PDB_CHAIN_ID": "pdb_chain_id",
@@ -5959,7 +5959,7 @@
                "METHOD_NAME": "datablockid()",
                "ARGUMENTS": null
             },
-            "THE_3D_FITTING_ID": {
+            "3D_FITTING_ID": {
                "CATEGORY": "em_3d_fitting_list",
                "ATTRIBUTE": "3d_fitting_id",
                "METHOD_NAME": null,
@@ -6011,7 +6011,7 @@
                   "BLOCK_ATTRIBUTE"
                ]
             },
-            "THE_3D_FITTING_ID": {
+            "3D_FITTING_ID": {
                "ORDER": 2,
                "NULLABLE": false,
                "PRECISION": 0,
@@ -6090,7 +6090,7 @@
                "TYPE": "UNIQUE",
                "ATTRIBUTES": [
                   "STRUCTURE_ID",
-                  "THE_3D_FITTING_ID",
+                  "3D_FITTING_ID",
                   "ID"
                ]
             },
@@ -8094,7 +8094,7 @@
                "PRIMARY_KEY": false,
                "APP_TYPE": "char",
                "WIDTH": 468,
-               "ITERABLE_DELIMITER": null,
+               "ITERABLE_DELIMITER": ",",
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": []
@@ -8363,7 +8363,7 @@
          "SCHEMA_CONTENT_CLASSES": [],
          "ATTRIBUTES": {
             "STRUCTURE_ID": "structure_id",
-            "THE_CELL": "the_cell",
+            "CELL": "cell",
             "CELLULAR_LOCATION": "cellular_location",
             "ENTITY_ASSEMBLY_ID": "entity_assembly_id",
             "ID": "id",
@@ -8393,7 +8393,7 @@
                "METHOD_NAME": null,
                "ARGUMENTS": null
             },
-            "THE_CELL": {
+            "CELL": {
                "CATEGORY": "em_entity_assembly_naturalsource",
                "ATTRIBUTE": "cell",
                "METHOD_NAME": null,
@@ -8481,7 +8481,7 @@
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": []
             },
-            "THE_CELL": {
+            "CELL": {
                "ORDER": 4,
                "NULLABLE": true,
                "PRECISION": 0,
@@ -8614,7 +8614,7 @@
          "SCHEMA_CONTENT_CLASSES": [],
          "ATTRIBUTES": {
             "STRUCTURE_ID": "structure_id",
-            "THE_CELL": "the_cell",
+            "CELL": "cell",
             "ENTITY_ASSEMBLY_ID": "entity_assembly_id",
             "ID": "id",
             "NCBI_TAX_ID": "ncbi_tax_id",
@@ -8641,7 +8641,7 @@
                "METHOD_NAME": null,
                "ARGUMENTS": null
             },
-            "THE_CELL": {
+            "CELL": {
                "CATEGORY": "em_entity_assembly_recombinant",
                "ATTRIBUTE": "cell",
                "METHOD_NAME": null,
@@ -8711,7 +8711,7 @@
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": []
             },
-            "THE_CELL": {
+            "CELL": {
                "ORDER": 4,
                "NULLABLE": true,
                "PRECISION": 0,
@@ -13426,7 +13426,9 @@
                "APP_TYPE": "char",
                "WIDTH": 25076,
                "ITERABLE_DELIMITER": null,
-               "FILTER_TYPES": [],
+               "FILTER_TYPES": [
+                  "STRIP_WS"
+               ],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": []
             },
@@ -13438,7 +13440,9 @@
                "APP_TYPE": "char",
                "WIDTH": 6159,
                "ITERABLE_DELIMITER": null,
-               "FILTER_TYPES": [],
+               "FILTER_TYPES": [
+                  "STRIP_WS"
+               ],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": []
             },
@@ -18174,7 +18178,7 @@
          "ATTRIBUTES": {
             "STRUCTURE_ID": "structure_id",
             "DATA_CONTENT_TYPE": "data_content_type",
-            "THE_GROUP": "the_group",
+            "GROUP": "group",
             "ORDINAL": "ordinal",
             "REVISION_ORDINAL": "revision_ordinal"
          },
@@ -18203,7 +18207,7 @@
                "METHOD_NAME": null,
                "ARGUMENTS": null
             },
-            "THE_GROUP": {
+            "GROUP": {
                "CATEGORY": "pdbx_audit_revision_group",
                "ATTRIBUTE": "group",
                "METHOD_NAME": null,
@@ -18261,7 +18265,7 @@
                "IS_CHAR_TYPE": false,
                "CONTENT_CLASSES": []
             },
-            "THE_GROUP": {
+            "GROUP": {
                "ORDER": 5,
                "NULLABLE": false,
                "PRECISION": 0,
@@ -30852,7 +30856,7 @@
                "PRIMARY_KEY": false,
                "APP_TYPE": "char",
                "WIDTH": 20216,
-               "ITERABLE_DELIMITER": null,
+               "ITERABLE_DELIMITER": ",",
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": []
@@ -41599,7 +41603,7 @@
                "PRIMARY_KEY": false,
                "APP_TYPE": "char",
                "WIDTH": 13,
-               "ITERABLE_DELIMITER": null,
+               "ITERABLE_DELIMITER": ",",
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": []
@@ -45132,7 +45136,7 @@
                "PRIMARY_KEY": false,
                "APP_TYPE": "char",
                "WIDTH": 12,
-               "ITERABLE_DELIMITER": null,
+               "ITERABLE_DELIMITER": ",",
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": []
@@ -45828,7 +45832,7 @@
                "PRIMARY_KEY": false,
                "APP_TYPE": "char",
                "WIDTH": 10,
-               "ITERABLE_DELIMITER": null,
+               "ITERABLE_DELIMITER": ",",
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": []
@@ -49884,7 +49888,9 @@
                "APP_TYPE": "char",
                "WIDTH": 32714,
                "ITERABLE_DELIMITER": null,
-               "FILTER_TYPES": [],
+               "FILTER_TYPES": [
+                  "STRIP_WS"
+               ],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": []
             }

@@ -72,7 +72,7 @@ class DataExchangeStatusTests(unittest.TestCase):
             tS = desp.setEndTime()
             self.assertGreaterEqual(len(tS), 15)
             dL.append(desp.getStatus())
-            self.assertEquals(len(dL), 1)
+            self.assertEqual(len(dL), 1)
             logger.debug("Status record %r" % dL[0])
             #
             ok = desp.setObject('my_database', 'my_other_collection')
@@ -85,7 +85,7 @@ class DataExchangeStatusTests(unittest.TestCase):
             tS = desp.setEndTime()
             self.assertGreaterEqual(len(tS), 15)
             dL.append(desp.getStatus())
-            self.assertEquals(len(dL), 2)
+            self.assertEqual(len(dL), 2)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()

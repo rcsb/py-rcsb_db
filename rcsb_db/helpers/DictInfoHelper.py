@@ -10,6 +10,7 @@
 #   1-Jun-2018  jdw add bridging class DataTransformInfo for attribute filters
 #  13-Jun-2018  jdw add content classes to cover former base table feature
 #  15-Jun-2018  jdw add support for alternative iterable delimiters
+#  24-Jul-2018  jdw fix logic in processing _itemTransformers data
 ##
 """
 This helper class supplements dictionary information as required for schema production.
@@ -62,8 +63,8 @@ class DictInfoHelper(DictInfoHelperBase):
     _cardinalityCategoryExtras = ['rcsb_load_status']
     #
     _selectionFilters = {('PUBLIC_RELEASE', 'pdbx'): [{'CATEGORY_NAME': 'pdbx_database_status', 'ATTRIBUTE_NAME': 'status_code', 'VALUES': ['REL']}],
-                         ('PUBLIC_RELEASE', 'chem_comp'): [{'CATEGORY_NAME': 'pdbx_database_status', 'ATTRIBUTE_NAME': 'status_code', 'VALUES': ['REL']}],
-                         ('PUBLIC_RELEASE', 'bird_chem_comp'): [{'CATEGORY_NAME': 'pdbx_database_status', 'ATTRIBUTE_NAME': 'status_code', 'VALUES': ['REL']}],
+                         ('PUBLIC_RELEASE', 'chem_comp'): [{'CATEGORY_NAME': 'chem_comp', 'ATTRIBUTE_NAME': 'pdbx_release_status', 'VALUES': ['REL', 'OBS', 'REF_ONLY']}],
+                         ('PUBLIC_RELEASE', 'bird_chem_comp'): [{'CATEGORY_NAME': 'chem_comp', 'ATTRIBUTE_NAME': 'pdbx_release_status', 'VALUES': ['REL', 'OBS', 'REF_ONLY']}],
                          ('PUBLIC_RELEASE', 'bird'): [{'CATEGORY_NAME': 'pdbx_reference_molecule', 'ATTRIBUTE_NAME': 'release_status', 'VALUES': ['REL', 'OBS']}],
                          ('PUBLIC_RELEASE', 'bird_family'): [{'CATEGORY_NAME': 'pdbx_reference_molecule_family', 'ATTRIBUTE_NAME': 'release_status', 'VALUES': ['REL', 'OBS']}]
                          }
@@ -167,12 +168,13 @@ class DictInfoHelper(DictInfoHelperBase):
     def __getItemTransformD(self):
         itD = {}
         for f, dL in DictInfoHelper._itemTransformers.items():
-            if not self.__dti.isImplemented(f):
-                continue
-            for d in dL:
-                if (d['CATEGORY_NAME'], d['ATTRIBUTE_NAME']) in itD:
-                    itD[(d['CATEGORY_NAME'], d['ATTRIBUTE_NAME'])] = []
-                itD[(d['CATEGORY_NAME'], d['ATTRIBUTE_NAME'])].append(f)
+            logger.debug("Verify transform method %r" % f)
+            if self.__dti.isImplemented(f):
+                for d in dL:
+                    if (d['CATEGORY_NAME'], d['ATTRIBUTE_NAME']) not in itD:
+                        itD[(d['CATEGORY_NAME'], d['ATTRIBUTE_NAME'])] = []
+                    itD[(d['CATEGORY_NAME'], d['ATTRIBUTE_NAME'])].append(f)
+
         return itD
 
     def getDictPath(self):
@@ -196,7 +198,7 @@ class DictInfoHelper(DictInfoHelperBase):
         """ Return the list of transforms to be applied to the input item (categoryName, attributeName).
         """
         try:
-            self.__itD[(categoryName, attributeName)]
+            return self.__itD[(categoryName, attributeName)]
         except Exception:
             return []
 
@@ -227,14 +229,15 @@ class DictInfoHelper(DictInfoHelperBase):
         """
         """
         try:
-            DictInfoHelper._typeCodeClasses[kind]
-        except Exception:
+            return DictInfoHelper._typeCodeClasses[kind]
+        except Exception as e:
+            logger.exception("Failing for kind %r with %s" % (kind, str(e)))
             pass
         return []
 
     def getQueryStrings(self, kind):
         try:
-            DictInfoHelper._queryStringSelectors[kind]
+            return DictInfoHelper._queryStringSelectors[kind]
         except Exception:
             pass
 

@@ -77,7 +77,7 @@ class TimeUtilTests(unittest.TestCase):
 
             wS2 = tU.getWeekSignature(td.year, td.month, td.day)
             logger.debug("Computed week signature %s" % wS2)
-            self.assertEquals(wS1, wS2)
+            self.assertEqual(wS1, wS2)
             #
             tS = tU.getTimestamp(useUtc=True)
             logger.debug("TS (UTC) = %s(%d)" % (tS, len(tS)))

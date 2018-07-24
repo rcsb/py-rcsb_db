@@ -98,9 +98,12 @@ class DictInfo(object):
             self.__categoryFeatures = {catName: self.__getCategoryFeatures(catName, unitCardinalityList, categoryContentClasses) for catName in self.__categoryList}
             iTypeCodes = dictHelper.getTypeCodes('iterable')
             iQueryStrings = dictHelper.getQueryStrings('iterable')
+            logger.debug("iterable types %r iterable query %r" % (iTypeCodes, iQueryStrings))
             iterableD = self.__getIterables(iTypeCodes, iQueryStrings, dictHelper)
+            logger.debug("iterableD %r" % iterableD.items())
             dataSelectFilterD = dictHelper.getSelectionFiltersBySubset(dictSubset)
             itemTransformD = dictHelper.getItemTransformD()
+            logger.debug("itemTransformD %r " % itemTransformD.items())
         else:
             logger.debug("Missing dictionary helper method")
 

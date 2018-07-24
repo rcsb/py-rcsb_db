@@ -35,17 +35,20 @@ class DataTransformInfo(object):
 
     """
 
-    def __init(self):
+    def __init__(self):
         # mapD {<external attribute filter name>: <implementation names>, ...}
         self.__mapD = {'STRIP_WS': 'STRIP_WS'}
 
     def isImplemented(self, attributeFilter):
+        ok = False
         try:
             if attributeFilter in self.__mapD:
-                return True
-        except Exception:
-            pass
-        return False
+                ok = True
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+
+        logger.debug("Filter %r status %r" % (attributeFilter, ok))
+        return ok
 
     def getTransformFilterName(self, attributeFilter):
         try:
@@ -112,9 +115,10 @@ class DataTransformFactory(object):
                     aD[atId].append(dt.castString)
                     if not self.__FLAGS['skipMaxWidth']:
                         aD[atId].append(dt.truncateString)
-                    # JDW THIS IS WRONG
-                    if self.__dti.getTransformFilterName(tObj.getAttributeFilterType(atId)) == "STRIP_WS":
-                        aD[atId].append(dt.stripWhiteSpace)
+                    #
+                    for ft in tObj.getAttributeFilterTypes(atId):
+                        if self.__dti.getTransformFilterName(ft) == "STRIP_WS":
+                            aD[atId].append(dt.stripWhiteSpace)
                 elif tObj.isAttributeIntegerType(atId):
                     aD[atId].append(dt.castInteger)
                 elif tObj.isAttributeFloatType(atId):

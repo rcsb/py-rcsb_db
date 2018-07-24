@@ -32,13 +32,17 @@ class SequenceClustersEtlWorker(object):
         DATABASE_NAME=sequence_clusters
         DATABASE_VERSION_STRING=v5
         COLLECTION_ENTITY_MEMBERS=entity_members
-        COLLECTION_CLUSTER_MEMBERS=cluster_members
-        COLLECTION_VERSION_STRING=v0_1
-        ENTITY_SCHEMA_NAME=rcsb_sequence_cluster_entity_list
-        CLUSTER_SCHEMA_NAME=rcsb_sequence_cluster_identifer_list
         COLLECTION_ENTITY_MEMBERS_INDEX=data_set_id,entry_id,entity_id
+        COLLECTION_CLUSTER_MEMBERS=cluster_members
         COLLECTION_CLUSTER_MEMBERS_INDEX=data_set_id,identity,cluster_id
+        COLLECTION_VERSION_STRING=v0_1
+        ENTITY_SCHEMA_NAME=rcsb_entity_sequence_cluster_entity_list
+        CLUSTER_SCHEMA_NAME=rcsb_entity_sequence_cluster_identifer_list
         SEQUENCE_IDENTITY_LEVELS=100,95,90,70,50,30
+        COLLECTION_CLUSTER_PROVENANCE=cluster_provenance
+        PROVENANCE_KEY_NAME=rcsb_entity_sequence_cluster_prov
+        PROVENANCE_INFO_LOCATOR=provenance/rcsb_extend_provenance_info.json
+
 
         """
 
@@ -57,11 +61,12 @@ class SequenceClustersEtlWorker(object):
         self.__sectionCluster = 'entity_sequence_clusters'
         self.__clusterDataPath = self.__cfgOb.getPath('RCSB_SEQUENCE_CLUSTER_DATA_PATH', sectionName=self.__sectionCluster)
         self.__databaseName = self.__cfgOb.get('DATABASE_NAME', sectionName=self.__sectionCluster, default='sequence_clusters')
-        self.__databaseVersion = self.__cfgOb.get('DATABASE_NAME', sectionName=self.__sectionCluster, default='v5')
+        self.__databaseVersion = self.__cfgOb.get('DATABASE_VERSION_STRING', sectionName=self.__sectionCluster, default='v5')
+        #
         self.__entityMemberCollection = self.__cfgOb.get('COLLECTION_ENTITY_MEMBERS', sectionName=self.__sectionCluster, default='entity_members')
         self.__clusterMembersCollection = self.__cfgOb.get('COLLECTION_CLUSTER_MEMBERS', sectionName=self.__sectionCluster, default='cluster_members')
         self.__clusterProvenanceCollection = self.__cfgOb.get('COLLECTION_CLUSTER_PROVENANCE', sectionName=self.__sectionCluster, default='cluster_provenance')
-        self.__collectionVersion = self.__cfgOb.get('DATABASE_NAME', sectionName=self.__sectionCluster, default='v0_1')
+        self.__collectionVersion = self.__cfgOb.get('COLLECTION_VERSION_STRING', sectionName=self.__sectionCluster, default='v0_1')
         #
         self.__entitySchemaName = self.__cfgOb.get('ENTITY_SCHEMA_NAME', sectionName=self.__sectionCluster, default='rcsb_entity_sequence_cluster_entity_list')
         self.__clusterSchemaName = self.__cfgOb.get('CLUSTER_SCHEMA_NAME', sectionName=self.__sectionCluster, default='rcsb_entity_sequence_cluster_identifer_list')
@@ -130,12 +135,13 @@ class SequenceClustersEtlWorker(object):
                                 documentLimit=self.__documentLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
             #
             databaseName = self.__databaseName + '_' + self.__databaseVersion
+            #
             collectionName = self.__entityMemberCollection + '_' + self.__collectionVersion
             dList = docBySequenceD[self.__entitySchemaName]
             ok1 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=self.__entityMemberCollectionIndexL, keyName=None)
             self.__updateStatus(dataSetId, databaseName, collectionName, ok1, statusStartTimestamp)
-
-            collectionName = self.__entityMemberCollection + '_' + self.__collectionVersion
+            #
+            collectionName = self.__clusterMembersCollection + '_' + self.__collectionVersion
             dList = docByClusterD[self.__clusterSchemaName]
             ok2 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=self.__clusterMembersCollectionIndexL, keyName=None)
             self.__updateStatus(dataSetId, databaseName, collectionName, ok2, statusStartTimestamp)

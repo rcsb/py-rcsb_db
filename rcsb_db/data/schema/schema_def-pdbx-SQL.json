@@ -8094,7 +8094,7 @@
                "PRIMARY_KEY": false,
                "APP_TYPE": "varchar",
                "WIDTH": 468,
-               "ITERABLE_DELIMITER": null,
+               "ITERABLE_DELIMITER": ",",
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": []
@@ -13426,7 +13426,9 @@
                "APP_TYPE": "text",
                "WIDTH": 25076,
                "ITERABLE_DELIMITER": null,
-               "FILTER_TYPES": [],
+               "FILTER_TYPES": [
+                  "STRIP_WS"
+               ],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": []
             },
@@ -13438,7 +13440,9 @@
                "APP_TYPE": "text",
                "WIDTH": 6159,
                "ITERABLE_DELIMITER": null,
-               "FILTER_TYPES": [],
+               "FILTER_TYPES": [
+                  "STRIP_WS"
+               ],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": []
             },
@@ -30852,7 +30856,7 @@
                "PRIMARY_KEY": false,
                "APP_TYPE": "varchar",
                "WIDTH": 20216,
-               "ITERABLE_DELIMITER": null,
+               "ITERABLE_DELIMITER": ",",
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": []
@@ -41599,7 +41603,7 @@
                "PRIMARY_KEY": false,
                "APP_TYPE": "char",
                "WIDTH": 13,
-               "ITERABLE_DELIMITER": null,
+               "ITERABLE_DELIMITER": ",",
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": []
@@ -45132,7 +45136,7 @@
                "PRIMARY_KEY": false,
                "APP_TYPE": "char",
                "WIDTH": 12,
-               "ITERABLE_DELIMITER": null,
+               "ITERABLE_DELIMITER": ",",
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": []
@@ -45828,7 +45832,7 @@
                "PRIMARY_KEY": false,
                "APP_TYPE": "char",
                "WIDTH": 10,
-               "ITERABLE_DELIMITER": null,
+               "ITERABLE_DELIMITER": ",",
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": []
@@ -49884,7 +49888,9 @@
                "APP_TYPE": "text",
                "WIDTH": 32714,
                "ITERABLE_DELIMITER": null,
-               "FILTER_TYPES": [],
+               "FILTER_TYPES": [
+                  "STRIP_WS"
+               ],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": []
             }

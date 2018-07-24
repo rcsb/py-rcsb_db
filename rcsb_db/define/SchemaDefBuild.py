@@ -202,15 +202,20 @@ class SchemaDefBuild(object):
         blockAttributeMethod = self.__schemaDefHelper.getBlockAttributeMethod(schemaName) if self.__schemaDefHelper else None
         #
         # Function to perform category and attribute name conversion.
-        convertNameF = self.__schemaDefHelper.convertNameDefault if self.__schemaDefHelper else self.__convertNameDefault
-
+        # convertNameF = self.__schemaDefHelper.convertNameDefault if self.__schemaDefHelper else self.__convertNameDefault
+        #
+        if applicationName in ['ANY', 'SQL', 'DOCUMENT', 'SOLR']:
+            nameConvention = applicationName
+        else:
+            nameConvention = 'DEFAULT'
+        convertNameF = self.__schemaDefHelper.getConvertNameMethod(nameConvention) if self.__schemaDefHelper else self.__convertNameDefault
         #
         dictSchema = dictInfo.getNameSchema()
         #
         rD = {}
         for catName, atNameList in dictSchema.items():
             cfD = dictInfo.getCategoryFeatures(catName)
-            # logger.debug("catName %s cfD %r" % (catName, cfD))
+            logger.debug("catName %s contentClasses %r cfD %r" % (catName, contentClasses, cfD))
 
             if not dtInstInfo.exists(catName) and not self.__testContentClasses(contentClasses, cfD['CONTENT_CLASSES']):
                 continue

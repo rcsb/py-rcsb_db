@@ -5,10 +5,10 @@
 # Version: 0.001 Initial version
 #
 # Updates:
-#
+#     24-July-2018  jdw Make the name conversion method convention specific.
 ##
 """
-Inject additional information into a schema definition.
+Inject additional semantic information into a schema definition applicable to all implementation types.
 
 """
 __docformat__ = "restructuredtext en"
@@ -65,20 +65,33 @@ class SchemaDefHelper(SchemaDefHelperBase):
         """
         super(SchemaDefHelper, self).__init__(**kwargs)
 
-    def convertNameDefault(self, name):
+    def getConvertNameMethod(self, nameConvention):
+        if nameConvention.upper() in ['SQL']:
+            return self.__convertNameDefault
+        elif nameConvention.upper() in ['ANY', 'DOCUMENT', 'SOLR']:
+            return self.__convertNamePunc
+        else:
+            return self.__convertNameDefault
+
+    def __convertNamePunc(self, name):
+        """ Default schema name converter -
+        """
+        return SchemaDefHelper.__re1.sub('_', SchemaDefHelper.__re2.sub('', name))
+
+    def __convertNameDefault(self, name):
         """ Default schema name converter -
         """
         if SchemaDefHelper.__re0.match(name) or name[0].isdigit():
             name = 'the_' + name
         return SchemaDefHelper.__re1.sub('_', SchemaDefHelper.__re2.sub('', name))
 
-    @classmethod
-    def convertName(cls, name):
-        """ Default schema name converter -
-        """
-        if cls.__re0.match(name):
-            name = 'the_' + name
-        return cls.__re1.sub('_', cls.__re2.sub('', name))
+    # @classmethod
+    # def xxconvertName(cls, name):
+    #    """ Default schema name converter -
+    #    """
+    #    if cls.__re0.match(name):
+    #        name = 'the_' + name
+    #    return cls.__re1.sub('_', cls.__re2.sub('', name))
 
     def getExcluded(self, schemaName):
         '''  For input schema definition, return the list of excluded schema identifiers.
