@@ -14,7 +14,10 @@
 #     22-Jun-2018 jdw  change collection attribute specification to dot notation
 #     22-Jun-2018 jdw  separate cases where the loading success can be easily mapped to the source data object.
 #     24-Jun-2018 jdw  rename and specialize function
-#     14-Jul-2018 jdw  add methods to return data exchange status objects for load operrations
+#     14-Jul-2018 jdw  add methods to return data exchange status objects for load operations
+#     25-Jul-2018 jdw  fixed bazaar bad function references blocking failure handling
+#     25-Jul-2018 jdw  restore pruning operations
+#
 ##
 """
 Worker methods for loading PDBx resident data sets (e.g., BIRD, CCD and PDBx/mmCIF data files)
@@ -158,7 +161,7 @@ class PdbxLoader(object):
                 retLists.extend(retListsT)
                 diagList.extend(diagListT)
             logger.debug("Failing path list %r" % failList)
-            logger.info("Load path list length %d failed load list length %d" % (len(pathList), len(failList)))
+            logger.info("Load path success list length %d - failed load list length %d" % (len(pathList), len(failList)))
             #
             if failedFilePath and len(failList) > 0:
                 wOk = self.__writePathList(failedFilePath, failList)
@@ -382,6 +385,7 @@ class PdbxLoader(object):
         #
         # Load database/collection with input document list -
         #
+        rIdL = []
         indD = {}
         failList = []
         fullSuccessValueList = [self.__dictGet(d, locatorKey) for d in dList]
@@ -404,24 +408,29 @@ class PdbxLoader(object):
                 if loadType == 'replace':
                     dTupL = mg.deleteList(dbName, collectionName, dList, keyName)
                     logger.debug("Deleted document status %r" % dTupL)
+                if pruneDocumentSize:
+                    dList = self.__pruneBySize(dList, limitMB=pruneDocumentSize)
                 #
-                rIdL = mg.insertList(dbName, collectionName, dList, keyName=keyName, salvage=True)
-                logger.debug("Insert returns rIdL length %r" % len(rIdL))
-
+                rIdL.extend(mg.insertList(dbName, collectionName, dList, keyName=keyName, salvage=True))
+                logger.debug("-- InsertList returns rIdL length %r or %r" % (len(rIdL), len(dList)))
                 # ---
                 #  If there is a failure then determine the specific successes and failures -
                 #
                 successList = fullSuccessValueList
                 if len(rIdL) != len(dList):
-                    sList = []
-                    for rId in rIdL:
-                        rObj = mg.fetchOne(dbName, collectionName, '_id', rId)
-                        dId = self.__getDict(rObj, docId)
-                        jj = indD[dId]
-                        sList.append(self.__dictGet(dList[jj], locatorKey))
-                    #
-                    failList = list(set(fullSuccessValueList) - set(sList))
-                    successList = list(set(sList))
+                    try:
+                        sList = []
+                        for rId in rIdL:
+                            #
+                            rObj = mg.fetchOne(dbName, collectionName, '_id', rId)
+                            dId = self.__dictGet(rObj, docId)
+                            jj = indD[dId]
+                            sList.append(self.__dictGet(dList[jj], locatorKey))
+                        #
+                        failList = list(set(fullSuccessValueList) - set(sList))
+                        successList = list(set(sList))
+                    except Exception as e:
+                        logger.exception("Failing with %s" % str(e))
                 #
                 if readBackCheck:
                     #
@@ -431,7 +440,7 @@ class PdbxLoader(object):
                     rbStatus = True
                     for ii, rId in enumerate(rIdL):
                         rObj = mg.fetchOne(dbName, collectionName, '_id', rId)
-                        dId = self.__getDict(rObj, docId)
+                        dId = self.__dictGet(rObj, docId)
                         jj = indD[dId]
                         if (rObj != dList[jj]):
                             rbStatus = False
@@ -443,6 +452,7 @@ class PdbxLoader(object):
             return len(rIdL) == len(dList), successList, failList
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
+
         return False, [], fullSuccessValueList
 
     def __dictGet(self, dct, dotNotation):

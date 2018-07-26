@@ -77,7 +77,7 @@ class FileUtil(object):
             locSp = urlsplit(locator)
             return locSp.path
         except Exception as e:
-            logger.exception("For locator %r Failing with %s" % (locator, str(e)))
+            logger.exception("For locator %r failing with %s" % (locator, str(e)))
         return None
 
     def getFileName(self, locator):
@@ -86,7 +86,7 @@ class FileUtil(object):
             (pth, fn) = os.path.split(locSp.path)
             return fn
         except Exception as e:
-            logger.exception("For locator %r Failing with %s" % (locator, str(e)))
+            logger.exception("For locator %r failing with %s" % (locator, str(e)))
         return None
 
     def isLocal(self, locator):
@@ -94,7 +94,7 @@ class FileUtil(object):
             locSp = urlsplit(locator)
             return locSp.scheme in ['', 'file']
         except Exception as e:
-            logger.exception("For locator %r Failing with %s" % (locator, str(e)))
+            logger.exception("For locator %r failing with %s" % (locator, str(e)))
         return None
 
     def getScheme(self, locator):

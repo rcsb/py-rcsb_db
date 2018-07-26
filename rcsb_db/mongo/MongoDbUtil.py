@@ -6,6 +6,7 @@
 #      17-Mar-2018  jdw add replace and index ops
 #      19-Mar-2018  jdw reorganize error handling for bulk insert
 #      24-Mar-2018  jdw add salvage path for bulk insert
+#      25-Jul-2018  jdw more adjustments to exception handling and salvage processing.
 ##
 """
 Base class for simple essential database operations for MongoDb.
@@ -120,15 +121,18 @@ class MongoDbUtil(object):
             c = self.__mgObj[databaseName].get_collection(collectionName)
             r = c.insert_many(dList, ordered=ordered, bypass_document_validation=bypassValidation)
         except Exception as e:
-            logger.exception("Bulk insert document length %d failing with %s" % (len(dList), str(e)))
+            logger.error("Bulk insert failing for document length %d" % len(dList))
         #
         try:
             rIdL = r.inserted_ids
             return rIdL
         except Exception as e:
-            logger.info("Bulk insert document recovery failing with %s" % str(e))
+            rIdL = []
+            logger.info("Bulk insert document recovery starting for %d documents" % (len(dList)))
             if salvage and keyName:
-                return self.__salvageinsertList(databaseName, collectionName, dList, keyName)
+                sIdL = self.__salvageinsertList(databaseName, collectionName, dList, keyName)
+            logger.info("Bulk insert document recovery returns %d of %d" % (len(sIdL), len(dList)))
+            return sIdL
 
         return rIdL
 
@@ -140,7 +144,7 @@ class MongoDbUtil(object):
                 rId = self.insert(databaseName, collectionName, d)
                 if rId:
                     rIdL.append(rId)
-                    logger.info("Insert suceeds for document %s" % kyVal)
+                    logger.debug("Insert suceeds for document %s" % kyVal)
                 else:
                     logger.error("Loading document %r failed" % kyVal)
         except Exception as e:
@@ -156,7 +160,7 @@ class MongoDbUtil(object):
         dTupL = self.deleteList(databaseName, collectionName, dList, keyName)
         logger.info("Salvage bulk insert - deleting %d documents" % len(dTupL))
         rIdL = self.insertListSerial(databaseName, collectionName, dList, keyName)
-        logger.info("Salvage bulk insert - serlial insert length %d" % len(rIdL))
+        logger.info("Salvage bulk insert - serial insert length %d" % len(rIdL))
         return rIdL
 
     def fetchOne(self, databaseName, collectionName, ky, val):
@@ -222,7 +226,7 @@ class MongoDbUtil(object):
                     delTupL.append((kyVal, r.deleted_count))
                 except Exception as e:
                     logger.error("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, keyName, str(e)))
-                logger.debug("Deleted status %r" % delTupL)
+            logger.debug("Deleted status %r" % delTupL)
             return delTupL
         except Exception as e:
             logger.error("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, keyName, str(e)))

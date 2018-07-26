@@ -50,7 +50,7 @@ from rcsb_db.utils.SchemaDefUtil import SchemaDefUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 class SchemaDefDataPrepTests(unittest.TestCase):

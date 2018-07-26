@@ -13,6 +13,7 @@
 #     4-Apr-2018 - jdw added option to prune documents to a size limit
 #     3-Jul-2018 - jdw specialize for repository loading.
 #    14-Jul-2018 - jdw add loading of separate
+#    25-Jul-2018 - jdw die on input file path list processing error
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -143,6 +144,9 @@ def main():
     if fPath:
         mu = MarshalUtil(workPath=workPath)
         inputPathList = mu.doImport(fPath, format='list')
+        if len(inputPathList) < 1:
+            logger.error("Missing or empty input file path list %s" % fPath)
+            exit(1)
     #
     ##
     if args.db_type == "mongo":

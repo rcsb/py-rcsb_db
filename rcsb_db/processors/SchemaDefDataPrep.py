@@ -326,8 +326,10 @@ class SchemaDefDataPrep(object):
                     vals = csD['VALUES']
                     logger.debug("Applying selector %s: tn %s an %s vals %r" % (cs, tn, an, vals))
                     catObj = container.getObj(tn)
-                    if catObj.getRowCount():
-                        for ii in range(catObj.getRowCount()):
+                    numRows = catObj.getRowCount()
+                    if numRows:
+                        for ii in range(numRows):
+                            logger.debug("Testing %s type %r row %d of %d" % (an, type(an), ii, numRows))
                             v = catObj.getValue(attributeName=an, rowIndex=ii)
                             if v not in vals:
                                 logger.debug("Selector %s rejects : tn %s an %s value %r" % (cs, tn, an, v))

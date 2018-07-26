@@ -3,4 +3,7 @@
 11-Mar-2018  - Py2->Py3 and refactored for python packaging tools
  4-Jul-2018  - V0.12 reformulate schema definitions directly from dictionary
                metadata and targeted helper functions.
+20-Jul-2018    V0.13 overhaul static schema management
+28-Jul-2018    V0.14 corrections for selection and type filters and object size pruning
+
 

@@ -9,6 +9,7 @@
 #   23-Mar-2018 jdw  Add reload test cases
 #   27-Mar-2018 jdw  Update configuration handling and mocking
 #    4-Apr-2018 jdw  Add size pruning tests
+#   25-Jul-2018 jdw  Add large test case to test failure and salvage scenarios
 #
 ##
 """
@@ -140,21 +141,6 @@ class PdbxLoaderTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-    def testLoadPdbxEntryData(self):
-        """ Test case -  Load PDBx entry data
-        """
-        try:
-            mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
-                            fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
-            ok = mw.load('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
-                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
-            self.assertTrue(ok)
-            ok = self.__loadStatus(mw.getLoadStatus())
-            self.assertTrue(ok)
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-            self.fail()
-
     def testReLoadChemCompReference(self):
         """ Test case -  Load and reload chemical component reference data
         """
@@ -173,6 +159,21 @@ class PdbxLoaderTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
+    def testLoadPdbxEntryData(self):
+        """ Test case -  Load PDBx entry data
+        """
+        try:
+            mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+                            fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
+            ok = mw.load('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+            self.assertFalse(ok)
+            ok = self.__loadStatus(mw.getLoadStatus())
+            self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
     def testReLoadPdbxEntryData(self):
         """ Test case -  Load PDBx entry data
         """
@@ -181,9 +182,9 @@ class PdbxLoaderTests(unittest.TestCase):
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
-            self.assertTrue(ok)
+            self.assertFalse(ok)
             ok = mw.load('pdbx', loadType='replace', inputPathList=None, styleType=self.__documentStyle,
-                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath, pruneDocumentSize=14.0)
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
@@ -198,7 +199,7 @@ class PdbxLoaderTests(unittest.TestCase):
             mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
-                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath, pruneDocumentSize=0.10)
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath, pruneDocumentSize=14.0)
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
@@ -243,7 +244,7 @@ def mongoLoadPdbxLimitSizeSuite():
 def mongoReLoadSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(PdbxLoaderTests("testReLoadChemCompReference"))
-    suiteSelect.addTest(PdbxLoaderTests("testLoadPdbxEntryData"))
+    suiteSelect.addTest(PdbxLoaderTests("testReLoadPdbxEntryData"))
     return suiteSelect
 
 
