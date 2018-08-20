@@ -107,22 +107,22 @@
             "action_type": {
                "type": "string",
                "enum": [
+                  "Other modification",
+                  "Obsolete familyt",
                   "Initial release",
+                  "Modify family name",
+                  "Modify related structures",
+                  "Modify citation",
                   "Modify sequence",
                   "Modify molecule details",
-                  "Other modification",
                   "Remove PRD",
-                  "Modify related structures",
-                  "Obsolete family",
-                  "Create family",
-                  "Modify citation",
-                  "Modify synonyms",
-                  "Obsolete familyt",
-                  "Modify annotation",
                   "Modify feature",
-                  "Modify family name",
+                  "Obsolete family",
+                  "Add PRD",
+                  "Modify synonyms",
+                  "Modify annotation",
                   "Modify family classification",
-                  "Add PRD"
+                  "Create family"
                ],
                "description": "The action associated with this audit record."
             },
@@ -282,10 +282,10 @@
             "release_status": {
                "type": "string",
                "enum": [
-                  "REL",
                   "WAIT",
-                  "HOLD",
-                  "OBS"
+                  "OBS",
+                  "REL",
+                  "HOLD"
                ],
                "description": "Assigns the current PDB release status for this family."
             },

@@ -44,6 +44,70 @@ compatible with MongoDB.
 ```bash
 exdb_repo_load_cli --help
 
+usage:  exdb_repo_load_cli
+                       [-h] [--full] [--replace] [--load_chem_comp_ref]
+                       [--load_bird_chem_comp_ref] [--load_bird_ref]
+                       [--load_bird_family_ref] [--load_entry_data]
+                       [--load_pdbx_core] [--config_path CONFIG_PATH]
+                       [--config_name CONFIG_NAME] [--db_type DB_TYPE]
+                       [--document_style DOCUMENT_STYLE] [--read_back_check]
+                       [--load_file_list_path LOAD_FILE_LIST_PATH]
+                       [--fail_file_list_path FAIL_FILE_LIST_PATH]
+                       [--save_file_list_path SAVE_FILE_LIST_PATH]
+                       [--num_proc NUM_PROC] [--chunk_size CHUNK_SIZE]
+                       [--file_limit FILE_LIMIT]
+                       [--prune_document_size PRUNE_DOCUMENT_SIZE] [--debug]
+                       [--mock] [--working_path WORKING_PATH]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --full                Fresh full load in a new tables/collections
+  --replace             Load with replacement in an existing table/collection
+                        (default)
+  --load_chem_comp_ref  Load Chemical Component reference definitions (public
+                        subset)
+  --load_bird_chem_comp_ref
+                        Load Bird Chemical Component reference definitions
+                        (public subset)
+  --load_bird_ref       Load Bird reference definitions (public subset)
+  --load_bird_family_ref
+                        Load Bird Family reference definitions (public subset)
+  --load_entry_data     Load PDBx entry data (current released subset)
+  --load_pdbx_core      Load PDBx core entry/entity data (current released
+                        subset)
+  --config_path CONFIG_PATH
+                        Path to configuration options file
+  --config_name CONFIG_NAME
+                        Configuration section name
+  --db_type DB_TYPE     Database server type (default=mongo)
+  --document_style DOCUMENT_STYLE
+                        Document organization (rowwise_by_name_with_cardinalit
+                        y|rowwise_by_name|columnwise_by_name|rowwise_by_id|row
+                        wise_no_name
+  --read_back_check     Perform read back check on all documents
+  --load_file_list_path LOAD_FILE_LIST_PATH
+                        Input file containing load file path list (override
+                        automatic repository scan)
+  --fail_file_list_path FAIL_FILE_LIST_PATH
+                        Output file containing file paths that fail to load
+  --save_file_list_path SAVE_FILE_LIST_PATH
+                        Save repo file paths from automatic file system scan
+                        in this path
+  --num_proc NUM_PROC   Number of processes to execute (default=2)
+  --chunk_size CHUNK_SIZE
+                        Number of files loaded per process
+  --file_limit FILE_LIMIT
+                        Load file limit for testing
+  --prune_document_size PRUNE_DOCUMENT_SIZE
+                        Prune large documents to this size limit (MB)
+  --debug               Turn on verbose logging
+  --mock                Use MOCK repository configuration for testing
+  --working_path WORKING_PATH
+                        Working path for temporary files
+
+
+exdb_repo_load_cli --help
+
 usage:  exdb_repo_load_cli [-h] [--full] [--replace] [--load_chem_comp_ref]
                            [--load_bird_chem_comp_ref] [--load_bird_ref]
                            [--load_bird_family_ref] [--load_entry_data]
@@ -303,6 +367,7 @@ COCKROACH_DB_USER_NAME=root
 PDBX_DICT_LOCATOR=dictionaries/mmcif_pdbx_v5_next.dic
 RCSB_DICT_LOCATOR=dictionaries/rcsb_mmcif_ext_v1.dic
 PROVENANCE_INFO_LOCATOR=provenance/rcsb_extend_provenance_info.json
+DICT_METHOD_HELPER_MODULE=rcsb_db.helpers.DictMethodRunnerHelper
 
 ## -------------------
 [pdbx]
@@ -319,6 +384,24 @@ APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
 DICT_HELPER_MODULE=rcsb_db.helpers.DictInfoHelper
 SCHEMADEF_HELPER_MODULE=rcsb_db.helpers.SchemaDefHelper
 DOCUMENT_HELPER_MODULE=rcsb_db.helpers.SchemaDocumentHelper
+DICT_METHOD_HELPER_MODULE=rcsb_db.helpers.DictMethodRunnerHelper
+
+## -------------------
+[pdbx_core]
+PDBX_DICT_LOCATOR=dictionaries/mmcif_pdbx_v5_next.dic
+RCSB_DICT_LOCATOR=dictionaries/rcsb_mmcif_ext_v1.dic
+PROVENANCE_INFO_LOCATOR=provenance/rcsb_extend_provenance_info.json
+#
+SCHEMA_NAME=pdbx_core
+SCHEMA_DEF_LOCATOR_SQL=schema/schema_def-pdbx_core-SQL.json
+SCHEMA_DEF_LOCATOR_ANY=schema/schema_def-pdbx_core-ANY.json
+INSTANCE_DATA_TYPE_INFO_LOCATOR=data_type_info/scan-pdbx-type-map.json
+APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
+
+DICT_HELPER_MODULE=rcsb_db.helpers.DictInfoHelper
+SCHEMADEF_HELPER_MODULE=rcsb_db.helpers.SchemaDefHelper
+DOCUMENT_HELPER_MODULE=rcsb_db.helpers.SchemaDocumentHelper
+DICT_METHOD_HELPER_MODULE=rcsb_db.helpers.DictMethodRunnerHelper
 
 ## -------------------
 [chem_comp]
@@ -335,6 +418,7 @@ APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
 DICT_HELPER_MODULE=rcsb_db.helpers.DictInfoHelper
 SCHEMADEF_HELPER_MODULE=rcsb_db.helpers.SchemaDefHelper
 DOCUMENT_HELPER_MODULE=rcsb_db.helpers.SchemaDocumentHelper
+DICT_METHOD_HELPER_MODULE=rcsb_db.helpers.DictMethodRunnerHelper
 
 ## -------------------
 [bird_chem_comp]
@@ -351,6 +435,7 @@ APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
 DICT_HELPER_MODULE=rcsb_db.helpers.DictInfoHelper
 SCHEMADEF_HELPER_MODULE=rcsb_db.helpers.SchemaDefHelper
 DOCUMENT_HELPER_MODULE=rcsb_db.helpers.SchemaDocumentHelper
+DICT_METHOD_HELPER_MODULE=rcsb_db.helpers.DictMethodRunnerHelper
 
 ## -------------------
 [bird]
@@ -367,6 +452,7 @@ APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
 DICT_HELPER_MODULE=rcsb_db.helpers.DictInfoHelper
 SCHEMADEF_HELPER_MODULE=rcsb_db.helpers.SchemaDefHelper
 DOCUMENT_HELPER_MODULE=rcsb_db.helpers.SchemaDocumentHelper
+DICT_METHOD_HELPER_MODULE=rcsb_db.helpers.DictMethodRunnerHelper
 
 ## -------------------
 [bird_family]
@@ -383,6 +469,7 @@ APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
 DICT_HELPER_MODULE=rcsb_db.helpers.DictInfoHelper
 SCHEMADEF_HELPER_MODULE=rcsb_db.helpers.SchemaDefHelper
 DOCUMENT_HELPER_MODULE=rcsb_db.helpers.SchemaDocumentHelper
+DICT_METHOD_HELPER_MODULE=rcsb_db.helpers.DictMethodRunnerHelper
 
 ## -------------------
 [entity_sequence_clusters]

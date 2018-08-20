@@ -75,10 +75,10 @@
                "type": "string",
                "enum": [
                   "branched",
-                  "macrolide",
                   "water",
-                  "non-polymer",
-                  "polymer"
+                  "macrolide",
+                  "polymer",
+                  "non-polymer"
                ],
                "description": "Defines the type of the entity.\n\n Polymer entities are expected to have corresponding\n ENTITY_POLY and associated entries.\n\n Non-polymer entities are expected to have corresponding\n CHEM_COMP and associated entries.\n\n Water entities are not expected to have corresponding\n entries in the ENTITY category."
             }
@@ -162,9 +162,9 @@
                "type": "string",
                "enum": [
                   "no",
+                  "n",
                   "yes",
-                  "y",
-                  "n"
+                  "y"
                ],
                "description": "A flag to indicate whether the polymer contains at least\n one monomer-to-monomer link different from that implied by\n _entity_poly.type."
             },
@@ -172,9 +172,9 @@
                "type": "string",
                "enum": [
                   "no",
+                  "n",
                   "yes",
-                  "y",
-                  "n"
+                  "y"
                ],
                "description": "A flag to indicate whether the polymer contains at least\n one monomer that is not considered standard."
             },
@@ -211,16 +211,16 @@
             "type": {
                "type": "string",
                "enum": [
-                  "polypeptide(L)",
-                  "polypeptide(D)",
-                  "polysaccharide(L)",
-                  "polydeoxyribonucleotide/polyribonucleotide hybrid",
                   "polyribonucleotide",
-                  "other",
-                  "cyclic-pseudo-peptide",
-                  "polysaccharide(D)",
+                  "polysaccharide(L)",
                   "peptide nucleic acid",
-                  "polydeoxyribonucleotide"
+                  "polydeoxyribonucleotide",
+                  "other",
+                  "polysaccharide(D)",
+                  "polypeptide(D)",
+                  "polydeoxyribonucleotide/polyribonucleotide hybrid",
+                  "cyclic-pseudo-peptide",
+                  "polypeptide(L)"
                ],
                "description": "The type of the polymer."
             }
@@ -541,10 +541,10 @@
                   "pdbx_seq_type": {
                      "type": "string",
                      "enum": [
-                        "Biological sequence",
-                        "C-terminal tag",
                         "N-terminal tag",
-                        "Linker"
+                        "Linker",
+                        "C-terminal tag",
+                        "Biological sequence"
                      ],
                      "description": "This data item povides additional information about the sequence type."
                   },

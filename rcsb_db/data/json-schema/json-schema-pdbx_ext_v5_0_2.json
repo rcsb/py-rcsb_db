@@ -26,22 +26,22 @@
             "feature": {
                "type": "string",
                "enum": [
-                  "b-form double helix",
-                  "internal loop",
-                  "four-way junction",
-                  "double helix",
-                  "mismatched base pair",
-                  "other right-handed double helix",
-                  "triple helix",
-                  "a-form double helix",
+                  "parallel strands",
                   "two-way junction",
                   "bulge loop",
-                  "tetraloop",
-                  "three-way junction",
-                  "parallel strands",
                   "quadruple helix",
+                  "internal loop",
+                  "other right-handed double helix",
                   "z-form double helix",
-                  "hairpin loop"
+                  "b-form double helix",
+                  "a-form double helix",
+                  "tetraloop",
+                  "mismatched base pair",
+                  "three-way junction",
+                  "hairpin loop",
+                  "four-way junction",
+                  "double helix",
+                  "triple helix"
                ],
                "description": "This data item identifies a secondary structure\n feature of this entry."
             }
@@ -683,8 +683,8 @@
                "type": "string",
                "enum": [
                   "MAIN CHAIN",
-                  "MAIN_CHAIN",
                   "SIDE_CHAIN",
+                  "MAIN_CHAIN",
                   "SIDE CHAIN"
                ],
                "description": "The type of plane - MAIN CHAIN or SIDE CHAIN atoms"
@@ -1263,47 +1263,47 @@
             "id": {
                "type": "string",
                "enum": [
-                  "HELX_RH_A_N",
-                  "HELX_LH_PI_P",
-                  "HELX_RH_PP_P",
-                  "HELX_RH_P",
+                  "TURN_TY1P_P",
+                  "HELX_LH_N",
+                  "HELX_RH_3T_P",
+                  "HELX_LH_P",
+                  "HELX_RH_AL_P",
+                  "TURN_TY2_P",
+                  "HELX_RH_OT_P",
+                  "HELX_LH_B_N",
+                  "HELX_RH_OM_P",
+                  "HELX_RH_Z_N",
+                  "HELX_RH_27_P",
                   "HELX_LH_3T_P",
+                  "HELX_OT_N",
+                  "HELX_RH_OT_N",
+                  "STRN",
+                  "TURN_TY3_P",
+                  "HELX_RH_GA_P",
+                  "TURN_OT_P",
+                  "HELX_LH_AL_P",
+                  "HELX_LH_OT_N",
+                  "HELX_P",
+                  "HELX_RH_P",
+                  "HELX_LH_PP_P",
+                  "HELX_LH_A_N",
+                  "HELX_LH_Z_N",
+                  "HELX_LH_27_P",
+                  "TURN_TY2P_P",
+                  "HELX_RH_B_N",
+                  "HELX_RH_PP_P",
                   "TURN_TY1_P",
                   "HELX_RH_PI_P",
+                  "HELX_OT_P",
                   "HELX_N",
-                  "HELX_LH_OT_N",
-                  "HELX_LH_PP_P",
-                  "HELX_RH_B_N",
-                  "TURN_TY2P_P",
-                  "TURN_TY3_P",
-                  "TURN_TY2_P",
-                  "HELX_P",
-                  "HELX_OT_N",
-                  "HELX_LH_B_N",
+                  "TURN_TY3P_P",
+                  "HELX_LH_OT_P",
+                  "HELX_LH_OM_P",
                   "TURN_P",
                   "HELX_RH_N",
-                  "HELX_RH_27_P",
-                  "HELX_LH_AL_P",
-                  "TURN_OT_P",
-                  "HELX_LH_OT_P",
-                  "TURN_TY1P_P",
-                  "HELX_RH_3T_P",
-                  "HELX_LH_Z_N",
-                  "HELX_RH_OT_N",
-                  "HELX_RH_AL_P",
-                  "STRN",
-                  "HELX_RH_Z_N",
-                  "HELX_OT_P",
-                  "HELX_RH_OM_P",
-                  "HELX_LH_A_N",
-                  "HELX_RH_OT_P",
-                  "HELX_RH_GA_P",
-                  "HELX_LH_27_P",
-                  "HELX_LH_OM_P",
                   "HELX_LH_GA_P",
-                  "HELX_LH_N",
-                  "TURN_TY3P_P",
-                  "HELX_LH_P"
+                  "HELX_RH_A_N",
+                  "HELX_LH_PI_P"
                ],
                "description": "The descriptor that categorizes the type of the conformation\n of the backbone of the polymer (whether protein or nucleic acid).\n Explicit values for the torsion angles that define each\n conformation are not given here, but it is expected that the\n author would provide such information in either the\n _struct_conf_type.criteria or _struct_conf_type.reference data\n items, or both."
             }
@@ -1337,9 +1337,9 @@
             "pdbx_leaving_atom_flag": {
                "type": "string",
                "enum": [
-                  "none",
                   "one",
-                  "both"
+                  "both",
+                  "none"
                ],
                "description": "This data item identifies if the linkage has displaced leaving atoms\n on both, one or none of the connected atoms forming the linkage.    \n Leaving atoms are defined within their chemical defintions of each\n connected component."
             },
@@ -1378,8 +1378,8 @@
             "pdbx_value_order": {
                "type": "string",
                "enum": [
-                  "sing",
                   "trip",
+                  "sing",
                   "doub",
                   "quad"
                ],
@@ -1475,15 +1475,15 @@
             "id": {
                "type": "string",
                "enum": [
-                  "mismat",
-                  "metalc",
-                  "hydrog",
                   "saltbr",
                   "covale",
+                  "hydrog",
+                  "metalc",
+                  "modres",
+                  "mismat",
                   "covale_phosphate",
                   "covale_base",
                   "disulf",
-                  "modres",
                   "covale_sugar"
                ],
                "description": "The chemical or structural type of the interaction."
