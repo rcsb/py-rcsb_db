@@ -103,8 +103,7 @@ class SqlGenTests(unittest.TestCase):
                                  dictHelper=dictInfoHelper,
                                  schemaDefHelper=defHelper,
                                  documentDefHelper=docHelper,
-                                 applicationName=applicationName,
-                                 includeContentClasses=['ADMIN_CATEGORY'])
+                                 applicationName=applicationName)
             sD = smb.build()
             #
             logger.debug("Schema %s dictionary category length %d" % (schemaName, len(sD['SCHEMA_DICT'])))

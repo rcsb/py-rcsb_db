@@ -8,6 +8,7 @@
 #   9-Apr-2018 jdw update to provide indices and include remaining schema
 #  18-Jun-2018 jdw update to new schema generation protocol
 #  22-Jun-2018 jdw change collection attribute specification to dot notation.
+#  14-Aug-2018 jdw generalize the primaryIndex to the list of attributes returned by getDocumentKeyAttributeNames()
 ##
 """
  A collection of schema and repo path convenience methods.
@@ -21,6 +22,7 @@ __license__ = "Apache 2.0"
 
 
 import logging
+import sys
 
 from rcsb_db.define.SchemaDefAccess import SchemaDefAccess
 from rcsb_db.define.SchemaDefBuild import SchemaDefBuild
@@ -51,7 +53,7 @@ class SchemaDefUtil(object):
                 outputPathList = inputPathList if inputPathList else rpU.getChemCompPathList()
             elif schemaName == 'bird_chem_comp':
                 outputPathList = inputPathList if inputPathList else rpU.getBirdChemCompPathList()
-            elif schemaName == 'pdbx':
+            elif schemaName in ['pdbx', 'pdbx_core']:
                 outputPathList = inputPathList if inputPathList else rpU.getEntryPathList()
             elif schemaName in ['pdb_distro', 'da_internal', 'status_history']:
                 outputPathList = inputPathList if inputPathList else []
@@ -92,7 +94,7 @@ class SchemaDefUtil(object):
                 logger.info("Schema %s database name %s collections %r" % (schemaName, dbName, collectionNameList))
                 primaryIndexD = {}
                 for collectionName in collectionNameList:
-                    primaryIndexD[collectionName] = sd.getDocumentKeyAttributeName(collectionName)
+                    primaryIndexD[collectionName] = sd.getDocumentKeyAttributeNames(collectionName)
 
         except Exception as e:
             logger.exception("Retreiving schema %s for %s failing with %s" % (schemaName, applicationName, str(e)))
@@ -120,8 +122,8 @@ class SchemaDefUtil(object):
                                  dictHelper=dictInfoHelper,
                                  schemaDefHelper=defHelper,
                                  documentDefHelper=docHelper,
-                                 applicationName=applicationName,
-                                 includeContentClasses=['ADMIN_CATEGORY'])
+                                 applicationName=applicationName)
+            #
             sD = smb.build()
             logger.info("Schema %s dictionary category length %d" % (schemaName, len(sD['SCHEMA_DICT'])))
             return sD
@@ -130,3 +132,14 @@ class SchemaDefUtil(object):
             logger.exception("Building schema %s failing with %s" % (schemaName, str(e)))
             self.fail()
         return {}
+
+    def __getHelper(self, modulePath, **kwargs):
+        aMod = __import__(modulePath, globals(), locals(), [''])
+        sys.modules[modulePath] = aMod
+        #
+        # Strip off any leading path to the module before we instaniate the object.
+        mpL = modulePath.split('.')
+        moduleName = mpL[-1]
+        #
+        aObj = getattr(aMod, moduleName)(**kwargs)
+        return aObj

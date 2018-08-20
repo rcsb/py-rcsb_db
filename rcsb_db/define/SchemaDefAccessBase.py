@@ -7,6 +7,8 @@
 # Updates:
 #       19-Jun-2018 jdw  add hasSchemaObject() and remove references to __baseTables.
 #       22-Jun-2018 jdw  change collection attribute specification to dot notation
+#        7-Aug-2018 jdw  add methods to return slice parent details
+#       14-Aug-2018 jdw  generalize getDocumentKeyAttributeNames() to return list of attributes ...
 ##
 """
 Base classes for schema defintions.
@@ -45,6 +47,9 @@ class SchemaDefAccessBase(object):
         self.__documentDefDict = schemaDef['DOCUMENT_DICT'] if 'DOCUMENT_DICT' in schemaDef else {}
         #
         self.__selectionFilterDict = schemaDef['SELECTION_FILTERS'] if 'SELECTION_FILTERS' in schemaDef else {}
+        self.__sliceParentItemD = schemaDef['SLICE_PARENT_ITEMS']
+        self.__sliceParentFilterD = schemaDef['SLICE_PARENT_FILTERS']
+        self.__sliceIndexD = self.__makeSliceIndex()
         #
 
     def getName(self):
@@ -106,6 +111,17 @@ class SchemaDefAccessBase(object):
 
         return sL
 
+    def getCollectionSliceFilter(self, collectionName):
+        '''  For input collection, return an defined slice filter
+
+        '''
+        sf = None
+        try:
+            sf = self.__documentDefDict['COLLECTION_CONTENT'][collectionName]['SLICE_FILTER']
+        except Exception as e:
+            logger.debug("Collection %s failing with %s" % (collectionName, str(e)))
+        return sf
+
     def getDataSelectors(self, selectorName):
         sL = []
         if selectorName in self.__selectionFilterDict:
@@ -115,10 +131,12 @@ class SchemaDefAccessBase(object):
     def getDataSelectorNames(self):
         return list(self.__selectionFilterDict.keys())
 
-    def getDocumentKeyAttributeName(self, collectionName):
-        r = None
+    def getDocumentKeyAttributeNames(self, collectionName):
+        """ Return list of key document attributes required to uniquely identify a document.
+        """
+        r = []
         try:
-            return self.__documentDefDict['COLLECTION_DOCUMENT_ATTRIBUTE_NAME'][collectionName]
+            return self.__documentDefDict['COLLECTION_DOCUMENT_ATTRIBUTE_NAMES'][collectionName]
         except Exception as e:
             logger.exception("Failing for collection %s with %r" % (collectionName, str(e)))
         return r
@@ -205,6 +223,54 @@ class SchemaDefAccessBase(object):
         attributeName = tD['ATTRIBUTES'][attributeId]
         qAN = tableName + '.' + attributeName
         return qAN
+
+    def __makeSliceIndex(self):
+        sliceD = {}
+        try:
+            sliceNames = self.getSliceNames()
+            for sliceName in sliceNames:
+                d = {}
+                for schemaId, tD in self.__schemaDefDict.items():
+                    if sliceName in tD['SLICE_ATTRIBUTES']:
+                        if schemaId not in d:
+                            d[schemaId] = {}
+                        for sD in tD['SLICE_ATTRIBUTES'][sliceName]:
+                            d[schemaId][(sD['PARENT_CATEGORY'], sD['PARENT_ATTRIBUTE'])] = sD['CHILD_ATTRIBUTE']
+                sliceD[sliceName] = d
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+        return sliceD
+
+    def getSliceNames(self):
+        """ Return a list of the slice names defined for the current schema
+        """
+        try:
+            return list(self.__sliceParentItemD.keys())
+        except Exception:
+            return []
+
+    def getSliceParentItems(self, sliceName):
+        """ Return a list of dictionaries containing the parent items for input slice name
+
+        """
+        try:
+            return self.__sliceParentItemD[sliceName]
+        except Exception:
+            return []
+
+    def getSliceParentFilters(self, sliceName):
+        """ Return a list of dictionaries containing the parent items for input slice name
+        """
+        try:
+            return self.__sliceParentFilterD[sliceName]
+        except Exception:
+            return []
+
+    def getSliceIndex(self, sliceName):
+        try:
+            return self.__sliceIndexD[sliceName]
+        except Exception:
+            return {}
 
 
 class SchemaDef(object):
@@ -619,5 +685,43 @@ class SchemaDef(object):
         """
         try:
             return self.__tD['ATTRIBUTES'][self.__tD['SCHEMA_DELETE_ATTRIBUTE']]
+        except Exception:
+            return None
+
+    def hasSliceAttributes(self, sliceName):
+        """ Return True if slice attributes are defined for this schema object.
+        """
+        try:
+            if self.__tD['SLICE_ATTRIBUTES'][sliceName]:
+                return True
+            else:
+                return False
+        except Exception:
+            return False
+
+    def hasSliceUnitCardinality(self, sliceName):
+        """ Return True if slice for this schema object has unit cardinality.
+        """
+        try:
+            return self.__tD["SLICE_UNIT_CARDINALITY"][sliceName]
+        except Exception:
+            return False
+
+    def isSliceExtra(self, sliceName):
+        """ Return True if this schema object is extra included content in the input slice.
+        """
+        try:
+            return self.__tD["SLICE_CATEGORY_EXTRAS"][sliceName]
+        except Exception:
+            return False
+
+    def getSliceAttributeId(self, sliceName, parentCategoryId, parentAttributeId):
+        """ Naive method to return corresponding child attribute for the input slice parent.
+        """
+        try:
+            for d in self.__tD['SLICE_ATTRIBUTES'][sliceName]:
+                if d['PARENT_CATEGORY'] == parentCategoryId and d['PARENT_ATTRIBUTE'] == parentAttributeId:
+                    return d['CHILD_ATTRIBUTE']
+            return None
         except Exception:
             return None

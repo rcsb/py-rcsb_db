@@ -116,7 +116,7 @@ class DataExchangeStatusLoaderTests(unittest.TestCase):
                 else:
                     loadType = 'append'
                 ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList,
-                             indexAttributeList=['update_id', 'database_name', 'object_name'], keyName=None)
+                             indexAttributeList=['update_id', 'database_name', 'object_name'], keyNames=None)
                 self.assertTrue(ok)
                 #
 

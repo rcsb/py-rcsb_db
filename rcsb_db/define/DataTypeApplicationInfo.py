@@ -8,6 +8,7 @@
 #  22-May-2018 jdw standardize data names and fix alignment in default data sections
 #  23-May-2018 jdw change assumptions for update method and add tests.
 #   7-Jun-2018 jdw rename and rescope.
+#  15-Aug-2018 jdw add mapping for JSON types based on generic 'ANY' typing.
 #
 ##
 """
@@ -69,10 +70,23 @@ class DataTypeApplicationInfo(object):
         self.__setup(self.__locator, self.__applicationName)
 
     def __setup(self, locator, applicationName):
+        appName = 'ANY' if applicationName == 'JSON' else applicationName
         if locator:
-            self.__dtmD = self.readDefaultDataTypeMap(locator, applicationName=applicationName)
+            self.__dtmD = self.readDefaultDataTypeMap(locator, applicationName=appName)
         else:
-            self.__dtmD = self.getDefaultDataTypeMap(applicationName=applicationName)
+            self.__dtmD = self.getDefaultDataTypeMap(applicationName=appName)
+        # for JSON - transform the generic 'ANY' data types -
+        if applicationName == 'JSON':
+            for cifType, tD in self.__dtmD.items():
+                if tD['application_name'] == 'ANY':
+                    if tD['app_type_code'] in ['char', 'text', 'datetime']:
+                        tD['app_type_code'] = 'string'
+                    elif tD['app_type_code'] in ['float']:
+                        tD['app_type_code'] = 'number'
+                    elif tD['app_type_code'] in ['int']:
+                        tD['app_type_code'] = 'integer'
+                tD['application_name'] = 'JSON'
+        #
 
     def getDefaultDataTypeMap(self, applicationName='ANY'):
         try:
@@ -95,7 +109,7 @@ class DataTypeApplicationInfo(object):
         return {}
 
     def updateCharType(self, isKey, appType, dataWidth, defaultWidth, bufferPercent=30.0, minWidth=10):
-        """ Skeleton implementation need to add brackets [80, 256, 1024, 2048, ... ]
+        """ Skeleton implementation needs to add bracket typing around [80, 256, 1024, 2048, ... ]
         """
         retDataWidth = defaultWidth
         retDataType = appType

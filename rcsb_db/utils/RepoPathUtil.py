@@ -11,6 +11,7 @@
 #   23-May-2018  jdw add getRepoPathList() convenience method
 #   18-Jun-2018  jdw move mock support to the configuration module
 #   12-Jul-2018  jdw correct config for PDBX_REPO_PATH
+#   13-Aug-2018  jdw add support for gz compressed entry files
 ##
 """
  Utilites for scanning common data repository file systems.
@@ -115,7 +116,7 @@ class RepoPathUtil(object):
         return self.__applyFileLimit(pathList)
 
     def _entryPathWorker(self, dataList, procName, optionsD, workingDir):
-        """ Return the list of chemical component definition file paths in the current repository.
+        """ Return the list of entry file paths in the current repository.
         """
         topRepoPath = optionsD['topRepoPath']
         pathList = []
@@ -125,7 +126,7 @@ class RepoPathUtil(object):
                 if "REMOVE" in root:
                     continue
                 for name in files:
-                    if name.endswith(".cif") and len(name) == 8:
+                    if ((name.endswith(".cif.gz") and len(name) == 11) or (name.endswith(".cif") and len(name) == 8)):
                         pathList.append(os.path.join(root, name))
         return dataList, pathList, []
 
@@ -133,7 +134,7 @@ class RepoPathUtil(object):
         return self.__getEntryPathList(self.__cfgOb.getPath('PDBX_REPO_PATH'), numProc=self.__numProc)
 
     def __getEntryPathList(self, topRepoPath, numProc=8):
-        """Get the path list for the chemical component definition repository
+        """Get the path list for structure entries in the input repository
         """
         ts = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
         logger.debug("Starting at %s" % ts)

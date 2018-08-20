@@ -7,6 +7,7 @@
 #
 # 28-Jun-2018 jdw update ScanRepoUtil prototype with workPath
 #  3-Jul-2018 jdw update to latest ScanRepoUtil() prototype
+# 20-Aug-2018 jdw engage incremental repository scan mode.
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -36,7 +37,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(mo
 logger = logging.getLogger()
 
 
-def scanRepo(cfgOb, contentType, scanDataFilePath, dictFilePath, numProc, chunkSize, fileLimit,
+def scanRepo(cfgOb, contentType, scanDataFilePath, dictFilePath, numProc, chunkSize, fileLimit, scanType='full',
              inputPathList=None, pathListFilePath=None, dataCoverageFilePath=None, dataTypeFilePath=None,
              failedFilePath=None, workPath=None):
     """ Utility method to scan the data repository of the input content type and store type and coverage details.
@@ -48,7 +49,7 @@ def scanRepo(cfgOb, contentType, scanDataFilePath, dictFilePath, numProc, chunkS
         attributeDataTypeD = dI.getAttributeDataTypeD()
         #
         sr = ScanRepoUtil(cfgOb, attributeDataTypeD=attributeDataTypeD, numProc=numProc, chunkSize=chunkSize, fileLimit=fileLimit, workPath=workPath)
-        ok = sr.scanContentType(contentType, scanType='full', inputPathList=inputPathList, scanDataFilePath=scanDataFilePath,
+        ok = sr.scanContentType(contentType, scanType=scanType, inputPathList=inputPathList, scanDataFilePath=scanDataFilePath,
                                 failedFilePath=failedFilePath, saveInputFileListPath=pathListFilePath)
         if dataTypeFilePath:
             ok = sr.evalScan(scanDataFilePath, dataTypeFilePath, evalType='data_type')
@@ -65,8 +66,7 @@ def main():
     #
     parser.add_argument("--dict_file_path", default=None, help="PDBx/mmCIF dictionary file path")
     #
-    #parser.add_argument("--full", default=False, action='store_true', help="Full scan of repository")
-    #parser.add_argument("--incr", default=False, action='store_true', help="Incr scan of repository")
+    parser.add_argument("--scanType", default='full', help="Repository scan type (full|incr)")
     #
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--scan_chem_comp_ref", default=False, action='store_true', help="Scan Chemical Component reference definitions (public subset)")
@@ -124,8 +124,7 @@ def main():
         #
         failedFilePath = args.fail_file_list_path
 
-        #loadType = 'full' if args.full else 'replace'
-        #loadType = 'replace' if args.replace else 'full'
+        scanType = args.scanType
         #
         inputFileListPath = args.input_file_list_path
         outputFileListPath = args.output_file_list_path
@@ -164,7 +163,7 @@ def main():
     elif args.scan_entry_data:
         contentType = 'pdbx'
 
-    ok = scanRepo(cfgOb, contentType, scanDataFilePath, dictFilePath, numProc, chunkSize, fileLimit,
+    ok = scanRepo(cfgOb, contentType, scanDataFilePath, dictFilePath, numProc, chunkSize, fileLimit, scanType=scanType,
                   inputPathList=inputPathList, pathListFilePath=outputFileListPath, dataCoverageFilePath=dataCoverageFilePath,
                   dataTypeFilePath=dataTypeFilePath, failedFilePath=failedFilePath, workPath=workPath)
 

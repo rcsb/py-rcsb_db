@@ -191,7 +191,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_REFERENCE_ENTITY_LINK": {
          "SCHEMA_ID": "PDBX_REFERENCE_ENTITY_LINK",
@@ -503,7 +506,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_REFERENCE_ENTITY_LIST": {
          "SCHEMA_ID": "PDBX_REFERENCE_ENTITY_LIST",
@@ -661,7 +667,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_REFERENCE_ENTITY_NONPOLY": {
          "SCHEMA_ID": "PDBX_REFERENCE_ENTITY_NONPOLY",
@@ -799,7 +808,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_REFERENCE_ENTITY_POLY": {
          "SCHEMA_ID": "PDBX_REFERENCE_ENTITY_POLY",
@@ -955,7 +967,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_REFERENCE_ENTITY_POLY_LINK": {
          "SCHEMA_ID": "PDBX_REFERENCE_ENTITY_POLY_LINK",
@@ -1232,7 +1247,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_REFERENCE_ENTITY_POLY_SEQ": {
          "SCHEMA_ID": "PDBX_REFERENCE_ENTITY_POLY_SEQ",
@@ -1432,7 +1450,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_REFERENCE_ENTITY_SEQUENCE": {
          "SCHEMA_ID": "PDBX_REFERENCE_ENTITY_SEQUENCE",
@@ -1588,7 +1609,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_REFERENCE_ENTITY_SRC_NAT": {
          "SCHEMA_ID": "PDBX_REFERENCE_ENTITY_SRC_NAT",
@@ -1842,7 +1866,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_REFERENCE_ENTITY_SUBCOMPONENTS": {
          "SCHEMA_ID": "PDBX_REFERENCE_ENTITY_SUBCOMPONENTS",
@@ -1960,7 +1987,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_REFERENCE_MOLECULE": {
          "SCHEMA_ID": "PDBX_REFERENCE_MOLECULE",
@@ -2287,7 +2317,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "RCSB_LOAD_STATUS": {
          "SCHEMA_ID": "RCSB_LOAD_STATUS",
@@ -2295,7 +2328,7 @@
          "SCHEMA_TYPE": "transactional",
          "SCHEMA_UNIT_CARDINALITY": true,
          "SCHEMA_CONTENT_CLASSES": [
-            "ADMIN_CATEGORY"
+            "DYNAMIC_CONTENT"
          ],
          "ATTRIBUTES": {
             "DB_ID": "db_id",
@@ -2311,21 +2344,21 @@
                "ARGUMENTS": null
             },
             "DATABLOCK_NAME": {
-               "CATEGORY": null,
-               "ATTRIBUTE": null,
-               "METHOD_NAME": "datablockid()",
+               "CATEGORY": "rcsb_load_status",
+               "ATTRIBUTE": "datablock_name",
+               "METHOD_NAME": null,
                "ARGUMENTS": null
             },
             "LOAD_DATE": {
-               "CATEGORY": null,
-               "ATTRIBUTE": null,
-               "METHOD_NAME": "getDateTime()",
+               "CATEGORY": "rcsb_load_status",
+               "ATTRIBUTE": "load_date",
+               "METHOD_NAME": null,
                "ARGUMENTS": null
             },
             "LOCATOR": {
-               "CATEGORY": null,
-               "ATTRIBUTE": null,
-               "METHOD_NAME": "getLocator()",
+               "CATEGORY": "rcsb_load_status",
+               "ATTRIBUTE": "locator",
+               "METHOD_NAME": null,
                "ARGUMENTS": null
             }
          },
@@ -2355,7 +2388,7 @@
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": [
-                  "ADMIN_CATEGORY"
+                  "DYNAMIC_CONTENT"
                ]
             },
             "LOAD_DATE": {
@@ -2369,7 +2402,7 @@
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": [
-                  "ADMIN_CATEGORY"
+                  "DYNAMIC_CONTENT"
                ]
             },
             "LOCATOR": {
@@ -2383,7 +2416,7 @@
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": [
-                  "ADMIN_CATEGORY"
+                  "DYNAMIC_CONTENT"
                ]
             }
          },
@@ -2411,7 +2444,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       }
    },
    "DOCUMENT_DICT": {
@@ -2420,14 +2456,19 @@
             "bird_v5_0_2"
          ]
       },
-      "COLLECTION_DOCUMENT_ATTRIBUTE_NAME": {
-         "bird_v5_0_2": "pdbx_reference_molecule.prd_id"
+      "COLLECTION_DOCUMENT_ATTRIBUTE_NAMES": {
+         "bird_v5_0_2": [
+            "pdbx_reference_molecule.prd_id"
+         ]
       },
       "COLLECTION_CONTENT": {
          "bird_v5_0_2": {
             "INCLUDE": [],
-            "EXCLUDE": []
+            "EXCLUDE": [],
+            "SLICE_FILTER": null
          }
       }
-   }
+   },
+   "SLICE_PARENT_ITEMS": {},
+   "SLICE_PARENT_FILTERS": {}
 }

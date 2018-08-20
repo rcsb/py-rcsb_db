@@ -45,6 +45,7 @@ from rcsb_db.utils.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 class PdbxLoaderTests(unittest.TestCase):
@@ -67,7 +68,7 @@ class PdbxLoaderTests(unittest.TestCase):
         self.__readBackCheck = True
         self.__numProc = 2
         self.__chunkSize = 10
-        self.__fileLimit = 10
+        self.__fileLimit = 12
         self.__documentStyle = 'rowwise_by_name_with_cardinality'
         #
         self.__startTime = time.time()
@@ -175,7 +176,7 @@ class PdbxLoaderTests(unittest.TestCase):
             self.fail()
 
     def testReLoadPdbxEntryData(self):
-        """ Test case -  Load PDBx entry data
+        """ Test case -  Load PDBx entry data with pdbx schema
         """
         try:
             mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
@@ -193,12 +194,30 @@ class PdbxLoaderTests(unittest.TestCase):
             self.fail()
 
     def testLoadPdbxEntryDataSizeLimit(self):
-        """ Test case -  Load PDBx entry data
+        """ Test case -  Load PDBx entry data with pdbx schema (testing document size handling)
         """
         try:
             mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath, pruneDocumentSize=14.0)
+            self.assertTrue(ok)
+            ok = self.__loadStatus(mw.getLoadStatus())
+            self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
+    def testReLoadPdbxEntryDataSliced(self):
+        """ Test case -  Load PDBx entry data with pdbx_core schema
+        """
+        try:
+            mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+                            fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
+            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entity_v5_0_2'], loadType='full', inputPathList=None, styleType=self.__documentStyle,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+            self.assertTrue(ok)
+            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entity_v5_0_2'], loadType='replace', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath, pruneDocumentSize=14.0)
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
@@ -216,7 +235,7 @@ class PdbxLoaderTests(unittest.TestCase):
         collectionVersion = self.__cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
         collectionName = self.__cfgOb.get('COLLECTION_UPDATE_STATUS', sectionName=sectionName) + '_' + collectionVersion
         ok = dl.load(databaseName, collectionName, loadType='append', documentList=statusList,
-                     indexAttributeList=['update_id', 'database_name', 'object_name'], keyName=None)
+                     indexAttributeList=['update_id', 'database_name', 'object_name'], keyNames=None)
         return ok
 
 
@@ -248,8 +267,15 @@ def mongoReLoadSuite():
     return suiteSelect
 
 
+def mongoSlicedSuite():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(PdbxLoaderTests("testReLoadPdbxEntryDataSliced"))
+    return suiteSelect
+
+
 if __name__ == '__main__':
     #
+
     if (True):
         mySuite = mongoLoadSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
@@ -265,3 +291,8 @@ if __name__ == '__main__':
     if (True):
         mySuite = mongoLoadPdbxLimitSizeSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+    if (True):
+        mySuite = mongoSlicedSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
+        #

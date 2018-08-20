@@ -7,6 +7,7 @@
 #      19-Mar-2018  jdw reorganize error handling for bulk insert
 #      24-Mar-2018  jdw add salvage path for bulk insert
 #      25-Jul-2018  jdw more adjustments to exception handling and salvage processing.
+#      14-Aug-2018  jdw generalize document identifier to a complex key
 ##
 """
 Base class for simple essential database operations for MongoDb.
@@ -115,7 +116,24 @@ class MongoDbUtil(object):
             logger.error("Failing with %s" % str(e))
         return None
 
-    def insertList(self, databaseName, collectionName, dList, ordered=False, bypassValidation=True, keyName=None, salvage=False):
+    def insertList(self, databaseName, collectionName, dList, ordered=False, bypassValidation=True, keyNames=None, salvage=False):
+        """Insert the input list of documents (dList) into the input database/collection.
+
+
+        Args:
+            databaseName (str): Target database name
+            collectionName (str): Target collection name
+            dList (list): document list
+            ordered (bool, optional): insert in input order
+            bypassValidation (bool, optional): skip internal validation processing
+            keyNames (list, optional): list of key names required to uniquely identify the object (dot notation)
+            salvage (bool, optional): perform serial salvage operation for a batch insert failure
+
+        Returns:
+            list: List of MongoDB document identifiers for inserted objects
+
+
+        """
         rIdL = []
         try:
             c = self.__mgObj[databaseName].get_collection(collectionName)
@@ -129,37 +147,58 @@ class MongoDbUtil(object):
         except Exception as e:
             rIdL = []
             logger.info("Bulk insert document recovery starting for %d documents" % (len(dList)))
-            if salvage and keyName:
-                sIdL = self.__salvageinsertList(databaseName, collectionName, dList, keyName)
+            if salvage and keyNames:
+                sIdL = self.__salvageinsertList(databaseName, collectionName, dList, keyNames)
             logger.info("Bulk insert document recovery returns %d of %d" % (len(sIdL), len(dList)))
             return sIdL
 
         return rIdL
 
-    def insertListSerial(self, databaseName, collectionName, dList, keyName):
+    def insertListSerial(self, databaseName, collectionName, dList, keyNames):
+        """Insert the input list of documents (dList) into the input database/collection in serial mode.
+
+        Args:
+            databaseName (str): Target database name
+            collectionName (str): Target collection name
+            dList (list): document list
+            keyNames (list, optional): list of key names required to uniquely identify the object (dot notation)
+
+        Returns:
+            list: List of MongoDB document identifiers for inserted objects
+
+        """
         rIdL = []
         try:
             for d in dList:
-                kyVal = self.__dictGet(d, keyName)
+                kyVals = self.__getKeyValues(d, keyNames)
                 rId = self.insert(databaseName, collectionName, d)
                 if rId:
                     rIdL.append(rId)
-                    logger.debug("Insert suceeds for document %s" % kyVal)
+                    logger.debug("Insert suceeds for document %s" % (kyVals,))
                 else:
-                    logger.error("Loading document %r failed" % kyVal)
+                    logger.error("Loading document %r failed" % (kyVals,))
         except Exception as e:
-            logger.exception("Failing %s and %s keyName %r with %s" % (databaseName, collectionName, keyName, str(e)))
+            logger.exception("Failing %s and %s keyName %r with %s" % (databaseName, collectionName, keyNames, str(e)))
         #
         return rIdL
 
-    def __salvageinsertList(self, databaseName, collectionName, dList, keyName):
-        ''' Delete and serially insert the input document list.   Return the list list
-            of documents ids successfully loaded.
-        '''
+    def __salvageinsertList(self, databaseName, collectionName, dList, keyNames):
+        """Delete and serially insert the input document list.   Return the list list of documents ids successfully loaded.
+
+        Args:
+            databaseName (str): Target database name
+            collectionName (str): Target collection name
+            dList (list): document list
+            keyNames (list, optional): list of key names required to uniquely identify the object (dot notation)
+
+        Returns:
+            list: List of MongoDB document identifiers for inserted objects
+
+        """
         logger.info("Salvaging %s %s document list length %d" % (databaseName, collectionName, len(dList)))
-        dTupL = self.deleteList(databaseName, collectionName, dList, keyName)
+        dTupL = self.deleteList(databaseName, collectionName, dList, keyNames)
         logger.info("Salvage bulk insert - deleting %d documents" % len(dTupL))
-        rIdL = self.insertListSerial(databaseName, collectionName, dList, keyName)
+        rIdL = self.insertListSerial(databaseName, collectionName, dList, keyNames)
         logger.info("Salvage bulk insert - serial insert length %d" % len(rIdL))
         return rIdL
 
@@ -173,6 +212,19 @@ class MongoDbUtil(object):
         return None
 
     def replace(self, databaseName, collectionName, dObj, selectD, upsertFlag=True):
+        """Replace the input document based on a selection query in the input selection dictionary (k,v).
+
+        Args:
+            databaseName (str): Target database name
+            collectionName (str): Target collection name
+            dList (list): document list
+            selectD (dict, optional): dictiony of key/values for the selction query
+            upsertFlag (bool, optional): set MongoDB 'upsert' option
+
+        Returns:
+            str: MongoDB document identifier for the replaced object
+
+        """
         try:
             c = self.__mgObj[databaseName].get_collection(collectionName)
             r = c.replace_one(selectD, dObj, upsert=upsertFlag)
@@ -190,64 +242,67 @@ class MongoDbUtil(object):
             logger.exception("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, selectD, str(e)))
         return None
 
-    def replaceList(self, databaseName, collectionName, dList, keyName, upsertFlag=True):
-        """ Replace the list of input documents based on a selection query by keyName -
-            Note: splitting keyName (dot notation for Mongo) to divided keys for Python
+    def replaceList(self, databaseName, collectionName, dList, keyNames, upsertFlag=True):
+        """Replace the list of input documents based on a selection query by keyNames -
+
+        Args:
+            databaseName (str): Target database name
+            collectionName (str): Target collection name
+            dList (list): document list
+            keyNames (list, optional): list of key names required to uniquely identify the object (dot notation)
+            upsertFlag (bool, optional): set MongoDB 'upsert' option
+
+        Returns:
+            list: List of MongoDB document identifiers for replaced objects
+
         """
         try:
             rIdL = []
             c = self.__mgObj[databaseName].get_collection(collectionName)
             for d in dList:
-                kyVal = self.__dictGet(d, keyName)
-                selectD = {keyName: kyVal}
+                kyVals = self.__getKeyValues(d, keyNames)
+                selectD = {ky: val for ky, val in zip(keyNames, kyVals)}
                 r = c.replace_one(selectD, d, upsert=upsertFlag)
                 try:
                     rIdL.append(r.upserted_id)
                 except Exception as e:
-                    logger.error("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, keyName, str(e)))
+                    logger.error("Failing for %s and %s selectD %r with %s" % (databaseName, collectionName, selectD.items(), str(e)))
         except Exception as e:
-            logger.error("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, keyName, str(e)))
+            logger.error("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, selectD.items(), str(e)))
         #
         return rIdL
 
-    def deleteList(self, databaseName, collectionName, dList, keyName):
-        """ Delete the list of input documents based on a selection query by keyName -
+    def deleteList(self, databaseName, collectionName, dList, keyNames):
+        """Delete the list of input documents based on a selection query by keyNames.
 
-            Note: splitting keyName (dot notation for Mongo) to divided keys for Python
+
+        Args:
+            databaseName (str): Target database name
+            collectionName (str): Target collection name
+            dList (list): document list
+            keyNames (list, optional): list of key names required to uniquely identify the object (dot notation)
+
+        Returns:
+            list: (value tuple of key names, deletion count)
+
         """
         try:
             delTupL = []
             c = self.__mgObj[databaseName].get_collection(collectionName)
             for d in dList:
-                kyVal = self.__dictGet(d, keyName)
-                selectD = {keyName: kyVal}
+                kyVals = self.__getKeyValues(d, keyNames)
+                selectD = {ky: val for ky, val in zip(keyNames, kyVals)}
                 r = c.delete_many(selectD)
                 try:
-                    delTupL.append((kyVal, r.deleted_count))
+                    delTupL.append((kyVals, r.deleted_count))
                 except Exception as e:
-                    logger.error("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, keyName, str(e)))
+                    logger.error("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, selectD.items(), str(e)))
             logger.debug("Deleted status %r" % delTupL)
             return delTupL
         except Exception as e:
-            logger.error("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, keyName, str(e)))
+            logger.error("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, selectD.items(), str(e)))
         #
         return delTupL
-
-    def __dictGet(self, dct, dotNotation):
-        """  Convert input dictionary key (dot notation) to divided Python format and return appropriate dictionary value.
-        """
-        try:
-            kys = dotNotation.split('.')
-            for key in kys:
-                try:
-                    dct = dct[key]
-                except KeyError:
-                    return None
-            return dct
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-
-        return None
 
     def createIndex(self, databaseName, collectionName, keyList, indexName="primary", indexType="DESCENDING", uniqueFlag=False):
 
@@ -293,4 +348,40 @@ class MongoDbUtil(object):
             return dList
         except Exception as e:
             logger.error("Failing with %s" % str(e))
+        return None
+
+    def __getKeyValues(self, dct, keyNames):
+        """Return the tuple of values of corresponding to the input dictionary key names expressed in dot notation.
+
+        Args:
+            dct (dict): source dictionary object (nested)
+            keyNames (list): list of dictionary keys in dot notatoin
+
+        Returns:
+            tuple: tuple of values corresponding to the input key names
+
+        """
+        rL = []
+        try:
+            for keyName in keyNames:
+                rL.append(self.__getKeyValue(dct, keyName))
+        except Exception as e:
+            logger.exception("Failing for key names %r with %s" % (keyNames, str(e)))
+
+        return tuple(rL)
+
+    def __getKeyValue(self, dct, keyName):
+        """  Return the value of the corresponding key expressed in dot notation in the input dictionary object (nested).
+        """
+        try:
+            kys = keyName.split('.')
+            for key in kys:
+                try:
+                    dct = dct[key]
+                except KeyError:
+                    return None
+            return dct
+        except Exception as e:
+            logger.exception("Failing for key %r with %s" % (keyName, str(e)))
+
         return None

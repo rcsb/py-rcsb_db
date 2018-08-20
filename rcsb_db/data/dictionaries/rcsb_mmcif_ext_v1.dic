@@ -7,6 +7,7 @@
 #     3-Jul-2018 jdw Added catetory RCSB_ENTITY_SEQUENCE_CLUSTER_LIST
 #     6-Jul-2018 jdw Name standardization, add category RCSB_INSTANCE_SEQUENCE_CLUSTER_LIST
 #    10-Jul-2018 jdw Add categories RCSB_REPOSITORY_HOLDINGS and RCSB_REPOSITORY_UPDATE
+#    10-Aug-2018 jdw Change methods to implement as calculate_with_helper
 #
 ###########################################################################
 
@@ -109,10 +110,10 @@ sys.stdout.write("Category %s\n" % self.getName())
 sys.stdout.write("Number of rows %d \n" % len(self.getRowList()))
 ;
 
-this_block      calculate_on_load python  'datablockid()'
-timestamp       calculate_on_load python  'getDateTime()'
-file_container  calculate_on_load python  'getLocator()'
-row_index       calculate_on_load python  'rowindex()'
+this_block      calculate_with_helper python  'DictMethodHelper.setDatablockId'
+timestamp       calculate_with_helper python  'DictMethodHelper.setLoadDateTime'
+file_container  calculate_with_helper python  'DictMethodHelper.setLocator'
+row_index       calculate_with_helper python  'DictMethodHelper.setRowIndex'
 
 
 ##

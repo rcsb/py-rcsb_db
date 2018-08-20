@@ -51,7 +51,7 @@ class CrateDbLoader(object):
         self.__pathList = []
         self.__cleanUp = cleanUp
         #
-        self.__sdp = SchemaDefDataPrep(schemaDefObj=schemaDefObj, ioObj=IoAdapter(), verbose=True)
+        self.__sdp = SchemaDefDataPrep(schemaDefAccessObj=schemaDefObj, ioObj=IoAdapter(), verbose=True)
 
     def load(self, inputPathList=None, containerList=None, loadType='batch-file', deleteOpt=None, tableIdSkipD=None):
         """ Load data for each table defined in the current schema definition object.

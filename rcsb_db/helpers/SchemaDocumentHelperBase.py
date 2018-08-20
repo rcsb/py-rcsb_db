@@ -6,6 +6,7 @@
 #
 # Updates:
 #  6-Jun-2018  jdw  separate table and document
+# 14-Aug-2018  jdw  generalize document key attribute to attribute list
 ##
 """
 Inject additional information into a schema document definition. Single source of additional document
@@ -51,7 +52,7 @@ class SchemaDocumentHelperBase(object):
             raise NotImplementedError()
         return []
 
-    def getDocumentKeyAttributeName(self, collectionName):
+    def getDocumentKeyAttributeNames(self, collectionName):
         if self._raiseExceptions:
             raise NotImplementedError()
-        return (None, None)
+        return []

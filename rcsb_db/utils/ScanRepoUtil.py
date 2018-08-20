@@ -74,7 +74,6 @@ class ScanRepoUtil(object):
         #
         self.__mpFormat = '[%(levelname)s] %(asctime)s %(processName)s-%(module)s.%(funcName)s: %(message)s'
 
-        # Need specify a working path - Jdw -
         self.__workPath = workPath
         self.__mU = MarshalUtil(workPath=self.__workPath)
 
@@ -155,6 +154,7 @@ class ScanRepoUtil(object):
             #
             if scanType == 'incr':
                 scanDataD = self.__mU.doImport(scanDataFilePath, format='pickle', default=None)
+                logger.info("Imported scan data with keys %r" % list(scanDataD.keys()))
             else:
                 scanDataD = {}
             #
@@ -166,7 +166,7 @@ class ScanRepoUtil(object):
                     #
                     scanDataD[cId] = ssTup
 
-                ok = self.__mU.doExport(scanDataFilePath, scanDataD, format='pickle', pickleProtocol=0)
+                ok = self.__mU.doExport(scanDataFilePath, scanDataD, format='pickle')
                 tscanDataD = self.__mU.doImport(scanDataFilePath, format='pickle')
                 ok = tscanDataD == scanDataD
 

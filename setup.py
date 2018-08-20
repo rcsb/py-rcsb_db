@@ -49,7 +49,7 @@ setup(
         ]
     },
     #
-    install_requires=['future', 'six', 'python-dateutil', 'pytz', 'mmcif', 'scandir; python_version < "3.0"', 'configparser; python_version < "3.0"'],
+    install_requires=['future', 'six', 'python-dateutil', 'pytz', 'mmcif; python_version >= "0.18"', 'scandir; python_version < "3.0"', 'configparser; python_version < "3.0"'],
     packages=find_packages(exclude=['rcsb_db.tests', 'rcsb_db.tests-*', 'tests.*']),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:

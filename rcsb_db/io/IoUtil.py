@@ -109,7 +109,7 @@ class IoUtil(object):
                 ofh.write("\n%s\n" % sOut)
             return True
         except Exception as e:
-            logger.exception("Unable to dump to %r  %r" % (filePath, str(e)))
+            logger.error("Unable to dump to %r  %r" % (filePath, str(e)))
         return False
 
     def __serializePickle(self, filePath, myObj, **kwargs):
@@ -120,7 +120,7 @@ class IoUtil(object):
                 pickle.dump(myObj, outfile, pickleProtocol)
             return True
         except Exception as e:
-            logger.exception("Unable to serialize %r  %r" % (filePath, str(e)))
+            logger.error("Unable to serialize %r  %r" % (filePath, str(e)))
         return False
 
     def __deserializePickle(self, filePath, **kwargs):
@@ -139,7 +139,7 @@ class IoUtil(object):
                 json.dump(myObj, outfile, indent=indent)
             return True
         except Exception as e:
-            logger.exception("Unable to serialize %r  %r" % (filePath, str(e)))
+            logger.error("Unable to serialize %r  %r" % (filePath, str(e)))
         return False
 
     def __deserializeJson(self, filePath, **kwargs):
@@ -158,7 +158,7 @@ class IoUtil(object):
                     ofh.write("%s\n" % pth)
             return True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.error("Unable to serialize %r %r" % (filePath, str(e)))
         return False
 
     def __deserializeList(self, filePath, **kwargs):
@@ -170,7 +170,7 @@ class IoUtil(object):
                     if len(pth) and not pth.startswith("#"):
                         aList.append(pth)
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.error("Unable to deserialize %r %s" % (filePath, str(e)))
         #
         logger.debug("Reading list length %d" % len(aList))
         return aList
@@ -188,7 +188,7 @@ class IoUtil(object):
             myIo = IoAdapter(raiseExceptions=raiseExceptions, useCharRefs=useCharRefs)
             containerList = myIo.readFile(filePath, enforceAscii=enforceAscii, outDirPath=workPath)
         except Exception as e:
-            logger.exception("Failing for %s with %s" % (filePath, str(e)))
+            logger.error("Failing for %s with %s" % (filePath, str(e)))
         return containerList
 
     def __serializeMmCif(self, filePath, containerList, **kwargs):
@@ -204,7 +204,7 @@ class IoUtil(object):
             myIo = IoAdapter(raiseExceptions=raiseExceptions, useCharRefs=useCharRefs)
             ret = myIo.writeFile(filePath, containerList=containerList, enforceAscii=enforceAscii)
         except Exception as e:
-            logger.exception("Failing for %s with %s" % (filePath, str(e)))
+            logger.error("Failing for %s with %s" % (filePath, str(e)))
         return ret
 
     def __deserializeMmCifDict(self, filePath, **kwargs):
@@ -220,7 +220,7 @@ class IoUtil(object):
             myIo = IoAdapterPy(raiseExceptions=raiseExceptions, useCharRefs=useCharRefs)
             containerList = myIo.readFile(filePath, enforceAscii=enforceAscii, outDirPath=workPath)
         except Exception as e:
-            logger.exception("Failing for %s with %s" % (filePath, str(e)))
+            logger.error("Failing for %s with %s" % (filePath, str(e)))
         return containerList
 
     def __serializeMmCifDict(self, filePath, containerList, **kwargs):
@@ -236,5 +236,5 @@ class IoUtil(object):
             myIo = IoAdapterPy(raiseExceptions=raiseExceptions, useCharRefs=useCharRefs)
             ret = myIo.writeFile(filePath, containerList=containerList, enforceAscii=enforceAscii, outDirPath=workPath)
         except Exception as e:
-            logger.exception("Failing for %s with %s" % (filePath, str(e)))
+            logger.error("Failing for %s with %s" % (filePath, str(e)))
         return ret

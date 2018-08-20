@@ -6,6 +6,7 @@
 #
 # Updates:
 #  13-July-2018 jdw add append mode
+#  14-Aug-2018  jdw generalize key identifiers to lists
 ##
 """
 Worker methods for loading document sets into MongoDb.
@@ -49,7 +50,7 @@ class DocumentLoader(object):
         #
         #
 
-    def load(self, databaseName, collectionName, loadType='full', documentList=None, indexAttributeList=None, keyName=None):
+    def load(self, databaseName, collectionName, loadType='full', documentList=None, indexAttributeList=None, keyNames=None):
         """  Driver method for loading MongoDb content -
 
 
@@ -66,7 +67,7 @@ class DocumentLoader(object):
             optionsD['databaseName'] = databaseName
             optionsD['readBackCheck'] = self.__readBackCheck
             optionsD['loadType'] = loadType
-            optionsD['keyName'] = keyName
+            optionsD['keyNames'] = keyNames
             # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             #
             docList = documentList[:self.__documentLimit] if self.__documentLimit else documentList
@@ -95,19 +96,19 @@ class DocumentLoader(object):
                 subLists = [docList]
             #
             if subLists and len(subLists) > 0:
-                logger.info("Starting with numProc %d outer subtask count %d subtask length ~ %d" % (numProc, len(subLists), len(subLists[0])))
+                logger.debug("Starting with numProc %d outer subtask count %d subtask length ~ %d" % (numProc, len(subLists), len(subLists[0])))
             #
             failList = []
             for ii, subList in enumerate(subLists):
-                logger.info("Running outer subtask %d of %d length %d" % (ii + 1, len(subLists), len(subList)))
+                logger.debug("Running outer subtask %d of %d length %d" % (ii + 1, len(subLists), len(subList)))
                 #
                 mpu = MultiProcUtil(verbose=True)
                 mpu.setOptions(optionsD=optionsD)
                 mpu.set(workerObj=self, workerMethod="loadWorker")
                 ok, failListT, _, _ = mpu.runMulti(dataList=subList, numProc=numProc, numResults=1, chunkSize=chunkSize)
                 failList.extend(failListT)
-            logger.debug("Failing document list %r" % failList)
-            logger.info("Document list length %d failed load list length %d" % (len(docList), len(failList)))
+            logger.debug("Completed load with failing document list %r" % failList)
+            logger.debug("Document list length %d failed load list length %d" % (len(docList), len(failList)))
             #
 
             self.__end(startTime, "loading operation with status " + str(ok))
@@ -129,13 +130,13 @@ class DocumentLoader(object):
 
             collectionName = optionsD['collectionName']
             databaseName = optionsD['databaseName']
-            keyName = optionsD['keyName']
+            keyNames = optionsD['keyNames']
             #
             logger.debug("%s databaseName %s collectionName %s" % (procName, databaseName, collectionName))
             #
             if dataList:
                 ok, successList, failedList = self.__loadDocuments(databaseName, collectionName, dataList,
-                                                                   loadType=loadType, readBackCheck=readBackCheck, keyName=keyName)
+                                                                   loadType=loadType, readBackCheck=readBackCheck, keyNames=keyNames)
             #
             logger.debug("%s database %s collection %s inputList length %d successList length %d  failed %d" %
                          (procName, databaseName, collectionName, len(dataList), len(successList), len(failedList)))
@@ -209,20 +210,20 @@ class DocumentLoader(object):
             logger.exception("Failing with %s" % str(e))
         return False
 
-    def __loadDocuments(self, dbName, collectionName, docList, loadType='full', readBackCheck=False, keyName=None):
+    def __loadDocuments(self, dbName, collectionName, docList, loadType='full', readBackCheck=False, keyNames=None):
         #
         # Load database/collection with input document list -
         #
         failList = []
-        logger.debug("dbName %s collectionName %s document count %d" % (dbName, collectionName, len(docList)))
-        if keyName:
+        logger.debug("Loading dbName %s collectionName %s with document count %d" % (dbName, collectionName, len(docList)))
+        if keyNames:
             # map the document list to some document key if this is provided
             indD = {}
             indL = []
             try:
                 for ii, d in enumerate(docList):
-                    dId = self.__dictGet(d, keyName)
-                    indD[dId] = ii
+                    dIdTup = self.__getKeyValues(d, keyNames)
+                    indD[dIdTup] = ii
                 indL = list(range(len(docList)))
             except Exception as e:
                 logger.exception("Failing ii %d d %r with %s" % (ii, d, str(e)))
@@ -230,11 +231,11 @@ class DocumentLoader(object):
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
                 #
-                if loadType == 'replace' and keyName:
-                    dTupL = mg.deleteList(dbName, collectionName, docList, keyName)
-                    logger.debug("Deleted document status %r" % dTupL)
+                if loadType == 'replace' and keyNames:
+                    dTupL = mg.deleteList(dbName, collectionName, docList, keyNames)
+                    logger.debug("Deleted document status %r" % (dTupL,))
                 #
-                rIdL = mg.insertList(dbName, collectionName, docList, keyName=keyName)
+                rIdL = mg.insertList(dbName, collectionName, docList, keyNames=keyNames)
                 logger.debug("Insert returns rIdL length %r" % len(rIdL))
 
                 # ---
@@ -243,12 +244,12 @@ class DocumentLoader(object):
                 successList = docList
                 failList = []
                 if len(rIdL) != len(docList):
-                    if keyName:
+                    if keyNames:
                         successIndList = []
                         for rId in rIdL:
                             rObj = mg.fetchOne(dbName, collectionName, '_id', rId)
-                            dId = self.__getDict(rObj, keyName)
-                            successIndList.append(indD[dId])
+                            dIdTup = self.__getKeyValues(rObj, keyNames)
+                            successIndList.append(indD[dIdTup])
                         failIndList = list(set(indL) - set(successIndList))
                         failList = [docList[ii] for ii in failIndList]
                         successList = [docList[ii] for ii in successIndList]
@@ -257,7 +258,7 @@ class DocumentLoader(object):
                         failList = docList
                         successList = []
                 #
-                if readBackCheck and keyName:
+                if readBackCheck and keyNames:
                     #
                     # Note that objects in docList are mutated by the insert operation with the additional key '_id',
                     # hence, it is possible to compare the fetched object with the input object.
@@ -265,8 +266,8 @@ class DocumentLoader(object):
                     rbStatus = True
                     for ii, rId in enumerate(rIdL):
                         rObj = mg.fetchOne(dbName, collectionName, '_id', rId)
-                        dId = self.__getDict(rObj, keyName)
-                        jj = indD[dId]
+                        dIdTup = self.__getKeyValues(rObj, keyNames)
+                        jj = indD[dIdTup]
                         if (rObj != docList[jj]):
                             rbStatus = False
                             break
@@ -279,20 +280,38 @@ class DocumentLoader(object):
             logger.exception("Failing with %s" % str(e))
         return False, [], docList
 
-    def __dictGet(self, dct, dotNotation):
-        """  Convert input dictionary key (dot notation) to divided Python format and return appropriate dictionary value.
+    def __getKeyValues(self, dct, keyNames):
+        """Return the tuple of values of corresponding to the input dictionary key names expressed in dot notation.
+
+        Args:
+            dct (dict): source dictionary object (nested)
+            keyNames (list): list of dictionary keys in dot notatoin
+
+        Returns:
+            tuple: tuple of values corresponding to the input key names
+
         """
-        key = None
+        rL = []
         try:
-            kys = dotNotation.split('.')
+            for keyName in keyNames:
+                rL.append(self.__getKeyValue(dct, keyName))
+        except Exception as e:
+            logger.exception("Failing for key names %r with %s" % (keyNames, str(e)))
+
+        return tuple(rL)
+
+    def __getKeyValue(self, dct, keyName):
+        """  Return the value of the corresponding key expressed in dot notation in the input dictionary object (nested).
+        """
+        try:
+            kys = keyName.split('.')
             for key in kys:
                 try:
                     dct = dct[key]
-                    logger.debug("dct %r " % dct)
                 except KeyError:
                     return None
             return dct
         except Exception as e:
-            logger.exception("Failing dotNotation %s key %r with %s" % (dotNotation, key, str(e)))
+            logger.exception("Failing for key %r with %s" % (keyName, str(e)))
 
         return None
