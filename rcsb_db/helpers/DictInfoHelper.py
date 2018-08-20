@@ -11,6 +11,10 @@
 #  13-Jun-2018  jdw add content classes to cover former base table feature
 #  15-Jun-2018  jdw add support for alternative iterable delimiters
 #  24-Jul-2018  jdw fix logic in processing _itemTransformers data
+#   6-Aug-2018  jdw add slice parent item definitions in terms of parent items
+#   8-Aug-2018  jdw add slice parent conditional filter definitions that could be applied to the parent data category,
+#  10-Aug-2018  jdw add slice category and cardinality extras
+#  18-Aug-2018  jdw add schema pdbx_core analogous to pdbx removing the block attribute.
 ##
 """
 This helper class supplements dictionary information as required for schema production.
@@ -53,16 +57,18 @@ class DictInfoHelper(DictInfoHelperBase):
         ]
     }
 
-    _cardinalityItems = {
+    _cardinalityParentItens = {
         'bird': {'CATEGORY_NAME': 'pdbx_reference_molecule', 'ATTRIBUTE_NAME': 'prd_id'},
         'bird_family': {'CATEGORY_NAME': 'pdbx_reference_molecule_family', 'ATTRIBUTE_NAME': 'family_prd_id'},
         'chem_comp': {'CATEGORY_NAME': 'chem_comp', 'ATTRIBUTE_NAME': 'id'},
         'bird_chem_comp': {'CATEGORY_NAME': 'chem_comp', 'ATTRIBUTE_NAME': 'id'},
-        'pdbx': {'CATEGORY_NAME': 'entry', 'ATTRIBUTE_NAME': 'id'}
+        'pdbx': {'CATEGORY_NAME': 'entry', 'ATTRIBUTE_NAME': 'id'},
+        'pdbx_core': {'CATEGORY_NAME': 'entry', 'ATTRIBUTE_NAME': 'id'}
     }
     _cardinalityCategoryExtras = ['rcsb_load_status']
     #
     _selectionFilters = {('PUBLIC_RELEASE', 'pdbx'): [{'CATEGORY_NAME': 'pdbx_database_status', 'ATTRIBUTE_NAME': 'status_code', 'VALUES': ['REL']}],
+                         ('PUBLIC_RELEASE', 'pdbx_core'): [{'CATEGORY_NAME': 'pdbx_database_status', 'ATTRIBUTE_NAME': 'status_code', 'VALUES': ['REL']}],
                          ('PUBLIC_RELEASE', 'chem_comp'): [{'CATEGORY_NAME': 'chem_comp', 'ATTRIBUTE_NAME': 'pdbx_release_status', 'VALUES': ['REL', 'OBS', 'REF_ONLY']}],
                          ('PUBLIC_RELEASE', 'bird_chem_comp'): [{'CATEGORY_NAME': 'chem_comp', 'ATTRIBUTE_NAME': 'pdbx_release_status', 'VALUES': ['REL', 'OBS', 'REF_ONLY']}],
                          ('PUBLIC_RELEASE', 'bird'): [{'CATEGORY_NAME': 'pdbx_reference_molecule', 'ATTRIBUTE_NAME': 'release_status', 'VALUES': ['REL', 'OBS']}],
@@ -74,21 +80,32 @@ class DictInfoHelper(DictInfoHelperBase):
     # Put the non default iterable delimiter cases here -
     _iterableDelimiters = [{'CATEGORY_NAME': 'chem_comp', 'ATTRIBUTE_NAME': 'pdbx_synonyms', 'DELIMITER': ';'}]
     #
-
-    _contentClasses = {('ADMIN_CATEGORY', 'pdbx'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']},
-                                                    {'CATEGORY_NAME': 'pdbx_struct_assembly_gen', 'ATTRIBUTE_NAME_LIST': ['ordinal']}],
-                       ('ADMIN_CATEGORY', 'chem_comp'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
-                       ('ADMIN_CATEGORY', 'bird_chem_comp'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
-                       ('ADMIN_CATEGORY', 'bird'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
-                       ('ADMIN_CATEGORY', 'bird_family'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
+    # Categories/Attributes that will be included in a schema definitions even if they are not populated in any tabulated instance data -
+    #
+    _contentClasses = {('DYNAMIC_CONTENT', 'pdbx'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']},
+                                                     {'CATEGORY_NAME': 'pdbx_struct_assembly_gen', 'ATTRIBUTE_NAME_LIST': ['ordinal']}],
+                       ('DYNAMIC_CONTENT', 'pdbx_core'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']},
+                                                          {'CATEGORY_NAME': 'pdbx_struct_assembly_gen', 'ATTRIBUTE_NAME_LIST': ['ordinal']}],
+                       ('DYNAMIC_CONTENT', 'chem_comp'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
+                       ('DYNAMIC_CONTENT', 'bird_chem_comp'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
+                       ('DYNAMIC_CONTENT', 'bird'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
+                       ('DYNAMIC_CONTENT', 'bird_family'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
                        }
+
+    _sliceParentItems = {('ENTITY', 'pdbx_core'): [{'CATEGORY_NAME': 'entity', 'ATTRIBUTE_NAME': 'id'}]
+                         }
+    _sliceParentFilters = {('ENTITY', 'pdbx_core'): [{'CATEGORY_NAME': 'entity', 'ATTRIBUTE_NAME': 'type', 'VALUES': ['polymer', 'non-polymer', 'macrolide', 'branched']}]
+                           }
+
+    _sliceCardinalityCategoryExtras = {('ENTITY', 'pdbx_core'): ['rcsb_load_status', 'entry']}
+    _sliceCategoryExtras = {('ENTITY', 'pdbx_core'): ['rcsb_load_status', 'entry']}
 
     def __init__(self, **kwargs):
         """
         Args:
             **kwargs: (below)
             dictPath (str, optional): path to the current dictioonary text
-            dictSubset (str, optional): name of dictionary content subset
+            dictSubset (str, optional): name of dictionary content subset - alias for schema name
 
 
             Add - Include exclude filters on dictionary content -
@@ -220,7 +237,7 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return DictInfoHelper._cardinalityItems[dictSubset]
+            return DictInfoHelper._cardinalityParentItens[dictSubset]
         except Exception:
             pass
         return {'CATEGORY_NAME': None, 'ATTRIBUTE_NAME': None}
@@ -282,3 +299,55 @@ class DictInfoHelper(DictInfoHelperBase):
         except Exception:
             pass
         return {}
+
+    def getSliceParentItems(self, dictSubset, kind):
+        """  Interim api for slice parent itens defined in terms of dictionary category and attributes name and their values.
+
+        """
+        try:
+            return DictInfoHelper._sliceParentItems[(kind, dictSubset)]
+        except Exception:
+            pass
+        return []
+
+    def getSliceParentsBySubset(self, dictSubset):
+        """  Interim api for slice parent items for a particular dictionary subset.
+
+        """
+        try:
+            return {kind: v for (kind, dS), v in DictInfoHelper._sliceParentItems.items() if dS == dictSubset}
+        except Exception:
+            pass
+        return {}
+
+    def getSliceParentFilters(self, dictSubset, kind):
+        """  Interim api for slice parent condition filters defined in terms of dictionary category and attributes name and their values.
+
+        """
+        try:
+            return DictInfoHelper._sliceParentFilters[(kind, dictSubset)]
+        except Exception:
+            pass
+        return []
+
+    def getSliceParentFiltersBySubset(self, dictSubset):
+        """  Interim api for slice parent condition filters for a particular dictionary subset.
+
+        """
+        try:
+            return {kind: v for (kind, dS), v in DictInfoHelper._sliceParentFilters.items() if dS == dictSubset}
+        except Exception:
+            pass
+        return {}
+
+    def getSliceCardinalityCategoryExtras(self, dictSubset, kind):
+        try:
+            return DictInfoHelper._sliceCardinalityCategoryExtras[(kind, dictSubset)]
+        except Exception:
+            return []
+
+    def getSliceCategoryExtras(self, dictSubset, kind):
+        try:
+            return DictInfoHelper._sliceCategoryExtras[(kind, dictSubset)]
+        except Exception:
+            return []

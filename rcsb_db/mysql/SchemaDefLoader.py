@@ -21,6 +21,7 @@
 # 13-Mar-2018 jdw split data loading and data processing operations.
 # 30-Mar-2018 jdw more refactoring -  changing expectations on explicit data types -
 #  2-Jul-2018 jdw fix working path
+# 20-Aug-2019 jdw add dynamic method invocation  -
 ##
 """
 Generic mapper of PDBx/mmCIF instance data to SQL loadable data files based on external
@@ -38,6 +39,7 @@ import logging
 import os
 import time
 
+from rcsb_db.define.DictMethodRunner import DictMethodRunner
 from rcsb_db.mysql.MyDbUtil import MyDbQuery
 from rcsb_db.processors.DataTransformFactory import DataTransformFactory
 from rcsb_db.processors.SchemaDefDataPrep import SchemaDefDataPrep
@@ -52,9 +54,10 @@ class SchemaDefLoader(object):
     """ Map PDBx/mmCIF instance data to SQL loadable data using external schema definition.
     """
 
-    def __init__(self, schemaDefObj, dbCon=None, workPath='.', cleanUp=False, warnings='default', verbose=True):
+    def __init__(self, cfgOb, schemaDefObj, dbCon=None, workPath='.', cleanUp=False, warnings='default', verbose=True):
         self.__verbose = verbose
         self.__debug = False
+        self.__cfgOb = cfgOb
         self.__sD = schemaDefObj
         #
         self.__dbCon = dbCon
@@ -71,7 +74,14 @@ class SchemaDefLoader(object):
         #
         self.__warningAction = warnings
         dtf = DataTransformFactory(schemaDefObj=self.__sD, filterType=self.__fTypeRow)
-        self.__sdp = SchemaDefDataPrep(schemaDefObj=self.__sD, dtObj=dtf, workPath=self.__workingPath, verbose=self.__verbose)
+        self.__sdp = SchemaDefDataPrep(schemaDefAccessObj=self.__sD, dtObj=dtf, workPath=self.__workingPath, verbose=self.__verbose)
+
+        #
+        sectionName = 'DEFAULT'
+        pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=sectionName)
+        pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=sectionName)
+        dH = self.__cfgOb.getHelper('DICT_METHOD_HELPER_MODULE', sectionName=sectionName)
+        self.__dmh = DictMethodRunner(dictLocators=[pathPdbxDictionaryFile, pathRcsbDictionaryFile], methodHelper=dH)
 
     def setWarning(self, action):
         if action in ['error', 'ignore', 'default']:
@@ -116,7 +126,14 @@ class SchemaDefLoader(object):
         """
         tableIdSkipD = tableIdSkipD if tableIdSkipD is not None else {}
         if inputPathList is not None:
-            tableDataDict, containerNameList = self.__sdp.fetch(inputPathList)
+            cL = self.__sdp.getContainerList(inputPathList, filterType=self.__fTypeRow)
+            #
+            # Apply dynamic methods here -
+            #
+            for c in cL:
+                self.__dmh.apply(c)
+            tableDataDict, containerNameList = self.__sdp.process(cL)
+
         elif containerList is not None:
             tableDataDict, containerNameList = self.__sdp.process(containerList)
         #
@@ -176,11 +193,13 @@ class SchemaDefLoader(object):
             Return the containerNames for the input path list, and path list for load files that are created.
 
         """
+        cL = self.__sdp.getContainerList(inputPathList, filterType=self.__fTypeRow)
+        for c in cL:
+            self.__dmh.apply(c)
+        tableDataDict, containerNameList = self.__sdp.process(cL)
         if exportFormat == 'tdd':
-            tableDataDict, containerNameList = self.__sdp.fetch(inputPathList)
             return containerNameList, self.__exportTdd(tableDataDict, colSep=self.__colSep, rowSep=self.__rowSep, append=append, partName=partName)
         elif exportFormat == 'csv':
-            tableDataDict, containerNameList = self.__sdp.fetch(inputPathList)
             return containerNameList, self.__exportCsv(tableDataDict, append=append, partName=partName)
         else:
             return [], []

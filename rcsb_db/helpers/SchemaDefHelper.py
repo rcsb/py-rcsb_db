@@ -35,6 +35,11 @@ class SchemaDefHelper(SchemaDefHelperBase):
                                                    'ATOM_SITE_ANISOTROP'
                                                    ]
                                        },
+                              'pdbx_core': {'INCLUDE': [],
+                                            'EXCLUDE': ['ATOM_SITE',
+                                                        'ATOM_SITE_ANISOTROP'
+                                                        ]
+                                            },
                               }
 
     __block_attributes = {'pdbx': {'ATTRIBUTE_NAME': 'structure_id', 'CIF_TYPE_CODE': 'code', 'MAX_WIDTH': 12, 'METHOD': 'datablockid()'},
@@ -45,6 +50,7 @@ class SchemaDefHelper(SchemaDefHelperBase):
                           'pdb_distro': {'ATTRIBUTE_NAME': 'structure_id', 'CIF_TYPE_CODE': 'code', 'MAX_WIDTH': 12, 'METHOD': 'datablockid()'},
                           }
     __databaseNames = {'pdbx': {'NAME': 'pdbx_v5', 'VERSION': '0_2'},
+                       'pdbx_core': {'NAME': 'pdbx_v5', 'VERSION': '0_2'},
                        'bird': {'NAME': 'bird_v5', 'VERSION': '0_1'},
                        'bird_family': {'NAME': 'bird_v5', 'VERSION': '0_1'},
                        'chem_comp': {'NAME': 'chem_comp_v5', 'VERSION': '0_1'},
@@ -68,7 +74,7 @@ class SchemaDefHelper(SchemaDefHelperBase):
     def getConvertNameMethod(self, nameConvention):
         if nameConvention.upper() in ['SQL']:
             return self.__convertNameDefault
-        elif nameConvention.upper() in ['ANY', 'DOCUMENT', 'SOLR']:
+        elif nameConvention.upper() in ['ANY', 'DOCUMENT', 'SOLR', 'JSON']:
             return self.__convertNamePunc
         else:
             return self.__convertNameDefault

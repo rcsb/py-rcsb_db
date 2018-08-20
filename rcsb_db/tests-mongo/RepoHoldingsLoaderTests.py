@@ -105,34 +105,34 @@ class RepoHoldingsLoaderTests(unittest.TestCase):
             dList = rhdp.getHoldingsUpdate(updateId=self.__updateId)
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_UPDATE', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType='append', documentList=dList,
-                         indexAttributeList=['update_id', 'entry_id'], keyName=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
             self.assertTrue(ok)
             #
             dList = rhdp.getHoldingsCurrent(updateId=self.__updateId)
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_CURRENT', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType='append', documentList=dList,
-                         indexAttributeList=['update_id', 'entry_id'], keyName=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
             self.assertTrue(ok)
 
             dList = rhdp.getHoldingsUnreleased(updateId=self.__updateId)
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_UNRELEASED', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType='append', documentList=dList,
-                         indexAttributeList=['update_id', 'entry_id'], keyName=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
             self.assertTrue(ok)
             #
             dList1, dList2, dList3 = rhdp.getHoldingsRemoved(updateId=self.__updateId)
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_REMOVED', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType='append', documentList=dList1,
-                         indexAttributeList=['update_id', 'entry_id'], keyName=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
             self.assertTrue(ok)
 
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_REMOVED_AUTHORS', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType='append', documentList=dList2,
-                         indexAttributeList=['update_id', 'entry_id'], keyName=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
 
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_SUPERSEDED', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType='append', documentList=dList3,
-                         indexAttributeList=['update_id', 'entry_id'], keyName=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()

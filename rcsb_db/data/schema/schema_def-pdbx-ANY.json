@@ -552,7 +552,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "ATOM_SITES_FOOTNOTE": {
          "SCHEMA_ID": "ATOM_SITES_FOOTNOTE",
@@ -649,7 +652,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "ATOM_TYPE": {
          "SCHEMA_ID": "ATOM_TYPE",
@@ -1020,7 +1026,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "AUDIT": {
          "SCHEMA_ID": "AUDIT",
@@ -1155,7 +1164,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "AUDIT_AUTHOR": {
          "SCHEMA_ID": "AUDIT_AUTHOR",
@@ -1272,7 +1284,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "AUDIT_CONFORM": {
          "SCHEMA_ID": "AUDIT_CONFORM",
@@ -1390,7 +1405,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "CELL": {
          "SCHEMA_ID": "CELL",
@@ -1840,7 +1858,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "CELL_MEASUREMENT": {
          "SCHEMA_ID": "CELL_MEASUREMENT",
@@ -1945,7 +1966,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "CHEM_COMP": {
          "SCHEMA_ID": "CHEM_COMP",
@@ -1976,6 +2000,7 @@
             "PDBX_CLASS_2": "pdbx_class_2",
             "PDBX_COMP_TYPE": "pdbx_comp_type",
             "PDBX_COMPONENT_NO": "pdbx_component_no",
+            "PDBX_CORE_COMP_ID": "pdbx_core_comp_id",
             "PDBX_FORMAL_CHARGE": "pdbx_formal_charge",
             "PDBX_IDEAL_COORDINATES_DETAILS": "pdbx_ideal_coordinates_details",
             "PDBX_IDEAL_COORDINATES_MISSING_FLAG": "pdbx_ideal_coordinates_missing_flag",
@@ -2175,7 +2200,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "CHEM_COMP_ATOM": {
          "SCHEMA_ID": "CHEM_COMP_ATOM",
@@ -2204,6 +2232,8 @@
             "PDBX_COMPONENT_COMP_ID": "pdbx_component_comp_id",
             "PDBX_COMPONENT_ENTITY_ID": "pdbx_component_entity_id",
             "PDBX_COMPONENT_ID": "pdbx_component_id",
+            "PDBX_CORE_ATOM_ID": "pdbx_core_atom_id",
+            "PDBX_CORE_COMP_ID": "pdbx_core_comp_id",
             "PDBX_LEAVING_ATOM_FLAG": "pdbx_leaving_atom_flag",
             "PDBX_MODEL_CARTN_X_IDEAL": "pdbx_model_Cartn_x_ideal",
             "PDBX_MODEL_CARTN_Y_IDEAL": "pdbx_model_Cartn_y_ideal",
@@ -2212,6 +2242,7 @@
             "PDBX_POLYMER_TYPE": "pdbx_polymer_type",
             "PDBX_REF_ID": "pdbx_ref_id",
             "PDBX_RESIDUE_NUMBERING": "pdbx_residue_numbering",
+            "PDBX_STANDARD_ATOM_ID": "pdbx_standard_atom_id",
             "PDBX_STEREO_CONFIG": "pdbx_stereo_config",
             "SUBSTRUCT_CODE": "substruct_code",
             "TYPE_SYMBOL": "type_symbol"
@@ -2320,7 +2351,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "CHEM_LINK": {
          "SCHEMA_ID": "CHEM_LINK",
@@ -2399,7 +2433,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "CITATION": {
          "SCHEMA_ID": "CITATION",
@@ -2863,7 +2900,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "CITATION_AUTHOR": {
          "SCHEMA_ID": "CITATION_AUTHOR",
@@ -2984,7 +3024,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "CITATION_EDITOR": {
          "SCHEMA_ID": "CITATION_EDITOR",
@@ -3102,7 +3145,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "DATABASE_2": {
          "SCHEMA_ID": "DATABASE_2",
@@ -3201,7 +3247,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "DATABASE_PDB_CAVEAT": {
          "SCHEMA_ID": "DATABASE_PDB_CAVEAT",
@@ -3298,7 +3347,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "DATABASE_PDB_MATRIX": {
          "SCHEMA_ID": "DATABASE_PDB_MATRIX",
@@ -3616,7 +3668,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "DATABASE_PDB_TVECT": {
          "SCHEMA_ID": "DATABASE_PDB_TVECT",
@@ -3752,7 +3807,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "DIFFRN": {
          "SCHEMA_ID": "DIFFRN",
@@ -3776,7 +3834,8 @@
             "CRYSTAL_SUPPORT": "crystal_support",
             "CRYSTAL_TREATMENT": "crystal_treatment",
             "DETAILS": "details",
-            "ID": "id"
+            "ID": "id",
+            "PDBX_SERIAL_CRYSTAL_EXPERIMENT": "pdbx_serial_crystal_experiment"
          },
          "ATTRIBUTE_MAP": {
             "STRUCTURE_ID": {
@@ -3952,7 +4011,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "DIFFRN_DETECTOR": {
          "SCHEMA_ID": "DIFFRN_DETECTOR",
@@ -3970,6 +4032,7 @@
             "PDBX_COLLECTION_DATE": "pdbx_collection_date",
             "PDBX_COLLECTION_TIME_TOTAL": "pdbx_collection_time_total",
             "PDBX_FRAMES_TOTAL": "pdbx_frames_total",
+            "PDBX_FREQUENCY": "pdbx_frequency",
             "TYPE": "type"
          },
          "ATTRIBUTE_MAP": {
@@ -4110,7 +4173,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "DIFFRN_MEASUREMENT": {
          "SCHEMA_ID": "DIFFRN_MEASUREMENT",
@@ -4231,7 +4297,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "DIFFRN_RADIATION": {
          "SCHEMA_ID": "DIFFRN_RADIATION",
@@ -4487,7 +4556,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "DIFFRN_RADIATION_WAVELENGTH": {
          "SCHEMA_ID": "DIFFRN_RADIATION_WAVELENGTH",
@@ -4603,7 +4675,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "DIFFRN_REFLNS": {
          "SCHEMA_ID": "DIFFRN_REFLNS",
@@ -5037,7 +5112,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "DIFFRN_SOURCE": {
          "SCHEMA_ID": "DIFFRN_SOURCE",
@@ -5256,7 +5334,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_2D_CRYSTAL_ENTITY": {
          "SCHEMA_ID": "EM_2D_CRYSTAL_ENTITY",
@@ -5470,7 +5551,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_3D_CRYSTAL_ENTITY": {
          "SCHEMA_ID": "EM_3D_CRYSTAL_ENTITY",
@@ -5721,7 +5805,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_3D_FITTING": {
          "SCHEMA_ID": "EM_3D_FITTING",
@@ -5935,7 +6022,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_3D_FITTING_LIST": {
          "SCHEMA_ID": "EM_3D_FITTING_LIST",
@@ -6110,7 +6200,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_3D_RECONSTRUCTION": {
          "SCHEMA_ID": "EM_3D_RECONSTRUCTION",
@@ -6461,7 +6554,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_BUFFER": {
          "SCHEMA_ID": "EM_BUFFER",
@@ -6617,7 +6713,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_BUFFER_COMPONENT": {
          "SCHEMA_ID": "EM_BUFFER_COMPONENT",
@@ -6792,7 +6891,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_CRYSTAL_FORMATION": {
          "SCHEMA_ID": "EM_CRYSTAL_FORMATION",
@@ -7041,7 +7143,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_CTF_CORRECTION": {
          "SCHEMA_ID": "EM_CTF_CORRECTION",
@@ -7183,7 +7288,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_DIFFRACTION": {
          "SCHEMA_ID": "EM_DIFFRACTION",
@@ -7318,7 +7426,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_DIFFRACTION_SHELL": {
          "SCHEMA_ID": "EM_DIFFRACTION_SHELL",
@@ -7529,7 +7640,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_DIFFRACTION_STATS": {
          "SCHEMA_ID": "EM_DIFFRACTION_STATS",
@@ -7816,7 +7930,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_EMBEDDING": {
          "SCHEMA_ID": "EM_EMBEDDING",
@@ -7951,7 +8068,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_ENTITY_ASSEMBLY": {
          "SCHEMA_ID": "EM_ENTITY_ASSEMBLY",
@@ -8196,7 +8316,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_ENTITY_ASSEMBLY_MOLWT": {
          "SCHEMA_ID": "EM_ENTITY_ASSEMBLY_MOLWT",
@@ -8353,7 +8476,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_ENTITY_ASSEMBLY_NATURALSOURCE": {
          "SCHEMA_ID": "EM_ENTITY_ASSEMBLY_NATURALSOURCE",
@@ -8604,7 +8730,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_ENTITY_ASSEMBLY_RECOMBINANT": {
          "SCHEMA_ID": "EM_ENTITY_ASSEMBLY_RECOMBINANT",
@@ -8798,7 +8927,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_EXPERIMENT": {
          "SCHEMA_ID": "EM_EXPERIMENT",
@@ -8953,7 +9085,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_HELICAL_ENTITY": {
          "SCHEMA_ID": "EM_HELICAL_ENTITY",
@@ -9131,7 +9266,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_IMAGE_PROCESSING": {
          "SCHEMA_ID": "EM_IMAGE_PROCESSING",
@@ -9249,7 +9387,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_IMAGE_RECORDING": {
          "SCHEMA_ID": "EM_IMAGE_RECORDING",
@@ -9500,7 +9641,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_IMAGE_SCANS": {
          "SCHEMA_ID": "EM_IMAGE_SCANS",
@@ -9809,7 +9953,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_IMAGING": {
          "SCHEMA_ID": "EM_IMAGING",
@@ -10467,7 +10614,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_IMAGING_OPTICS": {
          "SCHEMA_ID": "EM_IMAGING_OPTICS",
@@ -10681,7 +10831,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_PARTICLE_SELECTION": {
          "SCHEMA_ID": "EM_PARTICLE_SELECTION",
@@ -10820,7 +10973,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_SAMPLE_SUPPORT": {
          "SCHEMA_ID": "EM_SAMPLE_SUPPORT",
@@ -11017,7 +11173,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_SINGLE_PARTICLE_ENTITY": {
          "SCHEMA_ID": "EM_SINGLE_PARTICLE_ENTITY",
@@ -11155,7 +11314,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_SOFTWARE": {
          "SCHEMA_ID": "EM_SOFTWARE",
@@ -11366,7 +11528,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_SPECIMEN": {
          "SCHEMA_ID": "EM_SPECIMEN",
@@ -11579,7 +11744,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_STAINING": {
          "SCHEMA_ID": "EM_STAINING",
@@ -11733,7 +11901,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_VIRUS_ENTITY": {
          "SCHEMA_ID": "EM_VIRUS_ENTITY",
@@ -11949,7 +12120,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_VIRUS_NATURAL_HOST": {
          "SCHEMA_ID": "EM_VIRUS_NATURAL_HOST",
@@ -12105,7 +12279,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_VIRUS_SHELL": {
          "SCHEMA_ID": "EM_VIRUS_SHELL",
@@ -12261,7 +12438,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_VITRIFICATION": {
          "SCHEMA_ID": "EM_VITRIFICATION",
@@ -12533,7 +12713,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EM_VOLUME_SELECTION": {
          "SCHEMA_ID": "EM_VOLUME_SELECTION",
@@ -12727,7 +12910,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "ENTITY": {
          "SCHEMA_ID": "ENTITY",
@@ -12982,7 +13168,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "ENTITY_KEYWORDS": {
          "SCHEMA_ID": "ENTITY_KEYWORDS",
@@ -13083,7 +13272,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "ENTITY_NAME_COM": {
          "SCHEMA_ID": "ENTITY_NAME_COM",
@@ -13094,7 +13286,8 @@
          "ATTRIBUTES": {
             "STRUCTURE_ID": "structure_id",
             "ENTITY_ID": "entity_id",
-            "NAME": "name"
+            "NAME": "name",
+            "PDBX_PROVENANCE": "pdbx_provenance"
          },
          "ATTRIBUTE_MAP": {
             "STRUCTURE_ID": {
@@ -13180,7 +13373,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "ENTITY_NAME_SYS": {
          "SCHEMA_ID": "ENTITY_NAME_SYS",
@@ -13278,7 +13474,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "ENTITY_POLY": {
          "SCHEMA_ID": "ENTITY_POLY",
@@ -13507,7 +13706,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "ENTITY_POLY_SEQ": {
          "SCHEMA_ID": "ENTITY_POLY_SEQ",
@@ -13646,7 +13848,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "ENTITY_SRC_GEN": {
          "SCHEMA_ID": "ENTITY_SRC_GEN",
@@ -14625,7 +14830,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "ENTITY_SRC_NAT": {
          "SCHEMA_ID": "ENTITY_SRC_NAT",
@@ -15162,7 +15370,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "ENTRY": {
          "SCHEMA_ID": "ENTRY",
@@ -15241,7 +15452,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EXPTL": {
          "SCHEMA_ID": "EXPTL",
@@ -15402,7 +15616,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EXPTL_CRYSTAL": {
          "SCHEMA_ID": "EXPTL_CRYSTAL",
@@ -15659,7 +15876,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EXPTL_CRYSTAL_GROW": {
          "SCHEMA_ID": "EXPTL_CRYSTAL_GROW",
@@ -15879,7 +16099,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "EXPTL_CRYSTAL_GROW_COMP": {
          "SCHEMA_ID": "EXPTL_CRYSTAL_GROW_COMP",
@@ -16079,7 +16302,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "NDB_STRUCT_CONF_NA": {
          "SCHEMA_ID": "NDB_STRUCT_CONF_NA",
@@ -16179,7 +16405,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "NDB_STRUCT_NA_BASE_PAIR": {
          "SCHEMA_ID": "NDB_STRUCT_NA_BASE_PAIR",
@@ -16729,7 +16958,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "NDB_STRUCT_NA_BASE_PAIR_STEP": {
          "SCHEMA_ID": "NDB_STRUCT_NA_BASE_PAIR_STEP",
@@ -17637,7 +17869,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_SG_PROJECT": {
          "SCHEMA_ID": "PDBX_SG_PROJECT",
@@ -17772,7 +18007,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_AUDIT": {
          "SCHEMA_ID": "PDBX_AUDIT",
@@ -17869,7 +18107,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_AUDIT_REVISION_CATEGORY": {
          "SCHEMA_ID": "PDBX_AUDIT_REVISION_CATEGORY",
@@ -18008,7 +18249,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_AUDIT_REVISION_DETAILS": {
          "SCHEMA_ID": "PDBX_AUDIT_REVISION_DETAILS",
@@ -18167,7 +18411,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_AUDIT_REVISION_GROUP": {
          "SCHEMA_ID": "PDBX_AUDIT_REVISION_GROUP",
@@ -18306,7 +18553,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_AUDIT_REVISION_HISTORY": {
          "SCHEMA_ID": "PDBX_AUDIT_REVISION_HISTORY",
@@ -18464,7 +18714,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_AUDIT_REVISION_ITEM": {
          "SCHEMA_ID": "PDBX_AUDIT_REVISION_ITEM",
@@ -18603,7 +18856,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_AUDIT_SUPPORT": {
          "SCHEMA_ID": "PDBX_AUDIT_SUPPORT",
@@ -18739,7 +18995,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_BUFFER": {
          "SCHEMA_ID": "PDBX_BUFFER",
@@ -18855,7 +19114,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_BUFFER_COMPONENTS": {
          "SCHEMA_ID": "PDBX_BUFFER_COMPONENTS",
@@ -19032,7 +19294,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_COORDINATE_MODEL": {
          "SCHEMA_ID": "PDBX_COORDINATE_MODEL",
@@ -19129,7 +19394,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_DATABASE_PDB_OBS_SPR": {
          "SCHEMA_ID": "PDBX_DATABASE_PDB_OBS_SPR",
@@ -19285,7 +19553,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_DATABASE_RELATED": {
          "SCHEMA_ID": "PDBX_DATABASE_RELATED",
@@ -19424,7 +19695,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_DATABASE_REMARK": {
          "SCHEMA_ID": "PDBX_DATABASE_REMARK",
@@ -19521,7 +19795,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_DATABASE_STATUS": {
          "SCHEMA_ID": "PDBX_DATABASE_STATUS",
@@ -19842,7 +20119,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_DEPOSIT_GROUP": {
          "SCHEMA_ID": "PDBX_DEPOSIT_GROUP",
@@ -19977,7 +20257,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_DIFFRN_REFLNS_SHELL": {
          "SCHEMA_ID": "PDBX_DIFFRN_REFLNS_SHELL",
@@ -20230,7 +20513,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_DISTANT_SOLVENT_ATOMS": {
          "SCHEMA_ID": "PDBX_DISTANT_SOLVENT_ATOMS",
@@ -20465,7 +20751,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_ENTITY_INSTANCE_FEATURE": {
          "SCHEMA_ID": "PDBX_ENTITY_INSTANCE_FEATURE",
@@ -20605,7 +20894,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_ENTITY_NONPOLY": {
          "SCHEMA_ID": "PDBX_ENTITY_NONPOLY",
@@ -20721,7 +21013,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_ENTITY_SRC_SYN": {
          "SCHEMA_ID": "PDBX_ENTITY_SRC_SYN",
@@ -20954,7 +21249,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_ENTRY_DETAILS": {
          "SCHEMA_ID": "PDBX_ENTRY_DETAILS",
@@ -21108,7 +21406,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_EXPTL_CRYSTAL_CRYO_TREATMENT": {
          "SCHEMA_ID": "PDBX_EXPTL_CRYSTAL_CRYO_TREATMENT",
@@ -21244,7 +21545,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_EXPTL_CRYSTAL_GROW_COMP": {
          "SCHEMA_ID": "PDBX_EXPTL_CRYSTAL_GROW_COMP",
@@ -21420,7 +21724,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_EXPTL_CRYSTAL_GROW_SOL": {
          "SCHEMA_ID": "PDBX_EXPTL_CRYSTAL_GROW_SOL",
@@ -21576,7 +21883,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_HELICAL_SYMMETRY": {
          "SCHEMA_ID": "PDBX_HELICAL_SYMMETRY",
@@ -21768,7 +22078,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_MOLECULE": {
          "SCHEMA_ID": "PDBX_MOLECULE",
@@ -21889,7 +22202,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_MOLECULE_FEATURES": {
          "SCHEMA_ID": "PDBX_MOLECULE_FEATURES",
@@ -22043,7 +22359,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_NMR_CONSTRAINTS": {
          "SCHEMA_ID": "PDBX_NMR_CONSTRAINTS",
@@ -22504,7 +22823,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_NMR_DETAILS": {
          "SCHEMA_ID": "PDBX_NMR_DETAILS",
@@ -22601,7 +22923,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_NMR_ENSEMBLE": {
          "SCHEMA_ID": "PDBX_NMR_ENSEMBLE",
@@ -22945,7 +23270,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_NMR_ENSEMBLE_RMS": {
          "SCHEMA_ID": "PDBX_NMR_ENSEMBLE_RMS",
@@ -23275,7 +23603,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_NMR_EXPTL": {
          "SCHEMA_ID": "PDBX_NMR_EXPTL",
@@ -23452,7 +23783,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_NMR_EXPTL_SAMPLE": {
          "SCHEMA_ID": "PDBX_NMR_EXPTL_SAMPLE",
@@ -23628,7 +23962,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_NMR_EXPTL_SAMPLE_CONDITIONS": {
          "SCHEMA_ID": "PDBX_NMR_EXPTL_SAMPLE_CONDITIONS",
@@ -23972,7 +24309,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_NMR_REFINE": {
          "SCHEMA_ID": "PDBX_NMR_REFINE",
@@ -24109,7 +24449,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_NMR_REPRESENTATIVE": {
          "SCHEMA_ID": "PDBX_NMR_REPRESENTATIVE",
@@ -24225,7 +24568,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_NMR_SAMPLE_DETAILS": {
          "SCHEMA_ID": "PDBX_NMR_SAMPLE_DETAILS",
@@ -24398,7 +24744,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_NMR_SOFTWARE": {
          "SCHEMA_ID": "PDBX_NMR_SOFTWARE",
@@ -24553,7 +24902,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_NMR_SPECTROMETER": {
          "SCHEMA_ID": "PDBX_NMR_SPECTROMETER",
@@ -24727,7 +25079,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_NONPOLY_SCHEME": {
          "SCHEMA_ID": "PDBX_NONPOLY_SCHEME",
@@ -24978,7 +25333,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_PHASING_MAD_SET": {
          "SCHEMA_ID": "PDBX_PHASING_MAD_SET",
@@ -25437,7 +25795,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_PHASING_MAD_SET_SHELL": {
          "SCHEMA_ID": "PDBX_PHASING_MAD_SET_SHELL",
@@ -25899,7 +26260,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_PHASING_MAD_SET_SITE": {
          "SCHEMA_ID": "PDBX_PHASING_MAD_SET_SITE",
@@ -26176,7 +26540,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_PHASING_MAD_SHELL": {
          "SCHEMA_ID": "PDBX_PHASING_MAD_SHELL",
@@ -26401,7 +26768,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_PHASING_MR": {
          "SCHEMA_ID": "PDBX_PHASING_MR",
@@ -26792,7 +27162,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_PHASING_DM": {
          "SCHEMA_ID": "PDBX_PHASING_DM",
@@ -27060,7 +27433,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_PHASING_DM_SHELL": {
          "SCHEMA_ID": "PDBX_PHASING_DM_SHELL",
@@ -27293,7 +27669,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_POINT_SYMMETRY": {
          "SCHEMA_ID": "PDBX_POINT_SYMMETRY",
@@ -27428,7 +27807,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_POLY_SEQ_SCHEME": {
          "SCHEMA_ID": "PDBX_POLY_SEQ_SCHEME",
@@ -27721,7 +28103,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_REFINE": {
          "SCHEMA_ID": "PDBX_REFINE",
@@ -28069,7 +28454,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_REFINE_TLS": {
          "SCHEMA_ID": "PDBX_REFINE_TLS",
@@ -29059,7 +29447,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_REFINE_TLS_GROUP": {
          "SCHEMA_ID": "PDBX_REFINE_TLS_GROUP",
@@ -29365,7 +29756,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_REFLNS_TWIN": {
          "SCHEMA_ID": "PDBX_REFLNS_TWIN",
@@ -29544,7 +29938,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_RELATED_EXP_DATA_SET": {
          "SCHEMA_ID": "PDBX_RELATED_EXP_DATA_SET",
@@ -29698,7 +30095,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_SOLN_SCATTER": {
          "SCHEMA_ID": "PDBX_SOLN_SCATTER",
@@ -30196,7 +30596,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_SOLN_SCATTER_MODEL": {
          "SCHEMA_ID": "PDBX_SOLN_SCATTER_MODEL",
@@ -30466,7 +30869,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_STRUCT_ASSEMBLY": {
          "SCHEMA_ID": "PDBX_STRUCT_ASSEMBLY",
@@ -30620,7 +31026,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_STRUCT_ASSEMBLY_AUTH_EVIDENCE": {
          "SCHEMA_ID": "PDBX_STRUCT_ASSEMBLY_AUTH_EVIDENCE",
@@ -30757,7 +31166,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_STRUCT_ASSEMBLY_GEN": {
          "SCHEMA_ID": "PDBX_STRUCT_ASSEMBLY_GEN",
@@ -30765,7 +31177,7 @@
          "SCHEMA_TYPE": "transactional",
          "SCHEMA_UNIT_CARDINALITY": false,
          "SCHEMA_CONTENT_CLASSES": [
-            "ADMIN_CATEGORY"
+            "DYNAMIC_CONTENT"
          ],
          "ATTRIBUTES": {
             "STRUCTURE_ID": "structure_id",
@@ -30784,9 +31196,9 @@
                "ARGUMENTS": null
             },
             "ORDINAL": {
-               "CATEGORY": null,
-               "ATTRIBUTE": null,
-               "METHOD_NAME": "rowindex()",
+               "CATEGORY": "pdbx_struct_assembly_gen",
+               "ATTRIBUTE": "ordinal",
+               "METHOD_NAME": null,
                "ARGUMENTS": null
             },
             "ASSEMBLY_ID": {
@@ -30834,7 +31246,7 @@
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": false,
                "CONTENT_CLASSES": [
-                  "ADMIN_CATEGORY"
+                  "DYNAMIC_CONTENT"
                ]
             },
             "ASSEMBLY_ID": {
@@ -30898,7 +31310,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_STRUCT_ASSEMBLY_PROP": {
          "SCHEMA_ID": "PDBX_STRUCT_ASSEMBLY_PROP",
@@ -31017,7 +31432,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_STRUCT_CHEM_COMP_DIAGNOSTICS": {
          "SCHEMA_ID": "PDBX_STRUCT_CHEM_COMP_DIAGNOSTICS",
@@ -31211,7 +31629,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_STRUCT_CONN_ANGLE": {
          "SCHEMA_ID": "PDBX_STRUCT_CONN_ANGLE",
@@ -31885,7 +32306,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_STRUCT_ENTITY_INST": {
          "SCHEMA_ID": "PDBX_STRUCT_ENTITY_INST",
@@ -32001,7 +32425,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_STRUCT_LEGACY_OPER_LIST": {
          "SCHEMA_ID": "PDBX_STRUCT_LEGACY_OPER_LIST",
@@ -32326,7 +32753,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_STRUCT_MOD_RESIDUE": {
          "SCHEMA_ID": "PDBX_STRUCT_MOD_RESIDUE",
@@ -32576,7 +33006,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_STRUCT_MSYM_GEN": {
          "SCHEMA_ID": "PDBX_STRUCT_MSYM_GEN",
@@ -32696,7 +33129,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_STRUCT_OPER_LIST": {
          "SCHEMA_ID": "PDBX_STRUCT_OPER_LIST",
@@ -33059,7 +33495,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_STRUCT_SHEET_HBOND": {
          "SCHEMA_ID": "PDBX_STRUCT_SHEET_HBOND",
@@ -33521,7 +33960,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_STRUCT_SPECIAL_SYMMETRY": {
          "SCHEMA_ID": "PDBX_STRUCT_SPECIAL_SYMMETRY",
@@ -33752,7 +34194,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_UNOBS_OR_ZERO_OCC_ATOMS": {
          "SCHEMA_ID": "PDBX_UNOBS_OR_ZERO_OCC_ATOMS",
@@ -34077,7 +34522,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_UNOBS_OR_ZERO_OCC_RESIDUES": {
          "SCHEMA_ID": "PDBX_UNOBS_OR_ZERO_OCC_RESIDUES",
@@ -34345,7 +34793,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_VALIDATE_CHIRAL": {
          "SCHEMA_ID": "PDBX_VALIDATE_CHIRAL",
@@ -34576,7 +35027,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_VALIDATE_CLOSE_CONTACT": {
          "SCHEMA_ID": "PDBX_VALIDATE_CLOSE_CONTACT",
@@ -34922,7 +35376,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_VALIDATE_MAIN_CHAIN_PLANE": {
          "SCHEMA_ID": "PDBX_VALIDATE_MAIN_CHAIN_PLANE",
@@ -35133,7 +35590,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_VALIDATE_PEPTIDE_OMEGA": {
          "SCHEMA_ID": "PDBX_VALIDATE_PEPTIDE_OMEGA",
@@ -35439,7 +35899,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_VALIDATE_PLANES": {
          "SCHEMA_ID": "PDBX_VALIDATE_PLANES",
@@ -35669,7 +36132,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_VALIDATE_POLYMER_LINKAGE": {
          "SCHEMA_ID": "PDBX_VALIDATE_POLYMER_LINKAGE",
@@ -36013,7 +36479,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_VALIDATE_RMSD_ANGLE": {
          "SCHEMA_ID": "PDBX_VALIDATE_RMSD_ANGLE",
@@ -36547,7 +37016,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_VALIDATE_RMSD_BOND": {
          "SCHEMA_ID": "PDBX_VALIDATE_RMSD_BOND",
@@ -36967,7 +37439,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_VALIDATE_SYMM_CONTACT": {
          "SCHEMA_ID": "PDBX_VALIDATE_SYMM_CONTACT",
@@ -37349,7 +37824,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_VALIDATE_TORSION": {
          "SCHEMA_ID": "PDBX_VALIDATE_TORSION",
@@ -37579,7 +38057,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_XPLOR_FILE": {
          "SCHEMA_ID": "PDBX_XPLOR_FILE",
@@ -37716,7 +38197,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PHASING": {
          "SCHEMA_ID": "PHASING",
@@ -37794,7 +38278,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PHASING_MAD": {
          "SCHEMA_ID": "PHASING_MAD",
@@ -38040,7 +38527,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PHASING_MAD_CLUST": {
          "SCHEMA_ID": "PHASING_MAD_CLUST",
@@ -38140,7 +38630,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PHASING_MAD_EXPT": {
          "SCHEMA_ID": "PHASING_MAD_EXPT",
@@ -38243,7 +38736,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PHASING_MAD_SET": {
          "SCHEMA_ID": "PHASING_MAD_SET",
@@ -38518,7 +39014,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PHASING_MIR": {
          "SCHEMA_ID": "PHASING_MIR",
@@ -38770,7 +39269,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PHASING_MIR_DER": {
          "SCHEMA_ID": "PHASING_MIR_DER",
@@ -39163,7 +39665,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PHASING_MIR_DER_SHELL": {
          "SCHEMA_ID": "PHASING_MIR_DER_SHELL",
@@ -39447,7 +39952,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PHASING_MIR_DER_SITE": {
          "SCHEMA_ID": "PHASING_MIR_DER_SITE",
@@ -39801,7 +40309,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PHASING_MIR_SHELL": {
          "SCHEMA_ID": "PHASING_MIR_SHELL",
@@ -40028,7 +40539,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PHASING_SET": {
          "SCHEMA_ID": "PHASING_SET",
@@ -40264,7 +40778,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "RCSB_LOAD_STATUS": {
          "SCHEMA_ID": "RCSB_LOAD_STATUS",
@@ -40272,7 +40789,7 @@
          "SCHEMA_TYPE": "transactional",
          "SCHEMA_UNIT_CARDINALITY": true,
          "SCHEMA_CONTENT_CLASSES": [
-            "ADMIN_CATEGORY"
+            "DYNAMIC_CONTENT"
          ],
          "ATTRIBUTES": {
             "STRUCTURE_ID": "structure_id",
@@ -40288,21 +40805,21 @@
                "ARGUMENTS": null
             },
             "DATABLOCK_NAME": {
-               "CATEGORY": null,
-               "ATTRIBUTE": null,
-               "METHOD_NAME": "datablockid()",
+               "CATEGORY": "rcsb_load_status",
+               "ATTRIBUTE": "datablock_name",
+               "METHOD_NAME": null,
                "ARGUMENTS": null
             },
             "LOAD_DATE": {
-               "CATEGORY": null,
-               "ATTRIBUTE": null,
-               "METHOD_NAME": "getDateTime()",
+               "CATEGORY": "rcsb_load_status",
+               "ATTRIBUTE": "load_date",
+               "METHOD_NAME": null,
                "ARGUMENTS": null
             },
             "LOCATOR": {
-               "CATEGORY": null,
-               "ATTRIBUTE": null,
-               "METHOD_NAME": "getLocator()",
+               "CATEGORY": "rcsb_load_status",
+               "ATTRIBUTE": "locator",
+               "METHOD_NAME": null,
                "ARGUMENTS": null
             }
          },
@@ -40332,7 +40849,7 @@
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": [
-                  "ADMIN_CATEGORY"
+                  "DYNAMIC_CONTENT"
                ]
             },
             "LOAD_DATE": {
@@ -40346,7 +40863,7 @@
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": [
-                  "ADMIN_CATEGORY"
+                  "DYNAMIC_CONTENT"
                ]
             },
             "LOCATOR": {
@@ -40360,7 +40877,7 @@
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": [
-                  "ADMIN_CATEGORY"
+                  "DYNAMIC_CONTENT"
                ]
             }
          },
@@ -40388,7 +40905,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "REFINE": {
          "SCHEMA_ID": "REFINE",
@@ -41887,7 +42407,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "REFINE_B_ISO": {
          "SCHEMA_ID": "REFINE_B_ISO",
@@ -42028,7 +42551,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "REFINE_ANALYZE": {
          "SCHEMA_ID": "REFINE_ANALYZE",
@@ -42324,7 +42850,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "REFINE_FUNCT_MINIMIZED": {
          "SCHEMA_ID": "REFINE_FUNCT_MINIMIZED",
@@ -42426,7 +42955,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "REFINE_HIST": {
          "SCHEMA_ID": "REFINE_HIST",
@@ -42729,7 +43261,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "REFINE_LS_RESTR": {
          "SCHEMA_ID": "REFINE_LS_RESTR",
@@ -42925,7 +43460,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "REFINE_LS_RESTR_NCS": {
          "SCHEMA_ID": "REFINE_LS_RESTR_NCS",
@@ -43269,7 +43807,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "REFINE_LS_SHELL": {
          "SCHEMA_ID": "REFINE_LS_SHELL",
@@ -43732,7 +44273,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "REFINE_OCCUPANCY": {
          "SCHEMA_ID": "REFINE_OCCUPANCY",
@@ -43852,7 +44396,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "REFLN": {
          "SCHEMA_ID": "REFLN",
@@ -44220,7 +44767,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "REFLN_SYS_ABS": {
          "SCHEMA_ID": "REFLN_SYS_ABS",
@@ -44397,7 +44947,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "REFLNS": {
          "SCHEMA_ID": "REFLNS",
@@ -45250,7 +45803,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "REFLNS_SCALE": {
          "SCHEMA_ID": "REFLNS_SCALE",
@@ -45331,7 +45887,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "REFLNS_SHELL": {
          "SCHEMA_ID": "REFLNS_SHELL",
@@ -45934,7 +46493,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "SOFTWARE": {
          "SCHEMA_ID": "SOFTWARE",
@@ -46228,7 +46790,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "SPACE_GROUP": {
          "SCHEMA_ID": "SPACE_GROUP",
@@ -46382,7 +46947,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "SPACE_GROUP_SYMOP": {
          "SCHEMA_ID": "SPACE_GROUP_SYMOP",
@@ -46480,7 +47048,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT": {
          "SCHEMA_ID": "STRUCT",
@@ -46657,7 +47228,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_ASYM": {
          "SCHEMA_ID": "STRUCT_ASYM",
@@ -46801,7 +47375,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_BIOL": {
          "SCHEMA_ID": "STRUCT_BIOL",
@@ -46975,7 +47552,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_BIOL_KEYWORDS": {
          "SCHEMA_ID": "STRUCT_BIOL_KEYWORDS",
@@ -47074,7 +47654,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_CONF": {
          "SCHEMA_ID": "STRUCT_CONF",
@@ -47513,7 +48096,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_CONF_TYPE": {
          "SCHEMA_ID": "STRUCT_CONF_TYPE",
@@ -47593,7 +48179,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_CONN": {
          "SCHEMA_ID": "STRUCT_CONN",
@@ -47610,15 +48199,19 @@
             "PDBX_DIST_VALUE": "pdbx_dist_value",
             "PDBX_LEAVING_ATOM_FLAG": "pdbx_leaving_atom_flag",
             "PDBX_PTNR1_PDB_INS_CODE": "pdbx_ptnr1_PDB_ins_code",
+            "PDBX_PTNR1_ATOM_STEREO_CONFIG": "pdbx_ptnr1_atom_stereo_config",
             "PDBX_PTNR1_AUTH_ALT_ID": "pdbx_ptnr1_auth_alt_id",
             "PDBX_PTNR1_LABEL_ALT_ID": "pdbx_ptnr1_label_alt_id",
+            "PDBX_PTNR1_LEAVING_ATOM_ID": "pdbx_ptnr1_leaving_atom_id",
             "PDBX_PTNR1_MOD_NAME": "pdbx_ptnr1_mod_name",
             "PDBX_PTNR1_REPLACED_ATOM": "pdbx_ptnr1_replaced_atom",
             "PDBX_PTNR1_STANDARD_COMP_ID": "pdbx_ptnr1_standard_comp_id",
             "PDBX_PTNR1_SUGAR_NAME": "pdbx_ptnr1_sugar_name",
             "PDBX_PTNR2_PDB_INS_CODE": "pdbx_ptnr2_PDB_ins_code",
+            "PDBX_PTNR2_ATOM_STEREO_CONFIG": "pdbx_ptnr2_atom_stereo_config",
             "PDBX_PTNR2_AUTH_ALT_ID": "pdbx_ptnr2_auth_alt_id",
             "PDBX_PTNR2_LABEL_ALT_ID": "pdbx_ptnr2_label_alt_id",
+            "PDBX_PTNR2_LEAVING_ATOM_ID": "pdbx_ptnr2_leaving_atom_id",
             "PDBX_PTNR3_PDB_INS_CODE": "pdbx_ptnr3_PDB_ins_code",
             "PDBX_PTNR3_AUTH_ALT_ID": "pdbx_ptnr3_auth_alt_id",
             "PDBX_PTNR3_AUTH_ASYM_ID": "pdbx_ptnr3_auth_asym_id",
@@ -48171,7 +48764,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_CONN_TYPE": {
          "SCHEMA_ID": "STRUCT_CONN_TYPE",
@@ -48251,7 +48847,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_KEYWORDS": {
          "SCHEMA_ID": "STRUCT_KEYWORDS",
@@ -48368,7 +48967,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_MON_PROT_CIS": {
          "SCHEMA_ID": "STRUCT_MON_PROT_CIS",
@@ -48753,7 +49355,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_NCS_DOM": {
          "SCHEMA_ID": "STRUCT_NCS_DOM",
@@ -48871,7 +49476,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_NCS_DOM_LIM": {
          "SCHEMA_ID": "STRUCT_NCS_DOM_LIM",
@@ -49259,7 +49867,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_NCS_ENS": {
          "SCHEMA_ID": "STRUCT_NCS_ENS",
@@ -49357,7 +49968,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_NCS_OPER": {
          "SCHEMA_ID": "STRUCT_NCS_OPER",
@@ -49701,7 +50315,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_REF": {
          "SCHEMA_ID": "STRUCT_REF",
@@ -49919,7 +50536,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_REF_SEQ": {
          "SCHEMA_ID": "STRUCT_REF_SEQ",
@@ -50264,7 +50884,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_REF_SEQ_DIF": {
          "SCHEMA_ID": "STRUCT_REF_SEQ_DIF",
@@ -50570,7 +51193,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_SHEET": {
          "SCHEMA_ID": "STRUCT_SHEET",
@@ -50669,7 +51295,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_SHEET_HBOND": {
          "SCHEMA_ID": "STRUCT_SHEET_HBOND",
@@ -51089,7 +51718,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_SHEET_ORDER": {
          "SCHEMA_ID": "STRUCT_SHEET_ORDER",
@@ -51229,7 +51861,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_SHEET_RANGE": {
          "SCHEMA_ID": "STRUCT_SHEET_RANGE",
@@ -51595,7 +52230,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_SITE": {
          "SCHEMA_ID": "STRUCT_SITE",
@@ -51788,7 +52426,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_SITE_GEN": {
          "SCHEMA_ID": "STRUCT_SITE_GEN",
@@ -52062,7 +52703,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "STRUCT_SITE_KEYWORDS": {
          "SCHEMA_ID": "STRUCT_SITE_KEYWORDS",
@@ -52161,7 +52805,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "SYMMETRY": {
          "SCHEMA_ID": "SYMMETRY",
@@ -52334,7 +52981,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "SYMMETRY_EQUIV": {
          "SCHEMA_ID": "SYMMETRY_EQUIV",
@@ -52431,7 +53081,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       }
    },
    "DOCUMENT_DICT": {
@@ -52441,9 +53094,13 @@
             "pdbx_ext_v5_0_2"
          ]
       },
-      "COLLECTION_DOCUMENT_ATTRIBUTE_NAME": {
-         "pdbx_v5_0_2": "entry.id",
-         "pdbx_ext_v5_0_2": "entry.id"
+      "COLLECTION_DOCUMENT_ATTRIBUTE_NAMES": {
+         "pdbx_v5_0_2": [
+            "entry.id"
+         ],
+         "pdbx_ext_v5_0_2": [
+            "entry.id"
+         ]
       },
       "COLLECTION_CONTENT": {
          "pdbx_v5_0_2": {
@@ -52476,7 +53133,8 @@
                "ATOM_SITE_ANISOTROP",
                "PDBX_UNOBS_OR_ZERO_OCC_ATOMS",
                "PDBX_UNOBS_OR_ZERO_OCC_RESIDUES"
-            ]
+            ],
+            "SLICE_FILTER": null
          },
          "pdbx_ext_v5_0_2": {
             "INCLUDE": [
@@ -52506,8 +53164,11 @@
                "STRUCT_CONN_TYPE",
                "RCSB_LOAD_STATUS"
             ],
-            "EXCLUDE": []
+            "EXCLUDE": [],
+            "SLICE_FILTER": null
          }
       }
-   }
+   },
+   "SLICE_PARENT_ITEMS": {},
+   "SLICE_PARENT_FILTERS": {}
 }

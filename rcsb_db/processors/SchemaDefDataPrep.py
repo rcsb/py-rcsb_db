@@ -21,6 +21,8 @@
 #      18-Jun-2018  jdw Handle all IO using MarshalUtil(), eliminate adhoc status table,
 #                       add new dynamic methods -
 #      19-Jun-2018  jdw Change file paths to locator lists -
+#       6-Aug-2018  jdw Move properties stored locally in __loadInfo to the base container
+#                       deprecating __loadInfo in this class
 #
 #
 ##
@@ -37,11 +39,11 @@ __license__ = "Apache 2.0"
 
 import datetime
 import logging
-import pickle
 import time
-from operator import itemgetter
 
 from rcsb_db.io.MarshalUtil import MarshalUtil
+from rcsb_db.processors.SchemaDefReShape import SchemaDefReShape
+
 
 logger = logging.getLogger(__name__)
 
@@ -52,39 +54,40 @@ class SchemaDefDataPrep(object):
         with an external schema definition defined in class SchemaDefBase().
     """
 
-    def __init__(self, schemaDefObj, dtObj=None, workPath=None, verbose=True):
+    def __init__(self, schemaDefAccessObj, dtObj=None, workPath=None, verbose=True):
         self.__verbose = verbose
         self.__workPath = workPath
         self.__debug = False
-        self.__sD = schemaDefObj
+        self.__sD = schemaDefAccessObj
         self.__mU = MarshalUtil(workPath=workPath)
         self.__dtObj = dtObj
         #
         self.__overWrite = {}
         #
-        self.__tableIdExcludeD = {}
-        self.__tableIdIncludeD = {}
-        self.__loadInfo = {}
+        self.__schemaIdExcludeD = {}
+        self.__schemaIdIncludeD = {}
+        #
+        self.__reShape = SchemaDefReShape(schemaDefAccessObj, workPath=workPath, verbose=verbose)
         #
 
-    def setTableIdExcludeList(self, tableIdList):
-        """ Set list of table Ids to be excluded from any data extraction operations.
+    def setSchemaIdExcludeList(self, schemaIdList):
+        """ Set list of schema Ids to be excluded from any data extraction operations.
         """
         try:
-            self.__tableIdExcludeD = {tId: True for tId in tableIdList}
+            self.__schemaIdExcludeD = {sId: True for sId in schemaIdList}
             return True
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
         return False
 
-    def setTableIdIncludeList(self, tableIdList):
-        """ Set list of table Ids for inclusion in any data extraction operations. (subject to exclusion).
+    def setSchemaIdIncludeList(self, schemaIdList):
+        """ Set list of schema Ids for inclusion in any data extraction operations. (subject to exclusion).
 
             This list will limit the candidate tables selected from the current schema and exclusions if
             specified will still be applied.
         """
         try:
-            self.__tableIdIncludeD = {tId: True for tId in tableIdList}
+            self.__schemaIdIncludeD = {sId: True for sId in schemaIdList}
             return True
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -102,7 +105,6 @@ class SchemaDefDataPrep(object):
         for lPath in locatorList:
             myContainerList = self.__mU.doImport(lPath, format="mmcif")
             for c in myContainerList:
-                self.__loadInfo[c.getName()] = {'load_date': self.__getTimeStamp(), 'locator': lPath}
                 cL.append(c)
         return cL
 
@@ -113,7 +115,7 @@ class SchemaDefDataPrep(object):
             one collection of tables.     The organization of the loadable data is controlled
             by the style preference:
 
-            Returns: tableDataDict, containerNameList
+            Returns: schemaDataDict, containerNameList
 
                  For styleType settings:
 
@@ -125,17 +127,17 @@ class SchemaDefDataPrep(object):
                 filterTypes: "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
 
         """
-        tableDataDictById, containerNameList, _ = self.__fetch(locatorList, filterType, dataSelectors=dataSelectors)
-        tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType)
-        return tableDataDict, containerNameList
+        schemaDataDictById, containerNameList, _ = self.__fetch(locatorList, filterType, dataSelectors=dataSelectors)
+        schemaDataDict = self.__reShape.applyShape(schemaDataDictById, styleType=styleType)
+        return schemaDataDict, containerNameList
 
-    def fetchDocuments(self, locatorList, styleType="rowwise_by_id", filterType="none", logSize=False, dataSelectors=None):
-        """ Return a dictionary of loadable data for each table defined in the current schema
+    def fetchDocuments(self, locatorList, styleType="rowwise_by_id", filterType="none", logSize=False, dataSelectors=None, sliceFilter=None):
+        """ Return a list of dictionaries of loadable data for each table defined in the current schema
             definition object.   Data are extracted from the each input file, and each data
             set is stored in a separate schema instance (document).  The organization
             of the loadable data is controlled by the style preference:
 
-            Returns: tableDataDictList, containerNameList
+            Returns: schemaDataDictList, containerNameList
 
                  For styleType settings:
 
@@ -146,20 +148,21 @@ class SchemaDefDataPrep(object):
 
                  filterTypes: "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
 
+                 sliceFilter: name of slice filter
         """
-        tableDataDictList = []
+        schemaDataDictList = []
         containerNameList = []
         rejectPathList = []
         for locator in locatorList:
-            tableDataDictById, cnList, rL = self.__fetch([locator], filterType, dataSelectors=dataSelectors)
+            schemaDataDictById, cnList, rL = self.__fetch([locator], filterType, dataSelectors=dataSelectors)
             rejectPathList.extend(rL)
-            if not tableDataDictById:
+            if not schemaDataDictById:
                 continue
-            tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType, logSize=logSize)
-            tableDataDictList.append(tableDataDict)
+            sddL = self.__reShape.applySlicedShape(schemaDataDictById, styleType=styleType, sliceFilter=sliceFilter)
+            schemaDataDictList.extend(sddL)
             containerNameList.extend(cnList)
         #
-        return tableDataDictList, containerNameList, rejectPathList
+        return schemaDataDictList, containerNameList, rejectPathList
 
     def process(self, containerList, styleType="rowwise_by_id", filterType="none", dataSelectors=None):
         """ Return a dictionary of loadable data for each table defined in the current schema
@@ -167,7 +170,7 @@ class SchemaDefDataPrep(object):
             and this is added in single schema instance such that data from multiple files are appended to a
             one collection of tables.  The organization of the loadable data is controlled by the style preference:
 
-            Returns: tableDataDict, containerNameList
+            Returns: schemaDataDict, containerNameList
 
                  For styleType settings:
 
@@ -180,18 +183,18 @@ class SchemaDefDataPrep(object):
 
 
         """
-        tableDataDictById, containerNameList, _ = self.__process(containerList, filterType, dataSelectors=dataSelectors)
-        tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType)
+        schemaDataDictById, containerNameList, _ = self.__process(containerList, filterType, dataSelectors=dataSelectors)
+        schemaDataDict = self.__reShape.applyShape(schemaDataDictById, styleType=styleType)
 
-        return tableDataDict, containerNameList
+        return schemaDataDict, containerNameList
 
-    def processDocuments(self, containerList, styleType="rowwise_by_id", filterType="none", logSize=False, dataSelectors=None):
-        """ Return a dictionary of loadable data for each table defined in the current schema
+    def processDocuments(self, containerList, styleType="rowwise_by_id", filterType="none", logSize=False, dataSelectors=None, sliceFilter=None):
+        """ Return a list of dictionaries of loadable data for each table defined in the current schema
             definition object.   Data are extracted from the each input container, and each data
             set is stored in a separate schema instance (document).  The organization of the loadable
             data is controlled by the style preference:
 
-            Returns: tableDataDictList, containerNameList
+            Returns: schemaDataDictList, containerNameList
 
                  For styleType settings:
 
@@ -201,23 +204,25 @@ class SchemaDefDataPrep(object):
                      columnwise_by_name: dict[<tableName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
 
             filterTypes:  "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
+
+            sliceFilter: name of slice filter
         """
-        tableDataDictList = []
+        schemaDataDictList = []
         containerNameList = []
         rejectList = []
         for container in containerList:
-            tableDataDictById, cnList, rL = self.__process([container], filterType, dataSelectors=dataSelectors)
+            schemaDataDictById, cnList, rL = self.__process([container], filterType, dataSelectors=dataSelectors)
             rejectList.extend(rL)
-            if not tableDataDictById:
+            if not schemaDataDictById:
                 continue
             #
-            tableDataDict = self.__transformTableData(tableDataDictById, styleType=styleType, logSize=logSize)
-            tableDataDictList.append(tableDataDict)
+            sddL = self.__reShape.applySlicedShape(schemaDataDictById, styleType=styleType, sliceFilter=sliceFilter)
+            schemaDataDictList.extend(sddL)
             containerNameList.extend(cnList)
 
         rejectList = list(set(rejectList))
         #
-        return tableDataDictList, containerNameList, rejectList
+        return schemaDataDictList, containerNameList, rejectList
 
     def __fetch(self, locatorList, filterType, dataSelectors=None):
         """ Internal method to create loadable data corresponding to the table schema definition
@@ -232,26 +237,26 @@ class SchemaDefDataPrep(object):
         #
         rejectPathList = []
         containerNameList = []
-        tableDataDict = {}
+        schemaDataDict = {}
         for lPath in locatorList:
             myContainerList = self.__mU.doImport(lPath, format="mmcif")
             cL = []
             for c in myContainerList:
                 if self.__testdataSelectors(c, dataSelectors):
                     cL.append(c)
-                    self.__loadInfo[c.getName()] = {'load_date': self.__getTimeStamp(), 'locator': lPath}
+                    #self.__loadInfo[c.getName()] = {'load_date': self.__getTimeStamp(), 'locator': lPath}
                 else:
                     rejectPathList.append(lPath)
-            self.__mapData(cL, tableDataDict, filterType)
+            self.__mapData(cL, schemaDataDict, filterType)
             containerNameList.extend([myC.getName() for myC in myContainerList])
         #
-        tableDataDictF = {}
+        schemaDataDictF = {}
         if 'drop-empty-tables' in filterType:
-            for k, v in tableDataDict.items():
+            for k, v in schemaDataDict.items():
                 if len(v) > 0:
-                    tableDataDictF[k] = v
+                    schemaDataDictF[k] = v
         else:
-            tableDataDictF = tableDataDict
+            schemaDataDictF = schemaDataDict
         #
         rejectPathList = list(set(rejectPathList))
         #
@@ -261,7 +266,7 @@ class SchemaDefDataPrep(object):
         logger.debug("completed at %s (%.3f seconds)" %
                      (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
 
-        return tableDataDictF, containerNameList, rejectPathList
+        return schemaDataDictF, containerNameList, rejectPathList
 
     def __process(self, containerList, filterType, dataSelectors=None):
         """ Internal method to create loadable data corresponding to the table schema definition
@@ -277,35 +282,36 @@ class SchemaDefDataPrep(object):
         #
         rejectList = []
         containerNameList = []
-        tableDataDict = {}
+        schemaDataDict = {}
         cL = []
         for c in containerList:
             if self.__testdataSelectors(c, dataSelectors):
                 cL.append(c)
             else:
                 try:
-                    rejectList.append(self.__loadInfo[c.getName()]['locator'])
+                    # rejectList.append(self.__loadInfo[c.getName()]['locator'])
+                    rejectList.append(c.getProp['locator'])
                 except Exception:
                     rejectList.append(c.getName())
         #
-        self.__mapData(cL, tableDataDict, filterType)
+        self.__mapData(cL, schemaDataDict, filterType)
         containerNameList.extend([myC.getName() for myC in containerList])
         #
         #
-        tableDataDictF = {}
+        schemaDataDictF = {}
         if 'drop-empty-tables' in filterType:
-            for k, v in tableDataDict.items():
+            for k, v in schemaDataDict.items():
                 if len(v) > 0:
-                    tableDataDictF[k] = v
+                    schemaDataDictF[k] = v
         else:
-            tableDataDictF = tableDataDict
+            schemaDataDictF = schemaDataDict
         #
         #
         endTime = time.time()
         logger.debug("completed at %s (%.3f seconds)\n" %
                      (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
 
-        return tableDataDictF, containerNameList, rejectList
+        return schemaDataDictF, containerNameList, rejectList
 
     def __testdataSelectors(self, container, dataSelectors):
         """ Test the if the input container satisfies the input content/data selectors.
@@ -345,125 +351,6 @@ class SchemaDefDataPrep(object):
 
         return False
 
-    def __transformTableData(self, tableDataDictById, styleType="rowwise_by_name", logSize=False):
-        """  Reorganize and rename input table data object according to the input style preference:
-
-             Input: tableDataDictById  (styleType="rowwise_by_id")
-                                         dict[<tableId>]   = [ row1asDict[attributeId]=value,  row2asDict[attribute]=value, .. ]
-
-             Output: rowwise_by_name:     dict[<tableName>] = [ row1Dict[attributeName]=value,  row2dict[], .. ]
-                     rowwise_no_name:    dict[<tableName>] = {'attributes': [atName1, atName2,... ], 'data' : [[val1, val2, .. ],[val1, val2,... ]]}
-                     columnwise_by_name: dict[<tableName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
-      rowwise_by_name_with_cardinality:  same as rowwise_byName with special handing of tables with unit cardinality
-                                                          dict[<tableName>] = row1Dict[attributeName]=value (singleton row)
-        """
-        rD = {}
-        tupL = []
-        sum = 0.0
-        try:
-            if styleType == "rowwise_by_name":
-                for tableId in tableDataDictById:
-                    tableDef = self.__sD.getSchemaObject(tableId)
-                    tableName = self.__sD.getSchemaName(tableId)
-                    iRowDList = tableDataDictById[tableId]
-                    oRowDList = []
-                    for iRowD in iRowDList:
-                        oRowD = {}
-                        for atId in iRowD:
-                            oRowD[tableDef.getAttributeName(atId)] = iRowD[atId]
-                        oRowDList.append(oRowD)
-                    rD[tableName] = oRowDList
-                    #
-                    if logSize:
-                        megaBytes = float(len(pickle.dumps(iRowDList, protocol=0))) / 1000000.0
-                        tupL.append((tableId, megaBytes))
-                        sum += megaBytes
-
-            elif styleType == "rowwise_by_name_with_cardinality":
-                for tableId in tableDataDictById:
-                    tableDef = self.__sD.getSchemaObject(tableId)
-                    tableName = self.__sD.getSchemaName(tableId)
-                    unitCard = self.__sD.hasUnitCardinality(tableId)
-                    iRowDList = tableDataDictById[tableId]
-                    #
-                    if unitCard and len(iRowDList) == 1:
-                        iRowD = iRowDList[0]
-                        oRowD = {}
-                        for atId in iRowD:
-                            oRowD[tableDef.getAttributeName(atId)] = iRowD[atId]
-                        rD[tableName] = oRowD
-                    else:
-                        oRowDList = []
-                        for iRowD in iRowDList:
-                            oRowD = {}
-                            for atId in iRowD:
-                                oRowD[tableDef.getAttributeName(atId)] = iRowD[atId]
-                            oRowDList.append(oRowD)
-                        rD[tableName] = oRowDList
-                    #
-                    if logSize:
-                        megaBytes = float(len(pickle.dumps(iRowDList, protocol=0))) / 1000000.0
-                        tupL.append((tableId, megaBytes))
-                        sum += megaBytes
-
-                        #
-            elif styleType == "columnwise_by_name":
-                for tableId in tableDataDictById:
-                    tableDef = self.__sD.getSchemaObject(tableId)
-                    tableName = self.__sD.getSchemaName(tableId)
-                    iRowDList = tableDataDictById[tableId]
-                    colD = {}
-                    for iRowD in iRowDList:
-                        for atId in iRowD:
-                            atName = tableDef.getAttributeName(atId)
-                            if atName not in colD:
-                                colD[atName] = []
-                            colD[atName].append(iRowD[atId])
-                    rD[tableName] = colD
-                    #
-                    if logSize:
-                        megaBytes = float(len(pickle.dumps(iRowDList, protocol=0))) / 1000000.0
-                        tupL.append((tableId, megaBytes))
-                        sum += megaBytes
-            elif styleType == "rowwise_no_name":
-                for tableId in tableDataDictById:
-                    tableDef = self.__sD.getSchemaObject(tableId)
-                    tableName = self.__sD.getSchemaName(tableId)
-                    atIdList = self.__sD.getAttributeIdList(tableId)
-                    atNameList = self.__sD.getAttributeNameList(tableId)
-                    #
-                    iRowDList = tableDataDictById[tableId]
-                    oRowList = []
-                    for iRowD in iRowDList:
-                        oRowL = []
-                        for atId in atIdList:
-                            oRowL.append(iRowD[atId])
-                        oRowList.append(oRowL)
-                    #
-                    rD[tableName] = {'attributes': atNameList, 'data': oRowList}
-                    #
-                    if logSize:
-                        megaBytes = float(len(pickle.dumps(iRowDList, protocol=0))) / 1000000.0
-                        tupL.append((tableId, megaBytes))
-                        sum += megaBytes
-            elif styleType == "rowwise_by_id":
-                rD = tableDataDictById
-            else:
-                rD = tableDataDictById
-                logger.warning("Unsupported style type %s" % styleType)
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-            rD = tableDataDictById
-
-        if logSize:
-            if 'ENTRY' in tableDataDictById:
-                logger.debug("Table entry %r" % tableDataDictById['ENTRY'])
-            sTupL = sorted(tupL, key=itemgetter(1), reverse=True)
-            for tup in sTupL[:8]:
-                logger.debug("Transforming table id %s size %.4f (of %.4f) MB" % (tup[0], tup[1], sum))
-        #
-        return rD
-
     def __showOverwrite(self):
         #
         if (self.__verbose):
@@ -472,6 +359,9 @@ class SchemaDefDataPrep(object):
                     logger.debug("+SchemaDefLoader(load) %r maximum width %r" % (k, v))
 
     def __evalMapFunction(self, dataContainer, rowDList, attributeId, functionName, functionArgs=None):
+        """ Evaluate dynamic schema methods on the input data container.
+
+        """
         # logger.debug("Evaluating function %s on attribute %s" % (functionName, attributeId))
         fn = functionName.lower()
         cName = dataContainer.getName()
@@ -480,11 +370,15 @@ class SchemaDefDataPrep(object):
             for rowD in rowDList:
                 rowD[attributeId] = val
         elif (fn == "getdatetime()"):
-            val = self.__loadInfo[cName]['load_date'] if cName in self.__loadInfo else self.__getTimeStamp()
+            #val = self.__loadInfo[cName]['load_date'] if cName in self.__loadInfo else self.__getTimeStamp()
+            v = dataContainer.getProp('load_date')
+            val = v if v else self.__getTimeStamp()
             for rowD in rowDList:
                 rowD[attributeId] = val
         elif (fn == "getlocator()"):
-            val = self.__loadInfo[cName]['locator'] if cName in self.__loadInfo else 'unknown'
+            #val = self.__loadInfo[cName]['locator'] if cName in self.__loadInfo else 'unknown'
+            v = dataContainer.getProp('locator')
+            val = v if v else 'unknown'
             for rowD in rowDList:
                 rowD[attributeId] = val
         elif (fn == "rowindex()"):
@@ -496,7 +390,7 @@ class SchemaDefDataPrep(object):
 
         return True
 
-    def __mapData(self, containerList, tableDataDict, filterType="none"):
+    def __mapData(self, containerList, schemaDataDict, filterType="none"):
         """
            Process instance data in the input container list and map these data to the
            table schema definitions to the current selected table list.
@@ -508,8 +402,8 @@ class SchemaDefDataPrep(object):
 
         """
         # Respect any input selection otherwise use all schema defined tables -
-        if self.__tableIdIncludeD:
-            selectedTableIdList = list(self.__tableIdIncludeD.keys())
+        if self.__schemaIdIncludeD:
+            selectedTableIdList = list(self.__schemaIdIncludeD.keys())
         else:
             selectedTableIdList = self.__sD.getSchemaIdList()
         #
@@ -518,11 +412,11 @@ class SchemaDefDataPrep(object):
                 if not self.__sD.hasSchemaObject(tableId):
                     logger.debug("Skipping undefined table %s" % tableId)
                     continue
-                if tableId in self.__tableIdExcludeD:
+                if tableId in self.__schemaIdExcludeD:
                     logger.debug("Skipping excluded table %s" % tableId)
                     continue
-                if tableId not in tableDataDict:
-                    tableDataDict[tableId] = []
+                if tableId not in schemaDataDict:
+                    schemaDataDict[tableId] = []
                 tObj = self.__sD.getSchemaObject(tableId)
                 #
                 # Instance categories that are mapped to the current table -
@@ -538,7 +432,7 @@ class SchemaDefDataPrep(object):
                 if numMapCategories == 1:
                     rowDList = self.__mapInstanceCategory(tObj, mapCategoryNameList[0], myContainer, filterType)
                 elif numMapCategories == 0:
-                    # For apurely synthetic category with only method mappings,  create a placeholder row dictionary.
+                    # For a purely synthetic category with only method mappings,  create a placeholder row dictionary.
                     rowDList = [{k: None for k in otherAttributeIdList}]
                 elif numMapCategories >= 1:
                     rowDList = self.__mapInstanceCategoryList(tObj, mapCategoryNameList, myContainer, filterType)
@@ -548,9 +442,9 @@ class SchemaDefDataPrep(object):
                     fArgs = tObj.getMapAttributeFunctionArgs(atId)
                     self.__evalMapFunction(dataContainer=myContainer, rowDList=rowDList, attributeId=atId, functionName=fName, functionArgs=fArgs)
 
-                tableDataDict[tableId].extend(rowDList)
+                schemaDataDict[tableId].extend(rowDList)
 
-        return tableDataDict
+        return schemaDataDict
 
     def __mapInstanceCategory(self, tObj, categoryName, myContainer, filterType):
         """ Extract data from the input instance category and map these data to the organization

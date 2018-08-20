@@ -132,7 +132,7 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
             inputPathList.extend(self.__schU.getPathList(schemaName='bird_family'))
             #
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
-                sdl = SchemaDefLoader(schemaDefObj=sd, dbCon=client, workPath=os.path.join(HERE, "test-output"),
+                sdl = SchemaDefLoader(self.__cfgOb, schemaDefObj=sd, dbCon=client, workPath=os.path.join(HERE, "test-output"),
                                       cleanUp=False, warnings='error', verbose=self.__verbose)
                 ok = sdl.load(inputPathList=inputPathList, loadType='batch-file')
                 self.assertTrue(ok)
@@ -149,7 +149,7 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
             inputPathList.extend(self.__schU.getPathList(schemaName='bird_family'))
             #
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
-                sdl = SchemaDefLoader(schemaDefObj=sd, dbCon=client, workPath=os.path.join(HERE, "test-output"),
+                sdl = SchemaDefLoader(self.__cfgOb, schemaDefObj=sd, dbCon=client, workPath=os.path.join(HERE, "test-output"),
                                       cleanUp=False, warnings='error', verbose=self.__verbose)
                 sdl.load(inputPathList=inputPathList, loadType='batch-file')
                 #
@@ -170,7 +170,7 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
             self.__schemaCreate(schemaDefObj=sd)
             inputPathList = self.__schU.getPathList(schemaName='chem_comp')
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
-                sdl = SchemaDefLoader(schemaDefObj=sd, dbCon=client, workPath=os.path.join(HERE, "test-output"),
+                sdl = SchemaDefLoader(self.__cfgOb, schemaDefObj=sd, dbCon=client, workPath=os.path.join(HERE, "test-output"),
                                       cleanUp=False, warnings='error', verbose=self.__verbose)
                 ok = sdl.load(inputPathList=inputPathList, loadType='batch-file')
                 self.assertTrue(ok)
@@ -185,7 +185,7 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
             inputPathList = self.__schU.getPathList(schemaName='pdbx')
             logger.debug("Input path list %r " % inputPathList)
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
-                sdl = SchemaDefLoader(schemaDefObj=sd, dbCon=client, workPath=os.path.join(HERE, "test-output"),
+                sdl = SchemaDefLoader(self.__cfgOb, schemaDefObj=sd, dbCon=client, workPath=os.path.join(HERE, "test-output"),
                                       cleanUp=False, warnings='error', verbose=self.__verbose)
                 ok = sdl.load(inputPathList=inputPathList, loadType='batch-insert', deleteOpt='all')
                 self.assertTrue(ok)

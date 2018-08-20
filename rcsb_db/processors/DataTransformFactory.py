@@ -69,8 +69,8 @@ class DataTransformFactory(object):
 
     """
 
-    def __init__(self, schemaDefObj, filterType):
-        self.__sD = schemaDefObj
+    def __init__(self, schemaDefAccessObj, filterType):
+        self.__sD = schemaDefAccessObj
         self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
         logger.debug("filterType %r" % filterType)
         logger.debug("Schema database %r" % self.__sD.getDatabaseName())

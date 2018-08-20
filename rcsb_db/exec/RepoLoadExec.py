@@ -14,6 +14,7 @@
 #     3-Jul-2018 - jdw specialize for repository loading.
 #    14-Jul-2018 - jdw add loading of separate
 #    25-Jul-2018 - jdw die on input file path list processing error
+#    20-Aug-2018 - jdw add pdbx_core load option
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -68,6 +69,7 @@ def main():
     parser.add_argument("--load_bird_ref", default=False, action='store_true', help="Load Bird reference definitions (public subset)")
     parser.add_argument("--load_bird_family_ref", default=False, action='store_true', help="Load Bird Family reference definitions (public subset)")
     parser.add_argument("--load_entry_data", default=False, action='store_true', help="Load PDB entry data (current released subset)")
+    parser.add_argument("--load_entry_core_data", default=False, action='store_true', help="Load PDB core entry data (current released subset)")
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
     parser.add_argument("--config_name", default="DEFAULT", help="Configuration section name")
@@ -190,6 +192,12 @@ def main():
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
+        if args.load_entry_core_data:
+            ok = mw.load('pdbx_core', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
+                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+        #
         logger.info("Operation completed with status %r " % ok and okS)
 
 

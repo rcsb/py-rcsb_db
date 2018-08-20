@@ -273,7 +273,7 @@ class MongoDbUtilTests(unittest.TestCase):
                     dList.append(self.__makeDataObj(2, 5, 5, ii))
                 #
                 keyName = 'DOC_ID'
-                rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyName=keyName, salvage=True)
+                rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyNames=[keyName], salvage=True)
                 self.assertEqual(len(rIdL), len(dList))
                 #
                 # Note that dObj is mutated by additional key '_id' that is added on insert -
@@ -362,7 +362,7 @@ class MongoDbUtilTests(unittest.TestCase):
                     dList.append(dObj)
                 #
                 keyName = 'DOC_ID'
-                rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyName=keyName, salvage=True)
+                rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyNames=[keyName], salvage=True)
                 self.assertEqual(len(rIdL), len(dList))
                 #
                 for ii, rId in enumerate(rIdL):
@@ -416,7 +416,7 @@ class MongoDbUtilTests(unittest.TestCase):
                     dList.append(dObj)
                 #
                 keyName = 'DOC_ID'
-                rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyName=keyName, salvage=True)
+                rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyNames=[keyName], salvage=True)
                 self.assertEqual(len(dList), len(rIdL))
                 #
                 for ii in range(nDocs):
@@ -463,7 +463,7 @@ class MongoDbUtilTests(unittest.TestCase):
                     dList.append(dObj)
                 #
                 keyName = 'DOC_ID'
-                rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyName=keyName, salvage=True)
+                rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyNames=[keyName], salvage=True)
                 self.assertEqual(len(dList), len(rIdL))
                 #
                 for ii in range(nDocs):

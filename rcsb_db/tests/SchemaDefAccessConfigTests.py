@@ -5,7 +5,7 @@
 # Version: 0.001
 #
 # Update:
-#
+#   20-Aug-2018 jdw Replace local getHelper() method with method in configuration class.
 ##
 """
 Tests the accessor methods for schema meta data using externally store configuration details.
@@ -66,22 +66,11 @@ class SchemaDefAccessConfigTests(unittest.TestCase):
                                                             endTime - self.__startTime))
 
     def testAccess(self):
-        schemaNames = ['pdbx', 'chem_comp', 'bird', 'bird_family', 'bird_chem_comp']
+        schemaNames = ['pdbx', 'pdbx_core', 'chem_comp', 'bird', 'bird_family', 'bird_chem_comp']
         applicationNames = ['ANY', 'SQL']
         for schemaName in schemaNames:
             for applicationName in applicationNames:
                 self.__testAccess(schemaName, applicationName)
-
-    def __getHelper(self, modulePath, **kwargs):
-        aMod = __import__(modulePath, globals(), locals(), [''])
-        sys.modules[modulePath] = aMod
-        #
-        # Strip off any leading path to the module before we instaniate the object.
-        mpL = modulePath.split('.')
-        moduleName = mpL[-1]
-        #
-        aObj = getattr(aMod, moduleName)(**kwargs)
-        return aObj
 
     def __testBuild(self, schemaName, applicationName):
         try:
@@ -93,9 +82,9 @@ class SchemaDefAccessConfigTests(unittest.TestCase):
             optName = 'SCHEMA_DEF_LOCATOR_%s' % applicationName.upper()
             pathSchemaDefJson = self.__cfgOb.getPath(optName, sectionName=schemaName)
             #
-            dictInfoHelper = self.__getHelper(self.__cfgOb.get('DICT_HELPER_MODULE', sectionName=schemaName))
-            defHelper = self.__getHelper(self.__cfgOb.get('SCHEMADEF_HELPER_MODULE', sectionName=schemaName))
-            docHelper = self.__getHelper(self.__cfgOb.get('DOCUMENT_HELPER_MODULE', sectionName=schemaName))
+            dictInfoHelper = self.__cfgOb.getHelper('DICT_HELPER_MODULE', sectionName=schemaName)
+            defHelper = self.__cfgOb.getHelper('SCHEMADEF_HELPER_MODULE', sectionName=schemaName)
+            docHelper = self.__cfgOb.getHelper('DOCUMENT_HELPER_MODULE', sectionName=schemaName)
             smb = SchemaDefBuild(schemaName,
                                  dictLocators=[pathPdbxDictionaryFile, pathRcsbDictionaryFile],
                                  instDataTypeFilePath=instDataTypeFilePath,
@@ -103,8 +92,7 @@ class SchemaDefAccessConfigTests(unittest.TestCase):
                                  dictHelper=dictInfoHelper,
                                  schemaDefHelper=defHelper,
                                  documentDefHelper=docHelper,
-                                 applicationName=applicationName,
-                                 includeContentClasses=['ADMIN_CATEGORY'])
+                                 applicationName=applicationName)
             sD = smb.build()
             #
             logger.debug("Schema %s dictionary category length %d" % (schemaName, len(sD['SCHEMA_DICT'])))
@@ -152,7 +140,7 @@ class SchemaDefAccessConfigTests(unittest.TestCase):
 
             logger.debug("Collection excluded %r" % sd.getCollectionExcluded(collectionName))
             logger.debug("Collection included %r" % sd.getCollectionSelected(collectionName))
-            logger.debug("Collection document key attribute name %r" % sd.getDocumentKeyAttributeName(collectionName))
+            logger.debug("Collection document key attribute names %r" % sd.getDocumentKeyAttributeNames(collectionName))
 
         schemaIdList = sd.getSchemaIdList()
         for schemaId in schemaIdList:
@@ -173,12 +161,7 @@ class SchemaDefAccessConfigTests(unittest.TestCase):
 
             cL = tObj.getMapInstanceCategoryList()
             logger.debug("Mapped category list %s" % (str(cL)))
-            ccL = tObj.getContentClasses()
-            logger.debug("Content classes %r" % ccL)
-            if 'ADMIN_CATEGORY' in ccL:
-                self.assertGreaterEqual(len(cL), 0)
-            else:
-                self.assertGreater(len(cL), 0)
+
             for c in cL:
                 aL = tObj.getMapInstanceAttributeList(c)
                 logger.debug("Mapped attribute list in %s :  %s" % (c, str(aL)))

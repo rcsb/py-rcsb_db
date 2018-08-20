@@ -46,6 +46,7 @@
             "PDBX_CLASS_2": "pdbx_class_2",
             "PDBX_COMP_TYPE": "pdbx_comp_type",
             "PDBX_COMPONENT_NO": "pdbx_component_no",
+            "PDBX_CORE_COMP_ID": "pdbx_core_comp_id",
             "PDBX_FORMAL_CHARGE": "pdbx_formal_charge",
             "PDBX_IDEAL_COORDINATES_DETAILS": "pdbx_ideal_coordinates_details",
             "PDBX_IDEAL_COORDINATES_MISSING_FLAG": "pdbx_ideal_coordinates_missing_flag",
@@ -353,7 +354,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "CHEM_COMP_ATOM": {
          "SCHEMA_ID": "CHEM_COMP_ATOM",
@@ -382,6 +386,8 @@
             "PDBX_COMPONENT_COMP_ID": "pdbx_component_comp_id",
             "PDBX_COMPONENT_ENTITY_ID": "pdbx_component_entity_id",
             "PDBX_COMPONENT_ID": "pdbx_component_id",
+            "PDBX_CORE_ATOM_ID": "pdbx_core_atom_id",
+            "PDBX_CORE_COMP_ID": "pdbx_core_comp_id",
             "PDBX_LEAVING_ATOM_FLAG": "pdbx_leaving_atom_flag",
             "PDBX_MODEL_CARTN_X_IDEAL": "pdbx_model_Cartn_x_ideal",
             "PDBX_MODEL_CARTN_Y_IDEAL": "pdbx_model_Cartn_y_ideal",
@@ -390,6 +396,7 @@
             "PDBX_POLYMER_TYPE": "pdbx_polymer_type",
             "PDBX_REF_ID": "pdbx_ref_id",
             "PDBX_RESIDUE_NUMBERING": "pdbx_residue_numbering",
+            "PDBX_STANDARD_ATOM_ID": "pdbx_standard_atom_id",
             "PDBX_STEREO_CONFIG": "pdbx_stereo_config",
             "SUBSTRUCT_CODE": "substruct_code",
             "TYPE_SYMBOL": "type_symbol"
@@ -840,7 +847,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "CHEM_COMP_BOND": {
          "SCHEMA_ID": "CHEM_COMP_BOND",
@@ -1038,7 +1048,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_CHEM_COMP_AUDIT": {
          "SCHEMA_ID": "PDBX_CHEM_COMP_AUDIT",
@@ -1161,7 +1174,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_CHEM_COMP_DESCRIPTOR": {
          "SCHEMA_ID": "PDBX_CHEM_COMP_DESCRIPTOR",
@@ -1322,7 +1338,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "PDBX_CHEM_COMP_IDENTIFIER": {
          "SCHEMA_ID": "PDBX_CHEM_COMP_IDENTIFIER",
@@ -1483,7 +1502,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       },
       "RCSB_LOAD_STATUS": {
          "SCHEMA_ID": "RCSB_LOAD_STATUS",
@@ -1491,7 +1513,7 @@
          "SCHEMA_TYPE": "transactional",
          "SCHEMA_UNIT_CARDINALITY": true,
          "SCHEMA_CONTENT_CLASSES": [
-            "ADMIN_CATEGORY"
+            "DYNAMIC_CONTENT"
          ],
          "ATTRIBUTES": {
             "COMPONENT_ID": "component_id",
@@ -1507,21 +1529,21 @@
                "ARGUMENTS": null
             },
             "DATABLOCK_NAME": {
-               "CATEGORY": null,
-               "ATTRIBUTE": null,
-               "METHOD_NAME": "datablockid()",
+               "CATEGORY": "rcsb_load_status",
+               "ATTRIBUTE": "datablock_name",
+               "METHOD_NAME": null,
                "ARGUMENTS": null
             },
             "LOAD_DATE": {
-               "CATEGORY": null,
-               "ATTRIBUTE": null,
-               "METHOD_NAME": "getDateTime()",
+               "CATEGORY": "rcsb_load_status",
+               "ATTRIBUTE": "load_date",
+               "METHOD_NAME": null,
                "ARGUMENTS": null
             },
             "LOCATOR": {
-               "CATEGORY": null,
-               "ATTRIBUTE": null,
-               "METHOD_NAME": "getLocator()",
+               "CATEGORY": "rcsb_load_status",
+               "ATTRIBUTE": "locator",
+               "METHOD_NAME": null,
                "ARGUMENTS": null
             }
          },
@@ -1551,7 +1573,7 @@
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": [
-                  "ADMIN_CATEGORY"
+                  "DYNAMIC_CONTENT"
                ]
             },
             "LOAD_DATE": {
@@ -1565,7 +1587,7 @@
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": [
-                  "ADMIN_CATEGORY"
+                  "DYNAMIC_CONTENT"
                ]
             },
             "LOCATOR": {
@@ -1579,7 +1601,7 @@
                "FILTER_TYPES": [],
                "IS_CHAR_TYPE": true,
                "CONTENT_CLASSES": [
-                  "ADMIN_CATEGORY"
+                  "DYNAMIC_CONTENT"
                ]
             }
          },
@@ -1607,7 +1629,10 @@
                ],
                "TYPE": "EQUI-JOIN"
             }
-         }
+         },
+         "SLICE_ATTRIBUTES": {},
+         "SLICE_UNIT_CARDINALITY": {},
+         "SLICE_CATEGORY_EXTRAS": {}
       }
    },
    "DOCUMENT_DICT": {
@@ -1616,14 +1641,19 @@
             "bird_chem_comp_v5_0_2"
          ]
       },
-      "COLLECTION_DOCUMENT_ATTRIBUTE_NAME": {
-         "bird_chem_comp_v5_0_2": "Chem_comp.component_id"
+      "COLLECTION_DOCUMENT_ATTRIBUTE_NAMES": {
+         "bird_chem_comp_v5_0_2": [
+            "chem_comp.component_id"
+         ]
       },
       "COLLECTION_CONTENT": {
          "bird_chem_comp_v5_0_2": {
             "INCLUDE": [],
-            "EXCLUDE": []
+            "EXCLUDE": [],
+            "SLICE_FILTER": null
          }
       }
-   }
+   },
+   "SLICE_PARENT_ITEMS": {},
+   "SLICE_PARENT_FILTERS": {}
 }

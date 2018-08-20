@@ -65,7 +65,7 @@ class SchemaDefAccessTests(unittest.TestCase):
                                                             endTime - self.__startTime))
 
     def testAccess(self):
-        schemaNames = ['pdbx', 'chem_comp', 'bird', 'bird_family', 'bird_chem_comp']
+        schemaNames = ['pdbx', 'pdbx_core', 'chem_comp', 'bird', 'bird_family', 'bird_chem_comp']
         applicationNames = ['ANY', 'SQL']
         for schemaName in schemaNames:
             for applicationName in applicationNames:
@@ -73,7 +73,8 @@ class SchemaDefAccessTests(unittest.TestCase):
 
     def __testBuild(self, schemaName, applicationName):
         try:
-            instDataTypeFilePath = os.path.join(TOPDIR, 'rcsb_db', 'data', 'data_type_info', 'scan-%s-type-map.json' % schemaName)
+            contentType = schemaName[:4] if schemaName.startswith('pdbx') else schemaName
+            instDataTypeFilePath = os.path.join(TOPDIR, 'rcsb_db', 'data', 'data_type_info', 'scan-%s-type-map.json' % contentType)
             appDataTypeFilePath = os.path.join(TOPDIR, 'rcsb_db', 'data', 'data_type_info', 'app_data_type_mapping.cif')
             #
             pathSchemaDefJson = os.path.join(HERE, 'test-output', 'schema_def-%s-%s.json' % (schemaName, applicationName))
@@ -89,8 +90,8 @@ class SchemaDefAccessTests(unittest.TestCase):
                                  dictHelper=dictInfoHelper,
                                  schemaDefHelper=defHelper,
                                  documentDefHelper=docHelper,
-                                 applicationName=applicationName,
-                                 includeContentClasses=['ADMIN_CATEGORY'])
+                                 applicationName=applicationName
+                                 )
             sD = smb.build()
             #
             logger.debug("Schema dictionary category length %d" % len(sD['SCHEMA_DICT']))
@@ -138,7 +139,7 @@ class SchemaDefAccessTests(unittest.TestCase):
 
             logger.debug("Collection excluded %r" % sd.getCollectionExcluded(collectionName))
             logger.debug("Collection included %r" % sd.getCollectionSelected(collectionName))
-            logger.debug("Collection document key attribute name %r" % sd.getDocumentKeyAttributeName(collectionName))
+            logger.debug("Collection document key attribute names %r" % sd.getDocumentKeyAttributeNames(collectionName))
 
         schemaIdList = sd.getSchemaIdList()
         for schemaId in schemaIdList:
@@ -159,12 +160,7 @@ class SchemaDefAccessTests(unittest.TestCase):
 
             cL = tObj.getMapInstanceCategoryList()
             logger.debug("Mapped category list %s" % (str(cL)))
-            ccL = tObj.getContentClasses()
-            logger.debug("Content classes %r" % ccL)
-            if 'ADMIN_CATEGORY' in ccL:
-                self.assertGreaterEqual(len(cL), 0)
-            else:
-                self.assertGreater(len(cL), 0)
+
             for c in cL:
                 aL = tObj.getMapInstanceAttributeList(c)
                 logger.debug("Mapped attribute list in %s :  %s" % (c, str(aL)))
