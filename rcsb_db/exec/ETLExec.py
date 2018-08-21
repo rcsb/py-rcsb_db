@@ -47,7 +47,7 @@ def loadStatus(statusList, cfgOb, readBackCheck=True):
     collectionVersion = cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
     collectionName = cfgOb.get('COLLECTION_UPDATE_STATUS', sectionName=sectionName) + '_' + collectionVersion
     ok = dl.load(databaseName, collectionName, loadType='append', documentList=statusList,
-                 indexAttributeList=['update_id', 'database_name', 'object_name'], keyName=None)
+                 indexAttributeList=['update_id', 'database_name', 'object_name'], keyNames=None)
     return ok
 
 

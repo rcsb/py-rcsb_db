@@ -9,6 +9,7 @@
 #  18-Jun-2018 jdw update to new schema generation protocol
 #  22-Jun-2018 jdw change collection attribute specification to dot notation.
 #  14-Aug-2018 jdw generalize the primaryIndex to the list of attributes returned by getDocumentKeyAttributeNames()
+#  21-Aug-2018 jdw use getHelper() from the configuration class.
 ##
 """
  A collection of schema and repo path convenience methods.
@@ -22,7 +23,6 @@ __license__ = "Apache 2.0"
 
 
 import logging
-import sys
 
 from rcsb_db.define.SchemaDefAccess import SchemaDefAccess
 from rcsb_db.define.SchemaDefBuild import SchemaDefBuild
@@ -112,9 +112,9 @@ class SchemaDefUtil(object):
             instDataTypeFilePath = self.__cfgOb.getPath('INSTANCE_DATA_TYPE_INFO_LOCATOR', sectionName=schemaName)
             appDataTypeFilePath = self.__cfgOb.getPath('APP_DATA_TYPE_INFO_LOCATOR', sectionName=schemaName)
             #
-            dictInfoHelper = self.__getHelper(self.__cfgOb.get('DICT_HELPER_MODULE', sectionName=schemaName))
-            defHelper = self.__getHelper(self.__cfgOb.get('SCHEMADEF_HELPER_MODULE', sectionName=schemaName))
-            docHelper = self.__getHelper(self.__cfgOb.get('DOCUMENT_HELPER_MODULE', sectionName=schemaName))
+            dictInfoHelper = self.__cfgOb.getHelper('DICT_HELPER_MODULE', sectionName=schemaName)
+            defHelper = self.__cfgOb.getHelper('SCHEMADEF_HELPER_MODULE', sectionName=schemaName)
+            docHelper = self.__cfgOb.getHelper('DOCUMENT_HELPER_MODULE', sectionName=schemaName)
             smb = SchemaDefBuild(schemaName,
                                  dictLocators=dictLocators,
                                  instDataTypeFilePath=instDataTypeFilePath,
@@ -132,14 +132,3 @@ class SchemaDefUtil(object):
             logger.exception("Building schema %s failing with %s" % (schemaName, str(e)))
             self.fail()
         return {}
-
-    def __getHelper(self, modulePath, **kwargs):
-        aMod = __import__(modulePath, globals(), locals(), [''])
-        sys.modules[modulePath] = aMod
-        #
-        # Strip off any leading path to the module before we instaniate the object.
-        mpL = modulePath.split('.')
-        moduleName = mpL[-1]
-        #
-        aObj = getattr(aMod, moduleName)(**kwargs)
-        return aObj
