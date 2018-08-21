@@ -3,6 +3,7 @@
 #
 # Update:
 #   3-Jul-2018  jdw update CLI entry points and dependencies
+#  21-Aug-2018  jdw version adjustments
 #
 import re
 
