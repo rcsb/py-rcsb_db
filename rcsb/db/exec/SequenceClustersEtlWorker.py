@@ -138,17 +138,17 @@ class SequenceClustersEtlWorker(object):
             #
             collectionName = self.__entityMemberCollection + '_' + self.__collectionVersion
             dList = docBySequenceD[self.__entitySchemaName]
-            ok1 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=self.__entityMemberCollectionIndexL, keyName=None)
+            ok1 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=self.__entityMemberCollectionIndexL, keyNames=None)
             self.__updateStatus(dataSetId, databaseName, collectionName, ok1, statusStartTimestamp)
             #
             collectionName = self.__clusterMembersCollection + '_' + self.__collectionVersion
             dList = docByClusterD[self.__clusterSchemaName]
-            ok2 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=self.__clusterMembersCollectionIndexL, keyName=None)
+            ok2 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=self.__clusterMembersCollectionIndexL, keyNames=None)
             self.__updateStatus(dataSetId, databaseName, collectionName, ok2, statusStartTimestamp)
             #
             pD = self.__fetchProvenance()
             collectionName = self.__clusterProvenanceCollection + '_' + self.__collectionVersion
-            ok3 = dl.load(databaseName, collectionName, loadType=loadType, documentList=[pD], indexAttributeList=None, keyName=None)
+            ok3 = dl.load(databaseName, collectionName, loadType=loadType, documentList=[pD], indexAttributeList=None, keyNames=None)
             self.__updateStatus(dataSetId, databaseName, collectionName, ok3, statusStartTimestamp)
             #
             return ok1 and ok2 and ok3

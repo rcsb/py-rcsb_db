@@ -27,7 +27,7 @@ import textwrap
 from mmcif.api.DictionaryApi import DictionaryApi
 from mmcif.api.PdbxContainers import CifName
 
-from rcsb.db.io.MarshalUtil import MarshalUtil
+from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logger = logging.getLogger(__name__)
 

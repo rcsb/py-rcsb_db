@@ -41,9 +41,8 @@ import datetime
 import logging
 import time
 
-from rcsb.db.io.MarshalUtil import MarshalUtil
 from rcsb.db.processors.SchemaDefReShape import SchemaDefReShape
-
+from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logger = logging.getLogger(__name__)
 

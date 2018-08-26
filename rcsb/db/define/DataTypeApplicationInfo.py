@@ -26,7 +26,7 @@ import logging
 from mmcif.api.DataCategory import DataCategory
 from mmcif.api.PdbxContainers import DataContainer
 
-from rcsb.db.io.MarshalUtil import MarshalUtil
+from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logger = logging.getLogger(__name__)
 

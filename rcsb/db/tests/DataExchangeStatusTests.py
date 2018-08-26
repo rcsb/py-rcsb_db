@@ -20,24 +20,17 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
-import sys
 import time
 import unittest
-
-HERE = os.path.abspath(os.path.dirname(__file__))
-TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-
-try:
-    from rcsb.db import __version__
-except Exception as e:
-    sys.path.insert(0, TOPDIR)
-    from rcsb.db import __version__
 
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
 class DataExchangeStatusTests(unittest.TestCase):
@@ -46,7 +39,6 @@ class DataExchangeStatusTests(unittest.TestCase):
         self.__verbose = True
         #
         self.__startTime = time.time()
-        logger.debug("Running tests on version %s" % __version__)
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
 

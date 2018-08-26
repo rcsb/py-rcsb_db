@@ -18,21 +18,14 @@ import logging
 import os
 import sys
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-
-try:
-    from rcsb.db import __version__
-except Exception as e:
-    sys.path.insert(0, TOPDIR)
-    from rcsb.db import __version__
-
 from rcsb.db.exec.RepoHoldingsEtlWorker import RepoHoldingsEtlWorker
 from rcsb.db.exec.SequenceClustersEtlWorker import SequenceClustersEtlWorker
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
-from rcsb.db.utils.ConfigUtil import ConfigUtil
 from rcsb.db.utils.TimeUtil import TimeUtil
+from rcsb.utils.config.ConfigUtil import ConfigUtil
 
+HERE = os.path.abspath(os.path.dirname(__file__))
+TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
@@ -87,7 +80,6 @@ def main():
     debugFlag = args.debug
     if debugFlag:
         logger.setLevel(logging.DEBUG)
-        logger.debug("Using software version %s" % __version__)
     # ----------------------- - ----------------------- - ----------------------- - ----------------------- - ----------------------- -
     #                                       Configuration Details
     configPath = args.config_path
@@ -101,7 +93,7 @@ def main():
         else:
             logger.error("Missing or access issue with config file %r" % configPath)
             exit(1)
-        mockTopPath = os.path.join(TOPDIR, "rcsb", "db", "data") if args.mock else None
+        mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', ) if args.mock else None
         cfgOb = ConfigUtil(configPath=configPath, sectionName=configName, mockTopPath=mockTopPath)
     except Exception as e:
         logger.error("Missing or access issue with config file %r" % configPath)

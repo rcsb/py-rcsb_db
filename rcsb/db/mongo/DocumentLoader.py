@@ -24,7 +24,7 @@ import time
 
 from rcsb.db.mongo.Connection import Connection
 from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
-from rcsb.db.utils.MultiProcUtil import MultiProcUtil
+from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
 
 logger = logging.getLogger(__name__)
 

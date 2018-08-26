@@ -46,8 +46,8 @@ from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
 from rcsb.db.processors.DataTransformFactory import DataTransformFactory
 from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
-from rcsb.db.utils.MultiProcUtil import MultiProcUtil
 from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
+from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
 
 logger = logging.getLogger(__name__)
 
@@ -170,7 +170,7 @@ class PdbxLoader(object):
                 subLists = [pathList]
             #
             if subLists and len(subLists) > 0:
-                logger.info("Starting with numProc %d outer subtask count %d subtask length ~ %d" % (numProc, len(subLists), len(subLists[0])))
+                logger.info("Starting loadType %s with numProc %d outer subtask count %d subtask length ~ %d" % (loadType, numProc, len(subLists), len(subLists[0])))
             #
             failList = []
             retLists = []
@@ -309,6 +309,8 @@ class PdbxLoader(object):
                 fullSuccessPathList.extend(successPathList)
                 fullFailedPathList.extend(failedPathList)
             #
+            logger.debug("fullSuccessPathList %r" % fullSuccessPathList)
+            logger.debug("fullFailedPathList  %r" % fullFailedPathList)
             retList = list(set(fullSuccessPathList) - set(fullFailedPathList))
             logger.debug("%s %s %r full success %s full fails %d " % (procName, dbName, collectionNameList,
                                                                       len(set(fullSuccessPathList)), len(set(fullFailedPathList))))

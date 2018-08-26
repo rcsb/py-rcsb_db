@@ -20,26 +20,18 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
-import sys
 import time
 import unittest
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-
-try:
-    from rcsb.db import __version__
-except Exception as e:
-    sys.path.insert(0, TOPDIR)
-    from rcsb.db import __version__
-
 from rcsb.db.processors.RepoHoldingsDataPrep import RepoHoldingsDataPrep
-from rcsb.db.utils.ConfigUtil import ConfigUtil
-
+from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
 class RepoHoldingsDataPrepTests(unittest.TestCase):
@@ -47,7 +39,7 @@ class RepoHoldingsDataPrepTests(unittest.TestCase):
     def setUp(self):
         self.__verbose = True
         #
-        self.__mockTopPath = os.path.join(TOPDIR, 'rcsb', 'db', 'data')
+        self.__mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
         self.__pathConfig = os.path.join(self.__mockTopPath, 'config', 'dbload-setup-example.cfg')
         self.__workPath = os.path.join(HERE, 'test-output')
         self.__updateId = '2018_25'
@@ -56,7 +48,6 @@ class RepoHoldingsDataPrepTests(unittest.TestCase):
         self.__sandboxPath = self.__cfgOb.getPath('RCSB_EXCHANGE_SANDBOX_PATH', sectionName='DEFAULT')
         #
         self.__startTime = time.time()
-        logger.debug("Running tests on version %s" % __version__)
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
 

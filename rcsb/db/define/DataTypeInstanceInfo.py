@@ -20,7 +20,7 @@ __license__ = "Apache 2.0"
 
 import logging
 
-from rcsb.db.io.IoUtil import IoUtil
+from rcsb.utils.io.IoUtil import IoUtil
 
 logger = logging.getLogger(__name__)
 

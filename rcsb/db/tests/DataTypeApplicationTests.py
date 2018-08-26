@@ -22,25 +22,18 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
-import sys
 import time
 import unittest
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-
-try:
-    from rcsb.db import __version__
-except Exception as e:
-    sys.path.insert(0, TOPDIR)
-    from rcsb.db import __version__
-
 from rcsb.db.define.DataTypeApplicationInfo import DataTypeApplicationInfo
-from rcsb.db.io.IoUtil import IoUtil
+from rcsb.utils.io.IoUtil import IoUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
 class DataTypeApplicationInfoTests(unittest.TestCase):
@@ -54,7 +47,6 @@ class DataTypeApplicationInfoTests(unittest.TestCase):
         self.__pathSaveTypeMapJson = os.path.join(HERE, 'test-output', 'app_data_type_mapping.json')
         #
         self.__startTime = time.time()
-        logger.debug("Running tests on version %s" % __version__)
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
 

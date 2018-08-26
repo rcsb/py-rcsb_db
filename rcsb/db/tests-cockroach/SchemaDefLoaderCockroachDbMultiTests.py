@@ -34,27 +34,17 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
-import sys
 import time
 import unittest
-
-HERE = os.path.abspath(os.path.dirname(__file__))
-TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-
-try:
-    from rcsb.db import __version__
-except Exception as e:
-    sys.path.insert(0, TOPDIR)
-    from rcsb.db import __version__
 
 from rcsb.db.cockroach.CockroachDbLoader import CockroachDbLoader
 from rcsb.db.cockroach.CockroachDbUtil import CockroachDbQuery
 from rcsb.db.cockroach.Connection import Connection
 #
 from rcsb.db.sql.SqlGen import SqlGenAdmin
-from rcsb.db.utils.ConfigUtil import ConfigUtil
-from rcsb.db.utils.MultiProcUtil import MultiProcUtil
 from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
+from rcsb.utils.config.ConfigUtil import ConfigUtil
+from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
@@ -67,6 +57,9 @@ except Exception as e:
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
 class SchemaDefLoaderCockroachDbMultiTests(unittest.TestCase):
@@ -82,18 +75,16 @@ class SchemaDefLoaderCockroachDbMultiTests(unittest.TestCase):
         self.__fileLimit = 100
         self.__chunkSize = 0
         self.__workPath = os.path.join(HERE, "test-output")
-        self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "db", "data")
-        configPath = os.path.join(TOPDIR, 'rcsb', 'db', 'data', 'config', 'dbload-setup-example.cfg')
+        self.__mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
+        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.cfg')
         configName = 'DEFAULT'
         self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
         self.__resourceName = "COCKROACH_DB"
         self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
         #
         self.__tableIdSkipD = {'ATOM_SITE': True, 'ATOM_SITE_ANISOTROP': True}
-        self.__ioObj = IoAdapter(verbose=self.__verbose)
         #
         self.__startTime = time.time()
-        logger.debug("Running tests on version %s" % __version__)
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
 

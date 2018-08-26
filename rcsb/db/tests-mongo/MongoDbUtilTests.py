@@ -22,27 +22,20 @@ __license__ = "Apache 2.0"
 import logging
 import os
 import pprint
-import sys
 import time
 import unittest
 
 import dateutil.parser
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-
-try:
-    from rcsb.db import __version__
-except Exception as e:
-    sys.path.insert(0, TOPDIR)
-    from rcsb.db import __version__
-
 from rcsb.db.mongo.Connection import Connection
 from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
-from rcsb.db.utils.ConfigUtil import ConfigUtil
+from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
 class MongoDbUtilTests(unittest.TestCase):
@@ -51,7 +44,7 @@ class MongoDbUtilTests(unittest.TestCase):
         self.__dbName = 'test_database'
         self.__collectionName = 'test_collection'
         #
-        configPath = os.path.join(TOPDIR, 'rcsb', 'db', 'data', 'config', 'dbload-setup-example.cfg')
+        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.cfg')
         configName = 'DEFAULT'
         self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
         self.__resourceName = "MONGO_DB"
@@ -59,7 +52,6 @@ class MongoDbUtilTests(unittest.TestCase):
         self.__cObj = self.__open(self.__connectD)
         #
         self.__startTime = time.time()
-        logger.debug("Running tests on version %s" % __version__)
         logger.debug("Starting %s at %s" % (self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
 
     def tearDown(self):

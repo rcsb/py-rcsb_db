@@ -24,34 +24,27 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
-import sys
 import time
 import unittest
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-
-try:
-    from rcsb.db import __version__
-except Exception as e:
-    sys.path.insert(0, TOPDIR)
-    from rcsb.db import __version__
-
 from rcsb.db.define.DictInfo import DictInfo
 from rcsb.db.helpers.DictInfoHelper import DictInfoHelper
-from rcsb.db.io.IoUtil import IoUtil
+from rcsb.utils.io.IoUtil import IoUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
 class DictInfoTests(unittest.TestCase):
 
     def setUp(self):
         self.__verbose = True
-        self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'db', 'data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
-        self.__pathRcsbDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'db', 'data', 'dictionaries', 'rcsb_mmcif_ext_v1.dic')
+        self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
+        self.__pathRcsbDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'rcsb_mmcif_ext_v1.dic')
         self.__ioU = IoUtil()
         #
         self.__pathSaveDictInfoDefaultJson = os.path.join(HERE, 'test-output', 'dict_info_default.json')
@@ -60,7 +53,6 @@ class DictInfoTests(unittest.TestCase):
         self.__pathSaveDefText = os.path.join(HERE, 'test-output', 'dict_info.txt')
         #
         self.__startTime = time.time()
-        logger.debug("Running tests on version %s" % __version__)
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
 

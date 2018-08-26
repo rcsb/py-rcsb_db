@@ -89,35 +89,35 @@ class RepoHoldingsEtlWorker(object):
             dList = rhdp.getHoldingsUpdate(updateId=updateId)
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_UPDATE', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList,
-                         indexAttributeList=['update_id', 'entry_id'], keyName=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             #
             dList = rhdp.getHoldingsCurrent(updateId=updateId)
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_CURRENT', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList,
-                         indexAttributeList=['update_id', 'entry_id'], keyName=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
             dList = rhdp.getHoldingsUnreleased(updateId=updateId)
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_UNRELEASED', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList,
-                         indexAttributeList=['update_id', 'entry_id'], keyName=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             #
             dList1, dList2, dList3 = rhdp.getHoldingsRemoved(updateId=updateId)
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_REMOVED', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList1,
-                         indexAttributeList=['update_id', 'entry_id'], keyName=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_REMOVED_AUTHORS', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList2,
-                         indexAttributeList=['update_id', 'entry_id'], keyName=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_SUPERSEDED', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList3,
-                         indexAttributeList=['update_id', 'entry_id'], keyName=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             return True
         except Exception as e:

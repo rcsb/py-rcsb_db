@@ -18,7 +18,7 @@ __license__ = "Apache 2.0"
 import logging
 import os
 
-from rcsb.db.io.MarshalUtil import MarshalUtil
+from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logger = logging.getLogger(__name__)
 

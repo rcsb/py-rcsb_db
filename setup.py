@@ -14,7 +14,7 @@ from setuptools import setup
 packages = []
 thisPackage = 'rcsb.db'
 
-with open('rcsb/db/__init__.py', 'r') as fd:
+with open('rcsb/db/exec/__init__.py', 'r') as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
                         fd.read(), re.MULTILINE).group(1)
 
@@ -51,7 +51,16 @@ setup(
         ]
     },
     #
-    install_requires=['future', 'six', 'python-dateutil', 'pytz', 'mmcif; python_version >= "0.18"', 'scandir; python_version < "3.0"', 'configparser; python_version < "3.0"'],
+    install_requires=['future',
+                      'six',
+                      'python-dateutil',
+                      'pytz',
+                      'mmcif; python_version >= "0.18"',
+                      'scandir; python_version < "3.0"',
+                      'configparser; python_version < "3.0"',
+                      'rcsb.utils.io',
+                      'rcsb.utils.config',
+                      'rcsb.utils.multiproc'],
     packages=find_packages(exclude=['rcsb.db.tests', 'rcsb.db.tests-*', 'tests.*']),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:

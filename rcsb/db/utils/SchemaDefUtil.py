@@ -26,8 +26,8 @@ import logging
 
 from rcsb.db.define.SchemaDefAccess import SchemaDefAccess
 from rcsb.db.define.SchemaDefBuild import SchemaDefBuild
-from rcsb.db.io.MarshalUtil import MarshalUtil
 from rcsb.db.utils.RepoPathUtil import RepoPathUtil
+from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logger = logging.getLogger(__name__)
 

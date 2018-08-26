@@ -26,7 +26,7 @@ import logging
 import os
 import time
 
-from rcsb.db.utils.MultiProcUtil import MultiProcUtil
+from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
 
 try:
     from os import walk

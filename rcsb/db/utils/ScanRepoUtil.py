@@ -31,9 +31,9 @@ import time
 
 from mmcif.api.DataCategory import DataCategory
 
-from rcsb.db.io.MarshalUtil import MarshalUtil
-from rcsb.db.utils.MultiProcUtil import MultiProcUtil
 from rcsb.db.utils.RepoPathUtil import RepoPathUtil
+from rcsb.utils.io.MarshalUtil import MarshalUtil
+from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
 
 logger = logging.getLogger(__name__)
 

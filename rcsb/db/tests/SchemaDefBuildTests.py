@@ -21,40 +21,31 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
-import sys
 import time
 import unittest
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-
-try:
-    from rcsb.db import __version__
-except Exception as e:
-    sys.path.insert(0, TOPDIR)
-    from rcsb.db import __version__
-
 from rcsb.db.define.SchemaDefBuild import SchemaDefBuild
-#
 from rcsb.db.helpers.DictInfoHelper import DictInfoHelper
 from rcsb.db.helpers.SchemaDefHelper import SchemaDefHelper
 from rcsb.db.helpers.SchemaDocumentHelper import SchemaDocumentHelper
-from rcsb.db.io.IoUtil import IoUtil
+from rcsb.utils.io.IoUtil import IoUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
 class SchemaDefBuildTests(unittest.TestCase):
 
     def setUp(self):
         self.__verbose = True
-        self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'db', 'data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
-        self.__pathRcsbDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'db', 'data', 'dictionaries', 'rcsb_mmcif_ext_v1.dic')
+        self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
+        self.__pathRcsbDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'rcsb_mmcif_ext_v1.dic')
         #
         self.__startTime = time.time()
-        logger.debug("Running tests on version %s" % __version__)
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
 
@@ -87,8 +78,8 @@ class SchemaDefBuildTests(unittest.TestCase):
     def __testBuild(self, schemaName, applicationName):
         try:
             contentType = schemaName[:4] if schemaName.startswith('pdbx') else schemaName
-            instDataTypeFilePath = os.path.join(TOPDIR, 'rcsb', 'db', 'data', 'data_type_info', 'scan-%s-type-map.json' % contentType)
-            appDataTypeFilePath = os.path.join(TOPDIR, 'rcsb', 'db', 'data', 'data_type_info', 'app_data_type_mapping.cif')
+            instDataTypeFilePath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'data_type_info', 'scan-%s-type-map.json' % contentType)
+            appDataTypeFilePath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'data_type_info', 'app_data_type_mapping.cif')
             #
             pathSchemaDefJson = os.path.join(HERE, 'test-output', 'schema_def-%s-%s.json' % (schemaName, applicationName))
             #
@@ -119,13 +110,13 @@ class SchemaDefBuildTests(unittest.TestCase):
     def __testBuildJson(self, schemaName, collectionName):
         try:
             contentType = schemaName[:4] if schemaName.startswith('pdbx') else schemaName
-            instDataTypeFilePath = os.path.join(TOPDIR, 'rcsb', 'db', 'data', 'data_type_info', 'scan-%s-type-map.json' % contentType)
-            appDataTypeFilePath = os.path.join(TOPDIR, 'rcsb', 'db', 'data', 'data_type_info', 'app_data_type_mapping.cif')
+            instDataTypeFilePath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'data_type_info', 'scan-%s-type-map.json' % contentType)
+            appDataTypeFilePath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'data_type_info', 'app_data_type_mapping.cif')
             #
             # pathSchemaDefJson = os.path.join(HERE, 'test-output', 'json-schema-%s-%s.json' % (schemaName, collectionName))
             #
             pathSchemaDefJson1 = os.path.join(HERE, 'test-output', 'json-schema-%s.json' % (collectionName))
-            pathSchemaDefJson2 = os.path.join(TOPDIR, 'rcsb', 'db', 'data', 'json-schema', 'json-schema-%s.json' % (collectionName))
+            pathSchemaDefJson2 = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'json-schema', 'json-schema-%s.json' % (collectionName))
             #
             dictInfoHelper = DictInfoHelper()
             defHelper = SchemaDefHelper()

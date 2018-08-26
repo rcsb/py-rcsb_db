@@ -19,25 +19,18 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
-import sys
 import time
 import unittest
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-
-try:
-    from rcsb.db import __version__
-except Exception as e:
-    sys.path.insert(0, TOPDIR)
-    from rcsb.db import __version__
-
-from rcsb.db.io.MarshalUtil import MarshalUtil
 from rcsb.db.processors.ClusterDataPrep import ClusterDataPrep
+from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
 class ClusterDataPrepTests(unittest.TestCase):
@@ -46,7 +39,7 @@ class ClusterDataPrepTests(unittest.TestCase):
         self.__verbose = True
         # sample data set
         self.__dataSetId = '2018_23'
-        self.__pathClusterData = os.path.join(TOPDIR, 'rcsb', 'db', 'data', 'cluster_data', 'mmseqs-20180608')
+        self.__pathClusterData = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'cluster_data', 'mmseqs-20180608')
         self.__levels = ['100', '95', '90', '70', '50', '30']
         #
         self.__workPath = os.path.join(HERE, 'test-output')
@@ -55,7 +48,6 @@ class ClusterDataPrepTests(unittest.TestCase):
         self.__pathSaveStyleDocCluster = os.path.join(HERE, 'test-output', 'cluster-data-doc-cluster.json')
         #
         self.__startTime = time.time()
-        logger.debug("Running tests on version %s" % __version__)
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
 

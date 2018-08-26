@@ -19,19 +19,13 @@ import logging
 import os
 import sys
 
+from rcsb.db.define.DictInfo import DictInfo
+from rcsb.db.utils.ScanRepoUtil import ScanRepoUtil
+from rcsb.utils.config.ConfigUtil import ConfigUtil
+from rcsb.utils.io.MarshalUtil import MarshalUtil
+
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-
-try:
-    from rcsb.db import __version__
-except Exception as e:
-    sys.path.insert(0, TOPDIR)
-    from rcsb.db import __version__
-
-from rcsb.db.define.DictInfo import DictInfo
-from rcsb.db.io.MarshalUtil import MarshalUtil
-from rcsb.db.utils.ConfigUtil import ConfigUtil
-from rcsb.db.utils.ScanRepoUtil import ScanRepoUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
@@ -96,7 +90,6 @@ def main():
     debugFlag = args.debug
     if debugFlag:
         logger.setLevel(logging.DEBUG)
-        logger.debug("Using software version %s" % __version__)
     # ----------------------- - ----------------------- - ----------------------- - ----------------------- - ----------------------- -
     #                                       Configuration Details
     configPath = args.config_path
@@ -110,7 +103,7 @@ def main():
         else:
             logger.error("Missing or access issue with config file %r" % configPath)
             exit(1)
-        mockTopPath = os.path.join(TOPDIR, "rcsb", "db", "data") if args.mock else None
+        mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', ) if args.mock else None
         cfgOb = ConfigUtil(configPath=configPath, sectionName=configName, mockTopPath=mockTopPath)
     except Exception as e:
         logger.error("Missing or access issue with config file %r" % configPath)
@@ -131,7 +124,7 @@ def main():
         scanDataFilePath = args.scan_data_file_path
         dataCoverageFilePath = args.coverage_file_path
         dataTypeFilePath = args.type_map_file_path
-        dictFilePath = args.dict_file_path if args.dict_file_path else os.path.join(TOPDIR, 'rcsb', 'db', 'data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
+        dictFilePath = args.dict_file_path if args.dict_file_path else os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
         workPath = args.working_path if args.working_path else '.'
     except Exception as e:
         logger.exception("Argument processing problem %s" % str(e))

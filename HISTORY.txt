@@ -9,6 +9,9 @@
                JSON schema description of collections, sfx/xfel examples, dictionary
                methods implemented in helper classes, and incremental repository metadata
                updates.
+25-Aug-2018    V0.16 split out rcsb.utils.config, rcsb.utils.io, rcsb.utils.multiproc and
+               mock-data as a shared submodule for test data. Merged branch ' namespace'
+               back into master.
 
 
 

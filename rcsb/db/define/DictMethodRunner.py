@@ -21,7 +21,7 @@ import logging
 
 from mmcif.api.DictionaryApi import DictionaryApi
 
-from rcsb.db.io.MarshalUtil import MarshalUtil
+from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logger = logging.getLogger(__name__)
 
