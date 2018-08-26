@@ -4,6 +4,7 @@
 # Update:
 #   3-Jul-2018  jdw update CLI entry points and dependencies
 #  21-Aug-2018  jdw version adjustments
+#  22-Aug-2018  jdw adjust for namespace packaging
 #
 import re
 
@@ -13,7 +14,7 @@ from setuptools import setup
 packages = []
 thisPackage = 'rcsb.db'
 
-with open('rcsb_db/__init__.py', 'r') as fd:
+with open('rcsb/db/exec/__init__.py', 'r') as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
                         fd.read(), re.MULTILINE).group(1)
 
@@ -44,21 +45,30 @@ setup(
     ),
     entry_points={
         'console_scripts': [
-            'exdb_repo_load_cli=rcsb_db.exec.RepoLoadExec:main',
-            'repo_scan_cli=rcsb_db.exec.RepoScanExec:main',
-            'etl_exec_cli=rcsb_db.exec.ETLExec:main',
+            'exdb_repo_load_cli=rcsb.db.exec.RepoLoadExec:main',
+            'repo_scan_cli=rcsb.db.exec.RepoScanExec:main',
+            'etl_exec_cli=rcsb.db.exec.ETLExec:main',
         ]
     },
     #
-    install_requires=['future', 'six', 'python-dateutil', 'pytz', 'mmcif; python_version >= "0.18"', 'scandir; python_version < "3.0"', 'configparser; python_version < "3.0"'],
-    packages=find_packages(exclude=['rcsb_db.tests', 'rcsb_db.tests-*', 'tests.*']),
+    install_requires=['future',
+                      'six',
+                      'python-dateutil',
+                      'pytz',
+                      'mmcif; python_version >= "0.18"',
+                      'scandir; python_version < "3.0"',
+                      'configparser; python_version < "3.0"',
+                      'rcsb.utils.io',
+                      'rcsb.utils.config',
+                      'rcsb.utils.multiproc'],
+    packages=find_packages(exclude=['rcsb.db.tests', 'rcsb.db.tests-*', 'tests.*']),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:
         '': ['*.md', '*.rst', "*.txt", "*.cfg"],
     },
     #
     # These basic tests require no database services -
-    test_suite="rcsb_db.tests",
+    test_suite="rcsb.db.tests",
     tests_require=['tox'],
     #
     # Not configured ...
@@ -74,5 +84,6 @@ setup(
             'release': ('setup.py', version)
         }
     },
-    zip_safe=True,
+    # This setting for namespace package support -
+    zip_safe=False,
 )
