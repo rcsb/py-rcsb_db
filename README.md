@@ -28,10 +28,11 @@ or simply run
 tox
 ```
 
-Installation is via the program [pip](https://pypi.python.org/pypi/pip).
+Installation is via the program [pip](https://pypi.python.org/pypi/pip).  To run tests
+from the source tree, the package must be installed in editable mode (i.e. -e):
 
 ```bash
-pip install .
+pip install -e .
 ```
 
 ### Command Line Interfaces
@@ -288,9 +289,9 @@ For instance, to perform a fresh/full load of all of the chemical component defi
 
 ```bash
 
-cd rcsb_db/exec
+cd rcsb/db/scripts
 python RepoLoadExec.py --full  --load_chem_comp_ref  \
-                      --config_path ../data/dbload-setup-example.cfg \
+                      --config_path ../../mock-data/config/dbload-setup-example.cfg \
                       --config_name DEFAULT \
                       --fail_file_list_path failed-cc-path-list.txt \
                       --read_back_check
@@ -302,15 +303,15 @@ this same data.
 
 ```bash
 
-cd rcsb_db/exec
+cd rcsb/db/scripts
 python RepoLoadExec.py  --mock --full  --load_entry_data \
-                     --config_path ../data/dbload-setup-example.cfg \
+                     --config_path ../../mock-data/config/dbload-setup-example.cfg \
                      --config_name DEFAULT \
                      --save_file_list_path  LATEST_PDBX_LOAD_LIST.txt \
                      --fail_file_list_path failed-entry-path-list.txt
 
 python RepoLoadExec.py --mock --replace  --load_entry_data \
-                      --config_path ../data/dbload-setup-example.cfg \
+                      --config_path ../../mock-data/config/dbload-setup-example.cfg \
                       --config_name DEFAULT \
                       --load_file_list_path  LATEST_PDBX_LOAD_LIST.txt \
                       --fail_file_list_path failed-entry-path-list.txt
@@ -323,7 +324,7 @@ python RepoLoadExec.py --mock --replace  --load_entry_data \
 RCSB/PDB repository path details are stored as configuration options.
 An example configuration file included in this package is shown below.
 This example is references dictionary resources and mock repository data
-provided in the package in `rcsb_db/data/*`.
+provided in the package in `rcsb/mock-data/*`.
 The `DEFAULT` section provides database server connection details.  This is
 followed by sections specifying the dictionaries and helper functions used
 to define the schema for the each supported content type (e.g., pdbx, chem_comp,
@@ -331,16 +332,17 @@ bird, bird_family,.. ).
 
 
 ```bash
-#File: rcsb_db/data/dbload-setup-example.cfg
-# -------------------------------------------------------------------------
-#
+# File: dbload-setup-example.cfg
 [DEFAULT]
 #
 BIRD_REPO_PATH=MOCK_BIRD_REPO
 BIRD_FAMILY_REPO_PATH=MOCK_BIRD_FAMILY_REPO
 BIRD_CHEM_COMP_REPO_PATH=MOCK_BIRD_CC_REPO
 CHEM_COMP_REPO_PATH=MOCK_CHEM_COMP_REPO
-RCSB_PDBX_SANBOX_PATH=MOCK_PDBX_SANDBOX
+PDBX_REPO_PATH=MOCK_PDBX_SANDBOX
+#
+RCSB_EXCHANGE_SANDBOX_PATH=MOCK_EXCHANGE_SANDBOX
+RCSB_SEQUENCE_CLUSTER_DATA_PATH=cluster_data/mmseqs-20180608
 #
 MONGO_DB_HOST=localhost
 MONGO_DB_PORT=27017
@@ -367,7 +369,7 @@ COCKROACH_DB_USER_NAME=root
 PDBX_DICT_LOCATOR=dictionaries/mmcif_pdbx_v5_next.dic
 RCSB_DICT_LOCATOR=dictionaries/rcsb_mmcif_ext_v1.dic
 PROVENANCE_INFO_LOCATOR=provenance/rcsb_extend_provenance_info.json
-DICT_METHOD_HELPER_MODULE=rcsb_db.helpers.DictMethodRunnerHelper
+DICT_METHOD_HELPER_MODULE=rcsb.db.helpers.DictMethodRunnerHelper
 
 ## -------------------
 [pdbx]
@@ -381,10 +383,10 @@ SCHEMA_DEF_LOCATOR_ANY=schema/schema_def-pdbx-ANY.json
 INSTANCE_DATA_TYPE_INFO_LOCATOR=data_type_info/scan-pdbx-type-map.json
 APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
 
-DICT_HELPER_MODULE=rcsb_db.helpers.DictInfoHelper
-SCHEMADEF_HELPER_MODULE=rcsb_db.helpers.SchemaDefHelper
-DOCUMENT_HELPER_MODULE=rcsb_db.helpers.SchemaDocumentHelper
-DICT_METHOD_HELPER_MODULE=rcsb_db.helpers.DictMethodRunnerHelper
+DICT_HELPER_MODULE=rcsb.db.helpers.DictInfoHelper
+SCHEMADEF_HELPER_MODULE=rcsb.db.helpers.SchemaDefHelper
+DOCUMENT_HELPER_MODULE=rcsb.db.helpers.SchemaDocumentHelper
+DICT_METHOD_HELPER_MODULE=rcsb.db.helpers.DictMethodRunnerHelper
 
 ## -------------------
 [pdbx_core]
@@ -398,10 +400,10 @@ SCHEMA_DEF_LOCATOR_ANY=schema/schema_def-pdbx_core-ANY.json
 INSTANCE_DATA_TYPE_INFO_LOCATOR=data_type_info/scan-pdbx-type-map.json
 APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
 
-DICT_HELPER_MODULE=rcsb_db.helpers.DictInfoHelper
-SCHEMADEF_HELPER_MODULE=rcsb_db.helpers.SchemaDefHelper
-DOCUMENT_HELPER_MODULE=rcsb_db.helpers.SchemaDocumentHelper
-DICT_METHOD_HELPER_MODULE=rcsb_db.helpers.DictMethodRunnerHelper
+DICT_HELPER_MODULE=rcsb.db.helpers.DictInfoHelper
+SCHEMADEF_HELPER_MODULE=rcsb.db.helpers.SchemaDefHelper
+DOCUMENT_HELPER_MODULE=rcsb.db.helpers.SchemaDocumentHelper
+DICT_METHOD_HELPER_MODULE=rcsb.db.helpers.DictMethodRunnerHelper
 
 ## -------------------
 [chem_comp]
@@ -415,10 +417,10 @@ SCHEMA_DEF_LOCATOR_ANY=schema/schema_def-chem_comp-ANY.json
 INSTANCE_DATA_TYPE_INFO_LOCATOR=data_type_info/scan-chem_comp-type-map.json
 APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
 
-DICT_HELPER_MODULE=rcsb_db.helpers.DictInfoHelper
-SCHEMADEF_HELPER_MODULE=rcsb_db.helpers.SchemaDefHelper
-DOCUMENT_HELPER_MODULE=rcsb_db.helpers.SchemaDocumentHelper
-DICT_METHOD_HELPER_MODULE=rcsb_db.helpers.DictMethodRunnerHelper
+DICT_HELPER_MODULE=rcsb.db.helpers.DictInfoHelper
+SCHEMADEF_HELPER_MODULE=rcsb.db.helpers.SchemaDefHelper
+DOCUMENT_HELPER_MODULE=rcsb.db.helpers.SchemaDocumentHelper
+DICT_METHOD_HELPER_MODULE=rcsb.db.helpers.DictMethodRunnerHelper
 
 ## -------------------
 [bird_chem_comp]
@@ -432,10 +434,10 @@ SCHEMA_DEF_LOCATOR_ANY=schema/schema_def-bird_chem_comp-ANY.json
 INSTANCE_DATA_TYPE_INFO_LOCATOR=data_type_info/scan-bird_chem_comp-type-map.json
 APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
 
-DICT_HELPER_MODULE=rcsb_db.helpers.DictInfoHelper
-SCHEMADEF_HELPER_MODULE=rcsb_db.helpers.SchemaDefHelper
-DOCUMENT_HELPER_MODULE=rcsb_db.helpers.SchemaDocumentHelper
-DICT_METHOD_HELPER_MODULE=rcsb_db.helpers.DictMethodRunnerHelper
+DICT_HELPER_MODULE=rcsb.db.helpers.DictInfoHelper
+SCHEMADEF_HELPER_MODULE=rcsb.db.helpers.SchemaDefHelper
+DOCUMENT_HELPER_MODULE=rcsb.db.helpers.SchemaDocumentHelper
+DICT_METHOD_HELPER_MODULE=rcsb.db.helpers.DictMethodRunnerHelper
 
 ## -------------------
 [bird]
@@ -449,10 +451,10 @@ SCHEMA_DEF_LOCATOR_ANY=schema/schema_def-bird-ANY.json
 INSTANCE_DATA_TYPE_INFO_LOCATOR=data_type_info/scan-bird-type-map.json
 APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
 
-DICT_HELPER_MODULE=rcsb_db.helpers.DictInfoHelper
-SCHEMADEF_HELPER_MODULE=rcsb_db.helpers.SchemaDefHelper
-DOCUMENT_HELPER_MODULE=rcsb_db.helpers.SchemaDocumentHelper
-DICT_METHOD_HELPER_MODULE=rcsb_db.helpers.DictMethodRunnerHelper
+DICT_HELPER_MODULE=rcsb.db.helpers.DictInfoHelper
+SCHEMADEF_HELPER_MODULE=rcsb.db.helpers.SchemaDefHelper
+DOCUMENT_HELPER_MODULE=rcsb.db.helpers.SchemaDocumentHelper
+DICT_METHOD_HELPER_MODULE=rcsb.db.helpers.DictMethodRunnerHelper
 
 ## -------------------
 [bird_family]
@@ -466,10 +468,10 @@ SCHEMA_DEF_LOCATOR_ANY=schema/schema_def-bird_family-ANY.json
 INSTANCE_DATA_TYPE_INFO_LOCATOR=data_type_info/scan-bird_family-type-map.json
 APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
 
-DICT_HELPER_MODULE=rcsb_db.helpers.DictInfoHelper
-SCHEMADEF_HELPER_MODULE=rcsb_db.helpers.SchemaDefHelper
-DOCUMENT_HELPER_MODULE=rcsb_db.helpers.SchemaDocumentHelper
-DICT_METHOD_HELPER_MODULE=rcsb_db.helpers.DictMethodRunnerHelper
+DICT_HELPER_MODULE=rcsb.db.helpers.DictInfoHelper
+SCHEMADEF_HELPER_MODULE=rcsb.db.helpers.SchemaDefHelper
+DOCUMENT_HELPER_MODULE=rcsb.db.helpers.SchemaDocumentHelper
+DICT_METHOD_HELPER_MODULE=rcsb.db.helpers.DictMethodRunnerHelper
 
 ## -------------------
 [entity_sequence_clusters]
@@ -480,9 +482,29 @@ COLLECTION_ENTITY_MEMBERS_INDEX=data_set_id,entry_id,entity_id
 COLLECTION_CLUSTER_MEMBERS=cluster_members
 COLLECTION_CLUSTER_MEMBERS_INDEX=data_set_id,identity,cluster_id
 COLLECTION_VERSION_STRING=v0_1
-ENTITY_SCHEMA_NAME=rcsb_sequence_cluster_entity_list
-CLUSTER_SCHEMA_NAME=rcsb_sequence_cluster_identifer_list
+ENTITY_SCHEMA_NAME=rcsb_entity_sequence_cluster_entity_list
+CLUSTER_SCHEMA_NAME=rcsb_entity_sequence_cluster_identifer_list
 SEQUENCE_IDENTITY_LEVELS=100,95,90,70,50,30
+COLLECTION_CLUSTER_PROVENANCE=cluster_provenance
+PROVENANCE_KEY_NAME=rcsb_entity_sequence_cluster_prov
+PROVENANCE_INFO_LOCATOR=provenance/rcsb_extend_provenance_info.json
 ## -------------------
+[repository_holdings]
+DATABASE_NAME=repository_holdings
+DATABASE_VERSION_STRING=v5
+COLLECTION_HOLDINGS_UPDATE=rcsb_repository_holdings_update
+COLLECTION_HOLDINGS_CURRENT=rcsb_repository_holdings_current
+COLLECTION_HOLDINGS_UNRELEASED=rcsb_repository_holdings_unreleased
+COLLECTION_HOLDINGS_REMOVED=rcsb_repository_holdings_removed
+COLLECTION_HOLDINGS_REMOVED_AUTHORS=rcsb_repository_holdings_removed_audit_authors
+COLLECTION_HOLDINGS_SUPERSEDED=rcsb_repository_holdings_superseded
+COLLECTION_VERSION_STRING=v0_1
 
+## -------------------
+[data_exchange_status]
+DATABASE_NAME=data_exchange
+DATABASE_VERSION_STRING=v5
+COLLECTION_UPDATE_STATUS=rcsb_data_exchange_status
+COLLECTION_VERSION_STRING=v0_1
+## --------------------
 ```

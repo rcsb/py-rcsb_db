@@ -12,6 +12,7 @@
 25-Aug-2018    V0.16 split out rcsb.utils.config, rcsb.utils.io, rcsb.utils.multiproc and
                mock-data as a shared submodule for test data. Merged branch ' namespace'
                back into master.
+28-Aug-2018    V0.17 rename console scripts directory to avoid conflict with reserved keyword in Py2.
 
 
 
