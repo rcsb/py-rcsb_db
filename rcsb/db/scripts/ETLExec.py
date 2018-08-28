@@ -18,9 +18,9 @@ import logging
 import os
 import sys
 
-from rcsb.db.exec.RepoHoldingsEtlWorker import RepoHoldingsEtlWorker
-from rcsb.db.exec.SequenceClustersEtlWorker import SequenceClustersEtlWorker
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
+from rcsb.db.scripts.RepoHoldingsEtlWorker import RepoHoldingsEtlWorker
+from rcsb.db.scripts.SequenceClustersEtlWorker import SequenceClustersEtlWorker
 from rcsb.db.utils.TimeUtil import TimeUtil
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 

@@ -5,6 +5,7 @@
 #   3-Jul-2018  jdw update CLI entry points and dependencies
 #  21-Aug-2018  jdw version adjustments
 #  22-Aug-2018  jdw adjust for namespace packaging
+#  27-Aug-2018  jdw change directory containing console scripts
 #
 import re
 
@@ -14,7 +15,7 @@ from setuptools import setup
 packages = []
 thisPackage = 'rcsb.db'
 
-with open('rcsb/db/exec/__init__.py', 'r') as fd:
+with open('rcsb/db/scripts/__init__.py', 'r') as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
                         fd.read(), re.MULTILINE).group(1)
 
@@ -45,9 +46,9 @@ setup(
     ),
     entry_points={
         'console_scripts': [
-            'exdb_repo_load_cli=rcsb.db.exec.RepoLoadExec:main',
-            'repo_scan_cli=rcsb.db.exec.RepoScanExec:main',
-            'etl_exec_cli=rcsb.db.exec.ETLExec:main',
+            'exdb_repo_load_cli=rcsb.db.scripts.RepoLoadExec:main',
+            'repo_scan_cli=rcsb.db.scripts.RepoScanExec:main',
+            'etl_exec_cli=rcsb.db.scripts.ETLExec:main',
         ]
     },
     #
@@ -55,7 +56,7 @@ setup(
                       'six',
                       'python-dateutil',
                       'pytz',
-                      'mmcif; python_version >= "0.18"',
+                      'mmcif; python_version >= "0.19"',
                       'scandir; python_version < "3.0"',
                       'configparser; python_version < "3.0"',
                       'rcsb.utils.io',
