@@ -18,6 +18,7 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 import logging
+from operator import itemgetter
 
 from mmcif.api.DictionaryApi import DictionaryApi
 
@@ -69,8 +70,10 @@ class DictMethodRunner(object):
                 mLang = methDef.getLanguage()
                 mCode = methDef.getCode()
                 mImplement = methDef.getInline()
-                d = {'METHOD_LANGUAGE': mLang, 'METHOD_IMPLEMENT': mImplement, 'METHOD_TYPE': mType, 'METHOD_CODE': mCode}
+                mPriority = methDef.getPriority()
+                d = {'METHOD_LANGUAGE': mLang, 'METHOD_IMPLEMENT': mImplement, 'METHOD_TYPE': mType, 'METHOD_CODE': mCode, 'METHOD_PRIORITY': mPriority}
                 methodD[(catName, atName)].append(d)
+            #
         ##
         logger.debug("Method dictionary %r" % methodD)
         return methodD
@@ -113,17 +116,17 @@ class DictMethodRunner(object):
         """
         mTupL = self.__getDatablockMethods(dataContainer)
         logger.debug("Datablock methods %r" % mTupL)
-        for blockName, _, methodName in mTupL:
+        for blockName, _, methodName, _ in mTupL:
             self.__invokeDatablockMethod(dataContainer, blockName, methodName)
 
         mTupL = self.__getCategoryMethods(dataContainer)
         logger.debug("Category methods %r" % mTupL)
-        for catName, _, methodName in mTupL:
+        for catName, _, methodName, _ in mTupL:
             self.__invokeCategoryMethod(dataContainer, catName, methodName)
 
         mTupL = self.__getAttributeMethods(dataContainer)
         logger.debug("Attribute methods %r" % mTupL)
-        for catName, atName, methodName in mTupL:
+        for catName, atName, methodName, _ in mTupL:
             self.__invokeAttributeMethod(dataContainer, catName, atName, methodName)
 
         return True
@@ -136,7 +139,8 @@ class DictMethodRunner(object):
                     if mD['METHOD_CODE'].lower() in methodCodes and mD['METHOD_TYPE'].lower() == 'datablock':
                         tL = mD['METHOD_IMPLEMENT'].split('.')
                         methodName = ''.join(tL[1:])
-                        mL.append((dictName, None, methodName))
+                        mL.append((dictName, None, methodName, mD['METHOD_PRIORITY']))
+            mL = sorted(mL, key=itemgetter(3))
             return mL
         except Exception as e:
             logger.exception("Failing dictName %s with %s" % (dictName, str(e)))
@@ -150,7 +154,8 @@ class DictMethodRunner(object):
                     if mD['METHOD_CODE'].lower() in methodCodes and mD['METHOD_TYPE'].lower() == 'category':
                         tL = mD['METHOD_IMPLEMENT'].split('.')
                         methodName = ''.join(tL[1:])
-                        mL.append((catName, None, methodName))
+                        mL.append((catName, None, methodName, mD['METHOD_PRIORITY']))
+            mL = sorted(mL, key=itemgetter(3))
             return mL
         except Exception as e:
             logger.exception("Failing catName %r with %s" % (catName, str(e)))
@@ -164,7 +169,8 @@ class DictMethodRunner(object):
                     if mD['METHOD_CODE'].lower() in methodCodes and mD['METHOD_TYPE'].lower() == 'attribute':
                         tL = mD['METHOD_IMPLEMENT'].split('.')
                         methodName = ''.join(tL[1:])
-                        mL.append((catName, atName, methodName))
+                        mL.append((catName, atName, methodName, mD['METHOD_PRIORITY']))
+            mL = sorted(mL, key=itemgetter(3))
             return mL
         except Exception as e:
             logger.exception("Failing catName %s atName %s with %s" % (catName, atName, str(e)))

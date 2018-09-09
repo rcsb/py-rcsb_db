@@ -59,7 +59,7 @@ setup(
                       'jsonschema >= "2.6.0"',
                       'mysqlclient >= "1.3.12"',
                       'pymongo >= "3.7.0"',
-                      'mmcif; python_version >= "0.19"',
+                      'mmcif; python_version >= "0.20"',
                       'scandir; python_version < "3.0"',
                       'configparser; python_version < "3.0"',
                       'rcsb.utils.io',

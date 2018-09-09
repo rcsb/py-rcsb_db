@@ -163,7 +163,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             cObj.setValue(tV, 'non-polymer_entity_ids', 0)
             #
             tObj = dataContainer.getObj('pdbx_struct_assembly')
-            assemblyIdL = tObj.getAttributeValueList('id')
+            assemblyIdL = tObj.getAttributeValueList('id') if tObj else []
             tV = ','.join(assemblyIdL) if assemblyIdL else '?'
             cObj.setValue(tV, 'assembly_ids', 0)
 
