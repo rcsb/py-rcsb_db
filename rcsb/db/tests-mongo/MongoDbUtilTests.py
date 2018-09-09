@@ -8,7 +8,8 @@
 # Updates:
 #    19-Mar-2018 jdw remove any assumptions about the order of bulk inserts.
 #    27-Mar-2018 jdw connection configuration now via ConfigUtil -
-#     1-Apr-2018 jdw update test connections
+#     1-Apr-2018 jdw update test connectionse
+#     6-Sep-2018 jdw add schema validation tests
 ##
 """
 Test cases for simple MongoDb client opeations .
@@ -24,6 +25,7 @@ import os
 import pprint
 import time
 import unittest
+from collections import OrderedDict
 
 import dateutil.parser
 
@@ -51,6 +53,40 @@ class MongoDbUtilTests(unittest.TestCase):
         self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName)
         self.__cObj = self.__open(self.__connectD)
         #
+        self.__mongoSchema = {
+            "bsonType": "object",
+            "required": ["strField1", "intField1", "enumField1", "dblField1"],
+            "properties": {
+                "strField1": {
+                    "bsonType": "string",
+                    "description": "must be a string and is required"
+                },
+                "strField2": {
+                    "bsonType": "string",
+                    "description": "must be a string and is not required"
+                },
+                "intField1": {
+                    "bsonType": "int",
+                    "minimum": 1,
+                    "maximum": 100,
+                    "exclusiveMaximum": False,
+                    "description": "must be an integer in [ 1, 100 ] and is required"
+                },
+                "enumField1": {
+                    "enum": ["v1", "v2", "v3", "v4", None],
+                    "description": "can only be one of the enum values and is required"
+                },
+                "dblField1": {
+                    "bsonType": ["double"],
+                    "minimum": 0,
+                    "description": "must be a double and is required"
+                },
+                "dateField1": {
+                    "bsonType": "date",
+                    "description": "must be a date and is not required"
+                },
+            }
+        }
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
 
@@ -491,6 +527,132 @@ class MongoDbUtilTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
+    def testSchemaValidation1(self):
+        """Test case -  create collection and insert data with schema validation (ext. schema assignment)
+
+        """
+
+        #  Example of a Mongo flavor of JsonSchema
+        vexpr = {"$jsonSchema": self.__mongoSchema}
+
+        query = [('collMod', self.__collectionName),
+                 ('validator', vexpr),
+                 ('validationLevel', 'moderate')]
+        query = OrderedDict(query)
+
+        try:
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                if mg.databaseExists(self.__dbName):
+                    ok = mg.dropDatabase(self.__dbName)
+                    self.assertTrue(ok)
+                #
+                ok = mg.createDatabase(self.__dbName)
+                self.assertTrue(ok)
+                #
+                ok = mg.createCollection(self.__dbName, self.__collectionName)
+                self.assertTrue(ok)
+                ok = mg.databaseExists(self.__dbName)
+                self.assertTrue(ok)
+                ok = mg.collectionExists(self.__dbName, self.__collectionName)
+                self.assertTrue(ok)
+                #
+                mg.databaseCommand(self.__dbName, query)
+                dObj = {"x": 1}
+                rId = mg.insert(self.__dbName, self.__collectionName, dObj)
+                logger.info("rId is %r" % rId)
+                self.assertEqual(rId, None)
+                #
+                dObj = {"strField1": "test value", "intField1": 50, "enumField1": "v3", "dblField1": 100.1}
+                rId = mg.insert(self.__dbName, self.__collectionName, dObj)
+                logger.info("rId is %r" % rId)
+                rObj = mg.fetchOne(self.__dbName, self.__collectionName, '_id', rId)
+                logger.debug("Return Object %s" % pprint.pformat(rObj))
+                self.assertEqual(len(dObj), len(rObj))
+                self.assertEqual(dObj, rObj)
+
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
+    def testSchemaValidation2(self):
+        """Test case -  create collection and insert data with schema validation (strict mode) (integrated schema assignment)
+
+        """
+        try:
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                if mg.databaseExists(self.__dbName):
+                    ok = mg.dropDatabase(self.__dbName)
+                    self.assertTrue(ok)
+                #
+                ok = mg.createDatabase(self.__dbName)
+                self.assertTrue(ok)
+                #
+                ok = mg.createCollection(self.__dbName, self.__collectionName, overWrite=True, bsonSchema=self.__mongoSchema)
+                self.assertTrue(ok)
+                ok = mg.databaseExists(self.__dbName)
+                self.assertTrue(ok)
+                ok = mg.collectionExists(self.__dbName, self.__collectionName)
+                self.assertTrue(ok)
+                #
+                dObj = {"x": 1}
+                rId = mg.insert(self.__dbName, self.__collectionName, dObj)
+                self.assertEqual(rId, None)
+                logger.info("rId is %r" % rId)
+                dtVal = dateutil.parser.parse("2018-01-30 12:01")
+                logger.debug("date value is %r" % dtVal)
+                dObj = {"strField1": "test value", "intField1": 50, "enumField1": "v3", "dblField1": 100.1, "dateField1": dtVal}
+                rId = mg.insert(self.__dbName, self.__collectionName, dObj)
+                logger.info("rId is %r" % rId)
+                rObj = mg.fetchOne(self.__dbName, self.__collectionName, '_id', rId)
+                logger.debug("Return Object %s" % pprint.pformat(rObj))
+                self.assertEqual(len(dObj), len(rObj))
+                self.assertEqual(dObj, rObj)
+
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
+    def testSchemaValidation3(self):
+        """Test case -  create collection and insert data with schema validation (warn mode) (integrated schema assignment)
+
+        """
+        try:
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                if mg.databaseExists(self.__dbName):
+                    ok = mg.dropDatabase(self.__dbName)
+                    self.assertTrue(ok)
+                #
+                ok = mg.createDatabase(self.__dbName)
+                self.assertTrue(ok)
+                #
+                ok = mg.createCollection(self.__dbName, self.__collectionName, overWrite=True, bsonSchema=self.__mongoSchema, validationAction='warn')
+                self.assertTrue(ok)
+                ok = mg.databaseExists(self.__dbName)
+                self.assertTrue(ok)
+                ok = mg.collectionExists(self.__dbName, self.__collectionName)
+                self.assertTrue(ok)
+                #
+                dObj = {"x": 1}
+                rId = mg.insert(self.__dbName, self.__collectionName, dObj)
+                logger.info("rId is %r" % rId)
+                self.assertNotEqual(rId, None)
+
+                dObj = {"strField1": "test value", "intField1": 50, "enumField1": "v3a", "dblField1": 100.1}
+                rId = mg.insert(self.__dbName, self.__collectionName, dObj)
+                self.assertNotEqual(rId, None)
+                logger.info("rId is %r" % rId)
+                rObj = mg.fetchOne(self.__dbName, self.__collectionName, '_id', rId)
+                logger.debug("Return Object %s" % pprint.pformat(rObj))
+                self.assertEqual(len(dObj), len(rObj))
+                self.assertEqual(dObj, rObj)
+
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
 
 def suiteOps():
     suiteSelect = unittest.TestSuite()
@@ -523,6 +685,14 @@ def suiteIndex():
     return suiteSelect
 
 
+def suiteValidation():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(MongoDbUtilTests("testSchemaValidation1"))
+    suiteSelect.addTest(MongoDbUtilTests("testSchemaValidation2"))
+    suiteSelect.addTest(MongoDbUtilTests("testSchemaValidation3"))
+    return suiteSelect
+
+
 if __name__ == '__main__':
     if (True):
         mySuite = suiteOps()
@@ -535,4 +705,7 @@ if __name__ == '__main__':
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 
         mySuite = suiteIndex()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+        mySuite = suiteValidation()
         unittest.TextTestRunner(verbosity=2).run(mySuite)

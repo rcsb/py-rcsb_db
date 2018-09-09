@@ -84,8 +84,8 @@ class SchemaDefAccessConfigTests(unittest.TestCase):
                                  dictHelper=dictInfoHelper,
                                  schemaDefHelper=defHelper,
                                  documentDefHelper=docHelper,
-                                 applicationName=applicationName)
-            sD = smb.build()
+                                 )
+            sD = smb.build(applicationName=applicationName)
             #
             logger.debug("Schema %s dictionary category length %d" % (schemaName, len(sD['SCHEMA_DICT'])))
             self.assertGreaterEqual(len(sD['SCHEMA_DICT']), 5)

@@ -10,6 +10,7 @@
 #  7-Aug-2018 jdw add slice definitions converted to schema id references
 # 13-Aug-2018 jdw Refine the role of includeContentClasses -
 # 14-Aug-2018 jdw Return 'COLLECTION_DOCUMENT_ATTRIBUTE_NAMES' as a list
+#  6-Sep-2018 jdw Generalize JSON schema generation method
 ##
 """
 Integrate dictionary metadata and file based(type/coverage) into schema defintions.
@@ -89,8 +90,8 @@ class SchemaDefBuild(object):
     """
 
     def __init__(self, schemaName, dictLocators, instDataTypeFilePath, appDataTypeFilePath,
-                 dictHelper=None, schemaDefHelper=None, documentDefHelper=None, applicationName='ANY',
-                 includeContentClasses=['DYNAMIC_CONTENT']):
+                 dictHelper=None, schemaDefHelper=None, documentDefHelper=None,
+                 includeContentClasses=['GENERATED_CONTENT', 'EVOLVING_CONTENT']):
         """
         """
         #
@@ -100,31 +101,34 @@ class SchemaDefBuild(object):
         self.__appDataTypeFilePath = appDataTypeFilePath
         self.__schemaDefHelper = schemaDefHelper
         self.__documentDefHelper = documentDefHelper
-        self.__applicationName = applicationName
+
         self.__includeContentClasses = includeContentClasses
 
         self.__dictInfo = DictInfo(dictLocators=dictLocators, dictHelper=dictHelper, dictSubset=schemaName)
         #
 
-    def build(self, collectionName=None, schemaType='rcsb'):
+    def build(self, collectionName=None, applicationName='ANY', schemaType='rcsb', enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
+        rD = {}
         if schemaType.lower() == 'rcsb':
             rD = self.__build(schemaName=self.__schemaName,
-                              applicationName=self.__applicationName,
+                              applicationName=applicationName,
                               instDataTypeFilePath=self.__instDataTypeFilePath,
                               appDataTypeFilePath=self.__appDataTypeFilePath,
                               schemaDefHelper=self.__schemaDefHelper,
                               documentDefHelper=self.__documentDefHelper,
                               includeContentClasses=self.__includeContentClasses
                               )
-        elif schemaType.lower() == 'json':
-            rD = self.__createJsonSchema(schemaName=self.__schemaName,
-                                         collectionName=collectionName,
-                                         instDataTypeFilePath=self.__instDataTypeFilePath,
-                                         appDataTypeFilePath=self.__appDataTypeFilePath,
-                                         schemaDefHelper=self.__schemaDefHelper,
-                                         documentDefHelper=self.__documentDefHelper,
-                                         includeContentClasses=self.__includeContentClasses
-                                         )
+        elif schemaType.lower() in ['json', 'bson']:
+            rD = self.__createJsonLikeSchema(schemaName=self.__schemaName,
+                                             collectionName=collectionName,
+                                             applicationName=applicationName.upper(),
+                                             instDataTypeFilePath=self.__instDataTypeFilePath,
+                                             appDataTypeFilePath=self.__appDataTypeFilePath,
+                                             schemaDefHelper=self.__schemaDefHelper,
+                                             documentDefHelper=self.__documentDefHelper,
+                                             includeContentClasses=self.__includeContentClasses,
+                                             enforceOpts=enforceOpts
+                                             )
 
         return rD
 
@@ -187,7 +191,7 @@ class SchemaDefBuild(object):
         # convertNameF = self.__schemaDefHelper.convertNameDefault if self.__schemaDefHelper else self.__convertNameDefault
         #
         try:
-            if applicationName in ['ANY', 'SQL', 'DOCUMENT', 'SOLR', 'JSON']:
+            if applicationName in ['ANY', 'SQL', 'DOCUMENT', 'SOLR', 'JSON', 'BSON']:
                 nameConvention = applicationName
             else:
                 nameConvention = 'DEFAULT'
@@ -206,7 +210,7 @@ class SchemaDefBuild(object):
             instDataTypeFilePath (string): Path to data instance type and coverage
             appDataTypeFilePath (string): Path to resource file mapping cif data types to application data types
             schemaDefHelper (class instance): Class instance providing additional schema details
-            includeContentClasses (list, optional): list of additional content classes to be included (e.g. DYNAMIC_CONTENT)
+            includeContentClasses (list, optional): list of additional content classes to be included (e.g. GENERATED_CONTENT)
 
         Returns:
             dict: definitions for each schema object
@@ -240,7 +244,7 @@ class SchemaDefBuild(object):
         rD = {}
         for catName, atNameList in dictSchema.items():
             cfD = self.__dictInfo.getCategoryFeatures(catName)
-            #logger.debug("catName %s contentClasses %r cfD %r" % (catName, contentClasses, cfD))
+            # logger.debug("catName %s contentClasses %r cfD %r" % (catName, contentClasses, cfD))
 
             if not dtInstInfo.exists(catName) and not self.__testContentClasses(contentClasses, cfD['CONTENT_CLASSES']):
                 logger.debug("Schema %r Skipping category %s content classes %r" % (schemaName, catName, cfD['CONTENT_CLASSES']))
@@ -262,6 +266,7 @@ class SchemaDefBuild(object):
             d['SCHEMA_TYPE'] = 'transactional'
             d['SCHEMA_UNIT_CARDINALITY'] = cfD['UNIT_CARDINALITY'] if 'UNIT_CARDINALITY' in cfD else False
             d['SCHEMA_CONTENT_CLASSES'] = cfD['CONTENT_CLASSES'] if 'CONTENT_CLASSES' in cfD else []
+            d['SCHEMA_MANDATORY'] = cfD['IS_MANDATORY']
             #
             d['ATTRIBUTES'] = {convertNameF(blockAttributeName).upper(): convertNameF(blockAttributeName)} if blockAttributeName else {}
             d['ATTRIBUTES'].update({(convertNameF(at)).upper(): convertNameF(at) for at in atNameList})
@@ -284,6 +289,7 @@ class SchemaDefBuild(object):
                     'WIDTH': blockAttributeWidth,
                     'ITERABLE_DELIMITER': None,
                     'FILTER_TYPES': [],
+                    'ENUMERATION': {},
                     'IS_CHAR_TYPE': True,
                     'CONTENT_CLASSES': ['BLOCK_ATTRIBUTE']}
                 iOrder += 1
@@ -316,6 +322,7 @@ class SchemaDefBuild(object):
                           'ITERABLE_DELIMITER': None,
                           'FILTER_TYPES': fD['FILTER_TYPES'],
                           'IS_CHAR_TYPE': fD['IS_CHAR_TYPE'],
+                          'ENUMERATION': {str(ky).lower(): ky for ky in fD['ENUMS']},
                           'CONTENT_CLASSES': fD['CONTENT_CLASSES']}
                     atId = (convertNameF(atName)).upper()
                     d['ATTRIBUTE_INFO'][atId] = td
@@ -353,6 +360,7 @@ class SchemaDefBuild(object):
                           'ITERABLE_DELIMITER': fD['ITERABLE_DELIMITER'],
                           'FILTER_TYPES': fD['FILTER_TYPES'],
                           'IS_CHAR_TYPE': fD['IS_CHAR_TYPE'],
+                          'ENUMERATION': {str(ky).lower(): ky for ky in fD['ENUMS']},
                           'CONTENT_CLASSES': fD['CONTENT_CLASSES']}
                     atId = (convertNameF(atName)).upper()
                     d['ATTRIBUTE_INFO'][atId] = td
@@ -458,33 +466,43 @@ class SchemaDefBuild(object):
 
     # -------------------------- ------------- ------------- ------------- ------------- ------------- -------------
 
-    def __createJsonSchema(self, schemaName, collectionName, instDataTypeFilePath, appDataTypeFilePath, schemaDefHelper, documentDefHelper, includeContentClasses=None):
-        """Internal method to integrate dictionary and instance metadata into a common json schema description data structure.
+    def __createJsonLikeSchema(self, schemaName, collectionName, applicationName, instDataTypeFilePath, appDataTypeFilePath,
+                               schemaDefHelper, documentDefHelper, includeContentClasses=None, jsonSpecDraft='4',
+                               enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
+        """Internal method to integrate dictionary and instance metadata into a common json/bson schema description data structure.
 
-           Working for schema style: rowwise_by_name_with_cardinality
+           Working only for practical schema style: rowwise_by_name_with_cardinality
 
         Args:
             schemaName (str): A schema/content name: pdbx|chem_comp|bird|bird_family ...
             collectionName (str): Collection defined within a schema/content type
+            applicationName (str): Target application for the schema (e.g. ANY, SQL, JSON, BSON, ...)
             instDataTypeFilePath (str): Path to data instance type and coverage
             appDataTypeFilePath (str): Path to resource file mapping cif data types to application data types
             schemaDefHelper (class instance): Class instance providing additional schema details
             documentDefHelper (class instance): Class instance providing additional document schema details
-            includeContentClasses (list, optional): list of additional content classes to be included (e.g. DYNAMIC_CONTENT)
+            includeContentClasses (list, optional): list of additional content classes to be included (e.g. GENERATED_CONTENT)
+            jsonSpecDraft (str, optional): The target draft schema specification '4|6'
+            enforceOpts (str, optional): options for semantics are included in the schema (e.g. "mandatoryKeys|mandatoryAttributes|bounds|enums")
 
         Returns:
-            dict: representation of JSON schema -
+            dict: representation of JSON/BSON schema -
+
 
         """
-        applicationName = 'JSON'
-        convertNameF = self.__getConvertNameMethod(applicationName)
+        # enforceOpts = "mandatoryKeys|mandatoryAttributes|bounds|enums"
+        #
+        # applicationName = 'JSON'
+        appNameU = applicationName.upper()
+        typeKey = 'bsonType' if appNameU == 'BSON' else 'type'
+        convertNameF = self.__getConvertNameMethod(appNameU)
         #
         addBlockAttribute = False
         contentClasses = includeContentClasses if includeContentClasses else []
         logger.debug("Including additional category classes %r" % contentClasses)
         #
         dtInstInfo = DataTypeInstanceInfo(instDataTypeFilePath)
-        dtAppInfo = DataTypeApplicationInfo(appDataTypeFilePath, applicationName=applicationName)
+        dtAppInfo = DataTypeApplicationInfo(appDataTypeFilePath, applicationName=appNameU)
         #
         #      Supplied by the schemaDefHelper for the content type (SchemaIds)
         #
@@ -516,6 +534,7 @@ class SchemaDefBuild(object):
         dictSchema = self.__dictInfo.getNameSchema()
         #
         schemaPropD = {}
+        mandatoryCategoryL = []
         for catName, atNameList in dictSchema.items():
             cfD = self.__dictInfo.getCategoryFeatures(catName)
             logger.debug("catName %s contentClasses %r cfD %r" % (catName, contentClasses, cfD))
@@ -553,20 +572,26 @@ class SchemaDefBuild(object):
             #
             aD = self.__dictInfo.getAttributeFeatures(catName)
             #
-            isUnitCard = True if 'UNIT_CARDINALITY' in cfD else False
+            if cfD['IS_MANDATORY']:
+                mandatoryCategoryL.append(catName)
+            #
+            isUnitCard = True if ('UNIT_CARDINALITY' in cfD and cfD['UNIT_CARDINALITY']) else False
             if sliceFilter and sliceFilter in sliceCardD:
                 isUnitCard = catName in sliceCardD[sliceFilter]
             #
-            pD = {'type': "object", 'properties': {}, 'required': []}
+            pD = {typeKey: "object", 'properties': {}, 'required': []}
             #
             if isUnitCard:
                 catPropD = pD
             else:
-                catPropD = {'type': "array", 'items': [pD], 'minItems': 1, 'uniqueItems': True}
+                if cfD['IS_MANDATORY']:
+                    catPropD = {typeKey: "array", 'items': [pD], 'minItems': 1, 'uniqueItems': True}
+                else:
+                    catPropD = {typeKey: "array", 'items': [pD], 'minItems': 0, 'uniqueItems': True}
             #
             if addBlockAttribute:
                 schemaAttributeName = convertNameF(blockAttributeName)
-                atPropD = {'type': blockAttributeAppType, 'maxWidth': blockAttributeWidth}
+                atPropD = {typeKey: blockAttributeAppType, 'maxWidth': blockAttributeWidth}
                 pD['required'].append(schemaAttributeName)
                 pD['properties'][schemaAttributeName] = atPropD
 
@@ -579,48 +604,72 @@ class SchemaDefBuild(object):
                 appType = dtAppInfo.getAppTypeName(fD['TYPE_CODE'])
                 # appWidth = dtAppInfo.getAppTypeDefaultWidth(fD['TYPE_CODE'])
                 # instWidth = dtInstInfo.getMaxWidth(catName, atName)
-                isRequired = fD['IS_KEY'] or fD['IS_MANDATORY']
+                #
+                isRequired = (('mandatoryKeys' in enforceOpts and fD['IS_KEY']) or ('mandatoryAttributes' in enforceOpts and fD['IS_MANDATORY']))
                 if isRequired:
                     pD['required'].append(schemaAttributeName)
                 #
                 if appType in ['string']:
-                    # atPropD = {'type': appType, 'maxWidth': instWidth}
-                    atPropD = {'type': appType}
+                    # atPropD = {typeKey: appType, 'maxWidth': instWidth}
+                    atPropD = {typeKey: appType}
 
-                elif appType in ['number', 'integer']:
-                    atPropD = {'type': appType}
-                    if 'MIN_VALUE' in fD:
-                        atPropD['minimum'] = fD['MIN_VALUE']
-                    elif 'MIN_VALUE_EXCLUSIVE' in fD:
-                        atPropD['exclusiveMinimum'] = fD['MIN_VALUE_EXCLUSIVE']
-                    if 'MAX_VALUE' in fD:
-                        atPropD['maximum'] = fD['MAX_VALUE']
-                    elif 'MAX_VALUE_EXCLUSIVE' in fD:
-                        atPropD['exclusiveMaximum'] = fD['MAX_VALUE_EXCLUSIVE']
+                elif appType in ['number', 'integer', 'int', 'double']:
+                    atPropD = {typeKey: appType}
+                    #
+                    if 'bounds' in enforceOpts:
+                        if jsonSpecDraft in ['3', '4']:
+                            if 'MIN_VALUE' in fD:
+                                atPropD['minimum'] = fD['MIN_VALUE']
+                            elif 'MIN_VALUE_EXCLUSIVE' in fD:
+                                atPropD['minimum'] = fD['MIN_VALUE_EXCLUSIVE']
+                                atPropD['exclusiveMinimum'] = True
+                            if 'MAX_VALUE' in fD:
+                                atPropD['maximum'] = fD['MAX_VALUE']
+                            elif 'MAX_VALUE_EXCLUSIVE' in fD:
+                                atPropD['maximum'] = fD['MAX_VALUE_EXCLUSIVE']
+                                atPropD['exclusiveMaximum'] = True
+                        elif jsonSpecDraft in ['6', '7']:
+                            if 'MIN_VALUE' in fD:
+                                atPropD['minimum'] = fD['MIN_VALUE']
+                            elif 'MIN_VALUE_EXCLUSIVE' in fD:
+                                atPropD['exclusiveMinimum'] = fD['MIN_VALUE_EXCLUSIVE']
+                            if 'MAX_VALUE' in fD:
+                                atPropD['maximum'] = fD['MAX_VALUE']
+                            elif 'MAX_VALUE_EXCLUSIVE' in fD:
+                                atPropD['exclusiveMaximum'] = fD['MAX_VALUE_EXCLUSIVE']
                 else:
-                    pass
+                    atPropD = {typeKey: appType}
                 #
-                if fD['ENUMS']:
+                if 'enums' in enforceOpts and fD['ENUMS']:
                     atPropD['enum'] = fD['ENUMS']
-                try:
-                    if fD['EXAMPLES']:
-                        atPropD['examples'] = [str(t1).strip() for t1, t2 in fD['EXAMPLES']]
-                except Exception as e:
-                    logger.exception("Failing for %r with %s" % (fD['EXAMPLES'], str(e)))
-                if fD['DESCRIPTION']:
-                    atPropD['description'] = fD['DESCRIPTION']
-                #
+                if appNameU not in ['BSON']:
+                    try:
+                        if fD['EXAMPLES']:
+                            atPropD['examples'] = [str(t1).strip() for t1, t2 in fD['EXAMPLES']]
+                    except Exception as e:
+                        logger.exception("Failing for %r with %s" % (fD['EXAMPLES'], str(e)))
+                    if fD['DESCRIPTION']:
+                        atPropD['description'] = fD['DESCRIPTION']
+                    #
                 delimiter = fD['ITERABLE_DELIMITER']
                 if delimiter:
-                    pD['properties'][schemaAttributeName] = {'type': 'array', 'items': atPropD, 'uniqueItems': True}
+                    pD['properties'][schemaAttributeName] = {typeKey: 'array', 'items': atPropD, 'uniqueItems': True}
                 else:
                     pD['properties'][schemaAttributeName] = atPropD
 
                 #
-
+            if 'required' in catPropD and len(catPropD['required']) < 1:
+                logger.info("Category %s cfD %r" % (catName, cfD.items()))
             #
             schemaPropD[sName] = copy.deepcopy(catPropD)
+        #
+        rD = {typeKey: 'object', 'properties': schemaPropD}
+        if appNameU == 'JSON':
+            jsonSchemaUrl = "http://json-schema.org/draft-0%s/schema#" % jsonSpecDraft if jsonSpecDraft in ['3', '4', '6', '7'] else "http://json-schema.org/schema#"
+            rD.update({"$id": "https://github.com/rcsb/py-rcsb.db/tree/master/rcsb.db/data/json-schema/",
+                       "$schema": jsonSchemaUrl,
+                       'title': 'Schema for content type %s collection %s' % (schemaName, collectionName)})
+        if len(mandatoryCategoryL):
+            rD['required'] = mandatoryCategoryL
 
-        return {"$id": "https://github.com/rcsb/py-rcsb.db/tree/master/rcsb.db/data/json-schema/",
-                "$schema": "http://json-schema.org/draft-07/schema#", 'title': 'Schema for content type %s collection %s'
-                % (schemaName, collectionName), 'type': 'object', 'properties': schemaPropD, 'required': []}
+        return rD

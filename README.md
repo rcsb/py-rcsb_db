@@ -45,20 +45,20 @@ compatible with MongoDB.
 ```bash
 exdb_repo_load_cli --help
 
-usage:  exdb_repo_load_cli
-                       [-h] [--full] [--replace] [--load_chem_comp_ref]
-                       [--load_bird_chem_comp_ref] [--load_bird_ref]
-                       [--load_bird_family_ref] [--load_entry_data]
-                       [--load_pdbx_core] [--config_path CONFIG_PATH]
-                       [--config_name CONFIG_NAME] [--db_type DB_TYPE]
-                       [--document_style DOCUMENT_STYLE] [--read_back_check]
-                       [--load_file_list_path LOAD_FILE_LIST_PATH]
-                       [--fail_file_list_path FAIL_FILE_LIST_PATH]
-                       [--save_file_list_path SAVE_FILE_LIST_PATH]
-                       [--num_proc NUM_PROC] [--chunk_size CHUNK_SIZE]
-                       [--file_limit FILE_LIMIT]
-                       [--prune_document_size PRUNE_DOCUMENT_SIZE] [--debug]
-                       [--mock] [--working_path WORKING_PATH]
+usage: exdb_repo_load_cli [-h] [--full] [--replace] [--load_chem_comp_ref]
+                          [--load_bird_chem_comp_ref] [--load_bird_ref]
+                          [--load_bird_family_ref] [--load_entry_data]
+                          [--load_pdbx_core] [--config_path CONFIG_PATH]
+                          [--config_name CONFIG_NAME] [--db_type DB_TYPE]
+                          [--document_style DOCUMENT_STYLE]
+                          [--read_back_check] [--schema_level SCHEMA_LEVEL]
+                          [--load_file_list_path LOAD_FILE_LIST_PATH]
+                          [--fail_file_list_path FAIL_FILE_LIST_PATH]
+                          [--save_file_list_path SAVE_FILE_LIST_PATH]
+                          [--num_proc NUM_PROC] [--chunk_size CHUNK_SIZE]
+                          [--file_limit FILE_LIMIT]
+                          [--prune_document_size PRUNE_DOCUMENT_SIZE]
+                          [--debug] [--mock] [--working_path WORKING_PATH]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -86,67 +86,8 @@ optional arguments:
                         y|rowwise_by_name|columnwise_by_name|rowwise_by_id|row
                         wise_no_name
   --read_back_check     Perform read back check on all documents
-  --load_file_list_path LOAD_FILE_LIST_PATH
-                        Input file containing load file path list (override
-                        automatic repository scan)
-  --fail_file_list_path FAIL_FILE_LIST_PATH
-                        Output file containing file paths that fail to load
-  --save_file_list_path SAVE_FILE_LIST_PATH
-                        Save repo file paths from automatic file system scan
-                        in this path
-  --num_proc NUM_PROC   Number of processes to execute (default=2)
-  --chunk_size CHUNK_SIZE
-                        Number of files loaded per process
-  --file_limit FILE_LIMIT
-                        Load file limit for testing
-  --prune_document_size PRUNE_DOCUMENT_SIZE
-                        Prune large documents to this size limit (MB)
-  --debug               Turn on verbose logging
-  --mock                Use MOCK repository configuration for testing
-  --working_path WORKING_PATH
-                        Working path for temporary files
-
-
-exdb_repo_load_cli --help
-
-usage:  exdb_repo_load_cli [-h] [--full] [--replace] [--load_chem_comp_ref]
-                           [--load_bird_chem_comp_ref] [--load_bird_ref]
-                           [--load_bird_family_ref] [--load_entry_data]
-                           [--config_path CONFIG_PATH] [--config_name CONFIG_NAME]
-                           [--db_type DB_TYPE] [--document_style DOCUMENT_STYLE]
-                           [--read_back_check]
-                           [--load_file_list_path LOAD_FILE_LIST_PATH]
-                           [--fail_file_list_path FAIL_FILE_LIST_PATH]
-                           [--save_file_list_path SAVE_FILE_LIST_PATH]
-                           [--num_proc NUM_PROC] [--chunk_size CHUNK_SIZE]
-                           [--file_limit FILE_LIMIT]
-                           [--prune_document_size PRUNE_DOCUMENT_SIZE] [--debug]
-                           [--mock] [--working_path WORKING_PATH]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --full                Fresh full load in a new tables/collections
-  --replace             Load with replacement in an existing table/collection
-                        (default)
-  --load_chem_comp_ref  Load Chemical Component reference definitions (public
-                        subset)
-  --load_bird_chem_comp_ref
-                        Load Bird Chemical Component reference definitions
-                        (public subset)
-  --load_bird_ref       Load Bird reference definitions (public subset)
-  --load_bird_family_ref
-                        Load Bird Family reference definitions (public subset)
-  --load_entry_data     Load PDB entry data (current released subset)
-  --config_path CONFIG_PATH
-                        Path to configuration options file
-  --config_name CONFIG_NAME
-                        Configuration section name
-  --db_type DB_TYPE     Database server type (default=mongo)
-  --document_style DOCUMENT_STYLE
-                        Document organization (rowwise_by_name_with_cardinalit
-                        y|rowwise_by_name|columnwise_by_name|rowwise_by_id|row
-                        wise_no_name
-  --read_back_check     Perform read back check on all documents
+  --schema_level SCHEMA_LEVEL
+                        Schema validation level (full|min default=None)
   --load_file_list_path LOAD_FILE_LIST_PATH
                         Input file containing load file path list (override
                         automatic repository scan)
@@ -506,5 +447,54 @@ DATABASE_NAME=data_exchange
 DATABASE_VERSION_STRING=v5
 COLLECTION_UPDATE_STATUS=rcsb_data_exchange_status
 COLLECTION_VERSION_STRING=v0_1
+##
 ## --------------------
+## Preliminary configuration JSON Schema (BSON type flavor)
+##
+[pdbx_v5_0_2]
+SCHEMA_NAME=pdbx
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-pdbx_v5_0_2.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-pdbx_v5_0_2.json
+
+[pdbx_ext_v5_0_2]
+SCHEMA_NAME=pdbx
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-pdbx_ext_v5_0_2.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-pdbx_ext_v5_0_2.json
+
+[pdbx_core_entity_v5_0_2]
+SCHEMA_NAME=pdbx_core
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-pdbx_core_entity_v5_0_2.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-pdbx_core_entity_v5_0_2.json
+
+[pdbx_core_entry_v5_0_2]
+SCHEMA_NAME=pdbx_core
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-pdbx_core_entry_v5_0_2.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-pdbx_core_entry_v5_0_2.json
+
+[pdbx_core_assembly_v5_0_2]
+SCHEMA_NAME=pdbx_core
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-pdbx_core_assembly_v5_0_2.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-pdbx_core_assembly_v5_0_2.json
+
+[bird_v5_0_2]
+SCHEMA_NAME=bird
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-bird_v5_0_2.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-bird_v5_0_2.json
+
+[family_v5_0_2]
+SCHEMA_NAME=bird_family
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-family_v5_0_2.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-family_v5_0_2.json
+
+[chem_comp_v5_0_2]
+SCHEMA_NAME=chem_comp
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-chem_comp_v5_0_2.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-chem_comp_v5_0_2.json
+
+[bird_chem_comp_v5_0_2]
+SCHEMA_NAME=bird_chem_comp
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-chem_comp_v5_0_2.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-chem_comp_v5_0_2.json
+##
+
 ```

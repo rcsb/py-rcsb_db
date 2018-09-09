@@ -258,7 +258,7 @@ class MyDbAdapter(object):
                         aList.append(atId)
                     else:
                         # appropriate null handling -- all fields must be assigned on insert --
-                        vList.append(tableDefObj.getSqlNullValue(atId))
+                        vList.append(tableDefObj.getAppNullValue(atId))
                         aList.append(atId)
 
             sqlT = myAd.idInsertTemplateSQL(self.__databaseName, tableDefObj, insertAttributeIdList=aList)

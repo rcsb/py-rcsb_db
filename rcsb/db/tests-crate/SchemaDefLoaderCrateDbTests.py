@@ -102,15 +102,15 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
         """  Create table schema (live) for BIRD, chemical component, and PDBx data.
         """
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='bird')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='bird')
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='chem_comp')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='chem_comp')
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='pdbx')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='pdbx')
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
@@ -122,15 +122,15 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
         """  Remove table schema (live) for BIRD, chemical component, and PDBx data.
         """
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='bird')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='bird')
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='chem_comp')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='chem_comp')
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='pdbx')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='pdbx')
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
@@ -141,10 +141,10 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
     def testLoadInsertBirdReference(self):
 
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='bird')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='bird')
             self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getPathList(schemaName='bird')
-            inputPathList.extend(self.__schU.getPathList(schemaName='bird_family'))
+            inputPathList = self.__schU.getPathList(contentType='bird')
+            inputPathList.extend(self.__schU.getPathList(contentType='bird_family'))
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = CrateDbLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=self.__workPath,
                                     cleanUp=False, warnings='default', verbose=self.__verbose)
@@ -156,10 +156,10 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
 
     def testLoadInsertManyBirdReference(self):
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='bird')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='bird')
             self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getPathList(schemaName='bird')
-            inputPathList.extend(self.__schU.getPathList(schemaName='bird_family'))
+            inputPathList = self.__schU.getPathList(contentType='bird')
+            inputPathList.extend(self.__schU.getPathList(contentType='bird_family'))
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = CrateDbLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=self.__workPath,
                                     cleanUp=False, warnings='default', verbose=self.__verbose)
@@ -172,9 +172,9 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
     def testLoadInsertChemCompReference(self):
 
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='chem_comp')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='chem_comp')
             self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getPathList(schemaName='chem_comp')
+            inputPathList = self.__schU.getPathList(contentType='chem_comp')
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = CrateDbLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=self.__workPath, cleanUp=False, warnings='default', verbose=self.__verbose)
                 ret = sdl.load(inputPathList=inputPathList, loadType='crate-insert', deleteOpt='selected')
@@ -186,9 +186,9 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
     def testLoadInsertManyChemCompReference(self):
 
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='chem_comp')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='chem_comp')
             self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getPathList(schemaName='chem_comp')
+            inputPathList = self.__schU.getPathList(contentType='chem_comp')
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = CrateDbLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=self.__workPath, cleanUp=False, warnings='default', verbose=self.__verbose)
                 ret = sdl.load(inputPathList=inputPathList, loadType='crate-insert-many', deleteOpt='selected')
@@ -199,9 +199,9 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
 
     def testLoadInsertPdbxExampleFiles(self):
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='pdbx')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='pdbx')
             self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getPathList(schemaName='pdbx')
+            inputPathList = self.__schU.getPathList(contentType='pdbx')
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = CrateDbLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=self.__workPath, cleanUp=False, warnings='default', verbose=self.__verbose)
                 ret = sdl.load(inputPathList=inputPathList, loadType='crate-insert', deleteOpt='selected', tableIdSkipD=self.__tableIdSkipD)
@@ -212,9 +212,9 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
 
     def testLoadInsertManyPdbxExampleFiles(self):
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='pdbx')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='pdbx')
             self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getPathList(schemaName='pdbx')
+            inputPathList = self.__schU.getPathList(contentType='pdbx')
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = CrateDbLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=self.__workPath, cleanUp=False, warnings='default', verbose=self.__verbose)
                 ret = sdl.load(inputPathList=inputPathList, loadType='crate-insert-many', deleteOpt='selected', tableIdSkipD=self.__tableIdSkipD)

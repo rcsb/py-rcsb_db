@@ -22,7 +22,6 @@
 #
 ##
 """
-Worker methods for loading PDBx resident data sets (e.g., BIRD, CCD and PDBx/mmCIF data files)
 following mapping conventions in external schema definitions.
 
 """
@@ -55,6 +54,19 @@ logger = logging.getLogger(__name__)
 class PdbxLoader(object):
 
     def __init__(self, cfgOb, resourceName="MONGO_DB", numProc=4, chunkSize=15, fileLimit=None, verbose=False, readBackCheck=False, maxStepLength=2000, workPath=None):
+        """        following mapping conventions in external schema definitions.
+
+        Args:
+            cfgOb (TYPE): Description
+            resourceName (str, optional): Description
+            numProc (int, optional): Description
+            chunkSize (int, optional): Description
+            fileLimit (None, optional): Description
+            verbose (bool, optional): Description
+            readBackCheck (bool, optional): Description
+            maxStepLength (int, optional): Description
+            workPath (None, optional): Description
+        """
         self.__verbose = verbose
         #
         # Limit the load length of each file type for testing  -  Set to None to remove -
@@ -76,23 +88,21 @@ class PdbxLoader(object):
         #
         self.__statusList = []
         #
-        # PDBX_DICT_LOCATOR=dictionaries/mmcif_pdbx_v5_next.dic
-        # RCSB_DICT_LOCATOR=dictionaries/rcsb_mmcif_ext_v1.dic
-        # DICT_METHOD_HELPER_MODULE=rcsb.db.helpers.DictMethodRunnerHelper
-        #
         sectionName = 'DEFAULT'
         pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=sectionName)
         pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=sectionName)
+        #
         dH = self.__cfgOb.getHelper('DICT_METHOD_HELPER_MODULE', sectionName=sectionName)
         self.__dmh = DictMethodRunner(dictLocators=[pathPdbxDictionaryFile, pathRcsbDictionaryFile], methodHelper=dH)
 
     def load(self, schemaName, collectionLoadList=None, loadType='full', inputPathList=None, styleType='rowwise_by_name', dataSelectors=None,
-             failedFilePath=None, saveInputFileListPath=None, pruneDocumentSize=None, locatorKey='rcsb_load_status.locator'):
-        """Driver method for loading PDBx/mmCIF content into document store.
+             failedFilePath=None, saveInputFileListPath=None, pruneDocumentSize=None, logSize=False,
+             schemaLevel='min', locatorKey='rcsb_load_status.locator'):
+        """Driver method for loading PDBx/mmCIF content into the Mongo document store.
 
         Args:
             schemaName (str): A content schema (e.g. 'bird','bird_family','bird_chem_comp', chem_comp', 'pdbx', 'pdbx_core')
-            collectionNameList (list, optional):  list of collection names in this schema to load (default is load all collections)
+            collectionLoadList (list, optional): list of collection names in this schema to load (default is load all collections)
             loadType (str, optional): mode of loading 'full' (bulk delete then bulk insert) or 'replace'
             inputPathList (list, optional): Data file path list (if not provided the full repository will be scanned)
             styleType (str, optional): one of 'rowwise_by_name', 'columnwise_by_name', 'rowwise_no_name', 'rowwise_by_name_with_cardinality'
@@ -100,7 +110,10 @@ class PdbxLoader(object):
             failedFilePath (str, optional): Path to hold file paths for load failures
             saveInputFileListPath (list, optional): List of files
             pruneDocumentSize (bool, optional): iteratively remove large elements from a collection to satisfy size limits
+            logSize (bool, optional): Compute and log bson serialized object size
+            schemaLevel (str, optional): Completeness of json/bson metadata schema bound to each collection (e.g. 'min', 'full' or None)
             locatorKey (str, optional): Key identifier in document content storing the data file path (url)
+
 
         Returns:
             bool: True on success or False otherwise
@@ -114,25 +127,25 @@ class PdbxLoader(object):
             #
             startTime = self.__begin(message="loading operation")
             #
-            pathList = self.__schU.getPathList(schemaName=schemaName, inputPathList=inputPathList)
+            pathList = self.__schU.getPathList(contentType=schemaName, inputPathList=inputPathList)
             logger.debug("Path list length %d" % len(pathList))
             #
             if saveInputFileListPath:
                 self.__writePathList(saveInputFileListPath, pathList)
                 logger.info("Saving %d paths in %s" % (len(pathList), saveInputFileListPath))
             #
-            filterType = "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
+            filterType = "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates|convert-iterables|normalize-enums"
             if styleType in ["columnwise_by_name", "rowwise_no_name"]:
-                filterType = "drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
+                filterType = "drop-empty-tables|skip-max-width|assign-dates|convert-iterables|normalize-enums"
             #
             optD = {}
             optD['schemaName'] = schemaName
             optD['styleType'] = styleType
             optD['filterType'] = filterType
             optD['readBackCheck'] = self.__readBackCheck
-            optD['logSize'] = self.__verbose
             optD['dataSelectors'] = dataSelectors
             optD['loadType'] = loadType
+            optD['logSize'] = logSize
             optD['pruneDocumentSize'] = pruneDocumentSize
             optD['locatorKey'] = locatorKey
             # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
@@ -149,8 +162,11 @@ class PdbxLoader(object):
                 if loadType == 'full':
                     self.__removeCollection(dbName, collectionName)
                     indAtL = primaryIndexD[collectionName] if collectionName in primaryIndexD else None
-                    ok = self.__createCollection(dbName, collectionName, indAtL)
-                    logger.debug("Collection create status %r" % ok)
+                    bsonSchema = None
+                    if schemaLevel and schemaLevel in ['min', 'full']:
+                        bsonSchema = self.__schU.getJsonSchema(collectionName, level=schemaLevel)
+                    ok = self.__createCollection(dbName, collectionName, indAtL, bsonSchema=bsonSchema)
+                    logger.debug("Collection create return status %r" % ok)
 
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=filterType)
@@ -170,11 +186,9 @@ class PdbxLoader(object):
                 subLists = [pathList]
             #
             if subLists and len(subLists) > 0:
-                logger.info("Starting loadType %s with numProc %d outer subtask count %d subtask length ~ %d" % (loadType, numProc, len(subLists), len(subLists[0])))
+                logger.info("Starting loadType %s with numProc %d outer subtask count %d subtask length %d" % (loadType, numProc, len(subLists), len(subLists[0])))
             #
             failList = []
-            retLists = []
-            diagList = []
             for ii, subList in enumerate(subLists):
                 logger.info("Running outer subtask %d of %d length %d" % (ii + 1, len(subLists), len(subList)))
                 #
@@ -182,16 +196,14 @@ class PdbxLoader(object):
                 mpu.setWorkingDir(self.__workPath)
                 mpu.setOptions(optionsD=optD)
                 mpu.set(workerObj=self, workerMethod="loadWorker")
-                ok, failListT, retListsT, diagListT = mpu.runMulti(dataList=subList, numProc=numProc, numResults=1, chunkSize=chunkSize)
+                ok, failListT, _, _ = mpu.runMulti(dataList=subList, numProc=numProc, numResults=1, chunkSize=chunkSize)
                 failList.extend(failListT)
-                retLists.extend(retListsT)
-                diagList.extend(diagListT)
+            failList = list(set(failList))
             logger.debug("Failing path list %r" % failList)
-            logger.info("Load count success %d - failed count %d" % (len(pathList), len(failList)))
             #
             if failedFilePath and len(failList) > 0:
                 wOk = self.__writePathList(failedFilePath, failList)
-                logger.info("Writing failure path %s status %r" % (failedFilePath, wOk))
+                logger.info("Writing failure path %s length %d status %r" % (failedFilePath, len(failList), wOk))
             #
             ok = len(failList) == 0
             self.__end(startTime, "Loading operation with status " + str(ok))
@@ -206,6 +218,7 @@ class PdbxLoader(object):
                 desp.setEndTime()
                 self.__statusList.append(desp.getStatus())
             #
+            logger.info("Load operation fail length %d return status %r" % (len(failList), ok))
             return ok
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -217,6 +230,8 @@ class PdbxLoader(object):
 
     def loadWorker(self, dataList, procName, optionsD, workingDir):
         """ Multi-proc worker method for MongoDb loading -
+
+        sucessList,resultList,diagList=workerFunc(runList=nextList,procName, optionsD, workingDir)
         """
         try:
             startTime = self.__begin(message=procName)
@@ -235,26 +250,30 @@ class PdbxLoader(object):
             dtf = optionsD['dataTransformFactory']
             collectionNameList = optionsD['collectionNameList']
             dbName = optionsD['dbName']
-            #
-            fType = "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
-            if styleType in ["columnwise_by_name", "rowwise_no_name"]:
-                fType = "drop-empty-tables|skip-max-width|assign-dates|convert-iterables"
-            # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
+
             #
             sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=workingDir, verbose=self.__verbose)
             containerList = sdp.getContainerList(dataList, filterType=filterType)
             #
-            # Apply dynamic methods here -
+            # Apply dynamic methods for generated content here -
             #
+            readSuccessPathList = []
             for container in containerList:
-                self.__dmh.apply(container)
-
+                if self.__dmh:
+                    self.__dmh.apply(container)
+                readSuccessPathList.append(container.getProp('locator'))
+            #
+            readFailPathList = list(set(dataList) - set(readSuccessPathList))
+            #
+            if readFailPathList:
+                logger.info("Read failures readFailPathList %r" % readFailPathList)
+            #
             logger.debug("%s container count %d" % (procName, len(containerList)))
             #
             logger.debug("%s schemaName %s dbName %s collectionNameList %s pathlist %d containerList %d" %
                          (procName, schemaName, dbName, collectionNameList, len(dataList), len(containerList)))
             fullSuccessPathList = []
-            fullFailedPathList = []
+            fullFailedPathList = readFailPathList
             for collectionName in collectionNameList:
                 successPathList = []
                 failedPathList = []
@@ -271,10 +290,10 @@ class PdbxLoader(object):
                 logger.debug("%s schemaName %s exclude list %r" % (procName, schemaName, tableIdExcludeList))
 
                 #
-                tableDataDictList, containerNameList, rejectPathList = sdp.processDocuments(containerList, styleType=styleType, filterType=fType,
+                tableDataDictList, containerNameList, rejectPathList = sdp.processDocuments(containerList, styleType=styleType, filterType=filterType,
                                                                                             dataSelectors=dataSelectors, sliceFilter=sliceFilter)
                 #
-                # Get the unique paths for the rejected  container list -
+                # Get the unique paths for the rejected  container list - (rejections are not treated as failures)
                 #
                 rejectPathList = list(set(rejectPathList))
                 #
@@ -302,23 +321,25 @@ class PdbxLoader(object):
                                                                                loadType=loadType, locatorKey=locatorKey,
                                                                                readBackCheck=readBackCheck, pruneDocumentSize=pruneDocumentSize)
                 #
-                logger.debug("%s %s/%s inputList %d successes %d  failed %d rejected %d" %
-                             (procName, dbName, collectionName, len(tableDataDictList), len(successPathList), len(failedPathList), len(rejectPathList)))
-                #
-                successPathList.extend(rejectPathList)
-                fullSuccessPathList.extend(successPathList)
-                fullFailedPathList.extend(failedPathList)
+                successPathList.extend(list(set(rejectPathList)))
+                fullSuccessPathList.extend(list(set(successPathList)))
+                fullFailedPathList.extend(list(set(failedPathList)))
+                logger.info("%s %s/%s document list %d successes %d  failed %d rejected %d" %
+                            (procName, dbName, collectionName, len(tableDataDictList), len(successPathList), len(failedPathList), len(rejectPathList)))
             #
             logger.debug("fullSuccessPathList %r" % fullSuccessPathList)
             logger.debug("fullFailedPathList  %r" % fullFailedPathList)
-            retList = list(set(fullSuccessPathList) - set(fullFailedPathList))
-            logger.debug("%s %s %r full success %s full fails %d " % (procName, dbName, collectionNameList,
-                                                                      len(set(fullSuccessPathList)), len(set(fullFailedPathList))))
+            retList = list(set(dataList) - set(fullFailedPathList))
+            #
+            logger.debug("Length input path List %d length rejectList %d return path List %d" % (len(dataList), len(rejectPathList), len(retList)))
+            #
+            logger.info("%s %s %r return path List %d full failed path list %d " % (procName, dbName, collectionNameList,
+                                                                                    len(set(retList)), len(set(fullFailedPathList))))
             self.__end(startTime, procName + " with status " + str(ok))
             return retList, [], []
 
         except Exception as e:
-            #logger.error("Failing for dataList %r" % dataList)
+            # logger.error("Failing for dataList %r" % dataList)
             logger.exception("Failing with %s" % str(e))
 
         return [], [], []
@@ -348,14 +369,14 @@ class PdbxLoader(object):
         delta = endTime - startTime
         logger.debug("Completed %s at %s (%.4f seconds)" % (message, ts, delta))
 
-    def __createCollection(self, dbName, collectionName, indexAttributeNames=None):
+    def __createCollection(self, dbName, collectionName, indexAttributeNames=None, bsonSchema=None):
         """Create database and collection and optionally a primary index -
         """
         try:
             logger.debug("Create database %s collection %s" % (dbName, collectionName))
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
-                ok1 = mg.createCollection(dbName, collectionName)
+                ok1 = mg.createCollection(dbName, collectionName, bsonSchema=bsonSchema)
                 ok2 = mg.databaseExists(dbName)
                 ok3 = mg.collectionExists(dbName, collectionName)
                 okI = True

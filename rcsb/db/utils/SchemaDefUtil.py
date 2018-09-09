@@ -10,6 +10,7 @@
 #  22-Jun-2018 jdw change collection attribute specification to dot notation.
 #  14-Aug-2018 jdw generalize the primaryIndex to the list of attributes returned by getDocumentKeyAttributeNames()
 #  21-Aug-2018 jdw use getHelper() from the configuration class.
+#   7-Sep-2018 jdw add method to return a stored JSON schema getJsonSchema()
 ##
 """
  A collection of schema and repo path convenience methods.
@@ -33,6 +34,8 @@ logger = logging.getLogger(__name__)
 
 
 class SchemaDefUtil(object):
+    """ A collection of schema and repository convenience methods.
+    """
 
     def __init__(self, cfgOb=None, numProc=1, fileLimit=None, workPath=None, **kwargs):
         self.__cfgOb = cfgOb
@@ -40,25 +43,36 @@ class SchemaDefUtil(object):
         self.__numProc = numProc
         self.__workPath = workPath
 
-    def getPathList(self, schemaName, inputPathList=None):
+    def getPathList(self, contentType, inputPathList=None):
+        """Convenience method to get the data path list for the input repository content type.
+
+        Args:
+            contentType (str): Repository content type (e.g. pdbx, chem_comp, bird, ...)
+            inputPathList (list, optional): path list that will be returned if provided.
+
+        Returns:
+            list: data file file path list
+
+
+        """
         outputPathList = []
         inputPathList = inputPathList if inputPathList else []
         rpU = RepoPathUtil(self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit)
         try:
-            if schemaName == "bird":
+            if contentType == "bird":
                 outputPathList = inputPathList if inputPathList else rpU.getBirdPathList()
-            elif schemaName == "bird_family":
+            elif contentType == "bird_family":
                 outputPathList = inputPathList if inputPathList else rpU.getBirdFamilyPathList()
-            elif schemaName == 'chem_comp':
+            elif contentType == 'chem_comp':
                 outputPathList = inputPathList if inputPathList else rpU.getChemCompPathList()
-            elif schemaName == 'bird_chem_comp':
+            elif contentType == 'bird_chem_comp':
                 outputPathList = inputPathList if inputPathList else rpU.getBirdChemCompPathList()
-            elif schemaName in ['pdbx', 'pdbx_core']:
+            elif contentType in ['pdbx', 'pdbx_core']:
                 outputPathList = inputPathList if inputPathList else rpU.getEntryPathList()
-            elif schemaName in ['pdb_distro', 'da_internal', 'status_history']:
+            elif contentType in ['pdb_distro', 'da_internal', 'status_history']:
                 outputPathList = inputPathList if inputPathList else []
             else:
-                logger.warning("Unsupported schemaName %s" % schemaName)
+                logger.warning("Unsupported contentType %s" % contentType)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
 
@@ -67,7 +81,20 @@ class SchemaDefUtil(object):
 
         return outputPathList
 
-    def getSchemaInfo(self, schemaName, applicationName='ANY', saveSchema=True):
+    def getSchemaInfo(self, contentType, applicationName='ANY', useCache=True, saveSchema=True):
+        """Convenience method to return essential schema details for the input repository content type.
+
+        Args:
+            contentType (str): Repository content type (e.g. pdbx, bird, chem_comp, ...)
+            applicationName (str, optional): Application name for the target schema (e.g. ANY, SQL, ...)
+            useCache (bool, optional): Use a cached version of the target schema if available
+            saveSchema (bool, optional): If a schema is generated preserve the generated schema
+
+        Returns:
+            tuple: SchemaDefAccess(object), target database name, target collection name list, primary index attribute list
+
+
+        """
         sd = None
         dbName = None
         collectionNameList = []
@@ -75,60 +102,106 @@ class SchemaDefUtil(object):
         mU = MarshalUtil(workPath=self.__workPath)
         try:
             optName = 'SCHEMA_DEF_LOCATOR_%s' % applicationName.upper()
-            schemaLocator = self.__cfgOb.getPath(optName, sectionName=schemaName)
+            schemaLocator = self.__cfgOb.getPath(optName, sectionName=contentType)
             schemaDef = mU.doImport(schemaLocator, format="json")
-            if schemaDef:
-                logger.debug("Using cached schema definition for %s application %s" % (schemaName, applicationName))
+            if schemaDef and useCache:
+                logger.debug("Using cached schema definition for %s application %s" % (contentType, applicationName))
                 sd = SchemaDefAccess(schemaDef)
             else:
-                schemaDef = self.__buildSchema(schemaName, applicationName)
+                schemaDef = self.__buildSchema(contentType, applicationName)
                 if schemaDef and saveSchema:
                     optName = 'SCHEMA_DEF_LOCATOR_%s' % applicationName.upper()
-                    schemaLocator = self.__cfgOb.getPath(optName, sectionName=schemaName)
+                    schemaLocator = self.__cfgOb.getPath(optName, sectionName=contentType)
                     mU.doExport(schemaLocator, schemaDef, format="json")
                 sd = SchemaDefAccess(schemaDef)
 
             if sd:
                 dbName = sd.getDatabaseName()
-                collectionNameList = sd.getContentTypeCollections(schemaName)
-                logger.info("Schema %s database name %s collections %r" % (schemaName, dbName, collectionNameList))
+                collectionNameList = sd.getContentTypeCollections(contentType)
+                logger.debug("Schema %s database name %s collections %r" % (contentType, dbName, collectionNameList))
                 primaryIndexD = {}
                 for collectionName in collectionNameList:
                     primaryIndexD[collectionName] = sd.getDocumentKeyAttributeNames(collectionName)
 
         except Exception as e:
-            logger.exception("Retreiving schema %s for %s failing with %s" % (schemaName, applicationName, str(e)))
+            logger.exception("Retreiving schema %s for %s failing with %s" % (contentType, applicationName, str(e)))
 
         return sd, dbName, collectionNameList, primaryIndexD
 
-    def __buildSchema(self, schemaName, applicationName):
+    def getJsonSchema(self, collectionName, level='full'):
+        """Return JSON schema (w/ BSON types) for the input collection and level.and
+
+           Currenting using configuration information -
+
+            pdbx_core_entity_v5_0_2]
+                SCHEMA_NAME=pdbx_core
+                JSON_SCHEMA_FULL_LOCATOR=...
+                JSON_SCHEMA_MIN_LOCATOR=...
+
+        Args:
+            collectionName (str): Collection name in document store
+            level (str, optional): Completeness of the schema (e.g. min or full)
+
+        Returns:
+            dict: Schema object
+
+        """
+        sObj = None
+        if level.lower() == 'full':
+            schemaLocator = self.__cfgOb.getPath('BSON_SCHEMA_FULL_LOCATOR', sectionName=collectionName)
+        elif level.lower() in ['min', 'minimum']:
+            schemaLocator = self.__cfgOb.getPath('BSON_SCHEMA_MIN_LOCATOR', sectionName=collectionName)
+        else:
+            logger.error("Unsupported schema level %s %r" % (collectionName, level))
+            schemaLocator = None
+
+        if schemaLocator:
+            #
+            mU = MarshalUtil(workPath=self.__workPath)
+            sObj = mU.doImport(schemaLocator, format="json")
+        else:
+            logger.error("Failed to retriev schema for %s %r" % (collectionName, level))
+        return sObj
+
+    def __buildSchema(self, contentType, applicationName):
+        """Internal method to create a schema definition from dictionary and supported metadata.
+
+
+        Args:
+            contentType (str): Repository content type (e.g. pdbx, bird, chem_comp, ...)
+            applicationName (str, optional): Application name for the target schema (e.g. ANY, SQL, ...)
+
+        Returns:
+            dict: schema definition
+
+
+        """
         try:
             #
-            logger.debug("Building schema definition for %s application %s" % (schemaName, applicationName))
-            locPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=schemaName)
-            locRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', default=None, sectionName=schemaName)
+            logger.debug("Building schema definition for %s application %s" % (contentType, applicationName))
+            locPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=contentType)
+            locRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', default=None, sectionName=contentType)
             dictLocators = [locPdbxDictionaryFile, locRcsbDictionaryFile] if locRcsbDictionaryFile else [locPdbxDictionaryFile]
             #
-            instDataTypeFilePath = self.__cfgOb.getPath('INSTANCE_DATA_TYPE_INFO_LOCATOR', sectionName=schemaName)
-            appDataTypeFilePath = self.__cfgOb.getPath('APP_DATA_TYPE_INFO_LOCATOR', sectionName=schemaName)
+            instDataTypeFilePath = self.__cfgOb.getPath('INSTANCE_DATA_TYPE_INFO_LOCATOR', sectionName=contentType)
+            appDataTypeFilePath = self.__cfgOb.getPath('APP_DATA_TYPE_INFO_LOCATOR', sectionName=contentType)
             #
-            dictInfoHelper = self.__cfgOb.getHelper('DICT_HELPER_MODULE', sectionName=schemaName)
-            defHelper = self.__cfgOb.getHelper('SCHEMADEF_HELPER_MODULE', sectionName=schemaName)
-            docHelper = self.__cfgOb.getHelper('DOCUMENT_HELPER_MODULE', sectionName=schemaName)
-            smb = SchemaDefBuild(schemaName,
+            dictInfoHelper = self.__cfgOb.getHelper('DICT_HELPER_MODULE', sectionName=contentType)
+            defHelper = self.__cfgOb.getHelper('SCHEMADEF_HELPER_MODULE', sectionName=contentType)
+            docHelper = self.__cfgOb.getHelper('DOCUMENT_HELPER_MODULE', sectionName=contentType)
+            smb = SchemaDefBuild(contentType,
                                  dictLocators=dictLocators,
                                  instDataTypeFilePath=instDataTypeFilePath,
                                  appDataTypeFilePath=appDataTypeFilePath,
                                  dictHelper=dictInfoHelper,
                                  schemaDefHelper=defHelper,
-                                 documentDefHelper=docHelper,
-                                 applicationName=applicationName)
+                                 documentDefHelper=docHelper)
             #
-            sD = smb.build()
-            logger.info("Schema %s dictionary category length %d" % (schemaName, len(sD['SCHEMA_DICT'])))
+            sD = smb.build(applicationName=applicationName)
+            logger.info("Schema %s dictionary category length %d" % (contentType, len(sD['SCHEMA_DICT'])))
             return sD
 
         except Exception as e:
-            logger.exception("Building schema %s failing with %s" % (schemaName, str(e)))
+            logger.exception("Building schema %s failing with %s" % (contentType, str(e)))
             self.fail()
         return {}

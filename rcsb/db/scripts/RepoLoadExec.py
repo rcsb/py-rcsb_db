@@ -15,6 +15,7 @@
 #    14-Jul-2018 - jdw add loading of separate
 #    25-Jul-2018 - jdw die on input file path list processing error
 #    20-Aug-2018 - jdw add load_pdbx_core load option
+#     9-Sep-2018 - jdw expose --schema_level option
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -73,6 +74,7 @@ def main():
     parser.add_argument("--document_style", default="rowwise_by_name_with_cardinality",
                         help="Document organization (rowwise_by_name_with_cardinality|rowwise_by_name|columnwise_by_name|rowwise_by_id|rowwise_no_name")
     parser.add_argument("--read_back_check", default=False, action='store_true', help="Perform read back check on all documents")
+    parser.add_argument("--schema_level", default=None, help="Schema validation level (full|min default=None)")
     #
     parser.add_argument("--load_file_list_path", default=None, help="Input file containing load file path list (override automatic repository scan)")
     parser.add_argument("--fail_file_list_path", default=None, help="Output file containing file paths that fail to load")
@@ -117,6 +119,7 @@ def main():
         fileLimit = int(args.file_limit) if args.file_limit else None
         failedFilePath = args.fail_file_list_path
         fPath = args.load_file_list_path
+        schemaLevel = args.schema_level if args.schema_level in ['min', 'full', 'minimum'] else None
         loadType = 'full' if args.full else 'replace'
         loadType = 'replace' if args.replace else 'full'
         saveInputFileListPath = args.save_file_list_path
@@ -158,37 +161,37 @@ def main():
         if args.load_chem_comp_ref:
             ok = mw.load('chem_comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
-                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
+                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
         if args.load_bird_chem_comp_ref:
             ok = mw.load('bird_chem_comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
-                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
+                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
         if args.load_bird_ref:
             ok = mw.load('bird', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
-                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
+                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
         if args.load_bird_family_ref:
             ok = mw.load('bird_family', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"], failedFilePath=failedFilePath,
-                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
+                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
         if args.load_entry_data:
             ok = mw.load('pdbx', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
-                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
+                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
         if args.load_pdbx_core:
             ok = mw.load('pdbx_core', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
-                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize)
+                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
         #
         logger.info("Operation completed with status %r " % ok and okS)

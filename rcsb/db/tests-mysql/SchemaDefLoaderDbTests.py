@@ -99,22 +99,22 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
     def testSchemaCreate(self):
         """  Create table schema for BIRD, chemical component, and PDBx data.
         """
-        sd, dbName, _, _ = self.__schU.getSchemaInfo(schemaName='bird', applicationName='SQL')
+        sd, dbName, _, _ = self.__schU.getSchemaInfo(contentType='bird', applicationName='SQL')
         self.__schemaCreate(schemaDefObj=sd)
         #
-        sd, dbName, _, _ = self.__schU.getSchemaInfo(schemaName='chem_comp', applicationName='SQL')
+        sd, dbName, _, _ = self.__schU.getSchemaInfo(contentType='chem_comp', applicationName='SQL')
         self.__schemaCreate(schemaDefObj=sd)
         #
-        sd, dbName, _, _ = self.__schU.getSchemaInfo(schemaName='pdbx', applicationName='SQL')
+        sd, dbName, _, _ = self.__schU.getSchemaInfo(contentType='pdbx', applicationName='SQL')
         self.__schemaCreate(schemaDefObj=sd)
 
     def testLoadBirdReference(self):
         try:
-            sd, dbName, _, _ = self.__schU.getSchemaInfo(schemaName='bird', applicationName='SQL')
+            sd, dbName, _, _ = self.__schU.getSchemaInfo(contentType='bird', applicationName='SQL')
             self.__schemaCreate(schemaDefObj=sd)
 
-            inputPathList = self.__schU.getPathList(schemaName='bird')
-            inputPathList.extend(self.__schU.getPathList(schemaName='bird_family'))
+            inputPathList = self.__schU.getPathList(contentType='bird')
+            inputPathList.extend(self.__schU.getPathList(contentType='bird_family'))
             #
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = SchemaDefLoader(self.__cfgOb, schemaDefObj=sd, dbCon=client, workPath=os.path.join(HERE, "test-output"),
@@ -127,11 +127,11 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
 
     def testReLoadBirdReference(self):
         try:
-            sd, dbName, _, _ = self.__schU.getSchemaInfo(schemaName='bird', applicationName='SQL')
+            sd, dbName, _, _ = self.__schU.getSchemaInfo(contentType='bird', applicationName='SQL')
             self.__schemaCreate(schemaDefObj=sd)
 
-            inputPathList = self.__schU.getPathList(schemaName='bird')
-            inputPathList.extend(self.__schU.getPathList(schemaName='bird_family'))
+            inputPathList = self.__schU.getPathList(contentType='bird')
+            inputPathList.extend(self.__schU.getPathList(contentType='bird_family'))
             #
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = SchemaDefLoader(self.__cfgOb, schemaDefObj=sd, dbCon=client, workPath=os.path.join(HERE, "test-output"),
@@ -151,9 +151,9 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
 
     def testLoadChemCompReference(self):
         try:
-            sd, dbName, _, _ = self.__schU.getSchemaInfo(schemaName='chem_comp', applicationName='SQL')
+            sd, dbName, _, _ = self.__schU.getSchemaInfo(contentType='chem_comp', applicationName='SQL')
             self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getPathList(schemaName='chem_comp')
+            inputPathList = self.__schU.getPathList(contentType='chem_comp')
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = SchemaDefLoader(self.__cfgOb, schemaDefObj=sd, dbCon=client, workPath=os.path.join(HERE, "test-output"),
                                       cleanUp=False, warnings='error', verbose=self.__verbose)
@@ -165,9 +165,9 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
 
     def testLoadPdbxFiles(self):
         try:
-            sd, dbName, _, _ = self.__schU.getSchemaInfo(schemaName='pdbx', applicationName='SQL')
+            sd, dbName, _, _ = self.__schU.getSchemaInfo(contentType='pdbx', applicationName='SQL')
             self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getPathList(schemaName='pdbx')
+            inputPathList = self.__schU.getPathList(contentType='pdbx')
             logger.debug("Input path list %r " % inputPathList)
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = SchemaDefLoader(self.__cfgOb, schemaDefObj=sd, dbCon=client, workPath=os.path.join(HERE, "test-output"),

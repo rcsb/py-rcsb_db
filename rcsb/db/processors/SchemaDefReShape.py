@@ -115,7 +115,7 @@ class SchemaDefReShape(object):
             #
             sliceValues = SliceValues(schemaDataDictById, self.__sD, sliceFilter)
             for ii, sliceValue in enumerate(sliceValues):
-                logger.debug(" %4d value %r" % (ii, sliceValue))
+                logger.debug(" %4d filter %s slice value %r" % (ii, sliceFilter, sliceValue))
                 rD = self.__reshapeSlidedSchemaData(schemaDataDictById, sliceFilter, sliceValue, sI, styleType=styleType)
                 rL.append(rD)
         else:
@@ -194,6 +194,7 @@ class SchemaDefReShape(object):
             schemaObjName = self.__sD.getSchemaName(schemaId)
             #
             iRowDList = schemaDataDictById[schemaId]
+
             #
             oRowDList = []
             for iRowD in iRowDList:
@@ -202,6 +203,10 @@ class SchemaDefReShape(object):
                     for atId in iRowD:
                         oRowD[schemaObj.getAttributeName(atId)] = iRowD[atId]
                     oRowDList.append(oRowD)
+
+            if (len(oRowDList) < 1) and not schemaObj.isMandatory():
+                logger.debug("Schema id %r row length %r mandatory %r" % (schemaId, len(oRowDList), schemaObj.isMandatory()))
+                continue
 
             if schemaObj.hasSliceUnitCardinality(sliceFilter) and len(oRowDList) == 1:
                 rD[schemaObjName] = oRowDList[0]
@@ -223,7 +228,7 @@ class SchemaDefReShape(object):
             schemaObjName = self.__sD.getSchemaName(schemaId)
             #
             iRowDList = schemaDataDictById[schemaId]
-            #
+
             oRowDList = []
             for iRowD in iRowDList:
                 if lExtra or self.__inSlice(schemaId, sliceIndex, iRowD, sliceValues):
@@ -231,6 +236,10 @@ class SchemaDefReShape(object):
                     for atId in iRowD:
                         oRowD[schemaObj.getAttributeName(atId)] = iRowD[atId]
                     oRowDList.append(oRowD)
+            #
+            if (len(oRowDList) < 1) and not schemaObj.isMandatory():
+                logger.debug("Schema id %r row length %r mandatory %r" % (schemaId, len(oRowDList), schemaObj.isMandatory()))
+                continue
             rD[schemaObjName] = oRowDList
 
         return rD
@@ -246,7 +255,6 @@ class SchemaDefReShape(object):
                 continue
             # ------
             schemaObjName = self.__sD.getSchemaName(schemaId)
-            #
             iRowDList = schemaDataDictById[schemaId]
             #
             colD = {}
@@ -257,6 +265,10 @@ class SchemaDefReShape(object):
                         if atName not in colD:
                             colD[atName] = []
                         colD[atName].append(iRowD[atId])
+
+            if (len(colD) < 1) and not schemaObj.isMandatory():
+                logger.debug("Schema id %r row length %r mandatory %r" % (schemaId, len(colD), schemaObj.isMandatory()))
+                continue
             rD[schemaObjName] = colD
 
         return rD
@@ -276,6 +288,7 @@ class SchemaDefReShape(object):
             schemaObjName = self.__sD.getSchemaName(schemaId)
             #
             iRowDList = schemaDataDictById[schemaId]
+
             #
             oRowList = []
             for iRowD in iRowDList:
@@ -285,6 +298,9 @@ class SchemaDefReShape(object):
                         oRowL.append(iRowD[atId])
                     oRowList.append(oRowL)
             #
+            if (len(oRowList) < 1) and not schemaObj.isMandatory():
+                logger.debug("Schema id %r row length %r mandatory %r" % (schemaId, len(oRowList), schemaObj.isMandatory()))
+                continue
             rD[schemaObjName] = {'attributes': atNameList, 'data': oRowList}
 
         return rD

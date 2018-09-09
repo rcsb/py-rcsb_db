@@ -74,7 +74,7 @@ class SchemaDefHelper(SchemaDefHelperBase):
     def getConvertNameMethod(self, nameConvention):
         if nameConvention.upper() in ['SQL']:
             return self.__convertNameDefault
-        elif nameConvention.upper() in ['ANY', 'DOCUMENT', 'SOLR', 'JSON']:
+        elif nameConvention.upper() in ['ANY', 'DOCUMENT', 'SOLR', 'JSON', 'BSON']:
             return self.__convertNamePunc
         else:
             return self.__convertNameDefault

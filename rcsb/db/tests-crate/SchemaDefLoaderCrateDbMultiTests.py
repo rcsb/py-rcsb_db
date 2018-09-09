@@ -107,15 +107,15 @@ class SchemaDefLoadercrateDbMultiTests(unittest.TestCase):
         """  Create table schema (live) for BIRD, chemical component, and PDBx data.
         """
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='bird')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='bird')
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='chem_comp')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='chem_comp')
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='pdbx')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='pdbx')
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
@@ -127,15 +127,15 @@ class SchemaDefLoadercrateDbMultiTests(unittest.TestCase):
         """  Remove table schema (live) for BIRD, chemical component, and PDBx data.
         """
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='bird')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='bird')
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='chem_comp')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='chem_comp')
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='pdbx')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='pdbx')
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
@@ -155,12 +155,12 @@ class SchemaDefLoadercrateDbMultiTests(unittest.TestCase):
     def __getPathList(self, fType):
         pathList = []
         if fType == "chem_comp":
-            pathList = self.__schU.getPathList(schemaName='chem_comp')
+            pathList = self.__schU.getPathList(contentType='chem_comp')
         elif fType == "bird":
-            pathList = self.__schU.getPathList(schemaName='bird')
-            pathList.extend(self.__schU.getPathList(schemaName='bird_family'))
+            pathList = self.__schU.getPathList(contentType='bird')
+            pathList.extend(self.__schU.getPathList(contentType='bird_family'))
         elif fType == "pdbx":
-            pathList = self.__schU.getPathList(schemaName='pdbx')
+            pathList = self.__schU.getPathList(contentType='pdbx')
         return pathList
 
     def loadInsertMany(self, dataList, procName, optionsD, workingDir):
@@ -192,7 +192,7 @@ class SchemaDefLoadercrateDbMultiTests(unittest.TestCase):
         chunkSize = self.__chunkSize
         try:
             #
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName=contentType)
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType=contentType)
             if (self.__createFlag):
                 self.__schemaCreate(schemaDefObj=sd)
 

@@ -54,8 +54,8 @@ class DictMethodRunnerTests(unittest.TestCase):
         self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, workPath=self.__workPath)
         self.__birdRepoPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'MOCK_BIRD_REPO')
         #
-        self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables"
-        self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables"
+        self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums"
+        self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums"
         self.__chemCompMockLen = 4
         self.__birdMockLen = 4
         self.__pdbxMockLen = 8
@@ -81,8 +81,8 @@ class DictMethodRunnerTests(unittest.TestCase):
             dH = DictMethodRunnerHelper()
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
             #
-            inputPathList = self.__schU.getPathList(schemaName='pdbx')
-            sd, _, _, _ = self.__schU.getSchemaInfo(schemaName='pdbx')
+            inputPathList = self.__schU.getPathList(contentType='pdbx')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='pdbx')
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
             sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
@@ -94,7 +94,7 @@ class DictMethodRunnerTests(unittest.TestCase):
 
             for container in containerList:
                 cName = container.getName()
-                logger.info("Processing container %s" % cName)
+                logger.debug("Processing container %s" % cName)
                 #
                 dmh.apply(container)
                 #

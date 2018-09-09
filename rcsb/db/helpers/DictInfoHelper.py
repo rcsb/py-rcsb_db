@@ -82,23 +82,94 @@ class DictInfoHelper(DictInfoHelperBase):
     #
     # Categories/Attributes that will be included in a schema definitions even if they are not populated in any tabulated instance data -
     #
-    _contentClasses = {('DYNAMIC_CONTENT', 'pdbx'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']},
-                                                     {'CATEGORY_NAME': 'pdbx_struct_assembly_gen', 'ATTRIBUTE_NAME_LIST': ['ordinal']}],
-                       ('DYNAMIC_CONTENT', 'pdbx_core'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']},
-                                                          {'CATEGORY_NAME': 'pdbx_struct_assembly_gen', 'ATTRIBUTE_NAME_LIST': ['ordinal']}],
-                       ('DYNAMIC_CONTENT', 'chem_comp'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
-                       ('DYNAMIC_CONTENT', 'bird_chem_comp'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
-                       ('DYNAMIC_CONTENT', 'bird'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
-                       ('DYNAMIC_CONTENT', 'bird_family'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
-                       }
+    _contentClasses = {('GENERATED_CONTENT', 'pdbx'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']},
+                                                       {'CATEGORY_NAME': 'pdbx_struct_assembly_gen', 'ATTRIBUTE_NAME_LIST': ['ordinal']}],
+                       ('GENERATED_CONTENT', 'pdbx_core'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']},
+                                                            {'CATEGORY_NAME': 'pdbx_struct_assembly_gen', 'ATTRIBUTE_NAME_LIST': ['ordinal']},
+                                                            {'CATEGORY_NAME': 'pdbx_struct_assembly', 'ATTRIBUTE_NAME_LIST': ['rcsb_details']},
+                                                            {'CATEGORY_NAME': 'rcsb_entry_container_identifiers', 'ATTRIBUTE_NAME_LIST': [
+                                                                'entry_id', 'entity_ids', 'polymer_entity_ids', 'non-polymer_entity_ids', 'assembly_ids']},
+                                                            {'CATEGORY_NAME': 'rcsb_entity_container_identifiers', 'ATTRIBUTE_NAME_LIST': ['entry_id', 'entity_id']},
+                                                            {'CATEGORY_NAME': 'rcsb_assembly_container_identifiers', 'ATTRIBUTE_NAME_LIST': ['entry_id', 'assembly_id']}],
+                       ('EVOLVING_CONTENT', 'pdbx_core'): [{'CATEGORY_NAME': 'diffrn', 'ATTRIBUTE_NAME_LIST': ['pdbx_serial_crystal_experiment']},
+                                                           {'CATEGORY_NAME': 'diffrn_detector', 'ATTRIBUTE_NAME_LIST': ['pdbx_frequency']},
+                                                           {'CATEGORY_NAME': 'pdbx_serial_crystallography_measurement',
+                                                            'ATTRIBUTE_NAME_LIST': ['diffrn_id',
+                                                                                    'pulse_energy',
+                                                                                    'pulse_duration',
+                                                                                    'xfel_pulse_repetition_rate',
+                                                                                    'pulse_photon_energy',
+                                                                                    'photons_per_pulse',
+                                                                                    'source_size',
+                                                                                    'source_distance',
+                                                                                    'focal_spot_size',
+                                                                                    'collimation',
+                                                                                    'collection_time_total']},
 
-    _sliceParentItems = {('ENTITY', 'pdbx_core'): [{'CATEGORY_NAME': 'entity', 'ATTRIBUTE_NAME': 'id'}]
+                                                           {'CATEGORY_NAME': 'pdbx_serial_crystallography_sample_delivery',
+                                                            'ATTRIBUTE_NAME_LIST': ['diffrn_id', 'description', 'method']},
+
+                                                           {'CATEGORY_NAME': 'pdbx_serial_crystallography_sample_delivery_injection',
+                                                            'ATTRIBUTE_NAME_LIST': ['diffrn_id',
+                                                                                    'description',
+                                                                                    'injector_diameter',
+                                                                                    'injector_temperature',
+                                                                                    'injector_pressure',
+                                                                                    'flow_rate',
+                                                                                    'carrier_solvent',
+                                                                                    'crystal_concentration',
+                                                                                    'preparation',
+                                                                                    'power_by',
+                                                                                    'injector_nozzle',
+                                                                                    'jet_diameter',
+                                                                                    'filter_size']},
+
+                                                           {'CATEGORY_NAME': 'pdbx_serial_crystallography_sample_delivery_fixed_target',
+                                                            'ATTRIBUTE_NAME_LIST': ['diffrn_id',
+                                                                                    'description',
+                                                                                    'sample_holding',
+                                                                                    'support_base',
+                                                                                    'sample_unit_size',
+                                                                                    'crystals_per_unit',
+                                                                                    'sample_solvent',
+                                                                                    'sample_dehydration_prevention',
+                                                                                    'motion_control',
+                                                                                    'velocity_horizontal',
+                                                                                    'velocity_vertical',
+                                                                                    'details']},
+
+                                                           {'CATEGORY_NAME': 'pdbx_serial_crystallography_data_reduction',
+                                                            'ATTRIBUTE_NAME_LIST': ['diffrn_id',
+                                                                                    'frames_total',
+                                                                                    'xfel_pulse_events',
+                                                                                    'frame_hits',
+                                                                                    'crystal_hits',
+                                                                                    'droplet_hits',
+                                                                                    'frames_failed_index',
+                                                                                    'frames_indexed',
+                                                                                    'lattices_indexed',
+                                                                                    'xfel_run_numbers']},
+                                                           ],
+                       ('GENERATED_CONTENT', 'chem_comp'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
+                       ('GENERATED_CONTENT', 'bird_chem_comp'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
+                       ('GENERATED_CONTENT', 'bird'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
+                       ('GENERATED_CONTENT', 'bird_family'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
+                       }
+#
+#
+# _diffrn.pdbx_serial_crystal_experiment
+# _diffrn_detector.pdbx_frequency
+#
+#
+    _sliceParentItems = {('ENTITY', 'pdbx_core'): [{'CATEGORY_NAME': 'entity', 'ATTRIBUTE_NAME': 'id'}],
+                         ('ASSEMBLY', 'pdbx_core'): [{'CATEGORY_NAME': 'pdbx_struct_assembly', 'ATTRIBUTE_NAME': 'id'}]
                          }
     _sliceParentFilters = {('ENTITY', 'pdbx_core'): [{'CATEGORY_NAME': 'entity', 'ATTRIBUTE_NAME': 'type', 'VALUES': ['polymer', 'non-polymer', 'macrolide', 'branched']}]
                            }
 
-    _sliceCardinalityCategoryExtras = {('ENTITY', 'pdbx_core'): ['rcsb_load_status', 'entry']}
-    _sliceCategoryExtras = {('ENTITY', 'pdbx_core'): ['rcsb_load_status', 'entry']}
+    _sliceCardinalityCategoryExtras = {('ENTITY', 'pdbx_core'): ['rcsb_load_status'], ('ASSEMBLY', 'pdbx_core'): ['rcsb_load_status']
+                                       }
+    _sliceCategoryExtras = {('ENTITY', 'pdbx_core'): ['rcsb_load_status'], ('ASSEMBLY', 'pdbx_core'): ['rcsb_load_status', 'pdbx_struct_oper_list']}
 
     def __init__(self, **kwargs):
         """

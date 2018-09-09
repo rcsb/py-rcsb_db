@@ -282,7 +282,7 @@ if __name__ == '__main__':
     if (True):
         mySuite = mongoSlicedSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
-        #
+
     if (True):
         mySuite = mongoLoadPdbxSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)

@@ -32,7 +32,7 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
         Single source of additional document schema semantic content.
     """
     __schemaCollectionNames = {'pdbx': ['pdbx_v5_0_2', 'pdbx_ext_v5_0_2'],
-                               'pdbx_core': ['pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2'],
+                               'pdbx_core': ['pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2'],
                                'bird': ['bird_v5_0_2'],
                                'bird_family': ['family_v5_0_2'],
                                'chem_comp': ['chem_comp_v5_0_2'],
@@ -101,11 +101,12 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
                                                   'SLICE': None
                                                   },
                               'pdbx_core_entity_v5_0_2': {'INCLUDE': [], 'EXCLUDE': [], 'SLICE': 'ENTITY'},
+                              'pdbx_core_assembly_v5_0_2': {'INCLUDE': [], 'EXCLUDE': [], 'SLICE': 'ASSEMBLY'},
                               'pdbx_core_entry_v5_0_2': {'INCLUDE': ['AUDIT_AUTHOR', 'CELL',
                                                                      'CITATION', 'CITATION_AUTHOR', 'DIFFRN', 'DIFFRN_DETECTOR', 'DIFFRN_RADIATION', 'DIFFRN_SOURCE', 'EM_2D_CRYSTAL_ENTITY',
                                                                      'EM_3D_CRYSTAL_ENTITY', 'EM_3D_FITTING', 'EM_3D_RECONSTRUCTION', 'EM_EMBEDDING', 'EM_ENTITY_ASSEMBLY', 'EM_EXPERIMENT',
                                                                      'EM_HELICAL_ENTITY', 'EM_IMAGE_RECORDING', 'EM_IMAGING', 'EM_SINGLE_PARTICLE_ENTITY', 'EM_SOFTWARE', 'EM_SPECIMEN',
-                                                                     'EM_STAINING', 'EM_VITRIFICATION', 'ENTITY', 'ENTRY', 'EXPTL', 'EXPTL_CRYSTAL_GROW', 'PDBX_AUDIT_REVISION_DETAILS',
+                                                                     'EM_STAINING', 'EM_VITRIFICATION', 'ENTRY', 'EXPTL', 'EXPTL_CRYSTAL_GROW', 'PDBX_AUDIT_REVISION_DETAILS',
                                                                      'PDBX_AUDIT_REVISION_HISTORY', 'PDBX_AUDIT_SUPPORT', 'PDBX_DATABASE_PDB_OBS_SPR', 'PDBX_DATABASE_STATUS', 'PDBX_DEPOSIT_GROUP',
                                                                      'PDBX_MOLECULE', 'PDBX_MOLECULE_FEATURES', 'PDBX_NMR_DETAILS', 'PDBX_NMR_ENSEMBLE', 'PDBX_NMR_EXPTL', 'PDBX_NMR_EXPTL_SAMPLE_CONDITIONS',
                                                                      'PDBX_NMR_REFINE', 'PDBX_NMR_SAMPLE_DETAILS', 'PDBX_NMR_SOFTWARE', 'PDBX_NMR_SPECTROMETER', 'PDBX_SG_PROJECT',
@@ -113,13 +114,18 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
                                                                      'RCSB_HAS_FOFC_FILE', 'RCSB_HAS_NMR_V1_FILE', 'RCSB_HAS_NMR_V2_FILE', 'RCSB_HAS_STRUCTURE_FACTORS_FILE', 'RCSB_HAS_TWOFOFC_FILE',
                                                                      'RCSB_HAS_VALIDATION_REPORT', 'RCSB_LATEST_REVISION', 'RCSB_MODELS_COUNT', 'RCSB_MOLECULAR_WEIGHT', 'RCSB_PUBMED', 'RCSB_RELEASE_DATE',
                                                                      'REFINE', 'REFINE_ANALYZE', 'REFINE_HIST', 'REFINE_LS_RESTR', 'REFLNS', 'REFLNS_SHELL', 'SOFTWARE', 'STRUCT', 'STRUCT_KEYWORDS', 'SYMMETRY',
-                                                                     'RCSB_LOAD_STATUS'],
+                                                                     'RCSB_LOAD_STATUS', 'RCSB_ENTRY_CONTAINER_IDENTIFIERS', 'PDBX_SERIAL_CRYSTALLOGRAPHY_MEASUREMENT',
+                                                                     'PDBX_SERIAL_CRYSTALLOGRAPHY_SAMPLE_DELIVERY',
+                                                                     'PDBX_SERIAL_CRYSTALLOGRAPHY_SAMPLE_DELIVERY_INJECTION',
+                                                                     'PDBX_SERIAL_CRYSTALLOGRAPHY_SAMPLE_DELIVERY_FIXED_TARGET',
+                                                                     'PDBX_SERIAL_CRYSTALLOGRAPHY_DATA_REDUCTION'],
                                                          'EXCLUDE': [], 'SLICE': None}
                               }
 
     __collectionAttributeNames = {'pdbx_v5_0_2': ['entry.id'],
                                   'pdbx_ext_v5_0_2': ['entry.id'],
                                   'pdbx_core_entity_v5_0_2': ['entry.id', 'entity.id'],
+                                  'pdbx_core_assembly_v5_0_2': ['entry.id', 'pdbx_struct_assembly.id'],
                                   'pdbx_core_entry_v5_0_2': ['entry.id'],
                                   'bird_v5_0_2': ['pdbx_reference_molecule.prd_id'],
                                   'family_v5_0_2': ['pdbx_reference_molecule_family.family_prd_id'],

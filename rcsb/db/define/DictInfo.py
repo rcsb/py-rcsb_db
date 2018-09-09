@@ -235,6 +235,7 @@ class DictInfo(object):
                 catName = mr.getCategoryName()
                 atName = mr.getAttributeName()
                 mType = mr.getType()
+                logger.debug("mId %r catName %r atName %r mType %r" % (mId, catName, atName, mType))
                 if (catName, atName) not in methodD:
                     methodD[(catName, atName)] = []
                 methDef = self.__dApi.getMethod(mId)
@@ -328,6 +329,26 @@ class DictInfo(object):
             aD[atName] = self.__dApi.getTypeCode(catName, atName)
         return aD
 
+    def __assignEnumTypes(self, enumList, pT):
+        rL = []
+        if enumList:
+            if pT != 'numb':
+                return enumList
+            else:
+                isFloat = False
+                for enum in enumList:
+                    if '.' in enum:
+                        isFloat = True
+                        break
+                if isFloat:
+                    # a rare case
+                    rL = [float(enum) for enum in enumList]
+                else:
+                    rL = [int(enum) for enum in enumList]
+                return rL
+        else:
+            return enumList
+
     def __getAttributeFeatures(self, catName, iterableD, itemTransformD, methodD, attributeContentClasses):
         """
         Args:
@@ -365,14 +386,15 @@ class DictInfo(object):
             fD['DESCRIPTION'] = textwrap.dedent(self.__dApi.getDescription(catName, atName))
             fD['CHILD_ITEMS'] = self.__dApi.getFullChildList(catName, atName)
             fD['IS_KEY'] = atName in keyAtNames
-            fD['IS_CHAR_TYPE'] = str(self.__dApi.getTypePrimitive(catName, atName)).lower() in ['char', 'uchar']
+            pType = self.__dApi.getTypePrimitive(catName, atName)
+            fD['IS_CHAR_TYPE'] = str(pType).lower() in ['char', 'uchar']
             #
             fD['ITERABLE_DELIMITER'] = iterableD[(catName, atName)] if (catName, atName) in iterableD else None
             fD['FILTER_TYPES'] = itemTransformD[(catName, atName)] if (catName, atName) in itemTransformD else []
             #
             fD['METHODS'] = methodD[(catName, atName)] if (catName, atName) in methodD else []
             fD['CONTENT_CLASSES'] = attributeContentClasses[(catName, atName)] if (catName, atName) in attributeContentClasses else []
-            fD['ENUMS'] = self.__dApi.getEnumList(catName, atName)
+            fD['ENUMS'] = self.__assignEnumTypes(self.__dApi.getEnumList(catName, atName), pType)
             fD['EXAMPLES'] = self.__dApi.getExampleList(catName, atName)
             #
             bList = self.__dApi.getBoundaryListAlt(catName, atName, fallBack=True)
@@ -424,6 +446,7 @@ class DictInfo(object):
         cD['KEY_ATTRIBUTES'] = [CifName.attributePart(keyItem) for keyItem in self.__getCategoryKeysWithReplacement(catName)]
         cD['UNIT_CARDINALITY'] = catName in unitCardinalityList
         cD['CONTENT_CLASSES'] = categoryContentClasses[catName] if catName in categoryContentClasses else []
+        cD['IS_MANDATORY'] = True if str(self.__dApi.getCategoryMandatoryCode(catName)).lower() == 'yes' else False
         #
         return cD
 

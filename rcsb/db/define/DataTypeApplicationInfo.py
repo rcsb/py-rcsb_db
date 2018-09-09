@@ -70,7 +70,7 @@ class DataTypeApplicationInfo(object):
         self.__setup(self.__locator, self.__applicationName)
 
     def __setup(self, locator, applicationName):
-        appName = 'ANY' if applicationName == 'JSON' else applicationName
+        appName = 'ANY' if applicationName in ['JSON', 'BSON'] else applicationName
         if locator:
             self.__dtmD = self.readDefaultDataTypeMap(locator, applicationName=appName)
         else:
@@ -86,6 +86,18 @@ class DataTypeApplicationInfo(object):
                     elif tD['app_type_code'] in ['int']:
                         tD['app_type_code'] = 'integer'
                 tD['application_name'] = 'JSON'
+        elif applicationName == 'BSON':
+            for cifType, tD in self.__dtmD.items():
+                if tD['application_name'] == 'ANY':
+                    if tD['app_type_code'] in ['char', 'text']:
+                        tD['app_type_code'] = 'string'
+                    elif tD['app_type_code'] in ['float', 'double']:
+                        tD['app_type_code'] = 'double'
+                    elif tD['app_type_code'] in ['datetime']:
+                        tD['app_type_code'] = 'date'
+                    elif tD['app_type_code'] in ['int', 'integer']:
+                        tD['app_type_code'] = 'int'
+                tD['application_name'] = 'BSON'
         #
 
     def getDefaultDataTypeMap(self, applicationName='ANY'):

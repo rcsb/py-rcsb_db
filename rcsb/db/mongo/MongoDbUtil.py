@@ -8,6 +8,9 @@
 #      24-Mar-2018  jdw add salvage path for bulk insert
 #      25-Jul-2018  jdw more adjustments to exception handling and salvage processing.
 #      14-Aug-2018  jdw generalize document identifier to a complex key
+#       6-Sep-2018  jdw method to invoke general database command
+#       7-Sep-2018  jdw add schema binding to createCollection method.createCollection. Change the default option to bypassValidation=False
+#                       for method insertList()
 ##
 """
 Base class for simple essential database operations for MongoDb.
@@ -18,8 +21,8 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
-
 import logging
+from collections import OrderedDict
 
 import pymongo
 
@@ -68,6 +71,15 @@ class MongoDbUtil(object):
             logger.exception("Failing with %s" % str(e))
         return False
 
+    def databaseCommand(self, databaseName, command):
+        try:
+            rs = self.__mgObj[databaseName].command(command)
+            logger.debug("Database %s Command %r returns %r" % (databaseName, command, rs))
+            return True
+        except Exception as e:
+            logger.exception("Database %s command %s failing with %s" % (databaseName, command, str(e)))
+        return False
+
     def collectionExists(self, databaseName, collectionName):
         try:
             if self.databaseExists(databaseName) and (collectionName in self.__mgObj[databaseName].list_collection_names()):
@@ -81,13 +93,34 @@ class MongoDbUtil(object):
     def getCollectionNames(self, databaseName):
         return self.__mgObj[databaseName].list_collection_names()
 
-    def createCollection(self, databaseName, collectionName, overWrite=True):
+    def createCollection(self, databaseName, collectionName, overWrite=True, bsonSchema=None, validationLevel='strict', validationAction='error'):
+        """
+        Args:
+            databaseName (str): Description
+            collectionName (str): Description
+            overWrite (bool, optional): Drop any existing collection before creation
+            bsonSchema (dict, optional): JSON Schema (MongoDb flavor ~Draft 4 semantics w/ BSON types)
+            validationLevel (str, optional): Apply to all inserts (strict) of but not for updates to existing documents (moderate)
+            validationAction (str, optional): Reject inserts with error (error) or allow inserts with logged warning (warn)
+                                              Warnings are recorded in the MongoDB system log and these are not conveniently accessible
+                                              via the Python API.
+
+        Returns:
+            bool: True for sucess or false otherwise
+        """
         try:
             if overWrite and self.collectionExists(databaseName, collectionName):
                 self.__mgObj[databaseName].drop_collection(collectionName)
             #
             ok = self.__mgObj[databaseName].create_collection(collectionName)
             logger.debug("Return from create collection %r " % ok)
+            if bsonSchema:
+                sD = {"$jsonSchema": bsonSchema}
+                cmdD = OrderedDict([('collMod', collectionName),
+                                    ('validator', sD),
+                                    ('validationLevel', validationLevel),
+                                    ('validationAction', validationAction)])
+                self.__mgObj[databaseName].command(cmdD)
             return True
         except Exception as e:
             logger.exception("Failing for databaseName %s collectionName %s with %s" % (databaseName, collectionName, str(e)))
@@ -102,7 +135,7 @@ class MongoDbUtil(object):
             logger.error("Failing drop collection for databaseName %s collectionName %s with %s" % (databaseName, collectionName, str(e)))
         return False
 
-    def insert(self, databaseName, collectionName, dObj):
+    def insert(self, databaseName, collectionName, dObj, documentKey=None):
         try:
             c = self.__mgObj[databaseName].get_collection(collectionName)
             r = c.insert_one(dObj)
@@ -113,10 +146,13 @@ class MongoDbUtil(object):
                 logger.debug("Failing with %s" % str(e))
                 return None
         except Exception as e:
-            logger.error("Failing with %s" % str(e))
+            if documentKey:
+                logger.error("Failing %r with %s" % (documentKey, str(e)))
+            else:
+                logger.error("Failing with %s" % str(e))
         return None
 
-    def insertList(self, databaseName, collectionName, dList, ordered=False, bypassValidation=True, keyNames=None, salvage=False):
+    def insertList(self, databaseName, collectionName, dList, ordered=False, bypassValidation=False, keyNames=None, salvage=False):
         """Insert the input list of documents (dList) into the input database/collection.
 
 
@@ -171,12 +207,12 @@ class MongoDbUtil(object):
         try:
             for d in dList:
                 kyVals = self.__getKeyValues(d, keyNames)
-                rId = self.insert(databaseName, collectionName, d)
+                rId = self.insert(databaseName, collectionName, d, documentKey=kyVals)
                 if rId:
                     rIdL.append(rId)
                     logger.debug("Insert suceeds for document %s" % (kyVals,))
                 else:
-                    logger.error("Loading document %r failed" % (kyVals,))
+                    logger.debug("Loading document %r failed" % (kyVals,))
         except Exception as e:
             logger.exception("Failing %s and %s keyName %r with %s" % (databaseName, collectionName, keyNames, str(e)))
         #
@@ -199,7 +235,7 @@ class MongoDbUtil(object):
         dTupL = self.deleteList(databaseName, collectionName, dList, keyNames)
         logger.info("Salvage bulk insert - deleting %d documents" % len(dTupL))
         rIdL = self.insertListSerial(databaseName, collectionName, dList, keyNames)
-        logger.info("Salvage bulk insert - serial insert length %d" % len(rIdL))
+        logger.info("Salvage bulk insert - salvaged document length %d" % len(rIdL))
         return rIdL
 
     def fetchOne(self, databaseName, collectionName, ky, val):

@@ -9,6 +9,7 @@
 #       22-Jun-2018 jdw  change collection attribute specification to dot notation
 #        7-Aug-2018 jdw  add methods to return slice parent details
 #       14-Aug-2018 jdw  generalize getDocumentKeyAttributeNames() to return list of attributes ...
+#        4-Sep-2018 jdw  add methods to return attribute enumerations
 ##
 """
 Base classes for schema defintions.
@@ -287,6 +288,12 @@ class SchemaDef(object):
         except Exception:
             return None
 
+    def isMandatory(self):
+        try:
+            return self.__tD['SCHEMA_MANDATORY']
+        except Exception:
+            return False
+
     def getType(self):
         try:
             return self.__tD['SCHEMA_TYPE']
@@ -396,6 +403,25 @@ class SchemaDef(object):
             return self.__tD['ATTRIBUTE_INFO'][attributeId]['PRIMARY_KEY']
         except Exception:
             return None
+
+    def getAttributeEnumList(self, attributeId):
+        try:
+            return self.__tD['ATTRIBUTE_INFO'][attributeId]['ENUMERATION'].values()
+        except Exception:
+            return []
+
+    def normalizeEnum(self, attributeId, enum):
+        try:
+            return self.__tD['ATTRIBUTE_INFO'][attributeId]['ENUMERATION'][str(enum).lower()]
+        except Exception as e:
+            logger.error("Failing for %s and %s with %s" % (attributeId, enum, str(e)))
+            return enum
+
+    def isEnumerated(self, attributeId):
+        try:
+            return len(self.__tD['ATTRIBUTE_INFO'][attributeId]['ENUMERATION']) > 0
+        except Exception:
+            return False
 
     def getAttributeFilterTypes(self, attributeId):
         try:
@@ -576,7 +602,7 @@ class SchemaDef(object):
         except Exception:
             return []
 
-    def getSqlNullValue(self, attributeId):
+    def getAppNullValue(self, attributeId):
         """ Return the appropriate NULL value for this attribute:.
         """
         try:
@@ -589,7 +615,7 @@ class SchemaDef(object):
         except Exception:
             return r'\N'
 
-    def getSqlNullValueDict(self):
+    def getAppNullValueDict(self):
         """ Return a dictionary containing appropriate NULL value for each attribute.
         """
         d = {}

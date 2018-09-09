@@ -41,7 +41,7 @@ class SqlGenTests(unittest.TestCase):
 
     def setUp(self):
         self.__verbose = True
-#
+        #
         self.__mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
         self.__pathConfig = os.path.join(self.__mockTopPath, 'config', 'dbload-setup-example.cfg')
         #
@@ -93,9 +93,8 @@ class SqlGenTests(unittest.TestCase):
                                  appDataTypeFilePath=appDataTypeFilePath,
                                  dictHelper=dictInfoHelper,
                                  schemaDefHelper=defHelper,
-                                 documentDefHelper=docHelper,
-                                 applicationName=applicationName)
-            sD = smb.build()
+                                 documentDefHelper=docHelper)
+            sD = smb.build(applicationName=applicationName)
             #
             logger.debug("Schema %s dictionary category length %d" % (schemaName, len(sD['SCHEMA_DICT'])))
             self.assertGreaterEqual(len(sD['SCHEMA_DICT']), 5)

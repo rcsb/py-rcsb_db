@@ -6,6 +6,7 @@
 #
 # Updates:
 #
+#  4-Sep-2018 jdw add enumeration normalization (in progress)
 ##
 """
 Factory for functional elements of the transformations between input data and
@@ -79,6 +80,8 @@ class DataTransformFactory(object):
         self.__FLAGS['skipMaxWidth'] = 'skip-max-width' in filterType
         self.__FLAGS['assignDates'] = 'assign-dates' in filterType
         self.__FLAGS['convertIterables'] = 'convert-iterables' in filterType
+        self.__FLAGS['normalizeEnums'] = 'normalize-enums' in filterType
+        logger.debug("FLAGS settings are %r" % self.__FLAGS)
         #
         self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
         self.__dti = DataTransformInfo()
@@ -127,15 +130,19 @@ class DataTransformFactory(object):
                     aD[atId].append(dt.castDateToObj)
                 else:
                     aD[atId].append(dt.castString)
+                #
+                if self.__FLAGS['normalizeEnums'] and tObj.isEnumerated(atId):
+                    logger.debug("Normalizing enums for %s %s" % (tableId, atId))
+                    aD[atId].append(dt.normalizeEnum)
             #
             # Transformation functions keyed by attribute 'name'
             tD['atIdD'] = tObj.getMapAttributeIdDict()
             tD['atNameD'] = tObj.getMapAttributeNameDict()
-            tD['atNullValues'] = tObj.getSqlNullValueDict()
+            tD['atNullValues'] = tObj.getAppNullValueDict()
             tD['atFuncD'] = {tD['atIdD'][k]: v for k, v in aD.items()}
             #
             fD[tableId] = tD
-        #
+        ##
         return fD
 
     def get(self, tableId):
@@ -164,8 +171,11 @@ class DataTransformFactory(object):
             for ii, atName in enumerate(attributeNameList):
                 if atName not in dT['atNameD']:
                     continue
+                #
+                nullFlag = False if row[ii] else True
+
                 # Apply list of functions on an initial value (i.e. TrfValue for the ii(th) element of the row.
-                vT = reduce(lambda x, y: y(x), dT['atFuncD'][atName], TrfValue(row[ii], dT['atNameD'][atName], 0, False))
+                vT = reduce(lambda x, y: y(x), dT['atFuncD'][atName], TrfValue(row[ii], dT['atNameD'][atName], 0, nullFlag))
                 if self.__FLAGS['dropEmpty'] and vT.isNull:
                     continue
                 d[dT['atNameD'][atName]] = vT.value
@@ -192,6 +202,18 @@ class DataTransform(object):
         self.__tObj = tObj
         #
 
+    def normalizeEnum(self, trfTup):
+        """
+            Return:  TrfValue tuple
+        """
+        if trfTup.isNull:
+            return trfTup
+        #origLength = len(trfTup.value)
+        #if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
+        #    return TrfValue(self.__tObj.getAppNullValue(trfTup.atId), trfTup.atId, origLength, True)
+        nVal = self.__tObj.normalizeEnum(trfTup.atId, trfTup.value)
+        return TrfValue(nVal, trfTup.atId, trfTup.origLength, False)
+
     def castString(self, trfTup):
         """
             Return:  TrfValue tuple
@@ -200,7 +222,7 @@ class DataTransform(object):
             return trfTup
         origLength = len(trfTup.value)
         if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
-            return TrfValue(self.__tObj.getSqlNullValue(trfTup.atId), trfTup.atId, origLength, True)
+            return TrfValue(self.__tObj.getAppNullValue(trfTup.atId), trfTup.atId, origLength, True)
         return TrfValue(trfTup.value, trfTup.atId, origLength, False)
 
     def castIterableString(self, trfTup):
@@ -211,7 +233,7 @@ class DataTransform(object):
             return trfTup
         origLength = len(trfTup.value)
         if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
-            return TrfValue(self.__tObj.getSqlNullValue(trfTup.atId), trfTup.atId, origLength, True)
+            return TrfValue(self.__tObj.getAppNullValue(trfTup.atId), trfTup.atId, origLength, True)
         vL = [v.strip() for v in trfTup.value.split(self.__tObj.getIterableSeparator(trfTup.atId))]
         return TrfValue(vL, trfTup.atId, origLength, False)
 
@@ -223,7 +245,7 @@ class DataTransform(object):
             return trfTup
         origLength = len(trfTup.value)
         if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
-            return TrfValue(self.__tObj.getSqlNullValue(trfTup.atId), trfTup.atId, origLength, True)
+            return TrfValue(self.__tObj.getAppNullValue(trfTup.atId), trfTup.atId, origLength, True)
         return TrfValue(int(trfTup.value), trfTup.atId, origLength, False)
 
     def castIterableInteger(self, trfTup):
@@ -234,7 +256,7 @@ class DataTransform(object):
             return trfTup
         origLength = len(trfTup.value)
         if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
-            return TrfValue(self.__tObj.getSqlNullValue(trfTup.atId), trfTup.atId, origLength, True)
+            return TrfValue(self.__tObj.getAppNullValue(trfTup.atId), trfTup.atId, origLength, True)
         vL = [int(v.strip()) for v in trfTup.value.split(self.__tObj.getIterableSeparator(trfTup.atId))]
         return TrfValue(vL, trfTup.atId, origLength, False)
 
@@ -246,7 +268,7 @@ class DataTransform(object):
             return trfTup
         origLength = len(trfTup.value)
         if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
-            return TrfValue(self.__tObj.getSqlNullValue(trfTup.atId), trfTup.atId, origLength, True)
+            return TrfValue(self.__tObj.getAppNullValue(trfTup.atId), trfTup.atId, origLength, True)
         return TrfValue(float(trfTup.value), trfTup.atId, origLength, False)
 
     def castIterableFloat(self, trfTup):
@@ -257,7 +279,7 @@ class DataTransform(object):
             return trfTup
         origLength = len(trfTup.value)
         if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
-            return TrfValue(self.__tObj.getSqlNullValue(trfTup.atId), trfTup.atId, origLength, True)
+            return TrfValue(self.__tObj.getAppNullValue(trfTup.atId), trfTup.atId, origLength, True)
         vL = [float(v.strip()) for v in trfTup.value.split(self.__tObj.getIterableSeparator(trfTup.atId))]
         return TrfValue(vL, trfTup.atId, origLength, False)
 
@@ -270,7 +292,7 @@ class DataTransform(object):
             return trfTup
         origLength = len(trfTup.value)
         if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
-            return TrfValue(self.__tObj.getSqlNullValue(trfTup.atId), trfTup.atId, origLength, True)
+            return TrfValue(self.__tObj.getAppNullValue(trfTup.atId), trfTup.atId, origLength, True)
         tv = trfTup.value.replace(":", " ", 1)
         return TrfValue(dateutil.parser.parse(tv), trfTup.atId, origLength, False)
 
@@ -283,7 +305,7 @@ class DataTransform(object):
             return trfTup
         origLength = len(trfTup.value)
         if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
-            return TrfValue(self.__tObj.getSqlNullValue(trfTup.atId), trfTup.atId, origLength, True)
+            return TrfValue(self.__tObj.getAppNullValue(trfTup.atId), trfTup.atId, origLength, True)
         return TrfValue(trfTup.value, trfTup.atId, origLength, False)
 
     def stripWhiteSpace(self, trfTup):
