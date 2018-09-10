@@ -241,11 +241,23 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
         """
         try:
-            if not (dataContainer.exists('pdbx_struct_assembly') and
-                    dataContainer.exists('pdbx_struct_assembly_gen') and
-                    dataContainer.exists('pdbx_struct_oper_list') and
-                    dataContainer.exists('struct_asym')):
+            if not dataContainer.exists('struct_asym'):
                 return False
+            if not dataContainer.exists('pdbx_struct_assembly'):
+                dataContainer.append(DataCategory('pdbx_struct_assembly', attributeNameList=['id', 'details', 'method_details',
+                                                                                             'oligomeric_details', 'oligomeric_count', 'rcsb_details']))
+            if not dataContainer.exists('pdbx_struct_assembly_gen'):
+                dataContainer.append(DataCategory('pdbx_struct_assembly_gen', attributeNameList=['assembly_id', 'oper_expression', 'asym_id_list', 'ordinal']))
+
+            if not dataContainer.exists('pdbx_struct_oper_list'):
+                row = ['1', 'identity operation', '1_555', 'x, y, z', '1.0000000000', '0.0000000000', '0.0000000000',
+                       '0.0000000000', '0.0000000000', '1.0000000000', '0.0000000000', '0.0000000000',
+                       '0.0000000000', '0.0000000000', '1.0000000000', '0.0000000000']
+                atList = ['id', 'type', 'name', 'symmetry_operation', 'matrix[1][1]', 'matrix[1][2]', 'matrix[1][3]',
+                          'vector[1]', 'matrix[2][1]', 'matrix[2][2]', 'matrix[2][3]', 'vector[2]',
+                          'matrix[3][1]', 'matrix[3][2]', 'matrix[3][3]', 'vector[3]']
+                dataContainer.append(DataCategory('pdbx_struct_oper_list', attributeNameList=atList, rowList=[row]))
+
             #
             logger.debug("Add deposited assembly for %s" % dataContainer.getName())
             cObj = dataContainer.getObj('struct_asym')
@@ -297,7 +309,8 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
               'point asymmetric unit, std point frame': 'software_defined_assembly',
               'representative helical assembly': 'author_and_software_defined_assembly',
               'software_defined_assembly': 'software_defined_assembly',
-              'trisymmetron capsid unit': 'software_defined_assembly'}
+              'trisymmetron capsid unit': 'software_defined_assembly',
+              'deposited_coordinates': 'software_defined_assembly'}
         #
         try:
             if not dataContainer.exists('pdbx_struct_assembly'):
