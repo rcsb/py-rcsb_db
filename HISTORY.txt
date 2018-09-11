@@ -17,7 +17,8 @@
                integrate linking CIF methods to generate content at load time, add core
                assembly collection, add cardinal identifiers in new categories to each
                core collection, and enum normalization as a data transformation filter operation.
-10-Sep-2018    V0.19 add dictionary method for citation author aggregation
+11-Sep-2018    V0.19 add dictionary method for citation author aggregation
+                     adjust cardinality of entity and assembly identifier categories
 
 
 

@@ -17,6 +17,7 @@
 #  18-Aug-2018  jdw add schema pdbx_core analogous to pdbx removing the block attribute.
 #   7-Sep-2018  jdw add generated content classes for core schemas
 #  10-Sep-2018  jdw add iterable details for semicolon separated text data
+#  11-Sep-2018  jdw adjust slice cardinality constraints for entity and assembly identifier categories.
 ##
 """
 This helper class supplements dictionary information as required for schema production.
@@ -171,7 +172,8 @@ class DictInfoHelper(DictInfoHelperBase):
     _sliceParentFilters = {('ENTITY', 'pdbx_core'): [{'CATEGORY_NAME': 'entity', 'ATTRIBUTE_NAME': 'type', 'VALUES': ['polymer', 'non-polymer', 'macrolide', 'branched']}]
                            }
 
-    _sliceCardinalityCategoryExtras = {('ENTITY', 'pdbx_core'): ['rcsb_load_status'], ('ASSEMBLY', 'pdbx_core'): ['rcsb_load_status']
+    _sliceCardinalityCategoryExtras = {('ENTITY', 'pdbx_core'): ['rcsb_load_status', 'rcsb_entity_container_identifiers'],
+                                       ('ASSEMBLY', 'pdbx_core'): ['rcsb_load_status', 'rcsb_assembly_container_identifiers']
                                        }
     _sliceCategoryExtras = {('ENTITY', 'pdbx_core'): ['rcsb_load_status'], ('ASSEMBLY', 'pdbx_core'): ['rcsb_load_status', 'pdbx_struct_oper_list']}
 
