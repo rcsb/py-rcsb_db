@@ -15,6 +15,8 @@
 #   8-Aug-2018  jdw add slice parent conditional filter definitions that could be applied to the parent data category,
 #  10-Aug-2018  jdw add slice category and cardinality extras
 #  18-Aug-2018  jdw add schema pdbx_core analogous to pdbx removing the block attribute.
+#   7-Sep-2018  jdw add generated content classes for core schemas
+#  10-Sep-2018  jdw add iterable details for semicolon separated text data
 ##
 """
 This helper class supplements dictionary information as required for schema production.
@@ -75,16 +77,18 @@ class DictInfoHelper(DictInfoHelperBase):
                          ('PUBLIC_RELEASE', 'bird_family'): [{'CATEGORY_NAME': 'pdbx_reference_molecule_family', 'ATTRIBUTE_NAME': 'release_status', 'VALUES': ['REL', 'OBS']}]
                          }
 
-    _typeCodeClasses = {'iterable': ['ucode-alphanum-csv', 'id_list']}
+    _typeCodeClasses = {'iterable': ['ucode-alphanum-csv', 'id_list', 'alphanum-scsv']}
     _queryStringSelectors = {'iterable': ['comma separate']}
     # Put the non default iterable delimiter cases here -
-    _iterableDelimiters = [{'CATEGORY_NAME': 'chem_comp', 'ATTRIBUTE_NAME': 'pdbx_synonyms', 'DELIMITER': ';'}]
+    _iterableDelimiters = [{'CATEGORY_NAME': 'chem_comp', 'ATTRIBUTE_NAME': 'pdbx_synonyms', 'DELIMITER': ';'},
+                           {'CATEGORY_NAME': 'citation', 'ATTRIBUTE_NAME': 'rcsb_authors', 'DELIMITER': ';'}]
     #
     # Categories/Attributes that will be included in a schema definitions even if they are not populated in any tabulated instance data -
     #
     _contentClasses = {('GENERATED_CONTENT', 'pdbx'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']},
                                                        {'CATEGORY_NAME': 'pdbx_struct_assembly_gen', 'ATTRIBUTE_NAME_LIST': ['ordinal']}],
                        ('GENERATED_CONTENT', 'pdbx_core'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']},
+                                                            {'CATEGORY_NAME': 'citation', 'ATTRIBUTE_NAME_LIST': ['rcsb_authors']},
                                                             {'CATEGORY_NAME': 'pdbx_struct_assembly_gen', 'ATTRIBUTE_NAME_LIST': ['ordinal']},
                                                             {'CATEGORY_NAME': 'pdbx_struct_assembly', 'ATTRIBUTE_NAME_LIST': ['rcsb_details']},
                                                             {'CATEGORY_NAME': 'rcsb_entry_container_identifiers', 'ATTRIBUTE_NAME_LIST': [

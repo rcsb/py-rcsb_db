@@ -13,10 +13,11 @@
                mock-data as a shared submodule for test data. Merged branch ' namespace'
                back into master.
 28-Aug-2018    V0.17 rename console scripts directory to avoid conflict with reserved keyword in Py2.
- 9-Sep-2018.   V0.18 add support for multi-level JSON schema generation and validation,
+ 9-Sep-2018    V0.18 add support for multi-level JSON schema generation and validation,
                integrate linking CIF methods to generate content at load time, add core
-               assembly collection, add cardinal identifier in new categories to each
+               assembly collection, add cardinal identifiers in new categories to each
                core collection, and enum normalization as a data transformation filter operation.
+10-Sep-2018    V0.19 add dictionary method for citation author aggregation
 
 
 

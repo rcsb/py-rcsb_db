@@ -19,6 +19,7 @@
 #     25-Jul-2018 jdw  restore pruning operations
 #     14-Aug-2018 jdw  primaryIndexD from self.__schU.getSchemaInfo(schemaName) updated to list and i
 #                      in __createCollection(self, dbName, collectionName, indexAttributeNames=None) make indexAttributeNames a list
+#     10-Sep-2018 jdw  Adjust error handling and reporting across multiple collections
 #
 ##
 """
@@ -218,7 +219,7 @@ class PdbxLoader(object):
                 desp.setEndTime()
                 self.__statusList.append(desp.getStatus())
             #
-            logger.info("Load operation fail length %d return status %r" % (len(failList), ok))
+            logger.info("Load operation success status %r failed paths %d of %d" % (ok, len(failList), numPaths))
             return ok
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -293,7 +294,7 @@ class PdbxLoader(object):
                 tableDataDictList, containerNameList, rejectPathList = sdp.processDocuments(containerList, styleType=styleType, filterType=filterType,
                                                                                             dataSelectors=dataSelectors, sliceFilter=sliceFilter)
                 #
-                # Get the unique paths for the rejected  container list - (rejections are not treated as failures)
+                # Get the unique paths for the rejected/filtered container list - (rejections are NOT treated as failures)
                 #
                 rejectPathList = list(set(rejectPathList))
                 #
@@ -324,17 +325,17 @@ class PdbxLoader(object):
                 successPathList.extend(list(set(rejectPathList)))
                 fullSuccessPathList.extend(list(set(successPathList)))
                 fullFailedPathList.extend(list(set(failedPathList)))
-                logger.info("%s %s/%s document list %d successes %d  failed %d rejected %d" %
+                logger.info("%s %s/%s document list %d successes %d  failures %d filtered/rejected %d" %
                             (procName, dbName, collectionName, len(tableDataDictList), len(successPathList), len(failedPathList), len(rejectPathList)))
             #
             logger.debug("fullSuccessPathList %r" % fullSuccessPathList)
             logger.debug("fullFailedPathList  %r" % fullFailedPathList)
             retList = list(set(dataList) - set(fullFailedPathList))
             #
-            logger.debug("Length input path List %d length rejectList %d return path List %d" % (len(dataList), len(rejectPathList), len(retList)))
+            logger.debug("Length input path list %d length filtered list %d returning path list %d" % (len(dataList), len(rejectPathList), len(retList)))
             #
-            logger.info("%s %s %r return path List %d full failed path list %d " % (procName, dbName, collectionNameList,
-                                                                                    len(set(retList)), len(set(fullFailedPathList))))
+            logger.info("%s %s %r returning success path list %d full failed path list %d " % (procName, dbName, collectionNameList,
+                                                                                               len(set(retList)), len(set(fullFailedPathList))))
             self.__end(startTime, procName + " with status " + str(ok))
             return retList, [], []
 
@@ -473,7 +474,7 @@ class PdbxLoader(object):
                     dList = self.__pruneBySize(dList, limitMB=pruneDocumentSize)
                 #
                 rIdL.extend(mg.insertList(dbName, collectionName, dList, keyNames=keyNames, salvage=True))
-                logger.debug("-- InsertList returns rIdL length %r or %r" % (len(rIdL), len(dList)))
+                logger.debug("-- InsertList returns rIdL length %r of %r" % (len(rIdL), len(dList)))
                 # ---
                 #  If there is a failure then determine the specific successes and failures -
                 #

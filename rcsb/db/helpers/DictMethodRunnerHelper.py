@@ -6,6 +6,7 @@
 #
 # Updates:
 #  4-Sep-2018 jdw add methods to construct entry and entity identier categories.
+# 10-Sep-2018 jdw add method for citation author aggregation
 #
 ##
 """
@@ -119,6 +120,30 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             for ii, iRow in enumerate(range(numRows), 1):
                 # Note - we set the integer value as a string  -
                 cObj.setValue(str(ii), atName, iRow)
+            return True
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+        return False
+
+    def aggregateCitationAuthors(self, dataContainer, catName, atName, **kwargs):
+        try:
+            if not dataContainer.exists(catName) or not dataContainer.exists('citation_author'):
+                return False
+            #
+            cObj = dataContainer.getObj(catName)
+            if not cObj.hasAttribute(atName):
+                cObj.appendAttribute(atName)
+            citIdL = cObj.getAttributeValueList('id')
+            #
+            tObj = dataContainer.getObj('citation_author')
+            #
+            citIdL = list(set(citIdL))
+            tD = {}
+            for ii, citId in enumerate(citIdL):
+                tD[citId] = tObj.selectValuesWhere('name', citId, 'citation_id')
+            for ii in range(cObj.getRowCount()):
+                citId = cObj.getValue('id', ii)
+                cObj.setValue(';'.join(tD[citId]), atName, ii)
             return True
         except Exception as e:
             logger.exception("Failing with %s" % str(e))

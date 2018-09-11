@@ -10,6 +10,7 @@
 #   27-Mar-2018 jdw  Update configuration handling and mocking
 #    4-Apr-2018 jdw  Add size pruning tests
 #   25-Jul-2018 jdw  Add large test case to test failure and salvage scenarios
+#   10-Sep-2018 jdw  Update assert conditions for tests
 #
 ##
 """
@@ -278,11 +279,9 @@ if __name__ == '__main__':
     if (True):
         mySuite = mongoLoadPdbxLimitSizeSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
-
-    if (True):
-        mySuite = mongoSlicedSuite()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
-
     if (True):
         mySuite = mongoLoadPdbxSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
+    if (True):
+        mySuite = mongoSlicedSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)

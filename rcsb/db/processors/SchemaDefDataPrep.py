@@ -409,10 +409,10 @@ class SchemaDefDataPrep(object):
         for myContainer in containerList:
             for tableId in selectedTableIdList:
                 if not self.__sD.hasSchemaObject(tableId):
-                    logger.debug("Skipping undefined table %s" % tableId)
+                    # logger.debug("Skipping undefined table %s" % tableId)
                     continue
                 if tableId in self.__schemaIdExcludeD:
-                    logger.debug("Skipping excluded table %s" % tableId)
+                    # logger.debug("Skipping excluded table %s" % tableId)
                     continue
                 if tableId not in schemaDataDict:
                     schemaDataDict[tableId] = []
