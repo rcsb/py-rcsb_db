@@ -19,6 +19,8 @@
                core collection, and enum normalization as a data transformation filter operation.
 11-Sep-2018    V0.19 add dictionary method for citation author aggregation
                      adjust cardinality of entity and assembly identifier categories
+14-Sep-2018    V0.20 Require at least one record in any array type, adjust constraints on iterables.
+
 
 
 

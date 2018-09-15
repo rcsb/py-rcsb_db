@@ -11,6 +11,7 @@
 # 13-Aug-2018 jdw Refine the role of includeContentClasses -
 # 14-Aug-2018 jdw Return 'COLLECTION_DOCUMENT_ATTRIBUTE_NAMES' as a list
 #  6-Sep-2018 jdw Generalize JSON schema generation method
+# 14-Sep-2018 jdw Require at least one record in any array type, adjust constraints on iterables.
 ##
 """
 Integrate dictionary metadata and file based(type/coverage) into schema defintions.
@@ -587,7 +588,8 @@ class SchemaDefBuild(object):
                 if cfD['IS_MANDATORY']:
                     catPropD = {typeKey: "array", 'items': [pD], 'minItems': 1, 'uniqueItems': True}
                 else:
-                    catPropD = {typeKey: "array", 'items': [pD], 'minItems': 0, 'uniqueItems': True}
+                    # JDW Adjusted minItems=1
+                    catPropD = {typeKey: "array", 'items': [pD], 'minItems': 1, 'uniqueItems': True}
             #
             if addBlockAttribute:
                 schemaAttributeName = convertNameF(blockAttributeName)
@@ -653,7 +655,7 @@ class SchemaDefBuild(object):
                     #
                 delimiter = fD['ITERABLE_DELIMITER']
                 if delimiter:
-                    pD['properties'][schemaAttributeName] = {typeKey: 'array', 'items': atPropD, 'uniqueItems': True}
+                    pD['properties'][schemaAttributeName] = {typeKey: 'array', 'items': atPropD, 'uniqueItems': False}
                 else:
                     pD['properties'][schemaAttributeName] = atPropD
 
