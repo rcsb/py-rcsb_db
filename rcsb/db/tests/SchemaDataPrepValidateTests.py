@@ -116,12 +116,16 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                 for ii, d in enumerate(dL):
                     logger.debug("Schema %s collection %s document %d" % (schemaName, collectionName, ii))
                     try:
+                        cCount = 0
                         for error in sorted(v.iter_errors(d), key=str):
                             logger.debug("schema %s collection %s (%s) path %s error: %s" % (schemaName, collectionName, cnL[ii], error.path, error.message))
                             eCount += 1
+                            cCount += 1
                         #
+                        logger.debug("schema %s collection %s container %s count %d" % (schemaName, collectionName, cnL[ii], cCount))
                     except Exception as e:
                         logger.info("Validation error %s" % str(e))
+
         return eCount
 
     def __testBuildJson(self, schemaName, collectionName, enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):

@@ -12,6 +12,7 @@
 # 14-Aug-2018 jdw Return 'COLLECTION_DOCUMENT_ATTRIBUTE_NAMES' as a list
 #  6-Sep-2018 jdw Generalize JSON schema generation method
 # 14-Sep-2018 jdw Require at least one record in any array type, adjust constraints on iterables.
+# 18-Sep-2018 jdw Constrain categories/class to homogeneous content
 ##
 """
 Integrate dictionary metadata and file based(type/coverage) into schema defintions.
@@ -586,10 +587,11 @@ class SchemaDefBuild(object):
                 catPropD = pD
             else:
                 if cfD['IS_MANDATORY']:
-                    catPropD = {typeKey: "array", 'items': [pD], 'minItems': 1, 'uniqueItems': True}
+                    #catPropD = {typeKey: "array", 'items': [pD], 'minItems': 1, 'uniqueItems': True}
+                    catPropD = {typeKey: "array", 'items': pD, 'minItems': 1, 'uniqueItems': True}
                 else:
                     # JDW Adjusted minItems=1
-                    catPropD = {typeKey: "array", 'items': [pD], 'minItems': 1, 'uniqueItems': True}
+                    catPropD = {typeKey: "array", 'items': pD, 'minItems': 1, 'uniqueItems': True}
             #
             if addBlockAttribute:
                 schemaAttributeName = convertNameF(blockAttributeName)
