@@ -91,7 +91,7 @@ class DictInfoHelper(DictInfoHelperBase):
                        ('GENERATED_CONTENT', 'pdbx_core'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']},
                                                             {'CATEGORY_NAME': 'citation', 'ATTRIBUTE_NAME_LIST': ['rcsb_authors']},
                                                             {'CATEGORY_NAME': 'pdbx_struct_assembly_gen', 'ATTRIBUTE_NAME_LIST': ['ordinal']},
-                                                            {'CATEGORY_NAME': 'pdbx_struct_assembly', 'ATTRIBUTE_NAME_LIST': ['rcsb_details']},
+                                                            {'CATEGORY_NAME': 'pdbx_struct_assembly', 'ATTRIBUTE_NAME_LIST': ['rcsb_details', 'rcsb_candidate_assembly']},
                                                             {'CATEGORY_NAME': 'rcsb_entry_container_identifiers', 'ATTRIBUTE_NAME_LIST': [
                                                                 'entry_id', 'entity_ids', 'polymer_entity_ids', 'non-polymer_entity_ids', 'assembly_ids']},
                                                             {'CATEGORY_NAME': 'rcsb_entity_container_identifiers', 'ATTRIBUTE_NAME_LIST': ['entry_id', 'entity_id']},

@@ -7,6 +7,7 @@
 # Updates:
 #  4-Sep-2018 jdw add methods to construct entry and entity identier categories.
 # 10-Sep-2018 jdw add method for citation author aggregation
+# 22-Sep-2018 jdw add method assignAssemblyCandidates()
 #
 ##
 """
@@ -270,7 +271,8 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 return False
             if not dataContainer.exists('pdbx_struct_assembly'):
                 dataContainer.append(DataCategory('pdbx_struct_assembly', attributeNameList=['id', 'details', 'method_details',
-                                                                                             'oligomeric_details', 'oligomeric_count', 'rcsb_details']))
+                                                                                             'oligomeric_details', 'oligomeric_count',
+                                                                                             'rcsb_details', 'rcsb_candidate_assembly']))
             if not dataContainer.exists('pdbx_struct_assembly_gen'):
                 dataContainer.append(DataCategory('pdbx_struct_assembly_gen', attributeNameList=['assembly_id', 'oper_expression', 'asym_id_list', 'ordinal']))
 
@@ -352,6 +354,51 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     tObj.setValue(mD[details], 'rcsb_details', iRow)
                 else:
                     tObj.setValue('software_defined_assembly', 'rcsb_details', iRow)
+                logger.debug("Full row is %r" % tObj.getRow(iRow))
+            return True
+        except Exception as e:
+            logger.exception("For %s %s failing with %s" % (catName, atName, str(e)))
+        return False
+
+    def assignAssemblyCandidates(self, dataContainer, catName, atName, **kwargs):
+        """ Flag candidate biological assemblies as 'author_defined_assembly' ad author_and_software_defined_assembly'
+
+        """
+        mD = {'author_and_software_defined_assembly': 'author_and_software_defined_assembly',
+              'author_defined_assembly': 'author_defined_assembly',
+              'complete icosahedral assembly': 'author_and_software_defined_assembly',
+              'complete point assembly': 'author_and_software_defined_assembly',
+              'crystal asymmetric unit': 'software_defined_assembly',
+              'crystal asymmetric unit, crystal frame': 'software_defined_assembly',
+              'details': 'software_defined_assembly',
+              'helical asymmetric unit': 'software_defined_assembly',
+              'helical asymmetric unit, std helical frame': 'software_defined_assembly',
+              'icosahedral 23 hexamer': 'software_defined_assembly',
+              'icosahedral asymmetric unit': 'software_defined_assembly',
+              'icosahedral asymmetric unit, std point frame': 'software_defined_assembly',
+              'icosahedral pentamer': 'software_defined_assembly',
+              'pentasymmetron capsid unit': 'software_defined_assembly',
+              'point asymmetric unit': 'software_defined_assembly',
+              'point asymmetric unit, std point frame': 'software_defined_assembly',
+              'representative helical assembly': 'author_and_software_defined_assembly',
+              'software_defined_assembly': 'software_defined_assembly',
+              'trisymmetron capsid unit': 'software_defined_assembly',
+              'deposited_coordinates': 'software_defined_assembly'}
+        #
+        try:
+            if not dataContainer.exists('pdbx_struct_assembly'):
+                return False
+
+            tObj = dataContainer.getObj('pdbx_struct_assembly')
+            if not tObj.hasAttribute(atName):
+                tObj.appendAttribute(atName)
+            #
+            for iRow in range(tObj.getRowCount()):
+                details = tObj.getValue('details', iRow)
+                if details in mD and mD[details] in ['author_and_software_defined_assembly', 'author_defined_assembly']:
+                    tObj.setValue('Y', 'rcsb_candidate_assembly', iRow)
+                else:
+                    tObj.setValue('N', 'rcsb_candidate_assembly', iRow)
                 logger.debug("Full row is %r" % tObj.getRow(iRow))
             return True
         except Exception as e:

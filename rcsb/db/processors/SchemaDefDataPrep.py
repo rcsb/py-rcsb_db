@@ -210,13 +210,17 @@ class SchemaDefDataPrep(object):
         containerNameList = []
         rejectList = []
         for container in containerList:
-            schemaDataDictById, cnList, rL = self.__process([container], filterType, dataSelectors=dataSelectors)
+            schemaDataDictById, _, rL = self.__process([container], filterType, dataSelectors=dataSelectors)
             rejectList.extend(rL)
             if not schemaDataDictById:
                 continue
             #
             sddL = self.__reShape.applySlicedShape(schemaDataDictById, styleType=styleType, sliceFilter=sliceFilter)
             schemaDataDictList.extend(sddL)
+            #
+            # Match the container name to the generated reshaped objects
+            cName = container.getName()
+            cnList = [cName for i in range(len(sddL))]
             containerNameList.extend(cnList)
 
         rejectList = list(set(rejectList))

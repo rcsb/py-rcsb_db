@@ -98,7 +98,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
     def __testValidateOpts(self, enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
         schemaNames = ['pdbx', 'pdbx_core', 'chem_comp', 'bird', 'bird_family']
         collectionNames = {'pdbx': ['pdbx_v5_0_2', 'pdbx_ext_v5_0_2'],
-                           'pdbx_core': ['pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2'],
+                           'pdbx_core': ['pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2'],
                            'bird': ['bird_v5_0_2'],
                            'bird_family': ['family_v5_0_2'],
                            'chem_comp': ['chem_comp_v5_0_2'],
@@ -124,7 +124,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                         #
                         logger.debug("schema %s collection %s container %s count %d" % (schemaName, collectionName, cnL[ii], cCount))
                     except Exception as e:
-                        logger.info("Validation error %s" % str(e))
+                        logger.exception("Validation error %s" % str(e))
 
         return eCount
 

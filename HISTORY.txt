@@ -21,6 +21,7 @@
                      adjust cardinality of entity and assembly identifier categories
 14-Sep-2018    V0.20 Require at least one record in any array type, adjust constraints on iterables.
 18-Sep-2018    V0.21 Require homogeneous categories/classes in JSON schema production.
+22-Sep-2018    V0.22 Add method to generate _pdbx_struct_assembly.rcsb_candidate_assembly
 
 
 
