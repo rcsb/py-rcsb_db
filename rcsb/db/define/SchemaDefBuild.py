@@ -587,7 +587,7 @@ class SchemaDefBuild(object):
                 catPropD = pD
             else:
                 if cfD['IS_MANDATORY']:
-                    #catPropD = {typeKey: "array", 'items': [pD], 'minItems': 1, 'uniqueItems': True}
+                    # catPropD = {typeKey: "array", 'items': [pD], 'minItems': 1, 'uniqueItems': True}
                     catPropD = {typeKey: "array", 'items': pD, 'minItems': 1, 'uniqueItems': True}
                 else:
                     # JDW Adjusted minItems=1
