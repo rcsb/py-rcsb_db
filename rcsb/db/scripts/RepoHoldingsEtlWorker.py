@@ -34,6 +34,7 @@ class RepoHoldingsEtlWorker(object):
         self.__chunkSize = chunkSize
         self.__documentLimit = documentLimit
         self.__resourceName = "MONGO_DB"
+        self.__filterType = "assign-dates"
         self.__verbose = verbose
         self.__statusList = []
 
@@ -78,7 +79,7 @@ class RepoHoldingsEtlWorker(object):
 
             sectionName = 'repository_holdings'
 
-            rhdp = RepoHoldingsDataPrep(sandboxPath=self.__sandboxPath, workPath=self.__workPath)
+            rhdp = RepoHoldingsDataPrep(sandboxPath=self.__sandboxPath, workPath=self.__workPath, filterType=self.__filterType)
             #
             dl = DocumentLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                                 documentLimit=self.__documentLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)

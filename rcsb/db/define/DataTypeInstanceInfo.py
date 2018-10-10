@@ -7,6 +7,8 @@
 # Updates:
 #      15-Jun-2018 jdw cleanup exception handling
 #      18-Jun-2018 jdw turn off distracting warning messages by default
+#       6-Oct-2018 jdw make the methods in this module an innocuous pass-thru
+#                      if no instance data is available.
 #
 ##
 """
@@ -33,16 +35,22 @@ class DataTypeInstanceInfo(object):
         self.__verbose = kwargs.get("verbose", False)
         self.__tD = {}
         self.__ioU = IoUtil()
-        self.__setup(self.__filePath)
+        self.__byPassMode = not self.__setup(self.__filePath)
 
     def __setup(self, filePath):
         """
            Read the output serialized by ScanRepoUtil() -
            tD[category] -> d[atName]->{minWidth: , maxWidth:, minPrec:, maxPrec: , count}
         """
-        self.__tD = self.__ioU.deserialize(filePath, format='json')
+        if self.__ioU.exists(filePath):
+            self.__tD = self.__ioU.deserialize(filePath, format='json')
+            return len(self.__tD) > 0
+        else:
+            return False
 
     def exists(self, catName, atName=None):
+        if self.__byPassMode:
+            return True
         try:
             if atName:
                 return atName in self.__tD[catName]

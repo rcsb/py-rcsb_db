@@ -9,6 +9,7 @@
 #  23-May-2018 jdw change assumptions for update method and add tests.
 #   7-Jun-2018 jdw rename and rescope.
 #  15-Aug-2018 jdw add mapping for JSON types based on generic 'ANY' typing.
+#  29-Sep-2018 jdw make JSON date and datetime type explicit in JSON
 #
 ##
 """
@@ -44,7 +45,7 @@ class DataTypeApplicationInfo(object):
     # These are generic types -
     appTypes = [
         "char", "char", "char", "char", "char", "int", "float", "char", "char",
-        "text", "datetime", "char", "char", "char", "char", "datetime", "char",
+        "text", "date", "char", "char", "char", "char", "datetime", "char",
         "char", "char", "char", "char", "char", "datetime", "char", "char",
         "char", "char", "char", "char", "int", "int", "char", "char", "char", "char", "char", "char", "char", "char", ""
     ]
@@ -81,6 +82,8 @@ class DataTypeApplicationInfo(object):
                 if tD['application_name'] == 'ANY':
                     if tD['app_type_code'] in ['char', 'text', 'datetime']:
                         tD['app_type_code'] = 'string'
+                    elif tD['app_type_code'] in ['date', 'datetime']:
+                        tD['app_type_code'] = tD['app_type_code']
                     elif tD['app_type_code'] in ['float']:
                         tD['app_type_code'] = 'number'
                     elif tD['app_type_code'] in ['int']:
@@ -93,7 +96,7 @@ class DataTypeApplicationInfo(object):
                         tD['app_type_code'] = 'string'
                     elif tD['app_type_code'] in ['float', 'double']:
                         tD['app_type_code'] = 'double'
-                    elif tD['app_type_code'] in ['datetime']:
+                    elif tD['app_type_code'] in ['date', 'datetime']:
                         tD['app_type_code'] = 'date'
                     elif tD['app_type_code'] in ['int', 'integer']:
                         tD['app_type_code'] = 'int'

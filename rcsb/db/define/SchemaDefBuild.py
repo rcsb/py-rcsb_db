@@ -13,61 +13,12 @@
 #  6-Sep-2018 jdw Generalize JSON schema generation method
 # 14-Sep-2018 jdw Require at least one record in any array type, adjust constraints on iterables.
 # 18-Sep-2018 jdw Constrain categories/class to homogeneous content
+#  7-Oct-2018 jdw Add subCategory aggregation in the JSON schema generator
+#  9-Oct-2018 jdw push the constructor arguments into the constructor as configuration options
 ##
 """
-Integrate dictionary metadata and file based(type/coverage) into schema defintions.
-            data_rcsb_schema_info
+Integrate dictionary metadata and file based(type/coverage) into internal and JSON/BSON schema defintions.
 
-            Data set item and category schema info -
-
-                _pdbx_item_schema_info.data_set_id
-                _pdbx_item_schema_info.item_name
-                _pdbx_item_schema_info.populated_count
-                _pdbx_item_schema_info.max_field_width
-                _pdbx_item_schema_info.min_field_width
-                _pdbx_item_schema_info.min_precision
-                _pdbx_item_schema_info.max_precision
-
-                _pdbx_category_schema_info.data_set_id
-                _pdbx_category_schema_info.category_id
-                _pdbx_category_schema_info.min_row_count
-                _pdbx_category_schema_info.max_row_count
-
-            Data set item and category schema summary info -
-
-                _pdbx_item_schema_summary_info.item_name
-                _pdbx_item_schema_summary_info.data_set_populated_count
-                _pdbx_item_schema_summary_info.data_set_total_count
-                _pdbx_item_schema_summary_info.max_field_width
-                _pdbx_item_schema_summary_info.min_field_width
-                _pdbx_item_schema_summary_info.min_precision
-                _pdbx_item_schema_summary_info.max_precision
-                _pdbx_item_schema_summary_info.update_date
-
-                _pdbx_category_schema_summary_info.category_id
-                _pdbx_category_schema_summary_info.data_set_populated_count
-                _pdbx_category_schema_summary_info.data_set_total_count
-                _pdbx_category_schema_summary_info.min_row_count
-                _pdbx_category_schema_summary_info.max_row_count
-                _pdbx_category_schema_summary_info.update_date
-
-
-            Application data type map -
-
-                _pdbx_application_data_type_map.application_name
-                _pdbx_application_data_type_map.type_code
-                _pdbx_application_data_type_map.default_type_code
-                _pdbx_application_data_type_map.default_precision
-                _pdbx_application_data_type_map.default_width
-
-
-            Application index list -
-
-                _pdbx_application_index_list.application_name
-                _pdbx_application_index_list.index_name
-                _pdbx_application_index_list.category_id
-                _pdbx_application_index_list.index_type
-                _pdbx_application_index_list.attribute_name
 
 """
 __docformat__ = "restructuredtext en"
@@ -80,31 +31,35 @@ import logging
 
 from rcsb.db.define.DataTypeApplicationInfo import DataTypeApplicationInfo
 from rcsb.db.define.DataTypeInstanceInfo import DataTypeInstanceInfo
-#
 from rcsb.db.define.DictInfo import DictInfo
+from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logger = logging.getLogger(__name__)
 
 
 class SchemaDefBuild(object):
-    """ Build schema definitions from dictionary and auxilary content.
+    """ Integrate dictionary metadata and file based(type/coverage) into internal and JSON/BSON schema defintions.
 
     """
 
-    def __init__(self, schemaName, dictLocators, instDataTypeFilePath, appDataTypeFilePath,
-                 dictHelper=None, schemaDefHelper=None, documentDefHelper=None,
-                 includeContentClasses=['GENERATED_CONTENT', 'EVOLVING_CONTENT']):
+    def __init__(self, schemaName, configPath, mockTopPath, includeContentClasses=['GENERATED_CONTENT', 'EVOLVING_CONTENT']):
         """
-        """
-        #
-        self.__schemaName = schemaName
-        self.__dictLocators = dictLocators
-        self.__instDataTypeFilePath = instDataTypeFilePath
-        self.__appDataTypeFilePath = appDataTypeFilePath
-        self.__schemaDefHelper = schemaDefHelper
-        self.__documentDefHelper = documentDefHelper
 
+        """
+        self.__cfgOb = ConfigUtil(configPath=configPath, mockTopPath=mockTopPath)
+        self.__schemaName = schemaName
         self.__includeContentClasses = includeContentClasses
+        #
+        pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=schemaName)
+        pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=schemaName)
+        dictLocators = [pathPdbxDictionaryFile, pathRcsbDictionaryFile]
+        #
+        self.__instDataTypeFilePath = self.__cfgOb.getPath('INSTANCE_DATA_TYPE_INFO_LOCATOR', sectionName=schemaName)
+        self.__appDataTypeFilePath = self.__cfgOb.getPath('APP_DATA_TYPE_INFO_LOCATOR', sectionName=schemaName)
+
+        dictHelper = self.__cfgOb.getHelper('DICT_HELPER_MODULE', sectionName=schemaName, cfgOb=self.__cfgOb)
+        self.__schemaDefHelper = self.__cfgOb.getHelper('SCHEMADEF_HELPER_MODULE', sectionName=schemaName, cfgOb=self.__cfgOb)
+        self.__documentDefHelper = self.__cfgOb.getHelper('DOCUMENT_HELPER_MODULE', sectionName=schemaName, cfgOb=self.__cfgOb)
 
         self.__dictInfo = DictInfo(dictLocators=dictLocators, dictHelper=dictHelper, dictSubset=schemaName)
         #
@@ -231,6 +186,9 @@ class SchemaDefBuild(object):
         includeList = self.__schemaDefHelper.getIncluded(schemaName) if self.__schemaDefHelper else []
         excludeList = self.__schemaDefHelper.getExcluded(schemaName) if self.__schemaDefHelper else []
         #
+        logger.debug("Schema include list length %d" % len(includeList))
+        logger.debug("Schema exclude list length %d" % len(excludeList))
+        #
         # Optional synthetic attribute added to each category with value linked to data block identifier (or other function)
         #
         blockAttributeName = self.__schemaDefHelper.getBlockAttributeName(schemaName) if self.__schemaDefHelper else None
@@ -241,7 +199,8 @@ class SchemaDefBuild(object):
         #
         convertNameF = self.__getConvertNameMethod(applicationName)
         #
-        dictSchema = self.__dictInfo.getNameSchema()
+        dictSchema = self.__dictInfo.getSchemaNames()
+        logger.debug("Dictionary category length %d" % len(dictSchema))
         #
         rD = {}
         for catName, atNameList in dictSchema.items():
@@ -258,6 +217,9 @@ class SchemaDefBuild(object):
                 continue
             if includeList and sId not in includeList:
                 continue
+            # JDW
+            if not cfD:
+                logger.info("%s catName %s contentClasses %r cfD %r" % (schemaName, catName, contentClasses, cfD))
             #
             aD = self.__dictInfo.getAttributeFeatures(catName)
             #
@@ -470,7 +432,8 @@ class SchemaDefBuild(object):
 
     def __createJsonLikeSchema(self, schemaName, collectionName, applicationName, instDataTypeFilePath, appDataTypeFilePath,
                                schemaDefHelper, documentDefHelper, includeContentClasses=None, jsonSpecDraft='4',
-                               enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
+                               enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums",
+                               suppressSingleton=True):
         """Internal method to integrate dictionary and instance metadata into a common json/bson schema description data structure.
 
            Working only for practical schema style: rowwise_by_name_with_cardinality
@@ -478,7 +441,7 @@ class SchemaDefBuild(object):
         Args:
             schemaName (str): A schema/content name: pdbx|chem_comp|bird|bird_family ...
             collectionName (str): Collection defined within a schema/content type
-            applicationName (str): Target application for the schema (e.g. ANY, SQL, JSON, BSON, ...)
+            applicationName (str): Target application for the schema (e.g. JSON, BSON, or a variant of these...)
             instDataTypeFilePath (str): Path to data instance type and coverage
             appDataTypeFilePath (str): Path to resource file mapping cif data types to application data types
             schemaDefHelper (class instance): Class instance providing additional schema details
@@ -492,6 +455,7 @@ class SchemaDefBuild(object):
 
 
         """
+        subCategoryAggregates = documentDefHelper.getSubCategoryAggregates(collectionName)
         # enforceOpts = "mandatoryKeys|mandatoryAttributes|bounds|enums"
         #
         # applicationName = 'JSON'
@@ -508,8 +472,8 @@ class SchemaDefBuild(object):
         #
         #      Supplied by the schemaDefHelper for the content type (SchemaIds)
         #
-        includeList = self.__schemaDefHelper.getIncluded(schemaName) if self.__schemaDefHelper else []
-        excludeList = self.__schemaDefHelper.getExcluded(schemaName) if self.__schemaDefHelper else []
+        includeList = schemaDefHelper.getIncluded(schemaName) if self.__schemaDefHelper else []
+        excludeList = schemaDefHelper.getExcluded(schemaName) if self.__schemaDefHelper else []
         #
         #      Supplied by the documentDefHelp for the collection (SchemaIds)
         #
@@ -525,21 +489,19 @@ class SchemaDefBuild(object):
         #
         if addBlockAttribute:
             # Optional synthetic attribute added to each category with value linked to data block identifier (or other function)
-            blockAttributeName = self.__schemaDefHelper.getBlockAttributeName(schemaName) if self.__schemaDefHelper else None
-            blockAttributeCifType = self.__schemaDefHelper.getBlockAttributeCifType(schemaName) if self.__schemaDefHelper else None
+            blockAttributeName = schemaDefHelper.getBlockAttributeName(schemaName) if self.__schemaDefHelper else None
+            blockAttributeCifType = schemaDefHelper.getBlockAttributeCifType(schemaName) if self.__schemaDefHelper else None
             blockAttributeAppType = dtAppInfo.getAppTypeName(blockAttributeCifType)
-            blockAttributeWidth = self.__schemaDefHelper.getBlockAttributeMaxWidth(schemaName) if self.__schemaDefHelper else 0
-            # blockAttributeMethod = self.__schemaDefHelper.getBlockAttributeMethod(schemaName) if self.__schemaDefHelper else None
+            blockAttributeWidth = schemaDefHelper.getBlockAttributeMaxWidth(schemaName) if schemaDefHelper else 0
+            # blockAttributeMethod = schemaDefHelper.getBlockAttributeMethod(schemaName) if schemaDefHelper else None
         #
-
-        #
-        dictSchema = self.__dictInfo.getNameSchema()
+        dictSchema = self.__dictInfo.getSchemaNames()
         #
         schemaPropD = {}
         mandatoryCategoryL = []
         for catName, atNameList in dictSchema.items():
             cfD = self.__dictInfo.getCategoryFeatures(catName)
-            logger.debug("catName %s contentClasses %r cfD %r" % (catName, contentClasses, cfD))
+            # logger.debug("catName %s contentClasses %r cfD %r" % (catName, contentClasses, cfD))
 
             #
             #  Skip categories that are uniformly unpopulated --
@@ -587,7 +549,7 @@ class SchemaDefBuild(object):
                 catPropD = pD
             else:
                 if cfD['IS_MANDATORY']:
-                    #catPropD = {typeKey: "array", 'items': [pD], 'minItems': 1, 'uniqueItems': True}
+                    # catPropD = {typeKey: "array", 'items': [pD], 'minItems': 1, 'uniqueItems': True}
                     catPropD = {typeKey: "array", 'items': pD, 'minItems': 1, 'uniqueItems': True}
                 else:
                     # JDW Adjusted minItems=1
@@ -599,81 +561,145 @@ class SchemaDefBuild(object):
                 pD['required'].append(schemaAttributeName)
                 pD['properties'][schemaAttributeName] = atPropD
 
+            #  First, filter any subcategory aggregates from the available list of a category attributes
+            #
+            subCatPropD = {}
+            if subCategoryAggregates:
+                for subCategory in subCategoryAggregates:
+                    scD = {typeKey: "object", 'properties': {}, 'required': []}
+                    for atName in sorted(atNameList):
+                        fD = aD[atName]
+                        # Exclude primary data attributes with no instance coverage except if in a protected content class
+                        if not dtInstInfo.exists(catName, atName) and not self.__testContentClasses(contentClasses, fD['CONTENT_CLASSES']):
+                            continue
+                        if subCategory not in fD['SUB_CATEGORIES']:
+                            continue
+                        #
+                        schemaAttributeName = convertNameF(atName)
+                        isRequired = ('mandatoryAttributes' in enforceOpts and fD['IS_MANDATORY'])
+                        if isRequired:
+                            scD['required'].append(schemaAttributeName)
+                        #
+                        atPropD = self.__getJsonAttributeProperties(fD, appNameU, dtAppInfo, jsonSpecDraft, enforceOpts)
+                        scD['properties'][schemaAttributeName] = atPropD
+                    #
+                subCatPropD[subCategory] = {typeKey: 'array', 'items': scD, 'uniqueItems': True}
+            #
+            if subCatPropD:
+                logger.debug("subCatPropD %r" % subCatPropD.items())
+            #
             for atName in sorted(atNameList):
                 fD = aD[atName]
+                # Exclude primary data attributes with no instance coverage except if in a protected content class
                 if not dtInstInfo.exists(catName, atName) and not self.__testContentClasses(contentClasses, fD['CONTENT_CLASSES']):
+                    continue
+                if subCategoryAggregates and self.__subCategoryTest(subCategoryAggregates, fD['SUB_CATEGORIES']):
                     continue
                 #
                 schemaAttributeName = convertNameF(atName)
-                appType = dtAppInfo.getAppTypeName(fD['TYPE_CODE'])
-                # appWidth = dtAppInfo.getAppTypeDefaultWidth(fD['TYPE_CODE'])
-                # instWidth = dtInstInfo.getMaxWidth(catName, atName)
-                #
                 isRequired = (('mandatoryKeys' in enforceOpts and fD['IS_KEY']) or ('mandatoryAttributes' in enforceOpts and fD['IS_MANDATORY']))
                 if isRequired:
                     pD['required'].append(schemaAttributeName)
                 #
-                if appType in ['string']:
-                    # atPropD = {typeKey: appType, 'maxWidth': instWidth}
-                    atPropD = {typeKey: appType}
+                atPropD = self.__getJsonAttributeProperties(fD, appNameU, dtAppInfo, jsonSpecDraft, enforceOpts)
 
-                elif appType in ['number', 'integer', 'int', 'double']:
-                    atPropD = {typeKey: appType}
-                    #
-                    if 'bounds' in enforceOpts:
-                        if jsonSpecDraft in ['3', '4']:
-                            if 'MIN_VALUE' in fD:
-                                atPropD['minimum'] = fD['MIN_VALUE']
-                            elif 'MIN_VALUE_EXCLUSIVE' in fD:
-                                atPropD['minimum'] = fD['MIN_VALUE_EXCLUSIVE']
-                                atPropD['exclusiveMinimum'] = True
-                            if 'MAX_VALUE' in fD:
-                                atPropD['maximum'] = fD['MAX_VALUE']
-                            elif 'MAX_VALUE_EXCLUSIVE' in fD:
-                                atPropD['maximum'] = fD['MAX_VALUE_EXCLUSIVE']
-                                atPropD['exclusiveMaximum'] = True
-                        elif jsonSpecDraft in ['6', '7']:
-                            if 'MIN_VALUE' in fD:
-                                atPropD['minimum'] = fD['MIN_VALUE']
-                            elif 'MIN_VALUE_EXCLUSIVE' in fD:
-                                atPropD['exclusiveMinimum'] = fD['MIN_VALUE_EXCLUSIVE']
-                            if 'MAX_VALUE' in fD:
-                                atPropD['maximum'] = fD['MAX_VALUE']
-                            elif 'MAX_VALUE_EXCLUSIVE' in fD:
-                                atPropD['exclusiveMaximum'] = fD['MAX_VALUE_EXCLUSIVE']
-                else:
-                    atPropD = {typeKey: appType}
-                #
-                if 'enums' in enforceOpts and fD['ENUMS']:
-                    atPropD['enum'] = fD['ENUMS']
-                if appNameU not in ['BSON']:
-                    try:
-                        if fD['EXAMPLES']:
-                            atPropD['examples'] = [str(t1).strip() for t1, t2 in fD['EXAMPLES']]
-                    except Exception as e:
-                        logger.exception("Failing for %r with %s" % (fD['EXAMPLES'], str(e)))
-                    if fD['DESCRIPTION']:
-                        atPropD['description'] = fD['DESCRIPTION']
-                    #
                 delimiter = fD['ITERABLE_DELIMITER']
                 if delimiter:
                     pD['properties'][schemaAttributeName] = {typeKey: 'array', 'items': atPropD, 'uniqueItems': False}
                 else:
                     pD['properties'][schemaAttributeName] = atPropD
 
-                #
+            pD['properties'].update(subCatPropD)
+            pD['required'].extend(list(subCatPropD.keys()))
+            #
             if 'required' in catPropD and len(catPropD['required']) < 1:
                 logger.info("Category %s cfD %r" % (catName, cfD.items()))
             #
             schemaPropD[sName] = copy.deepcopy(catPropD)
         #
-        rD = {typeKey: 'object', 'properties': schemaPropD}
+        # Suppress the category name for schemas with a single category -
+        #
+        if suppressSingleton and len(schemaPropD) == 1:
+            logger.debug("%s %s suppressing category in singleton schema" % (schemaName, collectionName))
+            # rD = copy.deepcopy(catPropD)
+            rD = copy.deepcopy(pD)
+        else:
+            rD = {typeKey: 'object', 'properties': schemaPropD}
+            if len(mandatoryCategoryL):
+                rD['required'] = mandatoryCategoryL
+
         if appNameU == 'JSON':
             jsonSchemaUrl = "http://json-schema.org/draft-0%s/schema#" % jsonSpecDraft if jsonSpecDraft in ['3', '4', '6', '7'] else "http://json-schema.org/schema#"
             rD.update({"$id": "https://github.com/rcsb/py-rcsb.db/tree/master/rcsb.db/data/json-schema/",
                        "$schema": jsonSchemaUrl,
                        'title': 'Schema for content type %s collection %s' % (schemaName, collectionName)})
-        if len(mandatoryCategoryL):
-            rD['required'] = mandatoryCategoryL
 
         return rD
+
+    def __getJsonAttributeProperties(self, fD, appNameU, dtAppInfo, jsonSpecDraft, enforceOpts):
+        #
+        atPropD = {}
+        try:
+            # - assign data type attributes
+            typeKey = 'bsonType' if appNameU == 'BSON' else 'type'
+            appType = dtAppInfo.getAppTypeName(fD['TYPE_CODE'])
+            if appType in ['string']:
+                # atPropD = {typeKey: appType, 'maxWidth': instWidth}
+                atPropD = {typeKey: appType}
+            elif appType in ['date', 'datetime'] and appNameU == 'JSON':
+                fmt = 'date' if appType == 'date' else 'date-time'
+                atPropD = {typeKey: 'string', 'format': fmt}
+            elif appType in ['date', 'datetime'] and appNameU == 'BSON':
+                atPropD = {typeKey: 'date'}
+            elif appType in ['number', 'integer', 'int', 'double']:
+                atPropD = {typeKey: appType}
+                #
+                if 'bounds' in enforceOpts:
+                    if jsonSpecDraft in ['3', '4']:
+                        if 'MIN_VALUE' in fD:
+                            atPropD['minimum'] = fD['MIN_VALUE']
+                        elif 'MIN_VALUE_EXCLUSIVE' in fD:
+                            atPropD['minimum'] = fD['MIN_VALUE_EXCLUSIVE']
+                            atPropD['exclusiveMinimum'] = True
+                        if 'MAX_VALUE' in fD:
+                            atPropD['maximum'] = fD['MAX_VALUE']
+                        elif 'MAX_VALUE_EXCLUSIVE' in fD:
+                            atPropD['maximum'] = fD['MAX_VALUE_EXCLUSIVE']
+                            atPropD['exclusiveMaximum'] = True
+                    elif jsonSpecDraft in ['6', '7']:
+                        if 'MIN_VALUE' in fD:
+                            atPropD['minimum'] = fD['MIN_VALUE']
+                        elif 'MIN_VALUE_EXCLUSIVE' in fD:
+                            atPropD['exclusiveMinimum'] = fD['MIN_VALUE_EXCLUSIVE']
+                        if 'MAX_VALUE' in fD:
+                            atPropD['maximum'] = fD['MAX_VALUE']
+                        elif 'MAX_VALUE_EXCLUSIVE' in fD:
+                            atPropD['exclusiveMaximum'] = fD['MAX_VALUE_EXCLUSIVE']
+            else:
+                atPropD = {typeKey: appType}
+            #
+            if 'enums' in enforceOpts and fD['ENUMS']:
+                atPropD['enum'] = fD['ENUMS']
+            if appNameU not in ['BSON']:
+                try:
+                    if fD['EXAMPLES']:
+                        atPropD['examples'] = [str(t1).strip() for t1, t2 in fD['EXAMPLES']]
+                except Exception as e:
+                    logger.exception("Failing for %r with %s" % (fD['EXAMPLES'], str(e)))
+                if fD['DESCRIPTION']:
+                    atPropD['description'] = fD['DESCRIPTION']
+                #
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+        #
+        return atPropD
+
+    def __subCategoryTest(self, filterList, atSubCategoryList):
+        """ Return true if any element of filter list in atSubCategoryList
+        """
+        if not filterList or not atSubCategoryList:
+            return False
+        for subCat in filterList:
+            if subCat in atSubCategoryList:
+                return True
+        return False

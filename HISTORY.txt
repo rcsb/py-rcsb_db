@@ -22,6 +22,10 @@
 14-Sep-2018    V0.20 Require at least one record in any array type, adjust constraints on iterables.
 18-Sep-2018    V0.21 Require homogeneous categories/classes in JSON schema production.
 22-Sep-2018    V0.22 Add method to generate _pdbx_struct_assembly.rcsb_candidate_assembly
+10-Oct-2018    V0.23 Add date format to schema definitions; generate schemas and add validation tests
+                     for repository_holdings, entity_sequence_clusters, and data_exchange schema types;
+                     extend derived content for core_entry and core_entity collections;
+                     add subcategory aggregation feature; and refactor api for helper methods.
 
 
 

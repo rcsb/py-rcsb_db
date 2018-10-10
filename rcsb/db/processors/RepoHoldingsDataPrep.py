@@ -5,6 +5,9 @@
 #
 # Update:
 # 16-Jul-2018 jdw adjust naming to current sandbox conventions.
+# 30-Oct-2018 jdw naming to conform to dictioanry and schema conventions.
+#  8-Oct-2018 jdw adjustments for greater schema compliance and uniformity
+#                 provide alternative date assignment for JSON and mongo validation
 #
 ##
 
@@ -16,6 +19,8 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+
+import dateutil.parser
 
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 
@@ -31,9 +36,35 @@ class RepoHoldingsDataPrep(object):
     def __init__(self, **kwargs):
         self.__workPath = kwargs.get('workPath', None)
         self.__sandboxPath = kwargs.get('sandboxPath', None)
+        self.__filterType = kwargs.get('filterType', '')
+        self.__assignDates = 'assign-dates' in self.__filterType
         #
         self.__mU = MarshalUtil(workPath=self.__workPath)
         #
+
+    # TODO include all of the accessioning details for SAS and homology model structures.
+    def getHoldingsTransferred(self, updateId, dirPath, **kwargs):
+        """ Parse legacy lists defining the repository contents transferred to alternative repositories
+
+        Args:
+            updateId (str): update identifier (e.g. 2018_32)
+            dirPath (str): directory path containing update list files
+            **kwargs: unused
+
+        Returns:
+            list: List of dictionaries containing data for rcsb_repository_holdings_transferred
+        """
+        retL = []
+        dirPath = dirPath if dirPath else self.__sandboxPath
+        try:
+            # fp = os.path.join(dirPath, 'status', 'transfer-ma.list')
+            # entryIdL = self.__mU.doImport(fp, 'list')
+            #
+            return retL
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+
+        return retL
 
     def getHoldingsUpdate(self, updateId, dirPath=None, **kwargs):
         """ Parse legacy lists defining the contents of the repository update
@@ -58,9 +89,14 @@ class RepoHoldingsDataPrep(object):
                     fp = os.path.join(dirPath, 'update-lists', updateType + '-' + contentType)
                     entryIdL = self.__mU.doImport(fp, 'list')
                     #
+                    uD = {}
                     for entryId in entryIdL:
-                        uType = 'removed' if updateType == 'obsolete' else updateType
-                        retL.append({'update_id': updateId, 'entryId': entryId, 'update_type': uType, 'repository_content_type': contentNameD[contentType]})
+                        if entryId not in uD:
+                            uD[entryId] = []
+                        uD[entryId].append(contentNameD[contentType])
+                for entryId in uD:
+                    uType = 'removed' if updateType == 'obsolete' else updateType
+                    retL.append({'update_id': updateId, 'entry_id': entryId, 'update_type': uType, 'repository_content_types': uD[entryId]})
             return retL
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -126,20 +162,30 @@ class RepoHoldingsDataPrep(object):
                     continue
                 d = {'update_id': updateId,
                      'entry_id': fields[1],
-                     'status_code': fields[2],
-                     'deposit_date': fields[3],
-                     'deposit_date_coordinates': fields[4],
-                     'deposit_date_structure_factors': fields[5],
-                     'hold_date_struct_fact': fields[6],
-                     'deposit_date_nmr_restraints': fields[7],
-                     'hold_date_nmr_restraints': fields[8],
-                     'release_date': fields[9],
-                     'audit_author_list': fields[10],
-                     'title': fields[11],
-                     'author_prerelease_sequence': fields[12],
-                     'hold_date_coordinates': fields[13],
-                     'sg_project_name': fields[14],
-                     'sg_project_abbreviation': fields[15]}
+                     'status_code': fields[2]
+                     # 'sg_project_name': fields[14],
+                     # 'sg_project_abbreviation_': fields[15]}
+                     }
+                if fields[11] and len(fields[11].strip()):
+                    d['title'] = fields[11]
+                if fields[10] and len(fields[10].strip()):
+                    # d['audit_authors'] = fields[10].split(';'),
+                    d['audit_authors'] = fields[10]
+                if fields[12] and len(fields[12].strip()):
+                    d['author_prerelease_sequence'] = str(fields[12]).strip()
+                dTupL = [('deposit_date', 3),
+                         ('deposit_date_coordinates', 4),
+                         ('deposit_date_structure_factors', 5),
+                         ('hold_date_struct_fact', 6),
+                         ('deposit_date_nmr_restraints', 7),
+                         ('hold_date_nmr_restraints', 8),
+                         ('release_date', 9),
+                         ('hold_date_coordinates', 13)]
+                for dTup in dTupL:
+                    fN = dTup[1]
+                    if fields[fN] and len(fields[fN]) >= 4:
+                        d[dTup[0]] = dateutil.parser.parse(fields[fN]) if self.__assignDates else fields[fN]
+                #
                 retL.append({k: v for k, v in d.items() if v})
         except Exception as e:
             logger.error("Fields: %r" % fields)
@@ -184,9 +230,22 @@ class RepoHoldingsDataPrep(object):
             dD = self.__mU.doImport(fp, 'json')
             for d in dD:
                 rbL = d['obsoletedBy'] if 'obsoletedBy' in d else []
-                d1 = {'update_id': updateId, 'entry_id': d['entryId'], 'deposit_date': d['depositionDate'],
-                      'remove_date': d['obsoletedDate'], 'release_date': d['releaseDate'], 'title': d['title'], 'details': d['details'],
-                      'audit_authors': d['depositionAuthors'], 'id_codes_replaced_by': rbL}
+                d1 = {'update_id': updateId,
+                      'entry_id': d['entryId'],
+                      'title': d['title'],
+                      'details': d['details'],
+                      'audit_authors': d['depositionAuthors']}
+                if rbL:
+                    d1['id_codes_replaced_by'] = rbL
+
+                dTupL = [('deposit_date', 'depositionDate'),
+                         ('remove_date', 'obsoletedDate'),
+                         ('release_date', 'releaseDate')]
+                for dTup in dTupL:
+                    fN = dTup[1]
+                    if d[fN] and len(d[fN]) > 4:
+                        d1[dTup[0]] = dateutil.parser.parse(d[fN]) if self.__assignDates else d[fN]
+
                 rL1.append({k: v for k, v in d1.items() if v})
                 #
                 for ii, author in enumerate(d['depositionAuthors']):
@@ -198,8 +257,11 @@ class RepoHoldingsDataPrep(object):
                             sD[pdbId] = []
                         sD[pdbId].append(d['entryId'])
             for pdbId in sD:
-                d = {'update_id': updateId, 'entry_id': pdbId, 'id_codes_superseded': sD[pdbId]}
-                rL3.append(d)
+                if len(sD[pdbId]) > 1:
+                    rL3.append({'update_id': updateId, 'entry_id': pdbId, 'id_codes_superseded': sD[pdbId]})
+
+            logger.debug("rl3 %r" % rL3)
+            logger.debug("Computed data lengths  %d %d %d" % (len(rL1), len(rL2), len(rL3)))
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
 

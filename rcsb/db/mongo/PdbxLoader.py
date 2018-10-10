@@ -23,7 +23,7 @@
 #
 ##
 """
-following mapping conventions in external schema definitions.
+Worker methods for loading primary data content following mapping conventions in external schema definitions.
 
 """
 
@@ -55,7 +55,7 @@ logger = logging.getLogger(__name__)
 class PdbxLoader(object):
 
     def __init__(self, cfgOb, resourceName="MONGO_DB", numProc=4, chunkSize=15, fileLimit=None, verbose=False, readBackCheck=False, maxStepLength=2000, workPath=None):
-        """        following mapping conventions in external schema definitions.
+        """  Worker methods for loading primary data content following mapping conventions in external schema definitions.
 
         Args:
             cfgOb (TYPE): Description

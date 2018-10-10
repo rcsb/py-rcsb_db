@@ -1,4 +1,6 @@
-## RCSB Python Database Utility Classes
+## RCSB Pinelands
+#### A collection of Python Database Utility Classes
+
 
 ### Introduction
 
@@ -274,6 +276,10 @@ bird, bird_family,.. ).
 
 ```bash
 # File: dbload-setup-example.cfg
+# Date: 14-Mar-2018 jdw
+# Function: Template configuration file for rcsb.db utilities
+# -------------------------------------------------------------------------
+#
 [DEFAULT]
 #
 BIRD_REPO_PATH=MOCK_BIRD_REPO
@@ -348,7 +354,7 @@ DICT_METHOD_HELPER_MODULE=rcsb.db.helpers.DictMethodRunnerHelper
 
 ## -------------------
 [chem_comp]
-PDBX_DICT_LOCATOR =dictionaries/mmcif_pdbx_v5_next.dic
+PDBX_DICT_LOCATOR=dictionaries/mmcif_pdbx_v5_next.dic
 RCSB_DICT_LOCATOR=dictionaries/rcsb_mmcif_ext_v1.dic
 PROVENANCE_INFO_LOCATOR=provenance/rcsb_extend_provenance_info.json
 #
@@ -429,27 +435,72 @@ SEQUENCE_IDENTITY_LEVELS=100,95,90,70,50,30
 COLLECTION_CLUSTER_PROVENANCE=cluster_provenance
 PROVENANCE_KEY_NAME=rcsb_entity_sequence_cluster_prov
 PROVENANCE_INFO_LOCATOR=provenance/rcsb_extend_provenance_info.json
+
+PDBX_DICT_LOCATOR=dictionaries/mmcif_pdbx_v5_next.dic
+RCSB_DICT_LOCATOR=dictionaries/rcsb_mmcif_ext_v1.dic
+#
+SCHEMA_NAME=entity_sequence_clusters
+SCHEMA_DEF_LOCATOR_SQL=schema/schema_def-entity_sequence_clusters-SQL.json
+SCHEMA_DEF_LOCATOR_ANY=schema/schema_def-entity_sequence_clusters-ANY.json
+INSTANCE_DATA_TYPE_INFO_LOCATOR=data_type_info/scan-entity_sequence_clusters-type-map.json
+APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
+
+DICT_HELPER_MODULE=rcsb.db.helpers.DictInfoHelper
+SCHEMADEF_HELPER_MODULE=rcsb.db.helpers.SchemaDefHelper
+DOCUMENT_HELPER_MODULE=rcsb.db.helpers.SchemaDocumentHelper
+DICT_METHOD_HELPER_MODULE=rcsb.db.helpers.DictMethodRunnerHelper
+
 ## -------------------
 [repository_holdings]
 DATABASE_NAME=repository_holdings
 DATABASE_VERSION_STRING=v5
-COLLECTION_HOLDINGS_UPDATE=rcsb_repository_holdings_update
-COLLECTION_HOLDINGS_CURRENT=rcsb_repository_holdings_current
-COLLECTION_HOLDINGS_UNRELEASED=rcsb_repository_holdings_unreleased
-COLLECTION_HOLDINGS_REMOVED=rcsb_repository_holdings_removed
-COLLECTION_HOLDINGS_REMOVED_AUTHORS=rcsb_repository_holdings_removed_audit_authors
-COLLECTION_HOLDINGS_SUPERSEDED=rcsb_repository_holdings_superseded
+COLLECTION_HOLDINGS_UPDATE=repository_holdings_update
+COLLECTION_HOLDINGS_CURRENT=repository_holdings_current
+COLLECTION_HOLDINGS_UNRELEASED=repository_holdings_unreleased
+COLLECTION_HOLDINGS_REMOVED=repository_holdings_removed
+COLLECTION_HOLDINGS_REMOVED_AUTHORS=repository_holdings_removed_audit_authors
+COLLECTION_HOLDINGS_SUPERSEDED=repository_holdings_superseded
 COLLECTION_VERSION_STRING=v0_1
 
+PDBX_DICT_LOCATOR=dictionaries/mmcif_pdbx_v5_next.dic
+RCSB_DICT_LOCATOR=dictionaries/rcsb_mmcif_ext_v1.dic
+PROVENANCE_INFO_LOCATOR=provenance/rcsb_extend_provenance_info.json
+#
+SCHEMA_NAME=entity_sequence_clusters
+SCHEMA_DEF_LOCATOR_SQL=schema/schema_def-repository_holdings-SQL.json
+SCHEMA_DEF_LOCATOR_ANY=schema/schema_def-repository_holdings-ANY.json
+INSTANCE_DATA_TYPE_INFO_LOCATOR=data_type_info/scan-repository_holdings-type-map.json
+
+APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
+DICT_HELPER_MODULE=rcsb.db.helpers.DictInfoHelper
+SCHEMADEF_HELPER_MODULE=rcsb.db.helpers.SchemaDefHelper
+DOCUMENT_HELPER_MODULE=rcsb.db.helpers.SchemaDocumentHelper
+DICT_METHOD_HELPER_MODULE=rcsb.db.helpers.DictMethodRunnerHelper
+
 ## -------------------
-[data_exchange_status]
+[data_exchange]
 DATABASE_NAME=data_exchange
 DATABASE_VERSION_STRING=v5
 COLLECTION_UPDATE_STATUS=rcsb_data_exchange_status
 COLLECTION_VERSION_STRING=v0_1
-##
+
+PDBX_DICT_LOCATOR=dictionaries/mmcif_pdbx_v5_next.dic
+RCSB_DICT_LOCATOR=dictionaries/rcsb_mmcif_ext_v1.dic
+PROVENANCE_INFO_LOCATOR=provenance/rcsb_extend_provenance_info.json
+#
+SCHEMA_NAME=data_exchange
+SCHEMA_DEF_LOCATOR_SQL=schema/schema_def-data_exchange-SQL.json
+SCHEMA_DEF_LOCATOR_ANY=schema/schema_def-data_exchange-ANY.json
+INSTANCE_DATA_TYPE_INFO_LOCATOR=data_type_info/scan-data_exchange-type-map.json
+
+APP_DATA_TYPE_INFO_LOCATOR=data_type_info/app_data_type_mapping.cif
+DICT_HELPER_MODULE=rcsb.db.helpers.DictInfoHelper
+SCHEMADEF_HELPER_MODULE=rcsb.db.helpers.SchemaDefHelper
+DOCUMENT_HELPER_MODULE=rcsb.db.helpers.SchemaDocumentHelper
+DICT_METHOD_HELPER_MODULE=rcsb.db.helpers.DictMethodRunnerHelper
+
 ## --------------------
-## Preliminary configuration JSON Schema (BSON type flavor)
+## Preliminary config JSON Schema (BSON type flavor)
 ##
 [pdbx_v5_0_2]
 SCHEMA_NAME=pdbx
@@ -496,5 +547,56 @@ SCHEMA_NAME=bird_chem_comp
 BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-chem_comp_v5_0_2.json
 BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-chem_comp_v5_0_2.json
 ##
+
+[repository_holdings_update_v0_1]
+SCHEMA_NAME=repository_holdings
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-repository_holdings_update_v0_1.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-repository_holdings_update_v0_1.json
+
+[repository_holdings_removed_v0_1]
+SCHEMA_NAME=repository_holdings
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-repository_holdings_removed_v0_1.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-repository_holdings_removed_v0_1.json
+
+[repository_holdings_current_v0_1]
+SCHEMA_NAME=repository_holdings
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-repository_holdings_current_v0_1.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-repository_holdings_current_v0_1.json
+
+[repository_holdings_unreleased_v0_1]
+SCHEMA_NAME=repository_holdings
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-repository_holdings_unreleased_v0_1.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-repository_holdings_unreleased_v0_1.json
+
+[repository_holdings_removed_audit_authors_v0_1]
+SCHEMA_NAME=repository_holdings
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-repository_holdings_removed_audit_authors_v0_1.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-repository_holdings_removed_audit_authors_v0_1.json
+
+[repository_holdings_superseded_v0_1]
+SCHEMA_NAME=repository_holdings
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-repository_holdings_superseded_v0_1.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-repository_holdings_superseded_v0_1.json
+
+[cluster_members_v0_1]
+SCHEMA_NAME=entity_sequence_clusters
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-cluster_members_v0_1.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-cluster_members_v0_1.json
+
+[cluster_provenance_v0_1]
+SCHEMA_NAME=entity_sequence_clusters
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-cluster_provenance_v0_1.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-cluster_provenance_v0_1.json
+
+[entity_members_v0_1]
+SCHEMA_NAME=entity_sequence_clusters
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-entity_members_v0_1.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-entity_members_v0_1.json
+
+[rcsb_data_exchange_status_v0_1]
+SCHEMA_NAME=data_exchange
+BSON_SCHEMA_FULL_LOCATOR=json-schema/bson-schema-full-rcsb_data_exchange_status_v0_1.json
+BSON_SCHEMA_MIN_LOCATOR=json-schema/bson-schema-min-rcsb_data_exchange_status_v0_1.json
+
 
 ```

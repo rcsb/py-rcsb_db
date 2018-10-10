@@ -1,12 +1,11 @@
 ##
-# File:    SchemaDataPrepValidateTests.py
+# File:    SchemaValidationListTests.py
 # Author:  J. Westbrook
 # Date:    9-Jun-2018
 # Version: 0.001
 #
 # Update:
 #  7-Sep-2018 jdw add multi-level (strict/min) validation tests
-# 29-Sep-2018 jdw add plugin for extended checks of JSON Schema formats.
 #
 ##
 """
@@ -27,7 +26,7 @@ import os
 import time
 import unittest
 
-from jsonschema import Draft4Validator, FormatChecker
+from jsonschema import Draft4Validator
 
 from rcsb.db.define.DictMethodRunner import DictMethodRunner
 from rcsb.db.define.SchemaDefBuild import SchemaDefBuild
@@ -47,7 +46,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
-class SchemaDataPrepValidateTests(unittest.TestCase):
+class SchemaValidationListTests(unittest.TestCase):
 
     def setUp(self):
         self.__numProc = 2
@@ -74,6 +73,9 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+        self.__testFilePath = os.path.join(HERE, "test-output", 'vfiles')
+        self.__testFileNames = ['2pjg.cif', '3ed8.cif', '3ryo.cif', '3s4r.cif', '3vzv.cif', '4jne.cif', '5hgq.cif', '5pgy.cif']
+        self.__testPathList = [os.path.join(self.__testFilePath, f) for f in self.__testFileNames]
 
     def tearDown(self):
         endTime = time.time()
@@ -85,7 +87,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         enforceOpts = "mandatoryKeys|mandatoryAttributes|bounds|enums"
         eCount = self.__testValidateOpts(enforceOpts=enforceOpts)
         logger.info("Total validation errors enforcing %s : %d" % (enforceOpts, eCount))
-        self.assertGreaterEqual(eCount, 20)
+        self.assertGreaterEqual(eCount, 5)
 
     def testValidateOptsMin(self):
         enforceOpts = "mandatoryKeys|enums"
@@ -94,13 +96,8 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.assertTrue(eCount <= 1)
 
     def __testValidateOpts(self, enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
-        schemaNames = ['pdbx', 'pdbx_core', 'chem_comp', 'bird', 'bird_family']
-        collectionNames = {'pdbx': ['pdbx_v5_0_2', 'pdbx_ext_v5_0_2'],
-                           'pdbx_core': ['pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2'],
-                           'bird': ['bird_v5_0_2'],
-                           'bird_family': ['family_v5_0_2'],
-                           'chem_comp': ['chem_comp_v5_0_2'],
-                           'bird_chem_comp': ['bird_chem_comp_v5_0_2']}
+        schemaNames = ['pdbx_core']
+        collectionNames = {'pdbx_core': ['pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2']}
         #
         eCount = 0
         for schemaName in schemaNames:
@@ -110,25 +107,22 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                 # Raises exceptions for schema compliance.
                 Draft4Validator.check_schema(cD)
                 #
-                v = Draft4Validator(cD, format_checker=FormatChecker())
+                v = Draft4Validator(cD)
                 for ii, d in enumerate(dL):
                     logger.debug("Schema %s collection %s document %d" % (schemaName, collectionName, ii))
                     try:
-                        cCount = 0
                         for error in sorted(v.iter_errors(d), key=str):
-                            logger.debug("schema %s collection %s (%s) path %s error: %s" % (schemaName, collectionName, cnL[ii], error.path, error.message))
+                            logger.info("schema %s collection %s (%s) path %s error: %s" % (schemaName, collectionName, cnL[ii], error.path, error.message))
                             eCount += 1
-                            cCount += 1
                         #
-                        logger.debug("schema %s collection %s container %s count %d" % (schemaName, collectionName, cnL[ii], cCount))
                     except Exception as e:
-                        logger.exception("Validation error %s" % str(e))
-
+                        logger.info("Validation error %s" % str(e))
         return eCount
 
     def __testBuildJson(self, schemaName, collectionName, enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
         try:
             pathSchemaDefJson1 = os.path.join(HERE, 'test-output', 'json-schema-%s.json' % (collectionName))
+            #
             smb = SchemaDefBuild(schemaName, self.__configPath, self.__mockTopPath)
             cD = smb.build(collectionName, applicationName='json', schemaType='json', enforceOpts=enforceOpts)
             #
@@ -147,7 +141,8 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         """Test case -  create loadable PDBx data from repository files
         """
         try:
-            inputPathList = self.__schU.getPathList(contentType=schemaName)
+            #inputPathList = self.__schU.getPathList(contentType=schemaName)
+            inputPathList = self.__testPathList
             sd, _, _, _ = self.__schU.getSchemaInfo(contentType=schemaName)
             #
             dH = DictMethodRunnerHelper()
@@ -184,8 +179,8 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
 
 def schemaBuildJsonSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsStrict"))
-    suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsMin"))
+    suiteSelect.addTest(SchemaValidationListTests("testValidateOptsStrict"))
+    suiteSelect.addTest(SchemaValidationListTests("testValidateOptsMin"))
     return suiteSelect
 
 

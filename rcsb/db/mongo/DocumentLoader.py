@@ -24,6 +24,7 @@ import time
 
 from rcsb.db.mongo.Connection import Connection
 from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
+from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
 from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
 
 logger = logging.getLogger(__name__)
@@ -45,12 +46,14 @@ class DocumentLoader(object):
         self.__cfgOb = cfgOb
         self.__resourceName = resourceName
         #
+        self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__documentLimit)
+        #
         self.__readBackCheck = readBackCheck
         self.__mpFormat = '[%(levelname)s] %(asctime)s %(processName)s-%(module)s.%(funcName)s: %(message)s'
         #
         #
 
-    def load(self, databaseName, collectionName, loadType='full', documentList=None, indexAttributeList=None, keyNames=None):
+    def load(self, databaseName, collectionName, loadType='full', documentList=None, indexAttributeList=None, keyNames=None, schemaLevel='full'):
         """  Driver method for loading MongoDb content -
 
 
@@ -76,14 +79,19 @@ class DocumentLoader(object):
             chunkSize = self.__chunkSize if docList and self.__chunkSize < len(docList) else 0
             #
             indAtList = indexAttributeList if indexAttributeList else []
+            bsonSchema = None
+            if schemaLevel and schemaLevel in ['min', 'full']:
+                bsonSchema = self.__schU.getJsonSchema(collectionName, level=schemaLevel)
+                logger.debug("Using schema validation for %r %r" % (collectionName, schemaLevel))
+
             if loadType == 'full':
                 self.__removeCollection(databaseName, collectionName)
-                ok = self.__createCollection(databaseName, collectionName, indAtList)
-                logger.debug("Collection create status %r" % ok)
+                ok = self.__createCollection(databaseName, collectionName, indAtList, bsonSchema=bsonSchema)
+                logger.info("Collection %s create status %r" % (collectionName, ok))
             elif loadType == 'append':
                 # create only if object does not exist -
-                ok = self.__createCollection(databaseName, collectionName, indexAttributeNames=indAtList, checkExists=True)
-                logger.debug("Collection create status %r" % ok)
+                ok = self.__createCollection(databaseName, collectionName, indexAttributeNames=indAtList, checkExists=True, bsonSchema=bsonSchema)
+                logger.debug("Collection %s create status %r" % (collectionName, ok))
                 # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             numDocs = len(docList)
             logger.debug("Processing %d total documents" % numDocs)
@@ -166,7 +174,7 @@ class DocumentLoader(object):
         delta = endTime - startTime
         logger.debug("Completed %s at %s (%.4f seconds)" % (message, ts, delta))
 
-    def __createCollection(self, dbName, collectionName, indexAttributeNames=None, checkExists=False):
+    def __createCollection(self, dbName, collectionName, indexAttributeNames=None, checkExists=False, bsonSchema=None):
         """Create database and collection and optionally a primary index -
         """
         try:
@@ -176,7 +184,7 @@ class DocumentLoader(object):
                 if checkExists and mg.databaseExists(dbName) and mg.collectionExists(dbName, collectionName):
                     ok1 = True
                 else:
-                    ok1 = mg.createCollection(dbName, collectionName)
+                    ok1 = mg.createCollection(dbName, collectionName, bsonSchema=bsonSchema)
                 ok2 = mg.databaseExists(dbName)
                 ok3 = mg.collectionExists(dbName, collectionName)
                 okI = True
@@ -215,6 +223,8 @@ class DocumentLoader(object):
         # Load database/collection with input document list -
         #
         failList = []
+        rIdL = []
+        successList = []
         logger.debug("Loading dbName %s collectionName %s with document count %d" % (dbName, collectionName, len(docList)))
         if keyNames:
             # map the document list to some document key if this is provided
@@ -277,7 +287,7 @@ class DocumentLoader(object):
                 #
             return len(rIdL) == len(docList), successList, failList
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing %r %r (len=%d) %s with %s" % (dbName, collectionName, len(docList), keyNames, str(e)))
         return False, [], docList
 
     def __getKeyValues(self, dct, keyNames):

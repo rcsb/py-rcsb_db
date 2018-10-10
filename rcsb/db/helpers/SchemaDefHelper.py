@@ -40,6 +40,17 @@ class SchemaDefHelper(SchemaDefHelperBase):
                                                         'ATOM_SITE_ANISOTROP'
                                                         ]
                                             },
+                              'repository_holdings': {'INCLUDE': ['rcsb_repository_holdings_update', 'rcsb_repository_holdings_current',
+                                                                  'rcsb_repository_holdings_unreleased', 'rcsb_repository_holdings_removed',
+                                                                  'rcsb_repository_holdings_removed_audit_author',
+                                                                  'rcsb_repository_holdings_superseded'],
+                                                      'EXCLUDE': []
+                                                      },
+                              'entity_sequence_clusters': {'INCLUDE': ['rcsb_instance_sequence_cluster_list', 'rcsb_entity_sequence_cluster_list',
+                                                                       'software', 'citation', 'citation_author'],
+                                                           'EXCLUDE': []},
+                              'data_exchange': {'INCLUDE': ['rcsb_data_exchange_status'],
+                                                'EXCLUDE': []},
                               }
 
     __block_attributes = {'pdbx': {'ATTRIBUTE_NAME': 'structure_id', 'CIF_TYPE_CODE': 'code', 'MAX_WIDTH': 12, 'METHOD': 'datablockid()'},
@@ -56,6 +67,9 @@ class SchemaDefHelper(SchemaDefHelperBase):
                        'chem_comp': {'NAME': 'chem_comp_v5', 'VERSION': '0_1'},
                        'bird_chem_comp': {'NAME': 'chem_comp_v5', 'VERSION': '0_1'},
                        'pdb_distro': {'NAME': 'stat', 'VERSION': '0_1'},
+                       'repository_holdings': {'NAME': 'repository_holdings', 'VERSION': 'v5'},
+                       'entity_sequence_clusters': {'NAME': 'sequence_clusters', 'VERSION': 'v5'},
+                       'data_exchange': {'NAME': 'data_exchange', 'VERSION': 'v5'},
                        }
 
     #
@@ -105,7 +119,7 @@ class SchemaDefHelper(SchemaDefHelperBase):
         '''
         includeL = []
         try:
-            includeL = SchemaDefHelper.__schemaContentFilters[schemaName]['EXCLUDE']
+            includeL = [tS.upper() for tS in SchemaDefHelper.__schemaContentFilters[schemaName]['EXCLUDE']]
         except Exception as e:
             logger.debug("Schema definition %s failing with %s" % (schemaName, str(e)))
         return includeL
@@ -116,7 +130,7 @@ class SchemaDefHelper(SchemaDefHelperBase):
         '''
         excludeL = []
         try:
-            excludeL = SchemaDefHelper.__schemaContentFilters[schemaName]['INCLUDE']
+            excludeL = [tS.upper() for tS in SchemaDefHelper.__schemaContentFilters[schemaName]['INCLUDE']]
         except Exception as e:
             logger.debug("Schema definition %s failing with %s" % (schemaName, str(e)))
         return excludeL
