@@ -5,6 +5,7 @@
 #
 # Update:
 #   6-Jul-2018. jdw generalize test case.
+#   9-Oct-2018  jdw only use the list cases and make pubmedid an int
 #
 ##
 """
@@ -63,7 +64,7 @@ class ProvenanceUtilTests(unittest.TestCase):
                          'page_first': '1026',
                          'page_last': '1028',
                          'year': 2017,
-                         'pdbx_database_id_PubMed': '29035372',
+                         'pdbx_database_id_PubMed': 29035372,
                          'pdbx_database_id_DOI': '10.1038/nbt.3988'},
             #
             'citation_author': [{'citation_id': 'mmseq2',
@@ -95,7 +96,7 @@ class ProvenanceUtilTests(unittest.TestCase):
                           'page_first': '1026',
                           'page_last': '1028',
                           'year': 2017,
-                          'pdbx_database_id_PubMed': '29035372',
+                          'pdbx_database_id_PubMed': 29035372,
                           'pdbx_database_id_DOI': '10.1038/nbt.3988'}],
             #
             'citation_author': [{'citation_id': 'mmseq2',
@@ -121,7 +122,7 @@ class ProvenanceUtilTests(unittest.TestCase):
         """
         try:
             provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
-            pD = {self.__provKeyName: self.__provInfo}
+            pD = {self.__provKeyName: self.__provInfoL}
             ok = provU.store(pD, schemaName='DEFAULT')
             #
             self.assertTrue(ok)
@@ -134,7 +135,7 @@ class ProvenanceUtilTests(unittest.TestCase):
         """
         try:
             provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
-            pD = {self.__provKeyName: self.__provInfo}
+            pD = {self.__provKeyName: self.__provInfoL}
             ok = provU.store(pD, schemaName='DEFAULT')
             self.assertTrue(ok)
             #
@@ -150,7 +151,7 @@ class ProvenanceUtilTests(unittest.TestCase):
         """
         try:
             provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
-            pD = {self.__provKeyName: self.__provInfo}
+            pD = {self.__provKeyName: self.__provInfoL}
             ok = provU.store(pD, schemaName='DEFAULT')
             self.assertTrue(ok)
             #

@@ -160,7 +160,7 @@ class SchemaDefUtil(object):
             mU = MarshalUtil(workPath=self.__workPath)
             sObj = mU.doImport(schemaLocator, format="json")
         else:
-            logger.error("Failed to retriev schema for %s %r" % (collectionName, level))
+            logger.error("Failed to read schema for %s %r" % (collectionName, level))
         return sObj
 
     def __buildSchema(self, contentType, applicationName):

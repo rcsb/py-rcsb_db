@@ -128,23 +128,22 @@ class DictInfo(object):
             self.__selectionFiltersD = dictHelper.getSelectionFiltersBySubset(dictSubset)
             self.__sliceParentFiltersD = dictHelper.getSliceParentFiltersBySubset(dictSubset)
         else:
+            logger.debug("Dictionary helper not loaded for subset %r locators %r" % (dictSubset, dictLocators), stack_info=True)
             self.__selectionFiltersD = {}
             self.__sliceParentItemsD = {}
             self.__sliceParentFiltersD = {}
             self.__sliceUnitCardinalityD = {}
             self.__sliceCategoryExtrasD = {}
-
             logger.debug("Missing dictionary helper method")
 
         #
         self.__methodD = self.__getMethodInfo()
         self.__attributeFeatures = {
-            catName: self.__getAttributeFeatures(
-                catName,
-                iterableD,
-                itemTransformD,
-                self.__methodD,
-                attributeContentClasses) for catName in self.__categoryList}
+            catName: self.__getAttributeFeatures(catName,
+                                                 iterableD,
+                                                 itemTransformD,
+                                                 self.__methodD,
+                                                 attributeContentClasses) for catName in self.__categoryList}
         self.__attributeDataTypeD = {catName: self.__getAttributeTypeD(catName) for catName in self.__categoryList}
         self.__dataSelectFilterD = dataSelectFilterD
         self.__sliceD = self.__getSliceChildren(self.__sliceParentItemsD)
@@ -273,7 +272,7 @@ class DictInfo(object):
         #
         return self.__categoryList
 
-    def getNameSchema(self):
+    def getSchemaNames(self):
         return self.__dictSchema
 
     def getCategoryAttributes(self, catName):
@@ -396,6 +395,7 @@ class DictInfo(object):
             fD['CONTENT_CLASSES'] = attributeContentClasses[(catName, atName)] if (catName, atName) in attributeContentClasses else []
             fD['ENUMS'] = self.__assignEnumTypes(self.__dApi.getEnumList(catName, atName), pType)
             fD['EXAMPLES'] = self.__dApi.getExampleList(catName, atName)
+            fD['SUB_CATEGORIES'] = self.__dApi.getItemSubCategoryIdList(catName, atName)
             #
             bList = self.__dApi.getBoundaryListAlt(catName, atName, fallBack=True)
             if bList:

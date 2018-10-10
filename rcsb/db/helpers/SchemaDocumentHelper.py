@@ -5,9 +5,10 @@
 # Version: 0.001 Initial version
 #
 # Updates:
-#  22-Jun-2018 jdw  change collection attribute id specification to dot notation
+#  22-Jun-2018 jdw change collection attribute id specification to dot notation
 #  14-Aug-2018 jdw generalize document key attribute to attribute list
 #  20-Aug-2018 jdw slice details added to __schemaContentFilters
+#   8-Oct-2018 jdw added getSubCategoryAggregates() method
 #
 ##
 """
@@ -38,6 +39,9 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
                                'chem_comp': ['chem_comp_v5_0_2'],
                                'bird_chem_comp': ['bird_chem_comp_v5_0_2'],
                                'pdb_distro': [],
+                               'repository_holdings': ['repository_holdings_update_v0_1', 'repository_holdings_current_v0_1', 'repository_holdings_unreleased_v0_1',
+                                                       'repository_holdings_removed_v0_1', 'repository_holdings_removed_audit_authors_v0_1', 'repository_holdings_superseded_v0_1'],
+                               'entity_sequence_clusters': ['cluster_members_v0_1', 'cluster_provenance_v0_1', 'entity_members_v0_1']
                                }
     #
     # RCSB_LOAD_STATUS must be included in all INCLUDE filters -
@@ -119,7 +123,17 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
                                                                      'PDBX_SERIAL_CRYSTALLOGRAPHY_SAMPLE_DELIVERY_INJECTION',
                                                                      'PDBX_SERIAL_CRYSTALLOGRAPHY_SAMPLE_DELIVERY_FIXED_TARGET',
                                                                      'PDBX_SERIAL_CRYSTALLOGRAPHY_DATA_REDUCTION'],
-                                                         'EXCLUDE': [], 'SLICE': None}
+                                                         'EXCLUDE': [], 'SLICE': None},
+                              'repository_holdings_update_v0_1': {'INCLUDE': ['rcsb_repository_holdings_update'], 'EXCLUDE': [], 'SLICE': None},
+                              'repository_holdings_current_v0_1': {'INCLUDE': ['rcsb_repository_holdings_current'], 'EXCLUDE': [], 'SLICE': None},
+                              'repository_holdings_unreleased_v0_1': {'INCLUDE': ['rcsb_repository_holdings_unreleased'], 'EXCLUDE': [], 'SLICE': None},
+                              'repository_holdings_removed_v0_1': {'INCLUDE': ['rcsb_repository_holdings_removed'], 'EXCLUDE': [], 'SLICE': None},
+                              'repository_holdings_removed_audit_authors_v0_1': {'INCLUDE': ['rcsb_repository_holdings_removed_audit_author'], 'EXCLUDE': [], 'SLICE': None},
+                              'repository_holdings_superseded_v0_1': {'INCLUDE': ['rcsb_repository_holdings_superseded'], 'EXCLUDE': [], 'SLICE': None},
+                              'cluster_members_v0_1': {'INCLUDE': ['rcsb_entity_sequence_cluster_list'], 'EXCLUDE': [], 'SLICE': None},
+                              'cluster_provenance_v0_1': {'INCLUDE': ['software', 'citation', 'citation_author'], 'EXCLUDE': [], 'SLICE': None},
+                              'entity_members_v0_1': {'INCLUDE': ['rcsb_entity_sequence_cluster_list'], 'EXCLUDE': [], 'SLICE': None},
+                              'rcsb_data_exchange_status_v0_1': {'INCLUDE': ['rcsb_data_exchange_status'], 'EXCLUDE': [], 'SLICE': None},
                               }
 
     __collectionAttributeNames = {'pdbx_v5_0_2': ['entry.id'],
@@ -131,8 +145,21 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
                                   'family_v5_0_2': ['pdbx_reference_molecule_family.family_prd_id'],
                                   'chem_comp_v5_0_2': ['chem_comp.component_id'],
                                   'bird_chem_comp_v5_0_2': ['chem_comp.component_id'],
+                                  'repository_holdings_update_v0_1': ['update_id'],
+                                  'repository_holdings_current_v0_1': ['update_id'],
+                                  'repository_holdings_unreleased_v0_1': ['update_id'],
+                                  'repository_holdings_removed_v0_1': ['update_id'],
+                                  'repository_holdings_removed_audit_authors': ['update_id'],
+                                  'repository_holdings_superseded_v0_1': ['update_id'],
+                                  'cluster_members_v0_1': ['update_id'],
+                                  'cluster_provenance_v0_1': ['software.name'],
+                                  'entity_members_v0_1': ['update_id'],
+                                  'rcsb_data_exchange_status_v0_1': ['update_id', 'database_name', 'object_name'],
                                   }
     #
+    __collectionSubCategoryAggregates = {'cluster_members_v0_1': ['sequence_membership'],
+                                         'entity_members_v0_1': ['cluster_membership']
+                                         }
 
     def __init__(self, **kwargs):
         """
@@ -163,7 +190,7 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
         '''
         includeL = []
         try:
-            includeL = SchemaDocumentHelper.__schemaContentFilters[collectionName]['EXCLUDE']
+            includeL = [tS.upper() for tS in SchemaDocumentHelper.__schemaContentFilters[collectionName]['EXCLUDE']]
         except Exception as e:
             logger.debug("Collection %s failing with %s" % (collectionName, str(e)))
         return includeL
@@ -174,7 +201,7 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
         '''
         excludeL = []
         try:
-            excludeL = SchemaDocumentHelper.__schemaContentFilters[collectionName]['INCLUDE']
+            excludeL = [tS.upper() for tS in SchemaDocumentHelper.__schemaContentFilters[collectionName]['INCLUDE']]
         except Exception as e:
             logger.debug("Collection %s failing with %s" % (collectionName, str(e)))
         return excludeL
@@ -194,6 +221,14 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
         r = []
         try:
             return SchemaDocumentHelper.__collectionAttributeNames[collectionName]
+        except Exception as e:
+            logger.debug("Collection %s failing with %s" % (collectionName, str(e)))
+        return r
+
+    def getSubCategoryAggregates(self, collectionName):
+        r = []
+        try:
+            return SchemaDocumentHelper.__collectionSubCategoryAggregates[collectionName]
         except Exception as e:
             logger.debug("Collection %s failing with %s" % (collectionName, str(e)))
         return r

@@ -619,14 +619,18 @@ class SchemaDef(object):
         """ Return a dictionary containing appropriate NULL value for each attribute.
         """
         d = {}
-        for atId, atInfo in self.__tD['ATTRIBUTE_INFO'].items():
+        atId = atInfo = None
+        try:
+            for atId, atInfo in self.__tD['ATTRIBUTE_INFO'].items():
 
-            if self.__isStringType(atInfo['APP_TYPE'].upper()):
-                d[atId] = ''
-            elif self.__isDateType(atInfo['APP_TYPE'].upper()):
-                d[atId] = r'\N'
-            else:
-                d[atId] = r'\N'
+                if self.__isStringType(atInfo['APP_TYPE'].upper()):
+                    d[atId] = ''
+                elif self.__isDateType(atInfo['APP_TYPE'].upper()):
+                    d[atId] = r'\N'
+                else:
+                    d[atId] = r'\N'
+        except Exception as e:
+            logger.exception("Failing with atId %r atInfo %r" % (atId, atInfo))
         #
         return d
 

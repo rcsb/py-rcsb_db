@@ -70,7 +70,7 @@ class DataExchangeStatusLoaderTests(unittest.TestCase):
     def testLoadExchangeStatus(self):
         """ Test case - load data exchange status objects.
 
-        [data_exchange_status]
+        [data_exchange]
         DATABASE_NAME=data_exchange
         DATABASE_VERSION_STRING=v5
         COLLECTION_UPDATE_STATUS=rcsb_data_exchange_status
@@ -96,7 +96,7 @@ class DataExchangeStatusLoaderTests(unittest.TestCase):
                 self.assertEqual(len(dList), 1)
                 logger.debug("Status record %r" % dList[0])
 
-                sectionName = 'data_exchange_status'
+                sectionName = 'data_exchange'
                 dl = DocumentLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                                     documentLimit=self.__documentLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
                 #

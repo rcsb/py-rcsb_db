@@ -224,11 +224,11 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.fail()
 
     def testPrepPdbxDocumentsFromFiles(self):
-        """Test case -  create loadable PDBx data from repository files
+        """Test case -  create loadable PDBx data from repository files (pdbx_core)
         """
         try:
-            inputPathList = self.__schU.getPathList(contentType='pdbx')
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='pdbx')
+            inputPathList = self.__schU.getPathList(contentType='pdbx_core')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='pdbx_core')
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
             sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)

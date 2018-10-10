@@ -18,6 +18,8 @@
 #   7-Sep-2018  jdw add generated content classes for core schemas
 #  10-Sep-2018  jdw add iterable details for semicolon separated text data
 #  11-Sep-2018  jdw adjust slice cardinality constraints for entity and assembly identifier categories.
+#  30-Sep-2018  jdw add source and host organism categories
+#   2-Oct-2018  jdw add repository_holdings and sequence_cluster content types and associated category content.
 ##
 """
 This helper class supplements dictionary information as required for schema production.
@@ -77,14 +79,16 @@ class DictInfoHelper(DictInfoHelperBase):
                          ('PUBLIC_RELEASE', 'bird'): [{'CATEGORY_NAME': 'pdbx_reference_molecule', 'ATTRIBUTE_NAME': 'release_status', 'VALUES': ['REL', 'OBS']}],
                          ('PUBLIC_RELEASE', 'bird_family'): [{'CATEGORY_NAME': 'pdbx_reference_molecule_family', 'ATTRIBUTE_NAME': 'release_status', 'VALUES': ['REL', 'OBS']}]
                          }
-
-    _typeCodeClasses = {'iterable': ['ucode-alphanum-csv', 'id_list', 'alphanum-scsv']}
+    #
+    _typeCodeClasses = {'iterable': ['ucode-alphanum-csv', 'id_list', 'alphanum-scsv', 'alphanum-csv']}
     _queryStringSelectors = {'iterable': ['comma separate']}
     # Put the non default iterable delimiter cases here -
     _iterableDelimiters = [{'CATEGORY_NAME': 'chem_comp', 'ATTRIBUTE_NAME': 'pdbx_synonyms', 'DELIMITER': ';'},
                            {'CATEGORY_NAME': 'citation', 'ATTRIBUTE_NAME': 'rcsb_authors', 'DELIMITER': ';'}]
     #
     # Categories/Attributes that will be included in a schema definitions even if they are not populated in any tabulated instance data -
+    #
+    #
     #
     _contentClasses = {('GENERATED_CONTENT', 'pdbx'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']},
                                                        {'CATEGORY_NAME': 'pdbx_struct_assembly_gen', 'ATTRIBUTE_NAME_LIST': ['ordinal']}],
@@ -94,8 +98,19 @@ class DictInfoHelper(DictInfoHelperBase):
                                                             {'CATEGORY_NAME': 'pdbx_struct_assembly', 'ATTRIBUTE_NAME_LIST': ['rcsb_details', 'rcsb_candidate_assembly']},
                                                             {'CATEGORY_NAME': 'rcsb_entry_container_identifiers', 'ATTRIBUTE_NAME_LIST': [
                                                                 'entry_id', 'entity_ids', 'polymer_entity_ids', 'non-polymer_entity_ids', 'assembly_ids']},
-                                                            {'CATEGORY_NAME': 'rcsb_entity_container_identifiers', 'ATTRIBUTE_NAME_LIST': ['entry_id', 'entity_id']},
-                                                            {'CATEGORY_NAME': 'rcsb_assembly_container_identifiers', 'ATTRIBUTE_NAME_LIST': ['entry_id', 'assembly_id']}],
+                                                            {'CATEGORY_NAME': 'rcsb_entity_container_identifiers', 'ATTRIBUTE_NAME_LIST': [
+                                                                'entry_id', 'entity_id', 'asym_ids', 'auth_asym_ids']},
+                                                            {'CATEGORY_NAME': 'rcsb_assembly_container_identifiers', 'ATTRIBUTE_NAME_LIST': ['entry_id', 'assembly_id']},
+                                                            {'CATEGORY_NAME': 'rcsb_entity_source_organism', 'ATTRIBUTE_NAME_LIST': ['entity_id', 'pdbx_src_id', 'source_type',
+                                                                                                                                     'scientific_name', 'common_name', 'ncbi_taxonomy_id',
+                                                                                                                                     'provenance_code', 'beg_seq_num', 'end_seq_num']},
+                                                            {'CATEGORY_NAME': 'rcsb_entity_host_organism', 'ATTRIBUTE_NAME_LIST': ['entity_id', 'pdbx_src_id',
+                                                                                                                                   'scientific_name', 'common_name', 'ncbi_taxonomy_id',
+                                                                                                                                   'provenance_code', 'beg_seq_num', 'end_seq_num']},
+                                                            {'CATEGORY_NAME': 'entity', 'ATTRIBUTE_NAME_LIST': ['rcsb_multiple_source_flag', 'rcsb_source_part_count']},
+                                                            ],
+                       ('GENERATED_CONTENT', 'data_exchange'): [{'CATEGORY_NAME': 'rcsb_data_exchange_status',
+                                                                 'ATTRIBUTE_NAME_LIST': ['update_id', 'database_name', 'object_name', 'update_status_flag', 'update_begin_timestamp', 'update_end_timestamp']}],
                        ('EVOLVING_CONTENT', 'pdbx_core'): [{'CATEGORY_NAME': 'diffrn', 'ATTRIBUTE_NAME_LIST': ['pdbx_serial_crystal_experiment']},
                                                            {'CATEGORY_NAME': 'diffrn_detector', 'ATTRIBUTE_NAME_LIST': ['pdbx_frequency']},
                                                            {'CATEGORY_NAME': 'pdbx_serial_crystallography_measurement',
@@ -159,6 +174,28 @@ class DictInfoHelper(DictInfoHelperBase):
                        ('GENERATED_CONTENT', 'bird_chem_comp'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
                        ('GENERATED_CONTENT', 'bird'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
                        ('GENERATED_CONTENT', 'bird_family'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
+                       #
+                       ('REPO_HOLDINGS_CONTENT', 'repository_holdings'): [{'CATEGORY_NAME': 'rcsb_repository_holdings_current',
+                                                                           'ATTRIBUTE_NAME_LIST': ['update_id', 'entry_id', 'repository_content_types']},
+                                                                          {'CATEGORY_NAME': 'rcsb_repository_holdings_update',
+                                                                           'ATTRIBUTE_NAME_LIST': ['update_id', 'entry_id', 'repository_content_types']},
+                                                                          {'CATEGORY_NAME': 'rcsb_repository_holdings_removed',
+                                                                           'ATTRIBUTE_NAME_LIST': ['update_id', 'entry_id', 'repository_content_types', 'deposit_date',
+                                                                                                   'release_date', 'remove_date', 'title', 'details', 'audit_authors', 'id_codes_replaced_by']},
+                                                                          {'CATEGORY_NAME': 'rcsb_repository_holdings_unreleased',
+                                                                           'ATTRIBUTE_NAME_LIST': ['update_id', 'entry_id', 'status_code', 'deposit_date', 'deposit_date_coordinates',
+                                                                                                   'deposit_date_structure_factors', 'deposit_date_nmr_restraints', 'hold_date_coordinates',
+                                                                                                   'hold_date_structure_factors', 'hold_date_nmr_restraints', 'release_date', 'title',
+                                                                                                   'audit_authors', 'author_prerelease_sequence_status']},
+                                                                          {'CATEGORY_NAME': 'rcsb_repository_holdings_removed_audit_author',
+                                                                           'ATTRIBUTE_NAME_LIST': ['update_id', 'entry_id', 'ordinal_id', 'audit_author']},
+                                                                          {'CATEGORY_NAME': 'rcsb_repository_holdings_superseded',
+                                                                           'ATTRIBUTE_NAME_LIST': ['update_id', 'entry_id', 'id_codes_superseded']}
+                                                                          ],
+                       ('SEQUENCE_CLUSTER_CONTENT', 'entity_sequence_clusters'): [{'CATEGORY_NAME': 'rcsb_entity_sequence_cluster_list',
+                                                                                   'ATTRIBUTE_NAME_LIST': ['data_set_id', 'entry_id', 'entity_id', 'cluster_id', 'identity']},
+                                                                                  {'CATEGORY_NAME': 'rcsb_instance_sequence_cluster_list',
+                                                                                   'ATTRIBUTE_NAME_LIST': ['data_set_id', 'entry_id', 'instance_id', 'cluster_id', 'identity']}]
                        }
 #
 #

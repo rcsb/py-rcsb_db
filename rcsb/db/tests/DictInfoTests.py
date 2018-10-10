@@ -50,6 +50,7 @@ class DictInfoTests(unittest.TestCase):
         self.__pathSaveDictInfoDefaultJson = os.path.join(HERE, 'test-output', 'dict_info_default.json')
         self.__pathSaveDictInfoJson = os.path.join(HERE, 'test-output', 'dict_info.json')
         self.__pathSaveDictInfoExtJson = os.path.join(HERE, 'test-output', 'dict_info_with_ext.json')
+        self.__pathSaveDictInfoRepoJson = os.path.join(HERE, 'test-output', 'dict_info_with_repo.json')
         self.__pathSaveDefText = os.path.join(HERE, 'test-output', 'dict_info.txt')
         #
         self.__startTime = time.time()
@@ -67,7 +68,7 @@ class DictInfoTests(unittest.TestCase):
         """
         try:
             sdi = DictInfo(dictLocators=[self.__pathPdbxDictionaryFile])
-            nS = sdi.getNameSchema()
+            nS = sdi.getSchemaNames()
             #
             logger.debug("Dictionary category name length %d" % len(nS))
             ok = self.__ioU.serialize(self.__pathSaveDictInfoDefaultJson, nS, format="json", indent=3)
@@ -106,7 +107,7 @@ class DictInfoTests(unittest.TestCase):
         """
         try:
             dH = DictInfoHelper()
-            sdi = DictInfo(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], dictSubset='pdbx', dictHelper=dH)
+            sdi = DictInfo(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], dictSubset='pdbx_core', dictHelper=dH)
             catNameL = sdi.getCategories()
             cfD = {}
             afD = {}
@@ -117,6 +118,29 @@ class DictInfoTests(unittest.TestCase):
             #
             logger.debug("Dictionary category name length %d" % len(catNameL))
             ok = self.__ioU.serialize(self.__pathSaveDictInfoExtJson, afD, format="json", indent=3)
+            self.assertTrue(ok)
+
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
+    def testRepoWithHelper(self):
+        """ Test the dictionary content supplemented by helper function for auxiliary schema
+
+        """
+        try:
+            dH = DictInfoHelper()
+            sdi = DictInfo(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], dictSubset='repository_holdings', dictHelper=dH)
+            catNameL = sdi.getCategories()
+            cfD = {}
+            afD = {}
+            for catName in catNameL:
+                cfD[catName] = sdi.getCategoryFeatures(catName)
+                afD[catName] = sdi.getAttributeFeatures(catName)
+
+            #
+            logger.debug("Dictionary category name length %d" % len(catNameL))
+            ok = self.__ioU.serialize(self.__pathSaveDictInfoRepoJson, afD, format="json", indent=3)
             self.assertTrue(ok)
 
         except Exception as e:
@@ -142,6 +166,12 @@ def dictInfoExtensionSuite():
     return suiteSelect
 
 
+def dictInfoRepoSuite():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(DictInfoTests("testRepoWithHelper"))
+    return suiteSelect
+
+
 if __name__ == '__main__':
     #
     if True:
@@ -153,3 +183,8 @@ if __name__ == '__main__':
 
         mySuite = dictInfoExtensionSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+        mySuite = dictInfoRepoSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+#

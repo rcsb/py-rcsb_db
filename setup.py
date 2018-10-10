@@ -57,13 +57,14 @@ setup(
                       'python-dateutil',
                       'pytz',
                       'jsonschema >= "2.6.0"',
+                      'strict-rfc3339',
                       'mysqlclient >= "1.3.12"',
                       'pymongo >= "3.7.0"',
-                      'mmcif; python_version >= "0.20"',
+                      'mmcif; python_version >= "0.21"',
                       'scandir; python_version < "3.0"',
                       'configparser; python_version < "3.0"',
-                      'rcsb.utils.io',
-                      'rcsb.utils.config',
+                      'rcsb.utils.io >= "0.12"',
+                      'rcsb.utils.config >= "0.12"',
                       'rcsb.utils.multiproc'],
     packages=find_packages(exclude=['rcsb.db.tests', 'rcsb.db.tests-*', 'tests.*']),
     package_data={
@@ -73,7 +74,7 @@ setup(
     #
     # These basic tests require no database services -
     test_suite="rcsb.db.tests",
-    tests_require=['tox', 'jsonschema'],
+    tests_require=['tox', 'jsonschema', 'strict-rfc3339'],
     #
     # Not configured ...
     extras_require={

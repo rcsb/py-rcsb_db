@@ -243,7 +243,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        origLength = len(trfTup.value)
+        origLength = len(str(trfTup.value))
         if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
             return TrfValue(self.__tObj.getAppNullValue(trfTup.atId), trfTup.atId, origLength, True)
         return TrfValue(int(trfTup.value), trfTup.atId, origLength, False)
@@ -254,7 +254,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        origLength = len(trfTup.value)
+        origLength = len(str(trfTup.value))
         if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
             return TrfValue(self.__tObj.getAppNullValue(trfTup.atId), trfTup.atId, origLength, True)
         vL = [int(v.strip()) for v in trfTup.value.split(self.__tObj.getIterableSeparator(trfTup.atId))]
@@ -266,7 +266,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        origLength = len(trfTup.value)
+        origLength = len(str(trfTup.value))
         if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
             return TrfValue(self.__tObj.getAppNullValue(trfTup.atId), trfTup.atId, origLength, True)
         return TrfValue(float(trfTup.value), trfTup.atId, origLength, False)
@@ -277,7 +277,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        origLength = len(trfTup.value)
+        origLength = len(str(trfTup.value))
         if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
             return TrfValue(self.__tObj.getAppNullValue(trfTup.atId), trfTup.atId, origLength, True)
         vL = [float(v.strip()) for v in trfTup.value.split(self.__tObj.getIterableSeparator(trfTup.atId))]

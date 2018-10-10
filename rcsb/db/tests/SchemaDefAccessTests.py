@@ -25,10 +25,6 @@ import unittest
 
 from rcsb.db.define.SchemaDefAccess import SchemaDefAccess
 from rcsb.db.define.SchemaDefBuild import SchemaDefBuild
-#
-from rcsb.db.helpers.DictInfoHelper import DictInfoHelper
-from rcsb.db.helpers.SchemaDefHelper import SchemaDefHelper
-from rcsb.db.helpers.SchemaDocumentHelper import SchemaDocumentHelper
 from rcsb.utils.io.IoUtil import IoUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
@@ -43,9 +39,9 @@ class SchemaDefAccessTests(unittest.TestCase):
 
     def setUp(self):
         self.__verbose = True
-        self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
-        self.__pathRcsbDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'rcsb_mmcif_ext_v1.dic')
-
+        self.__mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
+        self.__pathConfig = os.path.join(self.__mockTopPath, 'config', 'dbload-setup-example.cfg')
+        #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
@@ -65,23 +61,9 @@ class SchemaDefAccessTests(unittest.TestCase):
 
     def __testBuild(self, schemaName, applicationName):
         try:
-            contentType = schemaName[:4] if schemaName.startswith('pdbx') else schemaName
-            instDataTypeFilePath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'data_type_info', 'scan-%s-type-map.json' % contentType)
-            appDataTypeFilePath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'data_type_info', 'app_data_type_mapping.cif')
-            #
             pathSchemaDefJson = os.path.join(HERE, 'test-output', 'schema_def-%s-%s.json' % (schemaName, applicationName))
             #
-            dictInfoHelper = DictInfoHelper()
-            defHelper = SchemaDefHelper()
-            docHelper = SchemaDocumentHelper()
-            #
-            smb = SchemaDefBuild(schemaName,
-                                 dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile],
-                                 instDataTypeFilePath=instDataTypeFilePath,
-                                 appDataTypeFilePath=appDataTypeFilePath,
-                                 dictHelper=dictInfoHelper,
-                                 schemaDefHelper=defHelper,
-                                 documentDefHelper=docHelper)
+            smb = SchemaDefBuild(schemaName, self.__pathConfig, self.__mockTopPath)
             sD = smb.build(applicationName=applicationName)
             #
             logger.debug("Schema dictionary category length %d" % len(sD['SCHEMA_DICT']))

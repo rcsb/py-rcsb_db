@@ -220,7 +220,7 @@ class PdbxLoaderTests(unittest.TestCase):
             self.fail()
 
     def __loadStatus(self, statusList):
-        sectionName = 'data_exchange_status'
+        sectionName = 'data_exchange'
         dl = DocumentLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             documentLimit=None, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
         #

@@ -6,6 +6,7 @@
 #
 # Updates:
 # 14-Jul-2018 jdw add configuration options
+#  7-Oct-2018 jdw add schema validation to the underlying load processing
 ##
 """
 Tests for loading repository holdings information.
@@ -53,6 +54,7 @@ class RepoHoldingsLoaderTests(unittest.TestCase):
         self.__numProc = 2
         self.__chunkSize = 10
         self.__documentLimit = 1000
+        self.__filterType = "assign-dates"
         #
         self.__workPath = os.path.join(HERE, 'test-output')
         self.__sandboxPath = self.__cfgOb.getPath('RCSB_EXCHANGE_SANDBOX_PATH', sectionName='DEFAULT')
@@ -86,7 +88,7 @@ class RepoHoldingsLoaderTests(unittest.TestCase):
         """
         try:
             sectionName = 'repository_holdings'
-            rhdp = RepoHoldingsDataPrep(sandboxPath=self.__sandboxPath, workPath=self.__workPath)
+            rhdp = RepoHoldingsDataPrep(sandboxPath=self.__sandboxPath, workPath=self.__workPath, filterType=self.__filterType)
             #
             dl = DocumentLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                                 documentLimit=self.__documentLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
@@ -98,33 +100,40 @@ class RepoHoldingsLoaderTests(unittest.TestCase):
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_UPDATE', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType='append', documentList=dList,
                          indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+            logger.info("Collection %r length %d load status %r" % (collectionName, len(dList), ok))
             self.assertTrue(ok)
             #
             dList = rhdp.getHoldingsCurrent(updateId=self.__updateId)
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_CURRENT', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType='append', documentList=dList,
                          indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+            logger.info("Collection %r length %d load status %r" % (collectionName, len(dList), ok))
             self.assertTrue(ok)
 
             dList = rhdp.getHoldingsUnreleased(updateId=self.__updateId)
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_UNRELEASED', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType='append', documentList=dList,
                          indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+            logger.info("Collection %r length %d load status %r" % (collectionName, len(dList), ok))
             self.assertTrue(ok)
             #
             dList1, dList2, dList3 = rhdp.getHoldingsRemoved(updateId=self.__updateId)
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_REMOVED', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType='append', documentList=dList1,
                          indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+            logger.info("Collection %r length %d load status %r" % (collectionName, len(dList1), ok))
             self.assertTrue(ok)
 
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_REMOVED_AUTHORS', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType='append', documentList=dList2,
                          indexAttributeList=['update_id', 'entry_id'], keyNames=None)
-
+            logger.info("Collection %r length %d load status %r" % (collectionName, len(dList2), ok))
+            #
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_SUPERSEDED', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType='append', documentList=dList3,
                          indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+            logger.info("Collection %r length %d load status %r" % (collectionName, len(dList3), ok))
+            #
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()

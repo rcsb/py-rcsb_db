@@ -27,7 +27,6 @@ class ClusterDataPrep(object):
     """
     Extract data for either entity or instance clusters.  For the entity case,
 
-
     For example -
      _rcsb_entity_sequence_cluster_list.data_set_id
 
@@ -145,7 +144,7 @@ class ClusterDataPrep(object):
             mL = []
             for ii, cId in enumerate(memberTup):
                 if cId:
-                    mL.append({'identity': levelList[ii], 'cluster_id': cId})
+                    mL.append({'identity': int(levelList[ii]), 'cluster_id': cId})
             d['cluster_membership'] = mL
             cL.append(d)
         docBySequenceD[schemaNameMembership] = cL
@@ -153,7 +152,7 @@ class ClusterDataPrep(object):
         cL = []
         for level, clusterD in cD.items():
             for cId, mL in clusterD.items():
-                d = {'data_set_id': dataSetId, 'identity': levelList[ii], 'cluster_id': cId}
+                d = {'data_set_id': dataSetId, 'identity': int(levelList[ii]), 'cluster_id': cId}
                 tL = []
                 for seqId in mL:
                     seqIdL = seqId.split('_')

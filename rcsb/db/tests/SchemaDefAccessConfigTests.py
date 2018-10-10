@@ -58,7 +58,7 @@ class SchemaDefAccessConfigTests(unittest.TestCase):
                                                             endTime - self.__startTime))
 
     def testAccess(self):
-        schemaNames = ['pdbx', 'pdbx_core', 'chem_comp', 'bird', 'bird_family', 'bird_chem_comp']
+        schemaNames = ['pdbx', 'pdbx_core', 'chem_comp', 'bird', 'bird_family', 'bird_chem_comp', 'repository_holdings', 'entity_sequence_clusters']
         applicationNames = ['ANY', 'SQL']
         for schemaName in schemaNames:
             for applicationName in applicationNames:
@@ -66,25 +66,11 @@ class SchemaDefAccessConfigTests(unittest.TestCase):
 
     def __testBuild(self, schemaName, applicationName):
         try:
-            pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=schemaName)
-            pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=schemaName)
-            instDataTypeFilePath = self.__cfgOb.getPath('INSTANCE_DATA_TYPE_INFO_LOCATOR', sectionName=schemaName)
-            appDataTypeFilePath = self.__cfgOb.getPath('APP_DATA_TYPE_INFO_LOCATOR', sectionName=schemaName)
             #
             optName = 'SCHEMA_DEF_LOCATOR_%s' % applicationName.upper()
             pathSchemaDefJson = self.__cfgOb.getPath(optName, sectionName=schemaName)
             #
-            dictInfoHelper = self.__cfgOb.getHelper('DICT_HELPER_MODULE', sectionName=schemaName)
-            defHelper = self.__cfgOb.getHelper('SCHEMADEF_HELPER_MODULE', sectionName=schemaName)
-            docHelper = self.__cfgOb.getHelper('DOCUMENT_HELPER_MODULE', sectionName=schemaName)
-            smb = SchemaDefBuild(schemaName,
-                                 dictLocators=[pathPdbxDictionaryFile, pathRcsbDictionaryFile],
-                                 instDataTypeFilePath=instDataTypeFilePath,
-                                 appDataTypeFilePath=appDataTypeFilePath,
-                                 dictHelper=dictInfoHelper,
-                                 schemaDefHelper=defHelper,
-                                 documentDefHelper=docHelper,
-                                 )
+            smb = SchemaDefBuild(schemaName, self.__pathConfig, self.__mockTopPath)
             sD = smb.build(applicationName=applicationName)
             #
             logger.debug("Schema %s dictionary category length %d" % (schemaName, len(sD['SCHEMA_DICT'])))

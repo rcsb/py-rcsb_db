@@ -32,7 +32,7 @@ logger = logging.getLogger()
 
 
 def loadStatus(statusList, cfgOb, readBackCheck=True):
-    sectionName = 'data_exchange_status'
+    sectionName = 'data_exchange'
     dl = DocumentLoader(cfgOb, "MONGO_DB", numProc=2, chunkSize=2,
                         documentLimit=None, verbose=False, readBackCheck=readBackCheck)
     #

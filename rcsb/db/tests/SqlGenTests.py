@@ -76,24 +76,10 @@ class SqlGenTests(unittest.TestCase):
 
     def __testBuild(self, schemaName, applicationName):
         try:
-            pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=schemaName)
-            pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=schemaName)
-            instDataTypeFilePath = self.__cfgOb.getPath('INSTANCE_DATA_TYPE_INFO_LOCATOR', sectionName=schemaName)
-            appDataTypeFilePath = self.__cfgOb.getPath('APP_DATA_TYPE_INFO_LOCATOR', sectionName=schemaName)
-            #
             optName = 'SCHEMA_DEF_LOCATOR_%s' % applicationName.upper()
             pathSchemaDefJson = self.__cfgOb.getPath(optName, sectionName=schemaName)
             #
-            dictInfoHelper = self.__getHelper(self.__cfgOb.get('DICT_HELPER_MODULE', sectionName=schemaName))
-            defHelper = self.__getHelper(self.__cfgOb.get('SCHEMADEF_HELPER_MODULE', sectionName=schemaName))
-            docHelper = self.__getHelper(self.__cfgOb.get('DOCUMENT_HELPER_MODULE', sectionName=schemaName))
-            smb = SchemaDefBuild(schemaName,
-                                 dictLocators=[pathPdbxDictionaryFile, pathRcsbDictionaryFile],
-                                 instDataTypeFilePath=instDataTypeFilePath,
-                                 appDataTypeFilePath=appDataTypeFilePath,
-                                 dictHelper=dictInfoHelper,
-                                 schemaDefHelper=defHelper,
-                                 documentDefHelper=docHelper)
+            smb = SchemaDefBuild(schemaName, self.__pathConfig, self.__mockTopPath)
             sD = smb.build(applicationName=applicationName)
             #
             logger.debug("Schema %s dictionary category length %d" % (schemaName, len(sD['SCHEMA_DICT'])))

@@ -205,16 +205,23 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         loop_
         _rcsb_entity_container_identifiers.entry_id
         _rcsb_entity_container_identifiers.entity_id
+        #
+        _rcsb_entity_container_identifiers.asym_ids
+        _rcsb_entity_container_identifiers.auth_asym_ids
+
         ...
         """
         try:
             if not (dataContainer.exists('entry') and dataContainer.exists('entity')):
                 return False
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=['entry_id', 'entity_id']))
+                dataContainer.append(DataCategory(catName, attributeNameList=['entry_id', 'entity_id', 'asym_ids', 'auth_asym_ids']))
             #
             cObj = dataContainer.getObj(catName)
 
+            psObj = dataContainer.getObj('pdbx_poly_seq_scheme')
+            npsObj = dataContainer.getObj('pdbx_nonpoly_scheme')
+            #
             tObj = dataContainer.getObj('entry')
             entryId = tObj.getValue('id', 0)
             cObj.setValue(entryId, 'entry_id', 0)
@@ -224,6 +231,15 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             for ii, entityId in enumerate(entityIdL):
                 cObj.setValue(entryId, 'entry_id', ii)
                 cObj.setValue(entityId, 'entity_id', ii)
+                eType = tObj.getValue('type', ii)
+                if eType == 'polymer':
+                    asymIdL = psObj.selectValuesWhere('asym_id', entityId, 'entity_id')
+                    authAsymIdL = psObj.selectValuesWhere('pdb_strand_id', entityId, 'entity_id')
+                else:
+                    asymIdL = npsObj.selectValuesWhere('asym_id', entityId, 'entity_id')
+                    authAsymIdL = npsObj.selectValuesWhere('pdb_strand_id', entityId, 'entity_id')
+                cObj.setValue(','.join(list(set(asymIdL))).strip(), 'asym_ids', ii)
+                cObj.setValue(','.join(list(set(authAsymIdL))).strip(), 'auth_asym_ids', ii)
             #
             return True
         except Exception as e:
@@ -404,6 +420,221 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         except Exception as e:
             logger.exception("For %s %s failing with %s" % (catName, atName, str(e)))
         return False
+
+    def __getAttribList(self, sObj, atTupL):
+        atL = []
+        atSL = []
+        if sObj:
+            for (atS, at) in atTupL:
+                if sObj.hasAttribute(atS):
+                    atL.append(at)
+                    atSL.append(atS)
+        return atSL, atL
+
+    def filterSourceOrganismDetails(self, dataContainer, catName, **kwargs):
+        """  Select relevant source and host organism details from primary data categories.
+
+        Build:
+            loop_
+            _rcsb_entity_source_organism.entity_id
+            _rcsb_entity_source_organism.pdbx_src_id
+            _rcsb_entity_source_organism.source_type
+            _rcsb_entity_source_organism.scientific_name
+            _rcsb_entity_source_organism.common_name
+            _rcsb_entity_source_organism.ncbi_taxonomy_id
+            _rcsb_entity_source_organism.provenance_code
+            _rcsb_entity_source_organism.beg_seq_num
+            _rcsb_entity_source_organism.end_seq_num
+            1 1 natural 'Homo sapiens' human 9606  'pdb-primary-data' 1 202
+            # ... abbreviated
+
+
+            loop_
+            _rcsb_entity_host_organism.entity_id
+            _rcsb_entity_host_organism.pdbx_src_id
+            _rcsb_entity_host_organism.scientific_name
+            _rcsb_entity_host_organism.common_name
+            _rcsb_entity_host_organism.ncbi_taxonomy_id
+            _rcsb_entity_host_organism.provenance_code
+            _rcsb_entity_host_organism.beg_seq_num
+            _rcsb_entity_host_organism.end_seq_num
+            1 1 'Escherichia coli' 'E. coli' 562  'pdb-primary-data' 1 102
+            # ... abbreviated
+
+            And two related items -
+
+            _entity.rcsb_multiple_source_flag
+            _entity.rcsb_source_part_count
+
+        """
+        hostCatName = 'rcsb_entity_host_organism'
+        try:
+            logger.debug("Starting with  %r %r" % (dataContainer.getName(), catName))
+            if catName == hostCatName:
+                logger.debug("Skipping method for %r %r" % (dataContainer.getName(), catName))
+                return True
+            #
+            # if there is no source information then exit
+            if not (dataContainer.exists('entity_src_gen') or
+                    dataContainer.exists('entity_src_nat') or
+                    dataContainer.exists('pdbx_entity_src_syn')):
+                return False
+            # Create the net target category
+            if not dataContainer.exists(catName):
+                dataContainer.append(DataCategory(catName, attributeNameList=['entity_id',
+                                                                              'pdbx_src_id',
+                                                                              'source_type',
+                                                                              'scientific_name',
+                                                                              'common_name',
+                                                                              'ncbi_taxonomy_id',
+                                                                              'beg_seq_num',
+                                                                              'end_seq_num',
+                                                                              'provenance_code']))
+            #
+            if not dataContainer.exists(hostCatName):
+                dataContainer.append(DataCategory(hostCatName, attributeNameList=['entity_id',
+                                                                                  'pdbx_src_id',
+                                                                                  'scientific_name',
+                                                                                  'common_name',
+                                                                                  'ncbi_taxonomy_id',
+                                                                                  'beg_seq_num',
+                                                                                  'end_seq_num',
+                                                                                  'provenance_code']))
+            cObj = dataContainer.getObj(catName)
+            hObj = dataContainer.getObj(hostCatName)
+            #
+            s1Obj = dataContainer.getObj('entity_src_gen')
+            atHTupL = [('entity_id', 'entity_id'),
+                       ('pdbx_host_org_scientific_name', 'scientific_name'),
+                       ('pdbx_host_org_common_name', 'common_name'),
+                       ('pdbx_host_org_ncbi_taxonomy_id', 'ncbi_taxonomy_id'),
+                       ('pdbx_src_id', 'pdbx_src_id'),
+                       ('pdbx_beg_seq_num', 'beg_seq_num'),
+                       ('pdbx_end_seq_num', 'end_seq_num')]
+            atHSL, atHL = self.__getAttribList(s1Obj, atHTupL)
+            #
+            at1TupL = [('entity_id', 'entity_id'),
+                       ('pdbx_gene_src_scientific_name', 'scientific_name'),
+                       ('gene_src_common_name', 'common_name'),
+                       ('pdbx_gene_src_ncbi_taxonomy_id', 'ncbi_taxonomy_id'),
+                       ('pdbx_src_id', 'pdbx_src_id'),
+                       ('pdbx_beg_seq_num', 'beg_seq_num'),
+                       ('pdbx_end_seq_num', 'end_seq_num')]
+            at1SL, at1L = self.__getAttribList(s1Obj, at1TupL)
+            #
+            s2Obj = dataContainer.getObj('entity_src_nat')
+            at2TupL = [('entity_id', 'entity_id'),
+                       ('pdbx_organism_scientific', 'scientific_name'),
+                       ('nat_common_name', 'common_name'),
+                       ('pdbx_ncbi_taxonomy_id', 'ncbi_taxonomy_id'),
+                       ('pdbx_src_id', 'pdbx_src_id'),
+                       ('pdbx_beg_seq_num', 'beg_seq_num'),
+                       ('pdbx_end_seq_num', 'end_seq_num')
+                       ]
+            at2SL, at2L = self.__getAttribList(s2Obj, at2TupL)
+            #
+            s3Obj = dataContainer.getObj('pdbx_entity_src_syn')
+            at3TupL = [('entity_id', 'entity_id'),
+                       ('organism_scientific', 'scientific_name'),
+                       ('organism_common_name', 'common_name'),
+                       ('ncbi_taxonomy_id', 'ncbi_taxonomy_id'),
+                       ('pdbx_src_id', 'pdbx_src_id'),
+                       ('beg_seq_num', 'beg_seq_num'),
+                       ('end_seq_num', 'end_seq_num')]
+            at3SL, at3L = self.__getAttribList(s3Obj, at3TupL)
+            #
+            eObj = dataContainer.getObj('entity')
+            entityIdL = eObj.getAttributeValueList('id')
+            pCode = 'pdb-primary-data'
+            #
+            partCountD = {}
+            srcL = []
+            hostL = []
+            for entityId in entityIdL:
+                partCountD[entityId] = 1
+                eL = []
+                tf = False
+                if s1Obj:
+                    sType = 'genetically engineered'
+                    vL = s1Obj.selectValueListWhere(at1SL, entityId, 'entity_id')
+                    if vL:
+                        for v in vL:
+                            eL.append((entityId, sType, at1L, v))
+                        logger.debug("%r entity %r - %r" % (sType, entityId, vL))
+                        partCountD[entityId] = len(eL)
+                        srcL.extend(eL)
+                        tf = True
+                    #
+                    vL = s1Obj.selectValueListWhere(atHSL, entityId, 'entity_id')
+                    if vL:
+                        for v in vL:
+                            hostL.append((entityId, sType, atHL, v))
+                        logger.debug("%r entity %r - %r" % (sType, entityId, vL))
+                    if tf:
+                        continue
+
+                if s2Obj:
+                    sType = 'natural'
+                    vL = s2Obj.selectValueListWhere(at2SL, entityId, 'entity_id')
+                    if vL:
+                        for v in vL:
+                            eL.append((entityId, sType, at2L, v))
+                        logger.debug("%r entity %r - %r" % (sType, entityId, vL))
+                        partCountD[entityId] = len(eL)
+                        srcL.extend(eL)
+                        continue
+
+                if s3Obj:
+                    sType = 'synthetic'
+                    vL = s3Obj.selectValueListWhere(at3SL, entityId, 'entity_id')
+                    if vL:
+                        for v in vL:
+                            eL.append((entityId, sType, at3L, v))
+                        logger.debug("%r entity %r - %r" % (sType, entityId, vL))
+                        partCountD[entityId] = len(eL)
+                        srcL.extend(eL)
+                        continue
+
+            iRow = 0
+            for (entityId, sType, atL, v) in srcL:
+                cObj.setValue(sType, 'source_type', iRow)
+                cObj.setValue(pCode, 'provenance_code', iRow)
+                for ii, at in enumerate(atL):
+                    cObj.setValue(v[ii], at, iRow)
+                logger.debug("%r entity %r - UPDATED %r %r" % (sType, entityId, atL, v))
+                iRow += 1
+            #
+            iRow = 0
+            for (entityId, sType, atL, v) in hostL:
+                hObj.setValue(pCode, 'provenance_code', iRow)
+                for ii, at in enumerate(atL):
+                    hObj.setValue(v[ii], at, iRow)
+                logger.debug("%r entity %r - UPDATED %r %r" % (sType, entityId, atL, v))
+                iRow += 1
+            #
+            # Update entity attributes
+            #    _entity.rcsb_multiple_source_flag
+            #    _entity.rcsb_source_part_count
+            for atName in ['rcsb_source_part_count', 'rcsb_multiple_source_flag']:
+                if not eObj.hasAttribute(atName):
+                    eObj.appendAttribute(atName)
+            #
+            for ii in range(eObj.getRowCount()):
+                cFlag = 'Y' if partCountD[entityId] > 1 else 'N'
+                entityId = eObj.getValue('id', ii)
+                eObj.setValue(partCountD[entityId], 'rcsb_source_part_count', ii)
+                eObj.setValue(cFlag, 'rcsb_multiple_source_flag', ii)
+
+            return True
+        except Exception as e:
+            logger.exception("For %s failing with %s" % (catName, str(e)))
+        return False
+
+    def deferredItemMethod(self, dataContainer, catName, atName, **kwargs):
+        """ Placeholder method to
+        """
+        logger.debug("Called deferred method for %r %r %r" % (dataContainer.getName(), catName, atName))
+        return True
 
     def __getTimeStamp(self):
         utcnow = datetime.datetime.utcnow()
