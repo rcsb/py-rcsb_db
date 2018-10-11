@@ -73,7 +73,7 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
         self.__mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
         configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.cfg')
         configName = 'DEFAULT'
-        self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
+        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName)
         self.__resourceName = "CRATE_DB"
         self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
         #

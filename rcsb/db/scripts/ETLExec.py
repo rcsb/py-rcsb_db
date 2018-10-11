@@ -94,7 +94,7 @@ def main():
             logger.error("Missing or access issue with config file %r" % configPath)
             exit(1)
         mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', ) if args.mock else None
-        cfgOb = ConfigUtil(configPath=configPath, sectionName=configName, mockTopPath=mockTopPath)
+        cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
     except Exception as e:
         logger.error("Missing or access issue with config file %r" % configPath)
         exit(1)

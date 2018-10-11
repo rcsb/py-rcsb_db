@@ -63,7 +63,7 @@ class SchemaDefAccessTests(unittest.TestCase):
         try:
             pathSchemaDefJson = os.path.join(HERE, 'test-output', 'schema_def-%s-%s.json' % (schemaName, applicationName))
             #
-            smb = SchemaDefBuild(schemaName, self.__pathConfig, self.__mockTopPath)
+            smb = SchemaDefBuild(schemaName, self.__pathConfig, mockTopPath=self.__mockTopPath)
             sD = smb.build(applicationName=applicationName)
             #
             logger.debug("Schema dictionary category length %d" % len(sD['SCHEMA_DICT']))

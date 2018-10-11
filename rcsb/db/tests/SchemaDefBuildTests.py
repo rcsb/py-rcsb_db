@@ -120,7 +120,7 @@ class SchemaDefBuildTests(unittest.TestCase):
         try:
             pathSchemaDefJson = os.path.join(HERE, 'test-output', 'schema_def-%s-%s.json' % (schemaName, applicationName))
             #
-            smb = SchemaDefBuild(schemaName, self.__pathConfig, self.__mockTopPath)
+            smb = SchemaDefBuild(schemaName, self.__pathConfig, mockTopPath=self.__mockTopPath)
             cD = smb.build(applicationName='ANY', schemaType='rcsb')
             #
             logger.debug("Schema dictionary category length %d" % len(cD['SCHEMA_DICT']))
@@ -140,7 +140,7 @@ class SchemaDefBuildTests(unittest.TestCase):
             pathSchemaDefJson1 = os.path.join(HERE, 'test-output', 'json-schema-%s-%s.json' % (schemaLevel, collectionName))
             pathSchemaDefJson2 = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'json-schema', 'json-schema-%s-%s.json' % (schemaLevel, collectionName))
             #
-            smb = SchemaDefBuild(schemaName, self.__pathConfig, self.__mockTopPath)
+            smb = SchemaDefBuild(schemaName, self.__pathConfig, mockTopPath=self.__mockTopPath)
             cD = smb.build(collectionName, applicationName='JSON', schemaType='JSON', enforceOpts=enforceOpts)
             #
             self.assertGreaterEqual(len(cD), 2)
@@ -158,7 +158,7 @@ class SchemaDefBuildTests(unittest.TestCase):
             pathSchemaDefBson1 = os.path.join(HERE, 'test-output', 'bson-schema-%s-%s.json' % (schemaLevel, collectionName))
             pathSchemaDefBson2 = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'json-schema', 'bson-schema-%s-%s.json' % (schemaLevel, collectionName))
             #
-            smb = SchemaDefBuild(schemaName, self.__pathConfig, self.__mockTopPath)
+            smb = SchemaDefBuild(schemaName, self.__pathConfig, mockTopPath=self.__mockTopPath)
             cD = smb.build(collectionName, applicationName='BSON', schemaType='BSON', enforceOpts=enforceOpts)
             #
             self.assertGreaterEqual(len(cD), 1)

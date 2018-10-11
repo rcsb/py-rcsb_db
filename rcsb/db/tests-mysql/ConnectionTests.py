@@ -45,7 +45,7 @@ class ConnectionTests(unittest.TestCase):
 
         configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.cfg')
         configName = 'DEFAULT'
-        self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
+        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName)
         self.__resourceName = "MYSQL_DB"
         self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName)
 

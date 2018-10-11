@@ -79,7 +79,7 @@ class SqlGenTests(unittest.TestCase):
             optName = 'SCHEMA_DEF_LOCATOR_%s' % applicationName.upper()
             pathSchemaDefJson = self.__cfgOb.getPath(optName, sectionName=schemaName)
             #
-            smb = SchemaDefBuild(schemaName, self.__pathConfig, self.__mockTopPath)
+            smb = SchemaDefBuild(schemaName, self.__pathConfig, mockTopPath=self.__mockTopPath)
             sD = smb.build(applicationName=applicationName)
             #
             logger.debug("Schema %s dictionary category length %d" % (schemaName, len(sD['SCHEMA_DICT'])))

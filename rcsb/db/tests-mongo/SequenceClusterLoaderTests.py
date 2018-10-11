@@ -49,7 +49,7 @@ class SequenceClusterLoaderTests(unittest.TestCase):
         mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
         configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.cfg')
         configName = 'DEFAULT'
-        self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName, mockTopPath=mockTopPath)
+        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         # self.__cfgOb.dump()
         self.__resourceName = "MONGO_DB"
         self.__failedFilePath = os.path.join(HERE, 'test-output', 'failed-list.txt')

@@ -179,23 +179,7 @@ class SchemaDefUtil(object):
         try:
             #
             logger.debug("Building schema definition for %s application %s" % (contentType, applicationName))
-            locPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=contentType)
-            locRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', default=None, sectionName=contentType)
-            dictLocators = [locPdbxDictionaryFile, locRcsbDictionaryFile] if locRcsbDictionaryFile else [locPdbxDictionaryFile]
-            #
-            instDataTypeFilePath = self.__cfgOb.getPath('INSTANCE_DATA_TYPE_INFO_LOCATOR', sectionName=contentType)
-            appDataTypeFilePath = self.__cfgOb.getPath('APP_DATA_TYPE_INFO_LOCATOR', sectionName=contentType)
-            #
-            dictInfoHelper = self.__cfgOb.getHelper('DICT_HELPER_MODULE', sectionName=contentType)
-            defHelper = self.__cfgOb.getHelper('SCHEMADEF_HELPER_MODULE', sectionName=contentType)
-            docHelper = self.__cfgOb.getHelper('DOCUMENT_HELPER_MODULE', sectionName=contentType)
-            smb = SchemaDefBuild(contentType,
-                                 dictLocators=dictLocators,
-                                 instDataTypeFilePath=instDataTypeFilePath,
-                                 appDataTypeFilePath=appDataTypeFilePath,
-                                 dictHelper=dictInfoHelper,
-                                 schemaDefHelper=defHelper,
-                                 documentDefHelper=docHelper)
+            smb = SchemaDefBuild(contentType, self.__cfgOb.getConfigPath(), mockTopPath=self.__cfgOb.getMockTopPath())
             #
             sD = smb.build(applicationName=applicationName)
             logger.info("Schema %s dictionary category length %d" % (contentType, len(sD['SCHEMA_DICT'])))

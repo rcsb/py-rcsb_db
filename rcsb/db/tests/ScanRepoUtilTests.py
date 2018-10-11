@@ -49,7 +49,7 @@ class ScanRepoUtilTests(unittest.TestCase):
         configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.cfg')
         configName = 'DEFAULT'
         self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
-        self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName, mockTopPath=mockTopPath)
+        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         #
         self.__failedFilePath = os.path.join(HERE, 'test-output', 'failed-list.txt')
         self.__savedFilePath = os.path.join(HERE, 'test-output', 'path-list.txt')
@@ -57,8 +57,8 @@ class ScanRepoUtilTests(unittest.TestCase):
         self.__workPath = os.path.join(HERE, 'test-output')
 
         self.__numProc = 2
-        self.__chunkSize = 10
-        self.__fileLimit = 10
+        self.__chunkSize = 20
+        self.__fileLimit = 20
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),

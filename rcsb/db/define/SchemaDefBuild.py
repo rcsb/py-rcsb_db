@@ -42,11 +42,11 @@ class SchemaDefBuild(object):
 
     """
 
-    def __init__(self, schemaName, configPath, mockTopPath, includeContentClasses=['GENERATED_CONTENT', 'EVOLVING_CONTENT']):
+    def __init__(self, schemaName, configPath, configName='DEFAULT', mockTopPath=None, includeContentClasses=['GENERATED_CONTENT', 'EVOLVING_CONTENT']):
         """
 
         """
-        self.__cfgOb = ConfigUtil(configPath=configPath, mockTopPath=mockTopPath)
+        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         self.__schemaName = schemaName
         self.__includeContentClasses = includeContentClasses
         #

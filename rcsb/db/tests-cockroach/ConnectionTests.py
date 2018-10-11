@@ -37,7 +37,7 @@ class ConnectionBaseTests(unittest.TestCase):
     def setUp(self):
         configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.cfg')
         configName = 'DEFAULT'
-        self.__cfgOb = ConfigUtil(configPath=configPath, sectionName=configName)
+        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName)
         self.__resourceName = "COCKROACH_DB"
 
         self.__startTime = time.time()

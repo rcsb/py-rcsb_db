@@ -31,7 +31,7 @@ from rcsb.utils.io.IoUtil import IoUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
@@ -108,7 +108,7 @@ class ClusterDataPrepValidateTests(unittest.TestCase):
         try:
             pathSchemaDefJson1 = os.path.join(HERE, 'test-output', 'json-schema-%s.json' % (collectionName))
             #
-            smb = SchemaDefBuild(schemaName, self.__pathConfig, self.__mockTopPath)
+            smb = SchemaDefBuild(schemaName, self.__pathConfig, mockTopPath=self.__mockTopPath)
             cD = smb.build(collectionName, applicationName='json', schemaType='json', enforceOpts=enforceOpts)
             #
             logger.debug("Schema dictionary category length %d" % len(cD))

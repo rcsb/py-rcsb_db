@@ -129,7 +129,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
     def __testBuildJson(self, schemaName, collectionName, enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
         try:
             pathSchemaDefJson1 = os.path.join(HERE, 'test-output', 'json-schema-%s.json' % (collectionName))
-            smb = SchemaDefBuild(schemaName, self.__configPath, self.__mockTopPath)
+            smb = SchemaDefBuild(schemaName, self.__configPath, mockTopPath=self.__mockTopPath)
             cD = smb.build(collectionName, applicationName='json', schemaType='json', enforceOpts=enforceOpts)
             #
             logger.debug("Schema dictionary category length %d" % len(cD['properties']))

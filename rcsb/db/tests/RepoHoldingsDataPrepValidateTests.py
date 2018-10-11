@@ -117,7 +117,7 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
         try:
             pathSchemaDefJson1 = os.path.join(HERE, 'test-output', 'json-schema-%s.json' % (collectionName))
             #
-            smb = SchemaDefBuild(schemaName, self.__pathConfig, self.__mockTopPath)
+            smb = SchemaDefBuild(schemaName, self.__pathConfig, mockTopPath=self.__mockTopPath)
             cD = smb.build(collectionName, applicationName='json', schemaType='json', enforceOpts=enforceOpts)
             #
             logger.debug("Schema dictionary category length %d" % len(cD))
