@@ -26,6 +26,7 @@
                      for repository_holdings, entity_sequence_clusters, and data_exchange schema types;
                      extend derived content for core_entry and core_entity collections;
                      add subcategory aggregation feature; and refactor api for helper methods.
+12-Oct-2018    V0.24 Add rcsb_repository_holdings_transferred and  rcsb_repository_holdings_insilico_models
 
 
 
