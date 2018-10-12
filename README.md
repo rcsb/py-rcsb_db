@@ -39,6 +39,13 @@ from the source tree, the package must be installed in editable mode (i.e. -e):
 pip install -e .
 ```
 
+#### Installing in Ubuntu Linux (tested in 18.04)
+You will need a few packages, before `pip install .` can work:
+```
+sudo apt install default-libmysqlclient-dev flex bison
+
+```
+
 ### Command Line Interfaces
 
 A convenience CLI `exdb_repo_load_cli` is provided to support loading PDB repositories
