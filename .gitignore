@@ -1,0 +1,6 @@
+# IntelliJ IDEA editor files
+.idea
+*.iml
+
+# Environments
+/venv/
