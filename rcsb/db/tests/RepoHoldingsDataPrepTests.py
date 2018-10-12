@@ -74,6 +74,12 @@ class RepoHoldingsDataPrepTests(unittest.TestCase):
             self.assertGreaterEqual(len(rL), 10)
             logger.debug("unreleased data length %r" % len(rL))
             #
+            rL1, rL2 = rhdp.getHoldingsTransferred(updateId=self.__updateId)
+            self.assertGreaterEqual(len(rL1), 10)
+            logger.debug("transferred data length %r" % len(rL1))
+            self.assertGreaterEqual(len(rL2), 10)
+            logger.debug("Insilico data length %r" % len(rL2))
+
             rL1, rL2, rL3 = rhdp.getHoldingsRemoved(updateId=self.__updateId)
             self.assertGreaterEqual(len(rL1), 10)
             logger.debug("removed data length %r" % len(rL1))

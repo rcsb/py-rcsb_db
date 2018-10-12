@@ -103,7 +103,10 @@ class SchemaDefBuildTests(unittest.TestCase):
 
         collectionNames = {'repository_holdings': ['repository_holdings_update_v0_1', 'repository_holdings_current_v0_1',
                                                    'repository_holdings_unreleased_v0_1', 'repository_holdings_removed_v0_1',
-                                                   'repository_holdings_removed_audit_authors_v0_1', 'repository_holdings_superseded_v0_1'],
+                                                   'repository_holdings_removed_audit_authors_v0_1',
+                                                   'repository_holdings_superseded_v0_1',
+                                                   'repository_holdings_transferred_v0_1',
+                                                   'repository_holdings_insilico_models_v0_1'],
                            'entity_sequence_clusters': ['cluster_members_v0_1', 'cluster_provenance_v0_1', 'entity_members_v0_1'],
                            'data_exchange': ['rcsb_data_exchange_status_v0_1'],
                            }
