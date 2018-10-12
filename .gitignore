@@ -4,3 +4,9 @@
 
 # Environments
 /venv/
+
+# Unit test
+.tox/
+
+# Distribution / packaging
+*.egg-info/
