@@ -90,7 +90,7 @@ class RepoHoldingsDataPrep(object):
                 obsDateD[entryId] = dateutil.parser.parse(fields[2]) if self.__assignDates else fields[2]
                 if len(fields) > 3 and len(fields[3]) > 3:
                     obsIdD[entryId] = fields[3]
-            logger.info("Read %d obsolete insilico id codes" % len(obsDateD))
+            logger.debug("Read %d obsolete insilico id codes" % len(obsDateD))
             # ---------  ---------  ---------  ---------  ---------  ---------  ---------
             fp = os.path.join(dirPath, 'status', 'model-archive-PDB-insilico-mapping.list')
             lineL = self.__mU.doImport(fp, 'list')
@@ -103,12 +103,13 @@ class RepoHoldingsDataPrep(object):
                 entryId = str(fields[1]).strip().upper()[:4]
                 maId = str(fields[0]).strip()
                 trD[entryId] = maId
-            logger.info("Read %d model archive id codes" % len(trD))
+            logger.debug("Read %d model archive id codes" % len(trD))
             #
             # ---------  ---------  ---------  ---------  ---------  ---------  ---------
             fp = os.path.join(dirPath, 'status', 'theoretical_model.tsv')
             lineL = self.__mU.doImport(fp, 'list')
             #
+            logger.debug("Read %d insilico id codes" % len(lineL))
             for line in lineL:
                 fields = str(line).split('\t')
                 if len(fields) < 6:
