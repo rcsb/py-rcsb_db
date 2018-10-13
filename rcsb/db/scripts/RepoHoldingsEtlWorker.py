@@ -120,6 +120,20 @@ class RepoHoldingsEtlWorker(object):
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList3,
                          indexAttributeList=['update_id', 'entry_id'], keyNames=None)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+
+#
+            dList1, dList2 = rhdp.getHoldingsTransferred(updateId=updateId)
+
+            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_TRANSFERRED', sectionName=sectionName) + '_' + collectionVersion
+            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList1,
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+
+            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_INSILICO_MODELS', sectionName=sectionName) + '_' + collectionVersion
+            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList2,
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+
             return True
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
