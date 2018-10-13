@@ -43,7 +43,8 @@ class SchemaDefHelper(SchemaDefHelperBase):
                               'repository_holdings': {'INCLUDE': ['rcsb_repository_holdings_update', 'rcsb_repository_holdings_current',
                                                                   'rcsb_repository_holdings_unreleased', 'rcsb_repository_holdings_removed',
                                                                   'rcsb_repository_holdings_removed_audit_author',
-                                                                  'rcsb_repository_holdings_superseded'],
+                                                                  'rcsb_repository_holdings_superseded',
+                                                                  'rcsb_repository_holdings_transferred', 'rcsb_repository_holdings_insilico_models'],
                                                       'EXCLUDE': []
                                                       },
                               'entity_sequence_clusters': {'INCLUDE': ['rcsb_instance_sequence_cluster_list', 'rcsb_entity_sequence_cluster_list',

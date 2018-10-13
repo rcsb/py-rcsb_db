@@ -83,7 +83,9 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
                                                    'repository_holdings_unreleased_v0_1',
                                                    'repository_holdings_removed_v0_1',
                                                    'repository_holdings_removed_audit_authors_v0_1',
-                                                   'repository_holdings_superseded_v0_1'
+                                                   'repository_holdings_superseded_v0_1',
+                                                   'repository_holdings_transferred_v0_1',
+                                                   'repository_holdings_insilico_models_v0_1'
                                                    ],
                            'entity_sequence_clusters': ['cluster_members_v0_1', 'cluster_provenance_v0_1', 'entity_members_v0_1']
                            }
@@ -102,8 +104,8 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
                     try:
                         cCount = 0
                         for error in sorted(v.iter_errors(d), key=str):
-                            logger.debug("schema %s collection %s path %s error: %s" % (schemaName, collectionName, error.path, error.message))
-                            logger.debug(">>> failing object is %r" % d)
+                            logger.info("schema %s collection %s path %s error: %s" % (schemaName, collectionName, error.path, error.message))
+                            logger.info(">>> failing object is %r" % d)
                             eCount += 1
                             cCount += 1
                         #
@@ -152,6 +154,16 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
                 self.assertGreaterEqual(len(rL), 10)
                 logger.debug("unreleased data length %r" % len(rL))
             #
+            elif collectionName in ['repository_holdings_transferred_v0_1', 'repository_holdings_insilico_models_v0_1']:
+                rL1, rL2 = rhdp.getHoldingsTransferred(updateId=updateId)
+                if collectionName == 'repository_holdings_transferred_v0_1':
+                    self.assertGreaterEqual(len(rL1), 10)
+                    logger.debug("transferred data length %r" % len(rL1))
+                    rL = rL1
+                elif collectionName == 'repository_holdings_insilico_models_v0_1':
+                    self.assertGreaterEqual(len(rL2), 10)
+                    logger.debug("Insilico data length %r" % len(rL1))
+                    rL = rL2
             elif collectionName in ['repository_holdings_removed_v0_1', 'repository_holdings_removed_audit_authors_v0_1', 'repository_holdings_superseded_v0_1']:
                 rL1, rL2, rL3 = rhdp.getHoldingsRemoved(updateId=updateId)
                 if collectionName == 'repository_holdings_removed_v0_1':

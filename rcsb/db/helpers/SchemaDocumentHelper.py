@@ -40,7 +40,9 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
                                'bird_chem_comp': ['bird_chem_comp_v5_0_2'],
                                'pdb_distro': [],
                                'repository_holdings': ['repository_holdings_update_v0_1', 'repository_holdings_current_v0_1', 'repository_holdings_unreleased_v0_1',
-                                                       'repository_holdings_removed_v0_1', 'repository_holdings_removed_audit_authors_v0_1', 'repository_holdings_superseded_v0_1'],
+                                                       'repository_holdings_removed_v0_1', 'repository_holdings_removed_audit_authors_v0_1',
+                                                       'repository_holdings_superseded_v0_1', 'repository_holdings_transferred_v0_1',
+                                                       'rcsb_repository_holdings_insilico_models_v0_1'],
                                'entity_sequence_clusters': ['cluster_members_v0_1', 'cluster_provenance_v0_1', 'entity_members_v0_1']
                                }
     #
@@ -130,6 +132,8 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
                               'repository_holdings_removed_v0_1': {'INCLUDE': ['rcsb_repository_holdings_removed'], 'EXCLUDE': [], 'SLICE': None},
                               'repository_holdings_removed_audit_authors_v0_1': {'INCLUDE': ['rcsb_repository_holdings_removed_audit_author'], 'EXCLUDE': [], 'SLICE': None},
                               'repository_holdings_superseded_v0_1': {'INCLUDE': ['rcsb_repository_holdings_superseded'], 'EXCLUDE': [], 'SLICE': None},
+                              'repository_holdings_transferred_v0_1': {'INCLUDE': ['rcsb_repository_holdings_transferred'], 'EXCLUDE': [], 'SLICE': None},
+                              'repository_holdings_insilico_models_v0_1': {'INCLUDE': ['rcsb_repository_holdings_insilico_models'], 'EXCLUDE': [], 'SLICE': None},
                               'cluster_members_v0_1': {'INCLUDE': ['rcsb_entity_sequence_cluster_list'], 'EXCLUDE': [], 'SLICE': None},
                               'cluster_provenance_v0_1': {'INCLUDE': ['software', 'citation', 'citation_author'], 'EXCLUDE': [], 'SLICE': None},
                               'entity_members_v0_1': {'INCLUDE': ['rcsb_entity_sequence_cluster_list'], 'EXCLUDE': [], 'SLICE': None},
@@ -151,6 +155,8 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
                                   'repository_holdings_removed_v0_1': ['update_id'],
                                   'repository_holdings_removed_audit_authors': ['update_id'],
                                   'repository_holdings_superseded_v0_1': ['update_id'],
+                                  'repository_holdings_transferred_v0_1': ['update_id'],
+                                  'repository_holdings_insilico_models_v0_1': ['update_id'],
                                   'cluster_members_v0_1': ['update_id'],
                                   'cluster_provenance_v0_1': ['software.name'],
                                   'entity_members_v0_1': ['update_id'],

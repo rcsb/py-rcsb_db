@@ -134,6 +134,19 @@ class RepoHoldingsLoaderTests(unittest.TestCase):
                          indexAttributeList=['update_id', 'entry_id'], keyNames=None)
             logger.info("Collection %r length %d load status %r" % (collectionName, len(dList3), ok))
             #
+            #
+            dList1, dList2 = rhdp.getHoldingsTransferred(updateId=self.__updateId)
+            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_TRANSFERRED', sectionName=sectionName) + '_' + collectionVersion
+            ok = dl.load(databaseName, collectionName, loadType='append', documentList=dList1,
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+            logger.info("Collection %r length %d load status %r" % (collectionName, len(dList1), ok))
+            self.assertTrue(ok)
+
+            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_INSILICO_MODELS', sectionName=sectionName) + '_' + collectionVersion
+            ok = dl.load(databaseName, collectionName, loadType='append', documentList=dList2,
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+            logger.info("Collection %r length %d load status %r" % (collectionName, len(dList2), ok))
+
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()

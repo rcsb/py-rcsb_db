@@ -8,6 +8,7 @@
 # 30-Oct-2018 jdw naming to conform to dictioanry and schema conventions.
 #  8-Oct-2018 jdw adjustments for greater schema compliance and uniformity
 #                 provide alternative date assignment for JSON and mongo validation
+# 10-Oct-2018 jdw Add getHoldingsTransferred() for homology models transfered to Model Archive
 #
 ##
 
@@ -42,8 +43,7 @@ class RepoHoldingsDataPrep(object):
         self.__mU = MarshalUtil(workPath=self.__workPath)
         #
 
-    # TODO include all of the accessioning details for SAS and homology model structures.
-    def getHoldingsTransferred(self, updateId, dirPath, **kwargs):
+    def getHoldingsTransferred(self, updateId, dirPath=None, **kwargs):
         """ Parse legacy lists defining the repository contents transferred to alternative repositories
 
         Args:
@@ -53,18 +53,123 @@ class RepoHoldingsDataPrep(object):
 
         Returns:
             list: List of dictionaries containing data for rcsb_repository_holdings_transferred
+            list: List of dictionaries containing data for rcsb_repository_holdings_insilico_models
+
+        Example input data:
+
+        ma-czyyf : 262D - TITLE A THREE-DIMENSIONAL MODEL OF THE REV BINDING ELEMENT OF HIV- TITLE 2 1 DERIVED FROM ANALYSES OF IN VITRO SELECTED VARIANTS
+        ma-cfqla : 163D - TITLE A THREE-DIMENSIONAL MODEL OF THE REV BINDING ELEMENT OF HIV- TITLE 2 1 DERIVED FROM ANALYSES OF IN VITRO SELECTED VARIANTS
+
+        and -
+
+        1DX2    REL 1999-12-16  2000-12-15  Tumour Targetting Human ...  Beiboer, S.H.W., Reurs, A., Roovers, R.C., Arends, J., Whitelegg, N.R.J., Rees, A.R., Hoogenboom, H.R.
+
+        and -
+
+        1APD    OBSLTE  1992-10-15      2APD
+        1BU0    OBSLTE  1998-10-07      2BU0
+        1CLJ    OBSLTE  1998-03-04      2CLJ
+        1DU8    OBSLTE  2001-01-31      1GIE
+        1I2J    OBSLTE  2001-01-06      1JA5
+
         """
-        retL = []
+        trsfL = []
+        insL = []
         dirPath = dirPath if dirPath else self.__sandboxPath
         try:
-            # fp = os.path.join(dirPath, 'status', 'transfer-ma.list')
-            # entryIdL = self.__mU.doImport(fp, 'list')
+            fp = os.path.join(dirPath, 'status', 'theoretical_model_obsolete.tsv')
+            lineL = self.__mU.doImport(fp, 'list')
             #
-            return retL
+            obsDateD = {}
+            obsIdD = {}
+            for line in lineL:
+                fields = line.split('\t')
+                if len(fields) < 3:
+                    continue
+                entryId = str(fields[0]).strip().upper()
+                obsDateD[entryId] = dateutil.parser.parse(fields[2]) if self.__assignDates else fields[2]
+                if len(fields) > 3 and len(fields[3]) > 3:
+                    obsIdD[entryId] = fields[3]
+            logger.debug("Read %d obsolete insilico id codes" % len(obsDateD))
+            # ---------  ---------  ---------  ---------  ---------  ---------  ---------
+            fp = os.path.join(dirPath, 'status', 'model-archive-PDB-insilico-mapping.list')
+            lineL = self.__mU.doImport(fp, 'list')
+            #
+            trD = {}
+            for line in lineL:
+                fields = line.split(':')
+                if len(fields) < 2:
+                    continue
+                entryId = str(fields[1]).strip().upper()[:4]
+                maId = str(fields[0]).strip()
+                trD[entryId] = maId
+            logger.debug("Read %d model archive id codes" % len(trD))
+            #
+            # ---------  ---------  ---------  ---------  ---------  ---------  ---------
+            fp = os.path.join(dirPath, 'status', 'theoretical_model.tsv')
+            lineL = self.__mU.doImport(fp, 'list')
+            #
+            logger.debug("Read %d insilico id codes" % len(lineL))
+            for line in lineL:
+                fields = str(line).split('\t')
+                if len(fields) < 6:
+                    continue
+                depDate = dateutil.parser.parse(fields[2]) if self.__assignDates else fields[2]
+                relDate = None
+                if len(fields[3]) >= 10 and not fields[3].startswith('0000'):
+                    relDate = dateutil.parser.parse(fields[3]) if self.__assignDates else fields[3]
+
+                statusCode = 'TRSF' if fields[1] == 'REL' else fields[1]
+
+                entryId = str(fields[0]).upper()
+                title = fields[4]
+                auditAuthors = fields[5]
+                repId = None
+                if entryId in trD:
+                    repName = 'Model Archive'
+                    repId = trD[entryId]
+
+                #
+                d = {'update_id': updateId,
+                     'entry_id': entryId,
+                     'status_code': statusCode,
+                     'deposit_date': depDate,
+                     'repository_content_types': ['coordinates'],
+                     'title': title,
+                     'audit_authors': auditAuthors}
+                #
+                if relDate:
+                    d['release_date'] = relDate
+                #
+                if repId:
+                    d['remote_accession_code'] = repId
+                    d['remote_repository_name'] = repName
+                if statusCode == 'TRSF':
+                    trsfL.append(d)
+                #
+                #
+                d = {'update_id': updateId,
+                     'entry_id': entryId,
+                     'status_code': statusCode,
+                     'deposit_date': depDate,
+                     'title': title,
+                     'audit_authors': auditAuthors}
+                #
+                if relDate:
+                    d['release_date'] = relDate
+                #
+                if entryId in obsDateD:
+                    d['remove_date'] = relDate
+                #
+                if entryId in obsIdD:
+                    d['id_codes_replaced_by'] = [obsIdD[entryId]]
+                #
+                insL.append(d)
+            #
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
 
-        return retL
+        return trsfL, insL
 
     def getHoldingsUpdate(self, updateId, dirPath=None, **kwargs):
         """ Parse legacy lists defining the contents of the repository update

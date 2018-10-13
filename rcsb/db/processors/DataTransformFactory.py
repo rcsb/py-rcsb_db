@@ -26,6 +26,8 @@ from functools import reduce
 
 import dateutil.parser
 
+import pytz
+
 TrfValue = collections.namedtuple('TrfValue', 'value, atId, origLength, isNull')
 
 logger = logging.getLogger(__name__)
@@ -81,6 +83,7 @@ class DataTransformFactory(object):
         self.__FLAGS['assignDates'] = 'assign-dates' in filterType
         self.__FLAGS['convertIterables'] = 'convert-iterables' in filterType
         self.__FLAGS['normalizeEnums'] = 'normalize-enums' in filterType
+        self.__FLAGS['normalizeDates'] = True
         logger.debug("FLAGS settings are %r" % self.__FLAGS)
         #
         self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
@@ -128,6 +131,11 @@ class DataTransformFactory(object):
                     aD[atId].append(dt.castFloat)
                 elif self.__FLAGS['assignDates'] and tObj.isAttributeDateType(atId):
                     aD[atId].append(dt.castDateToObj)
+                elif self.__FLAGS['normalizeDates'] and tObj.isAttributeDateType(atId):
+                    if tObj.getAttributeType(atId).lower() == 'datetime':
+                        aD[atId].append(dt.castDateTimeToIsoDate)
+                    elif tObj.getAttributeType(atId).lower() == 'date':
+                        aD[atId].append(dt.castDateToIsoDate)
                 else:
                     aD[atId].append(dt.castString)
                 #
@@ -295,6 +303,36 @@ class DataTransform(object):
             return TrfValue(self.__tObj.getAppNullValue(trfTup.atId), trfTup.atId, origLength, True)
         tv = trfTup.value.replace(":", " ", 1)
         return TrfValue(dateutil.parser.parse(tv), trfTup.atId, origLength, False)
+
+    def castDateTimeToIsoDate(self, trfTup):
+        """ Cast the input date (optional time) string (yyyy-mm-dd:hh::mm:ss) to a Python DateTime object -
+
+            Return:  TrfValue tuple
+        """
+        if trfTup.isNull:
+            return trfTup
+        origLength = len(trfTup.value)
+        if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
+            return TrfValue(self.__tObj.getAppNullValue(trfTup.atId), trfTup.atId, origLength, True)
+        tv = trfTup.value.replace(":", " ", 1)
+        tS = dateutil.parser.parse(tv).replace(tzinfo=pytz.UTC).isoformat()
+
+        return TrfValue(tS, trfTup.atId, origLength, False)
+
+    def castDateToIsoDate(self, trfTup):
+        """ Cast the input date (optional time) string (yyyy-mm-dd:hh::mm:ss) to a Python DateTime object -
+
+            Return:  TrfValue tuple
+        """
+        if trfTup.isNull:
+            return trfTup
+        origLength = len(trfTup.value)
+        if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
+            return TrfValue(self.__tObj.getAppNullValue(trfTup.atId), trfTup.atId, origLength, True)
+        tv = trfTup.value.replace(":", " ", 1)
+        tS = dateutil.parser.parse(tv).isoformat()
+
+        return TrfValue(tS[:10], trfTup.atId, origLength, False)
 
     def castDateToString(self, trfTup):
         """ Cast the input date (optional time) string (yyyy-mm-dd:hh::mm:ss) as a string unchanged -

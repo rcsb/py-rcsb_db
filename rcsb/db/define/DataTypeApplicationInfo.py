@@ -10,6 +10,7 @@
 #   7-Jun-2018 jdw rename and rescope.
 #  15-Aug-2018 jdw add mapping for JSON types based on generic 'ANY' typing.
 #  29-Sep-2018 jdw make JSON date and datetime type explicit in JSON
+#  12-Oct-2018 jdw unsuppress datetime mapping
 #
 ##
 """
@@ -68,19 +69,20 @@ class DataTypeApplicationInfo(object):
         self.__locator = locator
         self.__applicationName = applicationName
         self.__maxCharWidth = 32768
-        self.__setup(self.__locator, self.__applicationName)
+        self.__dtmD = self.__setup(self.__locator, self.__applicationName)
 
     def __setup(self, locator, applicationName):
         appName = 'ANY' if applicationName in ['JSON', 'BSON'] else applicationName
         if locator:
-            self.__dtmD = self.readDefaultDataTypeMap(locator, applicationName=appName)
+            dtmD = self.readDefaultDataTypeMap(locator, applicationName=appName)
         else:
-            self.__dtmD = self.getDefaultDataTypeMap(applicationName=appName)
+            logger.debug(">>>> Falling back to default type mapping. ")
+            dtmD = self.getDefaultDataTypeMap(applicationName=appName)
         # for JSON - transform the generic 'ANY' data types -
         if applicationName == 'JSON':
-            for cifType, tD in self.__dtmD.items():
+            for cifType, tD in dtmD.items():
                 if tD['application_name'] == 'ANY':
-                    if tD['app_type_code'] in ['char', 'text', 'datetime']:
+                    if tD['app_type_code'] in ['char', 'text']:
                         tD['app_type_code'] = 'string'
                     elif tD['app_type_code'] in ['date', 'datetime']:
                         tD['app_type_code'] = tD['app_type_code']
@@ -90,7 +92,7 @@ class DataTypeApplicationInfo(object):
                         tD['app_type_code'] = 'integer'
                 tD['application_name'] = 'JSON'
         elif applicationName == 'BSON':
-            for cifType, tD in self.__dtmD.items():
+            for cifType, tD in dtmD.items():
                 if tD['application_name'] == 'ANY':
                     if tD['app_type_code'] in ['char', 'text']:
                         tD['app_type_code'] = 'string'
@@ -102,6 +104,7 @@ class DataTypeApplicationInfo(object):
                         tD['app_type_code'] = 'int'
                 tD['application_name'] = 'BSON'
         #
+        return dtmD
 
     def getDefaultDataTypeMap(self, applicationName='ANY'):
         try:
@@ -286,7 +289,6 @@ class DataTypeApplicationInfo(object):
                         if d['application_name'] == applicationName:
                             mapD[d['type_code']] = {k: d[k] for k in ['app_type_code', 'application_name', 'type_code']}
                             mapD[d['type_code']].update({k: int(d[k]) for k in ['app_precision_default', 'app_width_default']})
-
             return mapD
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
