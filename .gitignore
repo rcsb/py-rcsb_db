@@ -1,0 +1,12 @@
+# IntelliJ IDEA editor files
+.idea
+*.iml
+
+# Environments
+/venv/
+
+# Unit test
+.tox/
+
+# Distribution / packaging
+*.egg-info/
