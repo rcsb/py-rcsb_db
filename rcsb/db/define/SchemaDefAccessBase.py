@@ -414,7 +414,7 @@ class SchemaDef(object):
         try:
             return self.__tD['ATTRIBUTE_INFO'][attributeId]['ENUMERATION'][str(enum).lower()]
         except Exception as e:
-            logger.error("Failing for %s and %s with %s" % (attributeId, enum, str(e)))
+            logger.error("Failing for %s and %r with %s" % (attributeId, enum, str(e)))
             return enum
 
     def isEnumerated(self, attributeId):

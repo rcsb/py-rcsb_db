@@ -15,6 +15,7 @@
 # 18-Sep-2018 jdw Constrain categories/class to homogeneous content
 #  7-Oct-2018 jdw Add subCategory aggregation in the JSON schema generator
 #  9-Oct-2018 jdw push the constructor arguments into the constructor as configuration options
+# 12-Oct-2018 jdw filter empty required attributes in subcategory aggregates
 ##
 """
 Integrate dictionary metadata and file based(type/coverage) into internal and JSON/BSON schema defintions.
@@ -566,7 +567,8 @@ class SchemaDefBuild(object):
             subCatPropD = {}
             if subCategoryAggregates:
                 for subCategory in subCategoryAggregates:
-                    scD = {typeKey: "object", 'properties': {}, 'required': []}
+                    reqL = []
+                    scD = {typeKey: "object", 'properties': {}, }
                     for atName in sorted(atNameList):
                         fD = aD[atName]
                         # Exclude primary data attributes with no instance coverage except if in a protected content class
@@ -578,11 +580,12 @@ class SchemaDefBuild(object):
                         schemaAttributeName = convertNameF(atName)
                         isRequired = ('mandatoryAttributes' in enforceOpts and fD['IS_MANDATORY'])
                         if isRequired:
-                            scD['required'].append(schemaAttributeName)
+                            reqL.append(schemaAttributeName)
                         #
                         atPropD = self.__getJsonAttributeProperties(fD, appNameU, dtAppInfo, jsonSpecDraft, enforceOpts)
                         scD['properties'][schemaAttributeName] = atPropD
-                    #
+                    if reqL:
+                        scD['required'] = reqL
                 subCatPropD[subCategory] = {typeKey: 'array', 'items': scD, 'uniqueItems': True}
             #
             if subCatPropD:
@@ -643,6 +646,8 @@ class SchemaDefBuild(object):
             # - assign data type attributes
             typeKey = 'bsonType' if appNameU == 'BSON' else 'type'
             appType = dtAppInfo.getAppTypeName(fD['TYPE_CODE'])
+            #
+            #
             if appType in ['string']:
                 # atPropD = {typeKey: appType, 'maxWidth': instWidth}
                 atPropD = {typeKey: appType}

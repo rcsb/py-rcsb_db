@@ -5,6 +5,7 @@
 #
 # Update:
 # 5-Jun-2018  jdw update prototypes for IoUtil() methods
+#12-Oct-2018  jdw add tests of store type mapping
 #
 #
 #
@@ -46,6 +47,8 @@ class DataTypeApplicationInfoTests(unittest.TestCase):
         self.__pathSaveTypeMap = os.path.join(HERE, 'test-output', 'app_data_type_mapping.cif')
         self.__pathSaveTypeMapJson = os.path.join(HERE, 'test-output', 'app_data_type_mapping.json')
         #
+        self.__mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
+        self.__pathDataTypeMap = os.path.join(self.__mockTopPath, 'data_type_info', 'app_data_type_mapping.cif')
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
@@ -80,6 +83,19 @@ class DataTypeApplicationInfoTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
+    def testStored(self):
+        """ Verify stored type mapping assignments.
+        """
+        try:
+            dtInfo = DataTypeApplicationInfo(locator=self.__pathDataTypeMap, applicationName='JSON', workPath=None)
+            mapD = dtInfo.getDefaultDataTypeMap()
+            logger.debug("Default type map length %d" % len(mapD))
+            self.assertGreaterEqual(len(mapD), 38)
+            #
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
 
 def dictTypeInfoDefaultSuite():
     suiteSelect = unittest.TestSuite()
@@ -87,8 +103,18 @@ def dictTypeInfoDefaultSuite():
     return suiteSelect
 
 
+def dictTypeInfoStoredSuite():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(DataTypeApplicationInfoTests("testStored"))
+    return suiteSelect
+
+
 if __name__ == '__main__':
     #
     if True:
         mySuite = dictTypeInfoDefaultSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+    if True:
+        mySuite = dictTypeInfoStoredSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)

@@ -39,6 +39,28 @@ from the source tree, the package must be installed in editable mode (i.e. -e):
 pip install -e .
 ```
 
+#### Installing in Ubuntu Linux (tested in 18.04)
+You will need a few packages, before `pip install .` can work:
+```
+sudo apt install default-libmysqlclient-dev flex bison
+
+```
+
+### Installing on macOS
+
+To use and develop this package on macOS requires a number of packages that are not
+distributed as part of the base macOS operating system.
+The following steps provide one approach to creating the development environment for this
+package.  First, install the Apple [XCode](https://developer.apple.com/xcode/) package and associate command-line tools.
+This will provide essential compilers and supporting tools.  The [HomeBrew](https://brew.sh/) package
+manager provides further access to a variety of common open source services and tools.
+Follow the instructions provided by at the [HomeBrew](https://brew.sh/) site to
+install this system.   Once HomeBrew is installed, you can further install the
+[MariaDB](https://mariadb.com/kb/en/library/installing-mariadb-on-macos-using-homebrew/) and
+[MongoDB](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-os-x/) packages which
+are required to support the Pinelands tools.  HomeBrew also provides a variety of options for
+managing a [Python virtual environments](https://gist.github.com/Geoyi/f55ed54d24cc9ff1c14bd95fac21c042).
+
 ### Command Line Interfaces
 
 A convenience CLI `exdb_repo_load_cli` is provided to support loading PDB repositories
