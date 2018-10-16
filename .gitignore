@@ -5,8 +5,13 @@
 # Environments
 /venv/
 
-# Unit test
+# Unit tests / reports
 .tox/
+rcsb/db/tests/test-output/*
 
 # Distribution / packaging
 *.egg-info/
+.eggs/
+
+# Byte-compiled
+*.pyc
