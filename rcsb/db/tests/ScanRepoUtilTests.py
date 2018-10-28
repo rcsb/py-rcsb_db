@@ -46,8 +46,8 @@ class ScanRepoUtilTests(unittest.TestCase):
         #
         #
         mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
-        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.cfg')
-        configName = 'DEFAULT'
+        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.yml')
+        configName = 'site_info'
         self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         #

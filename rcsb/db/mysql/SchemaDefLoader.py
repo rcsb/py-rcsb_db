@@ -54,7 +54,7 @@ class SchemaDefLoader(object):
     """ Map PDBx/mmCIF instance data to SQL loadable data using external schema definition.
     """
 
-    def __init__(self, cfgOb, schemaDefObj, dbCon=None, workPath='.', cleanUp=False, warnings='default', verbose=True):
+    def __init__(self, cfgOb, schemaDefObj, cfgSectionName='site_info', dbCon=None, workPath='.', cleanUp=False, warnings='default', verbose=True):
         self.__verbose = verbose
         self.__debug = False
         self.__cfgOb = cfgOb
@@ -77,7 +77,7 @@ class SchemaDefLoader(object):
         self.__sdp = SchemaDefDataPrep(schemaDefAccessObj=self.__sD, dtObj=dtf, workPath=self.__workingPath, verbose=self.__verbose)
 
         #
-        sectionName = 'DEFAULT'
+        sectionName = cfgSectionName
         pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=sectionName)
         pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=sectionName)
         dH = self.__cfgOb.getHelper('DICT_METHOD_HELPER_MODULE', sectionName=sectionName)

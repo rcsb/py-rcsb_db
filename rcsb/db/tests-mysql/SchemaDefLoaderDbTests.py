@@ -52,9 +52,9 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
         numProc = 2
         workPath = os.path.join(HERE, 'test-output')
         mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
-        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.cfg')
+        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.yml')
         #
-        configName = 'DEFAULT'
+        configName = 'site_info'
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         self.__resourceName = "MYSQL_DB"
         #

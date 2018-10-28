@@ -35,8 +35,8 @@ TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 class ConnectionBaseTests(unittest.TestCase):
 
     def setUp(self):
-        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.cfg')
-        configName = 'DEFAULT'
+        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.yml')
+        configName = 'site_info'
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName)
         self.__resourceName = "COCKROACH_DB"
 

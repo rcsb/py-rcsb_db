@@ -5,6 +5,7 @@
 # Version: 0.001
 #
 # Updates:
+#  24-Oct-2018  jdw revise api for new config organization
 ##
 """
  Utilities to access and update provenance details.
@@ -29,33 +30,33 @@ class ProvenanceUtil(object):
         self.__cfgOb = cfgOb
         self.__workPath = kwargs.get("workPath", None)
 
-    def fetch(self, schemaName='DEFAULT'):
+    def fetch(self, cfgSectionName='site_info'):
         try:
             mU = MarshalUtil(workPath=self.__workPath)
-            provLocator = self.__cfgOb.getPath('PROVENANCE_INFO_LOCATOR', sectionName=schemaName)
+            provLocator = self.__cfgOb.getPath('PROVENANCE_INFO_LOCATOR', sectionName=cfgSectionName)
             return mU.doImport(provLocator, format="json")
         except Exception as e:
-            logger.exception("Failed retreiving provence for %s with %s" % (schemaName, str(e)))
+            logger.exception("Failed retreiving provence for %s with %s" % (cfgSectionName, str(e)))
         return {}
 
-    def update(self, provD, schemaName='DEFAULT'):
+    def update(self, provD, cfgSectionName='site_info'):
         ok = False
         try:
             mU = MarshalUtil(workPath=self.__workPath)
-            provLocator = self.__cfgOb.getPath('PROVENANCE_INFO_LOCATOR', sectionName=schemaName)
+            provLocator = self.__cfgOb.getPath('PROVENANCE_INFO_LOCATOR', sectionName=cfgSectionName)
             tD = mU.doImport(provLocator, format="json")
             tD.update(provD)
             ok = mU.doExport(provLocator, tD, format="json")
         except Exception as e:
-            logger.exception("Failed storing provence for %s with %s" % (schemaName, str(e)))
+            logger.exception("Failed storing provence for %s with %s" % (cfgSectionName, str(e)))
         return ok
 
-    def store(self, provD, schemaName='DEFAULT'):
+    def store(self, provD, cfgSectionName='site_info'):
         ok = False
         try:
             mU = MarshalUtil(workPath=self.__workPath)
-            provLocator = self.__cfgOb.getPath('PROVENANCE_INFO_LOCATOR', sectionName=schemaName)
+            provLocator = self.__cfgOb.getPath('PROVENANCE_INFO_LOCATOR', sectionName=cfgSectionName)
             ok = mU.doExport(provLocator, provD, format="json")
         except Exception as e:
-            logger.exception("Failed storing provence for %s with %s" % (schemaName, str(e)))
+            logger.exception("Failed storing provence for %s with %s" % (cfgSectionName, str(e)))
         return ok

@@ -630,7 +630,7 @@ class SchemaDef(object):
                 else:
                     d[atId] = r'\N'
         except Exception as e:
-            logger.exception("Failing with atId %r atInfo %r" % (atId, atInfo))
+            logger.exception("Failing with atId %r atInfo %r with %s" % (atId, atInfo, str(e)))
         #
         return d
 

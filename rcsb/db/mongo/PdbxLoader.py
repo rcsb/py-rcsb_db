@@ -20,6 +20,7 @@
 #     14-Aug-2018 jdw  primaryIndexD from self.__schU.getSchemaInfo(schemaName) updated to list and i
 #                      in __createCollection(self, dbName, collectionName, indexAttributeNames=None) make indexAttributeNames a list
 #     10-Sep-2018 jdw  Adjust error handling and reporting across multiple collections
+#     24-Oct-2018 jdw  update for new configuration organization
 #
 ##
 """
@@ -54,7 +55,7 @@ logger = logging.getLogger(__name__)
 
 class PdbxLoader(object):
 
-    def __init__(self, cfgOb, resourceName="MONGO_DB", numProc=4, chunkSize=15, fileLimit=None, verbose=False, readBackCheck=False, maxStepLength=2000, workPath=None):
+    def __init__(self, cfgOb, cfgSectionName='site_info', resourceName="MONGO_DB", numProc=4, chunkSize=15, fileLimit=None, verbose=False, readBackCheck=False, maxStepLength=2000, workPath=None):
         """  Worker methods for loading primary data content following mapping conventions in external schema definitions.
 
         Args:
@@ -89,7 +90,7 @@ class PdbxLoader(object):
         #
         self.__statusList = []
         #
-        sectionName = 'DEFAULT'
+        sectionName = cfgSectionName
         pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=sectionName)
         pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=sectionName)
         #

@@ -37,7 +37,7 @@ import logging
 # from operator import itemgetter, attrgetter
 try:
     from itertools import zip_longest as zip_longest
-except Exception as e:
+except Exception:
     from itertools import izip_longest as zip_longest
 
 logger = logging.getLogger(__name__)
@@ -620,7 +620,7 @@ class SqlGenQuery(object):
             self.__limitStart = int(rowStart)
             self.__limitLength = int(rowLength)
             return True
-        except Exception as e:
+        except Exception:
             return False
 
     def addSelectAttributeId(self, attributeTuple=(None, None)):

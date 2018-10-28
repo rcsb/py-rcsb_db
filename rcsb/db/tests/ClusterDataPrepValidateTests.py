@@ -43,12 +43,12 @@ class ClusterDataPrepValidateTests(unittest.TestCase):
         self.__verbose = True
         #
         self.__mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
-        self.__pathConfig = os.path.join(self.__mockTopPath, 'config', 'dbload-setup-example.cfg')
+        self.__pathConfig = os.path.join(self.__mockTopPath, 'config', 'dbload-setup-example.yml')
         self.__workPath = os.path.join(HERE, 'test-output')
         self.__updateId = '2018_25'
         #
         self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, mockTopPath=self.__mockTopPath)
-        self.__sandboxPath = self.__cfgOb.getPath('RCSB_EXCHANGE_SANDBOX_PATH', sectionName='DEFAULT')
+        self.__sandboxPath = self.__cfgOb.getPath('RCSB_EXCHANGE_SANDBOX_PATH', sectionName='site_info')
         self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
         self.__pathRcsbDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'rcsb_mmcif_ext_v1.dic')
         #
@@ -128,7 +128,7 @@ class ClusterDataPrepValidateTests(unittest.TestCase):
         try:
             provKeyName = 'rcsb_entity_sequence_cluster_prov'
             provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
-            pD = provU.fetch(schemaName='DEFAULT')
+            pD = provU.fetch()
             return pD[provKeyName] if provKeyName in pD else {}
         except Exception as e:
             logger.exception("Failing with %s" % str(e))

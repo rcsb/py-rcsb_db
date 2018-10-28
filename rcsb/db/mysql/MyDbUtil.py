@@ -319,5 +319,5 @@ class MyDbQuery(object):
             rowL = self.selectRows(queryString=tSQL)
             tup = rowL[0]
             return int(str(tup[0])) == count
-        except Exception as e:
+        except Exception:
             return False

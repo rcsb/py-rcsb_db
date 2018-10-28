@@ -16,6 +16,7 @@
 #  7-Oct-2018 jdw Add subCategory aggregation in the JSON schema generator
 #  9-Oct-2018 jdw push the constructor arguments into the constructor as configuration options
 # 12-Oct-2018 jdw filter empty required attributes in subcategory aggregates
+# 24-Oct-2018 jdw update for new configuration organization
 ##
 """
 Integrate dictionary metadata and file based(type/coverage) into internal and JSON/BSON schema defintions.
@@ -43,7 +44,7 @@ class SchemaDefBuild(object):
 
     """
 
-    def __init__(self, schemaName, configPath, configName='DEFAULT', mockTopPath=None, includeContentClasses=['GENERATED_CONTENT', 'EVOLVING_CONTENT']):
+    def __init__(self, schemaName, configPath, configName='site_info', mockTopPath=None, includeContentClasses=['GENERATED_CONTENT', 'EVOLVING_CONTENT']):
         """
 
         """
@@ -51,16 +52,16 @@ class SchemaDefBuild(object):
         self.__schemaName = schemaName
         self.__includeContentClasses = includeContentClasses
         #
-        pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=schemaName)
-        pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=schemaName)
+        pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=configName)
+        pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=configName)
         dictLocators = [pathPdbxDictionaryFile, pathRcsbDictionaryFile]
         #
         self.__instDataTypeFilePath = self.__cfgOb.getPath('INSTANCE_DATA_TYPE_INFO_LOCATOR', sectionName=schemaName)
-        self.__appDataTypeFilePath = self.__cfgOb.getPath('APP_DATA_TYPE_INFO_LOCATOR', sectionName=schemaName)
+        self.__appDataTypeFilePath = self.__cfgOb.getPath('APP_DATA_TYPE_INFO_LOCATOR', sectionName=configName)
 
-        dictHelper = self.__cfgOb.getHelper('DICT_HELPER_MODULE', sectionName=schemaName, cfgOb=self.__cfgOb)
-        self.__schemaDefHelper = self.__cfgOb.getHelper('SCHEMADEF_HELPER_MODULE', sectionName=schemaName, cfgOb=self.__cfgOb)
-        self.__documentDefHelper = self.__cfgOb.getHelper('DOCUMENT_HELPER_MODULE', sectionName=schemaName, cfgOb=self.__cfgOb)
+        dictHelper = self.__cfgOb.getHelper('DICT_HELPER_MODULE', sectionName=configName, cfgOb=self.__cfgOb)
+        self.__schemaDefHelper = self.__cfgOb.getHelper('SCHEMADEF_HELPER_MODULE', sectionName=configName, cfgOb=self.__cfgOb)
+        self.__documentDefHelper = self.__cfgOb.getHelper('DOCUMENT_HELPER_MODULE', sectionName=configName, cfgOb=self.__cfgOb)
 
         self.__dictInfo = DictInfo(dictLocators=dictLocators, dictHelper=dictHelper, dictSubset=schemaName)
         #

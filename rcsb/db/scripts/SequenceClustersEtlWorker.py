@@ -6,6 +6,7 @@
 #
 # Updates:
 #  15-Jul-2018 jdw split out to separate module and add status tracking
+#  28-Oct-2018 jdw adjustments for new configuration organization
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -115,7 +116,7 @@ class SequenceClustersEtlWorker(object):
         try:
             provKeyName = self.__cfgOb.get('PROVENANCE_KEY_NAME', sectionName=self.__sectionCluster, default='rcsb_entity_sequence_cluster_prov')
             provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
-            pD = provU.fetch(schemaName=self.__sectionCluster)
+            pD = provU.fetch(cfgSectionName=self.__sectionCluster)
             return pD[provKeyName] if provKeyName in pD else {}
         except Exception as e:
             logger.exception("Failing with %s" % str(e))

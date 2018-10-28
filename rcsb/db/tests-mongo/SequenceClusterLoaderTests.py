@@ -6,6 +6,7 @@
 #
 # Updates:
 #  6-Jul-2018 jdw rename methods and incorporate provenance details -
+# 28-Oct-2018 jdw adjustments for new configuration organization
 #
 #
 ##
@@ -47,8 +48,8 @@ class SequenceClusterLoaderTests(unittest.TestCase):
         #
         #
         mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
-        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.cfg')
-        configName = 'DEFAULT'
+        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.yml')
+        configName = 'site_info'
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         # self.__cfgOb.dump()
         self.__resourceName = "MONGO_DB"
@@ -83,12 +84,12 @@ class SequenceClusterLoaderTests(unittest.TestCase):
                                                               time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                               endTime - self.__startTime))
 
-    def __fetchProvenance(self):
+    def __fetchProvenance(self, cfgSectionName='site_info'):
         """ Test case for fetching a provenance dictionary content.
         """
         try:
             provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
-            pD = provU.fetch(schemaName='DEFAULT')
+            pD = provU.fetch(cfgSectionName=cfgSectionName)
             return pD[self.__provKeyName] if self.__provKeyName in pD else {}
         except Exception as e:
             logger.exception("Failing with %s" % str(e))

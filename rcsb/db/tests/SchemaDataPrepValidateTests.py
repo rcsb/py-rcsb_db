@@ -54,8 +54,8 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__fileLimit = 200
         self.__mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
         self.__workPath = os.path.join(HERE, 'test-output')
-        self.__configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.cfg')
-        configName = 'DEFAULT'
+        self.__configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.yml')
+        configName = 'site_info'
         self.__cfgOb = ConfigUtil(configPath=self.__configPath, sectionName=configName, mockTopPath=self.__mockTopPath)
         self.__mU = MarshalUtil(workPath=self.__workPath)
 

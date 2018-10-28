@@ -45,8 +45,8 @@ class RepoHoldingsLoaderTests(unittest.TestCase):
         #
         #
         mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
-        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.cfg')
-        configName = 'DEFAULT'
+        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.yml')
+        configName = 'site_info'
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         # self.__cfgOb.dump()
         self.__resourceName = "MONGO_DB"
@@ -57,7 +57,7 @@ class RepoHoldingsLoaderTests(unittest.TestCase):
         self.__filterType = "assign-dates"
         #
         self.__workPath = os.path.join(HERE, 'test-output')
-        self.__sandboxPath = self.__cfgOb.getPath('RCSB_EXCHANGE_SANDBOX_PATH', sectionName='DEFAULT')
+        self.__sandboxPath = self.__cfgOb.getPath('RCSB_EXCHANGE_SANDBOX_PATH', sectionName='site_info')
         # sample data set
         self.__updateId = '2018_23'
         #

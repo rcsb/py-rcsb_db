@@ -46,11 +46,11 @@ class MongoDbUtilTests(unittest.TestCase):
         self.__dbName = 'test_database'
         self.__collectionName = 'test_collection'
         #
-        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.cfg')
-        configName = 'DEFAULT'
+        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.yml')
+        configName = 'site_info'
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName)
         self.__resourceName = "MONGO_DB"
-        self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName)
+        self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName, sectionName='site_server_info')
         self.__cObj = self.__open(self.__connectD)
         #
         self.__mongoSchema = {
@@ -97,9 +97,9 @@ class MongoDbUtilTests(unittest.TestCase):
                                                               time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                               endTime - self.__startTime))
 
-    def __assignResource(self, cfgOb, resourceName="MONGO_DB"):
+    def __assignResource(self, cfgOb, resourceName="MONGO_DB", sectionName=None):
         cn = Connection(cfgOb=cfgOb)
-        return cn.assignResource(resourceName=resourceName)
+        return cn.assignResource(resourceName=resourceName, sectionName=sectionName)
 
     def __open(self, connectD):
         cObj = Connection()

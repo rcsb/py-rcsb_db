@@ -7,6 +7,7 @@
 #
 # Updates:
 #  30-Mar-2018 jdw add tests for context manager style opens
+#  25-Oct-2018 jdw add section name to connnection resource assignment method
 ##
 """
 Test cases opening database connections.
@@ -43,11 +44,11 @@ class ConnectionTests(unittest.TestCase):
         self.__verbose = True
         self.__myC = None
 
-        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.cfg')
-        configName = 'DEFAULT'
+        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.yml')
+        configName = 'site_info'
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName)
         self.__resourceName = "MYSQL_DB"
-        self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName)
+        self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName, sectionName='')
 
         self.__startTime = time.time()
         logger.debug("Starting at %s" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
@@ -56,9 +57,9 @@ class ConnectionTests(unittest.TestCase):
         endTime = time.time()
         logger.debug("Completed at %s (%.4f seconds)" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime))
 
-    def __assignResource(self, cfgOb, resourceName="MYSQL_DB"):
+    def __assignResource(self, cfgOb, sectionName='site_server_info', resourceName="MYSQL_DB"):
         cn = Connection(cfgOb=cfgOb)
-        return cn.assignResource(resourceName=resourceName)
+        return cn.assignResource(resourceName=resourceName, sectionName='site_server_info')
 
     def __open(self, connectD):
         cObj = Connection()

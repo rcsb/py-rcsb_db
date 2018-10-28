@@ -51,7 +51,7 @@ logger = logging.getLogger()
 
 try:
     from mmcif.io.IoAdapterCore import IoAdapterCore as IoAdapter
-except Exception as e:
+except Exception:
     from mmcif.io.IoAdapterPy import IoAdapterPy as IoAdapter
 
 
@@ -76,8 +76,8 @@ class SchemaDefLoadercrateDbMultiTests(unittest.TestCase):
         self.__chunkSize = 0
         self.__workPath = os.path.join(HERE, "test-output")
         self.__mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
-        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.cfg')
-        configName = 'DEFAULT'
+        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.yml')
+        configName = 'site_info'
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName)
         self.__resourceName = "CRATE_DB"
         self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)

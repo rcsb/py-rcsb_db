@@ -175,14 +175,14 @@ class MongoDbUtil(object):
             c = self.__mgObj[databaseName].get_collection(collectionName)
             r = c.insert_many(dList, ordered=ordered, bypass_document_validation=bypassValidation)
         except Exception as e:
-            logger.error("Bulk insert failing for document length %d" % len(dList))
+            logger.error("Bulk insert failing for document length %d with %s" % (len(dList), str(e)))
         #
         try:
             rIdL = r.inserted_ids
             return rIdL
         except Exception as e:
             rIdL = []
-            logger.info("Bulk insert document recovery starting for %d documents" % (len(dList)))
+            logger.info("Bulk insert document recovery starting for %d documents with %s" % (len(dList), str(e)))
             if salvage and keyNames:
                 sIdL = self.__salvageinsertList(databaseName, collectionName, dList, keyNames)
             logger.info("Bulk insert document recovery returns %d of %d" % (len(sIdL), len(dList)))

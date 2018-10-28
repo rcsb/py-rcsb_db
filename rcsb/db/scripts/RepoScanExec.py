@@ -70,7 +70,7 @@ def main():
     group.add_argument("--scan_entry_data", default=False, action='store_true', help="Scan PDB entry data (current released subset)")
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
-    parser.add_argument("--config_name", default="DEFAULT", help="Configuration section name")
+    parser.add_argument("--config_name", default="site_info", help="Configuration section name")
 
     parser.add_argument("--input_file_list_path", default=None, help="Input file containing file paths to scan")
     parser.add_argument("--output_file_list_path", default=None, help="Output file containing file paths scanned")
@@ -106,7 +106,7 @@ def main():
         mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', ) if args.mock else None
         cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
     except Exception as e:
-        logger.error("Missing or access issue with config file %r" % configPath)
+        logger.error("Missing or access issue with config file %r with %s" % (configPath, str(e)))
         exit(1)
 
     #

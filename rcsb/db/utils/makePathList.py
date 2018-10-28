@@ -10,7 +10,7 @@ import os
 
 try:
     import os.scandir as scandir
-except Exception as e:
+except Exception:
     import scandir
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
