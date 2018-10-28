@@ -27,7 +27,7 @@ from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
@@ -38,7 +38,7 @@ class ProvenanceUtilTests(unittest.TestCase):
     def setUp(self):
         self.__mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
         self.__workPath = os.path.join(HERE, 'test-output')
-        self.__pathConfig = os.path.join(self.__mockTopPath, 'config', 'dbload-setup-example.cfg')
+        self.__pathConfig = os.path.join(self.__mockTopPath, 'config', 'dbload-setup-example.yml')
         #
         self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, mockTopPath=self.__mockTopPath)
         #
@@ -123,7 +123,7 @@ class ProvenanceUtilTests(unittest.TestCase):
         try:
             provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
             pD = {self.__provKeyName: self.__provInfoL}
-            ok = provU.store(pD, schemaName='DEFAULT')
+            ok = provU.store(pD, cfgSectionName='site_info')
             #
             self.assertTrue(ok)
         except Exception as e:
@@ -136,10 +136,10 @@ class ProvenanceUtilTests(unittest.TestCase):
         try:
             provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
             pD = {self.__provKeyName: self.__provInfoL}
-            ok = provU.store(pD, schemaName='DEFAULT')
+            ok = provU.store(pD, cfgSectionName='site_info')
             self.assertTrue(ok)
             #
-            fD = provU.fetch(schemaName='DEFAULT')
+            fD = provU.fetch(cfgSectionName='site_info')
             self.assertTrue(self.__provKeyName in fD)
             self.assertDictEqual(pD, fD)
         except Exception as e:
@@ -152,13 +152,13 @@ class ProvenanceUtilTests(unittest.TestCase):
         try:
             provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
             pD = {self.__provKeyName: self.__provInfoL}
-            ok = provU.store(pD, schemaName='DEFAULT')
+            ok = provU.store(pD, cfgSectionName='site_info')
             self.assertTrue(ok)
             #
-            ok = provU.update(pD, schemaName='DEFAULT')
+            ok = provU.update(pD, cfgSectionName='site_info')
             self.assertTrue(ok)
             #
-            fD = provU.fetch(schemaName='DEFAULT')
+            fD = provU.fetch(cfgSectionName='site_info')
             self.assertTrue(self.__provKeyName in fD)
             self.assertDictEqual(pD, fD)
         except Exception as e:

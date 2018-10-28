@@ -60,7 +60,7 @@ def main():
 
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
-    parser.add_argument("--config_name", default="DEFAULT", help="Configuration section name")
+    parser.add_argument("--config_name", default="site_info", help="Configuration section name")
 
     parser.add_argument("--db_type", default="mongo", help="Database server type (default=mongo)")
 
@@ -96,7 +96,7 @@ def main():
         mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', ) if args.mock else None
         cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
     except Exception as e:
-        logger.error("Missing or access issue with config file %r" % configPath)
+        logger.error("Missing or access issue with config file %r with %s" % (configPath, str(e)))
         exit(1)
 
     #

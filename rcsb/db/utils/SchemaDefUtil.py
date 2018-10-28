@@ -187,5 +187,5 @@ class SchemaDefUtil(object):
 
         except Exception as e:
             logger.exception("Building schema %s failing with %s" % (contentType, str(e)))
-            self.fail()
+
         return {}

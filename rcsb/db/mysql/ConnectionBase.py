@@ -29,7 +29,7 @@ if platform.system() == "Linux":
         import sqlalchemy.pool as pool
         MySQLdb = pool.manage(MySQLdb, pool_size=12, max_overflow=12, timeout=30, echo=False, use_threadlocal=False)
     except Exception as e:
-        logger.exception("Creating MYSQL connection pool failing")
+        logger.exception("Creating MYSQL connection pool failing with %s" % str(e))
 
 
 class ConnectionBase(object):

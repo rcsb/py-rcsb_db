@@ -60,8 +60,8 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__fileLimit = 200
         mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
         self.__workPath = os.path.join(HERE, 'test-output')
-        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.cfg')
-        configName = 'DEFAULT'
+        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.yml')
+        configName = 'site_info'
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         self.__mU = MarshalUtil(workPath=self.__workPath)
 

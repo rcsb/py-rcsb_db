@@ -52,8 +52,8 @@ class PdbxLoaderTests(unittest.TestCase):
         #
         #
         mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
-        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.cfg')
-        configName = 'DEFAULT'
+        configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.yml')
+        configName = 'site_info'
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         # self.__cfgOb.dump()
         self.__resourceName = "MONGO_DB"
@@ -79,7 +79,7 @@ class PdbxLoaderTests(unittest.TestCase):
         """ Test case -  Load chemical component reference data
         """
         try:
-            mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+            mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('chem_comp', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
@@ -94,7 +94,7 @@ class PdbxLoaderTests(unittest.TestCase):
         """ Test case -  Load Bird chemical component reference data
         """
         try:
-            mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+            mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('bird_chem_comp', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
@@ -109,7 +109,7 @@ class PdbxLoaderTests(unittest.TestCase):
         """ Test case -  Load Bird reference data
         """
         try:
-            mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+            mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('bird', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
@@ -124,7 +124,7 @@ class PdbxLoaderTests(unittest.TestCase):
         """ Test case -  Load Bird family reference data
         """
         try:
-            mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+            mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('bird_family', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
@@ -139,7 +139,7 @@ class PdbxLoaderTests(unittest.TestCase):
         """ Test case -  Load and reload chemical component reference data
         """
         try:
-            mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+            mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('chem_comp', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
@@ -157,7 +157,7 @@ class PdbxLoaderTests(unittest.TestCase):
         """ Test case -  Load PDBx entry data
         """
         try:
-            mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+            mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
@@ -172,7 +172,7 @@ class PdbxLoaderTests(unittest.TestCase):
         """ Test case -  Load PDBx entry data with pdbx schema
         """
         try:
-            mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+            mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
@@ -190,7 +190,7 @@ class PdbxLoaderTests(unittest.TestCase):
         """ Test case -  Load PDBx entry data with pdbx schema (testing document size handling)
         """
         try:
-            mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+            mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath, pruneDocumentSize=14.0)
@@ -205,7 +205,7 @@ class PdbxLoaderTests(unittest.TestCase):
         """ Test case -  Load PDBx entry data with pdbx_core schema
         """
         try:
-            mw = PdbxLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+            mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entity_v5_0_2'], loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
@@ -221,7 +221,7 @@ class PdbxLoaderTests(unittest.TestCase):
 
     def __loadStatus(self, statusList):
         sectionName = 'data_exchange'
-        dl = DocumentLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+        dl = DocumentLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             documentLimit=None, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
         #
         databaseName = self.__cfgOb.get('DATABASE_NAME', sectionName=sectionName) + '_' + self.__cfgOb.get('DATABASE_VERSION_STRING', sectionName=sectionName)

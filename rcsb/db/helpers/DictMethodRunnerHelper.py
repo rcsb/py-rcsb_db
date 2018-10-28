@@ -8,6 +8,7 @@
 #  4-Sep-2018 jdw add methods to construct entry and entity identier categories.
 # 10-Sep-2018 jdw add method for citation author aggregation
 # 22-Sep-2018 jdw add method assignAssemblyCandidates()
+# 27-Oct-2018 jdw add method consolidateAccessionDetails()
 #
 ##
 """
@@ -475,11 +476,9 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 return True
             #
             # if there is no source information then exit
-            if not (dataContainer.exists('entity_src_gen') or
-                    dataContainer.exists('entity_src_nat') or
-                    dataContainer.exists('pdbx_entity_src_syn')):
+            if not (dataContainer.exists('entity_src_gen') or dataContainer.exists('entity_src_nat') or dataContainer.exists('pdbx_entity_src_syn')):
                 return False
-            # Create the net target category
+            # Create the new target category
             if not dataContainer.exists(catName):
                 dataContainer.append(DataCategory(catName, attributeNameList=['entity_id',
                                                                               'pdbx_src_id',
@@ -625,6 +624,93 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 eObj.setValue(partCountD[entityId], 'rcsb_source_part_count', ii)
                 eObj.setValue(cFlag, 'rcsb_multiple_source_flag', ii)
 
+            return True
+        except Exception as e:
+            logger.exception("For %s failing with %s" % (catName, str(e)))
+        return False
+
+    def consolidateAccessionDetails(self, dataContainer, catName, **kwargs):
+        """  Consolidate accession details into a single object.
+
+             _rcsb_accession_info.entry_id                1ABC
+             _rcsb_accession_info.status_code             REL
+             _rcsb_accession_info.deposit_date            2018-01-11
+             _rcsb_accession_info.initial_release_date    2018-03-23
+             _rcsb_accession_info.major_revision          1
+             _rcsb_accession_info.minor_revision          2
+             _rcsb_accession_info.revision_date           2018-10-25
+
+
+            #
+
+            _pdbx_database_status.entry_id                        3OQP
+            _pdbx_database_status.deposit_site                    RCSB
+            _pdbx_database_status.process_site                    RCSB
+            _pdbx_database_status.recvd_initial_deposition_date   2010-09-03
+            _pdbx_database_status.status_code                     REL
+            _pdbx_database_status.status_code_sf                  REL
+            _pdbx_database_status.status_code_mr                  ?
+            _pdbx_database_status.status_code_cs                  ?
+            _pdbx_database_status.pdb_format_compatible           Y
+            _pdbx_database_status.methods_development_category    ?
+            _pdbx_database_status.SG_entry                        Y
+            #
+            loop_
+            _pdbx_audit_revision_history.ordinal
+            _pdbx_audit_revision_history.data_content_type
+            _pdbx_audit_revision_history.major_revision
+            _pdbx_audit_revision_history.minor_revision
+            _pdbx_audit_revision_history.revision_date
+            1 'Structure model' 1 0 2010-10-13
+            2 'Structure model' 1 1 2011-07-13
+            3 'Structure model' 1 2 2011-07-20
+            4 'Structure model' 1 3 2014-11-12
+            5 'Structure model' 1 4 2017-10-25
+            #
+
+
+
+        """
+        ##
+        try:
+            logger.debug("Starting with  %r %r" % (dataContainer.getName(), catName))
+            #
+            # if there is incomplete accessioninformation then exit
+            if not (dataContainer.exists('pdbx_database_status') or dataContainer.exists('pdbx_audit_revision_history')):
+                return False
+            # Create the new target category
+            if not dataContainer.exists(catName):
+                dataContainer.append(DataCategory(catName, attributeNameList=['entry_id',
+                                                                              'status_code',
+                                                                              'deposit_date',
+                                                                              'initial_release_date',
+                                                                              'major_revision',
+                                                                              'minor_revision',
+                                                                              'revision_date']))
+            #
+            cObj = dataContainer.getObj(catName)
+            #
+            tObj = dataContainer.getObj('pdbx_database_status')
+            entryId = tObj.getValue('entry_id', 0)
+            statusCode = tObj.getValue('status_code', 0)
+            depositDate = tObj.getValue('recvd_initial_deposition_date', 0)
+            #
+            cObj.setValue(entryId, 'entry_id', 0)
+            cObj.setValue(statusCode, 'status_code', 0)
+            cObj.setValue(depositDate, 'deposit_date', 0)
+            #
+            tObj = dataContainer.getObj('pdbx_audit_revision_history')
+            nRows = tObj.getRowCount()
+            # Assuming the default sorting order from the release module -
+            releaseDate = tObj.getValue('revision_date', 0)
+            minorRevision = tObj.getValue('minor_revision', nRows - 1)
+            majorRevision = tObj.getValue('major_revision', nRows - 1)
+            revisionDate = tObj.getValue('revision_date', nRows - 1)
+            cObj.setValue(releaseDate, 'initial_release_date', 0)
+            cObj.setValue(minorRevision, 'minor_revision', 0)
+            cObj.setValue(majorRevision, 'major_revision', 0)
+            cObj.setValue(revisionDate, 'revision_date', 0)
+            #
             return True
         except Exception as e:
             logger.exception("For %s failing with %s" % (catName, str(e)))

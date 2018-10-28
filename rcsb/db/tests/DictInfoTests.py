@@ -29,6 +29,7 @@ import unittest
 
 from rcsb.db.define.DictInfo import DictInfo
 from rcsb.db.helpers.DictInfoHelper import DictInfoHelper
+from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.io.IoUtil import IoUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
@@ -43,8 +44,12 @@ class DictInfoTests(unittest.TestCase):
 
     def setUp(self):
         self.__verbose = True
-        self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
-        self.__pathRcsbDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'rcsb_mmcif_ext_v1.dic')
+        self.__mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
+        self.__pathConfig = os.path.join(self.__mockTopPath, 'config', 'dbload-setup-example.yml')
+        self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, mockTopPath=self.__mockTopPath)
+        #
+        self.__pathPdbxDictionaryFile = os.path.join(self.__mockTopPath, 'dictionaries', 'mmcif_pdbx_v5_next.dic')
+        self.__pathRcsbDictionaryFile = os.path.join(self.__mockTopPath, 'dictionaries', 'rcsb_mmcif_ext_v1.dic')
         self.__ioU = IoUtil()
         #
         self.__pathSaveDictInfoDefaultJson = os.path.join(HERE, 'test-output', 'dict_info_default.json')
@@ -83,7 +88,7 @@ class DictInfoTests(unittest.TestCase):
 
         """
         try:
-            dH = DictInfoHelper()
+            dH = DictInfoHelper(cfgOb=self.__cfgOb)
             sdi = DictInfo(dictLocators=[self.__pathPdbxDictionaryFile], dictSubset='chem_comp', dictHelper=dH)
             catNameL = sdi.getCategories()
             cfD = {}
@@ -106,7 +111,7 @@ class DictInfoTests(unittest.TestCase):
 
         """
         try:
-            dH = DictInfoHelper()
+            dH = DictInfoHelper(cfgOb=self.__cfgOb)
             sdi = DictInfo(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], dictSubset='pdbx_core', dictHelper=dH)
             catNameL = sdi.getCategories()
             cfD = {}
@@ -129,7 +134,7 @@ class DictInfoTests(unittest.TestCase):
 
         """
         try:
-            dH = DictInfoHelper()
+            dH = DictInfoHelper(cfgOb=self.__cfgOb)
             sdi = DictInfo(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], dictSubset='repository_holdings', dictHelper=dH)
             catNameL = sdi.getCategories()
             cfD = {}

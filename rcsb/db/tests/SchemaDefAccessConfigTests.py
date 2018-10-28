@@ -42,7 +42,7 @@ class SchemaDefAccessConfigTests(unittest.TestCase):
         self.__verbose = True
         #
         self.__mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
-        self.__pathConfig = os.path.join(self.__mockTopPath, 'config', 'dbload-setup-example.cfg')
+        self.__pathConfig = os.path.join(self.__mockTopPath, 'config', 'dbload-setup-example.yml')
         #
         self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, mockTopPath=self.__mockTopPath)
         #

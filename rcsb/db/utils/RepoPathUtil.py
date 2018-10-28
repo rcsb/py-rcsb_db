@@ -12,6 +12,7 @@
 #   18-Jun-2018  jdw move mock support to the configuration module
 #   12-Jul-2018  jdw correct config for PDBX_REPO_PATH
 #   13-Aug-2018  jdw add support for gz compressed entry files
+#   24-Oct-2018  jdw update for new configuration organization
 ##
 """
  Utilites for scanning common data repository file systems.
@@ -39,11 +40,12 @@ logger = logging.getLogger(__name__)
 
 class RepoPathUtil(object):
 
-    def __init__(self, cfgOb, numProc=8, fileLimit=None, verbose=False):
+    def __init__(self, cfgOb, cfgSectionName='site_info', numProc=8, fileLimit=None, verbose=False):
         self.__fileLimit = fileLimit
         self.__numProc = numProc
         self.__verbose = verbose
         self.__cfgOb = cfgOb
+        self.__cfgSectionName = cfgSectionName
         self.__mpFormat = '[%(levelname)s] %(asctime)s %(processName)s-%(module)s.%(funcName)s: %(message)s'
 
     def getRepoPathList(self, contentType, inputPathList=None):
@@ -90,7 +92,7 @@ class RepoPathUtil(object):
         return dataList, pathList, []
 
     def getChemCompPathList(self):
-        return self.__getChemCompPathList(self.__cfgOb.getPath('CHEM_COMP_REPO_PATH'), numProc=self.__numProc)
+        return self.__getChemCompPathList(self.__cfgOb.getPath('CHEM_COMP_REPO_PATH', sectionName=self.__cfgSectionName), numProc=self.__numProc)
 
     def __getChemCompPathList(self, topRepoPath, numProc=8):
         """Get the path list for the chemical component definition repository
@@ -131,7 +133,7 @@ class RepoPathUtil(object):
         return dataList, pathList, []
 
     def getEntryPathList(self):
-        return self.__getEntryPathList(self.__cfgOb.getPath('PDBX_REPO_PATH'), numProc=self.__numProc)
+        return self.__getEntryPathList(self.__cfgOb.getPath('PDBX_REPO_PATH', sectionName=self.__cfgSectionName), numProc=self.__numProc)
 
     def __getEntryPathList(self, topRepoPath, numProc=8):
         """Get the path list for structure entries in the input repository
@@ -165,7 +167,7 @@ class RepoPathUtil(object):
         return self.__applyFileLimit(pathList)
 
     def getBirdPathList(self):
-        return self.__getBirdPathList(self.__cfgOb.getPath('BIRD_REPO_PATH'))
+        return self.__getBirdPathList(self.__cfgOb.getPath('BIRD_REPO_PATH', sectionName=self.__cfgSectionName))
 
     def __getBirdPathList(self, topRepoPath):
         """ Return the list of definition file paths in the current repository.
@@ -191,7 +193,7 @@ class RepoPathUtil(object):
         return self.__applyFileLimit(pathList)
 
     def getBirdFamilyPathList(self):
-        return self.__getBirdFamilyPathList(self.__cfgOb.getPath('BIRD_FAMILY_REPO_PATH'))
+        return self.__getBirdFamilyPathList(self.__cfgOb.getPath('BIRD_FAMILY_REPO_PATH', sectionName=self.__cfgSectionName))
 
     def __getBirdFamilyPathList(self, topRepoPath):
         """ Return the list of definition file paths in the current repository.
@@ -217,7 +219,7 @@ class RepoPathUtil(object):
         return self.__applyFileLimit(pathList)
 
     def getBirdChemCompPathList(self):
-        return self.__getBirdChemCompPathList(self.__cfgOb.getPath('BIRD_CHEM_COMP_REPO_PATH'))
+        return self.__getBirdChemCompPathList(self.__cfgOb.getPath('BIRD_CHEM_COMP_REPO_PATH', sectionName=self.__cfgSectionName))
 
     def __getBirdChemCompPathList(self, topRepoPath):
         """ Return the list of definition file paths in the current repository.

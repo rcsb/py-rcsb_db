@@ -200,7 +200,7 @@ class CrateDbQuery(object):
             logger.info(" MySQL warning is message is:\n%s\n" % str(e))
             curs.close()
         except Exception as e:
-            logger.exception(" SQL command failed for:\n%s\n" % queryString)
+            logger.exception(" SQL command failed for:\n%s\n with %s" % (queryString, str(e)))
             curs.close()
         return []
 
@@ -241,7 +241,7 @@ class CrateDbQuery(object):
             logger.info(" SQL command failed for:\n%s\n" % queryString)
             curs.close()
         except Exception as e:
-            logger.exception(" SQL command failed for:\n%s\n" % queryString)
+            logger.exception(" SQL command failed for:\n%s\n with %s" % (queryString, str(e)))
             curs.close()
 
         return []
@@ -283,5 +283,5 @@ class CrateDbQuery(object):
             rowL = self.selectRows(queryString=tSQL)
             tup = rowL[0]
             return int(str(tup[0])) == count
-        except Exception as e:
+        except Exception:
             return False

@@ -9,6 +9,7 @@
 #  8-Oct-2018 jdw adjustments for greater schema compliance and uniformity
 #                 provide alternative date assignment for JSON and mongo validation
 # 10-Oct-2018 jdw Add getHoldingsTransferred() for homology models transfered to Model Archive
+# 28-Oct-2018 jdw update with semi-colon separated author lists in status and theoretical model files
 #
 ##
 
@@ -106,7 +107,7 @@ class RepoHoldingsDataPrep(object):
             logger.debug("Read %d model archive id codes" % len(trD))
             #
             # ---------  ---------  ---------  ---------  ---------  ---------  ---------
-            fp = os.path.join(dirPath, 'status', 'theoretical_model.tsv')
+            fp = os.path.join(dirPath, 'status', 'theoretical_model_v2.tsv')
             lineL = self.__mU.doImport(fp, 'list')
             #
             logger.debug("Read %d insilico id codes" % len(lineL))
@@ -123,7 +124,8 @@ class RepoHoldingsDataPrep(object):
 
                 entryId = str(fields[0]).upper()
                 title = fields[4]
-                auditAuthors = fields[5]
+                #
+                auditAuthors = [t.strip() for t in fields[5].split(';')]
                 repId = None
                 if entryId in trD:
                     repName = 'Model Archive'
@@ -274,8 +276,8 @@ class RepoHoldingsDataPrep(object):
                 if fields[11] and len(fields[11].strip()):
                     d['title'] = fields[11]
                 if fields[10] and len(fields[10].strip()):
-                    # d['audit_authors'] = fields[10].split(';'),
-                    d['audit_authors'] = fields[10]
+                    d['audit_authors'] = [t.strip() for t in fields[10].split(';')]
+                    # d['audit_authors'] = fields[10]
                 if fields[12] and len(fields[12].strip()):
                     d['author_prerelease_sequence'] = str(fields[12]).strip()
                 dTupL = [('deposit_date', 3),

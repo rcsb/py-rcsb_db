@@ -41,7 +41,7 @@ class SchemaDefBuildTests(unittest.TestCase):
     def setUp(self):
         self.__verbose = True
         self.__mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
-        self.__pathConfig = os.path.join(self.__mockTopPath, 'config', 'dbload-setup-example.cfg')
+        self.__pathConfig = os.path.join(self.__mockTopPath, 'config', 'dbload-setup-example.yml')
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))

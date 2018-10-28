@@ -50,186 +50,6 @@ class DictInfoHelper(DictInfoHelperBase):
     """ Supplements dictionary information as required for schema production.
 
     """
-    # Data items requiring a particular data transformation -
-    _itemTransformers = {
-        'STRIP_WS': [
-            {'CATEGORY_NAME': 'entity_poly', 'ATTRIBUTE_NAME': 'pdbx_c_terminal_seq_one_letter_code'},
-            {'CATEGORY_NAME': 'entity_poly', 'ATTRIBUTE_NAME': 'pdbx_n_terminal_seq_one_letter_code'},
-            {'CATEGORY_NAME': 'entity_poly', 'ATTRIBUTE_NAME': 'pdbx_seq_one_letter_code'},
-            {'CATEGORY_NAME': 'entity_poly', 'ATTRIBUTE_NAME': 'pdbx_seq_one_letter_code_can'},
-            {'CATEGORY_NAME': 'entity_poly', 'ATTRIBUTE_NAME': 'pdbx_seq_one_letter_code_sample'},
-            {'CATEGORY_NAME': 'struct_ref', 'ATTRIBUTE_NAME': 'pdbx_seq_one_letter_code'}
-        ]
-    }
-
-    _cardinalityParentItens = {
-        'bird': {'CATEGORY_NAME': 'pdbx_reference_molecule', 'ATTRIBUTE_NAME': 'prd_id'},
-        'bird_family': {'CATEGORY_NAME': 'pdbx_reference_molecule_family', 'ATTRIBUTE_NAME': 'family_prd_id'},
-        'chem_comp': {'CATEGORY_NAME': 'chem_comp', 'ATTRIBUTE_NAME': 'id'},
-        'bird_chem_comp': {'CATEGORY_NAME': 'chem_comp', 'ATTRIBUTE_NAME': 'id'},
-        'pdbx': {'CATEGORY_NAME': 'entry', 'ATTRIBUTE_NAME': 'id'},
-        'pdbx_core': {'CATEGORY_NAME': 'entry', 'ATTRIBUTE_NAME': 'id'}
-    }
-    _cardinalityCategoryExtras = ['rcsb_load_status']
-    #
-    _selectionFilters = {('PUBLIC_RELEASE', 'pdbx'): [{'CATEGORY_NAME': 'pdbx_database_status', 'ATTRIBUTE_NAME': 'status_code', 'VALUES': ['REL']}],
-                         ('PUBLIC_RELEASE', 'pdbx_core'): [{'CATEGORY_NAME': 'pdbx_database_status', 'ATTRIBUTE_NAME': 'status_code', 'VALUES': ['REL']}],
-                         ('PUBLIC_RELEASE', 'chem_comp'): [{'CATEGORY_NAME': 'chem_comp', 'ATTRIBUTE_NAME': 'pdbx_release_status', 'VALUES': ['REL', 'OBS', 'REF_ONLY']}],
-                         ('PUBLIC_RELEASE', 'bird_chem_comp'): [{'CATEGORY_NAME': 'chem_comp', 'ATTRIBUTE_NAME': 'pdbx_release_status', 'VALUES': ['REL', 'OBS', 'REF_ONLY']}],
-                         ('PUBLIC_RELEASE', 'bird'): [{'CATEGORY_NAME': 'pdbx_reference_molecule', 'ATTRIBUTE_NAME': 'release_status', 'VALUES': ['REL', 'OBS']}],
-                         ('PUBLIC_RELEASE', 'bird_family'): [{'CATEGORY_NAME': 'pdbx_reference_molecule_family', 'ATTRIBUTE_NAME': 'release_status', 'VALUES': ['REL', 'OBS']}]
-                         }
-    #
-    _typeCodeClasses = {'iterable': ['ucode-alphanum-csv', 'id_list', 'alphanum-scsv', 'alphanum-csv']}
-    _queryStringSelectors = {'iterable': ['comma separate']}
-    # Put the non default iterable delimiter cases here -
-    _iterableDelimiters = [{'CATEGORY_NAME': 'chem_comp', 'ATTRIBUTE_NAME': 'pdbx_synonyms', 'DELIMITER': ';'},
-                           {'CATEGORY_NAME': 'citation', 'ATTRIBUTE_NAME': 'rcsb_authors', 'DELIMITER': ';'}]
-    #
-    # Categories/Attributes that will be included in a schema definitions even if they are not populated in any tabulated instance data -
-    #
-    #
-    #
-    _contentClasses = {('GENERATED_CONTENT', 'pdbx'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']},
-                                                       {'CATEGORY_NAME': 'pdbx_struct_assembly_gen', 'ATTRIBUTE_NAME_LIST': ['ordinal']}],
-                       ('GENERATED_CONTENT', 'pdbx_core'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']},
-                                                            {'CATEGORY_NAME': 'citation', 'ATTRIBUTE_NAME_LIST': ['rcsb_authors']},
-                                                            {'CATEGORY_NAME': 'pdbx_struct_assembly_gen', 'ATTRIBUTE_NAME_LIST': ['ordinal']},
-                                                            {'CATEGORY_NAME': 'pdbx_struct_assembly', 'ATTRIBUTE_NAME_LIST': ['rcsb_details', 'rcsb_candidate_assembly']},
-                                                            {'CATEGORY_NAME': 'rcsb_entry_container_identifiers', 'ATTRIBUTE_NAME_LIST': [
-                                                                'entry_id', 'entity_ids', 'polymer_entity_ids', 'non-polymer_entity_ids', 'assembly_ids']},
-                                                            {'CATEGORY_NAME': 'rcsb_entity_container_identifiers', 'ATTRIBUTE_NAME_LIST': [
-                                                                'entry_id', 'entity_id', 'asym_ids', 'auth_asym_ids']},
-                                                            {'CATEGORY_NAME': 'rcsb_assembly_container_identifiers', 'ATTRIBUTE_NAME_LIST': ['entry_id', 'assembly_id']},
-                                                            {'CATEGORY_NAME': 'rcsb_entity_source_organism', 'ATTRIBUTE_NAME_LIST': ['entity_id', 'pdbx_src_id', 'source_type',
-                                                                                                                                     'scientific_name', 'common_name', 'ncbi_taxonomy_id',
-                                                                                                                                     'provenance_code', 'beg_seq_num', 'end_seq_num']},
-                                                            {'CATEGORY_NAME': 'rcsb_entity_host_organism', 'ATTRIBUTE_NAME_LIST': ['entity_id', 'pdbx_src_id',
-                                                                                                                                   'scientific_name', 'common_name', 'ncbi_taxonomy_id',
-                                                                                                                                   'provenance_code', 'beg_seq_num', 'end_seq_num']},
-                                                            {'CATEGORY_NAME': 'entity', 'ATTRIBUTE_NAME_LIST': ['rcsb_multiple_source_flag', 'rcsb_source_part_count']},
-                                                            ],
-                       ('GENERATED_CONTENT', 'data_exchange'): [{'CATEGORY_NAME': 'rcsb_data_exchange_status',
-                                                                 'ATTRIBUTE_NAME_LIST': ['update_id', 'database_name', 'object_name', 'update_status_flag', 'update_begin_timestamp', 'update_end_timestamp']}],
-                       ('EVOLVING_CONTENT', 'pdbx_core'): [{'CATEGORY_NAME': 'diffrn', 'ATTRIBUTE_NAME_LIST': ['pdbx_serial_crystal_experiment']},
-                                                           {'CATEGORY_NAME': 'diffrn_detector', 'ATTRIBUTE_NAME_LIST': ['pdbx_frequency']},
-                                                           {'CATEGORY_NAME': 'pdbx_serial_crystallography_measurement',
-                                                            'ATTRIBUTE_NAME_LIST': ['diffrn_id',
-                                                                                    'pulse_energy',
-                                                                                    'pulse_duration',
-                                                                                    'xfel_pulse_repetition_rate',
-                                                                                    'pulse_photon_energy',
-                                                                                    'photons_per_pulse',
-                                                                                    'source_size',
-                                                                                    'source_distance',
-                                                                                    'focal_spot_size',
-                                                                                    'collimation',
-                                                                                    'collection_time_total']},
-
-                                                           {'CATEGORY_NAME': 'pdbx_serial_crystallography_sample_delivery',
-                                                            'ATTRIBUTE_NAME_LIST': ['diffrn_id', 'description', 'method']},
-
-                                                           {'CATEGORY_NAME': 'pdbx_serial_crystallography_sample_delivery_injection',
-                                                            'ATTRIBUTE_NAME_LIST': ['diffrn_id',
-                                                                                    'description',
-                                                                                    'injector_diameter',
-                                                                                    'injector_temperature',
-                                                                                    'injector_pressure',
-                                                                                    'flow_rate',
-                                                                                    'carrier_solvent',
-                                                                                    'crystal_concentration',
-                                                                                    'preparation',
-                                                                                    'power_by',
-                                                                                    'injector_nozzle',
-                                                                                    'jet_diameter',
-                                                                                    'filter_size']},
-
-                                                           {'CATEGORY_NAME': 'pdbx_serial_crystallography_sample_delivery_fixed_target',
-                                                            'ATTRIBUTE_NAME_LIST': ['diffrn_id',
-                                                                                    'description',
-                                                                                    'sample_holding',
-                                                                                    'support_base',
-                                                                                    'sample_unit_size',
-                                                                                    'crystals_per_unit',
-                                                                                    'sample_solvent',
-                                                                                    'sample_dehydration_prevention',
-                                                                                    'motion_control',
-                                                                                    'velocity_horizontal',
-                                                                                    'velocity_vertical',
-                                                                                    'details']},
-
-                                                           {'CATEGORY_NAME': 'pdbx_serial_crystallography_data_reduction',
-                                                            'ATTRIBUTE_NAME_LIST': ['diffrn_id',
-                                                                                    'frames_total',
-                                                                                    'xfel_pulse_events',
-                                                                                    'frame_hits',
-                                                                                    'crystal_hits',
-                                                                                    'droplet_hits',
-                                                                                    'frames_failed_index',
-                                                                                    'frames_indexed',
-                                                                                    'lattices_indexed',
-                                                                                    'xfel_run_numbers']},
-                                                           ],
-                       ('GENERATED_CONTENT', 'chem_comp'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
-                       ('GENERATED_CONTENT', 'bird_chem_comp'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
-                       ('GENERATED_CONTENT', 'bird'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
-                       ('GENERATED_CONTENT', 'bird_family'): [{'CATEGORY_NAME': 'rcsb_load_status', 'ATTRIBUTE_NAME_LIST': ['datablock_name', 'load_date', 'locator']}],
-                       #
-                       ('REPO_HOLDINGS_CONTENT', 'repository_holdings'): [{'CATEGORY_NAME': 'rcsb_repository_holdings_current',
-                                                                           'ATTRIBUTE_NAME_LIST': ['update_id', 'entry_id', 'repository_content_types']},
-                                                                          {'CATEGORY_NAME': 'rcsb_repository_holdings_update',
-                                                                           'ATTRIBUTE_NAME_LIST': ['update_id', 'entry_id', 'repository_content_types']},
-                                                                          {'CATEGORY_NAME': 'rcsb_repository_holdings_removed',
-                                                                           'ATTRIBUTE_NAME_LIST': ['update_id', 'entry_id', 'repository_content_types', 'deposit_date',
-                                                                                                   'release_date', 'remove_date', 'title', 'details', 'audit_authors', 'id_codes_replaced_by']},
-                                                                          {'CATEGORY_NAME': 'rcsb_repository_holdings_unreleased',
-                                                                           'ATTRIBUTE_NAME_LIST': ['update_id', 'entry_id', 'status_code', 'deposit_date', 'deposit_date_coordinates',
-                                                                                                   'deposit_date_structure_factors', 'deposit_date_nmr_restraints', 'hold_date_coordinates',
-                                                                                                   'hold_date_structure_factors', 'hold_date_nmr_restraints', 'release_date', 'title',
-                                                                                                   'audit_authors', 'author_prerelease_sequence_status']},
-                                                                          {'CATEGORY_NAME': 'rcsb_repository_holdings_removed_audit_author',
-                                                                           'ATTRIBUTE_NAME_LIST': ['update_id', 'entry_id', 'ordinal_id', 'audit_author']},
-                                                                          {'CATEGORY_NAME': 'rcsb_repository_holdings_superseded',
-                                                                           'ATTRIBUTE_NAME_LIST': ['update_id', 'entry_id', 'id_codes_superseded']},
-                                                                          {'CATEGORY_NAME': 'rcsb_repository_holdings_transferred', 'ATTRIBUTE_NAME_LIST': ['update_id', 'entry_id',
-                                                                                                                                                            'status_code',
-                                                                                                                                                            'deposit_date',
-                                                                                                                                                            'release_date',
-                                                                                                                                                            'title',
-                                                                                                                                                            'audit_authors',
-                                                                                                                                                            'remote_accession_code',
-                                                                                                                                                            'remote_repository_name',
-                                                                                                                                                            'repository_content_types']},
-                                                                          {'CATEGORY_NAME': 'rcsb_repository_holdings_insilico_models', 'ATTRIBUTE_NAME_LIST': ['update_id', 'entry_id',
-                                                                                                                                                                'status_code',
-                                                                                                                                                                'deposit_date',
-                                                                                                                                                                'release_date',
-                                                                                                                                                                'title',
-                                                                                                                                                                'audit_authors',
-                                                                                                                                                                'remove_date',
-                                                                                                                                                                'id_codes_replaced_by']},
-                                                                          ],
-                       ('SEQUENCE_CLUSTER_CONTENT', 'entity_sequence_clusters'): [{'CATEGORY_NAME': 'rcsb_entity_sequence_cluster_list',
-                                                                                   'ATTRIBUTE_NAME_LIST': ['data_set_id', 'entry_id', 'entity_id', 'cluster_id', 'identity']},
-                                                                                  {'CATEGORY_NAME': 'rcsb_instance_sequence_cluster_list',
-                                                                                   'ATTRIBUTE_NAME_LIST': ['data_set_id', 'entry_id', 'instance_id', 'cluster_id', 'identity']}]
-                       }
-#
-#
-# _diffrn.pdbx_serial_crystal_experiment
-# _diffrn_detector.pdbx_frequency
-#
-#
-    _sliceParentItems = {('ENTITY', 'pdbx_core'): [{'CATEGORY_NAME': 'entity', 'ATTRIBUTE_NAME': 'id'}],
-                         ('ASSEMBLY', 'pdbx_core'): [{'CATEGORY_NAME': 'pdbx_struct_assembly', 'ATTRIBUTE_NAME': 'id'}]
-                         }
-    _sliceParentFilters = {('ENTITY', 'pdbx_core'): [{'CATEGORY_NAME': 'entity', 'ATTRIBUTE_NAME': 'type', 'VALUES': ['polymer', 'non-polymer', 'macrolide', 'branched']}]
-                           }
-
-    _sliceCardinalityCategoryExtras = {('ENTITY', 'pdbx_core'): ['rcsb_load_status', 'rcsb_entity_container_identifiers'],
-                                       ('ASSEMBLY', 'pdbx_core'): ['rcsb_load_status', 'rcsb_assembly_container_identifiers']
-                                       }
-    _sliceCategoryExtras = {('ENTITY', 'pdbx_core'): ['rcsb_load_status'], ('ASSEMBLY', 'pdbx_core'): ['rcsb_load_status', 'pdbx_struct_oper_list']}
 
     def __init__(self, **kwargs):
         """
@@ -244,6 +64,13 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         super(DictInfoHelper, self).__init__(**kwargs)
+        # ----
+        #
+        self.__cfgOb = kwargs.get('cfgOb', None)
+        sectionName = kwargs.get('config_section', 'dictionary_helper')
+        self.__cfgD = self.__cfgOb.exportConfig(sectionName=sectionName)
+        #
+        # ----
         self._dictSubset = kwargs.get('dictSubset', None)
         self._dictPath = kwargs.get("dictPath", None)
         #
@@ -254,7 +81,7 @@ class DictInfoHelper(DictInfoHelperBase):
         self.__attributeClasses = self.__getAttributeContentClasses()
 
     def getDelimiter(self, categoryName, attributeName, default=','):
-        for tD in DictInfoHelper._iterableDelimiters:
+        for tD in self.__cfgD['iterable_delimiters']:
             if tD['CATEGORY_NAME'] == categoryName and tD['ATTRIBUTE_NAME'] == attributeName:
                 return tD['DELIMITER']
         return default
@@ -290,7 +117,7 @@ class DictInfoHelper(DictInfoHelperBase):
     def __getCategoryContentClasses(self):
         classD = {}
         try:
-            for cTup, cDL in DictInfoHelper._contentClasses.items():
+            for cTup, cDL in self.__cfgD['content_classes'].items():
                 for cD in cDL:
                     if cD['CATEGORY_NAME'] not in classD:
                         classD[cD['CATEGORY_NAME']] = []
@@ -302,7 +129,7 @@ class DictInfoHelper(DictInfoHelperBase):
     def __getAttributeContentClasses(self):
         classD = {}
         try:
-            for cTup, cDL in DictInfoHelper._contentClasses.items():
+            for cTup, cDL in self.__cfgD['content_classes'].items():
                 for cD in cDL:
                     catName = cD['CATEGORY_NAME']
                     for atName in cD['ATTRIBUTE_NAME_LIST']:
@@ -315,7 +142,7 @@ class DictInfoHelper(DictInfoHelperBase):
 
     def __getItemTransformD(self):
         itD = {}
-        for f, dL in DictInfoHelper._itemTransformers.items():
+        for f, dL in self.__cfgD['item_transformers'].items():
             logger.debug("Verify transform method %r" % f)
             if self.__dti.isImplemented(f):
                 for d in dL:
@@ -338,7 +165,7 @@ class DictInfoHelper(DictInfoHelperBase):
         """
         try:
             if self.__dti.isImplemented(transformName):
-                return DictInfoHelper._itemTransformers[transformName]
+                return self.__cfgD['item_transformers'][transformName]
         except Exception:
             return []
 
@@ -359,7 +186,7 @@ class DictInfoHelper(DictInfoHelperBase):
             return {}
 
     def getCardinalityCategoryExtras(self):
-        return DictInfoHelper._cardinalityCategoryExtras
+        return self.__cfgD['cardinality_category_extras']
 
     def getCardinalityKeyItem(self, dictSubset):
         """ Identify the parent item for the dictionary subset that can be used to
@@ -368,7 +195,7 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return DictInfoHelper._cardinalityParentItens[dictSubset]
+            return self.__cfgD['cardinality_parent_items'][dictSubset]
         except Exception:
             pass
         return {'CATEGORY_NAME': None, 'ATTRIBUTE_NAME': None}
@@ -377,7 +204,7 @@ class DictInfoHelper(DictInfoHelperBase):
         """
         """
         try:
-            return DictInfoHelper._typeCodeClasses[kind]
+            return self.__cfgD['type_code_classes'][kind]
         except Exception as e:
             logger.exception("Failing for kind %r with %s" % (kind, str(e)))
             pass
@@ -385,7 +212,7 @@ class DictInfoHelper(DictInfoHelperBase):
 
     def getQueryStrings(self, kind):
         try:
-            return DictInfoHelper._queryStringSelectors[kind]
+            return self.__cfgD['query_string_selectors'][kind]
         except Exception:
             pass
 
@@ -396,7 +223,7 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return DictInfoHelper._selectionFilters[(kind, dictSubset)]
+            return self.__cfgD['selection_filters'][(kind, dictSubset)]
         except Exception:
             pass
         return []
@@ -406,7 +233,7 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return {kind: v for (kind, dS), v in DictInfoHelper._selectionFilters.items() if dS == dictSubset}
+            return {kind: v for (kind, dS), v in self.__cfgD['selection_filters'].items() if dS == dictSubset}
         except Exception:
             pass
         return {}
@@ -416,7 +243,7 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return DictInfoHelper._specialContent[(kind, dictSubset)]
+            return self.__cfgD['special_content'][(kind, dictSubset)]
         except Exception:
             pass
         return []
@@ -426,7 +253,7 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return {kind: v for (kind, dS), v in DictInfoHelper._specialContent.items() if dS == dictSubset}
+            return {kind: v for (kind, dS), v in self.__cfgD['special_content'].items() if dS == dictSubset}
         except Exception:
             pass
         return {}
@@ -436,7 +263,7 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return DictInfoHelper._sliceParentItems[(kind, dictSubset)]
+            return self.__cfgD['slice_parent_items'][(kind, dictSubset)]
         except Exception:
             pass
         return []
@@ -446,7 +273,7 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return {kind: v for (kind, dS), v in DictInfoHelper._sliceParentItems.items() if dS == dictSubset}
+            return {kind: v for (kind, dS), v in self.__cfgD['slice_parent_items'].items() if dS == dictSubset}
         except Exception:
             pass
         return {}
@@ -456,7 +283,7 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return DictInfoHelper._sliceParentFilters[(kind, dictSubset)]
+            return self.__cfgD['slice_parent_filters'][(kind, dictSubset)]
         except Exception:
             pass
         return []
@@ -466,19 +293,19 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return {kind: v for (kind, dS), v in DictInfoHelper._sliceParentFilters.items() if dS == dictSubset}
+            return {kind: v for (kind, dS), v in self.__cfgD['slice_parent_filters'].items() if dS == dictSubset}
         except Exception:
             pass
         return {}
 
     def getSliceCardinalityCategoryExtras(self, dictSubset, kind):
         try:
-            return DictInfoHelper._sliceCardinalityCategoryExtras[(kind, dictSubset)]
+            return self.__cfgD['slice_cardinality_category_extras'][(kind, dictSubset)]
         except Exception:
             return []
 
     def getSliceCategoryExtras(self, dictSubset, kind):
         try:
-            return DictInfoHelper._sliceCategoryExtras[(kind, dictSubset)]
+            return self.__cfgD['slice_category_extras'][(kind, dictSubset)]
         except Exception:
             return []

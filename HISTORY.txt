@@ -28,8 +28,12 @@
                      add subcategory aggregation feature; and refactor api for helper methods.
 12-Oct-2018    V0.24 Add rcsb_repository_holdings_transferred and  rcsb_repository_holdings_insilico_models,
                      make datetime type mappings the same as date, check for empty required properties for
-                     subcategory aggregates,
-
+                     subcategory aggregates
+28-Oct-2018    V0.25 Move local helper method configuration to common YAML configuration, restore some missing
+                     modules for cockroach and crate server types,  add category rcsb_accession_info in core_entry,
+                     make audit_authors an iterable type in categories rcsb_repository_holdings_transferred,
+                     rcsb_repository_holdings_insilico_models, and rcsb_repository_holdings_unreleasedmake audit_authors,
+                     verify data types in sequence cluster collections.
 
 
 

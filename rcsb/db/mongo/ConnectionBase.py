@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 if platform.system() == "Linux":
     try:
         pass
-    except Exception as e:
+    except Exception:
         logger.exception("Loading Linux feature failing")
 
 
