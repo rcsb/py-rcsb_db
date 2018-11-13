@@ -49,6 +49,7 @@ setup(
         'console_scripts': [
             'exdb_repo_load_cli=rcsb.db.scripts.RepoLoadExec:main',
             'repo_scan_cli=rcsb.db.scripts.RepoScanExec:main',
+            'schema_update_cli=rcsb.db.scripts.SchemaUpdateExec:main',
             'etl_exec_cli=rcsb.db.scripts.ETLExec:main',
         ]
     },

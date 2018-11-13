@@ -5,7 +5,7 @@
 # Version: 0.001 Initial version
 #
 # Updates:
-#
+# 12-Nov-2018 jdw Run block methods after category and attribute methods.
 #
 ##
 """
@@ -97,7 +97,7 @@ class DictMethodRunner(object):
             theMeth = getattr(self.__methodHelper, methodName, None)
             ok = theMeth(dataContainer, catName)
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failed invoking category %s method %r with %s" % (catName, methodName, str(e)))
         return ok
 
     def __invokeDatablockMethod(self, dataContainer, blockName, methodName):
@@ -108,17 +108,12 @@ class DictMethodRunner(object):
             theMeth = getattr(self.__methodHelper, methodName, None)
             ok = theMeth(dataContainer, blockName)
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failed invoking block %s method %r with %s" % (blockName, methodName, str(e)))
         return ok
 
     def apply(self, dataContainer):
         """ Apply datablock, category and attribute dictionary methods on the input data container.
         """
-        mTupL = self.__getDatablockMethods(dataContainer)
-        logger.debug("Datablock methods %r" % mTupL)
-        for blockName, _, methodName, _ in mTupL:
-            self.__invokeDatablockMethod(dataContainer, blockName, methodName)
-
         mTupL = self.__getCategoryMethods(dataContainer)
         logger.debug("Category methods %r" % mTupL)
         for catName, _, methodName, _ in mTupL:
@@ -128,6 +123,11 @@ class DictMethodRunner(object):
         logger.debug("Attribute methods %r" % mTupL)
         for catName, atName, methodName, _ in mTupL:
             self.__invokeAttributeMethod(dataContainer, catName, atName, methodName)
+
+        mTupL = self.__getDatablockMethods(dataContainer)
+        logger.debug("Datablock methods %r" % mTupL)
+        for blockName, _, methodName, _ in mTupL:
+            self.__invokeDatablockMethod(dataContainer, blockName, methodName)
 
         return True
 
@@ -146,7 +146,7 @@ class DictMethodRunner(object):
             logger.exception("Failing dictName %s with %s" % (dictName, str(e)))
         return mL
 
-    def __getCategoryMethods(self, contatiner, methodCodes=["calculate_with_helper"]):
+    def __getCategoryMethods(self, container, methodCodes=["calculate_with_helper"]):
         mL = []
         try:
             for (catName, _), mDL in self.__methodD.items():

@@ -58,7 +58,7 @@ class SchemaDefAccessConfigTests(unittest.TestCase):
                                                             endTime - self.__startTime))
 
     def testAccess(self):
-        schemaNames = ['pdbx', 'pdbx_core', 'chem_comp', 'bird', 'bird_family', 'bird_chem_comp', 'repository_holdings', 'entity_sequence_clusters']
+        schemaNames = ['pdbx', 'pdbx_core', 'chem_comp', 'chem_comp_core', 'bird', 'bird_family', 'bird_chem_comp', 'bird_chem_comp_core', 'repository_holdings', 'entity_sequence_clusters']
         applicationNames = ['ANY', 'SQL']
         for schemaName in schemaNames:
             for applicationName in applicationNames:

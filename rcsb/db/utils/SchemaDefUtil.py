@@ -11,6 +11,7 @@
 #  14-Aug-2018 jdw generalize the primaryIndex to the list of attributes returned by getDocumentKeyAttributeNames()
 #  21-Aug-2018 jdw use getHelper() from the configuration class.
 #   7-Sep-2018 jdw add method to return a stored JSON schema getJsonSchema()
+#  11-Nov-2018 jdw add support for chem_comp_core and bird_chem_comp_core schemas
 ##
 """
  A collection of schema and repo path convenience methods.
@@ -63,9 +64,9 @@ class SchemaDefUtil(object):
                 outputPathList = inputPathList if inputPathList else rpU.getBirdPathList()
             elif contentType == "bird_family":
                 outputPathList = inputPathList if inputPathList else rpU.getBirdFamilyPathList()
-            elif contentType == 'chem_comp':
+            elif contentType in ['chem_comp', 'chem_comp_core']:
                 outputPathList = inputPathList if inputPathList else rpU.getChemCompPathList()
-            elif contentType == 'bird_chem_comp':
+            elif contentType in ['bird_chem_comp', 'bird_chem_comp_core']:
                 outputPathList = inputPathList if inputPathList else rpU.getBirdChemCompPathList()
             elif contentType in ['pdbx', 'pdbx_core']:
                 outputPathList = inputPathList if inputPathList else rpU.getEntryPathList()

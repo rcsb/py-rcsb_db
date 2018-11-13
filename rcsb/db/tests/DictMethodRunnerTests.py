@@ -4,7 +4,7 @@
 # Version: 0.001
 #
 # Update:
-#
+#    12-Nov-2018 jdw add chemical component and bird chemical component tests
 ##
 """
 Tests for applying dictionary methods defined as references to helper plugin methods .
@@ -55,14 +55,17 @@ class DictMethodRunnerTests(unittest.TestCase):
         #
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums"
-        self.__chemCompMockLen = 4
-        self.__birdMockLen = 4
-        self.__pdbxMockLen = 8
+        self.__chemCompMockLen = 5
+        self.__birdMockLen = 3
+        self.__pdbxMockLen = 14
         self.__verbose = True
         #
         self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
         self.__pathRcsbDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'rcsb_mmcif_ext_v1.dic')
         #
+        self.__drugBankMappingFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'DrugBank', 'drugbank_pdb_mapping.json')
+        self.__csdModelMappingFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'chem_comp_models', 'ccdc_pdb_mapping.json')
+
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
@@ -104,6 +107,68 @@ class DictMethodRunnerTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
+    def testProcessChemCompDocumentsFromContainers(self):
+        """Test case -  create loadable PDBx data from files
+        """
+        try:
+            dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath, csdModelMappingFilePath=self.__csdModelMappingFile)
+            dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
+            #
+            inputPathList = self.__schU.getPathList(contentType='chem_comp_core')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='chem_comp_core')
+            #
+            dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
+            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
+            containerList = sdp.getContainerList(inputPathList)
+            #
+            #
+            logger.debug("Length of path list %d\n" % len(inputPathList))
+            self.assertGreaterEqual(len(inputPathList), self.__chemCompMockLen)
+
+            for container in containerList:
+                cName = container.getName()
+                logger.debug("Processing container %s" % cName)
+                #
+                dmh.apply(container)
+                #
+                savePath = os.path.join(HERE, "test-output", cName + '-with-method.cif')
+                self.__mU.doExport(savePath, [container], format="mmcif")
+
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
+    def testProcessBirdChemCompDocumentsFromContainers(self):
+        """Test case -  create loadable PDBx data from files
+        """
+        try:
+            dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath, csdModelMappingFilePath=self.__csdModelMappingFile)
+            dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
+            #
+            inputPathList = self.__schU.getPathList(contentType='bird_chem_comp_core')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='bird_chem_comp_core')
+            #
+            dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
+            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
+            containerList = sdp.getContainerList(inputPathList)
+            #
+            #
+            logger.debug("Length of path list %d\n" % len(inputPathList))
+            self.assertGreaterEqual(len(inputPathList), self.__birdMockLen)
+
+            for container in containerList:
+                cName = container.getName()
+                logger.debug("Processing container %s" % cName)
+                #
+                dmh.apply(container)
+                #
+                savePath = os.path.join(HERE, "test-output", cName + '-with-method.cif')
+                self.__mU.doExport(savePath, [container], format="mmcif")
+
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
     def testMethodRunnerSetup(self):
         """ Test the setup methods for method runner class
 
@@ -119,9 +184,16 @@ class DictMethodRunnerTests(unittest.TestCase):
             self.fail()
 
 
-def DictMethodRunnerHelperSuite():
+def DictMethodRunnerHelperPdbxSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(DictMethodRunnerTests("testProcessPdbxDocumentsFromContainers"))
+    return suiteSelect
+
+
+def DictMethodRunnerHelperChemCompSuite():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(DictMethodRunnerTests("testProcessChemCompDocumentsFromContainers"))
+    suiteSelect.addTest(DictMethodRunnerTests("testProcessBirdChemCompDocumentsFromContainers"))
     return suiteSelect
 
 
@@ -138,6 +210,10 @@ if __name__ == '__main__':
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 
     if True:
-        mySuite = DictMethodRunnerHelperSuite()
+        mySuite = DictMethodRunnerHelperPdbxSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
     #
+
+    if True:
+        mySuite = DictMethodRunnerHelperChemCompSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)

@@ -64,12 +64,16 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         #
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums"
-        self.__chemCompMockLen = 4
+        self.__chemCompMockLen = 5
         self.__birdMockLen = 4
         self.__pdbxMockLen = 8
         self.__verbose = True
         self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
         self.__pathRcsbDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'rcsb_mmcif_ext_v1.dic')
+        #
+        #
+        self.__drugBankMappingFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'DrugBank', 'drugbank_pdb_mapping.json')
+        self.__csdModelMappingFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'chem_comp_models', 'ccdc_pdb_mapping.json')
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
@@ -100,7 +104,9 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                            'bird': ['bird_v5_0_2'],
                            'bird_family': ['family_v5_0_2'],
                            'chem_comp': ['chem_comp_v5_0_2'],
-                           'bird_chem_comp': ['bird_chem_comp_v5_0_2']}
+                           'chem_comp_core': ['chem_comp_core_v5_0_2'],
+                           'bird_chem_comp': ['bird_chem_comp_v5_0_2'],
+                           'bird_chem_comp_core': ['bird_chem_comp_core_v5_0_2']}
         #
         eCount = 0
         for schemaName in schemaNames:
@@ -150,7 +156,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             inputPathList = self.__schU.getPathList(contentType=schemaName)
             sd, _, _, _ = self.__schU.getSchemaInfo(contentType=schemaName)
             #
-            dH = DictMethodRunnerHelper()
+            dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath, csdModelMappingFilePath=self.__csdModelMappingFile)
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)

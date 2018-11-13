@@ -60,7 +60,9 @@ def main():
     parser.add_argument("--replace", default=False, action='store_true', help="Load with replacement in an existing table/collection (default)")
     #
     parser.add_argument("--load_chem_comp_ref", default=False, action='store_true', help="Load Chemical Component reference definitions (public subset)")
+    parser.add_argument("--load_chem_comp_core_ref", default=False, action='store_true', help="Load Chemical Component Core reference definitions (public subset)")
     parser.add_argument("--load_bird_chem_comp_ref", default=False, action='store_true', help="Load Bird Chemical Component reference definitions (public subset)")
+    parser.add_argument("--load_bird_chem_comp_core_ref", default=False, action='store_true', help="Load Bird Chemical Component Core reference definitions (public subset)")
     parser.add_argument("--load_bird_ref", default=False, action='store_true', help="Load Bird reference definitions (public subset)")
     parser.add_argument("--load_bird_family_ref", default=False, action='store_true', help="Load Bird Family reference definitions (public subset)")
     parser.add_argument("--load_entry_data", default=False, action='store_true', help="Load PDBx entry data (current released subset)")
@@ -165,8 +167,20 @@ def main():
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
+        if args.load_chem_comp_core_ref:
+            ok = mw.load('chem_comp_core', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
+                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+
         if args.load_bird_chem_comp_ref:
             ok = mw.load('bird_chem_comp', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
+                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+
+        if args.load_bird_chem_comp_core_ref:
+            ok = mw.load('bird_chem_comp_core', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)

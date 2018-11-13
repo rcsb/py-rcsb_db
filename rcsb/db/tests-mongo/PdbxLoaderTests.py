@@ -11,6 +11,7 @@
 #    4-Apr-2018 jdw  Add size pruning tests
 #   25-Jul-2018 jdw  Add large test case to test failure and salvage scenarios
 #   10-Sep-2018 jdw  Update assert conditions for tests
+#   11-Nov-2018 jdw  Add chem_comp_core
 #
 ##
 """
@@ -62,7 +63,7 @@ class PdbxLoaderTests(unittest.TestCase):
         self.__readBackCheck = True
         self.__numProc = 2
         self.__chunkSize = 10
-        self.__fileLimit = 15
+        self.__fileLimit = 16
         self.__documentStyle = 'rowwise_by_name_with_cardinality'
         #
         self.__startTime = time.time()
@@ -75,13 +76,13 @@ class PdbxLoaderTests(unittest.TestCase):
                                                               time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                               endTime - self.__startTime))
 
-    def testLoadChemCompReference(self):
-        """ Test case -  Load chemical component reference data
+    def testLoadChemCompCoreReference(self):
+        """ Test case -  Load chemical component core reference data
         """
         try:
             mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
-            ok = mw.load('chem_comp', loadType='full', inputPathList=None, styleType=self.__documentStyle,
+            ok = mw.load('chem_comp_core', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
@@ -90,13 +91,13 @@ class PdbxLoaderTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-    def testLoadBirdChemCompReference(self):
+    def testLoadBirdChemCompCoreReference(self):
         """ Test case -  Load Bird chemical component reference data
         """
         try:
             mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
-            ok = mw.load('bird_chem_comp', loadType='full', inputPathList=None, styleType=self.__documentStyle,
+            ok = mw.load('bird_chem_comp_core', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
@@ -135,16 +136,16 @@ class PdbxLoaderTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-    def testReLoadChemCompReference(self):
+    def testReLoadChemCompCoreReference(self):
         """ Test case -  Load and reload chemical component reference data
         """
         try:
             mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
-            ok = mw.load('chem_comp', loadType='full', inputPathList=None, styleType=self.__documentStyle,
+            ok = mw.load('chem_comp_core', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
-            ok = mw.load('chem_comp', loadType='replace', inputPathList=None, styleType=self.__documentStyle,
+            ok = mw.load('chem_comp_core', loadType='replace', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
@@ -234,8 +235,8 @@ class PdbxLoaderTests(unittest.TestCase):
 
 def mongoLoadSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(PdbxLoaderTests("testLoadChemCompReference"))
-    suiteSelect.addTest(PdbxLoaderTests("testLoadBirdChemCompReference"))
+    suiteSelect.addTest(PdbxLoaderTests("testLoadChemCompCoreReference"))
+    suiteSelect.addTest(PdbxLoaderTests("testLoadBirdChemCompCoreReference"))
     suiteSelect.addTest(PdbxLoaderTests("testLoadBirdReference"))
     suiteSelect.addTest(PdbxLoaderTests("testLoadBirdFamilyReference"))
     return suiteSelect
@@ -255,7 +256,7 @@ def mongoLoadPdbxLimitSizeSuite():
 
 def mongoReLoadSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(PdbxLoaderTests("testReLoadChemCompReference"))
+    suiteSelect.addTest(PdbxLoaderTests("testReLoadChemCompCoreReference"))
     suiteSelect.addTest(PdbxLoaderTests("testReLoadPdbxEntryData"))
     return suiteSelect
 

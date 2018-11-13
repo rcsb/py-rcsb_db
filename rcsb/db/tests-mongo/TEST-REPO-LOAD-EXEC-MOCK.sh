@@ -4,6 +4,7 @@
 #
 # Example mock repository load (MongoDb)
 exdb_repo_load_cli  --mock --full  --load_chem_comp_ref       --working_path ./test-output  --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info --fail_file_list_path ./test-output/failed-cc-path-list.txt --read_back_check >& ./test-output/LOGCHEMCOMPFULL
+exdb_repo_load_cli  --mock --full  --load_chem_comp_core_ref  --working_path ./test-output  --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info --fail_file_list_path ./test-output/failed-cc-core-path-list.txt --read_back_check >& ./test-output/LOGCHEMCOMPCOREFULL
 exdb_repo_load_cli  --mock --full  --load_bird_chem_comp_ref  --working_path ./test-output  --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info --fail_file_list_path ./test-output/failed-bird-cc-path-list.txt --read_back_check >& ./test-output/LOGBIRDCHEMCOMPFULL
 exdb_repo_load_cli  --mock --full  --load_bird_ref            --working_path ./test-output  --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info --fail_file_list_path ./test-output/failed-bird-path-list.txt --read_back_check >& ./test-output/LOGBIRDFULL
 exdb_repo_load_cli  --mock --full  --load_bird_family_ref     --working_path ./test-output  --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info --fail_file_list_path ./test-output/failed-family-path-list.txt --read_back_check >& ./test-output/LOGBIRDFAMILY
