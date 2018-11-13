@@ -32,8 +32,15 @@
 28-Oct-2018    V0.25 Move local helper method configuration to common YAML configuration, restore some missing
                      modules for cockroach and crate server types,  add category rcsb_accession_info in core_entry,
                      make audit_authors an iterable type in categories rcsb_repository_holdings_transferred,
-                     rcsb_repository_holdings_insilico_models, and rcsb_repository_holdings_unreleasedmake audit_authors,
+                     rcsb_repository_holdings_insilico_models, and rcsb_repository_holdings_unreleased,
                      verify data types in sequence cluster collections.
+13-Nov-2018    V0.26 Add chemical component and bird chemical compoment core collections with convenience
+               categories rcsb_chem_comp_info, rcsb_chem_comp_synonyms, rcsb_chem_comp_descriptor,
+               and rcsb_chem_comp_target. Add convenience category rcsb_entry_info in pdbx_core core_entry
+               collection.  Include correspondence details for DrugBank and CCDC/CSD.
+               Add dictionary methods to filter core entry objects by experiment type to
+               remove largely vacuous categories.  Add new CLI entry point for schema generation.
+
 
 
 

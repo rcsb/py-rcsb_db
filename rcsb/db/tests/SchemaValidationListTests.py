@@ -63,7 +63,7 @@ class SchemaValidationListTests(unittest.TestCase):
         #
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums"
-        self.__chemCompMockLen = 4
+        self.__chemCompMockLen = 5
         self.__birdMockLen = 4
         self.__pdbxMockLen = 8
         self.__verbose = True

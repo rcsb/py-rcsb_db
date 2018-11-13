@@ -5,7 +5,8 @@
 # Version: 0.001 Initial version
 #
 # Updates:
-#     24-July-2018  jdw Make the name conversion method convention specific.
+#     24-Jul-2018  jdw Make the name conversion method convention specific.
+#      4-Nov-2018  jdw add support for excluded attributes
 ##
 """
 Inject additional semantic information into a schema definition applicable to all implementation types.
@@ -87,6 +88,13 @@ class SchemaDefHelper(SchemaDefHelperBase):
         except Exception as e:
             logger.debug("Schema definition %s failing with %s" % (schemaName, str(e)))
         return includeL
+
+    def getExcludedAttributes(self, schemaName):
+        atExcludeD = {}
+        for sn, dL in self.__cfgD['exclude_attributes'].items():
+            for d in dL:
+                atExcludeD[(d['CATEGORY_NAME'], d['ATTRIBUTE_NAME'])] = sn
+        return atExcludeD
 
     def getIncluded(self, schemaName):
         '''  For input schema definition, return the list of included schema identifiers.

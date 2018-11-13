@@ -187,6 +187,7 @@ class SchemaDefBuild(object):
         #
         includeList = self.__schemaDefHelper.getIncluded(schemaName) if self.__schemaDefHelper else []
         excludeList = self.__schemaDefHelper.getExcluded(schemaName) if self.__schemaDefHelper else []
+        excludeAttributesD = self.__schemaDefHelper.getExcludedAttributes(schemaName) if self.__schemaDefHelper else {}
         #
         logger.debug("Schema include list length %d" % len(includeList))
         logger.debug("Schema exclude list length %d" % len(excludeList))
@@ -205,7 +206,8 @@ class SchemaDefBuild(object):
         logger.debug("Dictionary category length %d" % len(dictSchema))
         #
         rD = {}
-        for catName, atNameList in dictSchema.items():
+        for catName, fullAtNameList in dictSchema.items():
+            atNameList = [at for at in fullAtNameList if (catName, at) not in excludeAttributesD]
             cfD = self.__dictInfo.getCategoryFeatures(catName)
             # logger.debug("catName %s contentClasses %r cfD %r" % (catName, contentClasses, cfD))
 
@@ -476,6 +478,7 @@ class SchemaDefBuild(object):
         #
         includeList = schemaDefHelper.getIncluded(schemaName) if self.__schemaDefHelper else []
         excludeList = schemaDefHelper.getExcluded(schemaName) if self.__schemaDefHelper else []
+        excludeAttributesD = self.__schemaDefHelper.getExcludedAttributes(schemaName) if self.__schemaDefHelper else {}
         #
         #      Supplied by the documentDefHelp for the collection (SchemaIds)
         #
@@ -501,7 +504,8 @@ class SchemaDefBuild(object):
         #
         schemaPropD = {}
         mandatoryCategoryL = []
-        for catName, atNameList in dictSchema.items():
+        for catName, fullAtNameList in dictSchema.items():
+            atNameList = [at for at in fullAtNameList if (catName, at) not in excludeAttributesD]
             cfD = self.__dictInfo.getCategoryFeatures(catName)
             # logger.debug("catName %s contentClasses %r cfD %r" % (catName, contentClasses, cfD))
 

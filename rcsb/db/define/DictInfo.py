@@ -86,7 +86,7 @@ class DictInfo(object):
         if dictHelper and dictSubset:
             cardD = dictHelper.getCardinalityKeyItem(dictSubset)
             logger.debug("Cardinality attribute %r" % cardD.items())
-            # unitCardinalityList = self.__getUnitCardinalityCategories(cardD['CATEGORY_NAME'], cardD['ATTRIBUTE_NAME'])
+            #
             unitCardinalityList = self.__getUnitCardinalityCategories([cardD])
             unitCardinalityList.extend(dictHelper.getCardinalityCategoryExtras())
             logger.debug("Cardinality categories %r" % unitCardinalityList)

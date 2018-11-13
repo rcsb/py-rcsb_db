@@ -63,6 +63,82 @@ managing a [Python virtual environments](https://gist.github.com/Geoyi/f55ed54d2
 
 ### Command Line Interfaces
 
+A convenience CLI `schema_update_cli` is provided for generating operational schema from
+PDBx/mmCIF dictionary metadata.  Schema are encoded for the PineLands API (rcsb), and
+for the document schema encoded in JSON and BSON formats.  The latter schema can be used to
+validate the loadable document objects produced for the collections served by MongoDB.
+
+```bash
+
+usage: schema_update_cli  [-h] [--update_chem_comp_ref]
+                           [--update_chem_comp_core_ref]
+                           [--update_bird_chem_comp_ref]
+                           [--update_bird_chem_comp_core_ref]
+                           [--update_bird_ref] [--update_bird_family_ref]
+                           [--update_pdbx] [--update_pdbx_core]
+                           [--update_repository_holdings]
+                           [--update_entity_sequence_clusters]
+                           [--update_data_exchange]
+                           [--config_path CONFIG_PATH]
+                           [--config_name CONFIG_NAME]
+                           [--schema_dirpath SCHEMA_DIRPATH]
+                           [--schema_format SCHEMA_FORMAT]
+                           [--schema_level SCHEMA_LEVEL] [--debug] [--mock]
+                           [--working_path WORKING_PATH]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --update_chem_comp_ref
+                        Update schema for Chemical Component reference
+                        definitions
+  --update_chem_comp_core_ref
+                        Update core schema for Chemical Component reference
+                        definitions
+  --update_bird_chem_comp_ref
+                        Update schema for Bird Chemical Component reference
+                        definitions
+  --update_bird_chem_comp_core_ref
+                        Update core schema for Bird Chemical Component
+                        reference definitions
+  --update_bird_ref     Update schema for Bird reference definitions
+  --update_bird_family_ref
+                        Update schema for Bird Family reference definitions
+  --update_pdbx         Update schema for PDBx entry data
+  --update_pdbx_core    Update schema for PDBx core entry/entity data
+  --update_repository_holdings
+                        Update schema for repository holdings
+  --update_entity_sequence_clusters
+                        Update schema for entity sequence clusters
+  --update_data_exchange
+                        Update schema for data exchange status
+  --config_path CONFIG_PATH
+                        Path to configuration options file
+  --config_name CONFIG_NAME
+                        Configuration section name
+  --schema_dirpath SCHEMA_DIRPATH
+                        Output schema directory path
+  --schema_format SCHEMA_FORMAT
+                        Schema encoding (rcsb|json|bson)
+  --schema_level SCHEMA_LEVEL
+                        Schema validation level (full|min default=None)
+  --debug               Turn on verbose logging
+  --mock                Use MOCK repository configuration for dependencies and
+                        testing
+
+```
+
+For example, the following command will generate the JSON schema for the collections in the
+pdbx_core schema.
+
+```bash
+schema_update_cli  --mock --schema_format json \
+                   --schema_level full  \
+                   --update_pdbx_core   \
+                   --schema_dirpath . \
+                   --config_path ./rcsb/mock-data/config/dbload-setup-example.yml \
+                   --config_name site_info
+```
+#
 A convenience CLI `exdb_repo_load_cli` is provided to support loading PDB repositories
 containing entry and chemical reference data content types in the form of document collections
 compatible with MongoDB.
@@ -303,6 +379,9 @@ bird, bird_family,.. ).
 # File: dbload-setup-example.yml
 # Date: 26-Oct-2018 jdw
 #
+#  4-Nov-2018 jdw add schemadef_helper/excluded_attributes
+# 11-Nov-2018 jdw add DRUGBANK_MAPPING_LOCATOR, and CCDC_MAPPING_LOCATOR
+#
 # Master Pinelands configuration file example
 ---
 DEFAULT: {}
@@ -322,6 +401,8 @@ site_info:
     SCHEMADEF_HELPER_MODULE: rcsb.db.helpers.SchemaDefHelper
     DOCUMENT_HELPER_MODULE: rcsb.db.helpers.SchemaDocumentHelper
     DICT_METHOD_HELPER_MODULE: rcsb.db.helpers.DictMethodRunnerHelper
+    DRUGBANK_MAPPING_LOCATOR: DrugBank/drugbank_pdb_mapping.json
+    CCDC_MAPPING_LOCATOR: chem_comp_models/ccdc_pdb_mapping.json
 site_server_info:
     MONGO_DB_HOST: localhost
     MONGO_DB_PORT: '27017'

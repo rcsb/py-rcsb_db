@@ -21,6 +21,7 @@
 #                      in __createCollection(self, dbName, collectionName, indexAttributeNames=None) make indexAttributeNames a list
 #     10-Sep-2018 jdw  Adjust error handling and reporting across multiple collections
 #     24-Oct-2018 jdw  update for new configuration organization
+#     11-Nov-2018 jdw  add DrugBank and CCDC mapping path details.
 #
 ##
 """
@@ -55,7 +56,8 @@ logger = logging.getLogger(__name__)
 
 class PdbxLoader(object):
 
-    def __init__(self, cfgOb, cfgSectionName='site_info', resourceName="MONGO_DB", numProc=4, chunkSize=15, fileLimit=None, verbose=False, readBackCheck=False, maxStepLength=2000, workPath=None):
+    def __init__(self, cfgOb, cfgSectionName='site_info', resourceName="MONGO_DB", numProc=4, chunkSize=15,
+                 fileLimit=None, verbose=False, readBackCheck=False, maxStepLength=2000, workPath=None):
         """  Worker methods for loading primary data content following mapping conventions in external schema definitions.
 
         Args:
@@ -94,7 +96,13 @@ class PdbxLoader(object):
         pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=sectionName)
         pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=sectionName)
         #
-        dH = self.__cfgOb.getHelper('DICT_METHOD_HELPER_MODULE', sectionName=sectionName)
+        pathDrugBankMappingFile = self.__cfgOb.getPath('DRUGBANK_MAPPING_LOCATOR', sectionName=sectionName)
+        pathCsdModelMappingFile = self.__cfgOb.getPath('CCDC_MAPPING_LOCATOR', sectionName=sectionName)
+        #
+        dH = self.__cfgOb.getHelper('DICT_METHOD_HELPER_MODULE', sectionName=sectionName,
+                                    drugBankMappingFilePath=pathDrugBankMappingFile,
+                                    workPath=self.__workPath,
+                                    csdModelMappingFilePath=pathCsdModelMappingFile)
         self.__dmh = DictMethodRunner(dictLocators=[pathPdbxDictionaryFile, pathRcsbDictionaryFile], methodHelper=dH)
 
     def load(self, schemaName, collectionLoadList=None, loadType='full', inputPathList=None, styleType='rowwise_by_name', dataSelectors=None,

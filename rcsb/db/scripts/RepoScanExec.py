@@ -64,7 +64,9 @@ def main():
     #
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--scan_chem_comp_ref", default=False, action='store_true', help="Scan Chemical Component reference definitions (public subset)")
+    group.add_argument("--scan_chem_comp_core_ref", default=False, action='store_true', help="Scan Chemical Component Core reference definitions (public subset)")
     group.add_argument("--scan_bird_chem_comp_ref", default=False, action='store_true', help="Scan Bird Chemical Component reference definitions (public subset)")
+    group.add_argument("--scan_bird_chem_comp_core_ref", default=False, action='store_true', help="Scan Bird Chemical Component Core reference definitions (public subset)")
     group.add_argument("--scan_bird_ref", default=False, action='store_true', help="Scan Bird reference definitions (public subset)")
     group.add_argument("--scan_bird_family_ref", default=False, action='store_true', help="Scan Bird Family reference definitions (public subset)")
     group.add_argument("--scan_entry_data", default=False, action='store_true', help="Scan PDB entry data (current released subset)")
@@ -144,8 +146,14 @@ def main():
     if args.scan_chem_comp_ref:
         contentType = 'chem_comp'
 
+    elif args.scan_chem_comp_core_ref:
+        contentType = 'chem_comp_core'
+
     elif args.scan_bird_chem_comp_ref:
         contentType = 'bird_chem_comp'
+
+    elif args.scan_bird_chem_comp_core_ref:
+        contentType = 'bird_chem_comp_core'
 
     elif args.scan_bird_ref:
         contentType = 'bird'

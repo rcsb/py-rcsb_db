@@ -58,11 +58,11 @@ class RepoPathUtil(object):
                 outputPathList = inputPathList if inputPathList else self.getBirdPathList()
             elif contentType == "bird_family":
                 outputPathList = inputPathList if inputPathList else self.getBirdFamilyPathList()
-            elif contentType == 'chem_comp':
+            elif contentType in ['chem_comp', 'chem_comp_core']:
                 outputPathList = inputPathList if inputPathList else self.getChemCompPathList()
-            elif contentType == 'bird_chem_comp':
+            elif contentType in ['bird_chem_comp', 'bird_chem_comp_core']:
                 outputPathList = inputPathList if inputPathList else self.getBirdChemCompPathList()
-            elif contentType == 'pdbx':
+            elif contentType in ['pdbx', 'pdbx_core']:
                 outputPathList = inputPathList if inputPathList else self.getEntryPathList()
             elif contentType in ['pdb_distro', 'da_internal', 'status_history']:
                 outputPathList = inputPathList if inputPathList else []

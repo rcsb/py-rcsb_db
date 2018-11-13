@@ -23,7 +23,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class SliceValues:
+class SliceValues(object):
     """Iterator class for parent slice values.
     """
 

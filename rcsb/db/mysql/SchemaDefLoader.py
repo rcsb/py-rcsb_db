@@ -22,6 +22,7 @@
 # 30-Mar-2018 jdw more refactoring -  changing expectations on explicit data types -
 #  2-Jul-2018 jdw fix working path
 # 20-Aug-2019 jdw add dynamic method invocation  -
+# 11-Nov-2018 jdw  add DrugBank and CCDC mapping path details.
 ##
 """
 Generic mapper of PDBx/mmCIF instance data to SQL loadable data files based on external
@@ -80,7 +81,15 @@ class SchemaDefLoader(object):
         sectionName = cfgSectionName
         pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=sectionName)
         pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=sectionName)
-        dH = self.__cfgOb.getHelper('DICT_METHOD_HELPER_MODULE', sectionName=sectionName)
+#
+        pathDrugBankMappingFile = self.__cfgOb.getPath('DRUGBANK_MAPPING_LOCATOR', sectionName=sectionName)
+        pathCsdModelMappingFile = self.__cfgOb.getPath('CCDC_MAPPING_LOCATOR', sectionName=sectionName)
+        #
+        dH = self.__cfgOb.getHelper('DICT_METHOD_HELPER_MODULE', sectionName=sectionName,
+                                    drugBankMappingFilePath=pathDrugBankMappingFile,
+                                    workPath=self.__workingPath,
+                                    csdModelMappingFilePath=pathCsdModelMappingFile)
+
         self.__dmh = DictMethodRunner(dictLocators=[pathPdbxDictionaryFile, pathRcsbDictionaryFile], methodHelper=dH)
 
     def setWarning(self, action):
