@@ -10,6 +10,8 @@
 #        7-Aug-2018 jdw  add methods to return slice parent details
 #       14-Aug-2018 jdw  generalize getDocumentKeyAttributeNames() to return list of attributes ...
 #        4-Sep-2018 jdw  add methods to return attribute enumerations
+#       18-Nov-2018 jdw  extend the content of COLLECTION_DOCUMENT_ATTRIBUTE_NAMES to _INFO and add method
+#                        getDocumentKeyAttributeInfo()
 ##
 """
 Base classes for schema defintions.
@@ -137,7 +139,17 @@ class SchemaDefAccessBase(object):
         """
         r = []
         try:
-            return self.__documentDefDict['COLLECTION_DOCUMENT_ATTRIBUTE_NAMES'][collectionName]
+            return list(self.__documentDefDict['COLLECTION_DOCUMENT_ATTRIBUTE_NAMES'][collectionName])
+        except Exception as e:
+            logger.exception("Failing for collection %s with %r" % (collectionName, str(e)))
+        return r
+
+    def getPrivateDocumentAttributes(self, collectionName):
+        """ Return list of key document identifiers and document private document names.
+        """
+        r = []
+        try:
+            return [d for d in self.__documentDefDict['COLLECTION_DOCUMENT_PRIVATE_KEYS'][collectionName]]
         except Exception as e:
             logger.exception("Failing for collection %s with %r" % (collectionName, str(e)))
         return r

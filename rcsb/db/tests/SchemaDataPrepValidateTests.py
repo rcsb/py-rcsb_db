@@ -64,7 +64,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         #
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums"
-        self.__chemCompMockLen = 5
+        self.__chemCompMockLen = 8
         self.__birdMockLen = 4
         self.__pdbxMockLen = 8
         self.__verbose = True
@@ -98,7 +98,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.assertTrue(eCount <= 1)
 
     def __testValidateOpts(self, enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
-        schemaNames = ['pdbx', 'pdbx_core', 'chem_comp', 'bird', 'bird_family']
+        schemaNames = ['pdbx', 'pdbx_core', 'chem_comp', 'chem_comp_core', 'bird_chem_comp_core', 'bird', 'bird_family']
         collectionNames = {'pdbx': ['pdbx_v5_0_2', 'pdbx_ext_v5_0_2'],
                            'pdbx_core': ['pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2'],
                            'bird': ['bird_v5_0_2'],
@@ -114,7 +114,10 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                 cD = self.__testBuildJson(schemaName, collectionName, enforceOpts=enforceOpts)
                 dL, cnL = self.__testPrepDocumentsFromContainers(schemaName, collectionName, styleType="rowwise_by_name_with_cardinality")
                 # Raises exceptions for schema compliance.
-                Draft4Validator.check_schema(cD)
+                try:
+                    Draft4Validator.check_schema(cD)
+                except Exception as e:
+                    logger.error("%s %s schema validation fails with %s" % (schemaName, collectionName, str(e)))
                 #
                 v = Draft4Validator(cD, format_checker=FormatChecker())
                 for ii, d in enumerate(dL):
@@ -174,14 +177,16 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             sdp.setSchemaIdExcludeList(tableIdExcludeList)
             sdp.setSchemaIdIncludeList(tableIdIncludeList)
             #
-            tableDataDictList, containerNameList, rejectList = sdp.processDocuments(containerList, styleType=styleType,
-                                                                                    filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"],
-                                                                                    sliceFilter=sliceFilter)
+            docList, containerNameList, rejectList = sdp.processDocuments(containerList, styleType=styleType,
+                                                                          filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"],
+                                                                          sliceFilter=sliceFilter)
+
+            docList = sdp.addDocumentPrivateAttributes(docList, collectionName)
 
             fp = os.path.join(HERE, "test-output", "export-%s-%s-prep-rowwise-by-name-with-cardinality.json" % (schemaName, collectionName))
-            self.__mU.doExport(fp, tableDataDictList, format="json", indent=3)
+            self.__mU.doExport(fp, docList, format="json", indent=3)
             logger.debug("Exported %r" % fp)
-            return tableDataDictList, containerNameList
+            return docList, containerNameList
 
         except Exception as e:
             logger.exception("Failing with %s" % str(e))

@@ -13,6 +13,7 @@
 #                 addChemCompDescriptor()
 # 10-Nov-2018 jdw add addChemCompSynonyms(), addChemCompTargets(), filterBlockByMethod()
 # 12-Nov-2018 jdw add InChIKey matching in addChemCompRelated()
+# 15-Nov-2018 jdw add handling for antibody misrepresentation of multisource organisms
 #
 ##
 """
@@ -444,6 +445,53 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     atSL.append(atS)
         return atSL, atL
 
+    def __normalizeCsvToList(self, entryId, colL, separator=','):
+        """ Normalize a row containing some character delimited fields.
+
+            Expand list of uneven lists into unifornm list of lists.
+            Only two list lengths are logically support 1 and second
+            maximum length.
+
+            returns: list of expanded rows or the original input.
+
+        """
+        tcL = []
+        countL = []
+        for col in colL:
+            cL = [t.strip() for t in col.split(separator)]
+            tcL.append(cL)
+            countL.append(len(cL))
+        #
+        tL = list(set(countL))
+        if len(tL) == 1 and tL[0] == 1:
+            return [colL]
+        # Report pathological cases ...
+        if (len(tL) > 2) or (tL[0] != 1 and len(tL) == 2):
+            logger.error("%s integrated source data inconsistent %r colL" % (entryId, colL))
+            return [colL]
+        #
+        # Expand the columns with uniform length
+        #
+        icL = []
+        maxL = tL[1]
+        for tc in tcL:
+            if len(tc) == 1:
+                tc = tc * maxL
+            icL.append(tc)
+        #
+        logger.debug("%s icL %r" % (entryId, icL))
+        # Convert back to a row list
+        #
+        iRow = 0
+        rL = []
+        for iRow in range(maxL):
+            row = []
+            for ic in icL:
+                row.append(ic[iRow])
+            rL.append(row)
+
+        return rL
+
     def filterSourceOrganismDetails(self, dataContainer, catName, **kwargs):
         """  Select relevant source and host organism details from primary data categories.
 
@@ -607,13 +655,23 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                         continue
 
             iRow = 0
-            for (entityId, sType, atL, v) in srcL:
-                cObj.setValue(sType, 'source_type', iRow)
-                cObj.setValue(pCode, 'provenance_code', iRow)
-                for ii, at in enumerate(atL):
-                    cObj.setValue(v[ii], at, iRow)
-                logger.debug("%r entity %r - UPDATED %r %r" % (sType, entityId, atL, v))
-                iRow += 1
+            for (entityId, sType, atL, tv) in srcL:
+                ii = atL.index('ncbi_taxonomy_id') if 'ncbi_taxonomy_id' in atL else -1
+                if ii > 0 and len(tv[ii].split(',')) > 1:
+                    tvL = self.__normalizeCsvToList(dataContainer.getName(), tv)
+                    ii = atL.index('pdbx_src_id') if 'pdbx_src_id' in atL else -1
+                    for jj, row in enumerate(tvL, 1):
+                        row[ii] = str(jj)
+                    partCountD[entityId] = len(tvL)
+                else:
+                    tvL = [tv]
+                for v in tvL:
+                    cObj.setValue(sType, 'source_type', iRow)
+                    cObj.setValue(pCode, 'provenance_code', iRow)
+                    for ii, at in enumerate(atL):
+                        cObj.setValue(v[ii], at, iRow)
+                    logger.debug("%r entity %r - UPDATED %r %r" % (sType, entityId, atL, v))
+                    iRow += 1
             #
             iRow = 0
             for (entityId, sType, atL, v) in hostL:
@@ -631,8 +689,8 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     eObj.appendAttribute(atName)
             #
             for ii in range(eObj.getRowCount()):
-                cFlag = 'Y' if partCountD[entityId] > 1 else 'N'
                 entityId = eObj.getValue('id', ii)
+                cFlag = 'Y' if partCountD[entityId] > 1 else 'N'
                 eObj.setValue(partCountD[entityId], 'rcsb_source_part_count', ii)
                 eObj.setValue(cFlag, 'rcsb_multiple_source_flag', ii)
 
@@ -1203,6 +1261,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             'heteromeric protein' 'Multiple protein entities'
             'DNA' 'DNA entity/entities only'
             'RNA' 'RNA entity/entities only'
+            'NA-hybrid' 'DNA/RNA hybrid entity/entities only'
             'protein/NA' 'Both protein and nucleic acid polymer entities'
             'DNA/RNA' 'Both DNA and RNA polymer entities'
             'oligosaccharide' 'One of more oligosaccharide entities'
@@ -1223,7 +1282,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             elif polymerType in ['polyribonucleotide']:
                 cD['RNA'] = cD['RNA'] + 1 if 'RNA' in cD else 1
             elif polymerType in ['polydeoxyribonucleotide/polyribonucleotide hybrid']:
-                cD['NAHYBRID'] = cD['NAHYBRID'] + 1 if 'NAHYBRID' in cD else 1
+                cD['NA-hybrid'] = cD['NA-hybrid'] + 1 if 'NA-hybrid' in cD else 1
             elif polymerType in ['oligosaccharide']:
                 cD['oligosaccharide'] = cD['oligosaccharide'] + 1 if 'oligosaccharide' in cD else 1
             else:
@@ -1236,11 +1295,11 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     compClass = 'homomeric protein'
                 else:
                     compClass = 'heteromeric protein'
-            elif ky in ['DNA', 'RNA', 'NAHYBRID', 'oligosaccharide', 'other']:
+            elif ky in ['DNA', 'RNA', 'NA-hybrid', 'oligosaccharide', 'other']:
                 compClass = ky
         elif len(cD) == 2:
             if 'protein' in cD:
-                if ('DNA' in cD) or ('RNA' in cD) or ('NAHYBRID' in cD):
+                if ('DNA' in cD) or ('RNA' in cD) or ('NA-hybrid' in cD):
                     compClass = 'protein/NA'
                 elif 'oligosaccharide' in cD:
                     compClass = 'protein/oligosaccharide'

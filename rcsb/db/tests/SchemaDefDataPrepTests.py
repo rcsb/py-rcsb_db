@@ -299,12 +299,12 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 sdp.setSchemaIdExcludeList(tableIdExcludeList)
                 sdp.setSchemaIdIncludeList(tableIdIncludeList)
                 #
-                tableDataDictList, containerNameList, rejectList = sdp.processDocuments(containerList, styleType=styleType,
-                                                                                        filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"],
-                                                                                        sliceFilter=sliceFilter)
+                docList, containerNameList, rejectList = sdp.processDocuments(containerList, styleType=styleType,
+                                                                              sliceFilter=sliceFilter)
+                docList = sdp.addDocumentPrivateAttributes(docList, collectionName)
 
                 fp = os.path.join(HERE, "test-output", "sdp-export-%s-%s-rowwise-by-name-with-cardinality.json" % (schemaName, collectionName))
-                self.__mU.doExport(fp, tableDataDictList, format="json", indent=3)
+                self.__mU.doExport(fp, docList, format="json", indent=3)
                 logger.debug("Exported %r" % fp)
                 #
                 #
