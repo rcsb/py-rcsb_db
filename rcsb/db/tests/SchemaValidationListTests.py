@@ -87,7 +87,7 @@ class SchemaValidationListTests(unittest.TestCase):
         enforceOpts = "mandatoryKeys|mandatoryAttributes|bounds|enums"
         eCount = self.__testValidateOpts(enforceOpts=enforceOpts)
         logger.info("Total validation errors enforcing %s : %d" % (enforceOpts, eCount))
-        self.assertGreaterEqual(eCount, 5)
+        self.assertEqual(eCount, 0)
 
     def testValidateOptsMin(self):
         enforceOpts = "mandatoryKeys|enums"

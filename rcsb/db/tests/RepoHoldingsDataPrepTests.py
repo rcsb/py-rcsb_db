@@ -74,6 +74,10 @@ class RepoHoldingsDataPrepTests(unittest.TestCase):
             self.assertGreaterEqual(len(rL), 10)
             logger.debug("unreleased data length %r" % len(rL))
             #
+            rL = rhdp.getHoldingsPrerelease(updateId=self.__updateId)
+            self.assertGreaterEqual(len(rL), 10)
+            logger.debug("prerelease data length %r" % len(rL))
+            #
             rL1, rL2 = rhdp.getHoldingsTransferred(updateId=self.__updateId)
             self.assertGreaterEqual(len(rL1), 10)
             logger.debug("transferred data length %r" % len(rL1))

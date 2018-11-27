@@ -40,10 +40,12 @@
                    collection.  Include correspondence details for DrugBank and CCDC/CSD.
                    Add dictionary methods to filter core entry objects by experiment type to
                    remove largely vacuous categories.  Add new CLI entry point for schema generation.
-22-Nov-2018    V0.27 resolve inconsistent handling of multiple sources for antibody molecule types. Add
+27-Nov-2018    V0.27 resolve inconsistent handling of multiple sources for antibody molecule types. Add
                    dictionary method rcsb_file_block_by_method add item pdbx_chem_comp_audit.ordinal to replace
                    the primary key for this category.    Add new mechanism to inject private document key
-                   attributes to suppor Solr access and indexing.  (Feature branch  multisourcefix)
+                   attributes to support Solr access and indexing.  (Feature branch  multisourcefix). Extend
+                   repository holdings collection with prerelease sequences and extended content types for
+                   the current repository state.
 
 
 

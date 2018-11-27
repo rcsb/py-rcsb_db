@@ -81,6 +81,7 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
                            'repository_holdings': ['repository_holdings_update_v0_1',
                                                    'repository_holdings_current_v0_1',
                                                    'repository_holdings_unreleased_v0_1',
+                                                   'repository_holdings_prerelease_v0_1',
                                                    'repository_holdings_removed_v0_1',
                                                    'repository_holdings_removed_audit_authors_v0_1',
                                                    'repository_holdings_superseded_v0_1',
@@ -154,6 +155,11 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
                 self.assertGreaterEqual(len(rL), 10)
                 logger.debug("unreleased data length %r" % len(rL))
             #
+            elif collectionName == 'repository_holdings_prerelease_v0_1':
+                rL = rhdp.getHoldingsPrerelease(updateId=updateId)
+                self.assertGreaterEqual(len(rL), 10)
+                logger.debug("unreleased data length %r" % len(rL))
+
             elif collectionName in ['repository_holdings_transferred_v0_1', 'repository_holdings_insilico_models_v0_1']:
                 rL1, rL2 = rhdp.getHoldingsTransferred(updateId=updateId)
                 if collectionName == 'repository_holdings_transferred_v0_1':
