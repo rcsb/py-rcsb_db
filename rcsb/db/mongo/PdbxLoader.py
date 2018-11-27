@@ -22,6 +22,7 @@
 #     10-Sep-2018 jdw  Adjust error handling and reporting across multiple collections
 #     24-Oct-2018 jdw  update for new configuration organization
 #     11-Nov-2018 jdw  add DrugBank and CCDC mapping path details.
+#     21-Nov-2018 jdw  add addDocumentPrivateAttributes(dList, collectionName) to inject private document keys
 #
 ##
 """
@@ -300,19 +301,19 @@ class PdbxLoader(object):
                 logger.debug("%s schemaName %s exclude list %r" % (procName, schemaName, tableIdExcludeList))
 
                 #
-                tableDataDictList, containerNameList, rejectPathList = sdp.processDocuments(containerList, styleType=styleType, filterType=filterType,
-                                                                                            dataSelectors=dataSelectors, sliceFilter=sliceFilter)
+                dList, containerNameList, rejectPathList = sdp.processDocuments(containerList, styleType=styleType, filterType=filterType,
+                                                                                dataSelectors=dataSelectors, sliceFilter=sliceFilter)
                 #
                 # Get the unique paths for the rejected/filtered container list - (rejections are NOT treated as failures)
                 #
                 rejectPathList = list(set(rejectPathList))
                 #
                 logger.debug("%s schemaName %s dbName %s collectionName %s slice filter %s num containers %d len data %d num rejects %d" %
-                             (procName, schemaName, dbName, collectionName, sliceFilter, len(containerNameList), len(tableDataDictList), len(rejectPathList)))
+                             (procName, schemaName, dbName, collectionName, sliceFilter, len(containerNameList), len(dList), len(rejectPathList)))
                 #
                 if logSize:
                     maxDocumentMegaBytes = -1
-                    for tD, cN in zip(tableDataDictList, containerNameList):
+                    for tD, cN in zip(dList, containerNameList):
                         # documentMegaBytes = float(sys.getsizeof(pickle.dumps(tD, protocol=0))) / 1000000.0
                         documentMegaBytes = float(sys.getsizeof(bson.BSON.encode(tD))) / 1000000.0
                         logger.debug("%s Document %s  %.4f MB" % (procName, cN, documentMegaBytes))
@@ -324,10 +325,14 @@ class PdbxLoader(object):
                 #  Get the [scbemaId.atId,...] holding the natural document Id
                 #
                 docIdL = sd.getDocumentKeyAttributeNames(collectionName)
+                #
+                #  Add any private document keys -
+                dList = sdp.addDocumentPrivateAttributes(dList, collectionName)
+
                 logger.debug("%s docIdL %r collectionName %r" % (procName, docIdL, collectionName))
                 #
-                if tableDataDictList:
-                    ok, successPathList, failedPathList = self.__loadDocuments(dbName, collectionName, tableDataDictList, docIdL,
+                if dList:
+                    ok, successPathList, failedPathList = self.__loadDocuments(dbName, collectionName, dList, docIdL,
                                                                                loadType=loadType, locatorKey=locatorKey,
                                                                                readBackCheck=readBackCheck, pruneDocumentSize=pruneDocumentSize)
                 #
@@ -335,7 +340,7 @@ class PdbxLoader(object):
                 fullSuccessPathList.extend(list(set(successPathList)))
                 fullFailedPathList.extend(list(set(failedPathList)))
                 logger.info("%s %s/%s document list %d successes %d  failures %d filtered/rejected %d" %
-                            (procName, dbName, collectionName, len(tableDataDictList), len(successPathList), len(failedPathList), len(rejectPathList)))
+                            (procName, dbName, collectionName, len(dList), len(successPathList), len(failedPathList), len(rejectPathList)))
             #
             logger.debug("fullSuccessPathList %r" % fullSuccessPathList)
             logger.debug("fullFailedPathList  %r" % fullFailedPathList)

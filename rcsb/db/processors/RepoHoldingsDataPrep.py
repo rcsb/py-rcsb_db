@@ -3,6 +3,9 @@
 # Author:  J. Westbrook
 # Date:  12-Jul-2018
 #
+# Note:  This module uses well sandbox and repository defined file names
+#        within the configuration defined RCSB exchange sandbox path.
+#
 # Update:
 # 16-Jul-2018 jdw adjust naming to current sandbox conventions.
 # 30-Oct-2018 jdw naming to conform to dictioanry and schema conventions.
@@ -10,6 +13,7 @@
 #                 provide alternative date assignment for JSON and mongo validation
 # 10-Oct-2018 jdw Add getHoldingsTransferred() for homology models transfered to Model Archive
 # 28-Oct-2018 jdw update with semi-colon separated author lists in status and theoretical model files
+# 25-Nov-2018 jdw add sequence/pdb_seq_prerelease.fasta and  _rcsb_repository_holdings_prerelease.seq_one_letter_code
 #
 ##
 
@@ -198,6 +202,7 @@ class RepoHoldingsDataPrep(object):
                     #
                     uD = {}
                     for entryId in entryIdL:
+                        entryId = entryId.strip().upper()
                         if entryId not in uD:
                             uD[entryId] = []
                         uD[entryId].append(contentNameD[contentType])
@@ -229,17 +234,81 @@ class RepoHoldingsDataPrep(object):
             contentTypeList = ['pdb', 'mr', 'cs', 'sf']
             contentNameD = {'pdb': 'coordinates', 'mr': 'NMR restraints', 'cs': 'NMR chemical shifts', 'sf': 'structure factors'}
             #
+            tD = {}
             for updateType in updateTypeList:
                 for contentType in contentTypeList:
                     fp = os.path.join(dirPath, 'update-lists', updateType + '-' + contentType + '-list')
                     entryIdL = self.__mU.doImport(fp, 'list')
                     #
                     for entryId in entryIdL:
-                        if entryId not in rD:
-                            rD[entryId] = []
-                        rD[entryId].append(contentNameD[contentType])
+                        entryId = entryId.strip().upper()
+                        if entryId not in tD:
+                            tD[entryId] = {}
+                        tD[entryId][contentNameD[contentType]] = True
+            #
+            fp = os.path.join(dirPath, 'status', 'biounit_file_list.tsv')
+            lines = self.__mU.doImport(fp, 'list')
+            assemD = {}
+            for line in lines:
+                fields = line.split('\t')
+                entryId = fields[0].strip().upper()
+                assemId = fields[1].strip()
+                if entryId not in assemD:
+                    assemD[entryId] = []
+                assemD[entryId].append(assemId)
+            #
+            #
+            fp = os.path.join(dirPath, 'status', 'pdb_bundle_index_list.tsv')
+            bundleIdList = self.__mU.doImport(fp, 'list')
+            bundleD = {}
+            for entryId in bundleIdList:
+                bundleD[entryId.strip().upper()] = True
+            #
+            fp = os.path.join(dirPath, 'status', 'validation_report_list.tsv')
+            vList = self.__mU.doImport(fp, 'list')
+            valD = {}
+            for entryId in vList:
+                valD[entryId.strip().upper()] = True
+            #
+            fp = os.path.join(dirPath, 'status', 'edmaps.json')
+            qD = self.__mU.doImport(fp, 'json')
+            edD = {}
+            for entryId in qD:
+                edD[entryId.upper()] = qD[entryId]
+            #
+            # Revise content types bundles and assemblies
+            #
+            for entryId, dD in tD.items():
+                rD[entryId] = []
+                if 'coordinates' in dD and entryId in bundleD:
+                    rD[entryId].append('entry PDB bundle')
+                    rD[entryId].append('entry mmCIF')
+                    rD[entryId].append('entry PDBML')
+                else:
+                    rD[entryId].append('entry PDB')
+                    rD[entryId].append('entry mmCIF')
+                    rD[entryId].append('entry PDBML')
+                if entryId in assemD:
+                    if entryId not in bundleD:
+                        rD[entryId].append('assembly PDB')
+                    rD[entryId].append('assembly mmCIF')
+                #
+                for cType in dD:
+                    if cType != 'coordinates':
+                        rD[entryId].append(cType)
+                #
+                if entryId in valD:
+                    rD[entryId].append('validation report')
+                if entryId in edD:
+                    rD[entryId].append('2fo-fc Map')
+                    rD[entryId].append('fo-fc Map')
+                    rD[entryId].append('Map Coefficients')
+            #
             for entryId in rD:
-                retL.append({'update_id': updateId, 'entry_id': entryId, 'repository_content_types': rD[entryId]})
+                if entryId in assemD:
+                    retL.append({'update_id': updateId, 'entry_id': entryId, 'assembly_ids': assemD[entryId], 'repository_content_types': rD[entryId]})
+                else:
+                    retL.append({'update_id': updateId, 'entry_id': entryId, 'repository_content_types': rD[entryId]})
             return retL
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -256,19 +325,22 @@ class RepoHoldingsDataPrep(object):
 
         Returns:
             list: List of dictionaries containing data for rcsb_repository_holdings_unreleased
+
         """
         retL = []
         fields = []
         dirPath = dirPath if dirPath else self.__sandboxPath
         try:
-            fp = os.path.join(dirPath, 'status', 'status.txt')
+            #
+            fp = os.path.join(dirPath, 'status', 'status_v2.txt')
             lines = self.__mU.doImport(fp, 'list')
             for line in lines:
                 fields = line.split('\t')
                 if len(fields) < 15:
                     continue
+                entryId = fields[1]
                 d = {'update_id': updateId,
-                     'entry_id': fields[1],
+                     'entry_id': entryId,
                      'status_code': fields[2]
                      # 'sg_project_name': fields[14],
                      # 'sg_project_abbreviation_': fields[15]}
@@ -297,6 +369,7 @@ class RepoHoldingsDataPrep(object):
         except Exception as e:
             logger.error("Fields: %r" % fields)
             logger.exception("Failing with %s" % str(e))
+
         return retL
 
     def getHoldingsRemoved(self, updateId, dirPath=None, **kwargs):
@@ -373,3 +446,41 @@ class RepoHoldingsDataPrep(object):
             logger.exception("Failing with %s" % str(e))
 
         return rL1, rL2, rL3
+
+    def getHoldingsPrerelease(self, updateId, dirPath=None, **kwargs):
+        """ Parse the legacy exchange status file containing prerelease sequence data.
+
+        Args:
+            updateId (str): update identifier (e.g. 2018_32)
+            dirPath (str): directory path containing update list files
+            **kwargs: unused
+
+        Returns:
+            list: List of dictionaries containing data for rcsb_repository_holdings_prerelease
+
+        """
+        retL = []
+        fields = []
+        dirPath = dirPath if dirPath else self.__sandboxPath
+        try:
+            # Get prerelease sequence data
+            fp = os.path.join(dirPath, 'sequence', 'pdb_seq_prerelease.fasta')
+            sD = self.__mU.doImport(fp, 'fasta', commentStyle="prerelease")
+            seqD = {}
+            for sid in sD:
+                fields = sid.split('_')
+                entryId = str(fields[0]).upper()
+                if entryId not in seqD:
+                    seqD[entryId] = []
+                seqD[entryId].append(sD[sid]['sequence'])
+            logger.debug("Loaded prerelease sequences for %d entries" % len(seqD))
+            #
+            for entryId, seqL in seqD.items():
+                d = {'update_id': updateId, 'entry_id': entryId, 'seq_one_letter_code': seqL}
+                logger.debug("Adding prerelease sequences for %s" % entryId)
+                retL.append({k: v for k, v in d.items() if v})
+        except Exception as e:
+            logger.error("Fields: %r" % fields)
+            logger.exception("Failing with %s" % str(e))
+
+        return retL

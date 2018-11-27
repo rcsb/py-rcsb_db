@@ -9,6 +9,7 @@
 #   5-Jun-2018 jdw replace IoAdapter() with MarshalUtil() -
 #  10-Jun-2018 jdw move the base table definitions in terms of content classes
 #  16-Jun-2018 jdw standardize method name for getAttributeDataTypeD()
+#  26-Nov-2018 jdw turn down boundary value level to standard ddl values
 #
 #
 ##
@@ -397,7 +398,8 @@ class DictInfo(object):
             fD['EXAMPLES'] = self.__dApi.getExampleList(catName, atName)
             fD['SUB_CATEGORIES'] = self.__dApi.getItemSubCategoryIdList(catName, atName)
             #
-            bList = self.__dApi.getBoundaryListAlt(catName, atName, fallBack=True)
+            # bList = self.__dApi.getBoundaryListAlt(catName, atName, fallBack=True)
+            bList = self.__dApi.getBoundaryList(catName, atName)
             if bList:
                 minD = {}
                 maxD = {}

@@ -104,6 +104,14 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
             logger.debug("Collection %s failing with %s" % (collectionName, str(e)))
         return r
 
+    def getPrivateDocumentAttributes(self, collectionName):
+        r = []
+        try:
+            return [d for d in self.__cfgD['collection_private_keys'][collectionName] if d['PRIVATE_DOCUMENT_NAME'] and len(d['PRIVATE_DOCUMENT_NAME']) > 0]
+        except Exception as e:
+            logger.debug("Collection %s failing with %s" % (collectionName, str(e)))
+        return r
+
     def getSubCategoryAggregates(self, collectionName):
         r = []
         try:

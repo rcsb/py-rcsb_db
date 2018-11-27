@@ -104,7 +104,7 @@ class SchemaDefBuildTests(unittest.TestCase):
                 self.__testBuild(schemaName, applicationName)
 
         collectionNames = {'repository_holdings': ['repository_holdings_update_v0_1', 'repository_holdings_current_v0_1',
-                                                   'repository_holdings_unreleased_v0_1', 'repository_holdings_removed_v0_1',
+                                                   'repository_holdings_unreleased_v0_1', 'repository_holdings_prerelease_v0_1', 'repository_holdings_removed_v0_1',
                                                    'repository_holdings_removed_audit_authors_v0_1',
                                                    'repository_holdings_superseded_v0_1',
                                                    'repository_holdings_transferred_v0_1',

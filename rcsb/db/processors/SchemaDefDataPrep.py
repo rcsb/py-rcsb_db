@@ -23,6 +23,8 @@
 #      19-Jun-2018  jdw Change file paths to locator lists -
 #       6-Aug-2018  jdw Move properties stored locally in __loadInfo to the base container
 #                       deprecating __loadInfo in this class
+#      20-Nov-2018  jdw add addDocumentPrivateAttributes() to inject private document attributes,
+#                       This method is collection dependent which is awkward in this class.
 #
 #
 ##
@@ -226,6 +228,24 @@ class SchemaDefDataPrep(object):
         rejectList = list(set(rejectList))
         #
         return schemaDataDictList, containerNameList, rejectList
+
+    def addDocumentPrivateAttributes(self, docList, collectionName):
+        """ For the input collection, aqdd private document attributes to the input document list.
+        """
+        try:
+            d = {}
+            privDocKeyL = self.__sD.getPrivateDocumentAttributes(collectionName)
+            if privDocKeyL:
+                for pdk in privDocKeyL:
+                    catName = pdk['CATEGORY_NAME']
+                    atName = pdk['ATTRIBUTE_NAME']
+                    pName = pdk['PRIVATE_DOCUMENT_NAME']
+                    for d in docList:
+                        d[pName] = d[catName][atName]
+        except Exception as e:
+            logger.exception("Failing with %s : %r" % (str(e), d.items()[:5]))
+        #
+        return docList
 
     def __fetch(self, locatorList, filterType, dataSelectors=None):
         """ Internal method to create loadable data corresponding to the table schema definition

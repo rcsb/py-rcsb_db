@@ -17,6 +17,7 @@
 #  9-Oct-2018 jdw push the constructor arguments into the constructor as configuration options
 # 12-Oct-2018 jdw filter empty required attributes in subcategory aggregates
 # 24-Oct-2018 jdw update for new configuration organization
+# 18-Nov-2018 jdw add COLLECTION_DOCUMENT_ATTRIBUTE_INFO
 ##
 """
 Integrate dictionary metadata and file based(type/coverage) into internal and JSON/BSON schema defintions.
@@ -123,7 +124,10 @@ class SchemaDefBuild(object):
 
 
         """
-        rD = {'CONTENT_TYPE_COLLECTION_MAP': {}, 'COLLECTION_DOCUMENT_ATTRIBUTE_NAMES': {}, 'COLLECTION_CONTENT': {}}
+        rD = {'CONTENT_TYPE_COLLECTION_MAP': {},
+              'COLLECTION_DOCUMENT_ATTRIBUTE_NAMES': {},
+              'COLLECTION_DOCUMENT_PRIVATE_KEYS': {},
+              'COLLECTION_CONTENT': {}}
         #
         dH = documentDefHelper
         if dH:
@@ -132,6 +136,7 @@ class SchemaDefBuild(object):
             for c in cL:
                 rD['COLLECTION_CONTENT'][c] = {'INCLUDE': dH.getIncluded(c), 'EXCLUDE': dH.getExcluded(c), 'SLICE_FILTER': dH.getSliceFilter(c)}
                 rD['COLLECTION_DOCUMENT_ATTRIBUTE_NAMES'][c] = dH.getDocumentKeyAttributeNames(c)
+                rD['COLLECTION_DOCUMENT_PRIVATE_KEYS'][c] = dH.getPrivateDocumentAttributes(c)
         #
         return rD
 
@@ -460,6 +465,7 @@ class SchemaDefBuild(object):
 
         """
         subCategoryAggregates = documentDefHelper.getSubCategoryAggregates(collectionName)
+        privDocKeyL = documentDefHelper.getPrivateDocumentAttributes(collectionName)
         # enforceOpts = "mandatoryKeys|mandatoryAttributes|bounds|enums"
         #
         # applicationName = 'JSON'
@@ -625,13 +631,32 @@ class SchemaDefBuild(object):
             #
             schemaPropD[sName] = copy.deepcopy(catPropD)
         #
+        # Add any private keys to the object schema - Fetch the metadata for the private keys
+        #
+        privKeyD = {}
+        if privDocKeyL:
+            for pdk in privDocKeyL:
+                aD = self.__dictInfo.getAttributeFeatures(convertNameF(pdk['CATEGORY_NAME']))
+                fD = aD[convertNameF(pdk['ATTRIBUTE_NAME'])]
+                atPropD = self.__getJsonAttributeProperties(fD, appNameU, dtAppInfo, jsonSpecDraft, enforceOpts)
+                privKeyD[pdk['PRIVATE_DOCUMENT_NAME']] = atPropD
+
+        #
         # Suppress the category name for schemas with a single category -
         #
         if suppressSingleton and len(schemaPropD) == 1:
             logger.debug("%s %s suppressing category in singleton schema" % (schemaName, collectionName))
             # rD = copy.deepcopy(catPropD)
+            for k, v in privKeyD.items():
+                pD['properties'][k] = v
+                pD['required'] = k
             rD = copy.deepcopy(pD)
+
         else:
+            for k, v in privKeyD.items():
+                schemaPropD[k] = v
+                mandatoryCategoryL.append(k)
+            #
             rD = {typeKey: 'object', 'properties': schemaPropD}
             if len(mandatoryCategoryL):
                 rD['required'] = mandatoryCategoryL

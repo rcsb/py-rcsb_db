@@ -65,7 +65,7 @@ setup(
                       'mmcif >= 0.22',
                       'scandir; python_version < "3.0"',
                       # 'configparser; python_version < "3.0"',
-                      'rcsb.utils.io >= 0.17',
+                      'rcsb.utils.io >= 0.18',
                       'rcsb.utils.config >= 0.14',
                       'rcsb.utils.multiproc'],
     packages=find_packages(exclude=['rcsb.db.tests', 'rcsb.db.tests-*', 'tests.*']),

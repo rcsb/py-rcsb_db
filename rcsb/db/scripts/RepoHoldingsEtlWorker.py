@@ -5,6 +5,7 @@
 # ETL utilities for processing repository holding data.
 # Updates:
 #  15-Jul-2018 jdw split out to separate module and add status tracking
+#  26-Nov-2018 jdw add COLLECTION_HOLDINGS_PRERELEASE
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -66,6 +67,7 @@ class RepoHoldingsEtlWorker(object):
         COLLECTION_HOLDINGS_UPDATE=rcsb_repository_holdings_update
         COLLECTION_HOLDINGS_CURRENT=rcsb_repository_holdings_current
         COLLECTION_HOLDINGS_UNRELEASED=rcsb_repository_holdings_unreleased
+        COLLECTION_HOLDINGS_PRERELEASE=rcsb_repository_holdings_prerelease
         COLLECTION_HOLDINGS_REMOVED=rcsb_repository_holdings_removed
         COLLECTION_HOLDINGS_REMOVED_AUTHORS=rcsb_repository_holdings_removed_audit_authors
         COLLECTION_HOLDINGS_SUPERSEDED=rcsb_repository_holdings_superseded
@@ -101,6 +103,12 @@ class RepoHoldingsEtlWorker(object):
 
             dList = rhdp.getHoldingsUnreleased(updateId=updateId)
             collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_UNRELEASED', sectionName=sectionName) + '_' + collectionVersion
+            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList,
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            #
+            dList = rhdp.getHoldingsPrerelease(updateId=updateId)
+            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_PRERELEASE', sectionName=sectionName) + '_' + collectionVersion
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList,
                          indexAttributeList=['update_id', 'entry_id'], keyNames=None)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
