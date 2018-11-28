@@ -14,7 +14,7 @@
 # 10-Oct-2018 jdw Add getHoldingsTransferred() for homology models transfered to Model Archive
 # 28-Oct-2018 jdw update with semi-colon separated author lists in status and theoretical model files
 # 25-Nov-2018 jdw add sequence/pdb_seq_prerelease.fasta and  _rcsb_repository_holdings_prerelease.seq_one_letter_code
-#
+# 27-Nov-2018 jdw update rcsb_repository_holdings_current for all entry content types
 ##
 
 __docformat__ = "restructuredtext en"
@@ -270,6 +270,13 @@ class RepoHoldingsDataPrep(object):
             for entryId in vList:
                 valD[entryId.strip().upper()] = True
             #
+            #
+            fp = os.path.join(dirPath, 'status', 'entries_without_polymers.tsv')
+            pList = self.__mU.doImport(fp, 'list')
+            pD = {}
+            for entryId in pList:
+                pD[entryId.strip().upper()] = False
+            #
             fp = os.path.join(dirPath, 'status', 'edmaps.json')
             qD = self.__mU.doImport(fp, 'json')
             edD = {}
@@ -303,6 +310,8 @@ class RepoHoldingsDataPrep(object):
                     rD[entryId].append('2fo-fc Map')
                     rD[entryId].append('fo-fc Map')
                     rD[entryId].append('Map Coefficients')
+                if entryId not in pD:
+                    rD[entryId].append('FASTA sequence')
             #
             for entryId in rD:
                 if entryId in assemD:
