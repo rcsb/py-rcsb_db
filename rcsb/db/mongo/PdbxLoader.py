@@ -125,7 +125,6 @@ class PdbxLoader(object):
             schemaLevel (str, optional): Completeness of json/bson metadata schema bound to each collection (e.g. 'min', 'full' or None)
             locatorKey (str, optional): Key identifier in document content storing the data file path (url)
 
-
         Returns:
             bool: True on success or False otherwise
 

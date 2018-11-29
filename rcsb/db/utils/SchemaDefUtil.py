@@ -44,12 +44,14 @@ class SchemaDefUtil(object):
         self.__numProc = numProc
         self.__workPath = workPath
 
-    def getPathList(self, contentType, inputPathList=None):
+    def getPathList(self, contentType, inputPathList=None, dataSetPart='default'):
         """Convenience method to get the data path list for the input repository content type.
 
         Args:
             contentType (str): Repository content type (e.g. pdbx, chem_comp, bird, ...)
             inputPathList (list, optional): path list that will be returned if provided.
+            dataSetPart (str, optional): data set partition within the content type
+
 
         Returns:
             list: data file file path list
@@ -67,7 +69,10 @@ class SchemaDefUtil(object):
             elif contentType in ['chem_comp', 'chem_comp_core']:
                 outputPathList = inputPathList if inputPathList else rpU.getChemCompPathList()
             elif contentType in ['bird_chem_comp', 'bird_chem_comp_core']:
-                outputPathList = inputPathList if inputPathList else rpU.getBirdChemCompPathList()
+                if dataSetPart == 'default':
+                    outputPathList = inputPathList if inputPathList else rpU.getBirdChemCompPathList()
+                elif dataSetPart == 'bird-ref':
+                    outputPathList = inputPathList if inputPathList else rpU.getBirdPathList()
             elif contentType in ['pdbx', 'pdbx_core']:
                 outputPathList = inputPathList if inputPathList else rpU.getEntryPathList()
             elif contentType in ['pdb_distro', 'da_internal', 'status_history']:
@@ -182,7 +187,7 @@ class SchemaDefUtil(object):
             logger.debug("Building schema definition for %s application %s" % (contentType, applicationName))
             smb = SchemaDefBuild(contentType, self.__cfgOb.getConfigPath(), mockTopPath=self.__cfgOb.getMockTopPath())
             #
-            sD = smb.build(applicationName=applicationName)
+            sD = smb.build(applicationName=applicationName, schemaType='rcsb')
             logger.info("Schema %s dictionary category length %d" % (contentType, len(sD['SCHEMA_DICT'])))
             return sD
 

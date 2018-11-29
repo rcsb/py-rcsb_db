@@ -14,6 +14,7 @@
 # 10-Nov-2018 jdw add addChemCompSynonyms(), addChemCompTargets(), filterBlockByMethod()
 # 12-Nov-2018 jdw add InChIKey matching in addChemCompRelated()
 # 15-Nov-2018 jdw add handling for antibody misrepresentation of multisource organisms
+# 28-Nov-2018 jdw relax constraints on the production of rcsb_entry_info
 #
 ##
 """
@@ -1394,7 +1395,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         try:
             logger.debug("Starting with %r %r" % (dataContainer.getName(), catName))
             # Exit if source categories are missing
-            if not (dataContainer.exists('exptl') and dataContainer.exists('entity') and dataContainer.exists('entity_poly')):
+            if not (dataContainer.exists('exptl') and dataContainer.exists('entity')):
                 return False
             #
             # Create the new target category
@@ -1427,14 +1428,16 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     logger.error("Unexpected entity type for %s %s" % (dataContainer.getName(), eType))
             totalEntities = numPolymers + numNonPolymers + numBranched
             #
-            epObj = dataContainer.getObj('entity_poly')
-            pTypeL = epObj.getAttributeValueList('type')
-            #
-            atName = 'rcsb_entity_polymer_type'
-            if not epObj.hasAttribute(atName):
-                epObj.appendAttribute(atName)
-            for ii in range(epObj.getRowCount()):
-                epObj.setValue(self.__filterEntityPolyType(pTypeL[ii]), atName, ii)
+            pTypeL = []
+            if dataContainer.exists('entity_poly'):
+                epObj = dataContainer.getObj('entity_poly')
+                pTypeL = epObj.getAttributeValueList('type')
+                #
+                atName = 'rcsb_entity_polymer_type'
+                if not epObj.hasAttribute(atName):
+                    epObj.appendAttribute(atName)
+                for ii in range(epObj.getRowCount()):
+                    epObj.setValue(self.__filterEntityPolyType(pTypeL[ii]), atName, ii)
             #
             # Add any branched entity types to the
             if dataContainer.exists('entity_branch'):

@@ -46,7 +46,9 @@
                    attributes to support Solr access and indexing.  (Feature branch  multisourcefix). Extend
                    repository holdings collection with prerelease sequences and extended content types for
                    the current repository state.
-28-Nov-2018    V0.28 minor update to FASTA sequence content type to repository holdings current inventory.
+28-Nov-2018    V0.28 minor update to FASTA sequence content type to repository holdings current inventory and
+               adjustments in constraints for rcsb_entry_info category production
+
 
 
 
