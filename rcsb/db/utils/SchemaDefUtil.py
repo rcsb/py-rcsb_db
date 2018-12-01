@@ -44,47 +44,21 @@ class SchemaDefUtil(object):
         self.__numProc = numProc
         self.__workPath = workPath
 
-    def getPathList(self, contentType, inputPathList=None, dataSetPart='default'):
+    def getPathList(self, contentType, inputPathList=None):
         """Convenience method to get the data path list for the input repository content type.
 
         Args:
             contentType (str): Repository content type (e.g. pdbx, chem_comp, bird, ...)
             inputPathList (list, optional): path list that will be returned if provided.
-            dataSetPart (str, optional): data set partition within the content type
-
 
         Returns:
             list: data file file path list
 
 
         """
-        outputPathList = []
         inputPathList = inputPathList if inputPathList else []
         rpU = RepoPathUtil(self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit)
-        try:
-            if contentType == "bird":
-                outputPathList = inputPathList if inputPathList else rpU.getBirdPathList()
-            elif contentType == "bird_family":
-                outputPathList = inputPathList if inputPathList else rpU.getBirdFamilyPathList()
-            elif contentType in ['chem_comp', 'chem_comp_core']:
-                outputPathList = inputPathList if inputPathList else rpU.getChemCompPathList()
-            elif contentType in ['bird_chem_comp', 'bird_chem_comp_core']:
-                if dataSetPart == 'default':
-                    outputPathList = inputPathList if inputPathList else rpU.getBirdChemCompPathList()
-                elif dataSetPart == 'bird-ref':
-                    outputPathList = inputPathList if inputPathList else rpU.getBirdPathList()
-            elif contentType in ['pdbx', 'pdbx_core']:
-                outputPathList = inputPathList if inputPathList else rpU.getEntryPathList()
-            elif contentType in ['pdb_distro', 'da_internal', 'status_history']:
-                outputPathList = inputPathList if inputPathList else []
-            else:
-                logger.warning("Unsupported contentType %s" % contentType)
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-
-        if self.__fileLimit:
-            outputPathList = outputPathList[:self.__fileLimit]
-
+        outputPathList = rpU.getRepoPathList(contentType, inputPathList=inputPathList)
         return outputPathList
 
     def getSchemaInfo(self, contentType, applicationName='ANY', useCache=True, saveSchema=True):

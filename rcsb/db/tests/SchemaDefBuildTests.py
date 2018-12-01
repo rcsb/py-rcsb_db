@@ -7,6 +7,7 @@
 # Update:
 #      7-Sep-2018 jdw Update JSON/BSON schema generation tests
 #      7-Oct-2018 jdw update with repository_holdings and  sequence_cluster tests
+#     29-Nov-2018 jdw add selected build tests
 ##
 """
 Tests for utilities employed to construct local and json schema defintions from
@@ -52,6 +53,14 @@ class SchemaDefBuildTests(unittest.TestCase):
                                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                             endTime - self.__startTime))
 
+    def testSelectBuild(self):
+        schemaNames = ['bird_chem_comp_core']
+        applicationNames = ['ANY']
+        for schemaName in schemaNames:
+            for applicationName in applicationNames:
+                self.__testBuild(schemaName, applicationName)
+            self.__testRunSelectBuilder(schemaName, flavor='JSON', schemaLevel='full', enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums")
+
     def testBuild(self):
         schemaNames = ['pdbx', 'pdbx_core', 'chem_comp', 'chem_comp_core', 'bird', 'bird_family', 'bird_chem_comp', 'bird_chem_comp_core']
         applicationNames = ['ANY', 'SQL']
@@ -74,6 +83,22 @@ class SchemaDefBuildTests(unittest.TestCase):
     def testAltBuildBson(self):
         self.__testRunAltBuilder(flavor='BSON', schemaLevel='full', enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums")
         self.__testRunAltBuilder(flavor='BSON', schemaLevel='min', enforceOpts="mandatoryKeys|enums")
+
+    def __testRunSelectBuilder(self, schemaName, flavor='JSON', schemaLevel='full', enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
+        collectionNames = {'pdbx': ['pdbx_v5_0_2', 'pdbx_ext_v5_0_2'],
+                           'pdbx_core': ['pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2'],
+                           'bird': ['bird_v5_0_2'],
+                           'bird_family': ['family_v5_0_2'],
+                           'chem_comp': ['chem_comp_v5_0_2'],
+                           'chem_comp_core': ['chem_comp_core_v5_0_2'],
+                           'bird_chem_comp': ['bird_chem_comp_v5_0_2'],
+                           'bird_chem_comp_core': ['bird_chem_comp_core_v5_0_2']}
+        #
+        for collectionName in collectionNames[schemaName]:
+            if flavor == 'JSON':
+                self.__testBuildJson(schemaName, collectionName, schemaLevel=schemaLevel, enforceOpts=enforceOpts)
+            elif flavor == 'BSON':
+                self.__testBuildBson(schemaName, collectionName, schemaLevel=schemaLevel, enforceOpts=enforceOpts)
 
     def __testRunPrimaryBuilder(self, flavor='JSON', schemaLevel='full', enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
         schemaNames = ['pdbx', 'pdbx_core', 'chem_comp', 'chem_comp_core', 'bird_chem_comp', 'bird_chem_comp_core', 'bird', 'bird_family']
@@ -199,14 +224,25 @@ def schemaAltBuildJsonSuite():
     return suiteSelect
 
 
+def schemaSelectBuildSuite():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(SchemaDefBuildTests("testSelectBuild"))
+    return suiteSelect
+
+
 if __name__ == '__main__':
     #
-    if True:
-        mySuite = schemaBuildSuite()
+    if False:
+        mySuite = schemaSelectBuildSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
+
     if True:
-        mySuite = schemaPrimaryBuildJsonSuite()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
-    if True:
-        mySuite = schemaAltBuildJsonSuite()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
+        if True:
+            mySuite = schemaBuildSuite()
+            unittest.TextTestRunner(verbosity=2).run(mySuite)
+        if True:
+            mySuite = schemaPrimaryBuildJsonSuite()
+            unittest.TextTestRunner(verbosity=2).run(mySuite)
+        if True:
+            mySuite = schemaAltBuildJsonSuite()
+            unittest.TextTestRunner(verbosity=2).run(mySuite)

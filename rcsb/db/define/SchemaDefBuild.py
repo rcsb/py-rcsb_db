@@ -45,7 +45,8 @@ class SchemaDefBuild(object):
 
     """
 
-    def __init__(self, schemaName, configPath, configName='site_info', mockTopPath=None, includeContentClasses=['GENERATED_CONTENT', 'EVOLVING_CONTENT']):
+    def __init__(self, schemaName, configPath, configName='site_info', mockTopPath=None,
+                 includeContentClasses=['GENERATED_CONTENT', 'EVOLVING_CONTENT', 'CONSOLIDATED_BIRD_CONTENT']):
         """
 
         """
