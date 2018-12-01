@@ -51,6 +51,7 @@
 30-Nov-2018    V0.29 branch birdconsolidate includes mashup of all BIRD definition data, additional content
                types in current repository holdings with adjustments to filter obsolete entries, various
                additional categories added to core entry collection.
+ 1-Dec-2018    V0.30  Adjustments for roundtrip CI/CD.
 
 
 
