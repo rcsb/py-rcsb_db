@@ -2,7 +2,6 @@
 # File:    RepoPathUtil.py
 # Author:  J. Westbrook
 # Date:    21-Mar-2018
-# Version: 0.001
 #
 # Updates:
 #   22-Mar-2018  jdw add support for all repositories -
@@ -13,9 +12,11 @@
 #   12-Jul-2018  jdw correct config for PDBX_REPO_PATH
 #   13-Aug-2018  jdw add support for gz compressed entry files
 #   24-Oct-2018  jdw update for new configuration organization
+#   28-Nov-2018  jdw add mergeBirdRefData()
+#
 ##
 """
- Utilites for scanning common data repository file systems.
+ Utilites for scanning and accessing data in common repository file systems.
 
 """
 __docformat__ = "restructuredtext en"
@@ -27,6 +28,7 @@ import logging
 import os
 import time
 
+from rcsb.utils.io.MarshalUtil import MarshalUtil
 from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
 
 try:
@@ -40,12 +42,14 @@ logger = logging.getLogger(__name__)
 
 class RepoPathUtil(object):
 
-    def __init__(self, cfgOb, cfgSectionName='site_info', numProc=8, fileLimit=None, verbose=False):
+    def __init__(self, cfgOb, cfgSectionName='site_info', numProc=8, fileLimit=None, workPath=None, verbose=False):
         self.__fileLimit = fileLimit
         self.__numProc = numProc
         self.__verbose = verbose
         self.__cfgOb = cfgOb
         self.__cfgSectionName = cfgSectionName
+        self.__workPath = workPath if workPath else '.'
+        #
         self.__mpFormat = '[%(levelname)s] %(asctime)s %(processName)s-%(module)s.%(funcName)s: %(message)s'
 
     def getRepoPathList(self, contentType, inputPathList=None):
@@ -60,10 +64,12 @@ class RepoPathUtil(object):
                 outputPathList = inputPathList if inputPathList else self.getBirdFamilyPathList()
             elif contentType in ['chem_comp', 'chem_comp_core']:
                 outputPathList = inputPathList if inputPathList else self.getChemCompPathList()
-            elif contentType in ['bird_chem_comp', 'bird_chem_comp_core']:
+            elif contentType in ['bird_chem_comp']:
                 outputPathList = inputPathList if inputPathList else self.getBirdChemCompPathList()
             elif contentType in ['pdbx', 'pdbx_core']:
                 outputPathList = inputPathList if inputPathList else self.getEntryPathList()
+            elif contentType in ['bird_consolidated', 'bird_chem_comp_core']:
+                outputPathList = inputPathList if inputPathList else self.mergeBirdRefData()
             elif contentType in ['pdb_distro', 'da_internal', 'status_history']:
                 outputPathList = inputPathList if inputPathList else []
             else:
@@ -250,3 +256,130 @@ class RepoPathUtil(object):
             return pathList[:self.__fileLimit]
         else:
             return pathList
+
+    def __buildFamilyIndex(self):
+        """ Using information from the PRD family definition:
+            #
+            loop_
+            _pdbx_reference_molecule_list.family_prd_id
+            _pdbx_reference_molecule_list.prd_id
+                FAM_000010 PRD_000041
+                FAM_000010 PRD_000042
+                FAM_000010 PRD_000043
+                FAM_000010 PRD_000044
+                FAM_000010 PRD_000048
+                FAM_000010 PRD_000049
+                FAM_000010 PRD_000051
+            #
+        """
+        prdD = {}
+        try:
+            mU = MarshalUtil(workPath=self.__workPath)
+            pthL = self.getRepoPathList('bird_family')
+            for pth in pthL:
+                containerL = mU.doImport(pth, format="mmcif")
+                for container in containerL:
+                    catName = "pdbx_reference_molecule_list"
+                    if container.exists(catName):
+                        catObj = container.getObj(catName)
+                        for ii in range(catObj.getRowCount()):
+                            familyPrdId = catObj.getValue(attributeName='family_prd_id', rowIndex=ii)
+                            prdId = catObj.getValue(attributeName='prd_id', rowIndex=ii)
+                            if prdId in prdD:
+                                logger.debug("duplicate prdId in family index %s %s " % (prdId, familyPrdId))
+                            prdD[prdId] = {'familyPrdId': familyPrdId, 'c': container}
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+
+        return prdD
+    #
+
+    def mergeBirdRefData(self):
+        """ Consolidate all of the bird reference data in a single container.
+
+            Return a path list for the consolidated data files -
+
+        """
+        outPathList = []
+        try:
+            mU = MarshalUtil(workPath=self.__workPath)
+            birdPathList = self.getRepoPathList('bird')
+            birdPathD = {}
+            for birdPath in birdPathList:
+                _, fn = os.path.split(birdPath)
+                prdId, _ = os.path.splitext(fn)
+                birdPathD[prdId] = birdPath
+            #
+            logger.debug("BIRD data length %d" % len(birdPathD))
+            logger.debug("BIRD keys %r" % list(birdPathD.keys()))
+            birdCcPathList = self.getRepoPathList('bird_chem_comp')
+            birdCcPathD = {}
+            for birdCcPath in birdCcPathList:
+                _, fn = os.path.split(birdCcPath)
+                prdCcId, _ = os.path.splitext(fn)
+                prdId = 'PRD_' + prdCcId[6:]
+                birdCcPathD[prdId] = birdCcPath
+            #
+            logger.debug("BIRD CC data length %d" % len(birdCcPathD))
+            logger.debug("BIRD CC keys %r" % list(birdCcPathD.keys()))
+            fD = self.__buildFamilyIndex()
+            logger.debug("Family index length %d" % len(fD))
+            logger.debug("Family index keys %r" % list(fD.keys()))
+            #
+            for prdId in birdCcPathD:
+                fp = os.path.join(self.__workPath, prdId + '.cif')
+                logger.debug("Export path is %r" % fp)
+                #
+                pth1 = birdCcPathD[prdId]
+                c1L = mU.doImport(pth1, format="mmcif")
+                cFull = c1L[0]
+                logger.debug("Got cFull %r" % cFull.getName())
+                #
+                cBird = None
+                if prdId in birdPathD:
+                    pth2 = birdPathD[prdId]
+                    c2L = mU.doImport(pth2, format="mmcif")
+                    cBird = c2L[0]
+                    logger.debug("Got cBird %r" % cBird.getName())
+                #
+                cFam = None
+                if prdId in fD:
+                    cFam = fD[prdId]['c']
+                    logger.debug("Got cFam %r" % cFam.getName())
+                #
+                if cBird:
+                    for catName in cBird.getObjNameList():
+                        cFull.append(cBird.getObj(catName))
+                if cFam:
+                    for catName in cFam.getObjNameList():
+                        cFull.append(cFam.getObj(catName))
+                #
+                # self.__exportConfig(cFull)
+                #
+                mU.doExport(fp, [cFull], format='mmcif')
+                outPathList.append(fp)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+        #
+        return outPathList
+        #
+
+    def __exportConfig(self, container):
+        """
+                - CATEGORY_NAME: diffrn_detector
+                  ATTRIBUTE_NAME_LIST:
+                      - pdbx_frequency
+                - CATEGORY_NAME: pdbx_serial_crystallography_measurement
+                  ATTRIBUTE_NAME_LIST:
+                      - diffrn_id
+                      - pulse_energy
+                      - pulse_duration
+                      - xfel_pulse_repetition_rate
+        """
+        for catName in container.getObjNameList():
+            cObj = container.getObj(catName)
+            print("- CATEGORY_NAME: %s" % catName)
+            print("  ATTRIBUTE_NAME_LIST:")
+            for atName in cObj.getAttributeList():
+                print("       - %s" % atName)
+        return True

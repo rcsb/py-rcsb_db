@@ -129,7 +129,7 @@ class PdbxLoaderTests(unittest.TestCase):
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('bird_family', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
-            self.assertFalse(ok)
+            self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
         except Exception as e:

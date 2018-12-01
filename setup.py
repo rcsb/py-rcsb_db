@@ -62,12 +62,12 @@ setup(
                       'strict-rfc3339',
                       'mysqlclient >= 1.3.12',
                       'pymongo >= 3.7.0',
-                      'mmcif >= 0.22',
+                      'mmcif >= 0.27',
                       'scandir; python_version < "3.0"',
                       # 'configparser; python_version < "3.0"',
                       'rcsb.utils.io >= 0.18',
-                      'rcsb.utils.config >= 0.14',
-                      'rcsb.utils.multiproc'],
+                      'rcsb.utils.config >= 0.15',
+                      'rcsb.utils.multiproc >= 0.11'],
     packages=find_packages(exclude=['rcsb.db.tests', 'rcsb.db.tests-*', 'tests.*']),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:

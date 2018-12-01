@@ -48,6 +48,9 @@
                    the current repository state.
 28-Nov-2018    V0.28 minor update to FASTA sequence content type to repository holdings current inventory and
                adjustments in constraints for rcsb_entry_info category production
+30-Nov-2018    V0.29 branch birdconsolidate includes mashup of all BIRD definition data, additional content
+               types in current repository holdings with adjustments to filter obsolete entries, various
+               additional categories added to core entry collection.
 
 
 

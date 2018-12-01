@@ -15,6 +15,8 @@
 # 28-Oct-2018 jdw update with semi-colon separated author lists in status and theoretical model files
 # 25-Nov-2018 jdw add sequence/pdb_seq_prerelease.fasta and  _rcsb_repository_holdings_prerelease.seq_one_letter_code
 # 27-Nov-2018 jdw update rcsb_repository_holdings_current for all entry content types
+# 29-Nov-2018 jdw Add support for NMR restraint versions.
+# 30-Nov-3018 jdw explicitly filter obsolete entries from current holdings
 ##
 
 __docformat__ = "restructuredtext en"
@@ -277,15 +279,32 @@ class RepoHoldingsDataPrep(object):
             for entryId in pList:
                 pD[entryId.strip().upper()] = False
             #
+            #
+            fp = os.path.join(dirPath, 'status', 'nmr_restraints_v2_list.tsv')
+            nmrV2List = self.__mU.doImport(fp, 'list')
+            nmrV2D = {}
+            for entryId in nmrV2List:
+                nmrV2D[entryId.strip().upper()] = False
+            #
             fp = os.path.join(dirPath, 'status', 'edmaps.json')
             qD = self.__mU.doImport(fp, 'json')
             edD = {}
             for entryId in qD:
                 edD[entryId.upper()] = qD[entryId]
             #
+            fp = os.path.join(dirPath, 'status', 'obsolete_entry.json_2')
+            oL = self.__mU.doImport(fp, 'json')
+            obsD = {}
+            for d in oL:
+                obsD[d['entryId'].upper()] = True
+            logger.info("Removed entry length %d" % len(obsD))
+            #
+            #
             # Revise content types bundles and assemblies
             #
             for entryId, dD in tD.items():
+                if entryId in obsD:
+                    continue
                 rD[entryId] = []
                 if 'coordinates' in dD and entryId in bundleD:
                     rD[entryId].append('entry PDB bundle')
@@ -301,8 +320,13 @@ class RepoHoldingsDataPrep(object):
                     rD[entryId].append('assembly mmCIF')
                 #
                 for cType in dD:
-                    if cType != 'coordinates':
+                    if cType not in ['coordinates', 'NMR restraints']:
                         rD[entryId].append(cType)
+                    if cType == 'NMR restraints':
+                        rD[entryId].append('NMR restraints V1')
+
+                if entryId in nmrV2D:
+                    rD[entryId].append('NMR restraints V2')
                 #
                 if entryId in valD:
                     rD[entryId].append('validation report')
