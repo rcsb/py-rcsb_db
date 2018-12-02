@@ -201,7 +201,9 @@ class DictInfoHelper(DictInfoHelperBase):
         return {'CATEGORY_NAME': None, 'ATTRIBUTE_NAME': None}
 
     def getTypeCodes(self, kind):
-        """
+        """ Get the list of CIF type codes of a particular kind.
+
+           returns (dict) [{'TYPE_CODE': <type> ... other feature of the type}]
         """
         try:
             return self.__cfgD['type_code_classes'][kind]

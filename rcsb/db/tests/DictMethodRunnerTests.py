@@ -65,6 +65,7 @@ class DictMethodRunnerTests(unittest.TestCase):
         #
         self.__drugBankMappingFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'DrugBank', 'drugbank_pdb_mapping.json')
         self.__csdModelMappingFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'chem_comp_models', 'ccdc_pdb_mapping.json')
+        self.__pathTaxonomyMappingFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'NCBI', 'taxonomy_names.pic')
 
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
@@ -80,7 +81,7 @@ class DictMethodRunnerTests(unittest.TestCase):
         """Test case -  create loadable PDBx data from files
         """
         try:
-            dH = DictMethodRunnerHelper()
+            dH = DictMethodRunnerHelper(workPath=self.__workPath, taxonomyMappingFilePath=self.__pathTaxonomyMappingFile)
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
             #
             inputPathList = self.__schU.getPathList(contentType='pdbx_core')
@@ -111,7 +112,8 @@ class DictMethodRunnerTests(unittest.TestCase):
         """Test case -  create loadable PDBx data from files
         """
         try:
-            dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath, csdModelMappingFilePath=self.__csdModelMappingFile)
+            dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath,
+                                        csdModelMappingFilePath=self.__csdModelMappingFile, taxonomyMappingFilePath=self.__pathTaxonomyMappingFile)
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
             #
             inputPathList = self.__schU.getPathList(contentType='chem_comp_core')
@@ -142,7 +144,8 @@ class DictMethodRunnerTests(unittest.TestCase):
         """Test case -  create loadable PDBx data from files
         """
         try:
-            dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath, csdModelMappingFilePath=self.__csdModelMappingFile)
+            dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath,
+                                        csdModelMappingFilePath=self.__csdModelMappingFile, taxonomyMappingFilePath=self.__pathTaxonomyMappingFile)
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
             #
             inputPathList = self.__schU.getPathList(contentType='bird_chem_comp_core')
@@ -205,7 +208,7 @@ def DictMethodRunnerSetupSuite():
 
 if __name__ == '__main__':
     #
-    if False:
+    if True:
         mySuite = DictMethodRunnerSetupSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 
@@ -214,6 +217,6 @@ if __name__ == '__main__':
         unittest.TextTestRunner(verbosity=2).run(mySuite)
     #
 
-    if False:
+    if True:
         mySuite = DictMethodRunnerHelperChemCompSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)

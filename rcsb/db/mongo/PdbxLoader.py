@@ -99,11 +99,13 @@ class PdbxLoader(object):
         #
         pathDrugBankMappingFile = self.__cfgOb.getPath('DRUGBANK_MAPPING_LOCATOR', sectionName=sectionName)
         pathCsdModelMappingFile = self.__cfgOb.getPath('CCDC_MAPPING_LOCATOR', sectionName=sectionName)
+        pathTaxonomyMappingFile = self.__cfgOb.getPath('NCBI_TAXONOMY_LOCATOR', sectionName=sectionName)
         #
         dH = self.__cfgOb.getHelper('DICT_METHOD_HELPER_MODULE', sectionName=sectionName,
                                     drugBankMappingFilePath=pathDrugBankMappingFile,
                                     workPath=self.__workPath,
-                                    csdModelMappingFilePath=pathCsdModelMappingFile)
+                                    csdModelMappingFilePath=pathCsdModelMappingFile,
+                                    taxonomyMappingFilePath=pathTaxonomyMappingFile)
         self.__dmh = DictMethodRunner(dictLocators=[pathPdbxDictionaryFile, pathRcsbDictionaryFile], methodHelper=dH)
 
     def load(self, schemaName, collectionLoadList=None, loadType='full', inputPathList=None, styleType='rowwise_by_name', dataSelectors=None,

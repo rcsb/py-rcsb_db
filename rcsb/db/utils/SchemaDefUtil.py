@@ -57,7 +57,7 @@ class SchemaDefUtil(object):
 
         """
         inputPathList = inputPathList if inputPathList else []
-        rpU = RepoPathUtil(self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit)
+        rpU = RepoPathUtil(self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, workPath=self.__workPath)
         outputPathList = rpU.getRepoPathList(contentType, inputPathList=inputPathList)
         return outputPathList
 

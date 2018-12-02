@@ -15,6 +15,7 @@
 # 12-Nov-2018 jdw add InChIKey matching in addChemCompRelated()
 # 15-Nov-2018 jdw add handling for antibody misrepresentation of multisource organisms
 # 28-Nov-2018 jdw relax constraints on the production of rcsb_entry_info
+#  1-Dec-2018 jdw add ncbi source and host organism info
 #
 ##
 """
@@ -57,6 +58,10 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         self.__drugBankMappingDict = {}
         self.__csdModelMappingFilePath = kwargs.get("csdModelMappingFilePath", None)
         self.__csdModelMappingDict = {}
+        #
+        self.__taxonomyMappingFilePath = kwargs.get("taxonomyMappingFilePath", None)
+        self.__taxonomyMappingDict = {}
+        #
         self.__workPath = kwargs.get("workPath", None)
         logger.debug("Dictionary method helper init")
         #
@@ -493,6 +498,25 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
         return rL
 
+    def __fetchTaxonomyMapping(self, filePath, workPath='.'):
+        """
+
+        """
+        if self.__taxonomyMappingDict:
+            return self.__taxonomyMappingDict
+        rD = {}
+        try:
+            if not filePath:
+                return rD
+            mU = MarshalUtil(workPath=workPath)
+            rD = mU.doImport(filePath, format="pickle")
+            logger.info("Fetching taxonomy mapping length %d" % len(rD))
+            self.__taxonomyMappingDict = rD
+            return rD
+        except Exception as e:
+            logger.exception("For %s failing with %s" % (filePath, str(e)))
+        return rD
+
     def filterSourceOrganismDetails(self, dataContainer, catName, **kwargs):
         """  Select relevant source and host organism details from primary data categories.
 
@@ -549,7 +573,9 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                               'ncbi_taxonomy_id',
                                                                               'beg_seq_num',
                                                                               'end_seq_num',
-                                                                              'provenance_code']))
+                                                                              'provenance_code',
+                                                                              'ncbi_scientific_name',
+                                                                              'ncbi_common_names']))
             #
             if not dataContainer.exists(hostCatName):
                 dataContainer.append(DataCategory(hostCatName, attributeNameList=['entity_id',
@@ -559,7 +585,11 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                                   'ncbi_taxonomy_id',
                                                                                   'beg_seq_num',
                                                                                   'end_seq_num',
-                                                                                  'provenance_code']))
+                                                                                  'provenance_code',
+                                                                                  'ncbi_scientific_name',
+                                                                                  'ncbi_common_names']))
+
+            taxD = self.__fetchTaxonomyMapping(self.__taxonomyMappingFilePath, workPath=self.__workPath)
             cObj = dataContainer.getObj(catName)
             hObj = dataContainer.getObj(hostCatName)
             #
@@ -671,6 +701,14 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     cObj.setValue(pCode, 'provenance_code', iRow)
                     for ii, at in enumerate(atL):
                         cObj.setValue(v[ii], at, iRow)
+                        if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?']:
+                            taxId = int(v[ii])
+                            if taxId in taxD:
+                                if 'sn' in taxD[taxId]:
+                                    cObj.setValue(taxD[taxId]['sn'], 'ncbi_scientific_name', iRow)
+                                if 'cn' in taxD[taxId]:
+                                    cObj.setValue(';'.join(list(set(taxD[taxId]['cn']))), 'ncbi_common_names', iRow)
+
                     logger.debug("%r entity %r - UPDATED %r %r" % (sType, entityId, atL, v))
                     iRow += 1
             #
@@ -679,6 +717,13 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 hObj.setValue(pCode, 'provenance_code', iRow)
                 for ii, at in enumerate(atL):
                     hObj.setValue(v[ii], at, iRow)
+                    if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?']:
+                        taxId = int(v[ii])
+                        if taxId in taxD:
+                            if 'sn' in taxD[taxId]:
+                                hObj.setValue(taxD[taxId]['sn'], 'ncbi_scientific_name', iRow)
+                            if 'cn' in taxD[taxId]:
+                                hObj.setValue(';'.join(list(set(taxD[taxId]['cn']))), 'ncbi_common_names', iRow)
                 logger.debug("%r entity %r - UPDATED %r %r" % (sType, entityId, atL, v))
                 iRow += 1
             #

@@ -213,17 +213,21 @@ class DictInfo(object):
 
     def __getIterables(self, iTypeCodes, iQueryStrings, dictHelper):
         itD = {}
+        #
+        typD = {d['TYPE_CODE']: d['DELIMITER'] for d in iTypeCodes}
+
         for catName in self.__categoryList:
             for atName in self.__dictSchema[catName]:
                 typeCode = self.__dApi.getTypeCode(catName, atName)
                 typeCodeAlt = self.__dApi.getTypeCodeAlt(catName, atName)
-                if typeCode in iTypeCodes or typeCodeAlt in iTypeCodes:
-                    itD[(catName, atName)] = dictHelper.getDelimiter(catName, atName)
+                if typeCode in typD or typeCodeAlt in typD:
+                    itD[(catName, atName)] = typD[typeCode]
                     continue
                 description = self.__dApi.getDescription(catName, atName)
                 for qs in iQueryStrings:
                     if qs in description:
                         itD[(catName, atName)] = dictHelper.getDelimiter(catName, atName)
+        logger.debug("iterableD: %r" % list(itD.items()))
         return itD
 
     def __getMethodInfo(self):
@@ -353,7 +357,7 @@ class DictInfo(object):
         """
         Args:
             catName (string): Category name
-            iTypeCodes (tuple, optional): iterable dictionary type codes
+            iterableD (tuple, optional): iterable dictionary type codes
             iQueryStrings (list, optional): search strings applied to item descriptions to identify iterable candidates
             itemTransformD (dict): dictionary of data transform filters  itd[(catName,atName)] = [f1,f2,...]
 
