@@ -54,4 +54,5 @@
  1-Dec-2018    V0.30  Adjustments for roundtrip CI/CD
  2-Dec-2018    V0.31 Fixes for expansion of semi-colon separated value types, add methods to
                include NCBI scientific and common names.
+ 3-Dec-2018.   V0.32a interim update for troubleshooting entity collection load issues.
 

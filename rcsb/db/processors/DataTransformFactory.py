@@ -188,7 +188,7 @@ class DataTransformFactory(object):
                     continue
                 d[dT['atNameD'][atName]] = vT.value
         except Exception as e:
-            logger.exception("Failing with %s for table %s atName %s" % (str(e), tableId, atName))
+            logger.error("Failing with %s for table %s atName %s" % (str(e), tableId, atName))
 
         return d
 
