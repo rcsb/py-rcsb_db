@@ -510,7 +510,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 return rD
             mU = MarshalUtil(workPath=workPath)
             rD = mU.doImport(filePath, format="pickle")
-            logger.info("Fetching taxonomy mapping length %d" % len(rD))
+            logger.debug("Fetching taxonomy mapping length %d" % len(rD))
             self.__taxonomyMappingDict = rD
             return rD
         except Exception as e:
@@ -701,7 +701,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     cObj.setValue(pCode, 'provenance_code', iRow)
                     for ii, at in enumerate(atL):
                         cObj.setValue(v[ii], at, iRow)
-                        if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?']:
+                        if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?'] and v[ii].isdigit():
                             taxId = int(v[ii])
                             if taxId in taxD:
                                 if 'sn' in taxD[taxId]:
@@ -713,20 +713,46 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     iRow += 1
             #
             iRow = 0
-            for (entityId, sType, atL, v) in hostL:
-                hObj.setValue(pCode, 'provenance_code', iRow)
-                for ii, at in enumerate(atL):
-                    hObj.setValue(v[ii], at, iRow)
-                    if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?']:
-                        taxId = int(v[ii])
-                        if taxId in taxD:
-                            if 'sn' in taxD[taxId]:
-                                hObj.setValue(taxD[taxId]['sn'], 'ncbi_scientific_name', iRow)
-                            if 'cn' in taxD[taxId]:
-                                hObj.setValue(';'.join(list(set(taxD[taxId]['cn']))), 'ncbi_common_names', iRow)
-                logger.debug("%r entity %r - UPDATED %r %r" % (sType, entityId, atL, v))
-                iRow += 1
-            #
+            for (entityId, sType, atL, tv) in hostL:
+                ii = atL.index('ncbi_taxonomy_id') if 'ncbi_taxonomy_id' in atL else -1
+                if ii > 0 and len(tv[ii].split(',')) > 1:
+                    tvL = self.__normalizeCsvToList(dataContainer.getName(), tv)
+                    ii = atL.index('pdbx_src_id') if 'pdbx_src_id' in atL else -1
+                    for jj, row in enumerate(tvL, 1):
+                        row[ii] = str(jj)
+                    partCountD[entityId] = len(tvL)
+                else:
+                    tvL = [tv]
+                for v in tvL:
+                    hObj.setValue(pCode, 'provenance_code', iRow)
+                    for ii, at in enumerate(atL):
+                        hObj.setValue(v[ii], at, iRow)
+                        if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?'] and v[ii].isdigit():
+                            taxId = int(v[ii])
+                            if taxId in taxD:
+                                if 'sn' in taxD[taxId]:
+                                    hObj.setValue(taxD[taxId]['sn'], 'ncbi_scientific_name', iRow)
+                                if 'cn' in taxD[taxId]:
+                                    hObj.setValue(';'.join(list(set(taxD[taxId]['cn']))), 'ncbi_common_names', iRow)
+
+                    logger.debug("%r entity %r - UPDATED %r %r" % (sType, entityId, atL, v))
+                    iRow += 1
+            if 0:
+                iRow = 0
+                for (entityId, sType, atL, v) in hostL:
+                    hObj.setValue(pCode, 'provenance_code', iRow)
+                    for ii, at in enumerate(atL):
+                        hObj.setValue(v[ii], at, iRow)
+                        if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?'] and v[ii].isdigit():
+                            taxId = int(v[ii])
+                            if taxId in taxD:
+                                if 'sn' in taxD[taxId]:
+                                    hObj.setValue(taxD[taxId]['sn'], 'ncbi_scientific_name', iRow)
+                                if 'cn' in taxD[taxId]:
+                                    hObj.setValue(';'.join(list(set(taxD[taxId]['cn']))), 'ncbi_common_names', iRow)
+                    logger.debug("%r entity %r - UPDATED %r %r" % (sType, entityId, atL, v))
+                    iRow += 1
+            # -------------------------------------------------------------------------
             # Update entity attributes
             #    _entity.rcsb_multiple_source_flag
             #    _entity.rcsb_source_part_count
@@ -742,7 +768,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
             return True
         except Exception as e:
-            logger.exception("For %s failing with %s" % (catName, str(e)))
+            logger.exception("In %s for %s failing with %s" % (dataContainer.getName(), catName, str(e)))
         return False
 
     def consolidateAccessionDetails(self, dataContainer, catName, **kwargs):
@@ -826,7 +852,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             #
             return True
         except Exception as e:
-            logger.exception("For %s failing with %s" % (catName, str(e)))
+            logger.exception("In %s for %s failing with %s" % (dataContainer.getName(), catName, str(e)))
         return False
 
     def __fetchDrugBankMapping(self, filePath, workPath='.'):

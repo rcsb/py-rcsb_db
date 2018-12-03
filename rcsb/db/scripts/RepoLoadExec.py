@@ -16,6 +16,7 @@
 #    25-Jul-2018 - jdw die on input file path list processing error
 #    20-Aug-2018 - jdw add load_pdbx_core load option
 #     9-Sep-2018 - jdw expose --schema_level option
+#     3-Dec-2018 - jdw add options to load specific core collections.
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -66,7 +67,10 @@ def main():
     parser.add_argument("--load_bird_ref", default=False, action='store_true', help="Load Bird reference definitions (public subset)")
     parser.add_argument("--load_bird_family_ref", default=False, action='store_true', help="Load Bird Family reference definitions (public subset)")
     parser.add_argument("--load_entry_data", default=False, action='store_true', help="Load PDBx entry data (current released subset)")
-    parser.add_argument("--load_pdbx_core", default=False, action='store_true', help="Load PDBx core entry/entity data (current released subset)")
+    parser.add_argument("--load_pdbx_core", default=False, action='store_true', help="Load all PDBx core collections (current released subset)")
+    #
+    parser.add_argument("--load_pdbx_core_entry", default=False, action='store_true', help="Load PDBx core entry (current released subset)")
+    parser.add_argument("--load_pdbx_core_entity", default=False, action='store_true', help="Load PDBx core entity (current released subset)")
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
     parser.add_argument("--config_name", default="site_info", help="Configuration section name")
@@ -209,6 +213,24 @@ def main():
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
         #
+        if args.load_pdbx_core_entity:
+            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entity_v5_0_2'], loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
+                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+        #
+        if args.load_pdbx_core_entry:
+            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entry_v5_0_2'], loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
+                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+
+        if args.load_pdbx_core_assembly:
+            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_assemblyf_v5_0_2'], loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
+                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+
         logger.info("Operation completed with status %r " % ok and okS)
 
 

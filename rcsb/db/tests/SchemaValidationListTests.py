@@ -20,7 +20,7 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
-
+import glob
 import logging
 import os
 import time
@@ -50,7 +50,7 @@ class SchemaValidationListTests(unittest.TestCase):
 
     def setUp(self):
         self.__numProc = 2
-        self.__fileLimit = 200
+        self.__fileLimit = None
         self.__mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
         self.__workPath = os.path.join(HERE, 'test-output')
         self.__configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.yml')
@@ -70,12 +70,20 @@ class SchemaValidationListTests(unittest.TestCase):
         self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
         self.__pathRcsbDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'rcsb_mmcif_ext_v1.dic')
         #
+        #
+        self.__drugBankMappingFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'DrugBank', 'drugbank_pdb_mapping.json')
+        self.__csdModelMappingFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'chem_comp_models', 'ccdc_pdb_mapping.json')
+        #
+        self.__pathTaxonomyMappingFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'NCBI', 'taxonomy_names.pic')
+
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
-        self.__testFilePath = os.path.join(HERE, "test-output", 'vfiles')
-        self.__testFileNames = ['2pjg.cif', '3ed8.cif', '3ryo.cif', '3s4r.cif', '3vzv.cif', '4jne.cif', '5hgq.cif', '5pgy.cif']
-        self.__testPathList = [os.path.join(self.__testFilePath, f) for f in self.__testFileNames]
+        self.__testDirPath = os.path.join(HERE, "test-output", 'pdbx-fails')
+        # self.__testDirPath = os.path.join(HERE, "test-output", 'vfiles')
+
+        # self.__testFileNames = ['2pjg.cif', '3ed8.cif', '3ryo.cif', '3s4r.cif', '3vzv.cif', '4jne.cif', '5hgq.cif', '5pgy.cif']
+        # self.__testPathList = [os.path.join(self.__testFilePath, f) for f in self.__testFileNames]
 
     def tearDown(self):
         endTime = time.time()
@@ -83,40 +91,41 @@ class SchemaValidationListTests(unittest.TestCase):
                                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                             endTime - self.__startTime))
 
-    def testValidateOptsStrict(self):
+    def specialTestValidateOptsStrict(self):
         enforceOpts = "mandatoryKeys|mandatoryAttributes|bounds|enums"
-        eCount = self.__testValidateOpts(enforceOpts=enforceOpts)
+        schemaNameD = {'pdbx_core': ['pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2']}
+        eCount = self.__testValidateOpts(schemaNameD, self.__testDirPath, enforceOpts=enforceOpts)
         logger.info("Total validation errors enforcing %s : %d" % (enforceOpts, eCount))
         self.assertEqual(eCount, 0)
 
-    def testValidateOptsMin(self):
+    def specialTestValidateOptsMin(self):
         enforceOpts = "mandatoryKeys|enums"
-        eCount = self.__testValidateOpts(enforceOpts=enforceOpts)
+        schemaNameD = {'pdbx_core': ['pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2']}
+        eCount = self.__testValidateOpts(schemaNameD, self.__testDirPath, enforceOpts=enforceOpts)
         logger.info("Total validation errors enforcing %s : %d" % (enforceOpts, eCount))
         self.assertTrue(eCount <= 1)
 
-    def __testValidateOpts(self, enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
-        schemaNames = ['pdbx_core']
-        collectionNames = {'pdbx_core': ['pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2']}
+    def __testValidateOpts(self, schemaNameD, testDirPath, enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
         #
         eCount = 0
-        for schemaName in schemaNames:
-            for collectionName in collectionNames[schemaName]:
+        for schemaName in schemaNameD:
+            for collectionName in schemaNameD[schemaName]:
                 cD = self.__testBuildJson(schemaName, collectionName, enforceOpts=enforceOpts)
-                dL, cnL = self.__testPrepDocumentsFromContainers(schemaName, collectionName, styleType="rowwise_by_name_with_cardinality")
+                dL, cnL = self.__testPrepDocumentsFromContainers(testDirPath, schemaName, collectionName, styleType="rowwise_by_name_with_cardinality")
+                logger.info("Processed %d containers" % len(dL))
                 # Raises exceptions for schema compliance.
                 Draft4Validator.check_schema(cD)
                 #
                 v = Draft4Validator(cD)
                 for ii, d in enumerate(dL):
-                    logger.debug("Schema %s collection %s document %d" % (schemaName, collectionName, ii))
+                    logger.info("%s schema %s collection %s document %d" % (cnL[ii], schemaName, collectionName, ii))
                     try:
                         for error in sorted(v.iter_errors(d), key=str):
                             logger.info("schema %s collection %s (%s) path %s error: %s" % (schemaName, collectionName, cnL[ii], error.path, error.message))
                             eCount += 1
                         #
                     except Exception as e:
-                        logger.info("Validation error %s" % str(e))
+                        logger.exception("%s validation error %s" % (cnL[ii], str(e)))
         return eCount
 
     def __testBuildJson(self, schemaName, collectionName, enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
@@ -137,16 +146,21 @@ class SchemaValidationListTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-    def __testPrepDocumentsFromContainers(self, schemaName, collectionName, styleType="rowwise_by_name_with_cardinality"):
+    def __testPrepDocumentsFromContainers(self, testDirPath, schemaName, collectionName, styleType="rowwise_by_name_with_cardinality"):
         """Test case -  create loadable PDBx data from repository files
         """
         try:
-            #inputPathList = self.__schU.getPathList(contentType=schemaName)
-            inputPathList = self.__testPathList
+
+            inputPathList = glob.glob(testDirPath + "/*.cif")
+            logger.info("Found %d files in test path %s" % (len(inputPathList), testDirPath))
             sd, _, _, _ = self.__schU.getSchemaInfo(contentType=schemaName)
             #
-            dH = DictMethodRunnerHelper()
+            #
+            dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath,
+                                        csdModelMappingFilePath=self.__csdModelMappingFile,
+                                        taxonomyMappingFilePath=self.__pathTaxonomyMappingFile)
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
+
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
             sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
@@ -181,8 +195,8 @@ class SchemaValidationListTests(unittest.TestCase):
 
 def schemaBuildJsonSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(SchemaValidationListTests("testValidateOptsStrict"))
-    suiteSelect.addTest(SchemaValidationListTests("testValidateOptsMin"))
+    suiteSelect.addTest(SchemaValidationListTests("specialTestValidateOptsStrict"))
+    suiteSelect.addTest(SchemaValidationListTests("specialTestValidateOptsMin"))
     return suiteSelect
 
 

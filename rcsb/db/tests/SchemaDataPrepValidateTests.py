@@ -74,6 +74,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         #
         self.__drugBankMappingFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'DrugBank', 'drugbank_pdb_mapping.json')
         self.__csdModelMappingFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'chem_comp_models', 'ccdc_pdb_mapping.json')
+        self.__pathTaxonomyMappingFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'NCBI', 'taxonomy_names.pic')
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
@@ -159,7 +160,8 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             inputPathList = self.__schU.getPathList(contentType=schemaName)
             sd, _, _, _ = self.__schU.getSchemaInfo(contentType=schemaName)
             #
-            dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath, csdModelMappingFilePath=self.__csdModelMappingFile)
+            dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath,
+                                        csdModelMappingFilePath=self.__csdModelMappingFile, taxonomyMappingFilePath=self.__pathTaxonomyMappingFile)
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
