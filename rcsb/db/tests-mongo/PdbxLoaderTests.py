@@ -154,15 +154,15 @@ class PdbxLoaderTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-    def testLoadPdbxEntryData(self):
+    def testLoadPdbxEntryCoreData(self):
         """ Test case -  Load PDBx entry data
         """
         try:
             mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
-            ok = mw.load('pdbx', loadType='full', inputPathList=None, styleType=self.__documentStyle,
+            ok = mw.load('pdbx_core', loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
-            self.assertFalse(ok)
+            self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
         except Exception as e:
@@ -244,7 +244,7 @@ def mongoLoadSuite():
 
 def mongoLoadPdbxSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(PdbxLoaderTests("testLoadPdbxEntryData"))
+    suiteSelect.addTest(PdbxLoaderTests("testLoadPdbxEntryCoreData"))
     return suiteSelect
 
 

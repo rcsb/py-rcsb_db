@@ -71,6 +71,7 @@ def main():
     #
     parser.add_argument("--load_pdbx_core_entry", default=False, action='store_true', help="Load PDBx core entry (current released subset)")
     parser.add_argument("--load_pdbx_core_entity", default=False, action='store_true', help="Load PDBx core entity (current released subset)")
+    parser.add_argument("--load_pdbx_core_assembly", default=False, action='store_true', help="Load PDBx core assembly (current released subset)")
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
     parser.add_argument("--config_name", default="site_info", help="Configuration section name")
@@ -226,7 +227,7 @@ def main():
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
         if args.load_pdbx_core_assembly:
-            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_assemblyf_v5_0_2'], loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_assembly_v5_0_2'], loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)

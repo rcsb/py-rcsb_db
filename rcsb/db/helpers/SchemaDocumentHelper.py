@@ -9,6 +9,7 @@
 #  14-Aug-2018 jdw generalize document key attribute to attribute list
 #  20-Aug-2018 jdw slice details added to __schemaContentFilters
 #   8-Oct-2018 jdw added getSubCategoryAggregates() method
+#   3-Dec-2018 jdw add getDocumentIndices()
 #
 ##
 """
@@ -99,9 +100,20 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
     def getDocumentKeyAttributeNames(self, collectionName):
         r = []
         try:
-            return self.__cfgD['collection_attribute_names'][collectionName]
+            for d in self.__cfgD['collection_indices'][collectionName]:
+                if d['INDEX_NAME'] == 'primary':
+                    r = d['ATTRIBUTE_NAMES']
+                    break
         except Exception as e:
-            logger.debug("Collection %s failing with %s" % (collectionName, str(e)))
+            logger.exception("Collection %s failing with %s" % (collectionName, str(e)))
+        return r
+
+    def getDocumentIndices(self, collectionName):
+        r = []
+        try:
+            r = [d for d in self.__cfgD['collection_indices'][collectionName] if d['ATTRIBUTE_NAMES'] and len(d['ATTRIBUTE_NAMES']) > 0]
+        except Exception as e:
+            logger.exception("Collection %s failing with %s" % (collectionName, str(e)))
         return r
 
     def getPrivateDocumentAttributes(self, collectionName):

@@ -25,6 +25,7 @@
 #                       deprecating __loadInfo in this class
 #      20-Nov-2018  jdw add addDocumentPrivateAttributes() to inject private document attributes,
 #                       This method is collection dependent which is awkward in this class.
+#       4-Dec-2018  jdw make insertion of private keys optional
 #
 #
 ##
@@ -230,7 +231,7 @@ class SchemaDefDataPrep(object):
         return schemaDataDictList, containerNameList, rejectList
 
     def addDocumentPrivateAttributes(self, docList, collectionName):
-        """ For the input collection, aqdd private document attributes to the input document list.
+        """ For the input collection, add private document attributes to the input document list.
         """
         try:
             d = {}
@@ -241,9 +242,12 @@ class SchemaDefDataPrep(object):
                     atName = pdk['ATTRIBUTE_NAME']
                     pName = pdk['PRIVATE_DOCUMENT_NAME']
                     for d in docList:
-                        d[pName] = d[catName][atName]
+                        if catName in d and atName in d[catName]:
+                            d[pName] = d[catName][atName]
+                        else:
+                            logger.debug("Skipping private key for %s %s" % (catName, atName))
         except Exception as e:
-            logger.exception("Failing with %s : %r" % (str(e), d.items()[:5]))
+            logger.exception("Failing with %s : %r" % (str(e), list(d.items())[:5]))
         #
         return docList
 
@@ -267,7 +271,7 @@ class SchemaDefDataPrep(object):
             for c in myContainerList:
                 if self.__testdataSelectors(c, dataSelectors):
                     cL.append(c)
-                    #self.__loadInfo[c.getName()] = {'load_date': self.__getTimeStamp(), 'locator': lPath}
+                    # self.__loadInfo[c.getName()] = {'load_date': self.__getTimeStamp(), 'locator': lPath}
                 else:
                     rejectPathList.append(lPath)
             self.__mapData(cL, schemaDataDict, filterType)

@@ -23,6 +23,7 @@
 #     24-Oct-2018 jdw  update for new configuration organization
 #     11-Nov-2018 jdw  add DrugBank and CCDC mapping path details.
 #     21-Nov-2018 jdw  add addDocumentPrivateAttributes(dList, collectionName) to inject private document keys
+#      3-Dec-2018 jdw  generalize the creation of collection indices.
 #
 ##
 """
@@ -38,6 +39,7 @@ __license__ = "Apache 2.0"
 
 import logging
 import operator
+import os
 import sys
 import time
 
@@ -166,18 +168,18 @@ class PdbxLoader(object):
             numProc = self.__numProc
             chunkSize = self.__chunkSize if pathList and self.__chunkSize < len(pathList) else 0
             #
-            sd, dbName, fullCollectionNameList, primaryIndexD = self.__schU.getSchemaInfo(schemaName)
+            sd, dbName, fullCollectionNameList, docIndexD = self.__schU.getSchemaInfo(schemaName)
 
             collectionNameList = collectionLoadList if collectionLoadList else fullCollectionNameList
 
             for collectionName in collectionNameList:
                 if loadType == 'full':
                     self.__removeCollection(dbName, collectionName)
-                    indAtL = primaryIndexD[collectionName] if collectionName in primaryIndexD else None
+                    indexDL = docIndexD[collectionName] if collectionName in docIndexD else []
                     bsonSchema = None
                     if schemaLevel and schemaLevel in ['min', 'full']:
                         bsonSchema = self.__schU.getJsonSchema(collectionName, level=schemaLevel)
-                    ok = self.__createCollection(dbName, collectionName, indAtL, bsonSchema=bsonSchema)
+                    ok = self.__createCollection(dbName, collectionName, indexDL=indexDL, bsonSchema=bsonSchema)
                     logger.debug("Collection create return status %r" % ok)
 
             #
@@ -230,7 +232,11 @@ class PdbxLoader(object):
                 desp.setEndTime()
                 self.__statusList.append(desp.getStatus())
             #
-            logger.info("Load operation success status %r failed paths %d of %d" % (ok, len(failList), numPaths))
+            if ok:
+                logger.info("Load operation success with %d paths" % (numPaths))
+            else:
+                logger.info("Load operation fails with %d paths: %r" % (len(failList), [os.path.basename(pth) for pth in failList]))
+            #
             return ok
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -340,17 +346,25 @@ class PdbxLoader(object):
                 successPathList.extend(list(set(rejectPathList)))
                 fullSuccessPathList.extend(list(set(successPathList)))
                 fullFailedPathList.extend(list(set(failedPathList)))
-                logger.info("%s %s/%s document list %d successes %d  failures %d filtered/rejected %d" %
-                            (procName, dbName, collectionName, len(dList), len(successPathList), len(failedPathList), len(rejectPathList)))
-            #
+                #
+                logger.debug("%s %s/%s document list %d successes %d  failures %d filtered/rejected %d" %
+                             (procName, dbName, collectionName, len(dList), len(successPathList), len(failedPathList), len(rejectPathList)))
+                #
+                if (len(failedPathList) > 0):
+                    logger.info("%s %s/%s failures %r" % (procName, dbName, collectionName, [os.path.basename(pth) for pth in failedPathList]))
+                if (len(rejectPathList) > 0):
+                    logger.info("%s %s/%s rejected %r" % (procName, dbName, collectionName, [os.path.basename(pth) for pth in rejectPathList]))
+        #
             logger.debug("fullSuccessPathList %r" % fullSuccessPathList)
             logger.debug("fullFailedPathList  %r" % fullFailedPathList)
             retList = list(set(dataList) - set(fullFailedPathList))
             #
             logger.debug("Length input path list %d length filtered list %d returning path list %d" % (len(dataList), len(rejectPathList), len(retList)))
             #
-            logger.info("%s %s %r returning success path list %d full failed path list %d " % (procName, dbName, collectionNameList,
-                                                                                               len(set(retList)), len(set(fullFailedPathList))))
+            logger.debug("%s %s %r returning success path list %d full failed path list %d " % (procName, dbName, collectionNameList,
+                                                                                                len(set(retList)), len(set(fullFailedPathList))))
+            if (len(fullFailedPathList) > 0):
+                logger.info("%s %s %r full failed path list %r" % (procName, dbName, collectionNameList, [os.path.basename(pth) for pth in fullFailedPathList]))
             self.__end(startTime, procName + " with status " + str(ok))
             return retList, [], []
 
@@ -385,8 +399,8 @@ class PdbxLoader(object):
         delta = endTime - startTime
         logger.debug("Completed %s at %s (%.4f seconds)" % (message, ts, delta))
 
-    def __createCollection(self, dbName, collectionName, indexAttributeNames=None, bsonSchema=None):
-        """Create database and collection and optionally a primary index -
+    def __createCollection(self, dbName, collectionName, indexDL=None, bsonSchema=None):
+        """Create database and collection and optionally a set of indices -
         """
         try:
             logger.debug("Create database %s collection %s" % (dbName, collectionName))
@@ -396,8 +410,9 @@ class PdbxLoader(object):
                 ok2 = mg.databaseExists(dbName)
                 ok3 = mg.collectionExists(dbName, collectionName)
                 okI = True
-                if indexAttributeNames:
-                    okI = mg.createIndex(dbName, collectionName, indexAttributeNames, indexName="primary", indexType="DESCENDING", uniqueFlag=False)
+                if indexDL:
+                    for indexD in indexDL:
+                        okI = mg.createIndex(dbName, collectionName, indexD['ATTRIBUTE_NAMES'], indexName=indexD['INDEX_NAME'], indexType="DESCENDING", uniqueFlag=False)
 
             return ok1 and ok2 and ok3 and okI
             #

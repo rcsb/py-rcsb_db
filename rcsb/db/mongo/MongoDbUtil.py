@@ -171,6 +171,7 @@ class MongoDbUtil(object):
 
         """
         rIdL = []
+        r = None
         try:
             c = self.__mgObj[databaseName].get_collection(collectionName)
             r = c.insert_many(dList, ordered=ordered, bypass_document_validation=bypassValidation)
@@ -178,7 +179,7 @@ class MongoDbUtil(object):
             logger.error("Bulk insert failing for document length %d with %s" % (len(dList), str(e)))
         #
         try:
-            rIdL = r.inserted_ids
+            rIdL = r.inserted_ids if r is not None else []
             return rIdL
         except Exception as e:
             rIdL = []

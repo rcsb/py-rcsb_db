@@ -12,6 +12,7 @@
 #  21-Aug-2018 jdw use getHelper() from the configuration class.
 #   7-Sep-2018 jdw add method to return a stored JSON schema getJsonSchema()
 #  11-Nov-2018 jdw add support for chem_comp_core and bird_chem_comp_core schemas
+#   3-Dec-2018 jdw generalize the delivery of document indices
 ##
 """
  A collection of schema and repo path convenience methods.
@@ -78,7 +79,7 @@ class SchemaDefUtil(object):
         sd = None
         dbName = None
         collectionNameList = []
-        primaryIndexD = {}
+        docIndexD = {}
         mU = MarshalUtil(workPath=self.__workPath)
         try:
             optName = 'SCHEMA_DEF_LOCATOR_%s' % applicationName.upper()
@@ -99,14 +100,13 @@ class SchemaDefUtil(object):
                 dbName = sd.getDatabaseName()
                 collectionNameList = sd.getContentTypeCollections(contentType)
                 logger.debug("Schema %s database name %s collections %r" % (contentType, dbName, collectionNameList))
-                primaryIndexD = {}
                 for collectionName in collectionNameList:
-                    primaryIndexD[collectionName] = sd.getDocumentKeyAttributeNames(collectionName)
+                    docIndexD[collectionName] = sd.getDocumentIndices(collectionName)
 
         except Exception as e:
             logger.exception("Retreiving schema %s for %s failing with %s" % (contentType, applicationName, str(e)))
 
-        return sd, dbName, collectionNameList, primaryIndexD
+        return sd, dbName, collectionNameList, docIndexD
 
     def getJsonSchema(self, collectionName, level='full'):
         """Return JSON schema (w/ BSON types) for the input collection and level.and

@@ -128,6 +128,7 @@ class SchemaDefBuild(object):
         rD = {'CONTENT_TYPE_COLLECTION_MAP': {},
               'COLLECTION_DOCUMENT_ATTRIBUTE_NAMES': {},
               'COLLECTION_DOCUMENT_PRIVATE_KEYS': {},
+              'COLLECTION_DOCUMENT_INDICES': {},
               'COLLECTION_CONTENT': {}}
         #
         dH = documentDefHelper
@@ -138,6 +139,7 @@ class SchemaDefBuild(object):
                 rD['COLLECTION_CONTENT'][c] = {'INCLUDE': dH.getIncluded(c), 'EXCLUDE': dH.getExcluded(c), 'SLICE_FILTER': dH.getSliceFilter(c)}
                 rD['COLLECTION_DOCUMENT_ATTRIBUTE_NAMES'][c] = dH.getDocumentKeyAttributeNames(c)
                 rD['COLLECTION_DOCUMENT_PRIVATE_KEYS'][c] = dH.getPrivateDocumentAttributes(c)
+                rD['COLLECTION_DOCUMENT_INDICES'][c] = dH.getDocumentIndices(c)
         #
         return rD
 
@@ -635,12 +637,14 @@ class SchemaDefBuild(object):
         # Add any private keys to the object schema - Fetch the metadata for the private keys
         #
         privKeyD = {}
+        privMandatoryD = {}
         if privDocKeyL:
             for pdk in privDocKeyL:
                 aD = self.__dictInfo.getAttributeFeatures(convertNameF(pdk['CATEGORY_NAME']))
                 fD = aD[convertNameF(pdk['ATTRIBUTE_NAME'])]
                 atPropD = self.__getJsonAttributeProperties(fD, appNameU, dtAppInfo, jsonSpecDraft, enforceOpts)
                 privKeyD[pdk['PRIVATE_DOCUMENT_NAME']] = atPropD
+                privMandatoryD[pdk['PRIVATE_DOCUMENT_NAME']] = pdk['MANDATORY']
 
         #
         # Suppress the category name for schemas with a single category -
@@ -650,13 +654,16 @@ class SchemaDefBuild(object):
             # rD = copy.deepcopy(catPropD)
             for k, v in privKeyD.items():
                 pD['properties'][k] = v
-                pD['required'] = k
+                # pD['required'] = k
+                if privMandatoryD[k]:
+                    pD['required'].append(k)
             rD = copy.deepcopy(pD)
 
         else:
             for k, v in privKeyD.items():
                 schemaPropD[k] = v
-                mandatoryCategoryL.append(k)
+                if privMandatoryD[k]:
+                    mandatoryCategoryL.append(k)
             #
             rD = {typeKey: 'object', 'properties': schemaPropD}
             if len(mandatoryCategoryL):
