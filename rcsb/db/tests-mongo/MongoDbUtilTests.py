@@ -51,7 +51,7 @@ class MongoDbUtilTests(unittest.TestCase):
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName)
         self.__resourceName = "MONGO_DB"
         self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName, sectionName='site_server_info')
-        self.__cObj = self.__open(self.__connectD)
+        # self.__cObj = self.__open(self.__connectD)
         #
         self.__mongoSchema = {
             "bsonType": "object",
@@ -91,7 +91,7 @@ class MongoDbUtilTests(unittest.TestCase):
         logger.debug("Starting %s at %s" % (self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
 
     def tearDown(self):
-        self.__close(self.__cObj)
+        # self.__close(self.__cObj)
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)\n" % (self.id(),
                                                               time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
@@ -471,6 +471,7 @@ class MongoDbUtilTests(unittest.TestCase):
 
         """
         try:
+            logger.debug("Starting testSingleIndexSelect")
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 nDocs = 100
                 mg = MongoDbUtil(client)
@@ -510,6 +511,13 @@ class MongoDbUtilTests(unittest.TestCase):
                 ok = mg.reIndex(self.__dbName, self.__collectionName)
                 self.assertTrue(ok)
                 #
+                logger.debug("HERE NOW")
+                #
+            logger.debug("ReStarting client")
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                ii = mg.count(self.__dbName, self.__collectionName)
+                logger.debug("Fetch length %d" % ii)
                 #
                 cur = mg.fetch(self.__dbName, self.__collectionName, ['DOC_ID'])
                 self.assertEqual(cur.count_documents(), nDocs)
@@ -518,11 +526,13 @@ class MongoDbUtilTests(unittest.TestCase):
                     logger.debug("Fetch num %d: %r" % (ii, d))
                 #
                 #
+                logger.debug("HERE NOW")
                 cur = mg.fetch(self.__dbName, self.__collectionName, ['category_0.attribute_0'], {'category_0.attribute_0': 'val_0_0'})
                 self.assertEqual(cur.count_documents(), nDocs)
                 logger.debug("Fetch length %d" % cur.count_documents())
                 for ii, d in enumerate(cur):
                     logger.debug("Fetch num %d: %r" % (ii, d))
+            logger.debug("HERE NOW")
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -693,7 +703,17 @@ def suiteValidation():
     return suiteSelect
 
 
+def suiteIndex1():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(MongoDbUtilTests("testSingleIndexSelect"))
+    return suiteSelect
+
+
 if __name__ == '__main__':
+    if (False):
+        mySuite = suiteIndex1()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
+
     if (True):
         mySuite = suiteOps()
         unittest.TextTestRunner(verbosity=2).run(mySuite)

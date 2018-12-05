@@ -122,7 +122,7 @@ class SchemaDefBuildTests(unittest.TestCase):
         """
 
         """
-        schemaNames = ['repository_holdings', 'entity_sequence_clusters', 'data_exchange']
+        schemaNames = ['repository_holdings', 'entity_sequence_clusters', 'data_exchange', 'drugbank_core']
         applicationNames = ['ANY', 'SQL']
         for schemaName in schemaNames:
             for applicationName in applicationNames:
@@ -135,7 +135,7 @@ class SchemaDefBuildTests(unittest.TestCase):
                                                    'repository_holdings_transferred_v0_1',
                                                    'repository_holdings_insilico_models_v0_1'],
                            'entity_sequence_clusters': ['cluster_members_v0_1', 'cluster_provenance_v0_1', 'entity_members_v0_1'],
-                           'data_exchange': ['rcsb_data_exchange_status_v0_1'],
+                           'data_exchange': ['rcsb_data_exchange_status_v0_1'], 'drugbank_core': ['drugbank_core_v0_1']
                            }
 
         #

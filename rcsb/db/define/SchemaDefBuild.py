@@ -18,6 +18,7 @@
 # 12-Oct-2018 jdw filter empty required attributes in subcategory aggregates
 # 24-Oct-2018 jdw update for new configuration organization
 # 18-Nov-2018 jdw add COLLECTION_DOCUMENT_ATTRIBUTE_INFO
+#  3-Dec-2018 jdw add INTEGRATED_CONTENT
 ##
 """
 Integrate dictionary metadata and file based(type/coverage) into internal and JSON/BSON schema defintions.
@@ -46,7 +47,7 @@ class SchemaDefBuild(object):
     """
 
     def __init__(self, schemaName, configPath, configName='site_info', mockTopPath=None,
-                 includeContentClasses=['GENERATED_CONTENT', 'EVOLVING_CONTENT', 'CONSOLIDATED_BIRD_CONTENT']):
+                 includeContentClasses=['GENERATED_CONTENT', 'EVOLVING_CONTENT', 'CONSOLIDATED_BIRD_CONTENT', 'INTEGRATED_CONTENT']):
         """
 
         """

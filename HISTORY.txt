@@ -57,4 +57,5 @@
  3-Dec-2018.   V0.32 interim update for troubleshooting entity collection load issues, adding search indices
                for core collections, adding optional private identifier chemical component identifiers for non-polymer
                entities, adjustments to bird core citation schema.
+ 5-Dec-2018.   V0.33 Add preliminary DrugBank schema
 

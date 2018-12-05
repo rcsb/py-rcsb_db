@@ -384,8 +384,17 @@ class MongoDbUtil(object):
             dList = c.find(qD, sD)
             return dList
         except Exception as e:
-            logger.error("Failing with %s" % str(e))
+            logger.exception("Failing with %s" % str(e))
         return None
+
+    def count(self, databaseName, collectionName, filter={}):
+        try:
+            c = self.__mgObj[databaseName].get_collection(collectionName)
+            logger.debug("Current indexes for %s %s : %r" % (databaseName, collectionName, c.list_indexes()))
+            return c.count_documents(filter)
+        except Exception as e:
+            logger.exception("Failing %s and %s with %s" % (databaseName, collectionName, str(e)))
+        return 0
 
     def __getKeyValues(self, dct, keyNames):
         """Return the tuple of values of corresponding to the input dictionary key names expressed in dot notation.
