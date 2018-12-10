@@ -225,7 +225,8 @@ class DocumentLoader(object):
         failList = []
         rIdL = []
         successList = []
-        logger.debug("Loading dbName %s collectionName %s with document count %d" % (dbName, collectionName, len(docList)))
+        logger.debug("Loading dbName %s collectionName %s with document count %d keynames %r " %
+                     (dbName, collectionName, len(docList), keyNames))
         if keyNames:
             # map the document list to some document key if this is provided
             indD = {}
@@ -268,12 +269,12 @@ class DocumentLoader(object):
                         failList = docList
                         successList = []
                 #
+                rbStatus = True
                 if readBackCheck and keyNames:
                     #
                     # Note that objects in docList are mutated by the insert operation with the additional key '_id',
                     # hence, it is possible to compare the fetched object with the input object.
                     #
-                    rbStatus = True
                     for ii, rId in enumerate(rIdL):
                         rObj = mg.fetchOne(dbName, collectionName, '_id', rId)
                         dIdTup = self.__getKeyValues(rObj, keyNames)

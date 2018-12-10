@@ -353,7 +353,7 @@ class PdbxLoader(object):
                 if (len(failedPathList) > 0):
                     logger.info("%s %s/%s failures %r" % (procName, dbName, collectionName, [os.path.basename(pth) for pth in failedPathList]))
                 if (len(rejectPathList) > 0):
-                    logger.info("%s %s/%s rejected %r" % (procName, dbName, collectionName, [os.path.basename(pth) for pth in rejectPathList]))
+                    logger.debug("%s %s/%s rejected %r" % (procName, dbName, collectionName, [os.path.basename(pth) for pth in rejectPathList]))
         #
             logger.debug("fullSuccessPathList %r" % fullSuccessPathList)
             logger.debug("fullFailedPathList  %r" % fullFailedPathList)
@@ -507,6 +507,7 @@ class PdbxLoader(object):
                 logger.debug("-- InsertList returns rIdL length %r of %r" % (len(rIdL), len(dList)))
                 # ---
                 #  If there is a failure then determine the specific successes and failures -
+                #
                 #
                 successList = fullSuccessValueList
                 if len(rIdL) != len(dList):

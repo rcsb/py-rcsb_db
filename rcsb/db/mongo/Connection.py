@@ -5,6 +5,7 @@
 # Update:
 #   1-Apr-2018 jdw add context methods
 #  23-Oct-2018 jdw add section name config access methods and make this a constructor argument
+#   5-Dec-2018 jdw pass on exceptions from the context manager __exit__() method
 ##
 """
 Derived class for managing database connection which handles application specific authentication.
@@ -97,4 +98,6 @@ class Connection(ConnectionBase):
         return self.getClientConnection()
 
     def __exit__(self, *args):
+        if args[0]:
+            raise
         return self.closeConnection()

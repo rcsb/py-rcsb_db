@@ -279,27 +279,36 @@ The following CLI provides a preliminary access to ETL functions for processing
 derived content types such as sequence comparative data.
 
 ```bash
-etl_exec_cli  --help
-
-usage: etl_exec_cli   [-h] [--full] [--etl_entity_sequence_clusters]
-                      [--data_set_id DATA_SET_ID]
-                      [--sequence_cluster_data_path SEQUENCE_CLUSTER_DATA_PATH]
-                      [--config_path CONFIG_PATH] [--config_name CONFIG_NAME]
-                      [--db_type DB_TYPE] [--read_back_check]
-                      [--num_proc NUM_PROC] [--chunk_size CHUNK_SIZE]
-                      [--document_limit DOCUMENT_LIMIT]
-                      [--prune_document_size PRUNE_DOCUMENT_SIZE] [--debug]
-                      [--mock] [--working_path WORKING_PATH]
+| => etl_exec_cli --help
+usage: etl_exec_cli [-h] [--full] [--etl_entity_sequence_clusters]
+                    [--etl_repository_holdings] [--etl_chemref]
+                    [--data_set_id DATA_SET_ID]
+                    [--sequence_cluster_data_path SEQUENCE_CLUSTER_DATA_PATH]
+                    [--sandbox_data_path SANDBOX_DATA_PATH]
+                    [--config_path CONFIG_PATH] [--config_name CONFIG_NAME]
+                    [--db_type DB_TYPE] [--read_back_check]
+                    [--num_proc NUM_PROC] [--chunk_size CHUNK_SIZE]
+                    [--document_limit DOCUMENT_LIMIT]
+                    [--prune_document_size PRUNE_DOCUMENT_SIZE] [--debug]
+                    [--mock] [--working_path WORKING_PATH]
 
 optional arguments:
   -h, --help            show this help message and exit
   --full                Fresh full load in a new tables/collections (Default)
   --etl_entity_sequence_clusters
                         ETL entity sequence clusters
+  --etl_repository_holdings
+                        ETL repository holdings
+  --etl_chemref         ETL integrated chemical reference data
   --data_set_id DATA_SET_ID
-                        Data set identifier (e.g., 2018_14)
+                        Data set identifier (default= 2018_14 for current
+                        week)
   --sequence_cluster_data_path SEQUENCE_CLUSTER_DATA_PATH
-                        Sequence cluster data path
+                        Sequence cluster data path (default set by
+                        configuration
+  --sandbox_data_path SANDBOX_DATA_PATH
+                        Date exchange sandboxPath data path (default set by
+                        configuration
   --config_path CONFIG_PATH
                         Path to configuration options file
   --config_name CONFIG_NAME
@@ -317,6 +326,7 @@ optional arguments:
   --mock                Use MOCK repository configuration for testing
   --working_path WORKING_PATH
                         Working path for temporary files
+
 ```
 
 ### Examples
@@ -388,6 +398,9 @@ bird_chem_comp_core,.. ).
 # 23-Nov-2018 jdw add rcsb_repository_holdings_prerelease
 # 30-Nov-2018 jdw add CONSOLIDATE_BIRD_CONTENT content class for bird_chem_comp_core collection
 #  1-Dec-2018 jdw add NCBI_TAXONOMY_LOCATOR: NCBI/taxonomy_names.pic
+#  4-Dec-2018 jdw add indices, add private keys for chemical components, align citation schema, and
+#                 add DrugBank core collection details
+#  6-Dec-2018 jdw revised DrugBank core collection details
 #
 # Master Pinelands configuration file example
 ---
@@ -409,6 +422,7 @@ site_info:
     DOCUMENT_HELPER_MODULE: rcsb.db.helpers.SchemaDocumentHelper
     DICT_METHOD_HELPER_MODULE: rcsb.db.helpers.DictMethodRunnerHelper
     DRUGBANK_MAPPING_LOCATOR: DrugBank/drugbank_pdb_mapping.json
+    DRUGBANK_DATA_LOCATOR: DrugBank/full_database.xml.gz
     CCDC_MAPPING_LOCATOR: chem_comp_models/ccdc_pdb_mapping.json
     NCBI_TAXONOMY_LOCATOR: NCBI/taxonomy_names.pic
 site_server_info:
@@ -511,6 +525,15 @@ data_exchange:
     SCHEMA_DEF_LOCATOR_SQL: schema/schema_def-data_exchange-SQL.json
     SCHEMA_DEF_LOCATOR_ANY: schema/schema_def-data_exchange-ANY.json
     INSTANCE_DATA_TYPE_INFO_LOCATOR: data_type_info/scan-data_exchange-type-map.json
+drugbank_core:
+    DATABASE_NAME: chem_comp
+    SCHEMA_NAME: drugbank_core
+    DATABASE_VERSION_STRING: v5
+    COLLECTION_DRUGBANK_CORE: drugbank_core
+    COLLECTION_VERSION_STRING: v0_1
+    SCHEMA_DEF_LOCATOR_SQL: schema/schema_def-drugbank_core-SQL.json
+    SCHEMA_DEF_LOCATOR_ANY: schema/schema_def-drugbank_core-ANY.json
+    INSTANCE_DATA_TYPE_INFO_LOCATOR: data_type_info/scan-drugbank_core-type-map.json
 pdbx_v5_0_2:
     SCHEMA_NAME: pdbx
     BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-pdbx_v5_0_2.json
@@ -607,6 +630,10 @@ rcsb_data_exchange_status_v0_1:
     SCHEMA_NAME: data_exchange
     BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-rcsb_data_exchange_status_v0_1.json
     BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-rcsb_data_exchange_status_v0_1.json
+drugbank_core_v0_1:
+    SCHEMA_NAME: drugbank_core
+    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-drugbank_core_v0_1.json
+    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-drugbank_core_v0_1.json
 dictionary_helper:
     item_transformers:
         STRIP_WS:
@@ -649,6 +676,9 @@ dictionary_helper:
             ATTRIBUTE_NAME: id
     cardinality_category_extras:
         - rcsb_load_status
+        - pdbx_reference_molecule
+        - pdbx_reference_molecule_family
+        - drugbank_info
     selection_filters:
         ?       - PUBLIC_RELEASE
                 - pdbx
@@ -688,12 +718,11 @@ dictionary_helper:
                       - REF_ONLY
         ?       - PUBLIC_RELEASE
                 - bird_chem_comp_core
-        :       - CATEGORY_NAME: chem_comp
-                  ATTRIBUTE_NAME: pdbx_release_status
+        :       - CATEGORY_NAME: pdbx_reference_molecule
+                  ATTRIBUTE_NAME: release_status
                   VALUES:
                       - REL
                       - OBS
-                      - REF_ONLY
         ?       - PUBLIC_RELEASE
                 - bird
         :       - CATEGORY_NAME: pdbx_reference_molecule
@@ -724,10 +753,10 @@ dictionary_helper:
     iterable_delimiters:
         - CATEGORY_NAME: chem_comp
           ATTRIBUTE_NAME: pdbx_synonyms
-          DELIMITER: ;
+          DELIMITER: ";"
         - CATEGORY_NAME: citation
           ATTRIBUTE_NAME: rcsb_authors
-          DELIMITER: ;
+          DELIMITER: ";"
     content_classes:
         ?       - GENERATED_CONTENT
                 - pdbx
@@ -812,6 +841,7 @@ dictionary_helper:
                       - entity_count
                       - nonpolymer_entity_count
                       - branched_entity_count
+                      - solvent_entity_count
                 - CATEGORY_NAME: entity_poly
                   ATTRIBUTE_NAME_LIST:
                       - rcsb_entity_polymer_type
@@ -977,6 +1007,9 @@ dictionary_helper:
                       - datablock_name
                       - load_date
                       - locator
+                - CATEGORY_NAME: citation
+                  ATTRIBUTE_NAME_LIST:
+                      - rcsb_authors
                 - CATEGORY_NAME: rcsb_chem_comp_synonyms
                   ATTRIBUTE_NAME_LIST:
                       - comp_id
@@ -1288,14 +1321,27 @@ dictionary_helper:
                 - CATEGORY_NAME: citation
                   ATTRIBUTE_NAME_LIST:
                        - id
-                       - year
+                       - book_id_ISBN
+                       - book_publisher
+                       - book_publisher_city
+                       - book_title
+                       - coordinate_linkage
+                       - country
+                       - journal_abbrev
+                       - journal_id_ASTM
+                       - journal_id_CSD
+                       - journal_id_ISSN
+                       - journal_issue
                        - journal_volume
+                       - language
                        - page_first
                        - page_last
                        - pdbx_database_id_DOI
                        - pdbx_database_id_PubMed
-                       - journal_abbrev
+                       - rcsb_authors
                        - title
+                       - unpublished_flag
+                       - year
                 - CATEGORY_NAME: citation_author
                   ATTRIBUTE_NAME_LIST:
                        - citation_id
@@ -1309,6 +1355,32 @@ dictionary_helper:
                        - action_type
                        - annotator
                        - details
+        ?       - INTEGRATED_CONTENT
+                - drugbank_core
+        :       - CATEGORY_NAME: drugbank_info
+                  ATTRIBUTE_NAME_LIST:
+                      - drugbank_id
+                      - name
+                      - description
+                      - synonyms
+                      - brand_names
+                      - affected_organism
+                      - indication
+                      - pharmacology
+                      - mechanism_of_action
+                      - cas_number
+                      - drug_categories
+                      - drug_groups
+                - CATEGORY_NAME: drugbank_target
+                  ATTRIBUTE_NAME_LIST:
+                      - ordinal
+                      - name
+                      - interaction_type
+                      - target_actions
+                      - organism_common_name
+                      - reference_database_name
+                      - reference_database_accession_code
+                      - seq_one_letter_code
     slice_parent_items:
         ?       - ENTITY
                 - pdbx_core
@@ -1328,6 +1400,7 @@ dictionary_helper:
                       - non-polymer
                       - macrolide
                       - branched
+                      - water
     slice_cardinality_category_extras:
         ?       - ENTITY
                 - pdbx_core
@@ -1380,6 +1453,11 @@ schemadef_helper:
         data_exchange:
             INCLUDE:
                 - rcsb_data_exchange_status
+            EXCLUDE: []
+        drugbank_core:
+            INCLUDE:
+                - drugbank_info
+                - drugbank_target
             EXCLUDE: []
     block_attributes:
         pdbx:
@@ -1449,6 +1527,9 @@ schemadef_helper:
         data_exchange:
             NAME: data_exchange
             VERSION: v5
+        drugbank_core:
+            NAME: chem_comp_v5
+            VERSION: '0_1'
     exclude_attributes:
         pdbx_core:
             - CATEGORY_NAME: cell
@@ -1545,6 +1626,8 @@ document_helper:
             - entity_members_v0_1
         data_exchange:
             - rcsb_data_exchange_status_v0_1
+        drugbank_core:
+            - drugbank_core_v0_1
     schema_content_filters:
         chem_comp_core_v5_0_2:
             INCLUDE: []
@@ -1556,6 +1639,7 @@ document_helper:
             EXCLUDE:
                 - CHEM_COMP_ATOM
                 - CHEM_COMP_BOND
+                - CITATION_AUTHOR
         pdbx_v5_0_2:
             INCLUDE: []
             EXCLUDE:
@@ -1659,7 +1743,7 @@ document_helper:
                 - PDBX_AUDIT_REVISION_CATEGORY
                 - PDBX_AUDIT_REVISION_ITEM
                 - PDBX_DATABASE_PDB_OBS_SPR
-                - pDBX_DATABASE_RELATED
+                - PDBX_DATABASE_RELATED
                 - PDBX_DATABASE_STATUS
                 - PDBX_DEPOSIT_GROUP
                 - PDBX_MOLECULE
@@ -1778,93 +1862,223 @@ document_helper:
                 - rcsb_data_exchange_status
             EXCLUDE: []
             SLICE:
+        drugbank_core_v0_1:
+            INCLUDE:
+                - drugbank_info
+                - drugbank_target
+            EXCLUDE: []
+            SLICE:
     collection_private_keys:
         pdbx_core_entity_v5_0_2:
             - NAME: entry.id
               CATEGORY_NAME: rcsb_entity_container_identifiers
               ATTRIBUTE_NAME: entry_id
               PRIVATE_DOCUMENT_NAME: __entry_id
+              MANDATORY: True
             - NAME: entity.id
               CATEGORY_NAME: entity
               ATTRIBUTE_NAME: id
               PRIVATE_DOCUMENT_NAME: __entity_id
+              MANDATORY: True
+            - NAME: chem_comp.id
+              CATEGORY_NAME: pdbx_entity_nonpoly
+              ATTRIBUTE_NAME: comp_id
+              PRIVATE_DOCUMENT_NAME: __comp_id
+              MANDATORY: False
         pdbx_core_assembly_v5_0_2:
             - NAME: entry.id
               CATEGORY_NAME: rcsb_assembly_container_identifiers
               ATTRIBUTE_NAME: entry_id
               PRIVATE_DOCUMENT_NAME: __entry_id
+              MANDATORY: True
             - NAME: pdbx_struct_assembly.id
               CATEGORY_NAME: pdbx_struct_assembly
               ATTRIBUTE_NAME: id
               PRIVATE_DOCUMENT_NAME: __assembly_id
+              MANDATORY: True
         pdbx_core_entry_v5_0_2:
             - NAME: entry.id
               CATEGORY_NAME: entry
               ATTRIBUTE_NAME: id
               PRIVATE_DOCUMENT_NAME: __entry_id
+              MANDATORY: True
         chem_comp_core_v5_0_2:
             - NAME: chem_comp.id
               CATEGORY_NAME: chem_comp
               ATTRIBUTE_NAME: id
               PRIVATE_DOCUMENT_NAME: __comp_id
+              MANDATORY: True
         bird_chem_comp_core_v5_0_2:
-            - NAME: chem_comp.id
-              CATEGORY_NAME: chem_comp
-              ATTRIBUTE_NAME: id
+            - NAME: pdbx_reference_molecule.chem_comp_id
+              CATEGORY_NAME: pdbx_reference_molecule
+              ATTRIBUTE_NAME: chem_comp_id
               PRIVATE_DOCUMENT_NAME: __comp_id
-    collection_attribute_names:
+              MANDATORY: False
+            - NAME: pdbx_reference_molecule.prd_id
+              CATEGORY_NAME: pdbx_reference_molecule
+              ATTRIBUTE_NAME: prd_id
+              PRIVATE_DOCUMENT_NAME: __prd_id
+              MANDATORY: True
+        drugbank_core_v0_1:
+            - NAME: drugbank_info.drugbank_id
+              CATEGORY_NAME: drugbank_info
+              ATTRIBUTE_NAME: drugbank_id
+              PRIVATE_DOCUMENT_NAME: __drugbank_id
+              MANDATORY: True
+    collection_indices:
         pdbx_v5_0_2:
-            - entry.id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - entry.id
         pdbx_ext_v5_0_2:
-            - entry.id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - entry.id
         pdbx_core_entity_v5_0_2:
-            - entry.id
-            - entity.id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - entry.id
+              - entity.id
+            - INDEX_NAME: search_1
+              ATTRIBUTE_NAMES:
+              - rcsb_entity_container_identifiers.entry_id.entity_id
+              - rcsb_entity_container_identifiers.entry_id.asym_id
+            - INDEX_NAME: search_2
+              ATTRIBUTE_NAMES:
+              - rcsb_entity_container_identifiers.entry_id
+              - rcsb_entity_container_identifiers.entity_id
+              - rcsb_entity_container_identifiers.asym_ids
+            - INDEX_NAME: search_3
+              ATTRIBUTE_NAMES:
+              - rcsb_entity_container_identifiers.entry_id
+              - rcsb_entity_container_identifiers.entity_id
+              - rcsb_entity_container_identifiers.auth_asym_ids
+            - INDEX_NAME: search_4
+              ATTRIBUTE_NAMES:
+              - __entry_id
+              - __entity_id
+            - INDEX_NAME: search_5
+              ATTRIBUTE_NAMES:
+              - __entry_id
+              - __comp_id
         pdbx_core_assembly_v5_0_2:
-            - entry.id
-            - pdbx_struct_assembly.id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - entry.id
+              - pdbx_struct_assembly.id
+            - INDEX_NAME: search_1
+              ATTRIBUTE_NAMES:
+              - rcsb_assembly_container_identifiers.entry_id
+              - rcsb_assembly_container_identifiers.assembly_id
+            - INDEX_NAME: search_2
+              ATTRIBUTE_NAMES:
+              - __entry_id
+              - __assembly_id
         pdbx_core_entry_v5_0_2:
-            - entry.id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - entry.id
+            - INDEX_NAME: search_1
+              ATTRIBUTE_NAMES:
+              - rcsb_entry_container_identifiers.entry_id
+              - rcsb_entry_container_identifiers.entity_ids
+            - INDEX_NAME: search_2
+              ATTRIBUTE_NAMES:
+              - rcsb_entry_container_identifiers.entry_id
+              - rcsb_entry_container_identifiers.polymer_entity_ids
+            - INDEX_NAME: search_3
+              ATTRIBUTE_NAMES:
+              - rcsb_entry_container_identifiers.entry_id
+              - rcsb_entry_container_identifiers.non_polymer_entity_ids
+            - INDEX_NAME: search_4
+              ATTRIBUTE_NAMES:
+              - rcsb_entry_container_identifiers.entry_id
+              - rcsb_entry_container_identifiers.assembly_ids
+            - INDEX_NAME: search_5
+              ATTRIBUTE_NAMES:
+              - __entry_id
         bird_v5_0_2:
-            - pdbx_reference_molecule.prd_id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - pdbx_reference_molecule.prd_id
         family_v5_0_2:
-            - pdbx_reference_molecule_family.family_prd_id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - pdbx_reference_molecule_family.family_prd_id
         chem_comp_v5_0_2:
-            - chem_comp.component_id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - chem_comp.component_id
         chem_comp_core_v5_0_2:
-            - chem_comp.id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - chem_comp.id
         bird_chem_comp_v5_0_2:
-            - chem_comp.component_id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - chem_comp.component_id
         bird_chem_comp_core_v5_0_2:
-            - chem_comp.id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - chem_comp.id
         repository_holdings_update_v0_1:
-            - update_id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - update_id
         repository_holdings_current_v0_1:
-            - update_id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - update_id
         repository_holdings_unreleased_v0_1:
-            - update_id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - update_id
         repository_holdings_prerelease_v0_1:
-            - update_id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - update_id
         repository_holdings_removed_v0_1:
-            - update_id
-        repository_holdings_removed_audit_authors:
-            - update_id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - update_id
+        repository_holdings_removed_audit_authors_v0_1:
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - update_id
         repository_holdings_superseded_v0_1:
-            - update_id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - update_id
         repository_holdings_transferred_v0_1:
-            - update_id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - update_id
         repository_holdings_insilico_models_v0_1:
-            - update_id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - update_id
         cluster_members_v0_1:
-            - update_id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - update_id
         cluster_provenance_v0_1:
-            - software.name
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - software.name
         entity_members_v0_1:
-            - update_id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - update_id
         rcsb_data_exchange_status_v0_1:
-            - update_id
-            - database_name
-            - object_name
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - update_id
+              - database_name
+              - object_name
+        drugbank_core_v0_1:
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - drugbank_info.drugbank_id
     collection_subcategory_aggregates:
         cluster_members_v0_1:
             - sequence_membership

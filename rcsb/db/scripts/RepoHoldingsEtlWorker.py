@@ -54,7 +54,7 @@ class RepoHoldingsEtlWorker(object):
         return False
 
     def load(self, updateId, loadType='full'):
-        """ Test case - load legacy repository holdings and status data -
+        """ Load legacy repository holdings and status data -
 
         Relevant configuration options:
 

@@ -1478,7 +1478,8 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                               'polymer_entity_count',
                                                                               'entity_count',
                                                                               'nonpolymer_entity_count',
-                                                                              'branched_entity_count']))
+                                                                              'branched_entity_count',
+                                                                              'solvent_entity_count']))
             #
             cObj = dataContainer.getObj(catName)
             #
@@ -1488,6 +1489,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             numPolymers = 0
             numNonPolymers = 0
             numBranched = 0
+            numSolvent = 0
             for eType in eTypeL:
                 if eType == 'polymer':
                     numPolymers += 1
@@ -1495,9 +1497,11 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     numNonPolymers += 1
                 elif eType == 'branched':
                     numBranched += 1
-                elif eType != 'water':
+                elif eType == 'water':
+                    numSolvent += 1
+                else:
                     logger.error("Unexpected entity type for %s %s" % (dataContainer.getName(), eType))
-            totalEntities = numPolymers + numNonPolymers + numBranched
+            totalEntities = numPolymers + numNonPolymers + numBranched + numSolvent
             #
             pTypeL = []
             if dataContainer.exists('entity_poly'):
@@ -1527,6 +1531,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             cObj.setValue(numPolymers, 'polymer_entity_count', 0)
             cObj.setValue(numNonPolymers, 'nonpolymer_entity_count', 0)
             cObj.setValue(numBranched, 'branched_entity_count', 0)
+            cObj.setValue(numSolvent, 'solvent_entity_count', 0)
             cObj.setValue(totalEntities, 'entity_count', 0)
             cObj.setValue(expMethod, 'experimental_method', 0)
             cObj.setValue(methodCount, 'experimental_method_count', 0)
@@ -1569,6 +1574,111 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             return True
         except Exception as e:
             logger.exception("For %s failing with %s" % (dataContainer.getName(), str(e)))
+        return False
+
+    def addBirdEntityIds(self, dataContainer, catName, atName, **kwargs):
+        """ Add entity ids for BIRD molecule instances.
+
+            loop_
+            _pdbx_molecule.instance_id
+            _pdbx_molecule.prd_id
+            _pdbx_molecule.asym_id
+
+            loop_
+            _pdbx_entity_nonpoly.entity_id
+            _pdbx_entity_nonpoly.name
+            _pdbx_entity_nonpoly.comp_id
+
+
+        Update/add:
+
+        _pdbx_molecule.rcsb_entity_id
+        _pdbx_molecule.rcsb_comp_id
+
+        _pdbx_entity_nonpoly.rcsb_prd_id
+
+        """
+        try:
+            if catName != 'pdbx_molecule' and 'atName' != 'rcsb_entity_id':
+                return False
+            #
+            if not (dataContainer.exists(catName) and dataContainer.exists('struct_asym')):
+                return False
+            #
+            cObj = dataContainer.getObj(catName)
+            if not cObj.hasAttribute(atName):
+                cObj.appendAttribute(atName)
+            #
+            if not cObj.hasAttribute('rcsb_comp_id'):
+                cObj.appendAttribute('rcsb_comp_id')
+            #
+            aD = {}
+            aObj = dataContainer.getObj('struct_asym')
+            for ii in range(aObj.getRowCount()):
+                entityId = aObj.getValue('entity_id', ii)
+                asymId = aObj.getValue('id', ii)
+                aD[asymId] = entityId
+            #
+            eD = {}
+            if dataContainer.exists('pdbx_entity_nonpoly'):
+                npObj = dataContainer.getObj('pdbx_entity_nonpoly')
+                for ii in range(npObj.getRowCount()):
+                    entityId = npObj.getValue('entity_id', ii)
+                    compId = npObj.getValue('comp_id', ii)
+                    eD[entityId] = compId
+            #
+            #
+            prdD = {}
+            for ii in range(cObj.getRowCount()):
+                asymId = cObj.getValue('asym_id', ii)
+                prdId = cObj.getValue('prd_id', ii)
+                if asymId in aD:
+                    entityId = aD[asymId]
+                    prdD[entityId] = prdId
+                    cObj.setValue(entityId, atName, ii)
+                    compId = eD[entityId] if entityId in eD else '.'
+                    cObj.setValue(compId, 'rcsb_comp_id', ii)
+                else:
+                    logger.error("%s missing entityId for asymId %s" % (dataContainer.getName(), asymId))
+            #
+            if prdD and dataContainer.exists('pdbx_entity_nonpoly'):
+                npObj = dataContainer.getObj('pdbx_entity_nonpoly')
+                if not npObj.hasAttribute('rcsb_prd_id'):
+                    npObj.appendAttribute('rcsb_prd_id')
+                for ii in range(npObj.getRowCount()):
+                    entityId = npObj.getValue('entity_id', ii)
+                    prdId = prdD[entityId] if entityId in prdD else '.'
+                    npObj.setValue(prdId, 'rcsb_prd_id', ii)
+
+            return True
+        except Exception as e:
+            logger.exception("%s %s %s failing with %s" % (dataContainer.getName(), catName, atName, str(e)))
+        return False
+
+    def filterEnumerations(self, dataContainer, catName, atName, **kwargs):
+        """ Standardize the item value to conform to enumeration specifications.
+        """
+        subD = {('pdbx_reference_molecule', 'class'): [('Anti-tumor', 'Antitumor')]}
+        try:
+            if not dataContainer.exists(catName):
+                return False
+            #
+            cObj = dataContainer.getObj(catName)
+            if not cObj.hasAttribute(atName):
+                return False
+            #
+            subL = subD[(catName, atName)] if (catName, atName) in subD else []
+            #
+            for ii in range(cObj.getRowCount()):
+                tV = cObj.getValue(atName, ii)
+                if tV and tV not in ['.', '?']:
+                    for sub in subL:
+                        if sub[0] in tV:
+                            tV = tV.replace(sub[0], sub[1])
+                            cObj.setValue(tV, atName, ii)
+            return True
+        except Exception as e:
+            logger.exception("%s %s %s failing with %s" % (dataContainer.getName(), catName, atName, str(e)))
         return False
 
     def deferredItemMethod(self, dataContainer, catName, atName, **kwargs):

@@ -26,6 +26,7 @@
 #      20-Nov-2018  jdw add addDocumentPrivateAttributes() to inject private document attributes,
 #                       This method is collection dependent which is awkward in this class.
 #       4-Dec-2018  jdw make insertion of private keys optional
+#       8-Dec-2018  jdw add check to return False if a selection category does not exist.
 #
 #
 ##
@@ -241,11 +242,13 @@ class SchemaDefDataPrep(object):
                     catName = pdk['CATEGORY_NAME']
                     atName = pdk['ATTRIBUTE_NAME']
                     pName = pdk['PRIVATE_DOCUMENT_NAME']
+                    isMandatory = pdk['MANDATORY']
                     for d in docList:
-                        if catName in d and atName in d[catName]:
+                        if catName in d and atName in d[catName] and d[catName][atName] and d[catName][atName] not in ['.', '?']:
                             d[pName] = d[catName][atName]
                         else:
-                            logger.debug("Skipping private key for %s %s" % (catName, atName))
+                            if isMandatory:
+                                logger.info("Skipping private key for %s %s %r" % (catName, atName, pdk))
         except Exception as e:
             logger.exception("Failing with %s : %r" % (str(e), list(d.items())[:5]))
         #
@@ -358,6 +361,8 @@ class SchemaDefDataPrep(object):
                     an = csD['ATTRIBUTE_NAME']
                     vals = csD['VALUES']
                     logger.debug("Applying selector %s: tn %s an %s vals %r" % (cs, tn, an, vals))
+                    if not container.exists(tn):
+                        return False
                     catObj = container.getObj(tn)
                     numRows = catObj.getRowCount()
                     if numRows:

@@ -60,7 +60,7 @@ class DictInfo(object):
         #
         #  Not used in any public methods -
         #
-        self.__dApi = DictionaryApi(containerList=containerList, consolidate=True, verbose=True)
+        self.__dApi = DictionaryApi(containerList=containerList, consolidate=True, replaceDefinition=True, verbose=True)
         #
         iTypeCodes = []
         iQueryStrings = []

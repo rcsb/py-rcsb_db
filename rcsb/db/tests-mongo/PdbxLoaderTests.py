@@ -59,11 +59,13 @@ class PdbxLoaderTests(unittest.TestCase):
         # self.__cfgOb.dump()
         self.__resourceName = "MONGO_DB"
         self.__failedFilePath = os.path.join(HERE, 'test-output', 'failed-list.txt')
+        self.__failedCcFilePath = os.path.join(HERE, 'test-output', 'failed-cc-list.txt')
+        self.__failedBirdFilePath = os.path.join(HERE, 'test-output', 'failed-bird-list.txt')
         self.__workPath = os.path.join(HERE, 'test-output')
         self.__readBackCheck = True
         self.__numProc = 2
         self.__chunkSize = 10
-        self.__fileLimit = 16
+        self.__fileLimit = None
         self.__documentStyle = 'rowwise_by_name_with_cardinality'
         #
         self.__startTime = time.time()
@@ -83,7 +85,7 @@ class PdbxLoaderTests(unittest.TestCase):
             mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('chem_comp_core', loadType='full', inputPathList=None, styleType=self.__documentStyle,
-                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedCcFilePath)
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
@@ -98,7 +100,7 @@ class PdbxLoaderTests(unittest.TestCase):
             mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('bird_chem_comp_core', loadType='full', inputPathList=None, styleType=self.__documentStyle,
-                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedBirdFilePath)
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
@@ -233,12 +235,12 @@ class PdbxLoaderTests(unittest.TestCase):
         return ok
 
 
-def mongoLoadSuite():
+def mongoLoadChemRefCoreSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(PdbxLoaderTests("testLoadChemCompCoreReference"))
     suiteSelect.addTest(PdbxLoaderTests("testLoadBirdChemCompCoreReference"))
-    suiteSelect.addTest(PdbxLoaderTests("testLoadBirdReference"))
-    suiteSelect.addTest(PdbxLoaderTests("testLoadBirdFamilyReference"))
+    #suiteSelect.addTest(PdbxLoaderTests("testLoadBirdReference"))
+    #suiteSelect.addTest(PdbxLoaderTests("testLoadBirdFamilyReference"))
     return suiteSelect
 
 
@@ -270,19 +272,20 @@ def mongoSlicedSuite():
 if __name__ == '__main__':
     #
     if (True):
-        mySuite = mongoLoadSuite()
+        mySuite = mongoLoadChemRefCoreSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-    if (True):
-        mySuite = mongoReLoadSuite()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
+    if False:
+        if (True):
+            mySuite = mongoReLoadSuite()
+            unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-    if (True):
-        mySuite = mongoLoadPdbxLimitSizeSuite()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
-    if (True):
-        mySuite = mongoLoadPdbxSuite()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
-    if (True):
-        mySuite = mongoSlicedSuite()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
+        if (True):
+            mySuite = mongoLoadPdbxLimitSizeSuite()
+            unittest.TextTestRunner(verbosity=2).run(mySuite)
+        if (True):
+            mySuite = mongoLoadPdbxSuite()
+            unittest.TextTestRunner(verbosity=2).run(mySuite)
+        if (True):
+            mySuite = mongoSlicedSuite()
+            unittest.TextTestRunner(verbosity=2).run(mySuite)

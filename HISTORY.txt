@@ -54,8 +54,15 @@
  1-Dec-2018    V0.30  Adjustments for roundtrip CI/CD
  2-Dec-2018    V0.31 Fixes for expansion of semi-colon separated value types, add methods to
                include NCBI scientific and common names.
- 3-Dec-2018.   V0.32 interim update for troubleshooting entity collection load issues, adding search indices
+ 3-Dec-2018    V0.32 interim update for troubleshooting entity collection load issues, adding search indices
                for core collections, adding optional private identifier chemical component identifiers for non-polymer
                entities, adjustments to bird core citation schema.
- 5-Dec-2018.   V0.33 Add preliminary DrugBank schema
+ 9-Dec-2018    V0.33 Add _pdbx_reference_molecule.class, _pdbx_reference_molecule.type, Add categories drugbank_info
+               and drugbank_target, add method rcsb_add_bird_entity_identifiers, add  _rcsb_entry_info.solvent_entity_count
+               and adjust counts to include solvent.  Add consolidated loader for BIRD data, add loader for DrugBank
+               corresponding data from rcsb.utils.chemref.    Add CLI option for loading integrated chemical reference data.
+               Move time consuming schema validation tests to seperate subdirectory.  Add mandatory option for injected
+               private keys.  Resolve schema loading issues with current chemical component and BIRD definitions.
+
+
 
