@@ -180,6 +180,44 @@ class MongoDbUtil(object):
         #
         try:
             rIdL = r.inserted_ids if r is not None else []
+        except Exception as e:
+            logger.error("Bulk insert list processing fails for document length %d with %s" % (len(dList), str(e)))
+
+        if salvage and keyNames and (len(rIdL) < len(dList)):
+            logger.info("Bulk insert document recovery starting for %d documents " % len(dList))
+            rIdL = self.__salvageinsertList(databaseName, collectionName, dList, keyNames)
+            logger.info("Bulk insert document recovery returns %d of %d" % (len(rIdL), len(dList)))
+
+        return rIdL
+
+    def XinsertList(self, databaseName, collectionName, dList, ordered=False, bypassValidation=False, keyNames=None, salvage=False):
+        """Insert the input list of documents (dList) into the input database/collection.
+
+
+        Args:
+            databaseName (str): Target database name
+            collectionName (str): Target collection name
+            dList (list): document list
+            ordered (bool, optional): insert in input order
+            bypassValidation (bool, optional): skip internal validation processing
+            keyNames (list, optional): list of key names required to uniquely identify the object (dot notation)
+            salvage (bool, optional): perform serial salvage operation for a batch insert failure
+
+        Returns:
+            list: List of MongoDB document identifiers for inserted objects
+
+
+        """
+        rIdL = []
+        r = None
+        try:
+            c = self.__mgObj[databaseName].get_collection(collectionName)
+            r = c.insert_many(dList, ordered=ordered, bypass_document_validation=bypassValidation)
+        except Exception as e:
+            logger.error("Bulk insert failing for document length %d with %s" % (len(dList), str(e)))
+        #
+        try:
+            rIdL = r.inserted_ids if r is not None else []
             return rIdL
         except Exception as e:
             rIdL = []
@@ -377,11 +415,18 @@ class MongoDbUtil(object):
         """ Fetch selections (selectL) from documents satisfying input
             query constraints.
         """
+        dList = []
         try:
-            qD = queryD if queryD is not None else {}
-            sD = {k: 1 for k in selectL}
+            qD = queryD if queryD is not None else None
+            if selectL:
+                sD = {k: 1 for k in selectL}
+            else:
+                sD = None
             c = self.__mgObj[databaseName].get_collection(collectionName)
-            dList = c.find(qD, sD)
+            # logger.debug("Got collection object %r" % c)
+            for d in c.find(filter=qD, projection=sD):
+                # logger.debug("Got doc %r" % d)
+                dList.append(d)
             return dList
         except Exception as e:
             logger.exception("Failing with %s" % str(e))

@@ -6,6 +6,7 @@
 #
 #  Updates:
 #  15-Jul-2018 jdw add repository holdings, move all path configuration to a separate site dependent config section.
+#   9-Dec-2018 jdw add chemical reference ETL options
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -19,6 +20,7 @@ import os
 import sys
 
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
+from rcsb.db.scripts.ChemRefEtlWorker import ChemRefEtlWorker
 from rcsb.db.scripts.RepoHoldingsEtlWorker import RepoHoldingsEtlWorker
 from rcsb.db.scripts.SequenceClustersEtlWorker import SequenceClustersEtlWorker
 from rcsb.db.utils.TimeUtil import TimeUtil
@@ -52,6 +54,7 @@ def main():
     #
     parser.add_argument("--etl_entity_sequence_clusters", default=False, action='store_true', help="ETL entity sequence clusters")
     parser.add_argument("--etl_repository_holdings", default=False, action='store_true', help="ETL repository holdings")
+    parser.add_argument("--etl_chemref", default=False, action='store_true', help="ETL integrated chemical reference data")
 
     parser.add_argument("--data_set_id", default=None, help="Data set identifier (default= 2018_14 for current week)")
     #
@@ -151,6 +154,18 @@ def main():
                 workPath=workPath)
             ok = rhw.load(dataSetId, loadType=loadType)
             okS = loadStatus(rhw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+
+        if args.etl_chemref:
+            crw = ChemRefEtlWorker(
+                cfgOb,
+                numProc=numProc,
+                chunkSize=chunkSize,
+                documentLimit=documentLimit,
+                verbose=debugFlag,
+                readBackCheck=readBackCheck,
+                workPath=workPath)
+            ok = crw.load(dataSetId, extResource="DrugBank", loadType=loadType)
+            okS = loadStatus(crw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
         logger.info("Operation completed with status %r " % ok and okS)
 

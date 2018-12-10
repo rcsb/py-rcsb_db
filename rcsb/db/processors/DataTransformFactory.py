@@ -189,6 +189,7 @@ class DataTransformFactory(object):
                 d[dT['atNameD'][atName]] = vT.value
         except Exception as e:
             logger.error("Failing with %s for table %s atName %s" % (str(e), tableId, atName))
+            logger.exception("Failing with %s for table %s atName %s" % (str(e), tableId, atName))
 
         return d
 
@@ -216,10 +217,15 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        #origLength = len(trfTup.value)
-        #if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
+        # origLength = len(trfTup.value)
+        # if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
         #    return TrfValue(self.__tObj.getAppNullValue(trfTup.atId), trfTup.atId, origLength, True)
-        nVal = self.__tObj.normalizeEnum(trfTup.atId, trfTup.value)
+        if trfTup.value and isinstance(trfTup.value, (list,)):
+            tL = [self.__tObj.normalizeEnum(trfTup.atId, t) for t in trfTup.value]
+            nVal = tL
+        else:
+            nVal = self.__tObj.normalizeEnum(trfTup.atId, trfTup.value)
+        # logger.info("Normalizing %r %r" % (trfTup.atId, trfTup.value))
         return TrfValue(nVal, trfTup.atId, trfTup.origLength, False)
 
     def castString(self, trfTup):

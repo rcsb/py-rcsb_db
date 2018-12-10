@@ -326,35 +326,36 @@ class RepoPathUtil(object):
             logger.debug("Family index length %d" % len(fD))
             logger.debug("Family index keys %r" % list(fD.keys()))
             #
-            for prdId in birdCcPathD:
+            #
+            for prdId in birdPathD:
                 fp = os.path.join(self.__workPath, prdId + '.cif')
                 logger.debug("Export path is %r" % fp)
                 #
-                pth1 = birdCcPathD[prdId]
-                c1L = mU.doImport(pth1, format="mmcif")
-                cFull = c1L[0]
-                logger.debug("Got cFull %r" % cFull.getName())
-                #
-                cBird = None
                 if prdId in birdPathD:
                     pth2 = birdPathD[prdId]
                     c2L = mU.doImport(pth2, format="mmcif")
-                    cBird = c2L[0]
-                    logger.debug("Got cBird %r" % cBird.getName())
+                    cFull = c2L[0]
+                    logger.debug("Got cBird %r" % cFull.getName())
                 #
+                ccBird = None
+                if prdId in birdCcPathD:
+                    pth1 = birdCcPathD[prdId]
+                    c1L = mU.doImport(pth1, format="mmcif")
+                    ccBird = c1L[0]
+                    logger.debug("Got cFull %r" % ccBird.getName())
+                    #
                 cFam = None
                 if prdId in fD:
                     cFam = fD[prdId]['c']
                     logger.debug("Got cFam %r" % cFam.getName())
                 #
-                if cBird:
-                    for catName in cBird.getObjNameList():
-                        cFull.append(cBird.getObj(catName))
                 if cFam:
                     for catName in cFam.getObjNameList():
                         cFull.append(cFam.getObj(catName))
                 #
-                # self.__exportConfig(cFull)
+                if ccBird:
+                    for catName in ccBird.getObjNameList():
+                        cFull.append(ccBird.getObj(catName))
                 #
                 mU.doExport(fp, [cFull], format='mmcif')
                 outPathList.append(fp)

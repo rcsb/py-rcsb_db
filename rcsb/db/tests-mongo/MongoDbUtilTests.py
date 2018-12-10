@@ -405,11 +405,14 @@ class MongoDbUtilTests(unittest.TestCase):
                     dObj = self.__makeDataObj(4, 10, 10, ii)
                     dList.append(dObj)
                 #
-                updL = mg.replaceList(self.__dbName, self.__collectionName, dList, 'DOC_ID', upsertFlag=True)
-                logger.debug("Upserted id list length %d" % len(updL))
+                updL = mg.replaceList(self.__dbName, self.__collectionName, dList, ['DOC_ID'], upsertFlag=True)
+                #
+                logger.info("Upserted id list length %d" % len(updL))
                 for ii in range(nDocs + nDocs):
                     kVal = 'DOC_%d' % ii
                     rObj = mg.fetchOne(self.__dbName, self.__collectionName, 'DOC_ID', kVal)
+                    if not rObj:
+                        logger.info("Failing to recover doc %s" % kVal)
                     # logger.debug("Return Object %s" % pprint.pformat(rObj))
                     rObj.pop('_id', None)
                     dList[ii].pop('_id', None)
@@ -511,28 +514,23 @@ class MongoDbUtilTests(unittest.TestCase):
                 ok = mg.reIndex(self.__dbName, self.__collectionName)
                 self.assertTrue(ok)
                 #
-                logger.debug("HERE NOW")
-                #
-            logger.debug("ReStarting client")
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
                 ii = mg.count(self.__dbName, self.__collectionName)
-                logger.debug("Fetch length %d" % ii)
+                logger.debug("collection length %d" % ii)
                 #
-                cur = mg.fetch(self.__dbName, self.__collectionName, ['DOC_ID'])
-                self.assertEqual(cur.count_documents(), nDocs)
-                logger.debug("Fetch length %d" % cur.count_documents())
-                for ii, d in enumerate(cur):
+                dList = mg.fetch(self.__dbName, self.__collectionName, ['DOC_ID'])
+                self.assertEqual(len(dList), nDocs)
+                logger.debug("Fetch length %d" % len(dList))
+                for ii, d in enumerate(dList):
                     logger.debug("Fetch num %d: %r" % (ii, d))
                 #
-                #
-                logger.debug("HERE NOW")
-                cur = mg.fetch(self.__dbName, self.__collectionName, ['category_0.attribute_0'], {'category_0.attribute_0': 'val_0_0'})
-                self.assertEqual(cur.count_documents(), nDocs)
-                logger.debug("Fetch length %d" % cur.count_documents())
-                for ii, d in enumerate(cur):
+                dList = mg.fetch(self.__dbName, self.__collectionName, ['category_0.attribute_0'], queryD={'category_0.attribute_0': 'val_0_0'})
+                self.assertEqual(len(dList), nDocs)
+                logger.debug("Fetch length %d" % len(dList))
+                for ii, d in enumerate(dList):
                     logger.debug("Fetch num %d: %r" % (ii, d))
-            logger.debug("HERE NOW")
+
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()
@@ -710,9 +708,6 @@ def suiteIndex1():
 
 
 if __name__ == '__main__':
-    if (False):
-        mySuite = suiteIndex1()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
 
     if (True):
         mySuite = suiteOps()
