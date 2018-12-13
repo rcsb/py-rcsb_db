@@ -17,6 +17,7 @@
 # 27-Nov-2018 jdw update rcsb_repository_holdings_current for all entry content types
 # 29-Nov-2018 jdw Add support for NMR restraint versions.
 # 30-Nov-3018 jdw explicitly filter obsolete entries from current holdings
+# 13-Dec-2018 jdw Adjust logic for reporting assembly format availibility
 ##
 
 __docformat__ = "restructuredtext en"
@@ -315,9 +316,10 @@ class RepoHoldingsDataPrep(object):
                     rD[entryId].append('entry mmCIF')
                     rD[entryId].append('entry PDBML')
                 if entryId in assemD:
-                    if entryId not in bundleD:
+                    if entryId in bundleD:
+                        rD[entryId].append('assembly mmCIF')
+                    else:
                         rD[entryId].append('assembly PDB')
-                    rD[entryId].append('assembly mmCIF')
                 #
                 for cType in dD:
                     if cType not in ['coordinates', 'NMR restraints']:
