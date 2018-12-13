@@ -69,7 +69,8 @@ class SchemaDefBuild(object):
         self.__dictInfo = DictInfo(dictLocators=dictLocators, dictHelper=dictHelper, dictSubset=schemaName)
         #
 
-    def build(self, collectionName=None, applicationName='ANY', schemaType='rcsb', enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
+    def build(self, collectionName=None, applicationName='ANY', schemaType='rcsb', enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums",
+              suppressSingleton=True):
         rD = {}
         if schemaType.lower() == 'rcsb':
             rD = self.__build(schemaName=self.__schemaName,
@@ -89,9 +90,7 @@ class SchemaDefBuild(object):
                                              schemaDefHelper=self.__schemaDefHelper,
                                              documentDefHelper=self.__documentDefHelper,
                                              includeContentClasses=self.__includeContentClasses,
-                                             enforceOpts=enforceOpts
-                                             )
-
+                                             enforceOpts=enforceOpts)
         return rD
 
     def __build(self, schemaName, applicationName, instDataTypeFilePath, appDataTypeFilePath,
@@ -445,8 +444,7 @@ class SchemaDefBuild(object):
 
     def __createJsonLikeSchema(self, schemaName, collectionName, applicationName, instDataTypeFilePath, appDataTypeFilePath,
                                schemaDefHelper, documentDefHelper, includeContentClasses=None, jsonSpecDraft='4',
-                               enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums",
-                               suppressSingleton=True):
+                               enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
         """Internal method to integrate dictionary and instance metadata into a common json/bson schema description data structure.
 
            Working only for practical schema style: rowwise_by_name_with_cardinality
@@ -468,6 +466,8 @@ class SchemaDefBuild(object):
 
 
         """
+        suppressSingleton = not documentDefHelper.getRetainSingletonObjects(collectionName)
+        logger.debug("Collection %s suppress singleton %r" % (collectionName, suppressSingleton))
         subCategoryAggregates = documentDefHelper.getSubCategoryAggregates(collectionName)
         privDocKeyL = documentDefHelper.getPrivateDocumentAttributes(collectionName)
         # enforceOpts = "mandatoryKeys|mandatoryAttributes|bounds|enums"

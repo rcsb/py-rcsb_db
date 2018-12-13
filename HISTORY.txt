@@ -63,6 +63,6 @@
                corresponding data from rcsb.utils.chemref.    Add CLI option for loading integrated chemical reference data.
                Move time consuming schema validation tests to seperate subdirectory.  Add mandatory option for injected
                private keys.  Resolve schema loading issues with current chemical component and BIRD definitions.
-
-
+ 12-Dec-2018   V0.34 Add rcsb_entity_id identifiers in categories struct_ref_seq and struct_ref_seq_dif.Add category rcsb_entity_poly_info
+               as the basis for a new core collection core_entity_monomer.
 

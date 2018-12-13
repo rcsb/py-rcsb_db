@@ -16,6 +16,7 @@
 # 15-Nov-2018 jdw add handling for antibody misrepresentation of multisource organisms
 # 28-Nov-2018 jdw relax constraints on the production of rcsb_entry_info
 #  1-Dec-2018 jdw add ncbi source and host organism info
+# 11-Dec-2018 jdw add addStructRefSeqEntityIds and buildEntityPolySeq
 #
 ##
 """
@@ -44,6 +45,49 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
     """ Helper class implements external method references in the RCSB dictionary extension.
 
     """
+    # Dictionary of current standard monomers -
+    monDict3 = {
+        "ALA": "A",
+        "ARG": "R",
+        "ASN": "N",
+        "ASP": "D",
+        "ASX": "B",
+        "CYS": "C",
+        "GLN": "Q",
+        "GLU": "E",
+        "GLX": "Z",
+        "GLY": "G",
+        "HIS": "H",
+        "ILE": "I",
+        "LEU": "L",
+        "LYS": "K",
+        "MET": "M",
+        "PHE": "F",
+        "PRO": "P",
+        "SER": "S",
+        "THR": "T",
+        "TRP": "W",
+        "TYR": "Y",
+        "VAL": "V",
+        "PYL": "O",
+        "SEC": "U",
+        "DA": "A",
+        "DC": "C",
+        "DG": "G",
+        "DT": "T",
+        "DU": "U",
+        "DI": "I",
+        "A": "A",
+        "C": "C",
+        "G": "G",
+        "I": "I",
+        "N": "N",
+        "T": "T",
+        "U": "U",
+        # "UNK": "X",
+        #         "MSE":"M",
+        # ".": "."
+    }
 
     def __init__(self, **kwargs):
         """
@@ -61,6 +105,9 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         #
         self.__taxonomyMappingFilePath = kwargs.get("taxonomyMappingFilePath", None)
         self.__taxonomyMappingDict = {}
+        #
+        self.__siftsMappingFilePath = kwargs.get("taxonomyMappingFilePath", None)
+        self.__siftsMappingDict = {}
         #
         self.__workPath = kwargs.get("workPath", None)
         logger.debug("Dictionary method helper init")
@@ -1653,6 +1700,124 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             return True
         except Exception as e:
             logger.exception("%s %s %s failing with %s" % (dataContainer.getName(), catName, atName, str(e)))
+        return False
+
+    def addStructRefSeqEntityIds(self, dataContainer, catName, atName, **kwargs):
+        """ Add entity ids in categories struct_ref_seq and struct_ref_seq_dir instances.
+
+        """
+        try:
+            if catName != 'struct_ref_seq' and 'atName' != 'rcsb_entity_id':
+                return False
+            #
+            if not (dataContainer.exists(catName) and dataContainer.exists('struct_ref')):
+                return False
+            #
+            cObj = dataContainer.getObj(catName)
+            if not cObj.hasAttribute(atName):
+                cObj.appendAttribute(atName)
+            #
+            srObj = dataContainer.getObj('struct_ref')
+            #
+            srsdObj = None
+            if dataContainer.exists('struct_ref_seq_dif'):
+                srsdObj = dataContainer.getObj('struct_ref_seq_dif')
+                if not srsdObj.hasAttribute('rcsb_entity_id'):
+                    srsdObj.appendAttribute('rcsb_entity_id')
+
+            for ii in range(srObj.getRowCount()):
+                entityId = srObj.getValue('entity_id', ii)
+                refId = srObj.getValue('id', ii)
+                #
+                # Get indices for the target refId.
+                iRowL = cObj.selectIndices(refId, 'ref_id')
+                for iRow in iRowL:
+                    cObj.setValue(entityId, 'rcsb_entity_id', iRow)
+                    alignId = cObj.getValue('align_id', iRow)
+                    #
+                    if srsdObj:
+                        jRowL = srsdObj.selectIndices(alignId, 'align_id')
+                        for jRow in jRowL:
+                            srsdObj.setValue(entityId, 'rcsb_entity_id', jRow)
+
+            return True
+        except Exception as e:
+            logger.exception("%s %s %s failing with %s" % (dataContainer.getName(), catName, atName, str(e)))
+        return False
+
+    def buildEntityPolyInfo(self, dataContainer, catName, **kwargs):
+        """ Build category rcsb_entity_poly_info
+
+        For example:
+            loop_
+            _rcsb_entity_poly_info.ordinal_id
+            _rcsb_entity_poly_info.entry_id
+            _rcsb_entity_poly_info.entity_id
+            _rcsb_entity_poly_info.seq_num
+            _rcsb_entity_poly_info.comp_id
+            _rcsb_entity_poly_info.is_modified
+            _rcsb_entity_poly_info.is_heterogeneous
+            1 1ABC 1 1 MSE Y N
+            2 1ABC 1 2 TRP N N
+            # ... abbreviated ...
+
+            loop_
+            _entity_poly_seq.entity_id
+            _entity_poly_seq.num
+            _entity_poly_seq.mon_id
+            _entity_poly_seq.hetero
+
+        """
+        logger.debug("Starting with %r %r" % (dataContainer.getName(), catName))
+        try:
+            # Exit if source categories are missing
+            if not (dataContainer.exists('entity_poly_seq') and dataContainer.exists('entry')):
+                return False
+            #
+            # Create the new target category
+            if not dataContainer.exists(catName):
+                dataContainer.append(DataCategory(catName, attributeNameList=['ordinal_id',
+                                                                              'entry_id',
+                                                                              'entity_id',
+                                                                              'comp_id',
+                                                                              'chem_comp_count',
+                                                                              'entity_sequence_length',
+                                                                              'is_modified',
+                                                                              ]))
+            #
+            eObj = dataContainer.getObj('entry')
+            entryId = eObj.getValue('id', 0)
+            #
+            cObj = dataContainer.getObj(catName)
+            epsObj = dataContainer.getObj('entity_poly_seq')
+            eD = {}
+            elD = {}
+            for ii in range(epsObj.getRowCount()):
+                entityId = epsObj.getValue('entity_id', ii)
+                elD[entityId] = elD[entityId] + 1 if entityId in elD else 1
+                if entityId not in eD:
+                    eD[entityId] = {}
+                compId = epsObj.getValue('mon_id', ii)
+                eD[entityId][compId] = eD[entityId][compId] + 1 if compId in eD[entityId] else 1
+                # seqNum = epsObj.getValue('num', ii)
+                # hetFlag = epsObj.getValue('hetero', ii).upper()
+
+            #
+            ii = 0
+            for entityId, cD in eD.items():
+                for compId, v in cD.items():
+                    modFlag = 'N' if compId in DictMethodRunnerHelper.monDict3 else 'Y'
+                    cObj.setValue(ii + 1, "ordinal_id", ii)
+                    cObj.setValue(entryId, "entry_id", ii)
+                    cObj.setValue(entityId, "entity_id", ii)
+                    cObj.setValue(compId, "comp_id", ii)
+                    cObj.setValue(v, "chem_comp_count", ii)
+                    cObj.setValue(elD[entityId], "entity_sequence_length", ii)
+                    cObj.setValue(modFlag, "is_modified", ii)
+                    ii += 1
+            return True
+        except Exception as e:
+            logger.exception("%s %s failing with %s" % (dataContainer.getName(), catName, str(e)))
         return False
 
     def filterEnumerations(self, dataContainer, catName, atName, **kwargs):
