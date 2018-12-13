@@ -351,7 +351,7 @@ class PdbxLoader(object):
                              (procName, dbName, collectionName, len(dList), len(successPathList), len(failedPathList), len(rejectPathList)))
                 #
                 if (len(failedPathList) > 0):
-                    logger.info("%s %s/%s failures %r" % (procName, dbName, collectionName, [os.path.basename(pth) for pth in failedPathList]))
+                    logger.info("%s %s/%s failures %r" % (procName, dbName, collectionName, [os.path.basename(pth) for pth in failedPathList if pth is not None]))
                 if (len(rejectPathList) > 0):
                     logger.debug("%s %s/%s rejected %r" % (procName, dbName, collectionName, [os.path.basename(pth) for pth in rejectPathList]))
         #
@@ -364,7 +364,7 @@ class PdbxLoader(object):
             logger.debug("%s %s %r returning success path list %d full failed path list %d " % (procName, dbName, collectionNameList,
                                                                                                 len(set(retList)), len(set(fullFailedPathList))))
             if (len(fullFailedPathList) > 0):
-                logger.info("%s %s %r full failed path list %r" % (procName, dbName, collectionNameList, [os.path.basename(pth) for pth in fullFailedPathList]))
+                logger.info("%s %s %r full failed path list %r" % (procName, dbName, collectionNameList, [os.path.basename(pth) for pth in fullFailedPathList if pth is not None]))
             self.__end(startTime, procName + " with status " + str(ok))
             return retList, [], []
 

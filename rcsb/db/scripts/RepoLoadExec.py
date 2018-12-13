@@ -17,6 +17,7 @@
 #    20-Aug-2018 - jdw add load_pdbx_core load option
 #     9-Sep-2018 - jdw expose --schema_level option
 #     3-Dec-2018 - jdw add options to load specific core collections.
+#    12-Dec-2018 - jdw add core_entity_monomer collection support
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -71,6 +72,7 @@ def main():
     #
     parser.add_argument("--load_pdbx_core_entry", default=False, action='store_true', help="Load PDBx core entry (current released subset)")
     parser.add_argument("--load_pdbx_core_entity", default=False, action='store_true', help="Load PDBx core entity (current released subset)")
+    parser.add_argument("--load_pdbx_core_entity_monomer", default=False, action='store_true', help="Load PDBx core entity monomer (current released subset)")
     parser.add_argument("--load_pdbx_core_assembly", default=False, action='store_true', help="Load PDBx core assembly (current released subset)")
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
@@ -216,6 +218,12 @@ def main():
         #
         if args.load_pdbx_core_entity:
             ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entity_v5_0_2'], loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
+                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+        #
+        if args.load_pdbx_core_entity_monomer:
+            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entity_monomer_v5_0_2'], loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)

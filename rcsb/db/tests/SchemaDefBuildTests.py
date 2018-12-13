@@ -77,7 +77,7 @@ class SchemaDefBuildTests(unittest.TestCase):
         self.__testRunAltBuilder(flavor='BSON', schemaLevel='min', enforceOpts="mandatoryKeys|enums")
 
     def testSelectBuild(self):
-        schemaNames = ['bird_chem_comp_core', 'chem_comp_core']
+        schemaNames = ['pdbx_core', 'bird_chem_comp_core', 'chem_comp_core']
         applicationNames = ['ANY']
         for schemaName in schemaNames:
             for applicationName in applicationNames:
@@ -86,7 +86,7 @@ class SchemaDefBuildTests(unittest.TestCase):
 
     def __testRunSelectBuilder(self, schemaName, flavor='JSON', schemaLevel='full', enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
         collectionNames = {'pdbx': ['pdbx_v5_0_2', 'pdbx_ext_v5_0_2'],
-                           'pdbx_core': ['pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2'],
+                           'pdbx_core': ['pdbx_core_entity_monomer_v5_0_2', 'pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2'],
                            'bird': ['bird_v5_0_2'],
                            'bird_family': ['family_v5_0_2'],
                            'chem_comp': ['chem_comp_v5_0_2'],
@@ -107,7 +107,7 @@ class SchemaDefBuildTests(unittest.TestCase):
                            'bird_family': ['family_v5_0_2'],
                            'bird_chem_comp': ['bird_chem_comp_v5_0_2'],
                            'chem_comp': ['chem_comp_v5_0_2'],
-                           'pdbx_core': ['pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2'],
+                           'pdbx_core': ['pdbx_core_entity_monomer_v5_0_2', 'pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2'],
                            'chem_comp_core': ['chem_comp_core_v5_0_2'],
                            'bird_chem_comp_core': ['bird_chem_comp_core_v5_0_2']}
         #

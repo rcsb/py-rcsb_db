@@ -131,3 +131,14 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
         except Exception as e:
             logger.debug("Collection %s failing with %s" % (collectionName, str(e)))
         return r
+
+    def getRetainSingletonObjects(self, collectionName):
+        """ By default singleton objects are expanded in global scope.  To avoid
+            this behaviour set the retain singleton option for the collection.
+        """
+        r = False
+        try:
+            return self.__cfgD['collection_retain_singleton'][collectionName]
+        except Exception as e:
+            logger.debug("Collection %s failing with %s" % (collectionName, str(e)))
+        return r

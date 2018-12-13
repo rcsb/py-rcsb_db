@@ -11,7 +11,7 @@
 #    4-Apr-2018 jdw  Add size pruning tests
 #   25-Jul-2018 jdw  Add large test case to test failure and salvage scenarios
 #   10-Sep-2018 jdw  Update assert conditions for tests
-#   11-Nov-2018 jdw  Add chem_comp_core
+#   11-Nov-2018 jdw  Add chem_comp_core schema support
 #
 ##
 """
@@ -156,8 +156,8 @@ class PdbxLoaderTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-    def testLoadPdbxEntryCoreData(self):
-        """ Test case -  Load PDBx entry data
+    def testLoadPdbxCoreData(self):
+        """ Test case -  Load PDBx core collections
         """
         try:
             mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
@@ -246,7 +246,7 @@ def mongoLoadChemRefCoreSuite():
 
 def mongoLoadPdbxSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(PdbxLoaderTests("testLoadPdbxEntryCoreData"))
+    suiteSelect.addTest(PdbxLoaderTests("testLoadPdbxCoreData"))
     return suiteSelect
 
 
@@ -274,6 +274,9 @@ if __name__ == '__main__':
     if (True):
         mySuite = mongoLoadChemRefCoreSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
+    if (True):
+        mySuite = mongoLoadPdbxSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
 
     if False:
         if (True):
@@ -283,9 +286,7 @@ if __name__ == '__main__':
         if (True):
             mySuite = mongoLoadPdbxLimitSizeSuite()
             unittest.TextTestRunner(verbosity=2).run(mySuite)
-        if (True):
-            mySuite = mongoLoadPdbxSuite()
-            unittest.TextTestRunner(verbosity=2).run(mySuite)
+
         if (True):
             mySuite = mongoSlicedSuite()
             unittest.TextTestRunner(verbosity=2).run(mySuite)

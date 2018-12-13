@@ -103,7 +103,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         #schemaNames = ['pdbx', 'pdbx_core', 'chem_comp', 'chem_comp_core', 'bird_chem_comp_core', 'bird', 'bird_family']
         schemaNames = ['bird_chem_comp_core', 'chem_comp_core', 'pdbx_core']
         collectionNames = {'pdbx': ['pdbx_v5_0_2', 'pdbx_ext_v5_0_2'],
-                           'pdbx_core': ['pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2'],
+                           'pdbx_core': ['pdbx_core_entity_monomer_v5_0_2', 'pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2'],
                            'bird': ['bird_v5_0_2'],
                            'bird_family': ['family_v5_0_2'],
                            'chem_comp': ['chem_comp_v5_0_2'],
@@ -129,6 +129,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                         cCount = 0
                         for error in sorted(v.iter_errors(d), key=str):
                             logger.info("schema %s collection %s (%s) path %s error: %s" % (schemaName, collectionName, cnL[ii], error.path, error.message))
+                            logger.info("Failing document %d : %r" % (ii, list(d.items())))
                             eCount += 1
                             cCount += 1
                         if cCount > 0:
@@ -145,7 +146,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             cD = smb.build(collectionName, applicationName='json', schemaType='json', enforceOpts=enforceOpts)
             #
             logger.debug("Schema dictionary category length %d" % len(cD['properties']))
-            self.assertGreaterEqual(len(cD['properties']), 5)
+            self.assertGreaterEqual(len(cD['properties']), 4)
             #
             ioU = IoUtil()
             ioU.serialize(pathSchemaDefJson1, cD, format='json', indent=3)
