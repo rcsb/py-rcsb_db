@@ -295,18 +295,24 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             #
             tObj = dataContainer.getObj('entity')
             entityIdL = tObj.getAttributeValueList('id')
+            #
             for ii, entityId in enumerate(entityIdL):
                 cObj.setValue(entryId, 'entry_id', ii)
                 cObj.setValue(entityId, 'entity_id', ii)
                 eType = tObj.getValue('type', ii)
-                if eType == 'polymer':
+                asymIdL = []
+                authAsymIdL = []
+                if eType == 'polymer' and psObj:
                     asymIdL = psObj.selectValuesWhere('asym_id', entityId, 'entity_id')
                     authAsymIdL = psObj.selectValuesWhere('pdb_strand_id', entityId, 'entity_id')
-                else:
+                elif npsObj:
                     asymIdL = npsObj.selectValuesWhere('asym_id', entityId, 'entity_id')
                     authAsymIdL = npsObj.selectValuesWhere('pdb_strand_id', entityId, 'entity_id')
-                cObj.setValue(','.join(list(set(asymIdL))).strip(), 'asym_ids', ii)
-                cObj.setValue(','.join(list(set(authAsymIdL))).strip(), 'auth_asym_ids', ii)
+                #
+                if asymIdL:
+                    cObj.setValue(','.join(list(set(asymIdL))).strip(), 'asym_ids', ii)
+                if authAsymIdL:
+                    cObj.setValue(','.join(list(set(authAsymIdL))).strip(), 'auth_asym_ids', ii)
             #
             return True
         except Exception as e:

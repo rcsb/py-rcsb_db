@@ -100,9 +100,10 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         #self.assertTrue(eCount <= 1)
 
     def __testValidateOpts(self, enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
-        #schemaNames = ['pdbx', 'pdbx_core', 'chem_comp', 'chem_comp_core', 'bird_chem_comp_core', 'bird', 'bird_family']
-        schemaNames = ['bird_chem_comp_core', 'chem_comp_core', 'pdbx_core']
-        collectionNames = {'pdbx': ['pdbx_v5_0_2', 'pdbx_ext_v5_0_2'],
+        # schemaNames = ['pdbx', 'pdbx_core', 'chem_comp', 'chem_comp_core', 'bird_chem_comp_core', 'bird', 'bird_family']
+        schemaNames = ['bird_chem_comp_core', 'chem_comp_core', 'pdbx_core', 'ihm_dev']
+        collectionNames = {'ihm_dev': ['ihm_dev_v1_0_1'],
+                           'pdbx': ['pdbx_v5_0_2', 'pdbx_ext_v5_0_2'],
                            'pdbx_core': ['pdbx_core_entity_monomer_v5_0_2', 'pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2'],
                            'bird': ['bird_v5_0_2'],
                            'bird_family': ['family_v5_0_2'],
@@ -175,7 +176,6 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                 logger.debug("Processing container %s" % cName)
                 dmh.apply(container)
             #
-            logger.debug("inputPathList %r" % inputPathList)
             tableIdExcludeList = sd.getCollectionExcluded(collectionName)
             tableIdIncludeList = sd.getCollectionSelected(collectionName)
             sliceFilter = sd.getCollectionSliceFilter(collectionName)
@@ -200,7 +200,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
 
 def schemaBuildJsonSuite():
     suiteSelect = unittest.TestSuite()
-    #suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsStrict"))
+    # suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsStrict"))
     suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsMin"))
     return suiteSelect
 

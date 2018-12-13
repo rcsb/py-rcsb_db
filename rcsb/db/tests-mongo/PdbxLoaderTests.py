@@ -171,6 +171,21 @@ class PdbxLoaderTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
+    def testLoadIhmDevData(self):
+        """ Test case -  Load IHM_DEV collections
+        """
+        try:
+            mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+                            fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
+            ok = mw.load('ihm_dev', loadType='full', inputPathList=None, styleType=self.__documentStyle,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+            self.assertTrue(ok)
+            ok = self.__loadStatus(mw.getLoadStatus())
+            self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
     def testReLoadPdbxEntryData(self):
         """ Test case -  Load PDBx entry data with pdbx schema
         """
@@ -239,14 +254,20 @@ def mongoLoadChemRefCoreSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(PdbxLoaderTests("testLoadChemCompCoreReference"))
     suiteSelect.addTest(PdbxLoaderTests("testLoadBirdChemCompCoreReference"))
-    #suiteSelect.addTest(PdbxLoaderTests("testLoadBirdReference"))
-    #suiteSelect.addTest(PdbxLoaderTests("testLoadBirdFamilyReference"))
+    # suiteSelect.addTest(PdbxLoaderTests("testLoadBirdReference"))
+    # suiteSelect.addTest(PdbxLoaderTests("testLoadBirdFamilyReference"))
     return suiteSelect
 
 
 def mongoLoadPdbxSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(PdbxLoaderTests("testLoadPdbxCoreData"))
+    return suiteSelect
+
+
+def mongoLoadIhmSuite():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(PdbxLoaderTests("testLoadIhmDevData"))
     return suiteSelect
 
 
@@ -270,23 +291,27 @@ def mongoSlicedSuite():
 
 
 if __name__ == '__main__':
+
+    if (True):
+        mySuite = mongoLoadIhmSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
     #
     if (True):
         mySuite = mongoLoadChemRefCoreSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
+
     if (True):
         mySuite = mongoLoadPdbxSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-    if False:
-        if (True):
-            mySuite = mongoReLoadSuite()
-            unittest.TextTestRunner(verbosity=2).run(mySuite)
+    if (True):
+        mySuite = mongoReLoadSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-        if (True):
-            mySuite = mongoLoadPdbxLimitSizeSuite()
-            unittest.TextTestRunner(verbosity=2).run(mySuite)
+    if (True):
+        mySuite = mongoLoadPdbxLimitSizeSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-        if (True):
-            mySuite = mongoSlicedSuite()
-            unittest.TextTestRunner(verbosity=2).run(mySuite)
+    if (True):
+        mySuite = mongoSlicedSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)

@@ -78,7 +78,8 @@ usage: schema_update_cli  [-h] [--update_chem_comp_ref]
                            [--update_pdbx] [--update_pdbx_core]
                            [--update_repository_holdings]
                            [--update_entity_sequence_clusters]
-                           [--update_data_exchange]
+                           [--update_data_exchange] [--update_ihm_dev]
+                           [--update_drugbank_core]
                            [--config_path CONFIG_PATH]
                            [--config_name CONFIG_NAME]
                            [--schema_dirpath SCHEMA_DIRPATH]
@@ -111,6 +112,9 @@ optional arguments:
                         Update schema for entity sequence clusters
   --update_data_exchange
                         Update schema for data exchange status
+  --update_ihm_dev      Update schema for I/HM dev entry data
+  --update_drugbank_core
+                        Update DrugBank schema
   --config_path CONFIG_PATH
                         Path to configuration options file
   --config_name CONFIG_NAME
@@ -124,7 +128,8 @@ optional arguments:
   --debug               Turn on verbose logging
   --mock                Use MOCK repository configuration for dependencies and
                         testing
-
+  --working_path WORKING_PATH
+                        Working path for temporary files
 ```
 
 For example, the following command will generate the JSON schema for the collections in the
@@ -145,12 +150,17 @@ compatible with MongoDB.
 
 
 ```bash
-exdb_repo_load_cli --help
-
+ exdb_repo_load_cli --help
 usage: exdb_repo_load_cli [-h] [--full] [--replace] [--load_chem_comp_ref]
-                          [--load_bird_chem_comp_ref] [--load_bird_ref]
+                          [--load_chem_comp_core_ref]
+                          [--load_bird_chem_comp_ref]
+                          [--load_bird_chem_comp_core_ref] [--load_bird_ref]
                           [--load_bird_family_ref] [--load_entry_data]
-                          [--load_pdbx_core] [--config_path CONFIG_PATH]
+                          [--load_pdbx_core] [--load_pdbx_core_entry]
+                          [--load_pdbx_core_entity]
+                          [--load_pdbx_core_entity_monomer]
+                          [--load_pdbx_core_assembly] [--load_ihm_dev]
+                          [--config_path CONFIG_PATH]
                           [--config_name CONFIG_NAME] [--db_type DB_TYPE]
                           [--document_style DOCUMENT_STYLE]
                           [--read_back_check] [--schema_level SCHEMA_LEVEL]
@@ -169,15 +179,31 @@ optional arguments:
                         (default)
   --load_chem_comp_ref  Load Chemical Component reference definitions (public
                         subset)
+  --load_chem_comp_core_ref
+                        Load Chemical Component Core reference definitions
+                        (public subset)
   --load_bird_chem_comp_ref
                         Load Bird Chemical Component reference definitions
                         (public subset)
+  --load_bird_chem_comp_core_ref
+                        Load Bird Chemical Component Core reference
+                        definitions (public subset)
   --load_bird_ref       Load Bird reference definitions (public subset)
   --load_bird_family_ref
                         Load Bird Family reference definitions (public subset)
   --load_entry_data     Load PDBx entry data (current released subset)
-  --load_pdbx_core      Load PDBx core entry/entity data (current released
+  --load_pdbx_core      Load all PDBx core collections (current released
                         subset)
+  --load_pdbx_core_entry
+                        Load PDBx core entry (current released subset)
+  --load_pdbx_core_entity
+                        Load PDBx core entity (current released subset)
+  --load_pdbx_core_entity_monomer
+                        Load PDBx core entity monomer (current released
+                        subset)
+  --load_pdbx_core_assembly
+                        Load PDBx core assembly (current released subset)
+  --load_ihm_dev        Load I/HM DEV model data (current released subset)
   --config_path CONFIG_PATH
                         Path to configuration options file
   --config_name CONFIG_NAME
@@ -210,6 +236,7 @@ optional arguments:
   --working_path WORKING_PATH
                         Working path for temporary files
 
+
 ```
 
 Part of the schema definition process supported by this module involves refining
@@ -222,32 +249,42 @@ is provided to scan supported PDB repository content and update data type and co
 ```bash
 repo_scan_cli --help
 
-usage: repo_scan_cli   [-h] [--dict_file_path DICT_FILE_PATH]
-                       [--scan_chem_comp_ref | --scan_bird_chem_comp_ref | --scan_bird_ref | --scan_bird_family_ref | --scan_entry_data]
-                       [--config_path CONFIG_PATH] [--config_name CONFIG_NAME]
-                       [--input_file_list_path INPUT_FILE_LIST_PATH]
-                       [--output_file_list_path OUTPUT_FILE_LIST_PATH]
-                       [--fail_file_list_path FAIL_FILE_LIST_PATH]
-                       [--scan_data_file_path SCAN_DATA_FILE_PATH]
-                       [--coverage_file_path COVERAGE_FILE_PATH]
-                       [--type_map_file_path TYPE_MAP_FILE_PATH]
-                       [--num_proc NUM_PROC] [--chunk_size CHUNK_SIZE]
-                       [--file_limit FILE_LIMIT] [--debug] [--mock]
-                       [--working_path WORKING_PATH]
+usage: repo_scan_cli [-h] [--dict_file_path DICT_FILE_PATH]
+                     [--scanType SCANTYPE]
+                     [--scan_chem_comp_ref | --scan_chem_comp_core_ref | --scan_bird_chem_comp_ref |
+                      --scan_bird_chem_comp_core_ref | --scan_bird_ref | --scan_bird_family_ref | --scan_entry_data | --scan_ihm_dev]
+                     [--config_path CONFIG_PATH] [--config_name CONFIG_NAME]
+                     [--input_file_list_path INPUT_FILE_LIST_PATH]
+                     [--output_file_list_path OUTPUT_FILE_LIST_PATH]
+                     [--fail_file_list_path FAIL_FILE_LIST_PATH]
+                     [--scan_data_file_path SCAN_DATA_FILE_PATH]
+                     [--coverage_file_path COVERAGE_FILE_PATH]
+                     [--type_map_file_path TYPE_MAP_FILE_PATH]
+                     [--num_proc NUM_PROC] [--chunk_size CHUNK_SIZE]
+                     [--file_limit FILE_LIMIT] [--debug] [--mock]
+                     [--working_path WORKING_PATH]
 
 optional arguments:
   -h, --help            show this help message and exit
   --dict_file_path DICT_FILE_PATH
                         PDBx/mmCIF dictionary file path
+  --scanType SCANTYPE   Repository scan type (full|incr)
   --scan_chem_comp_ref  Scan Chemical Component reference definitions (public
                         subset)
+  --scan_chem_comp_core_ref
+                        Scan Chemical Component Core reference definitions
+                        (public subset)
   --scan_bird_chem_comp_ref
                         Scan Bird Chemical Component reference definitions
                         (public subset)
+  --scan_bird_chem_comp_core_ref
+                        Scan Bird Chemical Component Core reference
+                        definitions (public subset)
   --scan_bird_ref       Scan Bird reference definitions (public subset)
   --scan_bird_family_ref
                         Scan Bird Family reference definitions (public subset)
   --scan_entry_data     Scan PDB entry data (current released subset)
+  --scan_ihm_dev        Scan PDBDEV I/HM entry data (current released subset)
   --config_path CONFIG_PATH
                         Path to configuration options file
   --config_name CONFIG_NAME
@@ -273,13 +310,14 @@ optional arguments:
   --mock                Use MOCK repository configuration for testing
   --working_path WORKING_PATH
                         Working path for temporary files
+
 ```
 
 The following CLI provides a preliminary access to ETL functions for processing
 derived content types such as sequence comparative data.
 
 ```bash
-| => etl_exec_cli --help
+etl_exec_cli --help
 usage: etl_exec_cli [-h] [--full] [--etl_entity_sequence_clusters]
                     [--etl_repository_holdings] [--etl_chemref]
                     [--data_set_id DATA_SET_ID]
@@ -326,6 +364,7 @@ optional arguments:
   --mock                Use MOCK repository configuration for testing
   --working_path WORKING_PATH
                         Working path for temporary files
+
 
 ```
 
@@ -401,6 +440,8 @@ bird_chem_comp_core,.. ).
 #  4-Dec-2018 jdw add indices, add private keys for chemical components, align citation schema, and
 #                 add DrugBank core collection details
 #  6-Dec-2018 jdw revised DrugBank core collection details
+# 13-Dec-2018 jdw includes core_entity_monomer collection
+# 13-Dec-2018 jdw includes ihm_dev collection
 #
 # Master Pinelands configuration file example
 ---
@@ -412,9 +453,12 @@ site_info:
     CHEM_COMP_REPO_PATH: MOCK_CHEM_COMP_REPO
     PDBX_REPO_PATH: MOCK_PDBX_SANDBOX
     RCSB_EXCHANGE_SANDBOX_PATH: MOCK_EXCHANGE_SANDBOX
+    IHM_DEV_REPO_PATH: MOCK_IHM_REPO
     RCSB_SEQUENCE_CLUSTER_DATA_PATH: cluster_data/mmseqs-20180608
     PDBX_DICT_LOCATOR: dictionaries/mmcif_pdbx_v5_next.dic
     RCSB_DICT_LOCATOR: dictionaries/rcsb_mmcif_ext_v1.dic
+    IHMDEV_DICT_LOCATOR: dictionaries/ihm-extension.dic
+    FLR_DICT_LOCATOR: dictionaries/flr-extension.dic
     PROVENANCE_INFO_LOCATOR: provenance/rcsb_extend_provenance_info.json
     APP_DATA_TYPE_INFO_LOCATOR: data_type_info/app_data_type_mapping.cif
     DICT_HELPER_MODULE: rcsb.db.helpers.DictInfoHelper
@@ -441,6 +485,11 @@ site_server_info:
     COCKROACH_DB_PORT: '26257'
     COCKROACH_DB_NAME: system
     COCKROACH_DB_USER_NAME: root
+ihm_dev:
+    SCHEMA_NAME: ihm_dev
+    SCHEMA_DEF_LOCATOR_SQL: schema/schema_def-ihm_dev-SQL.json
+    SCHEMA_DEF_LOCATOR_ANY: schema/schema_def-ihm_dev-ANY.json
+    INSTANCE_DATA_TYPE_INFO_LOCATOR: data_type_info/scan-ihm_dev-type-map.json
 pdbx:
     SCHEMA_NAME: pdbx
     SCHEMA_DEF_LOCATOR_SQL: schema/schema_def-pdbx-SQL.json
@@ -534,6 +583,11 @@ drugbank_core:
     SCHEMA_DEF_LOCATOR_SQL: schema/schema_def-drugbank_core-SQL.json
     SCHEMA_DEF_LOCATOR_ANY: schema/schema_def-drugbank_core-ANY.json
     INSTANCE_DATA_TYPE_INFO_LOCATOR: data_type_info/scan-drugbank_core-type-map.json
+#
+ihm_dev_v1_0_1:
+    SCHEMA_NAME: ihm_dev
+    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-ihm_dev_v1_0_1.json
+    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-ihm_dev_v1_0_1.json
 pdbx_v5_0_2:
     SCHEMA_NAME: pdbx
     BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-pdbx_v5_0_2.json
@@ -546,6 +600,10 @@ pdbx_core_entity_v5_0_2:
     SCHEMA_NAME: pdbx_core
     BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-pdbx_core_entity_v5_0_2.json
     BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-pdbx_core_entity_v5_0_2.json
+pdbx_core_entity_monomer_v5_0_2:
+    SCHEMA_NAME: pdbx_core
+    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-pdbx_core_entity_monomer_v5_0_2.json
+    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-pdbx_core_entity_monomer_v5_0_2.json
 pdbx_core_entry_v5_0_2:
     SCHEMA_NAME: pdbx_core
     BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-pdbx_core_entry_v5_0_2.json
@@ -650,6 +708,9 @@ dictionary_helper:
             - CATEGORY_NAME: struct_ref
               ATTRIBUTE_NAME: pdbx_seq_one_letter_code
     cardinality_parent_items:
+        ihm_dev:
+            CATEGORY_NAME: entry
+            ATTRIBUTE_NAME: id
         bird:
             CATEGORY_NAME: pdbx_reference_molecule
             ATTRIBUTE_NAME: prd_id
@@ -778,6 +839,28 @@ dictionary_helper:
                 - CATEGORY_NAME: citation
                   ATTRIBUTE_NAME_LIST:
                       - rcsb_authors
+                - CATEGORY_NAME: pdbx_molecule
+                  ATTRIBUTE_NAME_LIST:
+                      - rcsb_entity_id
+                      - rcsb_comp_id
+                - CATEGORY_NAME: pdbx_entity_nonpoly
+                  ATTRIBUTE_NAME_LIST:
+                      - rcsb_prd_id
+                - CATEGORY_NAME: struct_ref_seq
+                  ATTRIBUTE_NAME_LIST:
+                      - rcsb_entity_id
+                - CATEGORY_NAME: struct_ref_seq_dif
+                  ATTRIBUTE_NAME_LIST:
+                      - rcsb_entity_id
+                - CATEGORY_NAME: rcsb_entity_poly_info
+                  ATTRIBUTE_NAME_LIST:
+                      - ordinal_id
+                      - entry_id
+                      - entity_id
+                      - comp_id
+                      - chem_comp_count
+                      - entity_sequence_length
+                      - is_modified
                 - CATEGORY_NAME: pdbx_struct_assembly_gen
                   ATTRIBUTE_NAME_LIST:
                       - ordinal
@@ -1390,6 +1473,10 @@ dictionary_helper:
                 - pdbx_core
         :       - CATEGORY_NAME: pdbx_struct_assembly
                   ATTRIBUTE_NAME: id
+        ?       - ENTITY_MONOMER
+                - pdbx_core
+        :       - CATEGORY_NAME: rcsb_entity_poly_info
+                  ATTRIBUTE_NAME: ordinal_id
     slice_parent_filters:
         ?       - ENTITY
                 - pdbx_core
@@ -1410,6 +1497,9 @@ dictionary_helper:
                 - pdbx_core
         :       - rcsb_load_status
                 - rcsb_assembly_container_identifiers
+        ?       - ENTITY_MONOMER
+                - pdbx_core
+        :       - rcsb_entity_poly_info
     slice_category_extras:
         ?       - ENTITY
                 - pdbx_core
@@ -1420,6 +1510,14 @@ dictionary_helper:
                 - pdbx_struct_oper_list
 schemadef_helper:
     schema_content_filters:
+        ihm_dev:
+            INCLUDE: []
+            EXCLUDE:
+                - atom_site
+                - atom_site_anisotrop
+                - pdbx_poly_seq_scheme
+                - ihm_starting_model_coord
+                - ihm_sphere_obj_site
         pdbx:
             INCLUDE: []
             EXCLUDE:
@@ -1460,6 +1558,11 @@ schemadef_helper:
                 - drugbank_target
             EXCLUDE: []
     block_attributes:
+        ihm_dev:
+            ATTRIBUTE_NAME: structure_id
+            CIF_TYPE_CODE: code
+            MAX_WIDTH: 16
+            METHOD: datablockid()
         pdbx:
             ATTRIBUTE_NAME: structure_id
             CIF_TYPE_CODE: code
@@ -1491,6 +1594,9 @@ schemadef_helper:
             MAX_WIDTH: 12
             METHOD: datablockid()
     database_names:
+        ihm_dev:
+          NAME: ihm_dev_v1
+          VERSION: '0_1'
         pdbx:
             NAME: pdbx_v5
             VERSION: '0_2'
@@ -1590,6 +1696,8 @@ schemadef_helper:
               ATTRIBUTE_NAME: annotator
 document_helper:
     schema_collection_names:
+        ihm_dev:
+            - ihm_dev_v1_0_1
         pdbx:
             - pdbx_v5_0_2
             - pdbx_ext_v5_0_2
@@ -1597,6 +1705,7 @@ document_helper:
             - pdbx_core_entity_v5_0_2
             - pdbx_core_entry_v5_0_2
             - pdbx_core_assembly_v5_0_2
+            - pdbx_core_entity_monomer_v5_0_2
         bird:
             - bird_v5_0_2
         bird_family:
@@ -1629,6 +1738,10 @@ document_helper:
         drugbank_core:
             - drugbank_core_v0_1
     schema_content_filters:
+        ihm_dev_v1_0_1:
+            INCLUDE: []
+            EXCLUDE:
+                - ATOM_SITE
         chem_comp_core_v5_0_2:
             INCLUDE: []
             EXCLUDE:
@@ -1704,6 +1817,10 @@ document_helper:
             INCLUDE: []
             EXCLUDE: []
             SLICE: ENTITY
+        pdbx_core_entity_monomer_v5_0_2:
+            INCLUDE: []
+            EXCLUDE: []
+            SLICE: ENTITY_MONOMER
         pdbx_core_assembly_v5_0_2:
             INCLUDE: []
             EXCLUDE: []
@@ -1869,6 +1986,12 @@ document_helper:
             EXCLUDE: []
             SLICE:
     collection_private_keys:
+        ihm_dev_v1_0_1:
+            - NAME: entry.id
+              CATEGORY_NAME: entry
+              ATTRIBUTE_NAME: id
+              PRIVATE_DOCUMENT_NAME: __entry_id
+              MANDATORY: True
         pdbx_core_entity_v5_0_2:
             - NAME: entry.id
               CATEGORY_NAME: rcsb_entity_container_identifiers
@@ -1885,6 +2008,22 @@ document_helper:
               ATTRIBUTE_NAME: comp_id
               PRIVATE_DOCUMENT_NAME: __comp_id
               MANDATORY: False
+        pdbx_core_entity_monomer_v5_0_2:
+            - NAME: entry.id
+              CATEGORY_NAME: rcsb_entity_poly_info
+              ATTRIBUTE_NAME: entry_id
+              PRIVATE_DOCUMENT_NAME: __entry_id
+              MANDATORY: True
+            - NAME: entity.id
+              CATEGORY_NAME: rcsb_entity_poly_info
+              ATTRIBUTE_NAME: entity_id
+              PRIVATE_DOCUMENT_NAME: __entity_id
+              MANDATORY: True
+            - NAME: chem_comp.id
+              CATEGORY_NAME: rcsb_entity_poly_info
+              ATTRIBUTE_NAME: comp_id
+              PRIVATE_DOCUMENT_NAME: __comp_id
+              MANDATORY: True
         pdbx_core_assembly_v5_0_2:
             - NAME: entry.id
               CATEGORY_NAME: rcsb_assembly_container_identifiers
@@ -1926,6 +2065,10 @@ document_helper:
               PRIVATE_DOCUMENT_NAME: __drugbank_id
               MANDATORY: True
     collection_indices:
+        ihm_dev_v1_0_1:
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - entry.id
         pdbx_v5_0_2:
             - INDEX_NAME: primary
               ATTRIBUTE_NAMES:
@@ -1953,6 +2096,33 @@ document_helper:
               - rcsb_entity_container_identifiers.entry_id
               - rcsb_entity_container_identifiers.entity_id
               - rcsb_entity_container_identifiers.auth_asym_ids
+            - INDEX_NAME: search_4
+              ATTRIBUTE_NAMES:
+              - __entry_id
+              - __entity_id
+            - INDEX_NAME: search_5
+              ATTRIBUTE_NAMES:
+              - __entry_id
+              - __comp_id
+        pdbx_core_entity_monomer_v5_0_2:
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - rcsb_entity_poly_info.ordinal_id
+            - INDEX_NAME: search_1
+              ATTRIBUTE_NAMES:
+              - rcsb_entity_poly_info.entry_id
+              - rcsb_entity_poly_info.entity_id
+            - INDEX_NAME: search_2
+              ATTRIBUTE_NAMES:
+              - rcsb_entity_poly_info.entry_id
+              - rcsb_entity_poly_info.entity_id
+              - rcsb_entity_poly_info.comp_id
+            - INDEX_NAME: search_3a
+              ATTRIBUTE_NAMES:
+              - rcsb_entity_container_identifiers.is_modified
+            - INDEX_NAME: search_3b
+              ATTRIBUTE_NAMES:
+              - rcsb_entity_container_identifiers.is_heterogeneous
             - INDEX_NAME: search_4
               ATTRIBUTE_NAMES:
               - __entry_id
@@ -2084,5 +2254,7 @@ document_helper:
             - sequence_membership
         entity_members_v0_1:
             - cluster_membership
+    collection_retain_singleton:
+        pdbx_core_entity_monomer_v5_0_2: True
 
 ```

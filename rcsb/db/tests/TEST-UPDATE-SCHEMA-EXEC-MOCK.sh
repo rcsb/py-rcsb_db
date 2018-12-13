@@ -2,7 +2,27 @@
 # File: TEST-SCHEMA-UPDATE-EXEC-MOCK.sh
 # Date: 13-Nov-2018 jdw
 #
+# Updates:
+#
+# 13-Dec-2018 jdw Add I/HM DEV schema
+#
 # Test schema production to update schemas in the mock-data module test directory --
+#
+#
+schema_update_cli  --mock --schema_format rcsb  --update_chem_comp_ref                                --schema_dirpath ../../mock-data/schema      --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >  ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format rcsb  --update_chem_comp_core_ref                           --schema_dirpath ../../mock-data/schema      --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format rcsb  --update_bird_chem_comp_ref                           --schema_dirpath ../../mock-data/schema      --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format rcsb  --update_bird_chem_comp_core_ref                      --schema_dirpath ../../mock-data/schema      --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format rcsb  --update_bird_ref                                     --schema_dirpath ../../mock-data/schema      --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format rcsb  --update_bird_family_ref                              --schema_dirpath ../../mock-data/schema      --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format rcsb  --update_pdbx                                         --schema_dirpath ../../mock-data/schema      --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format rcsb  --update_pdbx_core                                    --schema_dirpath ../../mock-data/schema      --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
+#
+schema_update_cli  --mock --schema_format rcsb  --update_repository_holdings                          --schema_dirpath ../../mock-data/schema       --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format rcsb  --update_data_exchange                                --schema_dirpath ../../mock-data/schema       --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format rcsb  --update_entity_sequence_clusters                     --schema_dirpath ../../mock-data/schema       --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format rcsb  --update_ihm_dev                                      --schema_dirpath ../../mock-data/schema       --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format rcsb  --update_drugbank_core                                --schema_dirpath ../../mock-data/schema       --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
 #
 schema_update_cli  --mock --schema_format json --schema_level full  --update_chem_comp_ref            --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info  > ./test-output/LOGUPDSCHEMA 2>&1
 schema_update_cli  --mock --schema_format json --schema_level full  --update_chem_comp_core_ref       --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
@@ -16,6 +36,8 @@ schema_update_cli  --mock --schema_format json --schema_level full  --update_pdb
 schema_update_cli  --mock --schema_format json --schema_level full  --update_repository_holdings      --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
 schema_update_cli  --mock --schema_format json --schema_level full  --update_data_exchange            --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
 schema_update_cli  --mock --schema_format json --schema_level full  --update_entity_sequence_clusters --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format json --schema_level full  --update_ihm_dev                  --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format json --schema_level full  --update_drugbank_core            --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
 #
 schema_update_cli  --mock --schema_format json --schema_level min --update_chem_comp_ref              --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
 schema_update_cli  --mock --schema_format json --schema_level min --update_chem_comp_core_ref         --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
@@ -29,6 +51,8 @@ schema_update_cli  --mock --schema_format json --schema_level min --update_pdbx_
 schema_update_cli  --mock --schema_format json --schema_level min  --update_repository_holdings      --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
 schema_update_cli  --mock --schema_format json --schema_level min  --update_data_exchange            --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
 schema_update_cli  --mock --schema_format json --schema_level min  --update_entity_sequence_clusters --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format json --schema_level min  --update_ihm_dev                  --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format json --schema_level min  --update_drugbank_core            --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
 #
 schema_update_cli  --mock --schema_format bson --schema_level full  --update_chem_comp_ref            --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
 schema_update_cli  --mock --schema_format bson --schema_level full  --update_chem_comp_core_ref       --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
@@ -42,6 +66,8 @@ schema_update_cli  --mock --schema_format bson --schema_level full  --update_pdb
 schema_update_cli  --mock --schema_format bson --schema_level full  --update_repository_holdings      --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
 schema_update_cli  --mock --schema_format bson --schema_level full  --update_data_exchange            --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
 schema_update_cli  --mock --schema_format bson --schema_level full  --update_entity_sequence_clusters --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format bson --schema_level full  --update_ihm_dev                  --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format bson --schema_level full  --update_drugbank_core            --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
 #
 schema_update_cli  --mock --schema_format bson --schema_level min --update_chem_comp_ref              --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
 schema_update_cli  --mock --schema_format bson --schema_level min --update_chem_comp_core_ref         --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
@@ -55,17 +81,6 @@ schema_update_cli  --mock --schema_format bson --schema_level min --update_pdbx_
 schema_update_cli  --mock --schema_format bson --schema_level min  --update_repository_holdings      --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
 schema_update_cli  --mock --schema_format bson --schema_level min  --update_data_exchange            --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
 schema_update_cli  --mock --schema_format bson --schema_level min  --update_entity_sequence_clusters --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
-#
-schema_update_cli  --mock --schema_format rcsb  --update_chem_comp_ref                                --schema_dirpath ../../mock-data/schema      --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
-schema_update_cli  --mock --schema_format rcsb  --update_chem_comp_core_ref                           --schema_dirpath ../../mock-data/schema      --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
-schema_update_cli  --mock --schema_format rcsb  --update_bird_chem_comp_ref                           --schema_dirpath ../../mock-data/schema      --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
-schema_update_cli  --mock --schema_format rcsb  --update_bird_chem_comp_core_ref                      --schema_dirpath ../../mock-data/schema      --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
-schema_update_cli  --mock --schema_format rcsb  --updae_bird_ref                                      --schema_dirpath ../../mock-data/schema      --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
-schema_update_cli  --mock --schema_format rcsb  --update_bird_family_ref                              --schema_dirpath ../../mock-data/schema      --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
-schema_update_cli  --mock --schema_format rcsb  --update_pdbx                                         --schema_dirpath ../../mock-data/schema      --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
-schema_update_cli  --mock --schema_format rcsb  --update_pdbx_core                                    --schema_dirpath ../../mock-data/schema      --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >>  ./test-output/LOGUPDSCHEMA 2>&1
-#
-schema_update_cli  --mock --schema_format rcsb  --update_repository_holdings                          --schema_dirpath ../../mock-data/schema       --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
-schema_update_cli  --mock --schema_format rcsb  --update_data_exchange                                --schema_dirpath ../../mock-data/schema       --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
-schema_update_cli  --mock --schema_format rcsb  --update_entity_sequence_clusters                     --schema_dirpath ../../mock-data/schema       --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format bson --schema_level min  --update_ihm_dev                  --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
+schema_update_cli  --mock --schema_format bson --schema_level min  --update_drugbank_core            --schema_dirpath ../../mock-data/json-schema --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info >> ./test-output/LOGUPDSCHEMA 2>&1
 #

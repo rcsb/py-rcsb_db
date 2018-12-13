@@ -11,6 +11,7 @@
 # 18-Jun-2018 jdw update ScanRepoUtil prototype
 # 28-Jun-2018 jdw update ScanRepoUtil prototype with workPath
 #  2-Jul-2018 jdw remove dependency on mmcif_utils.
+# 13-Dec-2018 jdw add IHM support
 ##
 """
 Tests for scanning BIRD, CCD and PDBx/mmCIF data files for essential
@@ -49,6 +50,8 @@ class ScanRepoUtilTests(unittest.TestCase):
         configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.yml')
         configName = 'site_info'
         self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
+        self.__pathIhmDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'ihm-extension.dic')
+        self.__pathFlrDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'flr-extension.dic')
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         #
         self.__failedFilePath = os.path.join(HERE, 'test-output', 'failed-list.txt')
@@ -69,6 +72,12 @@ class ScanRepoUtilTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)\n" % (self.id(),
                                                               time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                               endTime - self.__startTime))
+
+    def testScanIhmDevRepo(self):
+        """ Test case - scan chem comp reference data
+        """
+        ok = self.__testScanRepo(contentType='ihm_dev')
+        self.assertTrue(ok)
 
     def testScanChemCompRepo(self):
         """ Test case - scan chem comp reference data
@@ -114,7 +123,7 @@ class ScanRepoUtilTests(unittest.TestCase):
             dataCoverageFilePath = os.path.join(HERE, 'test-output', '%s-scan-data-coverage.json' % contentType)
             dataTypeFilePath = os.path.join(HERE, 'test-output', '%s-scan-data-type.json' % contentType)
             #
-            dI = DictInfo(dictLocators=[self.__pathPdbxDictionaryFile])
+            dI = DictInfo(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathIhmDictionaryFile, self.__pathFlrDictionaryFile])
             attributeDataTypeD = dI.getAttributeDataTypeD()
             #
             sr = ScanRepoUtil(
@@ -145,6 +154,7 @@ class ScanRepoUtilTests(unittest.TestCase):
 
 def scanSuite():
     suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(ScanRepoUtilTests("testScanIhmDevRepo"))
     suiteSelect.addTest(ScanRepoUtilTests("testScanChemCompRepo"))
     suiteSelect.addTest(ScanRepoUtilTests("testScanBirdRepo"))
     suiteSelect.addTest(ScanRepoUtilTests("testScanBirdFamilyRepo"))

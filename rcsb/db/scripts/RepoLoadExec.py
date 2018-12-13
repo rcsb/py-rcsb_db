@@ -18,6 +18,7 @@
 #     9-Sep-2018 - jdw expose --schema_level option
 #     3-Dec-2018 - jdw add options to load specific core collections.
 #    12-Dec-2018 - jdw add core_entity_monomer collection support
+#    13-Dec-2018 - jdw add I/HM schema support
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -74,6 +75,7 @@ def main():
     parser.add_argument("--load_pdbx_core_entity", default=False, action='store_true', help="Load PDBx core entity (current released subset)")
     parser.add_argument("--load_pdbx_core_entity_monomer", default=False, action='store_true', help="Load PDBx core entity monomer (current released subset)")
     parser.add_argument("--load_pdbx_core_assembly", default=False, action='store_true', help="Load PDBx core assembly (current released subset)")
+    parser.add_argument("--load_ihm_dev", default=False, action='store_true', help="Load I/HM DEV model data (current released subset)")
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
     parser.add_argument("--config_name", default="site_info", help="Configuration section name")
@@ -240,6 +242,12 @@ def main():
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
+        if args.load_ihm_dev:
+            ok = mw.load('ihm_dev', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
+                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+        #
         logger.info("Operation completed with status %r " % ok and okS)
 
 

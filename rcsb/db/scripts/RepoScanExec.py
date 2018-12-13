@@ -70,6 +70,7 @@ def main():
     group.add_argument("--scan_bird_ref", default=False, action='store_true', help="Scan Bird reference definitions (public subset)")
     group.add_argument("--scan_bird_family_ref", default=False, action='store_true', help="Scan Bird Family reference definitions (public subset)")
     group.add_argument("--scan_entry_data", default=False, action='store_true', help="Scan PDB entry data (current released subset)")
+    group.add_argument("--scan_ihm_dev", default=False, action='store_true', help="Scan PDBDEV I/HM entry data (current released subset)")
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
     parser.add_argument("--config_name", default="site_info", help="Configuration section name")
@@ -163,6 +164,9 @@ def main():
 
     elif args.scan_entry_data:
         contentType = 'pdbx'
+
+    elif args.scan_ihm_dev:
+        contentType = 'ihm_dev'
 
     ok = scanRepo(cfgOb, contentType, scanDataFilePath, dictFilePath, numProc, chunkSize, fileLimit, scanType=scanType,
                   inputPathList=inputPathList, pathListFilePath=outputFileListPath, dataCoverageFilePath=dataCoverageFilePath,

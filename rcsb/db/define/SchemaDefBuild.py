@@ -58,6 +58,11 @@ class SchemaDefBuild(object):
         pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=configName)
         pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=configName)
         dictLocators = [pathPdbxDictionaryFile, pathRcsbDictionaryFile]
+        if schemaName.startswith('ihm'):
+            pathIhmDictionaryFile = self.__cfgOb.getPath('IHMDEV_DICT_LOCATOR', sectionName=configName)
+            pathFlrDictionaryFile = self.__cfgOb.getPath('FLR_DICT_LOCATOR', sectionName=configName)
+            dictLocators.append(pathIhmDictionaryFile)
+            dictLocators.append(pathFlrDictionaryFile)
         #
         self.__instDataTypeFilePath = self.__cfgOb.getPath('INSTANCE_DATA_TYPE_INFO_LOCATOR', sectionName=schemaName)
         self.__appDataTypeFilePath = self.__cfgOb.getPath('APP_DATA_TYPE_INFO_LOCATOR', sectionName=configName)

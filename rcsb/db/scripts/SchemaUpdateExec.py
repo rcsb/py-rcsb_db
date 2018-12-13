@@ -5,6 +5,7 @@
 #  Execution wrapper  --  for schema production utilities --
 #
 #  Updates:
+#   13-Dec-2018 jdw add Drugbank and I/HM schema options
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -124,6 +125,8 @@ def main():
     parser.add_argument("--update_repository_holdings", default=False, action='store_true', help="Update schema for repository holdings")
     parser.add_argument("--update_entity_sequence_clusters", default=False, action='store_true', help="Update schema for entity sequence clusters")
     parser.add_argument("--update_data_exchange", default=False, action='store_true', help="Update schema for data exchange status")
+    parser.add_argument("--update_ihm_dev", default=False, action='store_true', help="Update schema for I/HM dev entry data")
+    parser.add_argument("--update_drugbank_core", default=False, action='store_true', help="Update DrugBank schema")
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
     parser.add_argument("--config_name", default="site_info", help="Configuration section name")
@@ -199,6 +202,12 @@ def main():
 
     if args.update_data_exchange:
         schemaNameList.append('data_exchange')
+
+    if args.update_ihm_dev:
+        schemaNameList.append('ihm_dev')
+
+    if args.update_drugbank_core:
+        schemaNameList.append('drugbank_core')
 
     scnD = cfgOb.get('schema_collection_names', sectionName='document_helper')
     #

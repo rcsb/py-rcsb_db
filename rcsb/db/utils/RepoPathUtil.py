@@ -13,6 +13,7 @@
 #   13-Aug-2018  jdw add support for gz compressed entry files
 #   24-Oct-2018  jdw update for new configuration organization
 #   28-Nov-2018  jdw add mergeBirdRefData()
+#   13-Dec-2018  jdw add preliminary I/HM repository support
 #
 ##
 """
@@ -70,6 +71,8 @@ class RepoPathUtil(object):
                 outputPathList = inputPathList if inputPathList else self.getEntryPathList()
             elif contentType in ['bird_consolidated', 'bird_chem_comp_core']:
                 outputPathList = inputPathList if inputPathList else self.mergeBirdRefData()
+            elif contentType in ['ihm_dev', 'ihm_dev_core']:
+                outputPathList = inputPathList if inputPathList else self.getIhmDevPathList()
             elif contentType in ['pdb_distro', 'da_internal', 'status_history']:
                 outputPathList = inputPathList if inputPathList else []
             else:
@@ -384,3 +387,32 @@ class RepoPathUtil(object):
             for atName in cObj.getAttributeList():
                 print("       - %s" % atName)
         return True
+
+    def getIhmDevPathList(self):
+        return self.__getIhmDevPathList(self.__cfgOb.getPath('IHM_DEV_REPO_PATH', sectionName=self.__cfgSectionName))
+
+    def __getIhmDevPathList(self, topRepoPath):
+        """ Return the list of I/HM entries in the current repository.
+
+            File name template is: PDBDEV_0000 0020_model_v1-0.cif.gz
+
+            List is ordered in increasing PRDDEV numerical code.
+        """
+        pathList = []
+        logger.info("Searching path %r" % topRepoPath)
+        try:
+            sd = {}
+            for root, dirs, files in os.walk(topRepoPath, topdown=False):
+                if "REMOVE" in root:
+                    continue
+                for name in files:
+                    if name.startswith("PDBDEV_") and name.endswith(".cif.gz") and len(name) <= 50:
+                        pth = os.path.join(root, name)
+                        sd[int(name[7:15])] = pth
+            #
+            for k in sorted(sd.keys()):
+                pathList.append(sd[k])
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+        #
+        return self.__applyFileLimit(pathList)

@@ -98,7 +98,6 @@ class ScanRepoUtil(object):
             rpU = RepoPathUtil(self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit)
             pathList = rpU.getRepoPathList(contentType=contentType, inputPathList=inputPathList)
             #
-
             if saveInputFileListPath:
                 self.__mU.doExport(saveInputFileListPath, pathList, format="list")
                 logger.debug("Saving %d paths in %s" % (len(pathList), saveInputFileListPath))
