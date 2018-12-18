@@ -66,5 +66,6 @@
  12-Dec-2018   V0.34 Add rcsb_entity_id identifiers in categories struct_ref_seq and struct_ref_seq_dif.Add category rcsb_entity_poly_info
                as the basis for a new core collection core_entity_monomer. Adjust logic for reporting assembly format availibility.
  13-Dec-2018   V0.35 Add ihm_dev collection and support for I/HM repository model files
+ 18-Dec-2018   V0.36 Add _entity_poly.rcsb_prd_id and configuration to include private key for BIRD identifier in the core_entity collection.
 ##
 

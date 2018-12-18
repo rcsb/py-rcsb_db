@@ -1649,6 +1649,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         _pdbx_molecule.rcsb_comp_id
 
         _pdbx_entity_nonpoly.rcsb_prd_id
+        _entity_poly.rcsb_prd_id
 
         """
         try:
@@ -1702,7 +1703,16 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     entityId = npObj.getValue('entity_id', ii)
                     prdId = prdD[entityId] if entityId in prdD else '.'
                     npObj.setValue(prdId, 'rcsb_prd_id', ii)
-
+            #
+            if prdD and dataContainer.exists('entity_poly'):
+                pObj = dataContainer.getObj('entity_poly')
+                if not pObj.hasAttribute('rcsb_prd_id'):
+                    pObj.appendAttribute('rcsb_prd_id')
+                for ii in range(pObj.getRowCount()):
+                    entityId = pObj.getValue('entity_id', ii)
+                    prdId = prdD[entityId] if entityId in prdD else '.'
+                    pObj.setValue(prdId, 'rcsb_prd_id', ii)
+            #
             return True
         except Exception as e:
             logger.exception("%s %s %s failing with %s" % (dataContainer.getName(), catName, atName, str(e)))
