@@ -46,10 +46,11 @@ class DictInfoTests(unittest.TestCase):
         self.__verbose = True
         self.__mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
         self.__pathConfig = os.path.join(self.__mockTopPath, 'config', 'dbload-setup-example.yml')
-        self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, mockTopPath=self.__mockTopPath)
+        configName = 'site_info'
+        self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
         #
-        self.__pathPdbxDictionaryFile = os.path.join(self.__mockTopPath, 'dictionaries', 'mmcif_pdbx_v5_next.dic')
-        self.__pathRcsbDictionaryFile = os.path.join(self.__mockTopPath, 'dictionaries', 'rcsb_mmcif_ext_v1.dic')
+        self.__pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=configName)
+        self.__pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=configName)
         self.__ioU = IoUtil()
         #
         self.__pathSaveDictInfoDefaultJson = os.path.join(HERE, 'test-output', 'dict_info_default.json')

@@ -142,7 +142,7 @@ class SchemaDefHelper(SchemaDefHelperBase):
     def getDatabaseName(self, schemaName):
         r = (None, None)
         try:
-            return self.__cfgD['database_names'][schemaName]['NAME']
+            return self.__cfgD['schema_info'][schemaName]['DATABASE_NAME']
         except Exception as e:
             logger.debug("Schema definition %s failing with %s" % (schemaName, str(e)))
         return r
@@ -150,7 +150,15 @@ class SchemaDefHelper(SchemaDefHelperBase):
     def getDatabaseVersion(self, schemaName):
         r = (None, None)
         try:
-            return self.__cfgD['database_names'][schemaName]['VERSION']
+            return self.__cfgD['schema_info'][schemaName]['VERSION']
+        except Exception as e:
+            logger.debug("Schema definition %s failing with %s" % (schemaName, str(e)))
+        return r
+
+    def getDataTypeInstanceFile(self, schemaName):
+        r = (None, None)
+        try:
+            return self.__cfgD['schema_info'][schemaName]['INSTANCE_DATA_TYPE_INFO_FILENAME']
         except Exception as e:
             logger.debug("Schema definition %s failing with %s" % (schemaName, str(e)))
         return r

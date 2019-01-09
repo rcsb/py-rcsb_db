@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 class Connection(ConnectionBase):
 
-    def __init__(self, cfgOb=None, infoD=None, resourceName=None, sectionName='site_server_info', verbose=False):
+    def __init__(self, cfgOb=None, infoD=None, resourceName=None, sectionName='site_info', verbose=False):
         super(Connection, self).__init__(verbose=verbose)
         #
         self.__cfgOb = cfgOb

@@ -4,8 +4,9 @@
 # Version: 0.001
 #
 # Update:
-# 5-Jun-2018  jdw update prototypes for IoUtil() methods
-#12-Oct-2018  jdw add tests of store type mapping
+#  5-Jun-2018  jdw update prototypes for IoUtil() methods
+# 12-Oct-2018  jdw add tests of store type mapping
+#  7-Jan-2019  jdw update argument naming conventions
 #
 #
 #
@@ -63,20 +64,20 @@ class DataTypeApplicationInfoTests(unittest.TestCase):
         """ Verify default type assignments and read, write and update operations.
         """
         try:
-            dtInfo = DataTypeApplicationInfo(locator=None, applicationName='ANY', workPath=None)
+            dtInfo = DataTypeApplicationInfo(locator=None, dataTyping='ANY', workPath=None)
             mapD = dtInfo.getDefaultDataTypeMap()
             logger.debug("Default type map length %d" % len(mapD))
             ok = self.__ioU.serialize(self.__pathSaveTypeMapJson, mapD, format='json', indent=3)
             self.assertTrue(ok)
-            ok = dtInfo.writeDefaultDataTypeMap(self.__pathSaveTypeMap, applicationName='ANY')
+            ok = dtInfo.writeDefaultDataTypeMap(self.__pathSaveTypeMap, dataTyping='ANY')
             #
-            rMapD = dtInfo.readDefaultDataTypeMap(self.__pathSaveTypeMap, applicationName='ANY')
+            rMapD = dtInfo.readDefaultDataTypeMap(self.__pathSaveTypeMap, dataTyping='ANY')
             self.assertEqual(len(mapD), len(rMapD))
             # Note treating all data as strings to facilitate differencing.
             rMapD['new_type'] = {'application_name': 'ANY', 'app_type_code': 'app_new_type', 'app_precision_default': '0', 'app_width_default': '80', 'type_code': 'new_type'}
             #
-            ok = dtInfo.updateDefaultDataTypeMap(self.__pathSaveTypeMap, rMapD, applicationName='ANY')
-            uMapD = dtInfo.readDefaultDataTypeMap(self.__pathSaveTypeMap, applicationName='ANY')
+            ok = dtInfo.updateDefaultDataTypeMap(self.__pathSaveTypeMap, rMapD, dataTyping='ANY')
+            uMapD = dtInfo.readDefaultDataTypeMap(self.__pathSaveTypeMap, dataTyping='ANY')
             self.assertEqual(len(uMapD), len(rMapD))
             #
         except Exception as e:
@@ -87,7 +88,7 @@ class DataTypeApplicationInfoTests(unittest.TestCase):
         """ Verify stored type mapping assignments.
         """
         try:
-            dtInfo = DataTypeApplicationInfo(locator=self.__pathDataTypeMap, applicationName='JSON', workPath=None)
+            dtInfo = DataTypeApplicationInfo(locator=self.__pathDataTypeMap, dataTyping='JSON', workPath=None)
             mapD = dtInfo.getDefaultDataTypeMap()
             logger.debug("Default type map length %d" % len(mapD))
             self.assertGreaterEqual(len(mapD), 38)

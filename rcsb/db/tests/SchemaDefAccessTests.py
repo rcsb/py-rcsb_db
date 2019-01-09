@@ -24,8 +24,8 @@ import time
 import unittest
 
 from rcsb.db.define.SchemaDefAccess import SchemaDefAccess
-from rcsb.db.define.SchemaDefBuild import SchemaDefBuild
-from rcsb.utils.io.IoUtil import IoUtil
+from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
+from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
@@ -39,8 +39,11 @@ class SchemaDefAccessTests(unittest.TestCase):
 
     def setUp(self):
         self.__verbose = True
-        self.__mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
-        self.__pathConfig = os.path.join(self.__mockTopPath, 'config', 'dbload-setup-example.yml')
+        mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
+        pathConfig = os.path.join(mockTopPath, 'config', 'dbload-setup-example.yml')
+        configName = 'site_info'
+        self.__cfgOb = ConfigUtil(configPath=pathConfig, defaultSectionName=configName, mockTopPath=mockTopPath)
+        self.__sdu = SchemaDefUtil(cfgOb=self.__cfgOb)
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
@@ -53,34 +56,15 @@ class SchemaDefAccessTests(unittest.TestCase):
                                                             endTime - self.__startTime))
 
     def testAccess(self):
-        schemaNames = ['pdbx', 'pdbx_core', 'chem_comp', 'bird', 'bird_family', 'bird_chem_comp', 'bird_chem_comp_core']
-        applicationNames = ['ANY', 'SQL']
+        schemaNames = ['pdbx_core', 'chem_comp_core', 'bird_chem_comp_core']
+        dataTypingList = ['ANY', 'SQL']
         for schemaName in schemaNames:
-            for applicationName in applicationNames:
-                self.__testAccess(schemaName, applicationName)
+            for dataTyping in dataTypingList:
+                self.__testAccess(schemaName, dataTyping)
 
-    def __testBuild(self, schemaName, applicationName):
+    def __testAccess(self, schemaName, dataTyping):
         try:
-            pathSchemaDefJson = os.path.join(HERE, 'test-output', 'schema_def-%s-%s.json' % (schemaName, applicationName))
-            #
-            smb = SchemaDefBuild(schemaName, self.__pathConfig, mockTopPath=self.__mockTopPath)
-            sD = smb.build(applicationName=applicationName)
-            #
-            logger.debug("Schema dictionary category length %d" % len(sD['SCHEMA_DICT']))
-            self.assertGreaterEqual(len(sD['SCHEMA_DICT']), 5)
-            #
-            ioU = IoUtil()
-            ioU.serialize(pathSchemaDefJson, sD, format='json', indent=3)
-            return sD
-
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-            self.fail()
-        return {}
-
-    def __testAccess(self, schemaName, applicationName):
-        try:
-            sD = self.__testBuild(schemaName, applicationName)
+            sD = self.__sdu.makeSchemaDef(schemaName, dataTyping=dataTyping, saveSchema=False)
             ok = self.__testAccessors(sD)
             self.assertTrue(ok)
             #

@@ -44,8 +44,9 @@ class RepoHoldingsDataPrepTests(unittest.TestCase):
         self.__workPath = os.path.join(HERE, 'test-output')
         self.__updateId = '2018_25'
         #
-        self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, mockTopPath=self.__mockTopPath)
-        self.__sandboxPath = self.__cfgOb.getPath('RCSB_EXCHANGE_SANDBOX_PATH', sectionName='site_info')
+        configName = 'site_info'
+        self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
+        self.__sandboxPath = self.__cfgOb.getPath('RCSB_EXCHANGE_SANDBOX_PATH', sectionName=configName)
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),

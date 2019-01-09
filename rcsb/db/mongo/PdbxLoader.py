@@ -59,7 +59,7 @@ logger = logging.getLogger(__name__)
 
 class PdbxLoader(object):
 
-    def __init__(self, cfgOb, cfgSectionName='site_info', resourceName="MONGO_DB", numProc=4, chunkSize=15,
+    def __init__(self, cfgOb, resourceName="MONGO_DB", numProc=4, chunkSize=15,
                  fileLimit=None, verbose=False, readBackCheck=False, maxStepLength=2000, workPath=None):
         """  Worker methods for loading primary data content following mapping conventions in external schema definitions.
 
@@ -95,7 +95,7 @@ class PdbxLoader(object):
         #
         self.__statusList = []
         #
-        sectionName = cfgSectionName
+        sectionName = 'site_info'
         pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=sectionName)
         pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=sectionName)
         #
@@ -178,7 +178,7 @@ class PdbxLoader(object):
                     indexDL = docIndexD[collectionName] if collectionName in docIndexD else []
                     bsonSchema = None
                     if schemaLevel and schemaLevel in ['min', 'full']:
-                        bsonSchema = self.__schU.getJsonSchema(collectionName, level=schemaLevel)
+                        bsonSchema = self.__schU.getJsonSchema(collectionName, schemaType='BSON', level=schemaLevel)
                     ok = self.__createCollection(dbName, collectionName, indexDL=indexDL, bsonSchema=bsonSchema)
                     logger.debug("Collection create return status %r" % ok)
 

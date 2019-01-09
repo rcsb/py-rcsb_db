@@ -164,6 +164,18 @@ class SchemaDefAccessBase(object):
             logger.exception("Failing for collection %s with %r" % (collectionName, str(e)))
         return r
 
+    def getDocumentIndex(self, collectionName, indexName):
+        """ Return the attribute list for a particular document index.
+        """
+        r = []
+        try:
+            for d in self.__documentDefDict['COLLECTION_DOCUMENT_INDICES'][collectionName]:
+                if d['INDEX_NAME'] == indexName:
+                    return d['ATTRIBUTE_NAMES']
+        except Exception as e:
+            logger.exception("Failing for collection %s index %r with %r" % (collectionName, indexName, str(e)))
+        return r
+
     def hasUnitCardinality(self, schemaId):
         try:
             return self.__schemaDefDict[schemaId]['SCHEMA_UNIT_CARDINALITY']

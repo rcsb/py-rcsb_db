@@ -23,6 +23,7 @@ import time
 import unittest
 
 from rcsb.db.processors.ClusterDataPrep import ClusterDataPrep
+from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
@@ -37,9 +38,16 @@ class ClusterDataPrepTests(unittest.TestCase):
 
     def setUp(self):
         self.__verbose = True
+        #
+        mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
+        pathConfig = os.path.join(mockTopPath, 'config', 'dbload-setup-example.yml')
+        #
+        configName = 'site_info'
+        cfgOb = ConfigUtil(configPath=pathConfig, defaultSectionName=configName, mockTopPath=mockTopPath)
+        self.__pathClusterData = cfgOb.getPath('RCSB_SEQUENCE_CLUSTER_DATA_PATH', sectionName=configName)
         # sample data set
         self.__dataSetId = '2018_23'
-        self.__pathClusterData = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'cluster_data', 'mmseqs-20180608')
+
         self.__levels = ['100', '95', '90', '70', '50', '30']
         #
         self.__workPath = os.path.join(HERE, 'test-output')

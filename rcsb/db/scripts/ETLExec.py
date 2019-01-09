@@ -7,6 +7,7 @@
 #  Updates:
 #  15-Jul-2018 jdw add repository holdings, move all path configuration to a separate site dependent config section.
 #   9-Dec-2018 jdw add chemical reference ETL options
+#   4-Jan-2019 jdw differentiate config sections for provenance
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -49,6 +50,7 @@ def loadStatus(statusList, cfgOb, readBackCheck=True):
 def main():
     parser = argparse.ArgumentParser()
     #
+    defaultConfigName = 'site_info'
     #
     parser.add_argument("--full", default=True, action='store_true', help="Fresh full load in a new tables/collections (Default)")
     #
@@ -63,7 +65,7 @@ def main():
 
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
-    parser.add_argument("--config_name", default="site_info", help="Configuration section name")
+    parser.add_argument("--config_name", default=defaultConfigName, help="Configuration section name")
 
     parser.add_argument("--db_type", default="mongo", help="Database server type (default=mongo)")
 
@@ -96,8 +98,11 @@ def main():
         else:
             logger.error("Missing or access issue with config file %r" % configPath)
             exit(1)
-        mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', ) if args.mock else None
-        cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
+        mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data') if args.mock else None
+        cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=defaultConfigName, mockTopPath=mockTopPath)
+        if configName != defaultConfigName:
+            cfgOb.replaceSectionName(defaultConfigName, configName)
+        #
     except Exception as e:
         logger.error("Missing or access issue with config file %r with %s" % (configPath, str(e)))
         exit(1)

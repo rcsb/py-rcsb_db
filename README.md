@@ -69,23 +69,23 @@ for the document schema encoded in JSON and BSON formats.  The latter schema can
 validate the loadable document objects produced for the collections served by MongoDB.
 
 ```bash
-
-usage: schema_update_cli  [-h] [--update_chem_comp_ref]
-                           [--update_chem_comp_core_ref]
-                           [--update_bird_chem_comp_ref]
-                           [--update_bird_chem_comp_core_ref]
-                           [--update_bird_ref] [--update_bird_family_ref]
-                           [--update_pdbx] [--update_pdbx_core]
-                           [--update_repository_holdings]
-                           [--update_entity_sequence_clusters]
-                           [--update_data_exchange] [--update_ihm_dev]
-                           [--update_drugbank_core]
-                           [--config_path CONFIG_PATH]
-                           [--config_name CONFIG_NAME]
-                           [--schema_dirpath SCHEMA_DIRPATH]
-                           [--schema_format SCHEMA_FORMAT]
-                           [--schema_level SCHEMA_LEVEL] [--debug] [--mock]
-                           [--working_path WORKING_PATH]
+schema_update_cli  --help
+usage: schema_update_cli [-h] [--update_chem_comp_ref]
+                         [--update_chem_comp_core_ref]
+                         [--update_bird_chem_comp_ref]
+                         [--update_bird_chem_comp_core_ref]
+                         [--update_bird_ref] [--update_bird_family_ref]
+                         [--update_pdbx] [--update_pdbx_core]
+                         [--update_repository_holdings]
+                         [--update_entity_sequence_clusters]
+                         [--update_data_exchange] [--update_ihm_dev]
+                         [--update_drugbank_core] [--update_config_all]
+                         [--update_config_deployed] [--update_config_test]
+                         [--config_path CONFIG_PATH]
+                         [--config_name CONFIG_NAME]
+                         [--schema_dirpath SCHEMA_DIRPATH]
+                         [--schema_types SCHEMA_TYPES]
+                         [--schema_levels SCHEMA_LEVELS] [--debug] [--mock]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -115,28 +115,36 @@ optional arguments:
   --update_ihm_dev      Update schema for I/HM dev entry data
   --update_drugbank_core
                         Update DrugBank schema
+  --update_config_all   Update using configuration settings (e.g.
+                        SCHEMA_NAMES_ALL)
+  --update_config_deployed
+                        Update using configuration settings (e.g.
+                        SCHEMA_NAMES_DEPLOYED)
+  --update_config_test  Update using configuration settings (e.g.
+                        SCHEMA_NAMES_TEST)
   --config_path CONFIG_PATH
                         Path to configuration options file
   --config_name CONFIG_NAME
                         Configuration section name
   --schema_dirpath SCHEMA_DIRPATH
-                        Output schema directory path
-  --schema_format SCHEMA_FORMAT
-                        Schema encoding (rcsb|json|bson)
-  --schema_level SCHEMA_LEVEL
-                        Schema validation level (full|min default=None)
+                        Output schema directory path (overrides configuration
+                        settings)
+  --schema_types SCHEMA_TYPES
+                        Schema encoding (rcsb|json|bson) (comma separated)
+  --schema_levels SCHEMA_LEVELS
+                        Schema validation level (full|min) (comma separated)
   --debug               Turn on verbose logging
   --mock                Use MOCK repository configuration for dependencies and
                         testing
-  --working_path WORKING_PATH
-                        Working path for temporary files
+__________________________________________________
+
 ```
 
-For example, the following command will generate the JSON schema for the collections in the
+For example, the following command will generate the JSON and BSON schema for the collections in the
 pdbx_core schema.
 
 ```bash
-schema_update_cli  --mock --schema_format json \
+schema_update_cli  --mock --schema_types json,bson \
                    --schema_level full  \
                    --update_pdbx_core   \
                    --schema_dirpath . \
@@ -384,7 +392,7 @@ For instance, to perform a fresh/full load of all of the chemical component defi
 cd rcsb/db/scripts
 python RepoLoadExec.py --full  --load_chem_comp_ref  \
                       --config_path ../../mock-data/config/dbload-setup-example.yml \
-                      --config_name DEFAULT \
+                      --config_name site_info \
                       --fail_file_list_path failed-cc-path-list.txt \
                       --read_back_check
 ```
@@ -398,13 +406,13 @@ this same data.
 cd rcsb/db/scripts
 python RepoLoadExec.py  --mock --full  --load_entry_data \
                      --config_path ../../mock-data/config/dbload-setup-example.yml \
-                     --config_name DEFAULT \
+                     --config_name site_info \
                      --save_file_list_path  LATEST_PDBX_LOAD_LIST.txt \
                      --fail_file_list_path failed-entry-path-list.txt
 
 python RepoLoadExec.py --mock --replace  --load_entry_data \
                       --config_path ../../mock-data/config/dbload-setup-example.yml \
-                      --config_name DEFAULT \
+                      --config_name site_info \
                       --load_file_list_path  LATEST_PDBX_LOAD_LIST.txt \
                       --fail_file_list_path failed-entry-path-list.txt
 ```
@@ -442,10 +450,18 @@ bird_chem_comp_core,.. ).
 #  6-Dec-2018 jdw revised DrugBank core collection details
 # 13-Dec-2018 jdw includes core_entity_monomer collection
 # 13-Dec-2018 jdw includes ihm_dev collection
+# 18-Dec-2018 jdw add entity private BIRD key based on either _pdbx_entity_nonpoly.rcsb_prd_id
+#                 _entity_poly.rcsb_prd_id
+#  1-Jan-2019 jdw restore exptl_crystal in pdbx_core_entry
+#  7-Jan-2019 jdw broad pruning and consolidation of site specific sections
+#
 #
 # Master Pinelands configuration file example
 ---
 DEFAULT: {}
+#
+# Site specific path and server configuration options -
+#
 site_info:
     BIRD_REPO_PATH: MOCK_BIRD_REPO
     BIRD_FAMILY_REPO_PATH: MOCK_BIRD_FAMILY_REPO
@@ -469,7 +485,10 @@ site_info:
     DRUGBANK_DATA_LOCATOR: DrugBank/full_database.xml.gz
     CCDC_MAPPING_LOCATOR: chem_comp_models/ccdc_pdb_mapping.json
     NCBI_TAXONOMY_LOCATOR: NCBI/taxonomy_names.pic
-site_server_info:
+    SCHEMA_DEF_LOCATOR_PATH: schema
+    JSON_SCHEMA_LOCATOR_PATH: json-schema
+    INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH: data_type_info
+    #
     MONGO_DB_HOST: localhost
     MONGO_DB_PORT: '27017'
     MONGO_DB_USER: ''
@@ -485,51 +504,37 @@ site_server_info:
     COCKROACH_DB_PORT: '26257'
     COCKROACH_DB_NAME: system
     COCKROACH_DB_USER_NAME: root
-ihm_dev:
-    SCHEMA_NAME: ihm_dev
-    SCHEMA_DEF_LOCATOR_SQL: schema/schema_def-ihm_dev-SQL.json
-    SCHEMA_DEF_LOCATOR_ANY: schema/schema_def-ihm_dev-ANY.json
-    INSTANCE_DATA_TYPE_INFO_LOCATOR: data_type_info/scan-ihm_dev-type-map.json
-pdbx:
-    SCHEMA_NAME: pdbx
-    SCHEMA_DEF_LOCATOR_SQL: schema/schema_def-pdbx-SQL.json
-    SCHEMA_DEF_LOCATOR_ANY: schema/schema_def-pdbx-ANY.json
-    INSTANCE_DATA_TYPE_INFO_LOCATOR: data_type_info/scan-pdbx-type-map.json
-pdbx_core:
-    SCHEMA_NAME: pdbx_core
-    SCHEMA_DEF_LOCATOR_SQL: schema/schema_def-pdbx_core-SQL.json
-    SCHEMA_DEF_LOCATOR_ANY: schema/schema_def-pdbx_core-ANY.json
-    INSTANCE_DATA_TYPE_INFO_LOCATOR: data_type_info/scan-pdbx-type-map.json
-chem_comp:
-    SCHEMA_NAME: chem_comp
-    SCHEMA_DEF_LOCATOR_SQL: schema/schema_def-chem_comp-SQL.json
-    SCHEMA_DEF_LOCATOR_ANY: schema/schema_def-chem_comp-ANY.json
-    INSTANCE_DATA_TYPE_INFO_LOCATOR: data_type_info/scan-chem_comp-type-map.json
-chem_comp_core:
-    SCHEMA_NAME: chem_comp_core
-    SCHEMA_DEF_LOCATOR_SQL: schema/schema_def-chem_comp_core-SQL.json
-    SCHEMA_DEF_LOCATOR_ANY: schema/schema_def-chem_comp_core-ANY.json
-    INSTANCE_DATA_TYPE_INFO_LOCATOR: data_type_info/scan-chem_comp-type-map.json
-bird_chem_comp:
-    SCHEMA_NAME: bird_chem_comp
-    SCHEMA_DEF_LOCATOR_SQL: schema/schema_def-bird_chem_comp-SQL.json
-    SCHEMA_DEF_LOCATOR_ANY: schema/schema_def-bird_chem_comp-ANY.json
-    INSTANCE_DATA_TYPE_INFO_LOCATOR: data_type_info/scan-bird_chem_comp-type-map.json
-bird_chem_comp_core:
-    SCHEMA_NAME: bird_chem_comp_core
-    SCHEMA_DEF_LOCATOR_SQL: schema/schema_def-bird_chem_comp_core-SQL.json
-    SCHEMA_DEF_LOCATOR_ANY: schema/schema_def-bird_chem_comp_core-ANY.json
-    INSTANCE_DATA_TYPE_INFO_LOCATOR: data_type_info/scan-bird_chem_comp-type-map.json
-bird:
-    SCHEMA_NAME: bird
-    SCHEMA_DEF_LOCATOR_SQL: schema/schema_def-bird-SQL.json
-    SCHEMA_DEF_LOCATOR_ANY: schema/schema_def-bird-ANY.json
-    INSTANCE_DATA_TYPE_INFO_LOCATOR: data_type_info/scan-bird-type-map.json
-bird_family:
-    SCHEMA_NAME: bird_family
-    SCHEMA_DEF_LOCATOR_SQL: schema/schema_def-bird_family-SQL.json
-    SCHEMA_DEF_LOCATOR_ANY: schema/schema_def-bird_family-ANY.json
-    INSTANCE_DATA_TYPE_INFO_LOCATOR: data_type_info/scan-bird_family-type-map.json
+#
+# Inventory of current databases and collections -
+#
+schema_catalog_info:
+  # All defined schema -
+  SCHEMA_NAMES_ALL: pdbx,pdbx_core,chem_comp,chem_comp_core,bird,bird_family,bird_chem_comp,bird_chem_comp_core,repository_holdings,entity_sequence_clusters,data_exchange,drugbank_core,ihm_dev
+  DATATYPING_ALL: ANY,SQL
+  SCHEMA_TYPES_ALL: rcsb,json,bson
+  SCHEMA_LEVELS_ALL: min,full
+  #
+  #  Schema in active use -
+  #
+  SCHEMA_NAMES_DEPLOYED: pdbx,pdbx_core,chem_comp,chem_comp_core,bird,bird_family,bird_chem_comp,bird_chem_comp_core,repository_holdings,entity_sequence_clusters,data_exchange,drugbank_core,ihm_dev
+  DATATYPING_DEPLOYED: ANY,SQL
+  SCHEMA_TYPES_DEPLOYED: rcsb,json,bson
+  SCHEMA_LEVELS_DEPLOYED: min,full
+  #
+  # Schema subset used for CI testing -
+  #
+  SCHEMA_NAMES_TEST: pdbx_core
+  DATATYPING_TEST: ANY,SQL
+  SCHEMA_TYPES_TEST: rcsb,json,bson
+  SCHEMA_LEVELS_TEST: min,full
+  #
+  #SCHEMA_NAMES_TEST: pdbx_core,chem_comp_core,bird_chem_comp_core,repository_holdings,entity_sequence_clusters,data_exchange,drugbank_core
+  #DATATYPING_TEST: ANY,SQL
+  #SCHEMA_FORMATS_TEST: rcsb,json,bson
+  #SCHEMA_LEVELS_TEST: min,full#
+#
+# Some schema details for integrated collections -
+#
 entity_sequence_clusters:
     DATABASE_NAME: sequence_clusters
     DATABASE_VERSION_STRING: v5
@@ -543,11 +548,10 @@ entity_sequence_clusters:
     SEQUENCE_IDENTITY_LEVELS: 100,95,90,70,50,30
     COLLECTION_CLUSTER_PROVENANCE: cluster_provenance
     PROVENANCE_KEY_NAME: rcsb_entity_sequence_cluster_prov
-    PROVENANCE_INFO_LOCATOR: provenance/rcsb_extend_provenance_info.json
-    SCHEMA_NAME: entity_sequence_clusters
-    SCHEMA_DEF_LOCATOR_SQL: schema/schema_def-entity_sequence_clusters-SQL.json
-    SCHEMA_DEF_LOCATOR_ANY: schema/schema_def-entity_sequence_clusters-ANY.json
-    INSTANCE_DATA_TYPE_INFO_LOCATOR: data_type_info/scan-entity_sequence_clusters-type-map.json
+    #SCHEMA_NAME: entity_sequence_clusters
+    #SCHEMA_DEF_FILENAME_SQL: schema_def-entity_sequence_clusters-SQL.json
+    #SCHEMA_DEF_FILENAME_ANY: schema_def-entity_sequence_clusters-ANY.json
+    INSTANCE_DATA_TYPE_INFO_FILENAME: scan-entity_sequence_clusters-type-map.json
 repository_holdings:
     DATABASE_NAME: repository_holdings
     DATABASE_VERSION_STRING: v5
@@ -561,137 +565,23 @@ repository_holdings:
     COLLECTION_HOLDINGS_TRANSFERRED: repository_holdings_transferred
     COLLECTION_HOLDINGS_INSILICO_MODELS: repository_holdings_insilico_models
     COLLECTION_VERSION_STRING: v0_1
-    SCHEMA_NAME: entity_sequence_clusters
-    SCHEMA_DEF_LOCATOR_SQL: schema/schema_def-repository_holdings-SQL.json
-    SCHEMA_DEF_LOCATOR_ANY: schema/schema_def-repository_holdings-ANY.json
-    INSTANCE_DATA_TYPE_INFO_LOCATOR: data_type_info/scan-repository_holdings-type-map.json
+    #SCHEMA_NAME: entity_sequence_clusters
+    #SCHEMA_DEF_FILENAME_SQL: schema_def-repository_holdings-SQL.json
+    #SCHEMA_DEF_FILENAME_ANY: schema_def-repository_holdings-ANY.json
+    #INSTANCE_DATA_TYPE_INFO_FILENAME: scan-repository_holdings-type-map.json
 data_exchange:
     DATABASE_NAME: data_exchange
     DATABASE_VERSION_STRING: v5
     COLLECTION_UPDATE_STATUS: rcsb_data_exchange_status
     COLLECTION_VERSION_STRING: v0_1
-    SCHEMA_NAME: data_exchange
-    SCHEMA_DEF_LOCATOR_SQL: schema/schema_def-data_exchange-SQL.json
-    SCHEMA_DEF_LOCATOR_ANY: schema/schema_def-data_exchange-ANY.json
-    INSTANCE_DATA_TYPE_INFO_LOCATOR: data_type_info/scan-data_exchange-type-map.json
-drugbank_core:
-    DATABASE_NAME: chem_comp
-    SCHEMA_NAME: drugbank_core
-    DATABASE_VERSION_STRING: v5
-    COLLECTION_DRUGBANK_CORE: drugbank_core
-    COLLECTION_VERSION_STRING: v0_1
-    SCHEMA_DEF_LOCATOR_SQL: schema/schema_def-drugbank_core-SQL.json
-    SCHEMA_DEF_LOCATOR_ANY: schema/schema_def-drugbank_core-ANY.json
-    INSTANCE_DATA_TYPE_INFO_LOCATOR: data_type_info/scan-drugbank_core-type-map.json
+    # SCHEMA_NAME: data_exchange
+    #SCHEMA_DEF_FILENAME_SQL: schema_def-data_exchange-SQL.json
+    #SCHEMA_DEF_FILENAME_ANY: schema_def-data_exchange-ANY.json
+    #INSTANCE_DATA_TYPE_INFO_FILENAME: scan-data_exchange-type-map.json
 #
-ihm_dev_v1_0_1:
-    SCHEMA_NAME: ihm_dev
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-ihm_dev_v1_0_1.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-ihm_dev_v1_0_1.json
-pdbx_v5_0_2:
-    SCHEMA_NAME: pdbx
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-pdbx_v5_0_2.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-pdbx_v5_0_2.json
-pdbx_ext_v5_0_2:
-    SCHEMA_NAME: pdbx
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-pdbx_ext_v5_0_2.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-pdbx_ext_v5_0_2.json
-pdbx_core_entity_v5_0_2:
-    SCHEMA_NAME: pdbx_core
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-pdbx_core_entity_v5_0_2.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-pdbx_core_entity_v5_0_2.json
-pdbx_core_entity_monomer_v5_0_2:
-    SCHEMA_NAME: pdbx_core
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-pdbx_core_entity_monomer_v5_0_2.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-pdbx_core_entity_monomer_v5_0_2.json
-pdbx_core_entry_v5_0_2:
-    SCHEMA_NAME: pdbx_core
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-pdbx_core_entry_v5_0_2.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-pdbx_core_entry_v5_0_2.json
-pdbx_core_assembly_v5_0_2:
-    SCHEMA_NAME: pdbx_core
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-pdbx_core_assembly_v5_0_2.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-pdbx_core_assembly_v5_0_2.json
-bird_v5_0_2:
-    SCHEMA_NAME: bird
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-bird_v5_0_2.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-bird_v5_0_2.json
-family_v5_0_2:
-    SCHEMA_NAME: bird_family
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-family_v5_0_2.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-family_v5_0_2.json
-chem_comp_v5_0_2:
-    SCHEMA_NAME: chem_comp
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-chem_comp_v5_0_2.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-chem_comp_v5_0_2.json
-chem_comp_core_v5_0_2:
-    SCHEMA_NAME: chem_comp_core
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-chem_comp_core_v5_0_2.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-chem_comp_core_v5_0_2.json
-bird_chem_comp_v5_0_2:
-    SCHEMA_NAME: bird_chem_comp
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-bird_chem_comp_v5_0_2.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-bird_chem_comp_v5_0_2.json
-bird_chem_comp_core_v5_0_2:
-    SCHEMA_NAME: bird_chem_comp_core
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-bird_chem_comp_core_v5_0_2.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-bird_chem_comp_core_v5_0_2.json
-repository_holdings_update_v0_1:
-    SCHEMA_NAME: repository_holdings
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-repository_holdings_update_v0_1.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-repository_holdings_update_v0_1.json
-repository_holdings_removed_v0_1:
-    SCHEMA_NAME: repository_holdings
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-repository_holdings_removed_v0_1.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-repository_holdings_removed_v0_1.json
-repository_holdings_current_v0_1:
-    SCHEMA_NAME: repository_holdings
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-repository_holdings_current_v0_1.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-repository_holdings_current_v0_1.json
-repository_holdings_unreleased_v0_1:
-    SCHEMA_NAME: repository_holdings
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-repository_holdings_unreleased_v0_1.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-repository_holdings_unreleased_v0_1.json
-repository_holdings_prerelease_v0_1:
-    SCHEMA_NAME: repository_holdings
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-repository_holdings_prerelease_v0_1.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-repository_holdings_prerelease_v0_1.json
-repository_holdings_removed_audit_authors_v0_1:
-    SCHEMA_NAME: repository_holdings
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-repository_holdings_removed_audit_authors_v0_1.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-repository_holdings_removed_audit_authors_v0_1.json
-repository_holdings_superseded_v0_1:
-    SCHEMA_NAME: repository_holdings
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-repository_holdings_superseded_v0_1.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-repository_holdings_superseded_v0_1.json
-repository_holdings_transferred_v0_1:
-    SCHEMA_NAME: repository_holdings
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-repository_holdings_transferred_v0_1.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-repository_holdings_transferred_v0_1.json
-repository_holdings_insilico_models_v0_1:
-    SCHEMA_NAME: repository_holdings
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-repository_holdings_insilico_models_v0_1.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-repository_holdings_insilico_models_v0_1.json
-cluster_members_v0_1:
-    SCHEMA_NAME: entity_sequence_clusters
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-cluster_members_v0_1.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-cluster_members_v0_1.json
-cluster_provenance_v0_1:
-    SCHEMA_NAME: entity_sequence_clusters
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-cluster_provenance_v0_1.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-cluster_provenance_v0_1.json
-entity_members_v0_1:
-    SCHEMA_NAME: entity_sequence_clusters
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-entity_members_v0_1.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-entity_members_v0_1.json
-rcsb_data_exchange_status_v0_1:
-    SCHEMA_NAME: data_exchange
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-rcsb_data_exchange_status_v0_1.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-rcsb_data_exchange_status_v0_1.json
-drugbank_core_v0_1:
-    SCHEMA_NAME: drugbank_core
-    BSON_SCHEMA_FULL_LOCATOR: json-schema/bson-schema-full-drugbank_core_v0_1.json
-    BSON_SCHEMA_MIN_LOCATOR: json-schema/bson-schema-min-drugbank_core_v0_1.json
+# Common configuration options for helper classes used for dictionary content generation
+# schema construction --
+#
 dictionary_helper:
     item_transformers:
         STRIP_WS:
@@ -928,6 +818,7 @@ dictionary_helper:
                 - CATEGORY_NAME: entity_poly
                   ATTRIBUTE_NAME_LIST:
                       - rcsb_entity_polymer_type
+                      - rcsb_prd_id
                 - CATEGORY_NAME: rcsb_accession_info
                   ATTRIBUTE_NAME_LIST:
                       - entry_id
@@ -1508,6 +1399,9 @@ dictionary_helper:
                 - pdbx_core
         :       - rcsb_load_status
                 - pdbx_struct_oper_list
+#
+##
+#
 schemadef_helper:
     schema_content_filters:
         ihm_dev:
@@ -1593,49 +1487,63 @@ schemadef_helper:
             CIF_TYPE_CODE: code
             MAX_WIDTH: 12
             METHOD: datablockid()
-    database_names:
+    schema_info:
         ihm_dev:
-          NAME: ihm_dev_v1
-          VERSION: '0_1'
+            DATABASE_NAME: ihm_dev_v1
+            VERSION: 'UNASSIGNED'
+            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-ihm_dev-type-map.json
         pdbx:
-            NAME: pdbx_v5
+            DATABASE_NAME: pdbx_v5
             VERSION: '0_2'
+            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-pdbx-type-map.json
         pdbx_core:
-            NAME: pdbx_v5
+            DATABASE_NAME: pdbx_v5
             VERSION: '0_2'
+            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-pdbx-type-map.json
         bird:
-            NAME: bird_v5
+            DATABASE_NAME: bird_v5
             VERSION: '0_1'
+            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-bird-type-map.json
         bird_family:
-            NAME: bird_v5
+            DATABASE_NAME: bird_v5
             VERSION: '0_1'
+            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-bird_family-type-map.json
         chem_comp:
-            NAME: chem_comp_v5
+            DATABASE_NAME: chem_comp_v5
             VERSION: '0_1'
+            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
         chem_comp_core:
-            NAME: chem_comp_v5
+            DATABASE_NAME: chem_comp_v5
             VERSION: '0_1'
+            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
         bird_chem_comp:
-            NAME: chem_comp_v5
+            DATABASE_NAME: chem_comp_v5
             VERSION: '0_1'
+            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-bird_chem_comp-type-map.json
         bird_chem_comp_core:
-            NAME: chem_comp_v5
+            DATABASE_NAME: chem_comp_v5
             VERSION: '0_1'
+            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-bird_chem_comp-type-map.json
         pdb_distro:
-            NAME: stat
+            DATABASE_NAME: stat
             VERSION: '0_1'
+            INSTANCE_DATA_TYPE_INFO_FILENAME:
         repository_holdings:
-            NAME: repository_holdings
+            DATABASE_NAME: repository_holdings
             VERSION: v5
+            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-repository_holdings-type-map.json
         entity_sequence_clusters:
-            NAME: sequence_clusters
+            DATABASE_NAME: sequence_clusters
             VERSION: v5
+            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-entity_sequence_clusters-type-map.json
         data_exchange:
-            NAME: data_exchange
+            DATABASE_NAME: data_exchange
             VERSION: v5
+            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-data_exchange-type-map.json
         drugbank_core:
-            NAME: chem_comp_v5
+            DATABASE_NAME: chem_comp_v5
             VERSION: '0_1'
+            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-drugbank_core-type-map.json
     exclude_attributes:
         pdbx_core:
             - CATEGORY_NAME: cell
@@ -1694,6 +1602,8 @@ schemadef_helper:
               ATTRIBUTE_NAME: processing_site
             - CATEGORY_NAME: pdbx_chem_comp_audit
               ATTRIBUTE_NAME: annotator
+#
+#
 document_helper:
     schema_collection_names:
         ihm_dev:
@@ -1852,6 +1762,7 @@ document_helper:
                 - EM_VITRIFICATION
                 - ENTRY
                 - EXPTL
+                - EXPTL_CRYSTAL
                 - EXPTL_CRYSTAL_GROW
                 - PDBX_AUDIT_REVISION_DETAILS
                 - PDBX_AUDIT_REVISION_HISTORY
@@ -2007,6 +1918,16 @@ document_helper:
               CATEGORY_NAME: pdbx_entity_nonpoly
               ATTRIBUTE_NAME: comp_id
               PRIVATE_DOCUMENT_NAME: __comp_id
+              MANDATORY: False
+            - NAME: _pdbx_entity_nonpoly.rcsb_prd_id
+              CATEGORY_NAME: pdbx_entity_nonpoly
+              ATTRIBUTE_NAME: rcsb_prd_id
+              PRIVATE_DOCUMENT_NAME: __prd_id
+              MANDATORY: False
+            - NAME: _entity_poly.rcsb_prd_id
+              CATEGORY_NAME: entity_poly
+              ATTRIBUTE_NAME: rcsb_prd_id
+              PRIVATE_DOCUMENT_NAME: __prd_id
               MANDATORY: False
         pdbx_core_entity_monomer_v5_0_2:
             - NAME: entry.id

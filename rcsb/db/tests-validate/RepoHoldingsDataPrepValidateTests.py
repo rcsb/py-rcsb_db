@@ -23,10 +23,9 @@ import unittest
 
 from jsonschema import Draft4Validator, FormatChecker
 
-from rcsb.db.define.SchemaDefBuild import SchemaDefBuild
 from rcsb.db.processors.RepoHoldingsDataPrep import RepoHoldingsDataPrep
+from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
 from rcsb.utils.config.ConfigUtil import ConfigUtil
-from rcsb.utils.io.IoUtil import IoUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
@@ -46,10 +45,10 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
         self.__workPath = os.path.join(HERE, 'test-output')
         self.__updateId = '2018_25'
         #
-        self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, mockTopPath=self.__mockTopPath)
-        self.__sandboxPath = self.__cfgOb.getPath('RCSB_EXCHANGE_SANDBOX_PATH', sectionName='site_info')
-        self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
-        self.__pathRcsbDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'rcsb_mmcif_ext_v1.dic')
+        configName = 'site_info'
+        self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
+        self.__sdu = SchemaDefUtil(cfgOb=self.__cfgOb)
+        self.__sandboxPath = self.__cfgOb.getPath('RCSB_EXCHANGE_SANDBOX_PATH', sectionName=configName)
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
@@ -63,19 +62,19 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
 
     def testValidateOptsStrict(self):
         updateId = self.__updateId
-        enforceOpts = "mandatoryKeys|mandatoryAttributes|bounds|enums"
-        eCount = self.__testValidateOpts(updateId, enforceOpts=enforceOpts)
-        logger.info("Total validation errors enforcing %s : %d" % (enforceOpts, eCount))
+        schemaLevel = 'full'
+        eCount = self.__testValidateOpts(updateId, schemaLevel=schemaLevel)
+        logger.info("Total validation errors schema level %s : %d" % (schemaLevel, eCount))
         self.assertTrue(eCount <= 1)
 
     def testValidateOptsMin(self):
         updateId = self.__updateId
-        enforceOpts = "mandatoryKeys|enums"
-        eCount = self.__testValidateOpts(updateId, enforceOpts=enforceOpts)
-        logger.info("Total validation errors enforcing %s : %d" % (enforceOpts, eCount))
+        schemaLevel = 'min'
+        eCount = self.__testValidateOpts(updateId, schemaLevel=schemaLevel)
+        logger.info("Total validation errors schema level %s : %d" % (schemaLevel, eCount))
         self.assertTrue(eCount <= 1)
 
-    def __testValidateOpts(self, updateId, enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
+    def __testValidateOpts(self, updateId, schemaLevel='full'):
         schemaNames = ['repository_holdings']
         collectionNames = {'repository_holdings_min': ['repository_holdings_superseded_v0_1'],
                            'repository_holdings': ['repository_holdings_update_v0_1',
@@ -94,7 +93,7 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
         eCount = 0
         for schemaName in schemaNames:
             for collectionName in collectionNames[schemaName]:
-                cD = self.__testBuildJsonSchema(schemaName, collectionName, enforceOpts=enforceOpts)
+                cD = self.__sdu.makeSchema(schemaName, collectionName, schemaType='JSON', level=schemaLevel, saveSchema=True, altDirPath=self.__workPath)
                 dL = self.__getRepositoryHoldingsDocuments(schemaName, collectionName, updateId)
                 # Raises exceptions for schema compliance.
                 Draft4Validator.check_schema(cD)
@@ -115,24 +114,6 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
                         logger.exception("Validation error %s" % str(e))
 
         return eCount
-
-    def __testBuildJsonSchema(self, schemaName, collectionName, enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
-        try:
-            pathSchemaDefJson1 = os.path.join(HERE, 'test-output', 'json-schema-%s.json' % (collectionName))
-            #
-            smb = SchemaDefBuild(schemaName, self.__pathConfig, mockTopPath=self.__mockTopPath)
-            cD = smb.build(collectionName, applicationName='json', schemaType='json', enforceOpts=enforceOpts)
-            #
-            logger.debug("Schema dictionary category length %d" % len(cD))
-            self.assertGreaterEqual(len(cD), 1)
-            #
-            ioU = IoUtil()
-            ioU.serialize(pathSchemaDefJson1, cD, format='json', indent=3)
-            return cD
-
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-            self.fail()
 
     def __getRepositoryHoldingsDocuments(self, schemaName, collectionName, updateId):
         """ Test loading and processing operations for legacy holdings and status data.

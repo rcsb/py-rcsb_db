@@ -32,7 +32,7 @@ class Connection(object):
     """ Class to encapsulate Crate RDBMS DBI connection.
     """
 
-    def __init__(self, cfgOb=None, infoD=None, resourceName=None, sectionName='site_server_info', verbose=False):
+    def __init__(self, cfgOb=None, infoD=None, resourceName=None, sectionName='site_info', verbose=False):
         self.__verbose = verbose
 
         self.__db = None

@@ -21,7 +21,7 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
-
+import glob
 import logging
 import os
 import time
@@ -30,13 +30,11 @@ import unittest
 from jsonschema import Draft4Validator, FormatChecker
 
 from rcsb.db.define.DictMethodRunner import DictMethodRunner
-from rcsb.db.define.SchemaDefBuild import SchemaDefBuild
 from rcsb.db.helpers.DictMethodRunnerHelper import DictMethodRunnerHelper
 from rcsb.db.processors.DataTransformFactory import DataTransformFactory
 from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
 from rcsb.utils.config.ConfigUtil import ConfigUtil
-from rcsb.utils.io.IoUtil import IoUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
@@ -57,11 +55,11 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__workPath = os.path.join(HERE, 'test-output')
         self.__configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.yml')
         configName = 'site_info'
-        self.__cfgOb = ConfigUtil(configPath=self.__configPath, sectionName=configName, mockTopPath=self.__mockTopPath)
+        self.__cfgOb = ConfigUtil(configPath=self.__configPath, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
         self.__mU = MarshalUtil(workPath=self.__workPath)
 
         self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, workPath=self.__workPath)
-        self.__birdRepoPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'MOCK_BIRD_REPO')
+        self.__birdRepoPath = self.__cfgOb.getPath('BIRD_REPO_PATH', sectionName=configName)
         #
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums"
@@ -69,14 +67,25 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__birdMockLen = 4
         self.__pdbxMockLen = 8
         self.__verbose = True
-        self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
-        self.__pathRcsbDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'rcsb_mmcif_ext_v1.dic')
         #
+        self.__pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=configName)
+        self.__pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=configName)
+        self.__drugBankMappingFile = self.__cfgOb.getPath('DRUGBANK_MAPPING_LOCATOR', sectionName=configName)
+        self.__csdModelMappingFile = self.__cfgOb.getPath('CCDC_MAPPING_LOCATOR', sectionName=configName)
+        self.__pathTaxonomyMappingFile = self.__cfgOb.getPath('NCBI_TAXONOMY_LOCATOR', sectionName=configName)
         #
-        self.__drugBankMappingFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'DrugBank', 'drugbank_pdb_mapping.json')
-        self.__csdModelMappingFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'chem_comp_models', 'ccdc_pdb_mapping.json')
-        self.__pathTaxonomyMappingFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'NCBI', 'taxonomy_names.pic')
+        self.__testDirPath = os.path.join(HERE, "test-output", 'pdbx-fails')
         #
+
+        self.__schemaNameD = {'ihm_dev': ['ihm_dev_v1_0_1'],
+                              'pdbx': ['pdbx_v5_0_2', 'pdbx_ext_v5_0_2'],
+                              'pdbx_core': ['pdbx_core_entity_monomer_v5_0_2', 'pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2'],
+                              'bird': ['bird_v5_0_2'],
+                              'bird_family': ['family_v5_0_2'],
+                              'chem_comp': ['chem_comp_v5_0_2'],
+                              'chem_comp_core': ['chem_comp_core_v5_0_2'],
+                              'bird_chem_comp': ['bird_chem_comp_v5_0_2'],
+                              'bird_chem_comp_core': ['bird_chem_comp_core_v5_0_2']}
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
@@ -87,36 +96,32 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                             endTime - self.__startTime))
 
-    def testValidateOptsStrict(self):
-        enforceOpts = "mandatoryKeys|mandatoryAttributes|bounds|enums"
-        eCount = self.__testValidateOpts(enforceOpts=enforceOpts)
-        logger.info("Total validation errors enforcing %s : %d" % (enforceOpts, eCount))
-        #self.assertGreaterEqual(eCount, 20)
+    def testValidateOptsRepo(self):
+        schemaLevel = 'min'
+        inputPathList = None
+        eCount = self.__testValidateOpts(schemaNameD=self.__schemaNameD, inputPathList=inputPathList, schemaLevel=schemaLevel)
+        logger.info("Total validation errors schema level %s : %d" % (schemaLevel, eCount))
+        # self.assertGreaterEqual(eCount, 20)
 
-    def testValidateOptsMin(self):
-        enforceOpts = "mandatoryKeys|enums"
-        eCount = self.__testValidateOpts(enforceOpts=enforceOpts)
-        logger.info("Total validation errors enforcing %s : %d" % (enforceOpts, eCount))
-        #self.assertTrue(eCount <= 1)
+    def testValidateOptsList(self):
+        schemaLevel = 'min'
+        inputPathList = glob.glob(self.__testDirPath + "/*.cif")
+        if not inputPathList:
+            self.assertTrue(True)
+            return True
+        schemaNameD = {'pdbx_core': ['pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2']}
+        eCount = self.__testValidateOpts(schemaNameD=schemaNameD, inputPathList=inputPathList, schemaLevel=schemaLevel)
+        logger.info("Total validation errors schema level %s : %d" % (schemaLevel, eCount))
+        # self.assertGreaterEqual(eCount, 20)
 
-    def __testValidateOpts(self, enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
-        # schemaNames = ['pdbx', 'pdbx_core', 'chem_comp', 'chem_comp_core', 'bird_chem_comp_core', 'bird', 'bird_family']
-        schemaNames = ['bird_chem_comp_core', 'chem_comp_core', 'pdbx_core', 'ihm_dev']
-        collectionNames = {'ihm_dev': ['ihm_dev_v1_0_1'],
-                           'pdbx': ['pdbx_v5_0_2', 'pdbx_ext_v5_0_2'],
-                           'pdbx_core': ['pdbx_core_entity_monomer_v5_0_2', 'pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2'],
-                           'bird': ['bird_v5_0_2'],
-                           'bird_family': ['family_v5_0_2'],
-                           'chem_comp': ['chem_comp_v5_0_2'],
-                           'chem_comp_core': ['chem_comp_core_v5_0_2'],
-                           'bird_chem_comp': ['bird_chem_comp_v5_0_2'],
-                           'bird_chem_comp_core': ['bird_chem_comp_core_v5_0_2']}
+    def __testValidateOpts(self, schemaNameD, inputPathList=None, schemaLevel='full'):
         #
         eCount = 0
-        for schemaName in schemaNames:
-            for collectionName in collectionNames[schemaName]:
-                cD = self.__testBuildJson(schemaName, collectionName, enforceOpts=enforceOpts)
-                dL, cnL = self.__testPrepDocumentsFromContainers(schemaName, collectionName, styleType="rowwise_by_name_with_cardinality")
+        for schemaName in schemaNameD:
+            pthList = inputPathList if inputPathList else self.__schU.getPathList(contentType=schemaName)
+            for collectionName in schemaNameD[schemaName]:
+                cD = self.__sdu.makeSchema(schemaName, collectionName, schemaType='JSON', level=schemaLevel, saveSchema=True, altDirPath=self.__workPath)
+                dL, cnL = self.__testPrepDocumentsFromContainers(pthList, schemaName, collectionName, styleType="rowwise_by_name_with_cardinality")
                 # Raises exceptions for schema compliance.
                 try:
                     Draft4Validator.check_schema(cD)
@@ -140,28 +145,11 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
 
         return eCount
 
-    def __testBuildJson(self, schemaName, collectionName, enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
-        try:
-            pathSchemaDefJson1 = os.path.join(HERE, 'test-output', 'json-schema-%s.json' % (collectionName))
-            smb = SchemaDefBuild(schemaName, self.__configPath, mockTopPath=self.__mockTopPath)
-            cD = smb.build(collectionName, applicationName='json', schemaType='json', enforceOpts=enforceOpts)
-            #
-            logger.debug("Schema dictionary category length %d" % len(cD['properties']))
-            self.assertGreaterEqual(len(cD['properties']), 4)
-            #
-            ioU = IoUtil()
-            ioU.serialize(pathSchemaDefJson1, cD, format='json', indent=3)
-            return cD
-
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-            self.fail()
-
-    def __testPrepDocumentsFromContainers(self, schemaName, collectionName, styleType="rowwise_by_name_with_cardinality"):
+    def __testPrepDocumentsFromContainers(self, inputPathList, schemaName, collectionName, styleType="rowwise_by_name_with_cardinality"):
         """Test case -  create loadable PDBx data from repository files
         """
         try:
-            inputPathList = self.__schU.getPathList(contentType=schemaName)
+
             sd, _, _, _ = self.__schU.getSchemaInfo(contentType=schemaName)
             #
             dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath,
@@ -198,15 +186,15 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             self.fail()
 
 
-def schemaBuildJsonSuite():
+def schemaValidateSuite():
     suiteSelect = unittest.TestSuite()
-    # suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsStrict"))
-    suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsMin"))
+    suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsRepo"))
+    suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsList"))
     return suiteSelect
 
 
 if __name__ == '__main__':
     #
     if True:
-        mySuite = schemaBuildJsonSuite()
+        mySuite = schemaValidateSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
