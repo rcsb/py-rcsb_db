@@ -148,9 +148,9 @@ class PdbxLoader(object):
                 self.__writePathList(saveInputFileListPath, pathList)
                 logger.info("Saving %d paths in %s" % (len(pathList), saveInputFileListPath))
             #
-            filterType = "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates|convert-iterables|normalize-enums"
+            filterType = "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates|convert-iterables|normalize-enums|translateXMLCharRefs"
             if styleType in ["columnwise_by_name", "rowwise_no_name"]:
-                filterType = "drop-empty-tables|skip-max-width|assign-dates|convert-iterables|normalize-enums"
+                filterType = "drop-empty-tables|skip-max-width|assign-dates|convert-iterables|normalize-enums|translateXMLCharRefs"
             #
             optD = {}
             optD['schemaName'] = schemaName

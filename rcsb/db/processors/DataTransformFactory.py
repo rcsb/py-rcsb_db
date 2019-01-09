@@ -28,6 +28,8 @@ import dateutil.parser
 
 import pytz
 
+from rcsb.db.utils.TextUtil import unescapeXmlCharRef
+
 TrfValue = collections.namedtuple('TrfValue', 'value, atId, origLength, isNull')
 
 logger = logging.getLogger(__name__)
@@ -83,6 +85,7 @@ class DataTransformFactory(object):
         self.__FLAGS['assignDates'] = 'assign-dates' in filterType
         self.__FLAGS['convertIterables'] = 'convert-iterables' in filterType
         self.__FLAGS['normalizeEnums'] = 'normalize-enums' in filterType
+        self.__FLAGS['translateXMLCharRefs'] = 'translateXMLCharRefs' in filterType
         self.__FLAGS['normalizeDates'] = True
         logger.debug("FLAGS settings are %r" % self.__FLAGS)
         #
@@ -112,6 +115,9 @@ class DataTransformFactory(object):
                 if self.__FLAGS['convertIterables'] and tObj.isIterable(atId):
                     if tObj.isAttributeStringType(atId):
                         aD[atId].append(dt.castIterableString)
+                        #
+                        if self.__FLAGS['translateXMLCharRefs']:
+                            aD[atId].append(dt.translateXMLCharRefsIt)
                     elif tObj.isAttributeIntegerType(atId):
                         aD[atId].append(dt.castIterableInteger)
                     elif tObj.isAttributeFloatType(atId):
@@ -125,6 +131,9 @@ class DataTransformFactory(object):
                     for ft in tObj.getAttributeFilterTypes(atId):
                         if self.__dti.getTransformFilterName(ft) == "STRIP_WS":
                             aD[atId].append(dt.stripWhiteSpace)
+                    #
+                    if self.__FLAGS['translateXMLCharRefs']:
+                            aD[atId].append(dt.translateXMLCharRefs)
                 elif tObj.isAttributeIntegerType(atId):
                     aD[atId].append(dt.castInteger)
                 elif tObj.isAttributeFloatType(atId):
@@ -370,3 +379,23 @@ class DataTransform(object):
         if trfTup.isNull:
             return trfTup
         return TrfValue(trfTup.value[:self.__tObj.getAttributeWidth(trfTup.atId)], trfTup.atId, trfTup.origLength, False)
+
+    def translateXMLCharRefs(self, trfTup):
+        """ Convert XML Character references to unicode.
+
+            Return:  ReturnValue tuple
+        """
+        if trfTup.isNull:
+            return trfTup
+        return TrfValue(unescapeXmlCharRef(trfTup.value), trfTup.atId, trfTup.origLength, False)
+
+    def translateXMLCharRefsIt(self, trfTup):
+        """ Convert XML Character references to unicode.
+
+            Return:  ReturnValue tuple
+        """
+        if trfTup.isNull:
+            return trfTup
+        #
+        vL = [unescapeXmlCharRef(v) for v in trfTup.value]
+        return TrfValue(vL, trfTup.atId, trfTup.origLength, False)

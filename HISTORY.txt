@@ -69,5 +69,6 @@
  18-Dec-2018   V0.36 Add _entity_poly.rcsb_prd_id and configuration to include private key for BIRD identifier in the core_entity collection.'
   7-Jan-2019   V0.37 Simplify and consolidate site specific configuration options, streamline cli scripts, and consolidate common
                schema access and building methods in SchemDefUtil() (feature branch configpath)
+  9-Jan-2019   V0.38 Introduce a new data transformation filter for XML character references and miscellaneous related changes.
 #
 

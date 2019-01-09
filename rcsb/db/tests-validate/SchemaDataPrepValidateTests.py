@@ -61,8 +61,8 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, workPath=self.__workPath)
         self.__birdRepoPath = self.__cfgOb.getPath('BIRD_REPO_PATH', sectionName=configName)
         #
-        self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums"
-        self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums"
+        self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
+        self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__chemCompMockLen = 8
         self.__birdMockLen = 4
         self.__pdbxMockLen = 8
@@ -120,7 +120,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         for schemaName in schemaNameD:
             pthList = inputPathList if inputPathList else self.__schU.getPathList(contentType=schemaName)
             for collectionName in schemaNameD[schemaName]:
-                cD = self.__sdu.makeSchema(schemaName, collectionName, schemaType='JSON', level=schemaLevel, saveSchema=True, altDirPath=self.__workPath)
+                cD = self.__schU.makeSchema(schemaName, collectionName, schemaType='JSON', level=schemaLevel, saveSchema=True, altDirPath=self.__workPath)
                 dL, cnL = self.__testPrepDocumentsFromContainers(pthList, schemaName, collectionName, styleType="rowwise_by_name_with_cardinality")
                 # Raises exceptions for schema compliance.
                 try:

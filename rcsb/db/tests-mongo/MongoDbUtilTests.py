@@ -10,6 +10,7 @@
 #    27-Mar-2018 jdw connection configuration now via ConfigUtil -
 #     1-Apr-2018 jdw update test connectionse
 #     6-Sep-2018 jdw add schema validation tests
+#     8-Jan-2019 jdw add tests for loading and recovering translated XML character references
 ##
 """
 Test cases for simple MongoDb client opeations .
@@ -31,6 +32,7 @@ import dateutil.parser
 
 from rcsb.db.mongo.Connection import Connection
 from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
+from rcsb.db.utils.TextUtil import unescapeXmlCharRef
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
@@ -62,6 +64,10 @@ class MongoDbUtilTests(unittest.TestCase):
                     "description": "must be a string and is required"
                 },
                 "strField2": {
+                    "bsonType": "string",
+                    "description": "must be a string and is not required"
+                },
+                "strField3": {
                     "bsonType": "string",
                     "description": "must be a string and is not required"
                 },
@@ -120,6 +126,12 @@ class MongoDbUtilTests(unittest.TestCase):
     def getClientConnection(self):
         return self.__cObj.getClientConnection()
 
+    def __unescape(self, i_str):
+        """
+        Convert html character entities into unicode.
+        """
+        return unescapeXmlCharRef(i_str)
+
     def __makeDataObj(self, nCats, Nattribs, Nrows, docId=1):
         rD = {}
         for cat in range(nCats):
@@ -137,6 +149,13 @@ class MongoDbUtilTests(unittest.TestCase):
                 val = "2018-01-30 12:01"
                 attribName = "attribute_%d" % attrib
                 d[attribName] = dateutil.parser.parse(val)
+            rD[catName].append(d)
+            #
+            d = {}
+            for attrib in range(Nattribs):
+                val = " &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171; "
+                attribName = "attribute_%d" % attrib
+                d[attribName] = unescapeXmlCharRef(val).encode('utf-8').decode('utf-8')
             rD[catName].append(d)
         rD['DOC_ID'] = "DOC_%d" % docId
         return rD
@@ -571,7 +590,8 @@ class MongoDbUtilTests(unittest.TestCase):
                 logger.info("rId is %r" % rId)
                 self.assertEqual(rId, None)
                 #
-                dObj = {"strField1": "test value", "intField1": 50, "enumField1": "v3", "dblField1": 100.1}
+                s2 = unescapeXmlCharRef(" &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171;")
+                dObj = {"strField1": "test value", "strField2": s2, "intField1": 50, "enumField1": "v3", "dblField1": 100.1}
                 rId = mg.insert(self.__dbName, self.__collectionName, dObj)
                 logger.info("rId is %r" % rId)
                 rObj = mg.fetchOne(self.__dbName, self.__collectionName, '_id', rId)
@@ -610,7 +630,8 @@ class MongoDbUtilTests(unittest.TestCase):
                 logger.info("rId is %r" % rId)
                 dtVal = dateutil.parser.parse("2018-01-30 12:01")
                 logger.debug("date value is %r" % dtVal)
-                dObj = {"strField1": "test value", "intField1": 50, "enumField1": "v3", "dblField1": 100.1, "dateField1": dtVal}
+                s2 = unescapeXmlCharRef(" &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171;")
+                dObj = {"strField1": "test value", "strField2": s2, "intField1": 50, "enumField1": "v3", "dblField1": 100.1, "dateField1": dtVal}
                 rId = mg.insert(self.__dbName, self.__collectionName, dObj)
                 logger.info("rId is %r" % rId)
                 rObj = mg.fetchOne(self.__dbName, self.__collectionName, '_id', rId)
@@ -647,8 +668,9 @@ class MongoDbUtilTests(unittest.TestCase):
                 rId = mg.insert(self.__dbName, self.__collectionName, dObj)
                 logger.info("rId is %r" % rId)
                 self.assertNotEqual(rId, None)
-
-                dObj = {"strField1": "test value", "intField1": 50, "enumField1": "v3a", "dblField1": 100.1}
+                #
+                s2 = unescapeXmlCharRef(" &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171;")
+                dObj = {"strField1": "test value", "strField2": s2, "intField1": 50, "enumField1": "v3a", "dblField1": 100.1}
                 rId = mg.insert(self.__dbName, self.__collectionName, dObj)
                 self.assertNotEqual(rId, None)
                 logger.info("rId is %r" % rId)
@@ -713,13 +735,13 @@ if __name__ == '__main__':
         mySuite = suiteOps()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-        mySuite = suiteInsert()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
-
         mySuite = suiteReplace()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 
         mySuite = suiteIndex()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+        mySuite = suiteInsert()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 
         mySuite = suiteValidation()

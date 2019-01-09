@@ -75,7 +75,7 @@ def main():
     configName = args.config_name
     schemaDirPath = args.schema_dirpath
     #
-    schemaTypes = args.schema_types.split(',') if args.schema_formats else []
+    schemaTypes = args.schema_types.split(',') if args.schema_types else []
     schemaLevels = args.schema_levels.split(',') if args.schema_levels else []
     dataTypingList = ['ANY', 'SQL']
 

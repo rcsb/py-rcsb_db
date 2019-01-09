@@ -211,7 +211,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 tD[citId] = tObj.selectValuesWhere('name', citId, 'citation_id')
             for ii in range(cObj.getRowCount()):
                 citId = cObj.getValue('id', ii)
-                cObj.setValue(';'.join(tD[citId]), atName, ii)
+                cObj.setValue('|'.join(tD[citId]), atName, ii)
             return True
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
