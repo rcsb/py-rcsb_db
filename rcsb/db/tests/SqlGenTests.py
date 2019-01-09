@@ -24,14 +24,13 @@ import time
 import unittest
 
 from rcsb.db.define.SchemaDefAccess import SchemaDefAccess
-from rcsb.db.define.SchemaDefBuild import SchemaDefBuild
 from rcsb.db.sql.SqlGen import SqlGenAdmin, SqlGenCondition, SqlGenQuery
+from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
 from rcsb.utils.config.ConfigUtil import ConfigUtil
-from rcsb.utils.io.IoUtil import IoUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
@@ -42,10 +41,12 @@ class SqlGenTests(unittest.TestCase):
     def setUp(self):
         self.__verbose = True
         #
-        self.__mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
-        self.__pathConfig = os.path.join(self.__mockTopPath, 'config', 'dbload-setup-example.yml')
+        mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
+        pathConfig = os.path.join(mockTopPath, 'config', 'dbload-setup-example.yml')
         #
-        self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, mockTopPath=self.__mockTopPath)
+        configName = 'site_info'
+        self.__cfgOb = ConfigUtil(configPath=pathConfig, defaultSectionName=configName, mockTopPath=mockTopPath)
+        self.__sdu = SchemaDefUtil(cfgOb=self.__cfgOb)
         #
 
         self.__startTime = time.time()
@@ -53,10 +54,10 @@ class SqlGenTests(unittest.TestCase):
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
 
     def testSQLMethods(self):
-        schemaNames = ['pdbx', 'chem_comp', 'bird', 'bird_family', 'bird_chem_comp']
-        applicationName = 'SQL'
+        schemaNames = ['pdbx_core']
+        dataTyping = 'SQL'
         for schemaName in schemaNames:
-            d = self.__testBuild(schemaName, applicationName)
+            d = self.__sdu.makeSchemaDef(schemaName, dataTyping=dataTyping, saveSchema=False)
             sD = SchemaDefAccess(d)
             self.__testSchemaCreate(sD)
             self.__testImportExport(sD)
@@ -73,26 +74,6 @@ class SqlGenTests(unittest.TestCase):
         #
         aObj = getattr(aMod, moduleName)(**kwargs)
         return aObj
-
-    def __testBuild(self, schemaName, applicationName):
-        try:
-            optName = 'SCHEMA_DEF_LOCATOR_%s' % applicationName.upper()
-            pathSchemaDefJson = self.__cfgOb.getPath(optName, sectionName=schemaName)
-            #
-            smb = SchemaDefBuild(schemaName, self.__pathConfig, mockTopPath=self.__mockTopPath)
-            sD = smb.build(applicationName=applicationName)
-            #
-            logger.debug("Schema %s dictionary category length %d" % (schemaName, len(sD['SCHEMA_DICT'])))
-            self.assertGreaterEqual(len(sD['SCHEMA_DICT']), 5)
-            #
-            ioU = IoUtil()
-            ioU.serialize(pathSchemaDefJson, sD, format='json', indent=3)
-            return sD
-
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-            self.fail()
-        return {}
 
     def __testSchemaCreate(self, sD):
         """Test case -  create table schema using input schema definition as an example
@@ -140,22 +121,27 @@ class SqlGenTests(unittest.TestCase):
             # get delete attribute -
             #
             tableIdList = sD.getSchemaIdList()
+            logger.debug("TableIdList %r" % tableIdList)
             sqlGen = SqlGenQuery(schemaDefObj=sD, verbose=self.__verbose)
 
             for tableId in tableIdList:
                 tableDefObj = sD.getSchemaObject(tableId)
                 dAtId = tableDefObj.getDeleteAttributeId()
-                sqlCondition = SqlGenCondition(schemaDefObj=sD, verbose=self.__verbose)
-                sqlCondition.addValueCondition((tableId, dAtId), 'EQ', ('D000001', 'CHAR'))
-                aIdList = sD.getAttributeIdList(tableId)
-                for aId in aIdList:
-                    sqlGen.addSelectAttributeId(attributeTuple=(tableId, aId))
-                sqlGen.setCondition(sqlCondition)
-                sqlGen.addOrderByAttributeId(attributeTuple=(tableId, dAtId))
-                sqlS = sqlGen.getSql()
-                logger.debug("\n\n+SqlGenTests table creation SQL string\n %s\n\n" % sqlS)
-                self.assertGreaterEqual(len(sqlS), 50)
-                sqlGen.clear()
+
+                if dAtId:
+                    sqlCondition = SqlGenCondition(schemaDefObj=sD, verbose=self.__verbose)
+                    sqlCondition.addValueCondition((tableId, dAtId), 'EQ', ('D000001', 'CHAR'))
+                    aIdList = sD.getAttributeIdList(tableId)
+                    for aId in aIdList:
+                        sqlGen.addSelectAttributeId(attributeTuple=(tableId, aId))
+                    sqlGen.setCondition(sqlCondition)
+                    sqlGen.addOrderByAttributeId(attributeTuple=(tableId, dAtId))
+                    sqlS = sqlGen.getSql()
+                    logger.debug("\n\n+SqlGenTests table creation SQL string\n %s\n\n" % sqlS)
+                    self.assertGreaterEqual(len(sqlS), 50)
+                    sqlGen.clear()
+                else:
+                    logger.debug("Missing delete atttribe for table %r" % tableId)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
             self.fail()

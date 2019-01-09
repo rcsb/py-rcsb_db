@@ -57,6 +57,7 @@ def scanRepo(cfgOb, contentType, scanDataFilePath, dictFilePath, numProc, chunkS
 
 def main():
     parser = argparse.ArgumentParser()
+    defaultConfigName = 'site_info'
     #
     parser.add_argument("--dict_file_path", default=None, help="PDBx/mmCIF dictionary file path")
     #
@@ -73,7 +74,7 @@ def main():
     group.add_argument("--scan_ihm_dev", default=False, action='store_true', help="Scan PDBDEV I/HM entry data (current released subset)")
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
-    parser.add_argument("--config_name", default="site_info", help="Configuration section name")
+    parser.add_argument("--config_name", default=defaultConfigName, help="Configuration section name")
 
     parser.add_argument("--input_file_list_path", default=None, help="Input file containing file paths to scan")
     parser.add_argument("--output_file_list_path", default=None, help="Output file containing file paths scanned")
@@ -106,8 +107,10 @@ def main():
         else:
             logger.error("Missing or access issue with config file %r" % configPath)
             exit(1)
-        mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', ) if args.mock else None
-        cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
+        mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data') if args.mock else None
+        cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=defaultConfigName, mockTopPath=mockTopPath)
+        if configName != defaultConfigName:
+            cfgOb.replaceSectionName(defaultConfigName, configName)
     except Exception as e:
         logger.error("Missing or access issue with config file %r with %s" % (configPath, str(e)))
         exit(1)
@@ -127,7 +130,7 @@ def main():
         scanDataFilePath = args.scan_data_file_path
         dataCoverageFilePath = args.coverage_file_path
         dataTypeFilePath = args.type_map_file_path
-        dictFilePath = args.dict_file_path if args.dict_file_path else os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
+        dictFilePath = args.dict_file_path if args.dict_file_path else cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=configName)
         workPath = args.working_path if args.working_path else '.'
     except Exception as e:
         logger.exception("Argument processing problem %s" % str(e))

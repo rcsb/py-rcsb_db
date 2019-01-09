@@ -58,6 +58,7 @@ def loadStatus(statusList, cfgOb, readBackCheck=True):
 def main():
     parser = argparse.ArgumentParser()
     #
+    defaultConfigName = 'site_info'
     #
     parser.add_argument("--full", default=False, action='store_true', help="Fresh full load in a new tables/collections")
     parser.add_argument("--replace", default=False, action='store_true', help="Load with replacement in an existing table/collection (default)")
@@ -78,7 +79,7 @@ def main():
     parser.add_argument("--load_ihm_dev", default=False, action='store_true', help="Load I/HM DEV model data (current released subset)")
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
-    parser.add_argument("--config_name", default="site_info", help="Configuration section name")
+    parser.add_argument("--config_name", default=defaultConfigName, help="Configuration section name")
 
     parser.add_argument("--db_type", default="mongo", help="Database server type (default=mongo)")
 
@@ -117,7 +118,9 @@ def main():
             logger.error("Missing or access issue with config file %r" % configPath)
             exit(1)
         mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data') if args.mock else None
-        cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
+        cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=defaultConfigName, mockTopPath=mockTopPath)
+        if configName != defaultConfigName:
+            cfgOb.replaceSectionName(defaultConfigName, configName)
     except Exception as e:
         logger.error("Missing or access issue with config file %r with %s" % (configPath, str(e)))
         exit(1)
@@ -161,7 +164,6 @@ def main():
     if args.db_type == "mongo":
         mw = PdbxLoader(
             cfgOb,
-            cfgSectionName=configName,
             resourceName="MONGO_DB",
             numProc=numProc,
             chunkSize=chunkSize,

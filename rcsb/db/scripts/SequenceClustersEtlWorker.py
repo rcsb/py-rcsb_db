@@ -7,6 +7,7 @@
 # Updates:
 #  15-Jul-2018 jdw split out to separate module and add status tracking
 #  28-Oct-2018 jdw adjustments for new configuration organization
+#   4-Jan-2019 jdw differentiate site and application config sections for provenance.
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -29,20 +30,23 @@ class SequenceClustersEtlWorker(object):
 
         Note: relevant configuration options -
 
-        [entity_sequence_clusters]
-        DATABASE_NAME=sequence_clusters
-        DATABASE_VERSION_STRING=v5
-        COLLECTION_ENTITY_MEMBERS=entity_members
-        COLLECTION_ENTITY_MEMBERS_INDEX=data_set_id,entry_id,entity_id
-        COLLECTION_CLUSTER_MEMBERS=cluster_members
-        COLLECTION_CLUSTER_MEMBERS_INDEX=data_set_id,identity,cluster_id
-        COLLECTION_VERSION_STRING=v0_1
-        ENTITY_SCHEMA_NAME=rcsb_entity_sequence_cluster_entity_list
-        CLUSTER_SCHEMA_NAME=rcsb_entity_sequence_cluster_identifer_list
-        SEQUENCE_IDENTITY_LEVELS=100,95,90,70,50,30
-        COLLECTION_CLUSTER_PROVENANCE=cluster_provenance
-        PROVENANCE_KEY_NAME=rcsb_entity_sequence_cluster_prov
-        PROVENANCE_INFO_LOCATOR=provenance/rcsb_extend_provenance_info.json
+       site_info:
+        'RCSB_SEQUENCE_CLUSTER_DATA_PATH': ...
+
+       entity_sequence_clusters:
+        DATABASE_NAME: sequence_clusters
+        DATABASE_VERSION_STRING: v5
+        COLLECTION_ENTITY_MEMBERS: entity_members
+        COLLECTION_ENTITY_MEMBERS_INDEX: data_set_id,entry_id,entity_id
+        COLLECTION_CLUSTER_MEMBERS: cluster_members
+        COLLECTION_CLUSTER_MEMBERS_INDEX: data_set_id,identity,cluster_id
+        COLLECTION_VERSION_STRING: v0_1
+        ENTITY_SCHEMA_NAME: rcsb_entity_sequence_cluster_entity_list
+        CLUSTER_SCHEMA_NAME: rcsb_entity_sequence_cluster_identifer_list
+        SEQUENCE_IDENTITY_LEVELS: 100,95,90,70,50,30
+        COLLECTION_CLUSTER_PROVENANCE: cluster_provenance
+        PROVENANCE_KEY_NAME: rcsb_entity_sequence_cluster_prov
+        PROVENANCE_INFO_LOCATOR: provenance/rcsb_extend_provenance_info.json
 
 
         """
@@ -57,10 +61,8 @@ class SequenceClustersEtlWorker(object):
         self.__resourceName = "MONGO_DB"
         self.__verbose = verbose
         #
-
-        #
         self.__sectionCluster = 'entity_sequence_clusters'
-        self.__clusterDataPath = self.__cfgOb.getPath('RCSB_SEQUENCE_CLUSTER_DATA_PATH', sectionName=self.__sectionCluster)
+        self.__clusterDataPath = self.__cfgOb.getPath('RCSB_SEQUENCE_CLUSTER_DATA_PATH', sectionName=self.__cfgOb.getDefaultSectionName())
         self.__databaseName = self.__cfgOb.get('DATABASE_NAME', sectionName=self.__sectionCluster, default='sequence_clusters')
         self.__databaseVersion = self.__cfgOb.get('DATABASE_VERSION_STRING', sectionName=self.__sectionCluster, default='v5')
         #
@@ -116,7 +118,7 @@ class SequenceClustersEtlWorker(object):
         try:
             provKeyName = self.__cfgOb.get('PROVENANCE_KEY_NAME', sectionName=self.__sectionCluster, default='rcsb_entity_sequence_cluster_prov')
             provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
-            pD = provU.fetch(cfgSectionName=self.__sectionCluster)
+            pD = provU.fetch(cfgSectionName=self.__cfgOb.getDefaultSectionName())
             return pD[provKeyName] if provKeyName in pD else {}
         except Exception as e:
             logger.exception("Failing with %s" % str(e))

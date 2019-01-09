@@ -22,6 +22,7 @@ import os
 import time
 import unittest
 
+from rcsb.db.mongo.ChemRefExtractor import ChemRefExtractor
 from rcsb.db.scripts.ChemRefEtlWorker import ChemRefEtlWorker
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
@@ -76,7 +77,9 @@ class ChemRefLoaderTests(unittest.TestCase):
         """
         try:
             crw = ChemRefEtlWorker(self.__cfgOb)
-            idD = crw.getChemCompAccesionMapping(extResource='DrugBank')
+            crExt = ChemRefExtractor(self.__cfgOb)
+
+            idD = crExt.getChemCompAccesionMapping(extResource='DrugBank')
             logger.info("Mapping dictionary %r" % len(idD))
             #
             ok = crw.load(self.__updateId, extResource='DrugBank', loadType='full')
@@ -86,24 +89,10 @@ class ChemRefLoaderTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-    def testValidateChemRef(self):
-        """ Test case - load chemical reference ETL data -
-
-        """
-        try:
-            crw = ChemRefEtlWorker(self.__cfgOb, mockTopPath=self.__mockTopPath)
-            eCount = crw.validate(extResource='DrugBank', schemaPath=self.__schemaPath, dataPath=self.__dataPath)
-            #
-            self.assertTrue(eCount == 0)
-        except Exception as e:
-            logger.exception("Failing with %s" % str(e))
-            self.fail()
-
 
 def chemRefLoadSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(ChemRefLoaderTests("testLoadChemRef"))
-    suiteSelect.addTest(ChemRefLoaderTests("testValidateChemRef"))
     return suiteSelect
 
 

@@ -11,6 +11,7 @@
 #  15-Aug-2018 jdw add mapping for JSON types based on generic 'ANY' typing.
 #  29-Sep-2018 jdw make JSON date and datetime type explicit in JSON
 #  12-Oct-2018 jdw unsuppress datetime mapping
+#   7-Jan-2019 jdw applicationName->dataTyping
 #
 ##
 """
@@ -64,22 +65,22 @@ class DataTypeApplicationInfo(object):
     ]
 
     #
-    def __init__(self, locator=None, applicationName='ANY', workPath=None, **kwargs):
+    def __init__(self, locator=None, dataTyping='ANY', workPath=None, **kwargs):
         self.__workPath = workPath
         self.__locator = locator
-        self.__applicationName = applicationName
+        self.__dataTyping = dataTyping
         self.__maxCharWidth = 32768
-        self.__dtmD = self.__setup(self.__locator, self.__applicationName)
+        self.__dtmD = self.__setup(self.__locator, self.__dataTyping)
 
-    def __setup(self, locator, applicationName):
-        appName = 'ANY' if applicationName in ['JSON', 'BSON'] else applicationName
+    def __setup(self, locator, dataTyping):
+        appName = 'ANY' if dataTyping in ['JSON', 'BSON'] else dataTyping
         if locator:
-            dtmD = self.readDefaultDataTypeMap(locator, applicationName=appName)
+            dtmD = self.readDefaultDataTypeMap(locator, dataTyping=appName)
         else:
             logger.debug(">>>> Falling back to default type mapping. ")
-            dtmD = self.getDefaultDataTypeMap(applicationName=appName)
+            dtmD = self.getDefaultDataTypeMap(dataTyping=appName)
         # for JSON - transform the generic 'ANY' data types -
-        if applicationName == 'JSON':
+        if dataTyping == 'JSON':
             for cifType, tD in dtmD.items():
                 if tD['application_name'] == 'ANY':
                     if tD['app_type_code'] in ['char', 'text']:
@@ -91,7 +92,7 @@ class DataTypeApplicationInfo(object):
                     elif tD['app_type_code'] in ['int']:
                         tD['app_type_code'] = 'integer'
                 tD['application_name'] = 'JSON'
-        elif applicationName == 'BSON':
+        elif dataTyping == 'BSON':
             for cifType, tD in dtmD.items():
                 if tD['application_name'] == 'ANY':
                     if tD['app_type_code'] in ['char', 'text']:
@@ -106,7 +107,7 @@ class DataTypeApplicationInfo(object):
         #
         return dtmD
 
-    def getDefaultDataTypeMap(self, applicationName='ANY'):
+    def getDefaultDataTypeMap(self, dataTyping='ANY'):
         try:
             mapD = {}
             for (cifType, simpleType, defWidth, defPrecision) in zip(DataTypeApplicationInfo.cifTypes,
@@ -120,7 +121,7 @@ class DataTypeApplicationInfo(object):
                     'app_precision_default': defPrecision,
                     'app_width_default': defWidth,
                     'type_code': cifType,
-                    'application_name': applicationName}
+                    'application_name': dataTyping}
             return mapD
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -133,7 +134,7 @@ class DataTypeApplicationInfo(object):
         retDataType = appType
         iWidth = dataWidth + int(bufferPercent * 0.01 * dataWidth)
         retDataWidth = iWidth if iWidth > minWidth else minWidth
-        if self.__applicationName.upper() in ['SQL', 'MYSQL', 'COCKROACH', 'CRATE']:
+        if self.__dataTyping.upper() in ['SQL', 'MYSQL', 'COCKROACH', 'CRATE']:
 
             if appType.upper() in ['CHAR', 'VARCHAR'] and retDataWidth > self.__maxCharWidth:
                 retDataType = 'TEXT'
@@ -175,7 +176,7 @@ class DataTypeApplicationInfo(object):
         except Exception:
             return default
 
-    def writeDefaultDataTypeMap(self, outPath, applicationName='ANY'):
+    def writeDefaultDataTypeMap(self, outPath, dataTyping='ANY'):
         """ Write data file containing application default dictionary to application data type mapping
 
                   data_rcsb_data_type_map
@@ -203,7 +204,7 @@ class DataTypeApplicationInfo(object):
                                                                      DataTypeApplicationInfo.defaultPrecisions):
                 if self.__isNull(cifType):
                     continue
-                aCat.append([applicationName, cifType, simpleType, defWidth, defPrecision])
+                aCat.append([dataTyping, cifType, simpleType, defWidth, defPrecision])
             curContainer.append(aCat)
             containerList.append(curContainer)
             #
@@ -215,7 +216,7 @@ class DataTypeApplicationInfo(object):
             logger.exception("Failing with %s" % str(e))
         return False
 
-    def updateDefaultDataTypeMap(self, filePath, mapD, applicationName='ANY'):
+    def updateDefaultDataTypeMap(self, filePath, mapD, dataTyping='ANY'):
         """ Update data file containing application default data type mapping with any
             updates from the input type mapping dictionary
 
@@ -241,7 +242,7 @@ class DataTypeApplicationInfo(object):
                     rIL = []
                     for ii in range(catObj.getRowCount()):
                         d = catObj.getRowAttributeDict(ii)
-                        if d['application_name'] == applicationName:
+                        if d['application_name'] == dataTyping:
                             rIL.append(ii)
                             mD[d['type_code']] = {k: d[k] for k in ['application_name', 'app_type_code', 'app_precision_default', 'app_width_default', 'type_code']}
                             continue
@@ -260,7 +261,7 @@ class DataTypeApplicationInfo(object):
             logger.exception("Failing with %s" % str(e))
         return False
 
-    def readDefaultDataTypeMap(self, locator, applicationName='ANY'):
+    def readDefaultDataTypeMap(self, locator, dataTyping='ANY'):
         """ Read data file containing application default data type mapping
 
                   data_rcsb_data_type_map
@@ -286,7 +287,7 @@ class DataTypeApplicationInfo(object):
                     catObj = container.getObj('pdbx_data_type_application_map')
                     for ii in range(catObj.getRowCount()):
                         d = catObj.getRowAttributeDict(ii)
-                        if d['application_name'] == applicationName:
+                        if d['application_name'] == dataTyping:
                             mapD[d['type_code']] = {k: d[k] for k in ['app_type_code', 'application_name', 'type_code']}
                             mapD[d['type_code']].update({k: int(d[k]) for k in ['app_precision_default', 'app_width_default']})
             return mapD

@@ -56,7 +56,8 @@ class PdbxLoaderTests(unittest.TestCase):
         configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.yml')
         configName = 'site_info'
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
-        # self.__cfgOb.dump()
+        # self.__cfgOb.replaceSectionName('site_info', 'site_info_test')
+        #
         self.__resourceName = "MONGO_DB"
         self.__failedFilePath = os.path.join(HERE, 'test-output', 'failed-list.txt')
         self.__failedCcFilePath = os.path.join(HERE, 'test-output', 'failed-cc-list.txt')

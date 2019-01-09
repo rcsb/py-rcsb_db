@@ -61,7 +61,7 @@ class SequenceClusterLoaderTests(unittest.TestCase):
         #
         # sample data set
         self.__dataSetId = '2018_23'
-        self.__pathClusterData = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'cluster_data', 'mmseqs-20180608')
+        self.__pathClusterData = self.__cfgOb.getPath('RCSB_SEQUENCE_CLUSTER_DATA_PATH', sectionName=configName)
         self.__levels = ['100', '95', '90', '70', '50', '30']
         #
         self.__workPath = os.path.join(HERE, 'test-output')

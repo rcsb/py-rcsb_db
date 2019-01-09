@@ -13,6 +13,11 @@
 #   7-Sep-2018 jdw add method to return a stored JSON schema getJsonSchema()
 #  11-Nov-2018 jdw add support for chem_comp_core and bird_chem_comp_core schemas
 #   3-Dec-2018 jdw generalize the delivery of document indices
+#   4-Jan-2019 jdw add prefix path options to api and json/bson schema paths
+#                  add method getJsonSchemaLocator()
+#   8-Jan-2019 jdw standardize argument names -
+#
+#   TODO: make writing schemas of all types part of this class -
 ##
 """
  A collection of schema and repo path convenience methods.
@@ -26,6 +31,7 @@ __license__ = "Apache 2.0"
 
 
 import logging
+import os
 
 from rcsb.db.define.SchemaDefAccess import SchemaDefAccess
 from rcsb.db.define.SchemaDefBuild import SchemaDefBuild
@@ -45,6 +51,14 @@ class SchemaDefUtil(object):
         self.__numProc = numProc
         self.__workPath = workPath
 
+    def getSchemaOptions(self, schemaLevel):
+        if schemaLevel == 'full':
+            return "mandatoryKeys|mandatoryAttributes|bounds|enums"
+        elif schemaLevel in ['min', 'minimum']:
+            return "mandatoryKeys|enums"
+        else:
+            return ""
+
     def getPathList(self, contentType, inputPathList=None):
         """Convenience method to get the data path list for the input repository content type.
 
@@ -62,14 +76,13 @@ class SchemaDefUtil(object):
         outputPathList = rpU.getRepoPathList(contentType, inputPathList=inputPathList)
         return outputPathList
 
-    def getSchemaInfo(self, contentType, applicationName='ANY', useCache=True, saveSchema=True):
+    def getSchemaInfo(self, contentType, dataTyping='ANY', altDirPath=None):
         """Convenience method to return essential schema details for the input repository content type.
 
         Args:
             contentType (str): Repository content type (e.g. pdbx, bird, chem_comp, ...)
-            applicationName (str, optional): Application name for the target schema (e.g. ANY, SQL, ...)
-            useCache (bool, optional): Use a cached version of the target schema if available
-            saveSchema (bool, optional): If a schema is generated preserve the generated schema
+            dataTyping (str, optional): Application name for the target schema (e.g. ANY, SQL, ...)
+            altDirPath (str, optional): alternative directory path for schema definition file
 
         Returns:
             tuple: SchemaDefAccess(object), target database name, target collection name list, primary index attribute list
@@ -80,92 +93,146 @@ class SchemaDefUtil(object):
         dbName = None
         collectionNameList = []
         docIndexD = {}
-        mU = MarshalUtil(workPath=self.__workPath)
         try:
-            optName = 'SCHEMA_DEF_LOCATOR_%s' % applicationName.upper()
-            schemaLocator = self.__cfgOb.getPath(optName, sectionName=contentType)
+            mU = MarshalUtil(workPath=self.__workPath)
+            schemaLocator = self.getSchemaDefLocator(contentType, dataTyping=dataTyping, altDirPath=altDirPath)
+            logger.debug("ContentType %r dataTyping %r altDirPath %r schemaLocator %r " % (contentType, dataTyping, altDirPath, schemaLocator))
             schemaDef = mU.doImport(schemaLocator, format="json")
-            if schemaDef and useCache:
-                logger.debug("Using cached schema definition for %s application %s" % (contentType, applicationName))
+            if schemaDef:
+                logger.debug("Using cached schema definition for %s application %s" % (contentType, dataTyping))
                 sd = SchemaDefAccess(schemaDef)
-            else:
-                schemaDef = self.__buildSchema(contentType, applicationName)
-                if schemaDef and saveSchema:
-                    optName = 'SCHEMA_DEF_LOCATOR_%s' % applicationName.upper()
-                    schemaLocator = self.__cfgOb.getPath(optName, sectionName=contentType)
-                    mU.doExport(schemaLocator, schemaDef, format="json")
-                sd = SchemaDefAccess(schemaDef)
-
-            if sd:
-                dbName = sd.getDatabaseName()
-                collectionNameList = sd.getContentTypeCollections(contentType)
-                logger.debug("Schema %s database name %s collections %r" % (contentType, dbName, collectionNameList))
-                for collectionName in collectionNameList:
-                    docIndexD[collectionName] = sd.getDocumentIndices(collectionName)
+                if sd:
+                    dbName = sd.getDatabaseName()
+                    collectionNameList = sd.getContentTypeCollections(contentType)
+                    logger.debug("Schema %s database name %s collections %r" % (contentType, dbName, collectionNameList))
+                    for collectionName in collectionNameList:
+                        docIndexD[collectionName] = sd.getDocumentIndices(collectionName)
 
         except Exception as e:
-            logger.exception("Retreiving schema %s for %s failing with %s" % (contentType, applicationName, str(e)))
+            logger.exception("Retreiving schema %s for %s failing with %s" % (contentType, dataTyping, str(e)))
 
         return sd, dbName, collectionNameList, docIndexD
 
-    def getJsonSchema(self, collectionName, level='full'):
-        """Return JSON schema (w/ BSON types) for the input collection and level.and
+    def getSchemaDefLocator(self, contentType, dataTyping='ANY', altDirPath=None):
+        """Return schema definition path for the input content type and application.
+
+           Defines schema definition naming convention -
+
+           Uses configuration details for directory path/locator details.
+
+           site_info:
+            'SCHEMA_DEF_LOCATOR_PATH': <locator prefix for schema file
+
+           Args:
+            contentType (str): Repository content type (e.g. pdbx, bird, chem_comp, ...)
+            dataTyping (str, optional): Application name for the target schema (e.g. ANY, SQL, ...)
+            altDirPath (str, optional): alternative directory path for schema definition file
+
+            Returns:
+
+             str: schema definition file locator
+
+        """
+        try:
+            prefixName = 'SCHEMA_DEF_LOCATOR_PATH'
+            pth = self.__cfgOb.getPath(prefixName, sectionName=self.__cfgOb.getDefaultSectionName())
+            fn = 'schema_def-%s-%s.json' % (contentType, dataTyping.upper())
+            #
+            schemaLocator = os.path.join(altDirPath, fn) if altDirPath else os.path.join(pth, fn)
+        except Exception as e:
+            logger.exception("Retreiving schema definition path %s for %s failing with %s" % (contentType, dataTyping, str(e)))
+        return schemaLocator
+
+    def getJsonSchemaLocator(self, collectionName, schemaType='BSON', level='full', altDirPath=None):
+        """Return JSON schema path for the input collection data type convention and level.
+
+           Defines the JSON/BSON schema naming convention -
+
+           site_info:
+            'JSON_SCHEMA_LOCATOR_PATH': <locator prefix for schema file>
+
+           Args:
+            collectionName (str): Collection name in document store
+            schemaType (str, optional): data type convention (BSON|JSON)
+            level (str, optional): Completeness of the schema (e.g. min or full)
+            altDirPath (str, optional): alternative directory path for json schema file
+
+            Returns:
+
+            str: schema file locator
+
+        """
+        prefixName = 'JSON_SCHEMA_LOCATOR_PATH'
+        sdType = None
+        sLevel = None
+        schemaLocator = None
+        if schemaType.upper() in ['JSON', 'BSON']:
+            sdType = schemaType.lower()
+        if level.lower() in ['min', 'minimun']:
+            sLevel = 'min'
+        elif level.lower() in ['full']:
+            sLevel = level.lower()
+        #
+        if sdType and sLevel:
+            pth = self.__cfgOb.getPath(prefixName, sectionName=self.__cfgOb.getDefaultSectionName())
+            fn = "%s-schema-%s-%s.json" % (sdType, sLevel, collectionName)
+            schemaLocator = os.path.join(altDirPath, fn) if altDirPath else os.path.join(pth, fn)
+        else:
+            logger.error("Unsupported schema options:  %s level %r type %r" % (collectionName, level, schemaType))
+            schemaLocator = None
+        #
+        return schemaLocator
+
+    def getJsonSchema(self, collectionName, schemaType='BSON', level='full', altDirPath=None):
+        """Return JSON schema (w/ BSON types) object for the input collection and level.and
 
            Currenting using configuration information -
 
-            pdbx_core_entity_v5_0_2]
-                SCHEMA_NAME=pdbx_core
-                JSON_SCHEMA_FULL_LOCATOR=...
-                JSON_SCHEMA_MIN_LOCATOR=...
+
 
         Args:
             collectionName (str): Collection name in document store
+            schemaType (str, optional): data type convention (BSON|JSON)
             level (str, optional): Completeness of the schema (e.g. min or full)
+            altDirPath (str, optional): alternative directory path for json schema file
 
         Returns:
             dict: Schema object
 
         """
         sObj = None
-        if level.lower() == 'full':
-            schemaLocator = self.__cfgOb.getPath('BSON_SCHEMA_FULL_LOCATOR', sectionName=collectionName)
-        elif level.lower() in ['min', 'minimum']:
-            schemaLocator = self.__cfgOb.getPath('BSON_SCHEMA_MIN_LOCATOR', sectionName=collectionName)
-        else:
-            logger.error("Unsupported schema level %s %r" % (collectionName, level))
-            schemaLocator = None
-
+        schemaLocator = self.getJsonSchemaLocator(collectionName, schemaType=schemaType, level=level, altDirPath=altDirPath)
         if schemaLocator:
-            #
             mU = MarshalUtil(workPath=self.__workPath)
             sObj = mU.doImport(schemaLocator, format="json")
         else:
             logger.error("Failed to read schema for %s %r" % (collectionName, level))
         return sObj
 
-    def __buildSchema(self, contentType, applicationName):
-        """Internal method to create a schema definition from dictionary and supported metadata.
-
-
-        Args:
-            contentType (str): Repository content type (e.g. pdbx, bird, chem_comp, ...)
-            applicationName (str, optional): Application name for the target schema (e.g. ANY, SQL, ...)
-
-        Returns:
-            dict: schema definition
-
-
-        """
+    def makeSchema(self, schemaName, collectionName, schemaType='BSON', level='full', saveSchema=False, altDirPath=None):
         try:
+            smb = SchemaDefBuild(schemaName, self.__cfgOb)
             #
-            logger.debug("Building schema definition for %s application %s" % (contentType, applicationName))
-            smb = SchemaDefBuild(contentType, self.__cfgOb.getConfigPath(), mockTopPath=self.__cfgOb.getMockTopPath())
-            #
-            sD = smb.build(applicationName=applicationName, schemaType='rcsb')
-            logger.info("Schema %s dictionary category length %d" % (contentType, len(sD['SCHEMA_DICT'])))
-            return sD
-
+            cD = None
+            stU = schemaType.upper()
+            cD = smb.build(collectionName, dataTyping=stU, schemaType=stU, enforceOpts=self.getSchemaOptions(level))
+            if cD and saveSchema:
+                schemaLocator = self.getJsonSchemaLocator(collectionName, schemaType=schemaType, level=level, altDirPath=altDirPath)
+                mU = MarshalUtil(workPath=self.__workPath)
+                mU.doExport(schemaLocator, cD, format="json", indent=3)
         except Exception as e:
-            logger.exception("Building schema %s failing with %s" % (contentType, str(e)))
+            logger.exception("Building schema %s collection %s failing with %s" % (schemaName, collectionName, str(e)))
+        return cD
 
-        return {}
+    def makeSchemaDef(self, schemaName, dataTyping='ANY', saveSchema=False, altDirPath=None):
+        schemaDef = None
+        try:
+            smb = SchemaDefBuild(schemaName, self.__cfgOb)
+            schemaDef = smb.build(dataTyping=dataTyping, schemaType='rcsb')
+            if schemaDef and saveSchema:
+                schemaLocator = self.getSchemaDefLocator(schemaName, dataTyping=dataTyping, altDirPath=altDirPath)
+                mU = MarshalUtil(workPath=self.__workPath)
+                mU.doExport(schemaLocator, schemaDef, format="json", indent=3)
+        except Exception as e:
+            logger.exception("Building schema %s failing with %s" % (schemaName, str(e)))
+        return schemaDef

@@ -27,7 +27,7 @@ from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
@@ -40,7 +40,8 @@ class ProvenanceUtilTests(unittest.TestCase):
         self.__workPath = os.path.join(HERE, 'test-output')
         self.__pathConfig = os.path.join(self.__mockTopPath, 'config', 'dbload-setup-example.yml')
         #
-        self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, mockTopPath=self.__mockTopPath)
+        configName = 'site_info'
+        self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
         #
         # Sanple provenance data -
         self.__provKeyName = 'rcsb_entity_sequence_cluster_prov'

@@ -50,7 +50,7 @@ class MongoDbUtilTests(unittest.TestCase):
         configName = 'site_info'
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName)
         self.__resourceName = "MONGO_DB"
-        self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName, sectionName='site_server_info')
+        self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName, sectionName='site_info')
         # self.__cObj = self.__open(self.__connectD)
         #
         self.__mongoSchema = {

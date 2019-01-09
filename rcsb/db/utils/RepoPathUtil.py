@@ -399,7 +399,7 @@ class RepoPathUtil(object):
             List is ordered in increasing PRDDEV numerical code.
         """
         pathList = []
-        logger.info("Searching path %r" % topRepoPath)
+        logger.debug("Searching path %r" % topRepoPath)
         try:
             sd = {}
             for root, dirs, files in os.walk(topRepoPath, topdown=False):

@@ -66,7 +66,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__mU = MarshalUtil(workPath=self.__workPath)
 
         self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, workPath=self.__workPath)
-        self.__birdRepoPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'MOCK_BIRD_REPO')
+        self.__birdRepoPath = self.__cfgOb.getPath('BIRD_REPO_PATH', sectionName=configName)
         #
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums"
@@ -74,11 +74,12 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__birdMockLen = 4
         self.__pdbxMockLen = 14
         self.__verbose = True
-        self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
-        self.__pathRcsbDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'rcsb_mmcif_ext_v1.dic')
         #
-        self.__drugBankMappingFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'DrugBank', 'drugbank_pdb_mapping.json')
-        self.__csdModelMappingFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'chem_comp_models', 'ccdc_pdb_mapping.json')
+        self.__pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=configName)
+        self.__pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=configName)
+        self.__drugBankMappingFile = self.__cfgOb.getPath('DRUGBANK_MAPPING_LOCATOR', sectionName=configName)
+        self.__csdModelMappingFile = self.__cfgOb.getPath('CCDC_MAPPING_LOCATOR', sectionName=configName)
+        self.__pathTaxonomyMappingFile = self.__cfgOb.getPath('NCBI_TAXONOMY_LOCATOR', sectionName=configName)
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
@@ -280,7 +281,9 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             inputPathList = self.__schU.getPathList(contentType=schemaName)
             sd, _, collectionNameList, _ = self.__schU.getSchemaInfo(contentType=schemaName)
             #
-            dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath, csdModelMappingFilePath=self.__csdModelMappingFile)
+            dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath,
+                                        csdModelMappingFilePath=self.__csdModelMappingFile, taxonomyMappingFilePath=self.__pathTaxonomyMappingFile)
+            #dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath, csdModelMappingFilePath=self.__csdModelMappingFile)
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
 
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)

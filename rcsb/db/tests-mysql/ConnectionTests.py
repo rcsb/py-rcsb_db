@@ -57,9 +57,9 @@ class ConnectionTests(unittest.TestCase):
         endTime = time.time()
         logger.debug("Completed at %s (%.4f seconds)" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime))
 
-    def __assignResource(self, cfgOb, sectionName='site_server_info', resourceName="MYSQL_DB"):
+    def __assignResource(self, cfgOb, sectionName='site_info', resourceName="MYSQL_DB"):
         cn = Connection(cfgOb=cfgOb)
-        return cn.assignResource(resourceName=resourceName, sectionName='site_server_info')
+        return cn.assignResource(resourceName=resourceName, sectionName=sectionName)
 
     def __open(self, connectD):
         cObj = Connection()

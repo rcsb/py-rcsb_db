@@ -7,7 +7,7 @@
 # 13-Dec-2018 jdw Add I/HM DEV schema
 #  7-Jan-2019 jdw update for simplified api
 #
-# Test schema update using command line options and storing data in the local test directory --
+# Test schema update in the local test directory --
 #
 #
 schema_update_cli  --mock --schema_types rcsb,json,bson --schema_levels full,min  --update_chem_comp_ref            --schema_dirpath ./test-output --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info  > ./test-output/LOGUPDSCHEMA 2>&1

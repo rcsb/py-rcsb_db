@@ -19,6 +19,7 @@
 # 24-Oct-2018 jdw update for new configuration organization
 # 18-Nov-2018 jdw add COLLECTION_DOCUMENT_ATTRIBUTE_INFO
 #  3-Dec-2018 jdw add INTEGRATED_CONTENT
+#  6-Jan-2019 jdw update to the change in configuration for dataTypeInstanceFile
 ##
 """
 Integrate dictionary metadata and file based(type/coverage) into internal and JSON/BSON schema defintions.
@@ -32,11 +33,11 @@ __license__ = "Apache 2.0"
 
 import copy
 import logging
+import os
 
 from rcsb.db.define.DataTypeApplicationInfo import DataTypeApplicationInfo
 from rcsb.db.define.DataTypeInstanceInfo import DataTypeInstanceInfo
 from rcsb.db.define.DictInfo import DictInfo
-from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logger = logging.getLogger(__name__)
 
@@ -46,12 +47,12 @@ class SchemaDefBuild(object):
 
     """
 
-    def __init__(self, schemaName, configPath, configName='site_info', mockTopPath=None,
-                 includeContentClasses=['GENERATED_CONTENT', 'EVOLVING_CONTENT', 'CONSOLIDATED_BIRD_CONTENT', 'INTEGRATED_CONTENT']):
+    def __init__(self, schemaName, cfgOb, includeContentClasses=['GENERATED_CONTENT', 'EVOLVING_CONTENT', 'CONSOLIDATED_BIRD_CONTENT', 'INTEGRATED_CONTENT']):
         """
 
         """
-        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
+        configName = 'site_info'
+        self.__cfgOb = cfgOb
         self.__schemaName = schemaName
         self.__includeContentClasses = includeContentClasses
         #
@@ -64,22 +65,26 @@ class SchemaDefBuild(object):
             dictLocators.append(pathIhmDictionaryFile)
             dictLocators.append(pathFlrDictionaryFile)
         #
-        self.__instDataTypeFilePath = self.__cfgOb.getPath('INSTANCE_DATA_TYPE_INFO_LOCATOR', sectionName=schemaName)
-        self.__appDataTypeFilePath = self.__cfgOb.getPath('APP_DATA_TYPE_INFO_LOCATOR', sectionName=configName)
-
-        dictHelper = self.__cfgOb.getHelper('DICT_HELPER_MODULE', sectionName=configName, cfgOb=self.__cfgOb)
         self.__schemaDefHelper = self.__cfgOb.getHelper('SCHEMADEF_HELPER_MODULE', sectionName=configName, cfgOb=self.__cfgOb)
         self.__documentDefHelper = self.__cfgOb.getHelper('DOCUMENT_HELPER_MODULE', sectionName=configName, cfgOb=self.__cfgOb)
-
+        #
+        ###
+        dataTypeInstanceFile = self.__schemaDefHelper.getDataTypeInstanceFile(schemaName) if self.__schemaDefHelper else '.'
+        pth = self.__cfgOb.getPath('INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH', sectionName=configName)
+        self.__instDataTypeFilePath = os.path.join(pth, dataTypeInstanceFile)
+        ##
+        self.__appDataTypeFilePath = self.__cfgOb.getPath('APP_DATA_TYPE_INFO_LOCATOR', sectionName=configName)
+        dictHelper = self.__cfgOb.getHelper('DICT_HELPER_MODULE', sectionName=configName, cfgOb=self.__cfgOb)
+        #
         self.__dictInfo = DictInfo(dictLocators=dictLocators, dictHelper=dictHelper, dictSubset=schemaName)
         #
 
-    def build(self, collectionName=None, applicationName='ANY', schemaType='rcsb', enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums",
+    def build(self, collectionName=None, dataTyping='ANY', schemaType='rcsb', enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums",
               suppressSingleton=True):
         rD = {}
         if schemaType.lower() == 'rcsb':
             rD = self.__build(schemaName=self.__schemaName,
-                              applicationName=applicationName,
+                              dataTyping=dataTyping,
                               instDataTypeFilePath=self.__instDataTypeFilePath,
                               appDataTypeFilePath=self.__appDataTypeFilePath,
                               schemaDefHelper=self.__schemaDefHelper,
@@ -89,7 +94,7 @@ class SchemaDefBuild(object):
         elif schemaType.lower() in ['json', 'bson']:
             rD = self.__createJsonLikeSchema(schemaName=self.__schemaName,
                                              collectionName=collectionName,
-                                             applicationName=applicationName.upper(),
+                                             dataTyping=dataTyping.upper(),
                                              instDataTypeFilePath=self.__instDataTypeFilePath,
                                              appDataTypeFilePath=self.__appDataTypeFilePath,
                                              schemaDefHelper=self.__schemaDefHelper,
@@ -98,32 +103,34 @@ class SchemaDefBuild(object):
                                              enforceOpts=enforceOpts)
         return rD
 
-    def __build(self, schemaName, applicationName, instDataTypeFilePath, appDataTypeFilePath,
+    def __build(self, schemaName, dataTyping, instDataTypeFilePath, appDataTypeFilePath,
                 schemaDefHelper, documentDefHelper, includeContentClasses):
         """
         """
         databaseName = self.__schemaDefHelper.getDatabaseName(schemaName) if self.__schemaDefHelper else ''
         databaseVersion = self.__schemaDefHelper.getDatabaseVersion(schemaName) if self.__schemaDefHelper else ''
+
         #
-        schemaDef = {'NAME': schemaName, 'APP_NAME': applicationName, 'DATABASE_NAME': databaseName, 'DATABASE_VERSION': databaseVersion}
+        schemaDef = {'NAME': schemaName, 'APP_NAME': dataTyping, 'DATABASE_NAME': databaseName,
+                     'DATABASE_VERSION': databaseVersion}
         #
         schemaDef['SELECTION_FILTERS'] = self.__dictInfo.getSelectionFiltersForSubset()
 
-        schemaDef['SCHEMA_DICT'] = self.__createSchemaDict(schemaName, applicationName, instDataTypeFilePath,
+        schemaDef['SCHEMA_DICT'] = self.__createSchemaDict(schemaName, dataTyping, instDataTypeFilePath,
                                                            appDataTypeFilePath, schemaDefHelper, includeContentClasses)
         schemaDef['DOCUMENT_DICT'] = self.__createDocumentDict(schemaName, documentDefHelper)
-        schemaDef['SLICE_PARENT_ITEMS'] = self.__convertSliceParentItemNames(schemaName, applicationName)
-        schemaDef['SLICE_PARENT_FILTERS'] = self.__convertSliceParentFilterNames(schemaName, applicationName)
+        schemaDef['SLICE_PARENT_ITEMS'] = self.__convertSliceParentItemNames(schemaName, dataTyping)
+        schemaDef['SLICE_PARENT_FILTERS'] = self.__convertSliceParentFilterNames(schemaName, dataTyping)
         return schemaDef
 
-    def __createDocumentDict(self, schemaName, documentDefHelper, applicationName='ANY'):
+    def __createDocumentDict(self, schemaName, documentDefHelper, dataTyping='ANY'):
         """Internal method to assign document-level details to the schema definition,
 
 
         Args:
             schemaName (string): A schema/content name: pdbx|chem_comp|bird|bird_family ...
             documentDefHelper (class instance):  Class instance providing additional document-level metadata
-            applicationName (string, optional): Application name ANY|SQL|...
+            dataTyping (string, optional): Application name ANY|SQL|...
 
         Returns:
             dict: dictionary of document-level metadata
@@ -158,13 +165,13 @@ class SchemaDefBuild(object):
                 return True
         return False
 
-    def __getConvertNameMethod(self, applicationName):
+    def __getConvertNameMethod(self, dataTyping):
         # Function to perform category and attribute name conversion.
         # convertNameF = self.__schemaDefHelper.convertNameDefault if self.__schemaDefHelper else self.__convertNameDefault
         #
         try:
-            if applicationName in ['ANY', 'SQL', 'DOCUMENT', 'SOLR', 'JSON', 'BSON']:
-                nameConvention = applicationName
+            if dataTyping in ['ANY', 'SQL', 'DOCUMENT', 'SOLR', 'JSON', 'BSON']:
+                nameConvention = dataTyping
             else:
                 nameConvention = 'DEFAULT'
             return self.__schemaDefHelper.getConvertNameMethod(nameConvention) if self.__schemaDefHelper else self.__convertNameDefault
@@ -173,12 +180,12 @@ class SchemaDefBuild(object):
 
         return self.__convertNameDefault
 
-    def __createSchemaDict(self, schemaName, applicationName, instDataTypeFilePath, appDataTypeFilePath, schemaDefHelper, includeContentClasses=None):
+    def __createSchemaDict(self, schemaName, dataTyping, instDataTypeFilePath, appDataTypeFilePath, schemaDefHelper, includeContentClasses=None):
         """Internal method to integrate dictionary and instance metadata into a common schema description data structure.
 
         Args:
             schemaName (string): A schema/content name: pdbx|chem_comp|bird|bird_family ...
-            applicationName (string): ANY|SQL
+            dataTyping (string): ANY|SQL
             instDataTypeFilePath (string): Path to data instance type and coverage
             appDataTypeFilePath (string): Path to resource file mapping cif data types to application data types
             schemaDefHelper (class instance): Class instance providing additional schema details
@@ -194,7 +201,7 @@ class SchemaDefBuild(object):
         logger.debug("Including additional category classes %r" % contentClasses)
         #
         dtInstInfo = DataTypeInstanceInfo(instDataTypeFilePath)
-        dtAppInfo = DataTypeApplicationInfo(appDataTypeFilePath, applicationName=applicationName)
+        dtAppInfo = DataTypeApplicationInfo(appDataTypeFilePath, dataTyping=dataTyping)
         #
         # Supplied by the schemaDefHelper
         #
@@ -213,7 +220,7 @@ class SchemaDefBuild(object):
         blockAttributeWidth = self.__schemaDefHelper.getBlockAttributeMaxWidth(schemaName) if self.__schemaDefHelper else 0
         blockAttributeMethod = self.__schemaDefHelper.getBlockAttributeMethod(schemaName) if self.__schemaDefHelper else None
         #
-        convertNameF = self.__getConvertNameMethod(applicationName)
+        convertNameF = self.__getConvertNameMethod(dataTyping)
         #
         dictSchema = self.__dictInfo.getSchemaNames()
         logger.debug("Dictionary category length %d" % len(dictSchema))
@@ -289,7 +296,7 @@ class SchemaDefBuild(object):
                     instWidth = dtInstInfo.getMaxWidth(catName, atName)
                     #
                     revAppType, revAppWidth = dtAppInfo.updateCharType(fD['IS_KEY'], appType, instWidth, appWidth, bufferPercent=20.0)
-                    if verbose and applicationName in ['SQL', 'ANY']:
+                    if verbose and dataTyping in ['SQL', 'ANY']:
                         logger.debug("catName %s atName %s cifType %s appType %s appWidth %r instWidth %r --> revAppType %r revAppWidth %r " %
                                      (catName, atName, fD['TYPE_CODE'], appType, appWidth, instWidth, revAppType, revAppWidth))
                     #
@@ -326,7 +333,7 @@ class SchemaDefBuild(object):
                     appWidth = dtAppInfo.getAppTypeDefaultWidth(fD['TYPE_CODE'])
                     instWidth = dtInstInfo.getMaxWidth(catName, atName)
                     revAppType, revAppWidth = dtAppInfo.updateCharType(fD['IS_KEY'], appType, instWidth, appWidth, bufferPercent=20.0)
-                    if verbose and applicationName in ['SQL', 'ANY']:
+                    if verbose and dataTyping in ['SQL', 'ANY']:
                         logger.debug("catName %s atName %s cifType %s appType %s appWidth %r instWidth %r --> revAppType %r revAppWidth %r " %
                                      (catName, atName, fD['TYPE_CODE'], appType, appWidth, instWidth, revAppType, revAppWidth))
 
@@ -402,10 +409,10 @@ class SchemaDefBuild(object):
         #
         return rD
 
-    def __convertSliceParentItemNames(self, schemaName, applicationName):
+    def __convertSliceParentItemNames(self, schemaName, dataTyping):
         sliceD = {}
         try:
-            convertNameF = self.__getConvertNameMethod(applicationName)
+            convertNameF = self.__getConvertNameMethod(dataTyping)
             # [{'CATEGORY_NAME': 'entity', 'ATTRIBUTE_NAME': 'id'}
             spD = self.__dictInfo.getSliceParentItemsForSubset()
             for ky in spD:
@@ -421,10 +428,10 @@ class SchemaDefBuild(object):
 
         return sliceD
 
-    def __convertSliceParentFilterNames(self, schemaName, applicationName):
+    def __convertSliceParentFilterNames(self, schemaName, dataTyping):
         sliceD = {}
         try:
-            convertNameF = self.__getConvertNameMethod(applicationName)
+            convertNameF = self.__getConvertNameMethod(dataTyping)
             # [{'CATEGORY_NAME': 'entity', 'ATTRIBUTE_NAME': 'id'}
             spD = self.__dictInfo.getSliceParentFiltersForSubset()
             for ky in spD:
@@ -447,7 +454,7 @@ class SchemaDefBuild(object):
 
     # -------------------------- ------------- ------------- ------------- ------------- ------------- -------------
 
-    def __createJsonLikeSchema(self, schemaName, collectionName, applicationName, instDataTypeFilePath, appDataTypeFilePath,
+    def __createJsonLikeSchema(self, schemaName, collectionName, dataTyping, instDataTypeFilePath, appDataTypeFilePath,
                                schemaDefHelper, documentDefHelper, includeContentClasses=None, jsonSpecDraft='4',
                                enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
         """Internal method to integrate dictionary and instance metadata into a common json/bson schema description data structure.
@@ -457,7 +464,7 @@ class SchemaDefBuild(object):
         Args:
             schemaName (str): A schema/content name: pdbx|chem_comp|bird|bird_family ...
             collectionName (str): Collection defined within a schema/content type
-            applicationName (str): Target application for the schema (e.g. JSON, BSON, or a variant of these...)
+            dataTyping (str): Target data type convention for the schema (e.g. JSON, BSON, or a variant of these...)
             instDataTypeFilePath (str): Path to data instance type and coverage
             appDataTypeFilePath (str): Path to resource file mapping cif data types to application data types
             schemaDefHelper (class instance): Class instance providing additional schema details
@@ -477,17 +484,17 @@ class SchemaDefBuild(object):
         privDocKeyL = documentDefHelper.getPrivateDocumentAttributes(collectionName)
         # enforceOpts = "mandatoryKeys|mandatoryAttributes|bounds|enums"
         #
-        # applicationName = 'JSON'
-        appNameU = applicationName.upper()
-        typeKey = 'bsonType' if appNameU == 'BSON' else 'type'
-        convertNameF = self.__getConvertNameMethod(appNameU)
+        # dataTyping = 'JSON'
+        dataTypingU = dataTyping.upper()
+        typeKey = 'bsonType' if dataTypingU == 'BSON' else 'type'
+        convertNameF = self.__getConvertNameMethod(dataTypingU)
         #
         addBlockAttribute = False
         contentClasses = includeContentClasses if includeContentClasses else []
         logger.debug("Including additional category classes %r" % contentClasses)
         #
         dtInstInfo = DataTypeInstanceInfo(instDataTypeFilePath)
-        dtAppInfo = DataTypeApplicationInfo(appDataTypeFilePath, applicationName=appNameU)
+        dtAppInfo = DataTypeApplicationInfo(appDataTypeFilePath, dataTyping=dataTypingU)
         #
         #      Supplied by the schemaDefHelper for the content type (SchemaIds)
         #
@@ -602,7 +609,7 @@ class SchemaDefBuild(object):
                         if isRequired:
                             reqL.append(schemaAttributeName)
                         #
-                        atPropD = self.__getJsonAttributeProperties(fD, appNameU, dtAppInfo, jsonSpecDraft, enforceOpts)
+                        atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, jsonSpecDraft, enforceOpts)
                         scD['properties'][schemaAttributeName] = atPropD
                     if reqL:
                         scD['required'] = reqL
@@ -624,7 +631,7 @@ class SchemaDefBuild(object):
                 if isRequired:
                     pD['required'].append(schemaAttributeName)
                 #
-                atPropD = self.__getJsonAttributeProperties(fD, appNameU, dtAppInfo, jsonSpecDraft, enforceOpts)
+                atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, jsonSpecDraft, enforceOpts)
 
                 delimiter = fD['ITERABLE_DELIMITER']
                 if delimiter:
@@ -648,7 +655,7 @@ class SchemaDefBuild(object):
             for pdk in privDocKeyL:
                 aD = self.__dictInfo.getAttributeFeatures(convertNameF(pdk['CATEGORY_NAME']))
                 fD = aD[convertNameF(pdk['ATTRIBUTE_NAME'])]
-                atPropD = self.__getJsonAttributeProperties(fD, appNameU, dtAppInfo, jsonSpecDraft, enforceOpts)
+                atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, jsonSpecDraft, enforceOpts)
                 privKeyD[pdk['PRIVATE_DOCUMENT_NAME']] = atPropD
                 privMandatoryD[pdk['PRIVATE_DOCUMENT_NAME']] = pdk['MANDATORY']
 
@@ -675,7 +682,7 @@ class SchemaDefBuild(object):
             if len(mandatoryCategoryL):
                 rD['required'] = mandatoryCategoryL
 
-        if appNameU == 'JSON':
+        if dataTypingU == 'JSON':
             jsonSchemaUrl = "http://json-schema.org/draft-0%s/schema#" % jsonSpecDraft if jsonSpecDraft in ['3', '4', '6', '7'] else "http://json-schema.org/schema#"
             rD.update({"$id": "https://github.com/rcsb/py-rcsb.db/tree/master/rcsb.db/data/json-schema/",
                        "$schema": jsonSchemaUrl,
@@ -683,22 +690,22 @@ class SchemaDefBuild(object):
 
         return rD
 
-    def __getJsonAttributeProperties(self, fD, appNameU, dtAppInfo, jsonSpecDraft, enforceOpts):
+    def __getJsonAttributeProperties(self, fD, dataTypingU, dtAppInfo, jsonSpecDraft, enforceOpts):
         #
         atPropD = {}
         try:
             # - assign data type attributes
-            typeKey = 'bsonType' if appNameU == 'BSON' else 'type'
+            typeKey = 'bsonType' if dataTypingU == 'BSON' else 'type'
             appType = dtAppInfo.getAppTypeName(fD['TYPE_CODE'])
             #
             #
             if appType in ['string']:
                 # atPropD = {typeKey: appType, 'maxWidth': instWidth}
                 atPropD = {typeKey: appType}
-            elif appType in ['date', 'datetime'] and appNameU == 'JSON':
+            elif appType in ['date', 'datetime'] and dataTypingU == 'JSON':
                 fmt = 'date' if appType == 'date' else 'date-time'
                 atPropD = {typeKey: 'string', 'format': fmt}
-            elif appType in ['date', 'datetime'] and appNameU == 'BSON':
+            elif appType in ['date', 'datetime'] and dataTypingU == 'BSON':
                 atPropD = {typeKey: 'date'}
             elif appType in ['number', 'integer', 'int', 'double']:
                 atPropD = {typeKey: appType}
@@ -729,7 +736,7 @@ class SchemaDefBuild(object):
             #
             if 'enums' in enforceOpts and fD['ENUMS']:
                 atPropD['enum'] = fD['ENUMS']
-            if appNameU not in ['BSON']:
+            if dataTypingU not in ['BSON']:
                 try:
                     if fD['EXAMPLES']:
                         atPropD['examples'] = [str(t1).strip() for t1, t2 in fD['EXAMPLES']]

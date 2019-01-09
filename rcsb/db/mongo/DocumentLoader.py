@@ -81,7 +81,7 @@ class DocumentLoader(object):
             indAtList = indexAttributeList if indexAttributeList else []
             bsonSchema = None
             if schemaLevel and schemaLevel in ['min', 'full']:
-                bsonSchema = self.__schU.getJsonSchema(collectionName, level=schemaLevel)
+                bsonSchema = self.__schU.getJsonSchema(collectionName, schemaType='BSON', level=schemaLevel)
                 logger.debug("Using schema validation for %r %r" % (collectionName, schemaLevel))
 
             if loadType == 'full':

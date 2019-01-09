@@ -49,10 +49,11 @@ class ScanRepoUtilTests(unittest.TestCase):
         mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data')
         configPath = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'config', 'dbload-setup-example.yml')
         configName = 'site_info'
-        self.__pathPdbxDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'mmcif_pdbx_v5_next.dic')
-        self.__pathIhmDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'ihm-extension.dic')
-        self.__pathFlrDictionaryFile = os.path.join(TOPDIR, 'rcsb', 'mock-data', 'dictionaries', 'flr-extension.dic')
+
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
+        self.__pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=configName)
+        self.__pathIhmDictionaryFile = self.__cfgOb.getPath('IHMDEV_DICT_LOCATOR', sectionName=configName)
+        self.__pathFlrDictionaryFile = self.__cfgOb.getPath('FLR_DICT_LOCATOR', sectionName=configName)
         #
         self.__failedFilePath = os.path.join(HERE, 'test-output', 'failed-list.txt')
         self.__savedFilePath = os.path.join(HERE, 'test-output', 'path-list.txt')
