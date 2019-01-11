@@ -70,5 +70,7 @@
   7-Jan-2019   V0.37 Simplify and consolidate site specific configuration options, streamline cli scripts, and consolidate common
                schema access and building methods in SchemDefUtil() (feature branch configpath)
   9-Jan-2019   V0.38 Introduce a new data transformation filter for XML character references and miscellaneous related changes.
+ 10-Jan-2019   V0.39 Adjustments to improve diagnostics relative remaining data issues observed loading latest data files, and
+               tuning of classification for RCSB candidate assemblies.
 #
 

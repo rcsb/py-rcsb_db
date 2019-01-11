@@ -169,7 +169,7 @@ class DataTransformFactory(object):
             logger.error("Missing table %r with error %s" % (tableId, str(e)))
         return {}
 
-    def processRecord(self, tableId, row, attributeNameList):
+    def processRecord(self, tableId, row, attributeNameList, containerName=None):
         """
             Input row data (list) ordered according to the input attribute names list.
 
@@ -197,8 +197,8 @@ class DataTransformFactory(object):
                     continue
                 d[dT['atNameD'][atName]] = vT.value
         except Exception as e:
-            logger.error("Failing with %s for table %s atName %s" % (str(e), tableId, atName))
-            logger.exception("Failing with %s for table %s atName %s" % (str(e), tableId, atName))
+            logger.error("Failing for %r table %s atName %s with %s" % (containerName, tableId, atName, str(e)))
+            logger.exception("Failing for %r table %s atName %s with %s" % (containerName, tableId, atName, str(e)))
 
         return d
 

@@ -27,6 +27,7 @@
 #                       This method is collection dependent which is awkward in this class.
 #       4-Dec-2018  jdw make insertion of private keys optional
 #       8-Dec-2018  jdw add check to return False if a selection category does not exist.
+#      10-Jan-2019  jdw pass down container name to processRecord() to allow for better diagnostics.
 #
 #
 ##
@@ -495,7 +496,7 @@ class SchemaDefDataPrep(object):
         attributeNameList = catObj.getAttributeList()
         #
         for row in catObj.getRowList():
-            d = self.__dtObj.processRecord(tObj.getId(), row, attributeNameList)
+            d = self.__dtObj.processRecord(tObj.getId(), row, attributeNameList, containerName=myContainer.getName())
             retList.append(d)
 
         return retList
@@ -535,7 +536,7 @@ class SchemaDefDataPrep(object):
                             logger.exception("Failing with %s" % str(e))
                 #
 
-                d = self.__dtObj.processRecord(tObj.getId(), row, attributeNameList)
+                d = self.__dtObj.processRecord(tObj.getId(), row, attributeNameList, containerName=myContainer.getName())
 
                 #
                 # Update this row using exact matching of the merging key --

@@ -17,6 +17,8 @@
 # 28-Nov-2018 jdw relax constraints on the production of rcsb_entry_info
 #  1-Dec-2018 jdw add ncbi source and host organism info
 # 11-Dec-2018 jdw add addStructRefSeqEntityIds and buildEntityPolySeq
+# 10-Jan-2019 jdw better handle initialization in filterBlockByMethod()
+# 11-Jan-2019 jdw revise classification in assignAssemblyCandidates()
 #
 ##
 """
@@ -474,6 +476,11 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
               'trisymmetron capsid unit': 'software_defined_assembly',
               'deposited_coordinates': 'software_defined_assembly'}
         #
+        eD = {k: True for k in ['crystal asymmetric unit', 'crystal asymmetric unit, crystal frame', 'helical asymmetric unit',
+                                'helical asymmetric unit, std helical frame', 'icosahedral 23 hexamer', 'icosahedral asymmetric unit',
+                                'icosahedral asymmetric unit, std point frame', 'icosahedral pentamer', 'pentasymmetron capsid unit',
+                                'point asymmetric unit', 'point asymmetric unit, std point frame', 'trisymmetron capsid unit',
+                                'deposited_coordinates', 'details']}
         try:
             if not dataContainer.exists('pdbx_struct_assembly'):
                 return False
@@ -484,7 +491,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             #
             for iRow in range(tObj.getRowCount()):
                 details = tObj.getValue('details', iRow)
-                if details in mD and mD[details] in ['author_and_software_defined_assembly', 'author_defined_assembly']:
+                if details in mD and details not in eD:
                     tObj.setValue('Y', 'rcsb_candidate_assembly', iRow)
                 else:
                     tObj.setValue('N', 'rcsb_candidate_assembly', iRow)
@@ -508,7 +515,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         """ Normalize a row containing some character delimited fields.
 
             Expand list of uneven lists into unifornm list of lists.
-            Only two list lengths are logically support 1 and second
+            Only two list lengths are logically supported: 1 and second
             maximum length.
 
             returns: list of expanded rows or the original input.
@@ -1605,9 +1612,10 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             #
             xObj = dataContainer.getObj('exptl')
             methodL = xObj.getAttributeValueList('method')
+            objNameL = []
             # Don't strip anything for multiple methods at this point
             if len(methodL) > 1:
-                objNameL = []
+                pass
             else:
                 #
                 mS = methodL[0].upper()
@@ -1620,7 +1628,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 elif mS in ['SOLUTION SCATTERING', 'EPR', 'THEORETICAL MODEL', 'INFRARED SPECTROSCOPY', 'FLUORESCENCE TRANSFER']:
                     objNameL = ['cell', 'symmetry', 'refine', 'refine_hist', 'software', 'diffrn', 'diffrn_radiation']
                 else:
-                    logger.error('Unexpected method ')
+                    logger.error('Unexpected method %r' % mS)
             #
             for objName in objNameL:
                 dataContainer.remove(objName)
