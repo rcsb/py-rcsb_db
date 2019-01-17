@@ -9,7 +9,8 @@
 #  14-Aug-2018 jdw generalize document key attribute to attribute list
 #  20-Aug-2018 jdw slice details added to __schemaContentFilters
 #   8-Oct-2018 jdw added getSubCategoryAggregates() method
-#   3-Dec-2018 jdw add getDocumentIndices()
+#   3-Dec-2018 jdw add method getDocumentIndices()
+#  16-Jan-2019 jdw add method getDocumentReplaceAttributeNames()
 #
 ##
 """
@@ -100,6 +101,26 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
     def getDocumentKeyAttributeNames(self, collectionName):
         r = []
         try:
+            for d in self.__cfgD['collection_indices'][collectionName]:
+                if d['INDEX_NAME'] == 'primary':
+                    r = d['ATTRIBUTE_NAMES']
+                    break
+        except Exception as e:
+            logger.exception("Collection %s failing with %s" % (collectionName, str(e)))
+        return r
+
+    def getDocumentReplaceAttributeNames(self, collectionName):
+        """ Return index labeled replace in provided or 'primary' otherwise
+        """
+        r = []
+        try:
+            for d in self.__cfgD['collection_indices'][collectionName]:
+                if d['INDEX_NAME'] == 'replace':
+                    r = d['ATTRIBUTE_NAMES']
+                    break
+            if r:
+                return r
+            #
             for d in self.__cfgD['collection_indices'][collectionName]:
                 if d['INDEX_NAME'] == 'primary':
                     r = d['ATTRIBUTE_NAMES']

@@ -454,6 +454,7 @@ bird_chem_comp_core,.. ).
 #                 _entity_poly.rcsb_prd_id
 #  1-Jan-2019 jdw restore exptl_crystal in pdbx_core_entry
 #  7-Jan-2019 jdw broad pruning and consolidation of site specific sections
+# 17-Jan-2019 jdw add a separate set of document attributes for replacing documents in collections built from slices.
 #
 #
 # Master Pinelands configuration file example
@@ -484,7 +485,7 @@ site_info:
     DRUGBANK_MAPPING_LOCATOR: DrugBank/drugbank_pdb_mapping.json
     DRUGBANK_DATA_LOCATOR: DrugBank/full_database.xml.gz
     CCDC_MAPPING_LOCATOR: chem_comp_models/ccdc_pdb_mapping.json
-    NCBI_TAXONOMY_LOCATOR: NCBI/taxonomy_names.pic
+    NCBI_TAXONOMY_LOCATOR: NCBI/taxonomy_names-py3.pic
     SCHEMA_DEF_LOCATOR_PATH: schema
     JSON_SCHEMA_LOCATOR_PATH: json-schema
     INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH: data_type_info
@@ -698,6 +699,8 @@ dictionary_helper:
               DELIMITER: ";"
             - TYPE_CODE: alphanum-csv
               DELIMITER: ","
+            - TYPE_CODE: alphanum-vbsv
+              DELIMITER: "|"
     query_string_selectors:
         iterable:
             - comma separate
@@ -707,7 +710,7 @@ dictionary_helper:
           DELIMITER: ";"
         - CATEGORY_NAME: citation
           ATTRIBUTE_NAME: rcsb_authors
-          DELIMITER: ";"
+          DELIMITER: "|"
     content_classes:
         ?       - GENERATED_CONTENT
                 - pdbx
@@ -2001,8 +2004,8 @@ document_helper:
         pdbx_core_entity_v5_0_2:
             - INDEX_NAME: primary
               ATTRIBUTE_NAMES:
-              - entry.id
-              - entity.id
+              - rcsb_entity_container_identifiers.entry_id
+              - rcsb_entity_container_identifiers.entity_id
             - INDEX_NAME: search_1
               ATTRIBUTE_NAMES:
               - rcsb_entity_container_identifiers.entry_id.entity_id
@@ -2025,10 +2028,15 @@ document_helper:
               ATTRIBUTE_NAMES:
               - __entry_id
               - __comp_id
+            - INDEX_NAME: replace
+              ATTRIBUTE_NAMES:
+              - __entry_id
         pdbx_core_entity_monomer_v5_0_2:
             - INDEX_NAME: primary
               ATTRIBUTE_NAMES:
-              - rcsb_entity_poly_info.ordinal_id
+              - rcsb_entity_poly_info.entry_id
+              - rcsb_entity_poly_info.entity_id
+              - rcsb_entity_poly_info.comp_id
             - INDEX_NAME: search_1
               ATTRIBUTE_NAMES:
               - rcsb_entity_poly_info.entry_id
@@ -2052,10 +2060,13 @@ document_helper:
               ATTRIBUTE_NAMES:
               - __entry_id
               - __comp_id
+            - INDEX_NAME: replace
+              ATTRIBUTE_NAMES:
+              - __entry_id
         pdbx_core_assembly_v5_0_2:
             - INDEX_NAME: primary
               ATTRIBUTE_NAMES:
-              - entry.id
+              - rcsb_assembly_container_identifiers.entry_id
               - pdbx_struct_assembly.id
             - INDEX_NAME: search_1
               ATTRIBUTE_NAMES:
@@ -2065,6 +2076,9 @@ document_helper:
               ATTRIBUTE_NAMES:
               - __entry_id
               - __assembly_id
+            - INDEX_NAME: replace
+              ATTRIBUTE_NAMES:
+              - __entry_id
         pdbx_core_entry_v5_0_2:
             - INDEX_NAME: primary
               ATTRIBUTE_NAMES:
@@ -2088,6 +2102,9 @@ document_helper:
             - INDEX_NAME: search_5
               ATTRIBUTE_NAMES:
               - __entry_id
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - entry.id
         bird_v5_0_2:
             - INDEX_NAME: primary
               ATTRIBUTE_NAMES:

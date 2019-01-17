@@ -12,6 +12,7 @@
 #        4-Sep-2018 jdw  add methods to return attribute enumerations
 #       18-Nov-2018 jdw  extend the content of COLLECTION_DOCUMENT_ATTRIBUTE_NAMES to _INFO and add method
 #                        getDocumentKeyAttributeInfo()
+#       16-Jan-2019 jdw  add method getDocumentReplaceAttributeNames() to return COLLECTION_DOCUMENT_REPLACE_ATTRIBUTE_NAMES
 ##
 """
 Base classes for schema defintions.
@@ -140,6 +141,17 @@ class SchemaDefAccessBase(object):
         r = []
         try:
             return list(self.__documentDefDict['COLLECTION_DOCUMENT_ATTRIBUTE_NAMES'][collectionName])
+        except Exception as e:
+            logger.exception("Failing for collection %s with %r" % (collectionName, str(e)))
+        return r
+
+    def getDocumentReplaceAttributeNames(self, collectionName):
+        """ Return list of document attributes required to remove all relevant documents
+            prior  to load 'replace' operation.
+        """
+        r = []
+        try:
+            return list(self.__documentDefDict['COLLECTION_DOCUMENT_REPLACE_ATTRIBUTE_NAMES'][collectionName])
         except Exception as e:
             logger.exception("Failing for collection %s with %r" % (collectionName, str(e)))
         return r

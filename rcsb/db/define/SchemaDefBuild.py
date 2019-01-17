@@ -20,6 +20,7 @@
 # 18-Nov-2018 jdw add COLLECTION_DOCUMENT_ATTRIBUTE_INFO
 #  3-Dec-2018 jdw add INTEGRATED_CONTENT
 #  6-Jan-2019 jdw update to the change in configuration for dataTypeInstanceFile
+# 16-Jan-2019 jdw add 'COLLECTION_DOCUMENT_REPLACE_ATTRIBUTE_NAMES'
 ##
 """
 Integrate dictionary metadata and file based(type/coverage) into internal and JSON/BSON schema defintions.
@@ -139,6 +140,7 @@ class SchemaDefBuild(object):
         """
         rD = {'CONTENT_TYPE_COLLECTION_MAP': {},
               'COLLECTION_DOCUMENT_ATTRIBUTE_NAMES': {},
+              'COLLECTION_DOCUMENT_REPLACE_ATTRIBUTE_NAMES': {},
               'COLLECTION_DOCUMENT_PRIVATE_KEYS': {},
               'COLLECTION_DOCUMENT_INDICES': {},
               'COLLECTION_CONTENT': {}}
@@ -150,6 +152,7 @@ class SchemaDefBuild(object):
             for c in cL:
                 rD['COLLECTION_CONTENT'][c] = {'INCLUDE': dH.getIncluded(c), 'EXCLUDE': dH.getExcluded(c), 'SLICE_FILTER': dH.getSliceFilter(c)}
                 rD['COLLECTION_DOCUMENT_ATTRIBUTE_NAMES'][c] = dH.getDocumentKeyAttributeNames(c)
+                rD['COLLECTION_DOCUMENT_REPLACE_ATTRIBUTE_NAMES'][c] = dH.getDocumentReplaceAttributeNames(c)
                 rD['COLLECTION_DOCUMENT_PRIVATE_KEYS'][c] = dH.getPrivateDocumentAttributes(c)
                 rD['COLLECTION_DOCUMENT_INDICES'][c] = dH.getDocumentIndices(c)
         #

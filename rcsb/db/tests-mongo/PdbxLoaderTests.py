@@ -226,12 +226,14 @@ class PdbxLoaderTests(unittest.TestCase):
         try:
             mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
-            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entity_v5_0_2'], loadType='full', inputPathList=None, styleType=self.__documentStyle,
+            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entry_v5_0_2', 'pdbx_core_entity_v5_0_2', 'pdbx_core_assembly_v5_0_2'], loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
-            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entry_v5_0_2'], loadType='replace', inputPathList=None, styleType=self.__documentStyle,
+            #
+            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entry_v5_0_2', 'pdbx_core_entity_v5_0_2', 'pdbx_core_assembly_v5_0_2'], loadType='replace', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath, pruneDocumentSize=14.0)
             self.assertTrue(ok)
+            #
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
         except Exception as e:
@@ -285,34 +287,34 @@ def mongoReLoadSuite():
     return suiteSelect
 
 
-def mongoSlicedSuite():
+def mongoReloadSlicedSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(PdbxLoaderTests("testReLoadPdbxEntryDataSliced"))
     return suiteSelect
 
 
 if __name__ == '__main__':
+    if (False):
+        if (True):
+            mySuite = mongoLoadIhmSuite()
+            unittest.TextTestRunner(verbosity=2).run(mySuite)
+        #
+        if (True):
+            mySuite = mongoLoadChemRefCoreSuite()
+            unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+        if (True):
+            mySuite = mongoLoadPdbxSuite()
+            unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+        if (True):
+            mySuite = mongoReLoadSuite()
+            unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+        if (True):
+            mySuite = mongoLoadPdbxLimitSizeSuite()
+            unittest.TextTestRunner(verbosity=2).run(mySuite)
 
     if (True):
-        mySuite = mongoLoadIhmSuite()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
-    #
-    if (True):
-        mySuite = mongoLoadChemRefCoreSuite()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
-
-    if (True):
-        mySuite = mongoLoadPdbxSuite()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
-
-    if (True):
-        mySuite = mongoReLoadSuite()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
-
-    if (True):
-        mySuite = mongoLoadPdbxLimitSizeSuite()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
-
-    if (True):
-        mySuite = mongoSlicedSuite()
+        mySuite = mongoReloadSlicedSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)

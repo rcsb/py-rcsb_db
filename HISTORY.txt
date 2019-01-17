@@ -72,5 +72,5 @@
   9-Jan-2019   V0.38 Introduce a new data transformation filter for XML character references and miscellaneous related changes.
  10-Jan-2019   V0.39 Adjustments to improve diagnostics relative remaining data issues observed loading latest data files, and
                tuning of classification for RCSB candidate assemblies.
+ 17-Jan-2019   V0.40 adjust handling of document replacement in sliced collections
 #
-

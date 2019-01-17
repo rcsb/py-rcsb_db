@@ -144,7 +144,8 @@ class DocumentLoader(object):
             #
             if dataList:
                 ok, successList, failedList = self.__loadDocuments(databaseName, collectionName, dataList,
-                                                                   loadType=loadType, readBackCheck=readBackCheck, keyNames=keyNames)
+                                                                   loadType=loadType, readBackCheck=readBackCheck,
+                                                                   keyNames=keyNames)
             #
             logger.debug("%s database %s collection %s inputList length %d successList length %d  failed %d" %
                          (procName, databaseName, collectionName, len(dataList), len(successList), len(failedList)))

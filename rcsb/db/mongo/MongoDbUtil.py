@@ -362,17 +362,23 @@ class MongoDbUtil(object):
 
         """
         try:
+            cD = {}
             delTupL = []
             c = self.__mgObj[databaseName].get_collection(collectionName)
             for d in dList:
                 kyVals = self.__getKeyValues(d, keyNames)
                 selectD = {ky: val for ky, val in zip(keyNames, kyVals)}
+                tt = tuple(selectD.items())
+                if tt in cD:
+                    continue
+                cD[tt] = True
                 r = c.delete_many(selectD)
                 try:
-                    delTupL.append((kyVals, r.deleted_count))
+                    # delTupL.append((kyVals, r.deleted_count))
+                    delTupL.append((selectD, r.deleted_count))
                 except Exception as e:
                     logger.error("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, selectD.items(), str(e)))
-            logger.debug("Deleted status %r" % delTupL)
+            logger.debug("%s %s deleted status %r" % (databaseName, collectionName, delTupL))
             return delTupL
         except Exception as e:
             logger.error("Failing %s and %s selectD %r with %s" % (databaseName, collectionName, selectD.items(), str(e)))
@@ -446,7 +452,7 @@ class MongoDbUtil(object):
 
         Args:
             dct (dict): source dictionary object (nested)
-            keyNames (list): list of dictionary keys in dot notatoin
+            keyNames (list): list of dictionary keys in dot notation
 
         Returns:
             tuple: tuple of values corresponding to the input key names

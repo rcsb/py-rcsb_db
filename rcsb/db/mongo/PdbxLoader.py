@@ -332,6 +332,7 @@ class PdbxLoader(object):
                 #  Get the [scbemaId.atId,...] holding the natural document Id
                 #
                 docIdL = sd.getDocumentKeyAttributeNames(collectionName)
+                replaceIdL = sd.getDocumentReplaceAttributeNames(collectionName)
                 #
                 #  Add any private document keys -
                 dList = sdp.addDocumentPrivateAttributes(dList, collectionName)
@@ -340,7 +341,7 @@ class PdbxLoader(object):
                 #
                 if dList:
                     ok, successPathList, failedPathList = self.__loadDocuments(dbName, collectionName, dList, docIdL,
-                                                                               loadType=loadType, locatorKey=locatorKey,
+                                                                               replaceIdL=replaceIdL, loadType=loadType, locatorKey=locatorKey,
                                                                                readBackCheck=readBackCheck, pruneDocumentSize=pruneDocumentSize)
                 #
                 successPathList.extend(list(set(rejectPathList)))
@@ -473,7 +474,7 @@ class PdbxLoader(object):
         logger.debug("Pruning returns document list length %d" % len(dList))
         return oL
 
-    def __loadDocuments(self, dbName, collectionName, dList, docIdL, loadType='full', locatorKey=None, readBackCheck=False, pruneDocumentSize=None):
+    def __loadDocuments(self, dbName, collectionName, dList, docIdL, replaceIdL=None, loadType='full', locatorKey=None, readBackCheck=False, pruneDocumentSize=None):
         #
         # Load database/collection with input document list -
         #
@@ -497,8 +498,8 @@ class PdbxLoader(object):
                 mg = MongoDbUtil(client)
                 #
                 keyNames = docIdL
-                if loadType == 'replace':
-                    dTupL = mg.deleteList(dbName, collectionName, dList, keyNames)
+                if loadType == 'replace' and replaceIdL:
+                    dTupL = mg.deleteList(dbName, collectionName, dList, replaceIdL)
                     logger.debug("Deleted document status %r" % dTupL)
                 if pruneDocumentSize:
                     dList = self.__pruneBySize(dList, limitMB=pruneDocumentSize)
