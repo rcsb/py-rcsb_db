@@ -10,6 +10,7 @@
 #  10-Jun-2018 jdw move the base table definitions in terms of content classes
 #  16-Jun-2018 jdw standardize method name for getAttributeDataTypeD()
 #  26-Nov-2018 jdw turn down boundary value level to standard ddl values
+#   3-Feb-2019 jdw get all child items using self.__dApi.getFullDecendentList()
 #
 #
 ##
@@ -67,8 +68,8 @@ class DictInfo(object):
         unitCardinalityList = []
         dataSelectFilterD = {}
         itemTransformD = {}
-        categoryContentClasses = {}
-        attributeContentClasses = {}
+        self.__categoryContentClasses = {}
+        self.__attributeContentClasses = {}
         iterableD = {}
         #
         self.__categoryList = self.__dApi.getCategoryList()
@@ -94,11 +95,11 @@ class DictInfo(object):
             #
             #
             #
-            categoryContentClasses = dictHelper.getCategoryContentClasses(dictSubset)
-            logger.debug("categoryContentClasses %r" % categoryContentClasses)
+            self.__categoryContentClasses = dictHelper.getCategoryContentClasses(dictSubset)
+            logger.debug("categoryContentClasses %r" % self.__categoryContentClasses)
             #
-            attributeContentClasses = dictHelper.getAttributeContentClasses(dictSubset)
-            logger.debug("attributeContentClasses %r" % attributeContentClasses)
+            self.__attributeContentClasses = dictHelper.getAttributeContentClasses(dictSubset)
+            logger.debug("attributeContentClasses %r" % self.__attributeContentClasses)
             #
             self.__sliceParentItemsD = dictHelper.getSliceParentsBySubset(dictSubset)
             self.__sliceUnitCardinalityD = {}
@@ -116,7 +117,7 @@ class DictInfo(object):
                 self.__sliceUnitCardinalityD[sliceName].extend(dictHelper.getSliceCardinalityCategoryExtras(dictSubset, sliceName))
                 logger.debug("Slicename %s unit cardinality categories %r" % (sliceName, self.__sliceUnitCardinalityD[sliceName]))
             #
-            self.__categoryFeatures = {catName: self.__getCategoryFeatures(catName, unitCardinalityList, categoryContentClasses) for catName in self.__categoryList}
+            self.__categoryFeatures = {catName: self.__getCategoryFeatures(catName, unitCardinalityList) for catName in self.__categoryList}
             iTypeCodes = dictHelper.getTypeCodes('iterable')
             iQueryStrings = dictHelper.getQueryStrings('iterable')
             logger.debug("iterable types %r iterable query %r" % (iTypeCodes, iQueryStrings))
@@ -143,8 +144,7 @@ class DictInfo(object):
             catName: self.__getAttributeFeatures(catName,
                                                  iterableD,
                                                  itemTransformD,
-                                                 self.__methodD,
-                                                 attributeContentClasses) for catName in self.__categoryList}
+                                                 self.__methodD) for catName in self.__categoryList}
         self.__attributeDataTypeD = {catName: self.__getAttributeTypeD(catName) for catName in self.__categoryList}
         self.__dataSelectFilterD = dataSelectFilterD
         self.__sliceD = self.__getSliceChildren(self.__sliceParentItemsD)
@@ -184,6 +184,27 @@ class DictInfo(object):
             pass
         return {}
 
+    def __getContentClasses(self, catName, atName=None, wildCardAtName='__all__'):
+        """ Return a list of contexts for input categpry and optional attribute.
+
+            Handle the special case of unspecified attributes interpreted as wildcard.
+
+            Return:
+              contextList (list): list of context names
+        """
+        cL = []
+        try:
+            if atName is None:
+                cL = self.__categoryContentClasses[catName] if catName in self.__categoryContentClasses else []
+            elif (catName, wildCardAtName) in self.__attributeContentClasses:
+                cL = self.__attributeContentClasses[(catName, wildCardAtName)]
+            else:
+                cL = self.__attributeContentClasses[(catName, atName)] if (catName, atName) in self.__attributeContentClasses else []
+        except Exception as e:
+            logger.exception("Failing catName %s atName %s with %s" % (catName, atName, str(e)))
+        #
+        return cL
+
     def __getSliceChildren(self, sliceParentD):
         """ Internal method to build data structure containing the parent-child relationships for the
             input slice parent construction.
@@ -197,7 +218,10 @@ class DictInfo(object):
                 parentAttributeName = pD['ATTRIBUTE_NAME']
                 #
                 sD[parentCategoryName] = [{'PARENT_CATEGORY_NAME': parentCategoryName, 'PARENT_ATTRIBUTE_NAME': parentAttributeName, 'CHILD_ATTRIBUTE_NAME': parentAttributeName}]
-                childItems = self.__dApi.getFullChildList(parentCategoryName, parentAttributeName)
+                #
+                # childItems = self.__dApi.getFullChildList(parentCategoryName, parentAttributeName)
+                childItems = self.__dApi.getFullDecendentList(parentCategoryName, parentAttributeName)
+                # logger.info("Slice parent %s %s  %r" % (parentCategoryName, parentAttributeName, childItems))
                 for childItem in childItems:
                     atName = CifName.attributePart(childItem)
                     catName = CifName.categoryPart(childItem)
@@ -353,7 +377,7 @@ class DictInfo(object):
         else:
             return enumList
 
-    def __getAttributeFeatures(self, catName, iterableD, itemTransformD, methodD, attributeContentClasses):
+    def __getAttributeFeatures(self, catName, iterableD, itemTransformD, methodD):
         """
         Args:
             catName (string): Category name
@@ -394,10 +418,12 @@ class DictInfo(object):
             fD['IS_CHAR_TYPE'] = str(pType).lower() in ['char', 'uchar']
             #
             fD['ITERABLE_DELIMITER'] = iterableD[(catName, atName)] if (catName, atName) in iterableD else None
-            fD['FILTER_TYPES'] = itemTransformD[(catName, atName)] if (catName, atName) in itemTransformD else []
+            #
+            fD['FILTER_TYPES'] = itemTransformD[(catName, '__all__')] if (catName, '__all__') in itemTransformD else []
+            fD['FILTER_TYPES'] = itemTransformD[(catName, atName)] if (catName, atName) in itemTransformD else fD['FILTER_TYPES']
             #
             fD['METHODS'] = methodD[(catName, atName)] if (catName, atName) in methodD else []
-            fD['CONTENT_CLASSES'] = attributeContentClasses[(catName, atName)] if (catName, atName) in attributeContentClasses else []
+            fD['CONTENT_CLASSES'] = self.__getContentClasses(catName, atName)
             fD['ENUMS'] = self.__assignEnumTypes(self.__dApi.getEnumList(catName, atName), pType)
             fD['EXAMPLES'] = self.__dApi.getExampleList(catName, atName)
             fD['SUB_CATEGORIES'] = self.__dApi.getItemSubCategoryIdList(catName, atName)
@@ -446,12 +472,12 @@ class DictInfo(object):
         #
         return aD
 
-    def __getCategoryFeatures(self, catName, unitCardinalityList, categoryContentClasses):
+    def __getCategoryFeatures(self, catName, unitCardinalityList):
         cD = {'KEY_ATTRIBUTES': []}
         # cD['KEY_ATTRIBUTES'] = [CifName.attributePart(keyItem) for keyItem in self.__dApi.getCategoryKeyList(catName)]
         cD['KEY_ATTRIBUTES'] = [CifName.attributePart(keyItem) for keyItem in self.__getCategoryKeysWithReplacement(catName)]
         cD['UNIT_CARDINALITY'] = catName in unitCardinalityList
-        cD['CONTENT_CLASSES'] = categoryContentClasses[catName] if catName in categoryContentClasses else []
+        cD['CONTENT_CLASSES'] = self.__getContentClasses(catName)
         cD['IS_MANDATORY'] = True if str(self.__dApi.getCategoryMandatoryCode(catName)).lower() == 'yes' else False
         #
         return cD

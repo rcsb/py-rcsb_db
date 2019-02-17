@@ -74,4 +74,7 @@
                tuning of classification for RCSB candidate assemblies.
  17-Jan-2019   V0.40 adjust handling of document replacement in sliced collections
  25-Jan-2019   V0.41 schema extension for DrugBank core collection
+ 16-Feb-2019   V0.42 Add entity_instance_core support, add content type merging feature to allow consolidation of data artifacts
+               prior to data load processing, and overhaul the slice processing to improve performance.
+
 #

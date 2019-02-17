@@ -75,17 +75,20 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__pathTaxonomyMappingFile = self.__cfgOb.getPath('NCBI_TAXONOMY_LOCATOR', sectionName=configName)
         #
         self.__testDirPath = os.path.join(HERE, "test-output", 'pdbx-fails')
+        self.__exportJson = False
         #
 
-        self.__schemaNameD = {'ihm_dev': ['ihm_dev_v1_0_1'],
-                              'pdbx': ['pdbx_v5_0_2', 'pdbx_ext_v5_0_2'],
-                              'pdbx_core': ['pdbx_core_entity_monomer_v5_0_2', 'pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2'],
-                              'bird': ['bird_v5_0_2'],
-                              'bird_family': ['family_v5_0_2'],
-                              'chem_comp': ['chem_comp_v5_0_2'],
-                              'chem_comp_core': ['chem_comp_core_v5_0_2'],
-                              'bird_chem_comp': ['bird_chem_comp_v5_0_2'],
-                              'bird_chem_comp_core': ['bird_chem_comp_core_v5_0_2']}
+        self.__xschemaNameD = {'ihm_dev': ['ihm_dev_v1_0_1'],
+                               'pdbx': ['pdbx_v5_0_2', 'pdbx_ext_v5_0_2'],
+                               'pdbx_core': ['pdbx_core_entity_monomer_v5_0_2', 'pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2', 'pdbx_core_entity_instance_v5_0_2', ],
+                               'bird': ['bird_v5_0_2'],
+                               'bird_family': ['family_v5_0_2'],
+                               'chem_comp': ['chem_comp_v5_0_2'],
+                               'chem_comp_core': ['chem_comp_core_v5_0_2'],
+                               'bird_chem_comp': ['bird_chem_comp_v5_0_2'],
+                               'bird_chem_comp_core': ['bird_chem_comp_core_v5_0_2']}
+        self.__schemaNameD = {'pdbx_core': ['pdbx_core_entity_monomer_v5_0_2', 'pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2', 'pdbx_core_entity_instance_v5_0_2', ],
+                              }
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
@@ -118,7 +121,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         #
         eCount = 0
         for schemaName in schemaNameD:
-            pthList = inputPathList if inputPathList else self.__schU.getPathList(contentType=schemaName)
+            pthList = inputPathList if inputPathList else self.__schU.getLocatorObjList(contentType=schemaName)
             for collectionName in schemaNameD[schemaName]:
                 cD = self.__schU.makeSchema(schemaName, collectionName, schemaType='JSON', level=schemaLevel, saveSchema=True, altDirPath=self.__workPath)
                 dL, cnL = self.__testPrepDocumentsFromContainers(pthList, schemaName, collectionName, styleType="rowwise_by_name_with_cardinality")
@@ -175,10 +178,10 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                                                                           sliceFilter=sliceFilter)
 
             docList = sdp.addDocumentPrivateAttributes(docList, collectionName)
-
-            fp = os.path.join(HERE, "test-output", "export-%s-%s-prep-rowwise-by-name-with-cardinality.json" % (schemaName, collectionName))
-            self.__mU.doExport(fp, docList, format="json", indent=3)
-            logger.debug("Exported %r" % fp)
+            if self.__exportJson:
+                fp = os.path.join(HERE, "test-output", "export-%s-%s-prep-rowwise-by-name-with-cardinality.json" % (schemaName, collectionName))
+                self.__mU.doExport(fp, docList, format="json", indent=3)
+                logger.debug("Exported %r" % fp)
             return docList, containerNameList
 
         except Exception as e:
@@ -188,8 +191,8 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
 
 def schemaValidateSuite():
     suiteSelect = unittest.TestSuite()
-    #suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsRepo"))
-    suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsList"))
+    suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsRepo"))
+    # suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsList"))
     return suiteSelect
 
 

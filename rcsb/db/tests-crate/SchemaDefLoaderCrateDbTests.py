@@ -143,8 +143,8 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
         try:
             sd, _, _, _ = self.__schU.getSchemaInfo(contentType='bird')
             self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getPathList(contentType='bird')
-            inputPathList.extend(self.__schU.getPathList(contentType='bird_family'))
+            inputPathList = self.__schU.getLocatorObjList(contentType='bird')
+            inputPathList.extend(self.__schU.getLocatorObjList(contentType='bird_family'))
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = CrateDbLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=self.__workPath,
                                     cleanUp=False, warnings='default', verbose=self.__verbose)
@@ -158,8 +158,8 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
         try:
             sd, _, _, _ = self.__schU.getSchemaInfo(contentType='bird')
             self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getPathList(contentType='bird')
-            inputPathList.extend(self.__schU.getPathList(contentType='bird_family'))
+            inputPathList = self.__schU.getLocatorObjList(contentType='bird')
+            inputPathList.extend(self.__schU.getLocatorObjList(contentType='bird_family'))
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = CrateDbLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=self.__workPath,
                                     cleanUp=False, warnings='default', verbose=self.__verbose)
@@ -174,7 +174,7 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
         try:
             sd, _, _, _ = self.__schU.getSchemaInfo(contentType='chem_comp')
             self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getPathList(contentType='chem_comp')
+            inputPathList = self.__schU.getLocatorObjList(contentType='chem_comp')
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = CrateDbLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=self.__workPath, cleanUp=False, warnings='default', verbose=self.__verbose)
                 ret = sdl.load(inputPathList=inputPathList, loadType='crate-insert', deleteOpt='selected')
@@ -188,7 +188,7 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
         try:
             sd, _, _, _ = self.__schU.getSchemaInfo(contentType='chem_comp')
             self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getPathList(contentType='chem_comp')
+            inputPathList = self.__schU.getLocatorObjList(contentType='chem_comp')
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = CrateDbLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=self.__workPath, cleanUp=False, warnings='default', verbose=self.__verbose)
                 ret = sdl.load(inputPathList=inputPathList, loadType='crate-insert-many', deleteOpt='selected')
@@ -201,7 +201,7 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
         try:
             sd, _, _, _ = self.__schU.getSchemaInfo(contentType='pdbx')
             self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getPathList(contentType='pdbx')
+            inputPathList = self.__schU.getLocatorObjList(contentType='pdbx')
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = CrateDbLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=self.__workPath, cleanUp=False, warnings='default', verbose=self.__verbose)
                 ret = sdl.load(inputPathList=inputPathList, loadType='crate-insert', deleteOpt='selected', tableIdSkipD=self.__tableIdSkipD)
@@ -214,7 +214,7 @@ class SchemaDefLoaderCrateDbTests(unittest.TestCase):
         try:
             sd, _, _, _ = self.__schU.getSchemaInfo(contentType='pdbx')
             self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getPathList(contentType='pdbx')
+            inputPathList = self.__schU.getLocatorObjList(contentType='pdbx')
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = CrateDbLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=self.__workPath, cleanUp=False, warnings='default', verbose=self.__verbose)
                 ret = sdl.load(inputPathList=inputPathList, loadType='crate-insert-many', deleteOpt='selected', tableIdSkipD=self.__tableIdSkipD)

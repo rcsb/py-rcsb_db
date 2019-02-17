@@ -14,6 +14,9 @@
 #   24-Oct-2018  jdw update for new configuration organization
 #   28-Nov-2018  jdw add mergeBirdRefData()
 #   13-Dec-2018  jdw add preliminary I/HM repository support
+#    5-Feb-2019  jdw add just method naming conventions, add getLocator() method,
+#                    consolidate deliver of path configuration details in __getRepoTopPath().
+#
 #
 ##
 """
@@ -53,7 +56,7 @@ class RepoPathUtil(object):
         #
         self.__mpFormat = '[%(levelname)s] %(asctime)s %(processName)s-%(module)s.%(funcName)s: %(message)s'
 
-    def getRepoPathList(self, contentType, inputPathList=None):
+    def getLocatorList(self, contentType, inputPathList=None):
         """ Convenience method to return repository path list by content type:
         """
         outputPathList = []
@@ -85,6 +88,66 @@ class RepoPathUtil(object):
 
         return outputPathList
 
+    def getLocator(self, contentType, idCode, version='v1-0'):
+        """ Convenience method to return repository path for a content type and cardinal identifier.
+        """
+        pth = None
+        try:
+            idCodel = idCode.lower()
+            if contentType == "bird":
+                pth = os.path.join(self.__getRepoTopPath(contentType), idCode[-1], idCode + '.cif')
+            elif contentType == "bird_family":
+                pth = os.path.join(self.__getRepoTopPath(contentType), idCode[-1], idCode + '.cif')
+            elif contentType in ['chem_comp', 'chem_comp_core']:
+                pth = os.path.join(self.__getRepoTopPath(contentType), idCode[0], idCode, idCode + '.cif')
+            elif contentType in ['bird_chem_comp']:
+                pth = os.path.join(self.__getRepoTopPath(contentType), idCode[-1], idCode + '.cif')
+            elif contentType in ['pdbx', 'pdbx_core']:
+                pth = os.path.join(self.__getRepoTopPath(contentType), idCodel[1:3], idCodel, idCodel + '.cif.gz')
+            elif contentType in ['bird_consolidated', 'bird_chem_comp_core']:
+                pth = os.path.join(self.__getRepoTopPath(contentType), idCode + '.cif')
+            elif contentType in ['ihm_dev', 'ihm_dev_core']:
+                pth = os.path.join(self.__getRepoTopPath(contentType), idCode, idCode + '_model_%s.cif.gz' % version)
+            elif contentType in ['pdb_distro', 'da_internal', 'status_history']:
+                pass
+            elif contentType in ['vrpt']:
+                pth = os.path.join(self.__getRepoTopPath(contentType), idCodel[1:3], idCodel, idCodel + '_validation.xml.gz')
+            else:
+                logger.warning("Unsupported contentType %s" % contentType)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+
+        return pth
+
+    def __getRepoTopPath(self, contentType):
+        """ Convenience method to return repository top path from configuration data.
+        """
+        pth = None
+        try:
+            if contentType == "bird":
+                pth = self.__cfgOb.getPath('BIRD_REPO_PATH', sectionName=self.__cfgSectionName)
+            elif contentType == "bird_family":
+                pth = self.__cfgOb.getPath('BIRD_FAMILY_REPO_PATH', sectionName=self.__cfgSectionName)
+            elif contentType in ['chem_comp', 'chem_comp_core']:
+                pth = self.__cfgOb.getPath('CHEM_COMP_REPO_PATH', sectionName=self.__cfgSectionName)
+            elif contentType in ['bird_chem_comp']:
+                pth = self.__cfgOb.getPath('BIRD_CHEM_COMP_REPO_PATH', sectionName=self.__cfgSectionName)
+            elif contentType in ['pdbx', 'pdbx_core']:
+                pth = self.__cfgOb.getPath('PDBX_REPO_PATH', sectionName=self.__cfgSectionName)
+            elif contentType in ['bird_consolidated', 'bird_chem_comp_core']:
+                pth = self.__workPath
+            elif contentType in ['ihm_dev', 'ihm_dev_core']:
+                pth = self.__cfgOb.getPath('IHM_DEV_REPO_PATH', sectionName=self.__cfgSectionName)
+            elif contentType in ['pdb_distro', 'da_internal', 'status_history']:
+                pass
+            elif contentType in ['vrpt']:
+                pth = self.__cfgOb.getPath('VRPT_REPO_PATH', sectionName=self.__cfgSectionName)
+            else:
+                logger.warning("Unsupported contentType %s" % contentType)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+        return pth
+
     def _chemCompPathWorker(self, dataList, procName, optionsD, workingDir):
         """ Return the list of chemical component definition file paths in the current repository.
         """
@@ -101,7 +164,7 @@ class RepoPathUtil(object):
         return dataList, pathList, []
 
     def getChemCompPathList(self):
-        return self.__getChemCompPathList(self.__cfgOb.getPath('CHEM_COMP_REPO_PATH', sectionName=self.__cfgSectionName), numProc=self.__numProc)
+        return self.__getChemCompPathList(self.__getRepoTopPath('chem_comp'), numProc=self.__numProc)
 
     def __getChemCompPathList(self, topRepoPath, numProc=8):
         """Get the path list for the chemical component definition repository
@@ -142,7 +205,7 @@ class RepoPathUtil(object):
         return dataList, pathList, []
 
     def getEntryPathList(self):
-        return self.__getEntryPathList(self.__cfgOb.getPath('PDBX_REPO_PATH', sectionName=self.__cfgSectionName), numProc=self.__numProc)
+        return self.__getEntryPathList(self.__getRepoTopPath('pdbx'), numProc=self.__numProc)
 
     def __getEntryPathList(self, topRepoPath, numProc=8):
         """Get the path list for structure entries in the input repository
@@ -176,7 +239,7 @@ class RepoPathUtil(object):
         return self.__applyFileLimit(pathList)
 
     def getBirdPathList(self):
-        return self.__getBirdPathList(self.__cfgOb.getPath('BIRD_REPO_PATH', sectionName=self.__cfgSectionName))
+        return self.__getBirdPathList(self.__getRepoTopPath('bird'))
 
     def __getBirdPathList(self, topRepoPath):
         """ Return the list of definition file paths in the current repository.
@@ -202,7 +265,7 @@ class RepoPathUtil(object):
         return self.__applyFileLimit(pathList)
 
     def getBirdFamilyPathList(self):
-        return self.__getBirdFamilyPathList(self.__cfgOb.getPath('BIRD_FAMILY_REPO_PATH', sectionName=self.__cfgSectionName))
+        return self.__getBirdFamilyPathList(self.__getRepoTopPath('bird_family'))
 
     def __getBirdFamilyPathList(self, topRepoPath):
         """ Return the list of definition file paths in the current repository.
@@ -228,7 +291,7 @@ class RepoPathUtil(object):
         return self.__applyFileLimit(pathList)
 
     def getBirdChemCompPathList(self):
-        return self.__getBirdChemCompPathList(self.__cfgOb.getPath('BIRD_CHEM_COMP_REPO_PATH', sectionName=self.__cfgSectionName))
+        return self.__getBirdChemCompPathList(self.__getRepoTopPath('bird_chem_comp'))
 
     def __getBirdChemCompPathList(self, topRepoPath):
         """ Return the list of definition file paths in the current repository.
@@ -278,7 +341,7 @@ class RepoPathUtil(object):
         prdD = {}
         try:
             mU = MarshalUtil(workPath=self.__workPath)
-            pthL = self.getRepoPathList('bird_family')
+            pthL = self.getLocatorList('bird_family')
             for pth in pthL:
                 containerL = mU.doImport(pth, format="mmcif")
                 for container in containerL:
@@ -306,7 +369,7 @@ class RepoPathUtil(object):
         outPathList = []
         try:
             mU = MarshalUtil(workPath=self.__workPath)
-            birdPathList = self.getRepoPathList('bird')
+            birdPathList = self.getLocatorList('bird')
             birdPathD = {}
             for birdPath in birdPathList:
                 _, fn = os.path.split(birdPath)
@@ -315,7 +378,7 @@ class RepoPathUtil(object):
             #
             logger.debug("BIRD data length %d" % len(birdPathD))
             logger.debug("BIRD keys %r" % list(birdPathD.keys()))
-            birdCcPathList = self.getRepoPathList('bird_chem_comp')
+            birdCcPathList = self.getLocatorList('bird_chem_comp')
             birdCcPathD = {}
             for birdCcPath in birdCcPathList:
                 _, fn = os.path.split(birdCcPath)
@@ -389,7 +452,7 @@ class RepoPathUtil(object):
         return True
 
     def getIhmDevPathList(self):
-        return self.__getIhmDevPathList(self.__cfgOb.getPath('IHM_DEV_REPO_PATH', sectionName=self.__cfgSectionName))
+        return self.__getIhmDevPathList(self.__getRepoTopPath('ihm_dev'))
 
     def __getIhmDevPathList(self, topRepoPath):
         """ Return the list of I/HM entries in the current repository.
@@ -413,6 +476,6 @@ class RepoPathUtil(object):
             for k in sorted(sd.keys()):
                 pathList.append(sd[k])
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing search in %r with %s" % (topRepoPath, str(e)))
         #
         return self.__applyFileLimit(pathList)

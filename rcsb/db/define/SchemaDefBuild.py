@@ -59,7 +59,10 @@ class SchemaDefBuild(object):
         #
         pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=configName)
         pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=configName)
-        dictLocators = [pathPdbxDictionaryFile, pathRcsbDictionaryFile]
+        #
+        pathVrptDictionaryFile = self.__cfgOb.getPath('VRPT_DICT_LOCATOR', sectionName=configName)
+        #
+        dictLocators = [pathPdbxDictionaryFile, pathRcsbDictionaryFile, pathVrptDictionaryFile]
         if schemaName.startswith('ihm'):
             pathIhmDictionaryFile = self.__cfgOb.getPath('IHMDEV_DICT_LOCATOR', sectionName=configName)
             pathFlrDictionaryFile = self.__cfgOb.getPath('FLR_DICT_LOCATOR', sectionName=configName)
@@ -330,9 +333,10 @@ class SchemaDefBuild(object):
                 fD = aD[atName]
                 if not dtInstInfo.exists(catName, atName) and not self.__testContentClasses(contentClasses, fD['CONTENT_CLASSES']):
                     continue
-
                 if not fD['IS_KEY']:
                     appType = dtAppInfo.getAppTypeName(fD['TYPE_CODE'])
+                    if not appType:
+                        logger.error("Missing data type mapping for %s %s" % (catName, atName))
                     appWidth = dtAppInfo.getAppTypeDefaultWidth(fD['TYPE_CODE'])
                     instWidth = dtInstInfo.getMaxWidth(catName, atName)
                     revAppType, revAppWidth = dtAppInfo.updateCharType(fD['IS_KEY'], appType, instWidth, appWidth, bufferPercent=20.0)

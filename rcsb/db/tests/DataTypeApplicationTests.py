@@ -7,6 +7,7 @@
 #  5-Jun-2018  jdw update prototypes for IoUtil() methods
 # 12-Oct-2018  jdw add tests of store type mapping
 #  7-Jan-2019  jdw update argument naming conventions
+#  6-Feb-2019  jdw replace IoUtil() with MarshalUtil()
 #
 #
 #
@@ -28,7 +29,7 @@ import time
 import unittest
 
 from rcsb.db.define.DataTypeApplicationInfo import DataTypeApplicationInfo
-from rcsb.utils.io.IoUtil import IoUtil
+from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
@@ -43,7 +44,7 @@ class DataTypeApplicationInfoTests(unittest.TestCase):
     def setUp(self):
         self.__verbose = True
         self.maxDiff = None
-        self.__ioU = IoUtil()
+        self.__mU = MarshalUtil()
         #
         self.__pathSaveTypeMap = os.path.join(HERE, 'test-output', 'app_data_type_mapping.cif')
         self.__pathSaveTypeMapJson = os.path.join(HERE, 'test-output', 'app_data_type_mapping.json')
@@ -67,7 +68,7 @@ class DataTypeApplicationInfoTests(unittest.TestCase):
             dtInfo = DataTypeApplicationInfo(locator=None, dataTyping='ANY', workPath=None)
             mapD = dtInfo.getDefaultDataTypeMap()
             logger.debug("Default type map length %d" % len(mapD))
-            ok = self.__ioU.serialize(self.__pathSaveTypeMapJson, mapD, format='json', indent=3)
+            ok = self.__mU.doExport(self.__pathSaveTypeMapJson, mapD, format='json', indent=3)
             self.assertTrue(ok)
             ok = dtInfo.writeDefaultDataTypeMap(self.__pathSaveTypeMap, dataTyping='ANY')
             #

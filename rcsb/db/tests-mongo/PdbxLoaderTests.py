@@ -172,6 +172,21 @@ class PdbxLoaderTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
+    def testLoadPdbxCoreDataWithMerge(self):
+        """ Test case -  Load PDBx core collections
+        """
+        try:
+            mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
+                            fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
+            ok = mw.load('pdbx_core', loadType='full', inputPathList=None, styleType=self.__documentStyle,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath, mergeContentTypes=['vrpt'])
+            self.assertTrue(ok)
+            ok = self.__loadStatus(mw.getLoadStatus())
+            self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
     def testLoadIhmDevData(self):
         """ Test case -  Load IHM_DEV collections
         """
@@ -264,7 +279,8 @@ def mongoLoadChemRefCoreSuite():
 
 def mongoLoadPdbxSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(PdbxLoaderTests("testLoadPdbxCoreData"))
+    #suiteSelect.addTest(PdbxLoaderTests("testLoadPdbxCoreData"))
+    suiteSelect.addTest(PdbxLoaderTests("testLoadPdbxCoreDataWithMerge"))
     return suiteSelect
 
 
@@ -294,17 +310,13 @@ def mongoReloadSlicedSuite():
 
 
 if __name__ == '__main__':
-    if (False):
+    if (True):
         if (True):
             mySuite = mongoLoadIhmSuite()
             unittest.TextTestRunner(verbosity=2).run(mySuite)
         #
         if (True):
             mySuite = mongoLoadChemRefCoreSuite()
-            unittest.TextTestRunner(verbosity=2).run(mySuite)
-
-        if (True):
-            mySuite = mongoLoadPdbxSuite()
             unittest.TextTestRunner(verbosity=2).run(mySuite)
 
         if (True):
@@ -315,6 +327,10 @@ if __name__ == '__main__':
             mySuite = mongoLoadPdbxLimitSizeSuite()
             unittest.TextTestRunner(verbosity=2).run(mySuite)
 
+        if (True):
+            mySuite = mongoReloadSlicedSuite()
+            unittest.TextTestRunner(verbosity=2).run(mySuite)
+
     if (True):
-        mySuite = mongoReloadSlicedSuite()
+        mySuite = mongoLoadPdbxSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)

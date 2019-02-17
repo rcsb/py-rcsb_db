@@ -46,7 +46,6 @@ class SchemaDefBuildTests(unittest.TestCase):
         pathConfig = os.path.join(mockTopPath, 'config', 'dbload-setup-example.yml')
         configName = 'site_info'
         self.__cfgOb = ConfigUtil(configPath=pathConfig, defaultSectionName=configName, mockTopPath=mockTopPath)
-        # self.__cfgOb.replaceSectionName('site_info', 'site_info_test')
         #
         self.__sdu = SchemaDefUtil(cfgOb=self.__cfgOb)
         self.__workPath = os.path.join(HERE, 'test-output')

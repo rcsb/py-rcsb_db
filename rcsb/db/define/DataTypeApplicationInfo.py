@@ -75,6 +75,7 @@ class DataTypeApplicationInfo(object):
     def __setup(self, locator, dataTyping):
         appName = 'ANY' if dataTyping in ['JSON', 'BSON'] else dataTyping
         if locator:
+            logger.debug("Using data mapping from %s for %s" % (locator, appName))
             dtmD = self.readDefaultDataTypeMap(locator, dataTyping=appName)
         else:
             logger.debug(">>>> Falling back to default type mapping. ")

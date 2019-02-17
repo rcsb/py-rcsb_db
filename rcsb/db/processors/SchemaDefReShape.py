@@ -17,6 +17,7 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
+import copy
 import itertools
 import logging
 
@@ -110,20 +111,31 @@ class SchemaDefReShape(object):
         rL = []
         if sliceFilter:
             rL = []
-            sI = self.__sD.getSliceIndex(sliceFilter)
-            logger.debug("Slice index %r" % sI.items())
+            sliceIndex = self.__sD.getSliceIndex(sliceFilter)
+            logger.debug("Slice index %r" % sliceIndex)
+            #
             #
             sliceValues = SliceValues(schemaDataDictById, self.__sD, sliceFilter)
-            for ii, sliceValue in enumerate(sliceValues):
-                logger.debug(" %4d filter %s slice value %r" % (ii, sliceFilter, sliceValue))
-                rD = self.__reshapeSlidedSchemaData(schemaDataDictById, sliceFilter, sliceValue, sI, styleType=styleType)
-                rL.append(rD)
+            #
+            flagNew = True
+            # JDW : TEMP ---------- ----------
+            if styleType == "rowwise_by_name_with_cardinality" and flagNew:
+                logger.debug("Invoking one-pass slice filter %s" % sliceFilter)
+                rL = self.__sliceRowwiseByNameWithCardOnePass(schemaDataDictById, sliceFilter, sliceIndex)
+                logger.debug("Completed one-pass slice filter %s" % sliceFilter)
+            else:
+                # JDW : TEMP ---------- ----------
+                for ii, sliceValue in enumerate(sliceValues):
+                    logger.debug(" %4d filter %s slice value %r" % (ii, sliceFilter, sliceValue))
+                    rD = self.__reshapeSlicedSchemaData(schemaDataDictById, sliceFilter, sliceValue, sliceIndex, styleType=styleType)
+                    logger.debug("rD keys %s" % (rD.keys()))
+                    rL.append(rD)
         else:
             return [self.__reshapeSchemaData(schemaDataDictById, styleType=styleType)]
 
         return rL
 
-    def __reshapeSlidedSchemaData(self, schemaDataDictById, sliceFilter, sliceValues, sliceIndex, styleType="rowwise_by_name"):
+    def __reshapeSlicedSchemaData(self, schemaDataDictById, sliceFilter, sliceValues, sliceIndex, styleType="rowwise_by_name"):
         """  Reorganize and rename input table data object according to the input style preference:
 
              Input: schemaDataDictById  (styleType="rowwise_by_id")
@@ -156,16 +168,21 @@ class SchemaDefReShape(object):
 
         return rD
 
-    def __inSlice(self, schemaId, sliceIdx, rowD, parentVals):
+    def __inSlice(self, schemaId, sliceIndex, rowD, parentVals):
         """ Test if the child values in the input row dictionary equal the corresponding input parents values
         """
         ok = True
         try:
-            if schemaId in sliceIdx:
+            if schemaId in sliceIndex:
                 for parentVal in parentVals:
-                    if parentVal[0] in sliceIdx[schemaId]:
-                        cAtId = sliceIdx[schemaId][parentVal[0]]
-                        if cAtId in rowD and rowD[cAtId] == parentVal[1]:
+                    if parentVal[0] in sliceIndex[schemaId]:
+                        # cAtId = sliceIndex[schemaId][parentVal[0]]
+                        tOk = False
+                        for cAtId in sliceIndex[schemaId][parentVal[0]]:
+                            if cAtId in rowD and rowD[cAtId] == parentVal[1]:
+                                tOk = True
+                                break
+                        if tOk:
                             continue
                         else:
                             ok = False
@@ -411,3 +428,125 @@ class SchemaDefReShape(object):
             #
             rD[schemaObjName] = {'attributes': atNameList, 'data': oRowList}
         return rD
+
+    # ---------------------- ---------------------- ---------------------- ---------------------- ----------------------
+    #
+    def __sliceRowwiseByNameWithCardOnePass(self, schemaDataDictById, sliceFilter, sliceIndex):
+
+        #
+        schemaIdExtraL = self.__sD.getSliceExtraSchemaIds(sliceFilter)
+        #logger.info("Schema Id extras %r" % schemaIdExtraL)
+        #
+        for schemaId in schemaDataDictById:
+            # sliceIndex = {'schemaId0': {(pCat0,pAt0): chAt0,  (pCat1,pAt1): chAt1}, ... }, ... }
+            if schemaId in sliceIndex:
+                logger.debug("SLICE %s - schemaId %s -> %r" % (sliceFilter, schemaId, sliceIndex[schemaId]))
+        #
+        # Build  value -> parent attributes dictionary -
+        #
+        sliceValues = SliceValues(schemaDataDictById, self.__sD, sliceFilter)
+        pvD = {}
+        pVals = []
+        for pvTupL in sliceValues:
+            vL = []
+            pL = []
+            for pvTup in pvTupL:
+                pL.append(pvTup[0])
+                vL.append(pvTup[1])
+                pVals.append(pvTup[1])
+            pvD[tuple(vL)] = tuple(pL)
+
+        retD = {k: {} for k in pVals}
+        # Each slice value has the form: (pCat0,pAt0), v0), (pCat1,pAt1), v1),...)
+        #
+        # Get the dictionary schemaId -> (chAt, chAt) where chAtn are in parent value order -
+        #
+        sfAtD = {}
+        singleKeyAtD = {}
+        sliceValues = SliceValues(schemaDataDictById, self.__sD, sliceFilter)
+        pvTupL = next(sliceValues)
+        #
+        # Each parent key in the slice filter -
+        ##
+        for pvTup in pvTupL:
+            logger.debug("VALUES > Slice filter %s parent %r value %r" % (sliceFilter, pvTup[0], pvTup[1]))
+            # sliceIndex = {'schemaId0': mD, ... }
+            #         mD = {(pCat0,pAt0): chAt0,  (pCat1,pAt1): chAt1}, ... }, ... }
+            for schemaId, mD in sliceIndex.items():
+                sfAtD[schemaId] = {}
+                if schemaId in schemaDataDictById and pvTup[0] in mD:
+                    sfAtD[schemaId].setdefault(pvTup[0], []).extend([k for k in mD[pvTup[0]]])
+                    singleKeyAtD.setdefault(schemaId, []).extend([k for k in mD[pvTup[0]]])
+                if len(sfAtD[schemaId]) > 1:
+                    logger.error("Unsupported slice complexity %s key length %d" % (sliceFilter, len(sfAtD[schemaId])))
+        logger.debug("Ordered slice filter attribute dictionary %r" % singleKeyAtD)
+        #
+        # Slice extra objects get replicated in each slice -
+        #
+        if schemaIdExtraL:
+            rD = {}
+            for schemaId in schemaIdExtraL:
+                schemaObj = self.__sD.getSchemaObject(schemaId)
+                schemaObjName = self.__sD.getSchemaName(schemaId)
+                iRowDList = schemaDataDictById[schemaId]
+                #
+                oRowDList = []
+                for iRowD in iRowDList:
+                    oRowD = {}
+                    for atId in iRowD:
+                        oRowD[schemaObj.getAttributeName(atId)] = iRowD[atId]
+                    oRowDList.append(oRowD)
+
+                if (len(oRowDList) < 1) and not schemaObj.isMandatory():
+                    logger.debug("Schema id %r row length %r mandatory %r" % (schemaId, len(oRowDList), schemaObj.isMandatory()))
+                    continue
+
+                if schemaObj.hasSliceUnitCardinality(sliceFilter) and len(oRowDList) == 1:
+                    rD[schemaObjName] = oRowDList[0]
+                else:
+                    rD[schemaObjName] = oRowDList
+            for pv in pVals:
+                retD[pv] = copy.copy(rD)
+        #
+        #logger.info("slice %s retD keys after slice extra insertion %r" % (sliceFilter, list(retD.keys())))
+        # logger.info("slice %s retD after slice extra insertion %r" % (sliceFilter, retD))
+
+        #
+        # Split of the rest by slice value - for single parent key slices  -
+        #
+        #logger.info("slice %s singleKeyAtD.keys() %r" % (sliceFilter, list(singleKeyAtD.keys())))
+        #
+        for schemaId, atL in singleKeyAtD.items():
+            #
+            schemaObj = self.__sD.getSchemaObject(schemaId)
+            # ------
+            schemaObjName = self.__sD.getSchemaName(schemaId)
+            #
+            uFlag = schemaObj.hasSliceUnitCardinality(sliceFilter)
+            #
+            iRowDList = schemaDataDictById[schemaId]
+            rvS = set()
+            for iRowD in iRowDList:
+                oRowD = {schemaObj.getAttributeName(atId): iRowD[atId] for atId in iRowD}
+                #
+                rvS = set([iRowD[at] if at in iRowD else None for at in atL])
+                for rv in rvS:
+                    #logger.info("Slice %s schemaId %s uFlag %r value %r ADD ROW %r" % (sliceFilter, schemaObjName, uFlag, rv, oRowD))
+                    if rv:
+                        #
+                        if uFlag:
+                            retD[rv][schemaObjName] = oRowD
+                        else:
+                            retD[rv].setdefault(schemaObjName, []).append(oRowD)
+            #
+            #logger.info("Slice %s Finished loading schema name %s values %r" % (sliceFilter, schemaObjName, rvS))
+            #
+            #
+            if False:
+                for pv in retD:
+                    if schemaObjName in retD[pv]:
+                        logger.info(">>>>>>>>")
+                        logger.info("slice %s schemaObjName %s value %r obj %r" % (sliceFilter, schemaObjName, pv, retD[pv][schemaObjName]))
+                        logger.info(">>>>>>>>")
+        #
+        return list(retD.values())
