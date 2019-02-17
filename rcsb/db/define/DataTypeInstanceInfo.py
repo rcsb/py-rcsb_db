@@ -22,7 +22,7 @@ __license__ = "Apache 2.0"
 
 import logging
 
-from rcsb.utils.io.IoUtil import IoUtil
+from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class DataTypeInstanceInfo(object):
         # Turn off warnings for missing values
         self.__verbose = kwargs.get("verbose", False)
         self.__tD = {}
-        self.__ioU = IoUtil()
+        self.__mU = MarshalUtil()
         self.__byPassMode = not self.__setup(self.__filePath)
 
     def __setup(self, filePath):
@@ -42,10 +42,10 @@ class DataTypeInstanceInfo(object):
            Read the output serialized by ScanRepoUtil() -
            tD[category] -> d[atName]->{minWidth: , maxWidth:, minPrec:, maxPrec: , count}
         """
-        if self.__ioU.exists(filePath):
-            self.__tD = self.__ioU.deserialize(filePath, format='json')
+        try:
+            self.__tD = self.__mU.doImport(filePath, format='json')
             return len(self.__tD) > 0
-        else:
+        except Exception:
             return False
 
     def exists(self, catName, atName=None):

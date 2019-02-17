@@ -19,6 +19,7 @@
 # 11-Dec-2018 jdw add addStructRefSeqEntityIds and buildEntityPolySeq
 # 10-Jan-2019 jdw better handle initialization in filterBlockByMethod()
 # 11-Jan-2019 jdw revise classification in assignAssemblyCandidates()
+# 16-Feb-2019 jdw add buildContainerEntityInstanceIds()
 #
 ##
 """
@@ -316,6 +317,110 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 if authAsymIdL:
                     cObj.setValue(','.join(list(set(authAsymIdL))).strip(), 'auth_asym_ids', ii)
             #
+            return True
+        except Exception as e:
+            logger.exception("For %s failing with %s" % (catName, str(e)))
+        return False
+
+    def buildContainerEntityInstanceIds(self, dataContainer, catName, **kwargs):
+        """
+        Build:
+
+        loop_
+        _rcsb_entity_instance_container_identifiers.entry_id
+        _rcsb_entity_instance_container_identifiers.entity_id
+        _rcsb_entity_instance_container_identifiers.entity_type
+        _rcsb_entity_instance_container_identifiers.asym_id
+        _rcsb_entity_instance_container_identifiers.auth_asym_id
+        _rcsb_entity_instance_container_identifiers.comp_id
+        _rcsb_entity_instance_container_identifiers.auth_seq_id
+
+
+            loop_
+            _pdbx_poly_seq_scheme.asym_id
+            _pdbx_poly_seq_scheme.entity_id
+            _pdbx_poly_seq_scheme.seq_id
+            _pdbx_poly_seq_scheme.mon_id
+            _pdbx_poly_seq_scheme.ndb_seq_num
+            _pdbx_poly_seq_scheme.pdb_seq_num
+            _pdbx_poly_seq_scheme.auth_seq_num
+            _pdbx_poly_seq_scheme.pdb_mon_id
+            _pdbx_poly_seq_scheme.auth_mon_id
+            _pdbx_poly_seq_scheme.pdb_strand_id
+            _pdbx_poly_seq_scheme.pdb_ins_code
+            _pdbx_poly_seq_scheme.hetero
+            A 1 1  MET 1  1  ?  ?   ?   A . n
+            A 1 2  ALA 2  2  ?  ?   ?   A . n
+
+            loop_
+            _pdbx_nonpoly_scheme.asym_id
+            _pdbx_nonpoly_scheme.entity_id
+            _pdbx_nonpoly_scheme.mon_id
+            _pdbx_nonpoly_scheme.ndb_seq_num
+            _pdbx_nonpoly_scheme.pdb_seq_num
+            _pdbx_nonpoly_scheme.auth_seq_num
+            _pdbx_nonpoly_scheme.pdb_mon_id
+            _pdbx_nonpoly_scheme.auth_mon_id
+            _pdbx_nonpoly_scheme.pdb_strand_id
+            _pdbx_nonpoly_scheme.pdb_ins_code
+            H 3 ADP 1  105 105 ADP ADP A .
+            I 3 ADP 1  101 101 ADP ADP B .
+            J 4 MG  1  66  1   MG  MG  B .
+            K 3 ADP 1  102 102 ADP ADP C .
+        ...
+        """
+        try:
+            if not (dataContainer.exists('entry') and dataContainer.exists('entity')):
+                return False
+            if not dataContainer.exists(catName):
+                dataContainer.append(DataCategory(catName, attributeNameList=['entry_id', 'entity_id', 'entity_type', 'asym_id', 'auth_asym_id', 'comp_id', 'auth_seq_id']))
+            #
+            cObj = dataContainer.getObj(catName)
+            #
+            eObj = dataContainer.getObj('entity')
+            eD = {}
+            for ii in range(eObj.getRowCount()):
+                entityId = eObj.getValue('id', ii)
+                entityType = eObj.getValue('type', ii)
+                eD[entityId] = entityType
+            #
+
+            psObj = dataContainer.getObj('pdbx_poly_seq_scheme')
+            npsObj = dataContainer.getObj('pdbx_nonpoly_scheme')
+            #
+            tObj = dataContainer.getObj('entry')
+            entryId = tObj.getValue('id', 0)
+
+            cObj.setValue(entryId, 'entry_id', 0)
+            #
+            asymD = {}
+            if psObj is not None:
+                for ii in range(psObj.getRowCount()):
+                    asymId = psObj.getValue('asym_id', ii)
+                    if asymId in asymD:
+                        continue
+                    entityId = psObj.getValue('entity_id', ii)
+                    authAsymId = psObj.getValue('pdb_strand_id', ii)
+                    asymD[asymId] = {'entry_id': entryId, 'entity_id': entityId, 'entity_type': eD[entityId],
+                                     'asym_id': asymId, 'auth_asym_id': authAsymId, 'comp_id': '?', 'auth_seq_id': '?'}
+                    #
+            if npsObj is not None:
+                for ii in range(npsObj.getRowCount()):
+                    asymId = npsObj.getValue('asym_id', ii)
+                    if asymId in asymD:
+                        continue
+                    entityId = npsObj.getValue('entity_id', ii)
+                    authAsymId = npsObj.getValue('pdb_strand_id', ii)
+                    resNum = npsObj.getValue('pdb_seq_num', ii)
+                    monId = npsObj.getValue('mon_id', ii)
+                    asymD[asymId] = {'entry_id': entryId, 'entity_id': entityId, 'entity_type': eD[entityId],
+                                     'asym_id': asymId, 'auth_asym_id': authAsymId, 'comp_id': monId, 'auth_seq_id': resNum}
+
+                #
+            for ii, ky in enumerate(sorted(asymD)):
+                for k, v in asymD[ky].items():
+                    cObj.setValue(v, k, ii)
+
             return True
         except Exception as e:
             logger.exception("For %s failing with %s" % (catName, str(e)))
@@ -1164,6 +1269,11 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                               'bond_count_aromatic',
                                                                               'atom_count_heavy']))
             # -------
+            cN = 'rcsb_chem_comp_container_identifiers'
+            if not dataContainer.exists(cN):
+                dataContainer.append(DataCategory(cN, attributeNameList=['comp_id']))
+            idObj = dataContainer.getObj(cN)
+            # -------
             wObj = dataContainer.getObj(catName)
             #
             cObj = dataContainer.getObj('chem_comp_atom')
@@ -1192,6 +1302,8 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             except Exception:
                 pass
 
+            #
+            idObj.setValue(ccId, 'comp_id', 0)
             #
             wObj.setValue(ccId, 'comp_id', 0)
             wObj.setValue(numAtoms, 'atom_count', 0)
@@ -1809,6 +1921,15 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                               'is_modified',
                                                                               ]))
             #
+            cN = 'rcsb_entity_monomer_container_identifiers'
+            if not dataContainer.exists(cN):
+                dataContainer.append(DataCategory(cN, attributeNameList=['ordinal_id',
+                                                                         'entry_id',
+                                                                         'entity_id',
+                                                                         'comp_id'
+                                                                         ]))
+            idObj = dataContainer.getObj(cN)
+            #
             eObj = dataContainer.getObj('entry')
             entryId = eObj.getValue('id', 0)
             #
@@ -1838,6 +1959,11 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     cObj.setValue(v, "chem_comp_count", ii)
                     cObj.setValue(elD[entityId], "entity_sequence_length", ii)
                     cObj.setValue(modFlag, "is_modified", ii)
+                    #
+                    idObj.setValue(ii + 1, "ordinal_id", ii)
+                    idObj.setValue(entryId, "entry_id", ii)
+                    idObj.setValue(entityId, "entity_id", ii)
+                    idObj.setValue(compId, "comp_id", ii)
                     ii += 1
             return True
         except Exception as e:

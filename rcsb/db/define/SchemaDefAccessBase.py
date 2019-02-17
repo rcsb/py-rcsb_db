@@ -13,6 +13,7 @@
 #       18-Nov-2018 jdw  extend the content of COLLECTION_DOCUMENT_ATTRIBUTE_NAMES to _INFO and add method
 #                        getDocumentKeyAttributeInfo()
 #       16-Jan-2019 jdw  add method getDocumentReplaceAttributeNames() to return COLLECTION_DOCUMENT_REPLACE_ATTRIBUTE_NAMES
+#        9-Feb-2019 jdw  add method getSliceExtraSchemaIds()
 ##
 """
 Base classes for schema defintions.
@@ -53,7 +54,7 @@ class SchemaDefAccessBase(object):
         self.__selectionFilterDict = schemaDef['SELECTION_FILTERS'] if 'SELECTION_FILTERS' in schemaDef else {}
         self.__sliceParentItemD = schemaDef['SLICE_PARENT_ITEMS']
         self.__sliceParentFilterD = schemaDef['SLICE_PARENT_FILTERS']
-        self.__sliceIndexD = self.__makeSliceIndex()
+        self.__sliceIndexD, self.__sliceExtraD = self.__makeSliceIndex()
         #
 
     def getName(self):
@@ -272,7 +273,12 @@ class SchemaDefAccessBase(object):
         return qAN
 
     def __makeSliceIndex(self):
+        """  Return a dictionary of slice parent and child attribures together with schema objects
+             to be included in every slice.
+
+        """
         sliceD = {}
+        extraD = {}
         try:
             sliceNames = self.getSliceNames()
             for sliceName in sliceNames:
@@ -282,11 +288,16 @@ class SchemaDefAccessBase(object):
                         if schemaId not in d:
                             d[schemaId] = {}
                         for sD in tD['SLICE_ATTRIBUTES'][sliceName]:
-                            d[schemaId][(sD['PARENT_CATEGORY'], sD['PARENT_ATTRIBUTE'])] = sD['CHILD_ATTRIBUTE']
+                            # d[schemaId][(sD['PARENT_CATEGORY'], sD['PARENT_ATTRIBUTE'])] = sD['CHILD_ATTRIBUTE']
+                            d[schemaId].setdefault((sD['PARENT_CATEGORY'], sD['PARENT_ATTRIBUTE']), []).append(sD['CHILD_ATTRIBUTE'])
+                    #
+                    if sliceName in tD['SLICE_CATEGORY_EXTRAS'] and tD['SLICE_CATEGORY_EXTRAS'][sliceName]:
+                        extraD.setdefault(sliceName, []).append(schemaId)
+
                 sliceD[sliceName] = d
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
-        return sliceD
+        return sliceD, extraD
 
     def getSliceNames(self):
         """ Return a list of the slice names defined for the current schema
@@ -318,6 +329,9 @@ class SchemaDefAccessBase(object):
             return self.__sliceIndexD[sliceName]
         except Exception:
             return {}
+
+    def getSliceExtraSchemaIds(self, sliceName):
+        return self.__sliceExtraD[sliceName] if sliceName in self.__sliceExtraD else []
 
 
 class SchemaDef(object):

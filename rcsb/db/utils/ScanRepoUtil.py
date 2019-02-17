@@ -96,7 +96,7 @@ class ScanRepoUtil(object):
             startTime = self.__begin(message="scanning operation")
             #
             rpU = RepoPathUtil(self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit)
-            pathList = rpU.getRepoPathList(contentType=contentType, inputPathList=inputPathList)
+            pathList = rpU.getLocatorList(contentType=contentType, inputPathList=inputPathList)
             #
             if saveInputFileListPath:
                 self.__mU.doExport(saveInputFileListPath, pathList, format="list")

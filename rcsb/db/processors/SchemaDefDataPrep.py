@@ -28,6 +28,8 @@
 #       4-Dec-2018  jdw make insertion of private keys optional
 #       8-Dec-2018  jdw add check to return False if a selection category does not exist.
 #      10-Jan-2019  jdw pass down container name to processRecord() to allow for better diagnostics.
+#       5-Feb-2019  jdw generalize locatorList to locatorObjList and associated dependent changes,
+#                       and add __mergeContainers() -
 #
 #
 ##
@@ -55,7 +57,7 @@ logger = logging.getLogger(__name__)
 class SchemaDefDataPrep(object):
 
     """Generic mapper of PDBx/mmCIF instance data to a data organization consistent
-        with an external schema definition defined in class SchemaDefBase().
+       with an external schema definition defined in class SchemaDefBase().
     """
 
     def __init__(self, schemaDefAccessObj, dtObj=None, workPath=None, verbose=True):
@@ -102,17 +104,84 @@ class SchemaDefDataPrep(object):
         ts = utcnow.strftime("%Y-%m-%d:%H:%M:%S")
         return ts
 
-    def getContainerList(self, locatorList, filterType="none"):
+    def __mergeContainers(self, locatorObj, format="mmcif", mergeTarget=0):
+        """ Consolidate content in auxiliary files locatorObj[1:] into
+            locatorObj[0] container index 'mergeTarget'.
+
+        """
+        #
+        cL = []
+        try:
+            if isinstance(locatorObj, str):
+                cL = self.__mU.doImport(locatorObj, format=format)
+                return cL if cL else []
+            elif isinstance(locatorObj, (list, tuple)) and len(locatorObj) > 0:
+                d = locatorObj[0]
+                kw = d['kwargs']
+                cL = self.__mU.doImport(d['locator'], format=d['format'], **kw)
+                if cL and len(cL) > 0:
+                    for d in locatorObj[1:]:
+                        kw = d['kwargs']
+                        rObj = self.__mU.doImport(d['locator'], format=d['format'], **kw)
+                        mergeL = rObj if rObj else []
+                        for mc in mergeL:
+                            cL[mergeTarget].merge(mc)
+                #
+                return cL
+            else:
+                return []
+        except Exception as e:
+            logger.exception("Failing for %r with %s" % (locatorObj, str(e)))
+
+        return cL
+
+    def getContainerList(self, locatorObjList, filterType="none"):
         """ Return the data container list obtained by parsing the input locator list.
         """
         cL = []
-        for lPath in locatorList:
-            myContainerList = self.__mU.doImport(lPath, format="mmcif")
+        for locatorObj in locatorObjList:
+            # myContainerList = self.__mU.doImport(locatorObj, format="mmcif")
+            # logger.info("locatorObj is %r" % type(locatorObj))
+            myContainerList = self.__mergeContainers(locatorObj, format="mmcif", mergeTarget=0)
             for c in myContainerList:
                 cL.append(c)
         return cL
 
-    def fetch(self, locatorList, styleType="rowwise_by_id", filterType="none", dataSelectors=None):
+    def getLocatorsFromPaths(self, locatorObjList, pathList, locatorIndex=0):
+        """ Return locator objects with paths (locatorObjIndex) matching the input pathList.
+
+        """
+        # index the input locatorObjList
+        rL = []
+        try:
+            if locatorObjList and isinstance(locatorObjList[0], str):
+                return pathList
+            #
+            locIdx = {}
+            for ii, locatorObj in enumerate(locatorObjList):
+                if 'locator' in locatorObj[locatorIndex]:
+                    locIdx[locatorObj[locatorIndex]['locator']] = ii
+            #
+            for pth in pathList:
+                jj = locIdx[pth] if pth in locIdx else None
+                if jj is not None:
+                    rL.append(locatorObjList[jj])
+        except Exception as e:
+            logger.exception("Faliing with %s" % str(e))
+        #
+        return rL
+
+    def getLocatorPaths(self, locatorObjList, locatorIndex=0):
+        try:
+            if locatorObjList and isinstance(locatorObjList[0], str):
+                return locatorObjList
+            else:
+                return [locatorObj[locatorIndex]['locator'] for locatorObj in locatorObjList]
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+        return []
+
+    def fetch(self, locatorObjList, styleType="rowwise_by_id", filterType="none", dataSelectors=None):
         """ Return a dictionary of loadable data for each table defined in the current schema
             definition object.   Data are extracted from all files in the input file list,
             and this is added in single schema instance such that data from multiple files are appended to a
@@ -131,11 +200,11 @@ class SchemaDefDataPrep(object):
                 filterTypes: "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
 
         """
-        schemaDataDictById, containerNameList, _ = self.__fetch(locatorList, filterType, dataSelectors=dataSelectors)
+        schemaDataDictById, containerNameList, _ = self.__fetch(locatorObjList, filterType, dataSelectors=dataSelectors)
         schemaDataDict = self.__reShape.applyShape(schemaDataDictById, styleType=styleType)
         return schemaDataDict, containerNameList
 
-    def fetchDocuments(self, locatorList, styleType="rowwise_by_id", filterType="none", logSize=False, dataSelectors=None, sliceFilter=None):
+    def fetchDocuments(self, locatorObjList, styleType="rowwise_by_id", filterType="none", logSize=False, dataSelectors=None, sliceFilter=None):
         """ Return a list of dictionaries of loadable data for each table defined in the current schema
             definition object.   Data are extracted from the each input file, and each data
             set is stored in a separate schema instance (document).  The organization
@@ -156,17 +225,17 @@ class SchemaDefDataPrep(object):
         """
         schemaDataDictList = []
         containerNameList = []
-        rejectPathList = []
-        for locator in locatorList:
+        rejectLocatorObjList = []
+        for locator in locatorObjList:
             schemaDataDictById, cnList, rL = self.__fetch([locator], filterType, dataSelectors=dataSelectors)
-            rejectPathList.extend(rL)
+            rejectLocatorObjList.extend(rL)
             if not schemaDataDictById:
                 continue
             sddL = self.__reShape.applySlicedShape(schemaDataDictById, styleType=styleType, sliceFilter=sliceFilter)
             schemaDataDictList.extend(sddL)
             containerNameList.extend(cnList)
         #
-        return schemaDataDictList, containerNameList, rejectPathList
+        return schemaDataDictList, containerNameList, rejectLocatorObjList
 
     def process(self, containerList, styleType="rowwise_by_id", filterType="none", dataSelectors=None):
         """ Return a dictionary of loadable data for each table defined in the current schema
@@ -213,13 +282,14 @@ class SchemaDefDataPrep(object):
         """
         schemaDataDictList = []
         containerNameList = []
-        rejectList = []
+        rejectPathList = []
         for container in containerList:
             schemaDataDictById, _, rL = self.__process([container], filterType, dataSelectors=dataSelectors)
-            rejectList.extend(rL)
+            rejectPathList.extend(rL)
             if not schemaDataDictById:
                 continue
             #
+            logger.debug("Reshape container %s using %s" % (container.getName(), sliceFilter))
             sddL = self.__reShape.applySlicedShape(schemaDataDictById, styleType=styleType, sliceFilter=sliceFilter)
             schemaDataDictList.extend(sddL)
             #
@@ -228,9 +298,9 @@ class SchemaDefDataPrep(object):
             cnList = [cName for i in range(len(sddL))]
             containerNameList.extend(cnList)
 
-        rejectList = list(set(rejectList))
+        rejectPathList = list(set(rejectPathList))
         #
-        return schemaDataDictList, containerNameList, rejectList
+        return schemaDataDictList, containerNameList, rejectPathList
 
     def addDocumentPrivateAttributes(self, docList, collectionName):
         """ For the input collection, add private document attributes to the input document list.
@@ -255,7 +325,7 @@ class SchemaDefDataPrep(object):
         #
         return docList
 
-    def __fetch(self, locatorList, filterType, dataSelectors=None):
+    def __fetch(self, locatorObjList, filterType, dataSelectors=None):
         """ Internal method to create loadable data corresponding to the table schema definition
             from the input list of data files.
 
@@ -266,18 +336,19 @@ class SchemaDefDataPrep(object):
         """
         startTime = time.time()
         #
-        rejectPathList = []
+        rejectLocatorObjList = []
         containerNameList = []
         schemaDataDict = {}
-        for lPath in locatorList:
-            myContainerList = self.__mU.doImport(lPath, format="mmcif")
+        for locatorObj in locatorObjList:
+            # myContainerList = self.__mU.doImport(locatorObj, format="mmcif")
+            myContainerList = self.__mergeContainers(locatorObj, format="mmcif", mergeTarget=0)
             cL = []
             for c in myContainerList:
                 if self.__testdataSelectors(c, dataSelectors):
                     cL.append(c)
-                    # self.__loadInfo[c.getName()] = {'load_date': self.__getTimeStamp(), 'locator': lPath}
+                    # self.__loadInfo[c.getName()] = {'load_date': self.__getTimeStamp(), 'locator': locatorObj}
                 else:
-                    rejectPathList.append(lPath)
+                    rejectLocatorObjList.append(locatorObj)
             self.__mapData(cL, schemaDataDict, filterType)
             containerNameList.extend([myC.getName() for myC in myContainerList])
         #
@@ -289,7 +360,7 @@ class SchemaDefDataPrep(object):
         else:
             schemaDataDictF = schemaDataDict
         #
-        rejectPathList = list(set(rejectPathList))
+        rejectLocatorObjList = list(set(rejectLocatorObjList))
         #
         #
         #
@@ -297,7 +368,7 @@ class SchemaDefDataPrep(object):
         logger.debug("completed at %s (%.3f seconds)" %
                      (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
 
-        return schemaDataDictF, containerNameList, rejectPathList
+        return schemaDataDictF, containerNameList, rejectLocatorObjList
 
     def __process(self, containerList, filterType, dataSelectors=None):
         """ Internal method to create loadable data corresponding to the table schema definition
@@ -311,7 +382,7 @@ class SchemaDefDataPrep(object):
         """
         startTime = time.time()
         #
-        rejectList = []
+        rejectPathList = []
         containerNameList = []
         schemaDataDict = {}
         cL = []
@@ -321,9 +392,9 @@ class SchemaDefDataPrep(object):
             else:
                 try:
                     # rejectList.append(self.__loadInfo[c.getName()]['locator'])
-                    rejectList.append(c.getProp['locator'])
+                    rejectPathList.append(c.getProp['locator'])
                 except Exception:
-                    rejectList.append(c.getName())
+                    rejectPathList.append(c.getName())
         #
         self.__mapData(cL, schemaDataDict, filterType)
         containerNameList.extend([myC.getName() for myC in containerList])
@@ -342,7 +413,7 @@ class SchemaDefDataPrep(object):
         logger.debug("completed at %s (%.3f seconds)\n" %
                      (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
 
-        return schemaDataDictF, containerNameList, rejectList
+        return schemaDataDictF, containerNameList, rejectPathList
 
     def __testdataSelectors(self, container, dataSelectors):
         """ Test the if the input container satisfies the input content/data selectors.
@@ -403,13 +474,13 @@ class SchemaDefDataPrep(object):
             for rowD in rowDList:
                 rowD[attributeId] = val
         elif (fn == "getdatetime()"):
-            #val = self.__loadInfo[cName]['load_date'] if cName in self.__loadInfo else self.__getTimeStamp()
+            # val = self.__loadInfo[cName]['load_date'] if cName in self.__loadInfo else self.__getTimeStamp()
             v = dataContainer.getProp('load_date')
             val = v if v else self.__getTimeStamp()
             for rowD in rowDList:
                 rowD[attributeId] = val
         elif (fn == "getlocator()"):
-            #val = self.__loadInfo[cName]['locator'] if cName in self.__loadInfo else 'unknown'
+            # val = self.__loadInfo[cName]['locator'] if cName in self.__loadInfo else 'unknown'
             v = dataContainer.getProp('locator')
             val = v if v else 'unknown'
             for rowD in rowDList:

@@ -71,6 +71,7 @@ def main():
     parser.add_argument("--load_bird_family_ref", default=False, action='store_true', help="Load Bird Family reference definitions (public subset)")
     parser.add_argument("--load_entry_data", default=False, action='store_true', help="Load PDBx entry data (current released subset)")
     parser.add_argument("--load_pdbx_core", default=False, action='store_true', help="Load all PDBx core collections (current released subset)")
+    parser.add_argument("--load_pdbx_core_merge", default=False, action='store_true', help="Load all PDBx core collections with merged content (current released subset)")
     #
     parser.add_argument("--load_pdbx_core_entry", default=False, action='store_true', help="Load PDBx core entry (current released subset)")
     parser.add_argument("--load_pdbx_core_entity", default=False, action='store_true', help="Load PDBx core entity (current released subset)")
@@ -219,6 +220,12 @@ def main():
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+        #
+        if args.load_pdbx_core_merge:
+            ok = mw.load('pdbx_core', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
+                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck, mergeContentTypes=['vrpt'])
         #
         if args.load_pdbx_core_entity:
             ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entity_v5_0_2'], loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,

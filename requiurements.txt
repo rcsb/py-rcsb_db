@@ -6,9 +6,10 @@ jsonschema >= 2.6.0
 strict-rfc3339
 mysqlclient >= 1.3.12
 pymongo >= 3.7.0
-mmcif >= 0.28
+mmcif >= 0.34
 rcsb.utils.config >= 0.16
 rcsb.utils.multiproc >= 0.11
-rcsb.utils.chemref >= 0.13
+rcsb.utils.chemref >= 0.17
+rcsb.utils.validtion >= 0.12
 scandir; python_version < "3.0"
 configparser; python_version < "3.0"

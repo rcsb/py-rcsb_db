@@ -84,7 +84,7 @@ class DictMethodRunnerTests(unittest.TestCase):
                                         csdModelMappingFilePath=self.__csdModelMappingFile, taxonomyMappingFilePath=self.__pathTaxonomyMappingFile)
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
             #
-            inputPathList = self.__schU.getPathList(contentType='pdbx_core')
+            inputPathList = self.__schU.getLocatorObjList(contentType='pdbx_core')
             sd, _, _, _ = self.__schU.getSchemaInfo(contentType='pdbx_core')
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
@@ -116,7 +116,7 @@ class DictMethodRunnerTests(unittest.TestCase):
                                         csdModelMappingFilePath=self.__csdModelMappingFile, taxonomyMappingFilePath=self.__pathTaxonomyMappingFile)
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
             #
-            inputPathList = self.__schU.getPathList(contentType='chem_comp_core')
+            inputPathList = self.__schU.getLocatorObjList(contentType='chem_comp_core')
             sd, _, _, _ = self.__schU.getSchemaInfo(contentType='chem_comp_core')
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
@@ -148,7 +148,7 @@ class DictMethodRunnerTests(unittest.TestCase):
                                         csdModelMappingFilePath=self.__csdModelMappingFile, taxonomyMappingFilePath=self.__pathTaxonomyMappingFile)
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
             #
-            inputPathList = self.__schU.getPathList(contentType='bird_chem_comp_core')
+            inputPathList = self.__schU.getLocatorObjList(contentType='bird_chem_comp_core')
             sd, _, _, _ = self.__schU.getSchemaInfo(contentType='bird_chem_comp_core')
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)

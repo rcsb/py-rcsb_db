@@ -7,6 +7,7 @@
 #  23-May-2018  jdw add preliminary default and helper tests
 #   5-Jun-2018  jdw update prototypes for IoUtil() methods
 #  13-Jun-2018  jdw add content classes
+#   6-Feb-2019  jdw replace IoUtil() with MarshalUtil()
 #
 #
 #
@@ -30,7 +31,7 @@ import unittest
 from rcsb.db.define.DictInfo import DictInfo
 from rcsb.db.helpers.DictInfoHelper import DictInfoHelper
 from rcsb.utils.config.ConfigUtil import ConfigUtil
-from rcsb.utils.io.IoUtil import IoUtil
+from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
@@ -51,7 +52,8 @@ class DictInfoTests(unittest.TestCase):
         #
         self.__pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=configName)
         self.__pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=configName)
-        self.__ioU = IoUtil()
+        self.__pathVrptDictionaryFile = self.__cfgOb.getPath('VRPT_DICT_LOCATOR', sectionName=configName)
+        self.__mU = MarshalUtil()
         #
         self.__pathSaveDictInfoDefaultJson = os.path.join(HERE, 'test-output', 'dict_info_default.json')
         self.__pathSaveDictInfoJson = os.path.join(HERE, 'test-output', 'dict_info.json')
@@ -77,7 +79,7 @@ class DictInfoTests(unittest.TestCase):
             nS = sdi.getSchemaNames()
             #
             logger.debug("Dictionary category name length %d" % len(nS))
-            ok = self.__ioU.serialize(self.__pathSaveDictInfoDefaultJson, nS, format="json", indent=3)
+            ok = self.__mU.doExport(self.__pathSaveDictInfoDefaultJson, nS, format="json", indent=3)
             self.assertTrue(ok)
 
         except Exception as e:
@@ -100,7 +102,7 @@ class DictInfoTests(unittest.TestCase):
 
             #
             logger.debug("Dictionary category name length %d" % len(catNameL))
-            ok = self.__ioU.serialize(self.__pathSaveDictInfoJson, afD, format="json", indent=3)
+            ok = self.__mU.doExport(self.__pathSaveDictInfoJson, afD, format="json", indent=3)
             self.assertTrue(ok)
 
         except Exception as e:
@@ -123,7 +125,7 @@ class DictInfoTests(unittest.TestCase):
 
             #
             logger.debug("Dictionary category name length %d" % len(catNameL))
-            ok = self.__ioU.serialize(self.__pathSaveDictInfoExtJson, afD, format="json", indent=3)
+            ok = self.__mU.doExport(self.__pathSaveDictInfoExtJson, afD, format="json", indent=3)
             self.assertTrue(ok)
 
         except Exception as e:
@@ -136,7 +138,7 @@ class DictInfoTests(unittest.TestCase):
         """
         try:
             dH = DictInfoHelper(cfgOb=self.__cfgOb)
-            sdi = DictInfo(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], dictSubset='repository_holdings', dictHelper=dH)
+            sdi = DictInfo(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile, self.__pathVrptDictionaryFile], dictSubset='repository_holdings', dictHelper=dH)
             catNameL = sdi.getCategories()
             cfD = {}
             afD = {}
@@ -146,7 +148,7 @@ class DictInfoTests(unittest.TestCase):
 
             #
             logger.debug("Dictionary category name length %d" % len(catNameL))
-            ok = self.__ioU.serialize(self.__pathSaveDictInfoRepoJson, afD, format="json", indent=3)
+            ok = self.__mU.doExport(self.__pathSaveDictInfoRepoJson, afD, format="json", indent=3)
             self.assertTrue(ok)
 
         except Exception as e:

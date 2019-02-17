@@ -16,8 +16,8 @@
 #   4-Jan-2019 jdw add prefix path options to api and json/bson schema paths
 #                  add method getJsonSchemaLocator()
 #   8-Jan-2019 jdw standardize argument names -
+#   6-Feb-2019 jdw add option to merge content types to getPathList()
 #
-#   TODO: make writing schemas of all types part of this class -
 ##
 """
  A collection of schema and repo path convenience methods.
@@ -35,6 +35,7 @@ import os
 
 from rcsb.db.define.SchemaDefAccess import SchemaDefAccess
 from rcsb.db.define.SchemaDefBuild import SchemaDefBuild
+from rcsb.db.utils.HashableDict import HashableDict
 from rcsb.db.utils.RepoPathUtil import RepoPathUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 
@@ -59,22 +60,48 @@ class SchemaDefUtil(object):
         else:
             return ""
 
-    def getPathList(self, contentType, inputPathList=None):
+    def getLocatorObjList(self, contentType, inputPathList=None, mergeContentTypes=None):
         """Convenience method to get the data path list for the input repository content type.
 
         Args:
             contentType (str): Repository content type (e.g. pdbx, chem_comp, bird, ...)
             inputPathList (list, optional): path list that will be returned if provided.
+            mergeContentTypes (list, optional): repository content types to combined with the
+                              primary content type.
 
         Returns:
-            list: data file file path list
+            Obj list: data file paths or tuple of file paths
 
 
         """
         inputPathList = inputPathList if inputPathList else []
         rpU = RepoPathUtil(self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, workPath=self.__workPath)
-        outputPathList = rpU.getRepoPathList(contentType, inputPathList=inputPathList)
-        return outputPathList
+        locatorList = rpU.getLocatorList(contentType, inputPathList=inputPathList)
+        #
+        if mergeContentTypes and 'vrpt' in mergeContentTypes and contentType in ['pdbx', 'pdbx_core']:
+            dictMapPath = self.__cfgOb.getPath('VRPT_DICT_MAPPING_LOCATOR', sectionName=self.__cfgOb.getDefaultSectionName())
+            locObjL = []
+            for locator in locatorList:
+                if isinstance(locator, str):
+                    kwD = HashableDict({})
+                    oL = [HashableDict({'locator': locator, 'format': 'mmcif', 'kwargs': kwD})]
+                    for mergeContentType in mergeContentTypes:
+                        pth, fn = os.path.split(locator)
+                        idCode = fn[:4] if fn and len(fn) >= 8 else None
+                        mergeLocator = rpU.getLocator(mergeContentType, idCode) if idCode else None
+                        if mergeLocator:
+                            kwD = HashableDict({'dictMapPath': dictMapPath})
+                            oL.append(HashableDict({'locator': mergeLocator, 'format': 'vrpt-xml-to-cif', 'kwargs': kwD}))
+                    lObj = tuple(oL)
+                else:
+                    logger.error("Unexpected output locator type %r" % locator)
+                    lObj = locator
+                locObjL.append(lObj)
+            #
+            locatorList = locObjL
+
+        # -
+        return locatorList
 
     def getSchemaInfo(self, contentType, dataTyping='ANY', altDirPath=None):
         """Convenience method to return essential schema details for the input repository content type.

@@ -154,12 +154,12 @@ class SchemaDefLoaderCockroachDbMultiTests(unittest.TestCase):
     def __getPathList(self, fType):
         pathList = []
         if fType == "chem_comp":
-            pathList = self.__schU.getPathList(contentType='chem_comp')
+            pathList = self.__schU.getLocatorObjList(contentType='chem_comp')
         elif fType == "bird":
-            pathList = self.__schU.getPathList(contentType='bird')
-            pathList.extend(self.__schU.getPathList(contentType='bird_family'))
+            pathList = self.__schU.getLocatorObjList(contentType='bird')
+            pathList.extend(self.__schU.getLocatorObjList(contentType='bird_family'))
         elif fType == "pdbx":
-            pathList = self.__schU.getPathList(contentType='pdbx')
+            pathList = self.__schU.getLocatorObjList(contentType='pdbx')
         return pathList
 
     def loadInsertMany(self, dataList, procName, optionsD, workingDir):

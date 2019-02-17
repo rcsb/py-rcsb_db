@@ -20,6 +20,7 @@
 #  11-Sep-2018  jdw adjust slice cardinality constraints for entity and assembly identifier categories.
 #  30-Sep-2018  jdw add source and host organism categories
 #   2-Oct-2018  jdw add repository_holdings and sequence_cluster content types and associated category content.
+#  12-Feb-2019  jdw add wildCardAtName argument on __getItemTransformD()
 ##
 """
 This helper class supplements dictionary information as required for schema production.
@@ -126,29 +127,37 @@ class DictInfoHelper(DictInfoHelperBase):
             logger.debug("Failing with %s" % str(e))
         return classD
 
-    def __getAttributeContentClasses(self):
+    def __getAttributeContentClasses(self, wildCardAtName='__all__'):
         classD = {}
         try:
             for cTup, cDL in self.__cfgD['content_classes'].items():
                 for cD in cDL:
                     catName = cD['CATEGORY_NAME']
-                    for atName in cD['ATTRIBUTE_NAME_LIST']:
-                        if (catName, atName) not in classD:
-                            classD[(catName, atName)] = []
-                        classD[(catName, atName)].append({'CONTENT_CLASS': cTup[0], 'DICT_SUBSET': cTup[1]})
+                    # if now optional 'ATTRIBUTE_NAME_LIST' is absent insert wildcard attribute
+                    if 'ATTRIBUTE_NAME_LIST' in cD:
+                        for atName in cD['ATTRIBUTE_NAME_LIST']:
+                            if (catName, atName) not in classD:
+                                classD[(catName, atName)] = []
+                            classD[(catName, atName)].append({'CONTENT_CLASS': cTup[0], 'DICT_SUBSET': cTup[1]})
+                    else:
+                        if (catName, wildCardAtName) not in classD:
+                            classD[(catName, wildCardAtName)] = []
+                        classD[(catName, wildCardAtName)].append({'CONTENT_CLASS': cTup[0], 'DICT_SUBSET': cTup[1]})
         except Exception as e:
             logger.debug("Failing with %s" % str(e))
         return classD
 
-    def __getItemTransformD(self):
+    def __getItemTransformD(self, wildCardAtName='__all__'):
         itD = {}
         for f, dL in self.__cfgD['item_transformers'].items():
             logger.debug("Verify transform method %r" % f)
             if self.__dti.isImplemented(f):
                 for d in dL:
-                    if (d['CATEGORY_NAME'], d['ATTRIBUTE_NAME']) not in itD:
-                        itD[(d['CATEGORY_NAME'], d['ATTRIBUTE_NAME'])] = []
-                    itD[(d['CATEGORY_NAME'], d['ATTRIBUTE_NAME'])].append(f)
+                    atN = d['ATTRIBUTE_NAME'] if 'ATTRIBUTE_NAME' in d else wildCardAtName
+                    itD.setdefault((d['CATEGORY_NAME'], atN), []).append(f)
+                    # if (d['CATEGORY_NAME'], d['ATTRIBUTE_NAME']) not in itD:
+                    #     itD[(d['CATEGORY_NAME'], d['ATTRIBUTE_NAME'])] = []
+                    # itD[(d['CATEGORY_NAME'], d['ATTRIBUTE_NAME'])].append(f)
 
         return itD
 
