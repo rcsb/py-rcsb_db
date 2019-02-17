@@ -158,27 +158,30 @@ compatible with MongoDB.
 
 
 ```bash
- exdb_repo_load_cli --help
-usage: exdb_repo_load_cli [-h] [--full] [--replace] [--load_chem_comp_ref]
-                          [--load_chem_comp_core_ref]
-                          [--load_bird_chem_comp_ref]
-                          [--load_bird_chem_comp_core_ref] [--load_bird_ref]
-                          [--load_bird_family_ref] [--load_entry_data]
-                          [--load_pdbx_core] [--load_pdbx_core_entry]
-                          [--load_pdbx_core_entity]
-                          [--load_pdbx_core_entity_monomer]
-                          [--load_pdbx_core_assembly] [--load_ihm_dev]
-                          [--config_path CONFIG_PATH]
-                          [--config_name CONFIG_NAME] [--db_type DB_TYPE]
-                          [--document_style DOCUMENT_STYLE]
-                          [--read_back_check] [--schema_level SCHEMA_LEVEL]
-                          [--load_file_list_path LOAD_FILE_LIST_PATH]
-                          [--fail_file_list_path FAIL_FILE_LIST_PATH]
-                          [--save_file_list_path SAVE_FILE_LIST_PATH]
-                          [--num_proc NUM_PROC] [--chunk_size CHUNK_SIZE]
-                          [--file_limit FILE_LIMIT]
-                          [--prune_document_size PRUNE_DOCUMENT_SIZE]
-                          [--debug] [--mock] [--working_path WORKING_PATH]
+exdb_repo_load_cli --help
+
+or
+
+python RepoLoadExec.py --help
+
+usage: RepoLoadExec.py [-h] [--full] [--replace] [--load_chem_comp_ref]
+                       [--load_chem_comp_core_ref] [--load_bird_chem_comp_ref]
+                       [--load_bird_chem_comp_core_ref] [--load_bird_ref]
+                       [--load_bird_family_ref] [--load_entry_data]
+                       [--load_pdbx_core] [--load_pdbx_core_merge]
+                       [--load_pdbx_core_entry] [--load_pdbx_core_entity]
+                       [--load_pdbx_core_entity_monomer]
+                       [--load_pdbx_core_assembly] [--load_ihm_dev]
+                       [--config_path CONFIG_PATH] [--config_name CONFIG_NAME]
+                       [--db_type DB_TYPE] [--document_style DOCUMENT_STYLE]
+                       [--read_back_check] [--schema_level SCHEMA_LEVEL]
+                       [--load_file_list_path LOAD_FILE_LIST_PATH]
+                       [--fail_file_list_path FAIL_FILE_LIST_PATH]
+                       [--save_file_list_path SAVE_FILE_LIST_PATH]
+                       [--num_proc NUM_PROC] [--chunk_size CHUNK_SIZE]
+                       [--file_limit FILE_LIMIT]
+                       [--prune_document_size PRUNE_DOCUMENT_SIZE] [--debug]
+                       [--mock] [--working_path WORKING_PATH]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -202,6 +205,9 @@ optional arguments:
   --load_entry_data     Load PDBx entry data (current released subset)
   --load_pdbx_core      Load all PDBx core collections (current released
                         subset)
+  --load_pdbx_core_merge
+                        Load all PDBx core collections with merged content
+                        (current released subset)
   --load_pdbx_core_entry
                         Load PDBx core entry (current released subset)
   --load_pdbx_core_entity
@@ -243,7 +249,6 @@ optional arguments:
   --mock                Use MOCK repository configuration for testing
   --working_path WORKING_PATH
                         Working path for temporary files
-
 
 ```
 
@@ -455,6 +460,9 @@ bird_chem_comp_core,.. ).
 #  1-Jan-2019 jdw restore exptl_crystal in pdbx_core_entry
 #  7-Jan-2019 jdw broad pruning and consolidation of site specific sections
 # 17-Jan-2019 jdw add a separate set of document attributes for replacing documents in collections built from slices.
+# 18-Jan-2019 jdw replace __ with _ in collection private keys
+#  2-Feb-2019 jdw adding validation report content to pdbx_core schema
+# 16-Feb-2019 jdw add search indices and private keys for entity_instance_core entity_monomer_core entcollections
 #
 #
 # Master Pinelands configuration file example
@@ -471,11 +479,17 @@ site_info:
     PDBX_REPO_PATH: MOCK_PDBX_SANDBOX
     RCSB_EXCHANGE_SANDBOX_PATH: MOCK_EXCHANGE_SANDBOX
     IHM_DEV_REPO_PATH: MOCK_IHM_REPO
+    VRPT_REPO_PATH: MOCK_VALIDATION_REPORTS
+    #
     RCSB_SEQUENCE_CLUSTER_DATA_PATH: cluster_data/mmseqs-20180608
     PDBX_DICT_LOCATOR: dictionaries/mmcif_pdbx_v5_next.dic
     RCSB_DICT_LOCATOR: dictionaries/rcsb_mmcif_ext_v1.dic
     IHMDEV_DICT_LOCATOR: dictionaries/ihm-extension.dic
     FLR_DICT_LOCATOR: dictionaries/flr-extension.dic
+    #
+    VRPT_DICT_LOCATOR: dictionaries/vrpt_mmcif_ext.dic
+    VRPT_DICT_MAPPING_LOCATOR: dictionaries/vrpt_dictmap.json
+    #
     PROVENANCE_INFO_LOCATOR: provenance/rcsb_extend_provenance_info.json
     APP_DATA_TYPE_INFO_LOCATOR: data_type_info/app_data_type_mapping.cif
     DICT_HELPER_MODULE: rcsb.db.helpers.DictInfoHelper
@@ -598,6 +612,12 @@ dictionary_helper:
               ATTRIBUTE_NAME: pdbx_seq_one_letter_code_sample
             - CATEGORY_NAME: struct_ref
               ATTRIBUTE_NAME: pdbx_seq_one_letter_code
+        TRANSLATE_XMLCHARREFS:
+            - CATEGORY_NAME: citation
+            - CATEGORY_NAME: citation_author
+            - CATEGORY_NAME: struct
+            - CATEGORY_NAME: audit_author
+            - CATEGORY_NAME: chem_comp
     cardinality_parent_items:
         ihm_dev:
             CATEGORY_NAME: entry
@@ -831,6 +851,35 @@ dictionary_helper:
                       - major_revision
                       - minor_revision
                       - revision_date
+                - CATEGORY_NAME: rcsb_entity_instance_container_identifiers
+                - CATEGORY_NAME: rcsb_entity_monomer_container_identifiers
+                - CATEGORY_NAME: pdbx_vrpt_summary
+                - CATEGORY_NAME: pdbx_vrpt_summary
+                - CATEGORY_NAME: pdbx_vrpt_model_list
+                - CATEGORY_NAME: pdbx_vrpt_instance_results
+                - CATEGORY_NAME: pdbx_vrpt_cyrange_domain
+                - CATEGORY_NAME: pdbx_vrpt_entity_instance_results
+                - CATEGORY_NAME: pdbx_vrpt_chemical_shift_list
+                - CATEGORY_NAME: pdbx_vrpt_unmapped_chemical_shift
+                - CATEGORY_NAME: pdbx_vrpt_unparsed_chemical_shift
+                - CATEGORY_NAME: pdbx_vrpt_missing_nmrstar_tags
+                - CATEGORY_NAME: pdbx_vrpt_random_coil_index
+                - CATEGORY_NAME: pdbx_vrpt_chemical_shift_outlier
+                - CATEGORY_NAME: pdbx_vrpt_referencing_offset
+                - CATEGORY_NAME: pdbx_vrpt_assign_compl_well_defined
+                - CATEGORY_NAME: pdbx_vrpt_assign_compl_full_length
+                - CATEGORY_NAME: pdbx_vrpt_software
+                - CATEGORY_NAME: pdbx_vrpt_bond_outliers
+                - CATEGORY_NAME: pdbx_vrpt_angle_outliers
+                - CATEGORY_NAME: pdbx_vrpt_stereo_outliers
+                - CATEGORY_NAME: pdbx_vrpt_plane_outliers
+                - CATEGORY_NAME: pdbx_vrpt_clashes
+                - CATEGORY_NAME: pdbx_vrpt_symmetry_clashes
+                - CATEGORY_NAME: pdbx_vrpt_mogul_bond_outliers
+                - CATEGORY_NAME: pdbx_vrpt_mogul_angle_outliers
+                - CATEGORY_NAME: pdbx_vrpt_mogul_torsion_outliers
+                - CATEGORY_NAME: pdbx_vrpt_mogul_ring_outliers
+                #
         ?       - GENERATED_CONTENT
                 - data_exchange
         :       - CATEGORY_NAME: rcsb_data_exchange_status
@@ -967,6 +1016,7 @@ dictionary_helper:
                 - CATEGORY_NAME: pdbx_chem_comp_audit
                   ATTRIBUTE_NAME_LIST:
                       - ordinal
+                - CATEGORY_NAME: rcsb_chem_comp_container_identifiers
         ?       - GENERATED_CONTENT
                 - bird_chem_comp
         :       - CATEGORY_NAME: rcsb_load_status
@@ -1029,6 +1079,7 @@ dictionary_helper:
                 - CATEGORY_NAME: pdbx_chem_comp_audit
                   ATTRIBUTE_NAME_LIST:
                       - ordinal
+                - CATEGORY_NAME: rcsb_chem_comp_container_identifiers
         ?       - GENERATED_CONTENT
                 - bird
         :       - CATEGORY_NAME: rcsb_load_status
@@ -1371,6 +1422,10 @@ dictionary_helper:
                 - pdbx_core
         :       - CATEGORY_NAME: rcsb_entity_poly_info
                   ATTRIBUTE_NAME: ordinal_id
+        ?       - ENTITY_INSTANCE
+                - pdbx_core
+        :       - CATEGORY_NAME: struct_asym
+                  ATTRIBUTE_NAME: id
     slice_parent_filters:
         ?       - ENTITY
                 - pdbx_core
@@ -1394,8 +1449,16 @@ dictionary_helper:
         ?       - ENTITY_MONOMER
                 - pdbx_core
         :       - rcsb_entity_poly_info
+                - rcsb_entity_monomer_container_identifiers
+        ?       - ENTITY_INSTANCE
+                - pdbx_core
+        :       - rcsb_load_status
+                - rcsb_entity_instance_container_identifiers
     slice_category_extras:
         ?       - ENTITY
+                - pdbx_core
+        :       - rcsb_load_status
+        ?       - ENTITY_INSTANCE
                 - pdbx_core
         :       - rcsb_load_status
         ?       - ASSEMBLY
@@ -1451,6 +1514,7 @@ schemadef_helper:
             EXCLUDE: []
         drugbank_core:
             INCLUDE:
+                - drugbank_container_identifiers
                 - drugbank_info
                 - drugbank_target
             EXCLUDE: []
@@ -1619,6 +1683,7 @@ document_helper:
             - pdbx_core_entry_v5_0_2
             - pdbx_core_assembly_v5_0_2
             - pdbx_core_entity_monomer_v5_0_2
+            - pdbx_core_entity_instance_v5_0_2
         bird:
             - bird_v5_0_2
         bird_family:
@@ -1728,7 +1793,8 @@ document_helper:
             SLICE:
         pdbx_core_entity_v5_0_2:
             INCLUDE: []
-            EXCLUDE: []
+            EXCLUDE:
+                - rcsb_entity_instance_container_identifiers
             SLICE: ENTITY
         pdbx_core_entity_monomer_v5_0_2:
             INCLUDE: []
@@ -1824,8 +1890,13 @@ document_helper:
                 - PDBX_SERIAL_CRYSTALLOGRAPHY_SAMPLE_DELIVERY_INJECTION
                 - PDBX_SERIAL_CRYSTALLOGRAPHY_SAMPLE_DELIVERY_FIXED_TARGET
                 - PDBX_SERIAL_CRYSTALLOGRAPHY_DATA_REDUCTION
+                - PDBX_VRPT_SUMMARY
             EXCLUDE: []
             SLICE:
+        pdbx_core_entity_instance_v5_0_2:
+            INCLUDE: []
+            EXCLUDE: []
+            SLICE: ENTITY_INSTANCE
         repository_holdings_update_v0_1:
             INCLUDE:
                 - rcsb_repository_holdings_update
@@ -1904,89 +1975,120 @@ document_helper:
             - NAME: entry.id
               CATEGORY_NAME: entry
               ATTRIBUTE_NAME: id
-              PRIVATE_DOCUMENT_NAME: __entry_id
+              PRIVATE_DOCUMENT_NAME: _entry_id
               MANDATORY: True
         pdbx_core_entity_v5_0_2:
             - NAME: entry.id
               CATEGORY_NAME: rcsb_entity_container_identifiers
               ATTRIBUTE_NAME: entry_id
-              PRIVATE_DOCUMENT_NAME: __entry_id
+              PRIVATE_DOCUMENT_NAME: _entry_id
               MANDATORY: True
             - NAME: entity.id
               CATEGORY_NAME: entity
               ATTRIBUTE_NAME: id
-              PRIVATE_DOCUMENT_NAME: __entity_id
+              PRIVATE_DOCUMENT_NAME: _entity_id
               MANDATORY: True
             - NAME: chem_comp.id
               CATEGORY_NAME: pdbx_entity_nonpoly
               ATTRIBUTE_NAME: comp_id
-              PRIVATE_DOCUMENT_NAME: __comp_id
+              PRIVATE_DOCUMENT_NAME: _comp_id
               MANDATORY: False
             - NAME: _pdbx_entity_nonpoly.rcsb_prd_id
               CATEGORY_NAME: pdbx_entity_nonpoly
               ATTRIBUTE_NAME: rcsb_prd_id
-              PRIVATE_DOCUMENT_NAME: __prd_id
+              PRIVATE_DOCUMENT_NAME: _prd_id
               MANDATORY: False
             - NAME: _entity_poly.rcsb_prd_id
               CATEGORY_NAME: entity_poly
               ATTRIBUTE_NAME: rcsb_prd_id
-              PRIVATE_DOCUMENT_NAME: __prd_id
+              PRIVATE_DOCUMENT_NAME: _prd_id
+              MANDATORY: False
+        pdbx_core_entity_instance_v5_0_2:
+            - NAME: entry.id
+              CATEGORY_NAME: rcsb_entity_instance_container_identifiers
+              ATTRIBUTE_NAME: entry_id
+              PRIVATE_DOCUMENT_NAME: _entry_id
+              MANDATORY: True
+            - NAME: entity.id
+              CATEGORY_NAME: rcsb_entity_instance_container_identifiers
+              ATTRIBUTE_NAME: entity_id
+              PRIVATE_DOCUMENT_NAME: _entity_id
+              MANDATORY: True
+            - NAME: struct_asym.id
+              CATEGORY_NAME: rcsb_entity_instance_container_identifiers
+              ATTRIBUTE_NAME: asym_id
+              PRIVATE_DOCUMENT_NAME: _asym_id
+              MANDATORY: True
+            - NAME: rcsb_entity_instance_container_identifiers.auth_asym_id
+              CATEGORY_NAME: rcsb_entity_instance_container_identifiers
+              ATTRIBUTE_NAME: auth_asym_id
+              PRIVATE_DOCUMENT_NAME: _auth_asym_id
+              MANDATORY: True
+            - NAME: rcsb_entity_instance_container_identifiers.comp_id
+              CATEGORY_NAME: rcsb_entity_instance_container_identifiers
+              ATTRIBUTE_NAME: comp_id
+              PRIVATE_DOCUMENT_NAME: _comp_id
+              MANDATORY: False
+            - NAME: rcsb_entity_instance_container_identifiers.auth_seq_id
+              CATEGORY_NAME: rcsb_entity_instance_container_identifiers
+              ATTRIBUTE_NAME: auth_seq_id
+              PRIVATE_DOCUMENT_NAME: _auth_seq_id
               MANDATORY: False
         pdbx_core_entity_monomer_v5_0_2:
             - NAME: entry.id
               CATEGORY_NAME: rcsb_entity_poly_info
               ATTRIBUTE_NAME: entry_id
-              PRIVATE_DOCUMENT_NAME: __entry_id
+              PRIVATE_DOCUMENT_NAME: _entry_id
               MANDATORY: True
             - NAME: entity.id
               CATEGORY_NAME: rcsb_entity_poly_info
               ATTRIBUTE_NAME: entity_id
-              PRIVATE_DOCUMENT_NAME: __entity_id
+              PRIVATE_DOCUMENT_NAME: _entity_id
               MANDATORY: True
             - NAME: chem_comp.id
               CATEGORY_NAME: rcsb_entity_poly_info
               ATTRIBUTE_NAME: comp_id
-              PRIVATE_DOCUMENT_NAME: __comp_id
+              PRIVATE_DOCUMENT_NAME: _comp_id
               MANDATORY: True
         pdbx_core_assembly_v5_0_2:
             - NAME: entry.id
               CATEGORY_NAME: rcsb_assembly_container_identifiers
               ATTRIBUTE_NAME: entry_id
-              PRIVATE_DOCUMENT_NAME: __entry_id
+              PRIVATE_DOCUMENT_NAME: _entry_id
               MANDATORY: True
             - NAME: pdbx_struct_assembly.id
               CATEGORY_NAME: pdbx_struct_assembly
               ATTRIBUTE_NAME: id
-              PRIVATE_DOCUMENT_NAME: __assembly_id
+              PRIVATE_DOCUMENT_NAME: _assembly_id
               MANDATORY: True
         pdbx_core_entry_v5_0_2:
             - NAME: entry.id
               CATEGORY_NAME: entry
               ATTRIBUTE_NAME: id
-              PRIVATE_DOCUMENT_NAME: __entry_id
+              PRIVATE_DOCUMENT_NAME: _entry_id
               MANDATORY: True
         chem_comp_core_v5_0_2:
             - NAME: chem_comp.id
               CATEGORY_NAME: chem_comp
               ATTRIBUTE_NAME: id
-              PRIVATE_DOCUMENT_NAME: __comp_id
+              PRIVATE_DOCUMENT_NAME: _comp_id
               MANDATORY: True
         bird_chem_comp_core_v5_0_2:
             - NAME: pdbx_reference_molecule.chem_comp_id
               CATEGORY_NAME: pdbx_reference_molecule
               ATTRIBUTE_NAME: chem_comp_id
-              PRIVATE_DOCUMENT_NAME: __comp_id
+              PRIVATE_DOCUMENT_NAME: _comp_id
               MANDATORY: False
             - NAME: pdbx_reference_molecule.prd_id
               CATEGORY_NAME: pdbx_reference_molecule
               ATTRIBUTE_NAME: prd_id
-              PRIVATE_DOCUMENT_NAME: __prd_id
+              PRIVATE_DOCUMENT_NAME: _prd_id
               MANDATORY: True
         drugbank_core_v0_1:
             - NAME: drugbank_info.drugbank_id
               CATEGORY_NAME: drugbank_info
               ATTRIBUTE_NAME: drugbank_id
-              PRIVATE_DOCUMENT_NAME: __drugbank_id
+              PRIVATE_DOCUMENT_NAME: _drugbank_id
               MANDATORY: True
     collection_indices:
         ihm_dev_v1_0_1:
@@ -2008,8 +2110,8 @@ document_helper:
               - rcsb_entity_container_identifiers.entity_id
             - INDEX_NAME: search_1
               ATTRIBUTE_NAMES:
-              - rcsb_entity_container_identifiers.entry_id.entity_id
-              - rcsb_entity_container_identifiers.entry_id.asym_id
+              - rcsb_entity_container_identifiers.entry_id
+              - rcsb_entity_container_identifiers.entry_id
             - INDEX_NAME: search_2
               ATTRIBUTE_NAMES:
               - rcsb_entity_container_identifiers.entry_id
@@ -2022,15 +2124,15 @@ document_helper:
               - rcsb_entity_container_identifiers.auth_asym_ids
             - INDEX_NAME: search_4
               ATTRIBUTE_NAMES:
-              - __entry_id
-              - __entity_id
+              - _entry_id
+              - _entity_id
             - INDEX_NAME: search_5
               ATTRIBUTE_NAMES:
-              - __entry_id
-              - __comp_id
+              - _entry_id
+              - _comp_id
             - INDEX_NAME: replace
               ATTRIBUTE_NAMES:
-              - __entry_id
+              - _entry_id
         pdbx_core_entity_monomer_v5_0_2:
             - INDEX_NAME: primary
               ATTRIBUTE_NAMES:
@@ -2054,15 +2156,15 @@ document_helper:
               - rcsb_entity_container_identifiers.is_heterogeneous
             - INDEX_NAME: search_4
               ATTRIBUTE_NAMES:
-              - __entry_id
-              - __entity_id
+              - _entry_id
+              - _entity_id
             - INDEX_NAME: search_5
               ATTRIBUTE_NAMES:
-              - __entry_id
-              - __comp_id
+              - _entry_id
+              - _comp_id
             - INDEX_NAME: replace
               ATTRIBUTE_NAMES:
-              - __entry_id
+              - _entry_id
         pdbx_core_assembly_v5_0_2:
             - INDEX_NAME: primary
               ATTRIBUTE_NAMES:
@@ -2074,11 +2176,11 @@ document_helper:
               - rcsb_assembly_container_identifiers.assembly_id
             - INDEX_NAME: search_2
               ATTRIBUTE_NAMES:
-              - __entry_id
-              - __assembly_id
+              - _entry_id
+              - _assembly_id
             - INDEX_NAME: replace
               ATTRIBUTE_NAMES:
-              - __entry_id
+              - _entry_id
         pdbx_core_entry_v5_0_2:
             - INDEX_NAME: primary
               ATTRIBUTE_NAMES:
@@ -2101,10 +2203,42 @@ document_helper:
               - rcsb_entry_container_identifiers.assembly_ids
             - INDEX_NAME: search_5
               ATTRIBUTE_NAMES:
-              - __entry_id
+              - _entry_id
             - INDEX_NAME: primary
               ATTRIBUTE_NAMES:
               - entry.id
+        pdbx_core_entity_instance_v5_0_2:
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - rcsb_entity_instance_container_identifiers.entry_id
+              - rcsb_entity_instance_container_identifiers.asym_id
+            - INDEX_NAME: search_1
+              ATTRIBUTE_NAMES:
+              - rcsb_entity_instance_container_identifiers.entry_id
+              - rcsb_entity_instance_container_identifiers.auth_asym_id
+            - INDEX_NAME: search_2
+              ATTRIBUTE_NAMES:
+              - rcsb_entity_instance_container_identifiers.entry_id
+              - rcsb_entity_instance_container_identifiers.entity_id
+            - INDEX_NAME: search_3
+              ATTRIBUTE_NAMES:
+              - rcsb_entity_instance_container_identifiers.entry_id
+              - rcsb_entity_instance_container_identifiers.comp_id
+            - INDEX_NAME: search_4
+              ATTRIBUTE_NAMES:
+              - _entry_id
+              - _asym_id
+            - INDEX_NAME: search_5
+              ATTRIBUTE_NAMES:
+              - _entry_id
+              - _auth_asym_id
+            - INDEX_NAME: search_6
+              ATTRIBUTE_NAMES:
+              - _entry_id
+              - _comp_id
+            - INDEX_NAME: replace
+              ATTRIBUTE_NAMES:
+              - _entry_id
         bird_v5_0_2:
             - INDEX_NAME: primary
               ATTRIBUTE_NAMES:
@@ -2194,5 +2328,6 @@ document_helper:
             - cluster_membership
     collection_retain_singleton:
         pdbx_core_entity_monomer_v5_0_2: True
+
 
 ```
