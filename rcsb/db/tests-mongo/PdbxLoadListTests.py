@@ -60,7 +60,7 @@ class PdbxLoadListTests(unittest.TestCase):
         self.__documentStyle = 'rowwise_by_name_with_cardinality'
         #
         # self.__testDirPath = os.path.join(HERE, "test-output", 'pdbx-fails')
-        self.__testDirPath = os.path.join(TOPDIR, "rcsb", "db", "tests", "test-output", 'pdbx-fails')
+        self.__testDirPath = os.path.join(TOPDIR, "rcsb", "db", "tests-mongo", "test-output", 'pdbx-fails')
         self.__testChemCompDirPath = os.path.join(TOPDIR, "rcsb", "db", "tests", "test-output", 'cc-fails')
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
@@ -102,16 +102,16 @@ class PdbxLoadListTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
-    def specialTestLoadPdbxCoreEntity(self):
-        """ Test case -  Load PDBx core entry data with pdbx_core_entry schema
+    def specialTestLoadPdbxCore(self):
+        """ Test case -  Load PDBx core collections with merging
         """
         try:
             inputPathList = glob.glob(self.__testDirPath + "/*.cif")
             logger.info("Found %d files in test path %s" % (len(inputPathList), self.__testDirPath))
             mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
-            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entity_v5_0_2'], loadType='full', inputPathList=inputPathList, styleType=self.__documentStyle,
-                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedEntityFilePath)
+            ok = mw.load('pdbx_core', loadType='full', inputPathList=inputPathList, styleType=self.__documentStyle,
+                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedEntityFilePath, mergeContentTypes=['vrpt'])
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -121,7 +121,7 @@ class PdbxLoadListTests(unittest.TestCase):
 def mongoLoadPdbxList():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(PdbxLoadListTests("specialTestLoadPdbxCoreEntry"))
-    suiteSelect.addTest(PdbxLoadListTests("specialTestLoadPdbxCoreEntity"))
+    suiteSelect.addTest(PdbxLoadListTests("specialTestLoadPdbxCore"))
     return suiteSelect
 
 

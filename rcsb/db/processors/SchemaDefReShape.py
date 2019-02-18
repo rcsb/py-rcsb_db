@@ -53,6 +53,9 @@ class SliceValues(object):
         self.data = list(itertools.product(*valueL))
         logger.debug("Parent value product list %r" % self.data)
 
+    def isEmpty(self):
+        return len(self.data) < 1
+
     def __testFilter(self, rowD, catId, filters):
         ok = True
         for filter in filters:
@@ -116,15 +119,17 @@ class SchemaDefReShape(object):
             #
             #
             sliceValues = SliceValues(schemaDataDictById, self.__sD, sliceFilter)
+            if sliceValues.isEmpty():
+                return rL
             #
             flagNew = True
-            # JDW : TEMP ---------- ----------
+            # JDW - This path is better performing -
             if styleType == "rowwise_by_name_with_cardinality" and flagNew:
                 logger.debug("Invoking one-pass slice filter %s" % sliceFilter)
                 rL = self.__sliceRowwiseByNameWithCardOnePass(schemaDataDictById, sliceFilter, sliceIndex)
                 logger.debug("Completed one-pass slice filter %s" % sliceFilter)
             else:
-                # JDW : TEMP ---------- ----------
+                # JDW - This path works but is not well performing
                 for ii, sliceValue in enumerate(sliceValues):
                     logger.debug(" %4d filter %s slice value %r" % (ii, sliceFilter, sliceValue))
                     rD = self.__reshapeSlicedSchemaData(schemaDataDictById, sliceFilter, sliceValue, sliceIndex, styleType=styleType)

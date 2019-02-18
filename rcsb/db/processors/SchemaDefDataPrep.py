@@ -291,12 +291,15 @@ class SchemaDefDataPrep(object):
             #
             logger.debug("Reshape container %s using %s" % (container.getName(), sliceFilter))
             sddL = self.__reShape.applySlicedShape(schemaDataDictById, styleType=styleType, sliceFilter=sliceFilter)
-            schemaDataDictList.extend(sddL)
-            #
-            # Match the container name to the generated reshaped objects
-            cName = container.getName()
-            cnList = [cName for i in range(len(sddL))]
-            containerNameList.extend(cnList)
+            if len(sddL) == 0:
+                logger.info("No result on reshaping container %s using %s" % (container.getName(), sliceFilter))
+            else:
+                schemaDataDictList.extend(sddL)
+                #
+                # Match the container name to the generated reshaped objects
+                cName = container.getName()
+                cnList = [cName for i in range(len(sddL))]
+                containerNameList.extend(cnList)
 
         rejectPathList = list(set(rejectPathList))
         #
