@@ -76,7 +76,7 @@
  25-Jan-2019   V0.41 schema extension for DrugBank core collection
  16-Feb-2019   V0.42 Add entity_instance_core support, add content type merging feature to allow consolidation of data artifacts
                prior to data load processing, and overhaul the slice processing to improve performance.
- 18-Feb-2019   V0.43 provide a more graceful handling of empty slices, add slice support for pdbx_validate_* categories, and
-               adjust category exclusions for the entity_core collection.
+ 18-Feb-2019   V0.43 provide a more graceful handling of empty slices,
+ 19-Feb-2019   V0.44 add slice support for pdbx_validate_* categories, and adjust category exclusions for the entity_core collection.
 
 #
