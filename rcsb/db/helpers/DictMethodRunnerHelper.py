@@ -20,6 +20,8 @@
 # 10-Jan-2019 jdw better handle initialization in filterBlockByMethod()
 # 11-Jan-2019 jdw revise classification in assignAssemblyCandidates()
 # 16-Feb-2019 jdw add buildContainerEntityInstanceIds()
+# 19-Feb-2019 jdw add internal method __addPdbxValidateAsymIds() to add cardinal identifiers to
+#                 pdbx_validate_* categories
 #
 ##
 """
@@ -195,6 +197,84 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
         return False
+
+    def __addPdbxValidateAsymIds(self, dataContainer, asymMapD, npAuthAsymMapD):
+        """ Internal method to insert Asym_id's into the following categories:
+
+                _pdbx_validate_close_contact.rcsb_label_asym_id_1
+                _pdbx_validate_close_contact.rcsb_label_asym_id_2
+                _pdbx_validate_symm_contact.rcsb_label_asym_id_1
+                _pdbx_validate_symm_contact.rcsb_label_asym_id_2
+                _pdbx_validate_rmsd_bond.rcsb_label_asym_id_1
+                _pdbx_validate_rmsd_bond.rcsb_label_asym_id_2
+                _pdbx_validate_rmsd_angle.rcsb_label_asym_id_1
+                _pdbx_validate_rmsd_angle.rcsb_label_asym_id_2
+                _pdbx_validate_rmsd_angle.rcsb_label_asym_id_3
+                _pdbx_validate_torsion.rcsb_label_asym_id
+                _pdbx_validate_peptide_omega.rcsb_label_asym_id_1
+                _pdbx_validate_peptide_omega.rcsb_label_asym_id_2
+                _pdbx_validate_chiral.rcsb_label_asym_id
+                _pdbx_validate_planes.rcsb_label_asym_id
+                _pdbx_validate_planes_atom.rcsb_label_asym_id
+                _pdbx_validate_main_chain_plane.rcsb_label_asym_id
+                _pdbx_validate_polymer_linkage.rcsb_label_asym_id_1
+                _pdbx_validate_polymer_linkage.rcsb_label_asym_id_2
+        """
+        #
+        mD = {'pdbx_validate_close_contact': [('auth_asym_id_1', 'auth_seq_id_1', 'rcsb_label_asym_id_1'), ('auth_asym_id_2', 'auth_seq_id_2', 'rcsb_label_asym_id_2')],
+              'pdbx_validate_symm_contact': [('auth_asym_id_1', 'auth_seq_id_1', 'rcsb_label_asym_id_1'), ('auth_asym_id_2', 'auth_seq_id_2', 'rcsb_label_asym_id_2')],
+              'pdbx_validate_rmsd_bond': [('auth_asym_id_1', 'auth_seq_id_1', 'rcsb_label_asym_id_1'), ('auth_asym_id_2', 'auth_seq_id_2', 'rcsb_label_asym_id_2')],
+              'pdbx_validate_rmsd_angle': [('auth_asym_id_1', 'auth_seq_id_1', 'rcsb_label_asym_id_1'), ('auth_asym_id_2', 'auth_seq_id_2', 'rcsb_label_asym_id_2'), ('auth_asym_id_3', 'auth_seq_id_3', 'rcsb_label_asym_id_3')],
+              'pdbx_validate_torsion': [('auth_asym_id', 'auth_seq_id', 'rcsb_label_asym_id')],
+              'pdbx_validate_peptide_omega': [('auth_asym_id_1', 'auth_seq_id_1', 'rcsb_label_asym_id_1'), ('auth_asym_id_2', 'auth_seq_id_2', 'rcsb_label_asym_id_2')],
+              'pdbx_validate_chiral': [('auth_asym_id', 'auth_seq_id', 'rcsb_label_asym_id')],
+              'pdbx_validate_planes': [('auth_asym_id', 'auth_seq_id', 'rcsb_label_asym_id')],
+              'pdbx_validate_planes_atom': [('auth_asym_id', 'auth_seq_id', 'rcsb_label_asym_id')],
+              'pdbx_validate_main_chain_plane': [('auth_asym_id', 'auth_seq_id', 'rcsb_label_asym_id')],
+              'pdbx_validate_polymer_linkage': [('auth_asym_id_1', 'auth_seq_id_1', 'rcsb_label_asym_id_1'), ('auth_asym_id_2', 'auth_seq_id_2', 'rcsb_label_asym_id_2')],
+              'pdbx_distant_solvent_atoms': [('auth_asym_id', 'auth_seq_id', 'rcsb_label_asym_id')]}
+        #
+        # polymer lookup
+        authAsymD = {}
+        for asymId, d in asymMapD.items():
+            if d['entity_type'].lower() in ['polymer', 'branched']:
+                authAsymD[(d['auth_asym_id'], '?')] = asymId
+        #
+        # non-polymer lookup
+        #
+        logger.debug("%s authAsymD %r" % (dataContainer.getName(), authAsymD))
+        for (authAsymId, seqId), d in npAuthAsymMapD.items():
+            if d['entity_type'].lower() not in ['polymer', 'branched']:
+                authAsymD[(authAsymId, seqId)] = d['asym_id']
+
+        #
+        for catName, mTupL in mD.items():
+            if not dataContainer.exists(catName):
+                continue
+            cObj = dataContainer.getObj(catName)
+            for ii in range(cObj.getRowCount()):
+                for mTup in mTupL:
+                    if cObj.hasAttribute(mTup[0]) and cObj.hasAttribute(mTup[1]):
+                        authVal = cObj.getValue(mTup[0], ii)
+                        authSeqId = cObj.getValue(mTup[1], ii)
+                        #
+                        # logger.debug("%s %4d authAsymId %r authSeqId %r" % (catName, ii, authVal, authSeqId))
+                        #
+                        if (authVal, authSeqId) in authAsymD:
+                            if not cObj.hasAttribute(mTup[2]):
+                                cObj.appendAttribute(mTup[2])
+                            cObj.setValue(authAsymD[(authVal, authSeqId)], mTup[2], ii)
+                        elif (authVal, '?') in authAsymD:
+                            if not cObj.hasAttribute(mTup[2]):
+                                cObj.appendAttribute(mTup[2])
+                            cObj.setValue(authAsymD[(authVal, '?')], mTup[2], ii)
+
+                        else:
+                            logger.error("%s %s missing mapping auth asymId %s" % (dataContainer.getName(), catName, authVal))
+                    else:
+                        logger.error("%s %s missing required attributes %s %s" % (dataContainer.getName(), catName, mTup[0], mTup[1]))
+
+        return True
 
     def aggregateCitationAuthors(self, dataContainer, catName, atName, **kwargs):
         try:
@@ -394,6 +474,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             cObj.setValue(entryId, 'entry_id', 0)
             #
             asymD = {}
+            npAuthAsymD = {}
             if psObj is not None:
                 for ii in range(psObj.getRowCount()):
                     asymId = psObj.getValue('asym_id', ii)
@@ -407,21 +488,25 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             if npsObj is not None:
                 for ii in range(npsObj.getRowCount()):
                     asymId = npsObj.getValue('asym_id', ii)
-                    if asymId in asymD:
-                        continue
+
                     entityId = npsObj.getValue('entity_id', ii)
                     authAsymId = npsObj.getValue('pdb_strand_id', ii)
                     resNum = npsObj.getValue('pdb_seq_num', ii)
                     monId = npsObj.getValue('mon_id', ii)
-                    asymD[asymId] = {'entry_id': entryId, 'entity_id': entityId, 'entity_type': eD[entityId],
-                                     'asym_id': asymId, 'auth_asym_id': authAsymId, 'comp_id': monId, 'auth_seq_id': resNum}
+                    if asymId not in asymD:
+                        asymD[asymId] = {'entry_id': entryId, 'entity_id': entityId, 'entity_type': eD[entityId],
+                                         'asym_id': asymId, 'auth_asym_id': authAsymId, 'comp_id': monId, 'auth_seq_id': '?'}
+                    npAuthAsymD[(authAsymId, resNum)] = {'entry_id': entryId, 'entity_id': entityId, 'entity_type': eD[entityId],
+                                                         'asym_id': asymId, 'auth_asym_id': authAsymId, 'comp_id': monId, 'auth_seq_id': resNum}
 
-                #
+            # JDW TODO MAKE npsObj extended mapping !
+            #
             for ii, ky in enumerate(sorted(asymD)):
                 for k, v in asymD[ky].items():
                     cObj.setValue(v, k, ii)
 
-            return True
+            ok = self.__addPdbxValidateAsymIds(dataContainer, asymD, npAuthAsymD)
+            return ok
         except Exception as e:
             logger.exception("For %s failing with %s" % (catName, str(e)))
         return False

@@ -111,7 +111,8 @@ class PdbxLoadListTests(unittest.TestCase):
             mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('pdbx_core', loadType='full', inputPathList=inputPathList, styleType=self.__documentStyle,
-                         dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedEntityFilePath, mergeContentTypes=['vrpt'])
+                         dataSelectors=["PUBLIC_RELEASE"], collectionLoadList=['pdbx_core_entity_v5_0_2'],
+                         failedFilePath=self.__failedEntityFilePath, mergeContentTypes=['vrpt'], logSize=True, pruneDocumentSize=15.8)
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -120,7 +121,7 @@ class PdbxLoadListTests(unittest.TestCase):
 
 def mongoLoadPdbxList():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(PdbxLoadListTests("specialTestLoadPdbxCoreEntry"))
+    #suiteSelect.addTest(PdbxLoadListTests("specialTestLoadPdbxCoreEntry"))
     suiteSelect.addTest(PdbxLoadListTests("specialTestLoadPdbxCore"))
     return suiteSelect
 

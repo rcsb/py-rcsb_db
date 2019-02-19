@@ -173,7 +173,7 @@ class PdbxLoaderTests(unittest.TestCase):
             self.fail()
 
     def testLoadPdbxCoreDataWithMerge(self):
-        """ Test case -  Load PDBx core collections
+        """ Test case -  Load PDBx core collections with merged content 'vrpt'
         """
         try:
             mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,

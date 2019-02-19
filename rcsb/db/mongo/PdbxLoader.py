@@ -328,14 +328,23 @@ class PdbxLoader(object):
                 #
                 if logSize:
                     maxDocumentMegaBytes = -1
+                    thresholdMB = 15.8
+                    # thresholdMB = 5.0
                     for tD, cN in zip(dList, containerNameList):
                         # documentMegaBytes = float(sys.getsizeof(pickle.dumps(tD, protocol=0))) / 1000000.0
                         documentMegaBytes = float(sys.getsizeof(bson.BSON.encode(tD))) / 1000000.0
-                        logger.debug("%s Document %s  %.4f MB" % (procName, cN, documentMegaBytes))
+                        logger.debug("%s Document %s %.4f MB" % (procName, cN, documentMegaBytes))
                         maxDocumentMegaBytes = max(maxDocumentMegaBytes, documentMegaBytes)
-                        if documentMegaBytes > 15.8:
+                        if documentMegaBytes > thresholdMB:
                             logger.info("Large document %s  %.4f MB" % (cN, documentMegaBytes))
-                    logger.debug("%s maximum document size loaded %.4f MB" % (procName, maxDocumentMegaBytes))
+                            for ky in tD:
+                                try:
+                                    sMB = float(sys.getsizeof(bson.BSON.encode({'t': tD[ky]}))) / 1000000.0
+                                except Exception:
+                                    sMB = -1
+                                logger.info("Sub-document length %s sizeMB %.4f  %8d" % (ky, sMB, len(tD[ky])))
+                            #
+                    logger.info("%s maximum document size loaded %.4f MB" % (procName, maxDocumentMegaBytes))
                 #
                 #  Get the [scbemaId.atId,...] holding the natural document Id
                 #
@@ -344,6 +353,7 @@ class PdbxLoader(object):
                 #
                 #  Add any private document keys -
                 dList = sdp.addDocumentPrivateAttributes(dList, collectionName)
+                #
 
                 logger.debug("%s docIdL %r collectionName %r" % (procName, docIdL, collectionName))
                 #
