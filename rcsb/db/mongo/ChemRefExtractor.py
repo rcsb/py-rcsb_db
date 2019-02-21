@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class ChemRefExtractor(object):
-    """ Prepare and load repository holdings and repository update data.
+    """ Selected utilities to extract data from chemical component core collections.
     """
 
     def __init__(self, cfgOb):
