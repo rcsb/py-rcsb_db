@@ -224,8 +224,9 @@ def main():
         if args.load_pdbx_core_merge:
             ok = mw.load('pdbx_core', loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
-                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
-            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck, mergeContentTypes=['vrpt'])
+                         saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize,
+                         schemaLevel=schemaLevel, mergeContentTypes=['vrpt'])
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
         #
         if args.load_pdbx_core_entity:
             ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entity_v5_0_2'], loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,

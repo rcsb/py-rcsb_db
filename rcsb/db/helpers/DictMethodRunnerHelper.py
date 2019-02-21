@@ -270,7 +270,8 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                             cObj.setValue(authAsymD[(authVal, '?')], mTup[2], ii)
 
                         else:
-                            logger.error("%s %s missing mapping auth asymId %s" % (dataContainer.getName(), catName, authVal))
+                            if authVal not in ['.']:
+                                logger.error("%s %s missing mapping auth asymId %s" % (dataContainer.getName(), catName, authVal))
                     else:
                         logger.error("%s %s missing required attributes %s %s" % (dataContainer.getName(), catName, mTup[0], mTup[1]))
 
