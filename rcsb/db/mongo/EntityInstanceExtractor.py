@@ -285,12 +285,21 @@ class EntityInstanceExtractor(object):
                                 #
                                 try:
                                     irdL = tL[0]['pdbx_vrpt_instance_results'] if 'pdbx_vrpt_instance_results' in tL[0] else []
-                                    oL = [{'OWAB': ird['OWAB'], 'label_seq_id': ird['label_seq_id'], 'label_comp_id': ird['label_comp_id']} for ird in irdL]
-                                    d['pdbx_vrpt_instance_results'] = oL
-                                    vD[asymId] = copy.copy(d)
+                                    oL = [{'label_seq_id': ird['label_seq_id'], 'label_comp_id': ird['label_comp_id']} for ird in irdL]
+                                    d['pdbx_vrpt_instance_results_seq'] = oL
                                 except Exception as e:
                                     logger.error("entryId %s entityId %s asymId %s bad validation data" % (entryId, entityId, asymId))
 
+#
+                                try:
+                                    irdL = tL[0]['pdbx_vrpt_instance_results'] if 'pdbx_vrpt_instance_results' in tL[0] else []
+                                    oL = [{'OWAB': ird['OWAB'], 'label_seq_id': ird['label_seq_id'], 'label_comp_id': ird['label_comp_id']} for ird in irdL]
+                                    d['pdbx_vrpt_instance_results_occ'] = oL
+                                except Exception as e:
+                                    #logger.error("entryId %s entityId %s asymId %s bad validation data" % (entryId, entityId, asymId))
+                                    pass
+
+                                vD[asymId] = copy.copy(d)
                                 #
                             analD = self.analEntity(entryId, peD, vD)
                             entryD[entryId]['selected_polymer_entities'][entityId]['anal_instances'] = copy.copy(analD)
@@ -366,34 +375,36 @@ class EntityInstanceExtractor(object):
                     logger.error("Missing validatoin data for %s %s %s" % (entryId, entityId, asymId))
                     continue
                 #
-                irDL = vD[asymId]['pdbx_vrpt_instance_results'] if 'pdbx_vrpt_instance_results' in vD[asymId] else []
+                irDL = vD[asymId]['pdbx_vrpt_instance_results_seq'] if 'pdbx_vrpt_instance_results_seq' in vD[asymId] else []
                 lsL = list(set([d['label_seq_id'] for d in irDL]))
                 lenInstanceSeq = len(lsL)
 
                 instRefDbSeqCov = 1.0 - float(lenRefDbSeq - lenInstanceSeq) / float(lenRefDbSeq) if lenRefDbSeq else None
                 instSampleSeqCov = 1.0 - float(lenEntitySeq - lenInstanceSeq) / float(lenEntitySeq)
                 #
+                occDL = vD[asymId]['pdbx_vrpt_instance_results_occ'] if 'pdbx_vrpt_instance_results_occ' in vD[asymId] else []
                 # average the
-                owabD = {}
-                for d in irDL:
-                    owabD.setdefault(d['label_seq_id'], []).append(d['OWAB'])
-                #
-                # logger.info("owabD %r" % owabD)
-                meanOwabD = {k: mean(v) for k, v in owabD.items()}
-                meanOwab = mean(meanOwabD.values())
-                stdevOwab = stdev(meanOwabD.values())
-                #
-                logger.debug(">> Length of B values list %d mean %.3f stdev %.3f" % (len(meanOwabD), meanOwab, stdevOwab))
-                #
-                meanOwabA = np.array(list(meanOwabD.values()))
-                #
-                condition = meanOwabA > (meanOwab + meanOwab)
-                regL = self.__contiguous_regions(condition)
                 owabRegD = {}
-                for ii, (start, stop) in enumerate(regL, 1):
-                    segment = meanOwabA[start:stop]
-                    logger.debug("B value range =  start %d stop %d min %.3f max %.3f" % (start, stop, segment.min(), segment.max()))
-                    owabRegD[ii] = {'length': stop - start + 1, 'occ_min': segment.min(), 'occ_max': segment.max()}
+                if len(occDL) > 0:
+                    owabD = {}
+                    for d in occDL:
+                        owabD.setdefault(d['label_seq_id'], []).append(d['OWAB'])
+                    #
+                    # logger.info("owabD %r" % owabD)
+                    meanOwabD = {k: mean(v) for k, v in owabD.items()}
+                    meanOwab = mean(meanOwabD.values())
+                    stdevOwab = stdev(meanOwabD.values())
+                    #
+                    logger.debug(">> Length of B values list %d mean %.3f stdev %.3f" % (len(meanOwabD), meanOwab, stdevOwab))
+                    #
+                    meanOwabA = np.array(list(meanOwabD.values()))
+                    #
+                    condition = meanOwabA > (meanOwab + meanOwab)
+                    regL = self.__contiguous_regions(condition)
+                    for ii, (start, stop) in enumerate(regL, 1):
+                        segment = meanOwabA[start:stop]
+                        logger.debug("B value range =  start %d stop %d min %.3f max %.3f" % (start, stop, segment.min(), segment.max()))
+                        owabRegD[ii] = {'length': stop - start + 1, 'occ_min': segment.min(), 'occ_max': segment.max()}
 
                 #
                 #
