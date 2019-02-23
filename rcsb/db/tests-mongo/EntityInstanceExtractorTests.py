@@ -52,13 +52,16 @@ class ChemRefLoaderTests(unittest.TestCase):
         self.__readBackCheck = True
         self.__numProc = 2
         self.__chunkSize = 10
-        self.__documentLimit = 1000
+        self.__documentLimit = None
         self.__filterType = "assign-dates"
         #
+        #
         self.__workPath = os.path.join(HERE, 'test-output')
-        self.__savePath = os.path.join(HERE, 'test-output', 'entry-data-dictionary.pic')
+        self.__entitySavePath = os.path.join(HERE, 'test-output', 'entity-data-dictionary.pic')
+        self.__entrySavePath = os.path.join(HERE, 'test-output', 'entry-data-dictionary.pic')
+        self.__instanceSavePath = os.path.join(HERE, 'test-output', 'instance-data-dictionary.pic')
         self.__mU = MarshalUtil()
-        self.__entryLimit = 5000
+        self.__entryLimit = None
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
@@ -77,15 +80,15 @@ class ChemRefLoaderTests(unittest.TestCase):
         try:
             eiExt = EntityInstanceExtractor(self.__cfgOb)
             entryD = eiExt.getEntryInfo()
-            self.__mU.doExport(self.__savePath, entryD, format='pickle')
             self.assertTrue(len(entryD) > 0)
-            ok = self.__mU.doExport(self.__savePath, entryD, format='pickle')
+            ok = self.__mU.doExport(self.__entrySavePath, entryD, format='pickle')
             self.assertTrue(ok)
             #
             logger.info('EntryD length %d' % len(entryD))
             #
+            entryD = self.__mU.doImport(self.__entrySavePath, format='pickle')
             #
-            entryD = eiExt.getPolymerEntities(entryD, savePath=self.__savePath, entryLimit=None)
+            entryD = eiExt.getPolymerEntities(entryD, savePath=self.__entitySavePath, entryLimit=None)
             self.assertTrue(len(entryD) > 0)
             logger.info('EntryD + polymer entities length %d' % len(entryD))
             #
@@ -100,25 +103,11 @@ class ChemRefLoaderTests(unittest.TestCase):
         """
         try:
             eiExt = EntityInstanceExtractor(self.__cfgOb)
-            if False:
-                entryD = eiExt.getEntryInfo()
-                self.__mU.doExport(self.__savePath, entryD, format='pickle')
-                self.assertTrue(len(entryD) > 0)
-                #
-                logger.info('EntryD length %d' % len(entryD))
-                #
-                entryD = eiExt.getPolymerEntities(entryD, savePath=self.__savePath)
-                self.assertTrue(len(entryD) > 0)
-                #
-                logger.info('EntryD after polymer entities length %d' % len(entryD))
-                ok = self.__mU.doExport(self.__savePath, entryD, format='pickle')
-                self.assertTrue(ok)
-                #
-            entryD = self.__mU.doImport(self.__savePath, format="pickle")
+            entryD = self.__mU.doImport(self.__entitySavePath, format="pickle")
             #
-            entryD = eiExt.getEntityInstances(entryD, savePath=self.__savePath, entryLimit=self.__entryLimit)
+            entryD = eiExt.getEntityInstances(entryD, savePath=self.__instanceSavePath, entryLimit=self.__entryLimit)
             self.assertTrue(len(entryD) > 0)
-            ok = self.__mU.doExport(self.__savePath, entryD, format='pickle')
+            ok = self.__mU.doExport(self.__instanceSavePath, entryD, format='pickle')
             self.assertTrue(ok)
             logger.info('EntryD + polymer entities instances length %d' % len(entryD))
             #
@@ -131,10 +120,10 @@ class ChemRefLoaderTests(unittest.TestCase):
 
         """
         try:
-            #eiExt = EntityInstanceExtractor(self.__cfgOb)
-            entryD = self.__mU.doImport(self.__savePath, format="pickle")
+            entryD = self.__mU.doImport(self.__instanceSavePath, format="pickle")
             for entryId in entryD:
                 for entityId, eD in entryD[entryId]['selected_polymer_entities'].items():
+
                     analD = eD['anal_instances'] if 'anal_instances' in eD else {}
                     for asymId, aD in analD.items():
                         logger.info("entryId %s entityId %s asymId %s analD: %r" % (entryId, entityId, asymId, aD))
