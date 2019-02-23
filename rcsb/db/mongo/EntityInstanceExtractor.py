@@ -16,15 +16,17 @@ __license__ = "Apache 2.0"
 
 import copy
 import logging
-from itertools import chain, islice, groupby
+from itertools import chain, groupby, islice
 from operator import itemgetter
 from statistics import mean, stdev
 
 import numpy as np
-import requests
+
 from rcsb.db.mongo.Connection import Connection
 from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
+
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -436,7 +438,7 @@ class EntityInstanceExtractor(object):
 
         # Print the start and stop indicies of each region where the absolute
         # values of x are below 1, and the min and max of each of these regions
-        for start, stop in contiguous_regions(condition):
+        for start, stop in self.__contiguous_regions(condition):
             segment = x[start:stop]
             print(start, stop)
             print(segment.min(), segment.max())

@@ -80,3 +80,4 @@
  19-Feb-2019   V0.44 add slice support for pdbx_validate_* categories, and adjust category exclusions for the entity_core collection.
  20-Feb-2019   V0.44 adding EntityInstanceExtractor.py preliminary version, adjust logging and cli script options.
 #
+ 22-Feb-2019   V0.45 preliminary version add tools for validation load analysis.
