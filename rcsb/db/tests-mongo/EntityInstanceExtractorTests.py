@@ -104,6 +104,7 @@ class ChemRefLoaderTests(unittest.TestCase):
         try:
             eiExt = EntityInstanceExtractor(self.__cfgOb)
             entryD = self.__mU.doImport(self.__entitySavePath, format="pickle")
+            logger.info("Reading stored entryD length %d" % len(entryD))
             #
             entryD = eiExt.getEntityInstances(entryD, savePath=self.__instanceSavePath, entryLimit=self.__entryLimit)
             self.assertTrue(len(entryD) > 0)
@@ -134,7 +135,7 @@ class ChemRefLoaderTests(unittest.TestCase):
 
 def entityInstanceExtractSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(ChemRefLoaderTests("testExtractEntityPolymers"))
+    #suiteSelect.addTest(ChemRefLoaderTests("testExtractEntityPolymers"))
     suiteSelect.addTest(ChemRefLoaderTests("testExtractEntityInstances"))
     suiteSelect.addTest(ChemRefLoaderTests("testAnalEntityInstances"))
     return suiteSelect
