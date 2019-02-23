@@ -271,26 +271,27 @@ class EntityInstanceExtractor(object):
                                 selectL = ['pdbx_vrpt_instance_results']
                                 tL = mg.fetch(dbName, collectionName, selectL, queryD=qD)
                                 d = {}
-                                if tL and len(tL) > 0:
-                                    logger.debug('>>> %s %s (%s) dict key length %d ' % (collectionName, entryId, asymId, len(tL[0])))
+                                logger.debug('>>> %s %s (%s) dict key length %d ' % (collectionName, entryId, asymId, len(tL[0])))
 
-                                    #
-                                    if False:
-                                        d['pdbx_vrpt_instance_results'] = tL[0]['pdbx_vrpt_instance_results'] if 'pdbx_vrpt_instance_results' in tL[0] else []
-                                        d['pdbx_unobs_or_zero_occ_residues'] = tL[0]['pdbx_unobs_or_zero_occ_residues'] if 'pdbx_unobs_or_zero_occ_residues' in tL[0] else []
-                                    else:
-                                        irdL = tL[0]['pdbx_vrpt_instance_results'] if 'pdbx_vrpt_instance_results' in tL[0] else []
-                                        oL = [{'OWAB': ird['OWAB'], 'label_seq_id': ird['label_seq_id'], 'label_comp_id': ird['label_comp_id']} for ird in irdL]
-                                        d['pdbx_vrpt_instance_results'] = oL
-                                        #
-                                        if False:
-                                            urdL = tL[0]['pdbx_unobs_or_zero_occ_residues'] if 'pdbx_unobs_or_zero_occ_residues' in tL[0] else []
-                                            oL = [{'label_seq_id': urd['label_seq_id'], 'label_comp_id': urd['label_comp_id']} for urd in urdL]
-                                            d['pdbx_unobs_or_zero_occ_residues'] = oL
-
+                                #
+                                if False:
+                                    d['pdbx_vrpt_instance_results'] = tL[0]['pdbx_vrpt_instance_results'] if 'pdbx_vrpt_instance_results' in tL[0] else []
+                                    d['pdbx_unobs_or_zero_occ_residues'] = tL[0]['pdbx_unobs_or_zero_occ_residues'] if 'pdbx_unobs_or_zero_occ_residues' in tL[0] else []
+                                #
+                                if False:
+                                    urdL = tL[0]['pdbx_unobs_or_zero_occ_residues'] if 'pdbx_unobs_or_zero_occ_residues' in tL[0] else []
+                                    oL = [{'label_seq_id': urd['label_seq_id'], 'label_comp_id': urd['label_comp_id']} for urd in urdL]
+                                    d['pdbx_unobs_or_zero_occ_residues'] = oL
+                                #
+                                try:
+                                    irdL = tL[0]['pdbx_vrpt_instance_results'] if 'pdbx_vrpt_instance_results' in tL[0] else []
+                                    oL = [{'OWAB': ird['OWAB'], 'label_seq_id': ird['label_seq_id'], 'label_comp_id': ird['label_comp_id']} for ird in irdL]
+                                    d['pdbx_vrpt_instance_results'] = oL
                                     vD[asymId] = copy.copy(d)
+                                except Exception as e:
+                                    logger.error("entryId %s entityId %s asymId %s bad validation data" % (entryId, entityId, asymId))
 
-                                    #
+                                #
                             analD = self.analEntity(entryId, peD, vD)
                             entryD[entryId]['selected_polymer_entities'][entityId]['anal_instances'] = copy.copy(analD)
                         iCount += 1
