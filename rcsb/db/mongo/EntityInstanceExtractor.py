@@ -295,7 +295,7 @@ class EntityInstanceExtractor(object):
                             analD = self.analEntity(entryId, peD, vD)
                             entryD[entryId]['selected_polymer_entities'][entityId]['anal_instances'] = copy.copy(analD)
                         iCount += 1
-                        if iCount % 100 == 0:
+                        if iCount % 500 == 0:
                             logger.info("Completed %d/%d entries" % (iCount, len(entryD)))
                         if iCount % 2000 == 0:
                             ok = self.__mU.doExport(savePath, entryD, format='pickle')
@@ -428,7 +428,7 @@ class EntityInstanceExtractor(object):
                 #
                 analD[asymId] = {'coverage_inst_refdb': instRefDbSeqCov, 'coverage_inst_entity': instSampleSeqCov,
                                  'gapD': copy.copy(gapD), 'owabRegiond': copy.copy(owabRegD)}
-                logger.info("entry %s entity %s analD %r" % (entryId, entityId, analD))
+                logger.debug("entry %s entity %s analD %r" % (entryId, entityId, analD))
         except Exception as e:
             logger.exception("%s failing with %s" % (entryId, str(e)))
         #
