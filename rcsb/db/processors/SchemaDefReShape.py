@@ -513,13 +513,13 @@ class SchemaDefReShape(object):
             for pv in pVals:
                 retD[pv] = copy.copy(rD)
         #
-        #logger.info("slice %s retD keys after slice extra insertion %r" % (sliceFilter, list(retD.keys())))
+        # logger.info("slice %s retD keys after slice extra insertion %r" % (sliceFilter, list(retD.keys())))
         # logger.info("slice %s retD after slice extra insertion %r" % (sliceFilter, retD))
 
         #
         # Split of the rest by slice value - for single parent key slices  -
         #
-        #logger.info("slice %s singleKeyAtD.keys() %r" % (sliceFilter, list(singleKeyAtD.keys())))
+        # logger.info("slice %s singleKeyAtD.keys() %r" % (sliceFilter, list(singleKeyAtD.keys())))
         #
         for schemaId, atL in singleKeyAtD.items():
             #
@@ -536,13 +536,16 @@ class SchemaDefReShape(object):
                 #
                 rvS = set([iRowD[at] if at in iRowD else None for at in atL])
                 for rv in rvS:
-                    #logger.info("Slice %s schemaId %s uFlag %r value %r ADD ROW %r" % (sliceFilter, schemaObjName, uFlag, rv, oRowD))
-                    if rv:
-                        #
+                    # if rv is null or has not parent then the following will fail -
+                    # JDW CHANE - Use a try rather than 'if'   Ignorring error for now
+                    try:
                         if uFlag:
                             retD[rv][schemaObjName] = oRowD
                         else:
                             retD[rv].setdefault(schemaObjName, []).append(oRowD)
+                    except Exception:
+                        pass
+
             #
             #logger.info("Slice %s Finished loading schema name %s values %r" % (sliceFilter, schemaObjName, rvS))
             #

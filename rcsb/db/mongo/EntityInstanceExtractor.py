@@ -102,7 +102,7 @@ class EntityInstanceExtractor(object):
                 if mg.collectionExists(dbName, collectionName):
                     logger.info("%s %s document count is %d" % (dbName, collectionName, mg.count(dbName, collectionName)))
                     qD = {'rcsb_entry_info.experimental_method': expMethod, 'refine.0.ls_d_res_high': {"$lte": resLimit}}
-                    selectL = ['_entry_id', 'rcsb_entry_info']
+                    selectL = ['_entry_id', 'rcsb_entry_info', 'refine']
                     dL = mg.fetch(dbName, collectionName, selectL, queryD=qD)
                     logger.info("Selection %r fetch result count %d" % (selectL, len(dL)))
                     #
@@ -113,6 +113,10 @@ class EntityInstanceExtractor(object):
                         if 'rcsb_entry_info' in d and 'polymer_composition' in d['rcsb_entry_info']:
                             entryD[d['_entry_id']] = {'polymer_composition': d['rcsb_entry_info']['polymer_composition'],
                                                       'experimental_method': d['rcsb_entry_info']['experimental_method']}
+                        if 'refine' in d and len(d['refine']) > 0 and 'ls_d_res_high' in d['refine'][0]:
+                            entryD[d['_entry_id']]['ls_d_res_high'] = d['refine'][0]['ls_d_res_high']
+                            logger.info("Got res %r" % (d['refine'][0]['ls_d_res_high']))
+
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
         return entryD

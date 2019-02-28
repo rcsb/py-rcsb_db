@@ -279,7 +279,7 @@ def mongoLoadChemRefCoreSuite():
 
 def mongoLoadPdbxSuite():
     suiteSelect = unittest.TestSuite()
-    #suiteSelect.addTest(PdbxLoaderTests("testLoadPdbxCoreData"))
+    # suiteSelect.addTest(PdbxLoaderTests("testLoadPdbxCoreData"))
     suiteSelect.addTest(PdbxLoaderTests("testLoadPdbxCoreDataWithMerge"))
     return suiteSelect
 

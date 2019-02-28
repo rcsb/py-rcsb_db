@@ -34,10 +34,10 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
-class ChemRefLoaderTests(unittest.TestCase):
+class EntityInstanceExtractorTests(unittest.TestCase):
 
     def __init__(self, methodName='runTest'):
-        super(ChemRefLoaderTests, self).__init__(methodName)
+        super(EntityInstanceExtractorTests, self).__init__(methodName)
         self.__verbose = True
 
     def setUp(self):
@@ -72,6 +72,21 @@ class ChemRefLoaderTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)\n" % (self.id(),
                                                               time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
                                                               endTime - self.__startTime))
+
+    def testExtractEntryInfo(self):
+        """ Test case - extract entity instance data -
+
+        """
+        try:
+            eiExt = EntityInstanceExtractor(self.__cfgOb)
+            entryD = eiExt.getEntryInfo()
+            self.assertTrue(len(entryD) > 0)
+            ok = self.__mU.doExport(self.__entrySavePath, entryD, format='pickle')
+            self.assertTrue(ok)
+            #
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
 
     def testExtractEntityPolymers(self):
         """ Test case - extract entity instance data -
@@ -135,14 +150,24 @@ class ChemRefLoaderTests(unittest.TestCase):
 
 def entityInstanceExtractSuite():
     suiteSelect = unittest.TestSuite()
-    #suiteSelect.addTest(ChemRefLoaderTests("testExtractEntityPolymers"))
-    suiteSelect.addTest(ChemRefLoaderTests("testExtractEntityInstances"))
-    suiteSelect.addTest(ChemRefLoaderTests("testAnalEntityInstances"))
+    # suiteSelect.addTest(EntityInstanceExtractorTests("testExtractEntityPolymers"))
+    suiteSelect.addTest(EntityInstanceExtractorTests("testExtractEntityInstances"))
+    suiteSelect.addTest(EntityInstanceExtractorTests("testAnalEntityInstances"))
+    return suiteSelect
+
+
+def entryExtractSuite():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(EntityInstanceExtractorTests("testExtractEntryInfo"))
     return suiteSelect
 
 
 if __name__ == '__main__':
     #
-    if (True):
+    if (False):
         mySuite = entityInstanceExtractSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+    if (True):
+        mySuite = entryExtractSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
