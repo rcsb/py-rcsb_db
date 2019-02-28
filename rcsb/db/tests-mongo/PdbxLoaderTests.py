@@ -316,10 +316,6 @@ if __name__ == '__main__':
             unittest.TextTestRunner(verbosity=2).run(mySuite)
         #
         if (True):
-            mySuite = mongoLoadChemRefCoreSuite()
-            unittest.TextTestRunner(verbosity=2).run(mySuite)
-
-        if (True):
             mySuite = mongoReLoadSuite()
             unittest.TextTestRunner(verbosity=2).run(mySuite)
 
@@ -331,6 +327,10 @@ if __name__ == '__main__':
             mySuite = mongoReloadSlicedSuite()
             unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-    if (True):
-        mySuite = mongoLoadPdbxSuite()
-        unittest.TextTestRunner(verbosity=2).run(mySuite)
+        if (True):
+            mySuite = mongoLoadChemRefCoreSuite()
+            unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+        if (True):
+            mySuite = mongoLoadPdbxSuite()
+            unittest.TextTestRunner(verbosity=2).run(mySuite)

@@ -22,6 +22,7 @@
 # 16-Feb-2019 jdw add buildContainerEntityInstanceIds()
 # 19-Feb-2019 jdw add internal method __addPdbxValidateAsymIds() to add cardinal identifiers to
 #                 pdbx_validate_* categories
+# 28-Feb-2019 jdw change criteria for adding rcsb_chem_comp_container_identiers to work with ion definitions
 #
 ##
 """
@@ -1343,7 +1344,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         try:
             logger.debug("Starting with  %r %r" % (dataContainer.getName(), catName))
             # Exit if source categories are missing
-            if not (dataContainer.exists('chem_comp_atom') and dataContainer.exists('chem_comp_bond')):
+            if not (dataContainer.exists('chem_comp') and dataContainer.exists('pdbx_chem_comp_audit')):
                 return False
             #
             # Create the new target category
