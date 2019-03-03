@@ -123,9 +123,13 @@ class SchemaDefDataPrepTests(unittest.TestCase):
 
             tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_by_name_with_cardinality",
                                                                                   filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"])
+            if (len(rejectList)):
+                logger.info("Rejecting components %r" % rejectList)
+            #
             self.assertGreaterEqual(len(tableDataDictList), self.__chemCompMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__chemCompMockLen)
-            self.assertEqual(len(rejectList), 0)
+            self.assertEqual(len(rejectList), 1)
+
             if self.__exportFlag:
                 self.__mU.doExport(os.path.join(HERE, "test-output", "chem-comp-file-prep-rowwise-by-name-with-cardinality.json"), tableDataDictList, format="json", indent=3)
 

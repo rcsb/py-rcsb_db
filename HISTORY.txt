@@ -80,4 +80,7 @@
  19-Feb-2019   V0.44 add slice support for pdbx_validate_* categories, and adjust category exclusions for the entity_core collection.
  20-Feb-2019   V0.44 adding EntityInstanceExtractor.py preliminary version, adjust logging and cli script options.
 #
- 22-Feb-2019   V0.45 preliminary version add tools for validation load analysis.
+ 22-Feb-2019   V0.45 preliminary version of tools for validation load analysis.
+  3-Mar-2019   V0.46 move validation analysis tools, EntityInstanceExtractor.py and related tests to package rcsb.utils.anal.
+               Change helper criteria for identifying chemical component objects and warn for missing chem_comp_atom category cases.
+               Change release filter for chem_comp_* collection to allow only status codes 'REL' and 'REF_ONLY' -

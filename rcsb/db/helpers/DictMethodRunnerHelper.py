@@ -1348,6 +1348,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 return False
             #
             # Create the new target category
+            #
             if not dataContainer.exists(catName):
                 dataContainer.append(DataCategory(catName, attributeNameList=['comp_id',
                                                                               'atom_count',
@@ -1363,18 +1364,28 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             # -------
             wObj = dataContainer.getObj(catName)
             #
-            cObj = dataContainer.getObj('chem_comp_atom')
-            numAtoms = cObj.getRowCount()
+            numAtoms = 0
             numAtomsHeavy = 0
             numAtomsChiral = 0
-            ccId = cObj.getValue('comp_id', 0)
-            for ii in range(numAtoms):
-                el = cObj.getValue('type_symbol', ii)
-                if el != 'H':
-                    numAtomsHeavy += 1
-                chFlag = cObj.getValue('pdbx_stereo_config', ii)
-                if chFlag != 'N':
-                    numAtomsChiral += 1
+            try:
+                cObj = dataContainer.getObj('chem_comp_atom')
+                numAtoms = cObj.getRowCount()
+                numAtomsHeavy = 0
+                numAtomsChiral = 0
+                ccId = cObj.getValue('comp_id', 0)
+                for ii in range(numAtoms):
+                    el = cObj.getValue('type_symbol', ii)
+                    if el != 'H':
+                        numAtomsHeavy += 1
+                    chFlag = cObj.getValue('pdbx_stereo_config', ii)
+                    if chFlag != 'N':
+                        numAtomsChiral += 1
+            except Exception:
+                logger.warning("Missing chem_comp_atom category for %s" % idObj)
+                numAtoms = 1
+                numAtomsHeavy = 1
+                numAtomsChiral = 0
+            #
             #  ------
             numBonds = 0
             numBondsAro = 0
@@ -1432,7 +1443,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         try:
             logger.debug("Starting with  %r %r" % (dataContainer.getName(), catName))
             # Exit if source categories are missing
-            if not (dataContainer.exists('chem_comp_atom') and dataContainer.exists('pdbx_chem_comp_descriptor')):
+            if not (dataContainer.exists('chem_comp') and dataContainer.exists('pdbx_chem_comp_descriptor')):
                 return False
             #
             # Create the new target category
