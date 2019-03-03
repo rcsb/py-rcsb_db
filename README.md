@@ -462,7 +462,12 @@ bird_chem_comp_core,.. ).
 # 17-Jan-2019 jdw add a separate set of document attributes for replacing documents in collections built from slices.
 # 18-Jan-2019 jdw replace __ with _ in collection private keys
 #  2-Feb-2019 jdw adding validation report content to pdbx_core schema
-# 16-Feb-2019 jdw add search indices and private keys for entity_instance_core entity_monomer_core entcollections
+# 16-Feb-2019 jdw add search indices and private keys for entity_instance_core entity_monomer_core collections
+# 18-Feb-2019 jdw various adjustments to exclustions for entity_core and entity_instance_core schemas
+# 20-Feb-2019 jdw include em_ctf_correction and em_particle_selection in the entry core collection
+#                 exclude rcsb_entity_monomer_container_identifiers, rcsb_entity_poly_info, pdbx_poly_seq_scheme,
+#                 and pdbx_nonpoly_scheme from the entity core collection
+#  3-Mar-2019 jdw adjust release filter for chem_comp_* collections to accept only REL and REF_ONLY status codes.
 #
 #
 # Master Pinelands configuration file example
@@ -670,45 +675,45 @@ dictionary_helper:
                   ATTRIBUTE_NAME: pdbx_release_status
                   VALUES:
                       - REL
-                      - OBS
                       - REF_ONLY
+                      #- OBS
         ?       - PUBLIC_RELEASE
                 - chem_comp_core
         :       - CATEGORY_NAME: chem_comp
                   ATTRIBUTE_NAME: pdbx_release_status
                   VALUES:
                       - REL
-                      - OBS
                       - REF_ONLY
+                      #- OBS
         ?       - PUBLIC_RELEASE
                 - bird_chem_comp
         :       - CATEGORY_NAME: chem_comp
                   ATTRIBUTE_NAME: pdbx_release_status
                   VALUES:
                       - REL
-                      - OBS
                       - REF_ONLY
+                      #- OBS
         ?       - PUBLIC_RELEASE
                 - bird_chem_comp_core
         :       - CATEGORY_NAME: pdbx_reference_molecule
                   ATTRIBUTE_NAME: release_status
                   VALUES:
                       - REL
-                      - OBS
+                      #- OBS
         ?       - PUBLIC_RELEASE
                 - bird
         :       - CATEGORY_NAME: pdbx_reference_molecule
                   ATTRIBUTE_NAME: release_status
                   VALUES:
                       - REL
-                      - OBS
+                      #- OBS
         ?       - PUBLIC_RELEASE
                 - bird_family
         :       - CATEGORY_NAME: pdbx_reference_molecule_family
                   ATTRIBUTE_NAME: release_status
                   VALUES:
                       - REL
-                      - OBS
+                      #- OBS
     type_code_classes:
         iterable:
             - TYPE_CODE: ucode-alphanum-csv
@@ -879,6 +884,18 @@ dictionary_helper:
                 - CATEGORY_NAME: pdbx_vrpt_mogul_angle_outliers
                 - CATEGORY_NAME: pdbx_vrpt_mogul_torsion_outliers
                 - CATEGORY_NAME: pdbx_vrpt_mogul_ring_outliers
+                - CATEGORY_NAME: pdbx_validate_close_contact
+                - CATEGORY_NAME: pdbx_validate_symm_contact
+                - CATEGORY_NAME: pdbx_validate_rmsd_bond
+                - CATEGORY_NAME: pdbx_validate_rmsd_angle
+                - CATEGORY_NAME: pdbx_validate_torsion
+                - CATEGORY_NAME: pdbx_validate_peptide_omega
+                - CATEGORY_NAME: pdbx_validate_chiral
+                - CATEGORY_NAME: pdbx_validate_planes
+                - CATEGORY_NAME: pdbx_validate_planes_atom
+                - CATEGORY_NAME: pdbx_validate_main_chain_plane
+                - CATEGORY_NAME: pdbx_validate_polymer_linkage
+                - CATEGORY_NAME: pdbx_distant_solvent_atoms
                 #
         ?       - GENERATED_CONTENT
                 - data_exchange
@@ -1795,6 +1812,36 @@ document_helper:
             INCLUDE: []
             EXCLUDE:
                 - rcsb_entity_instance_container_identifiers
+                - rcsb_entity_monomer_container_identifiers
+                - rcsb_entity_poly_info
+                - pdbx_poly_seq_scheme
+                - pdbx_nonpoly_scheme
+                - pdbx_vrpt_summary
+                - pdbx_vrpt_summary
+                - pdbx_vrpt_model_list
+                - pdbx_vrpt_instance_results
+                - pdbx_vrpt_cyrange_domain
+                - pdbx_vrpt_entity_instance_results
+                - pdbx_vrpt_chemical_shift_list
+                - pdbx_vrpt_unmapped_chemical_shift
+                - pdbx_vrpt_unparsed_chemical_shift
+                - pdbx_vrpt_missing_nmrstar_tags
+                - pdbx_vrpt_random_coil_index
+                - pdbx_vrpt_chemical_shift_outlier
+                - pdbx_vrpt_referencing_offset
+                - pdbx_vrpt_assign_compl_well_defined
+                - pdbx_vrpt_assign_compl_full_length
+                - pdbx_vrpt_software
+                - pdbx_vrpt_bond_outliers
+                - pdbx_vrpt_angle_outliers
+                - pdbx_vrpt_stereo_outliers
+                - pdbx_vrpt_plane_outliers
+                - pdbx_vrpt_clashes
+                - pdbx_vrpt_symmetry_clashes
+                - pdbx_vrpt_mogul_bond_outliers
+                - pdbx_vrpt_mogul_angle_outliers
+                - pdbx_vrpt_mogul_torsion_outliers
+                - pdbx_vrpt_mogul_ring_outliers
             SLICE: ENTITY
         pdbx_core_entity_monomer_v5_0_2:
             INCLUDE: []
@@ -1829,6 +1876,8 @@ document_helper:
                 - EM_SPECIMEN
                 - EM_STAINING
                 - EM_VITRIFICATION
+                - em_ctf_correction
+                - em_particle_selection
                 - ENTRY
                 - EXPTL
                 - EXPTL_CRYSTAL
@@ -1895,7 +1944,15 @@ document_helper:
             SLICE:
         pdbx_core_entity_instance_v5_0_2:
             INCLUDE: []
-            EXCLUDE: []
+            EXCLUDE:
+                - pdbx_poly_seq_scheme
+                - pdbx_nonpoly_scheme
+                - pdbx_struct_chem_comp_diagnostics
+                - pdbx_refine_tls_group
+                - pdbx_entity_instance_feature
+                - pdbx_struct_mod_residue
+                - refine_ls_restr_ncs
+                - struct_ncs_dom_lim
             SLICE: ENTITY_INSTANCE
         repository_holdings_update_v0_1:
             INCLUDE:
@@ -2328,6 +2385,5 @@ document_helper:
             - cluster_membership
     collection_retain_singleton:
         pdbx_core_entity_monomer_v5_0_2: True
-
 
 ```
