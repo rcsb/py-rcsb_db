@@ -47,18 +47,18 @@ class ChemRefExtractor(object):
             docList = []
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
-                if mg.collectionExists("chem_comp_v5", "chem_comp_core_v5_0_2"):
-                    logger.info("Document count is %d" % mg.count("chem_comp_v5", "chem_comp_core_v5_0_2"))
+                if mg.collectionExists("chem_comp_core", "chem_comp_core"):
+                    logger.info("Document count is %d" % mg.count("chem_comp_v5", "chem_comp_core"))
                     qD = {'rcsb_chem_comp_related.resource_name': extResource}
                     selectL = ['rcsb_chem_comp_related', '__comp_id']
-                    tL = mg.fetch("chem_comp_v5", "chem_comp_core_v5_0_2", selectL, queryD=qD)
+                    tL = mg.fetch("chem_comp_core", "chem_comp_core", selectL, queryD=qD)
                     logger.info("CC mapping count %d" % len(tL))
                     docList.extend(tL)
 
-                if mg.collectionExists("chem_comp_v5", "bird_chem_comp_core_v5_0_2"):
+                if mg.collectionExists("chem_comp_core", "bird_chem_comp_core"):
                     qD = {'rcsb_chem_comp_related.resource_name': extResource}
                     selectL = ['rcsb_chem_comp_related', '__prd_id']
-                    tL = mg.fetch("chem_comp_v5", "bird_chem_comp_core_v5_0_2", selectL, queryD=qD)
+                    tL = mg.fetch("chem_comp_core", "bird_chem_comp_core", selectL, queryD=qD)
                     logger.info("BIRD mapping count %d" % len(tL))
                     docList.extend(tL)
                 #

@@ -7,6 +7,7 @@
 #  22-Aug-2018  jdw adjust for namespace packaging
 #  27-Aug-2018  jdw change directory containing console scripts
 #  26-Oct-2018  jdw update dependencies
+#  11-Mar-2019  jdw add rcsb.utils.ec and taxonomy dependencies
 #
 import re
 
@@ -62,14 +63,16 @@ setup(
                       'strict-rfc3339',
                       'mysqlclient >= 1.3.12',
                       'pymongo >= 3.7.0',
-                      'mmcif >= 0.34',
+                      'mmcif >= 0.35',
                       'scandir; python_version < "3.0"',
                       # 'configparser; python_version < "3.0"',
-                      'rcsb.utils.io >= 0.21',
+                      'rcsb.utils.io >= 0.25',
                       'rcsb.utils.config >= 0.16',
                       'rcsb.utils.multiproc >= 0.11',
-                      'rcsb.utils.validation >= 0.12',
-                      'rcsb.utils.chemref >= 0.17'],
+                      'rcsb.utils.validation >= 0.13',
+                      'rcsb.utils.chemref >= 0.17',
+                      'rcsb.utils.ec >= 0.10',
+                      'rcsb.utils.taxonomy >= 0.10'],
     packages=find_packages(exclude=['rcsb.db.tests', 'rcsb.db.tests-*', 'tests.*']),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:

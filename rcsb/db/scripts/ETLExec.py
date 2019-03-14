@@ -39,9 +39,9 @@ def loadStatus(statusList, cfgOb, readBackCheck=True):
     dl = DocumentLoader(cfgOb, "MONGO_DB", numProc=2, chunkSize=2,
                         documentLimit=None, verbose=False, readBackCheck=readBackCheck)
     #
-    databaseName = cfgOb.get('DATABASE_NAME', sectionName=sectionName) + '_' + cfgOb.get('DATABASE_VERSION_STRING', sectionName=sectionName)
-    collectionVersion = cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
-    collectionName = cfgOb.get('COLLECTION_UPDATE_STATUS', sectionName=sectionName) + '_' + collectionVersion
+    databaseName = cfgOb.get('DATABASE_NAME', sectionName=sectionName)
+    #collectionVersion = cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
+    collectionName = cfgOb.get('COLLECTION_UPDATE_STATUS', sectionName=sectionName)
     ok = dl.load(databaseName, collectionName, loadType='append', documentList=statusList,
                  indexAttributeList=['update_id', 'database_name', 'object_name'], keyNames=None)
     return ok

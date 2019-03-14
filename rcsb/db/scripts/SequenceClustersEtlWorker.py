@@ -137,21 +137,25 @@ class SequenceClustersEtlWorker(object):
             dl = DocumentLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                                 documentLimit=self.__documentLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
             #
-            databaseName = self.__databaseName + '_' + self.__databaseVersion
+            databaseName = self.__databaseName
+            addValues = {'_schema_version': self.__collectionVersion}
             #
-            collectionName = self.__entityMemberCollection + '_' + self.__collectionVersion
+            collectionName = self.__entityMemberCollection
             dList = docBySequenceD[self.__entitySchemaName]
-            ok1 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=self.__entityMemberCollectionIndexL, keyNames=None)
+            ok1 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList,
+                          indexAttributeList=self.__entityMemberCollectionIndexL, keyNames=None, addValues=addValues)
             self.__updateStatus(dataSetId, databaseName, collectionName, ok1, statusStartTimestamp)
             #
-            collectionName = self.__clusterMembersCollection + '_' + self.__collectionVersion
+            collectionName = self.__clusterMembersCollection
             dList = docByClusterD[self.__clusterSchemaName]
-            ok2 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=self.__clusterMembersCollectionIndexL, keyNames=None)
+            ok2 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList,
+                          indexAttributeList=self.__clusterMembersCollectionIndexL, keyNames=None, addValues=addValues)
             self.__updateStatus(dataSetId, databaseName, collectionName, ok2, statusStartTimestamp)
             #
             pD = self.__fetchProvenance()
-            collectionName = self.__clusterProvenanceCollection + '_' + self.__collectionVersion
-            ok3 = dl.load(databaseName, collectionName, loadType=loadType, documentList=[pD], indexAttributeList=None, keyNames=None)
+            collectionName = self.__clusterProvenanceCollection
+            ok3 = dl.load(databaseName, collectionName, loadType=loadType, documentList=[pD],
+                          indexAttributeList=None, keyNames=None, addValues=addValues)
             self.__updateStatus(dataSetId, databaseName, collectionName, ok3, statusStartTimestamp)
             #
             return ok1 and ok2 and ok3

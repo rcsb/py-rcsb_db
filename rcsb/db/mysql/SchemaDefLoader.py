@@ -84,11 +84,16 @@ class SchemaDefLoader(object):
 #
         pathDrugBankMappingFile = self.__cfgOb.getPath('DRUGBANK_MAPPING_LOCATOR', sectionName=sectionName)
         pathCsdModelMappingFile = self.__cfgOb.getPath('CCDC_MAPPING_LOCATOR', sectionName=sectionName)
+        pathTaxonomyData = self.__cfgOb.getPath('NCBI_TAXONOMY_PATH', sectionName=sectionName)
+        pathEnzymeData = self.__cfgOb.getPath('ENZYME_CLASSIFICATION_DATA_PATH', sectionName=sectionName)
+        #
         #
         dH = self.__cfgOb.getHelper('DICT_METHOD_HELPER_MODULE', sectionName=sectionName,
                                     drugBankMappingFilePath=pathDrugBankMappingFile,
                                     workPath=self.__workingPath,
-                                    csdModelMappingFilePath=pathCsdModelMappingFile)
+                                    csdModelMappingFilePath=pathCsdModelMappingFile,
+                                    enzymeDataPath=pathEnzymeData,
+                                    taxonomyDataPath=pathTaxonomyData)
 
         self.__dmh = DictMethodRunner(dictLocators=[pathPdbxDictionaryFile, pathRcsbDictionaryFile], methodHelper=dH)
 

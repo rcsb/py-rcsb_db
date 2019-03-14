@@ -74,8 +74,9 @@ class SchemaDefBuild(object):
         #
         ###
         dataTypeInstanceFile = self.__schemaDefHelper.getDataTypeInstanceFile(schemaName) if self.__schemaDefHelper else '.'
+        #
         pth = self.__cfgOb.getPath('INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH', sectionName=configName)
-        self.__instDataTypeFilePath = os.path.join(pth, dataTypeInstanceFile)
+        self.__instDataTypeFilePath = os.path.join(pth, dataTypeInstanceFile) if dataTypeInstanceFile and pth else None
         ##
         self.__appDataTypeFilePath = self.__cfgOb.getPath('APP_DATA_TYPE_INFO_LOCATOR', sectionName=configName)
         dictHelper = self.__cfgOb.getHelper('DICT_HELPER_MODULE', sectionName=configName, cfgOb=self.__cfgOb)
@@ -141,23 +142,27 @@ class SchemaDefBuild(object):
 
 
         """
-        rD = {'CONTENT_TYPE_COLLECTION_MAP': {},
+        rD = {'CONTENT_TYPE_COLLECTION_INFO': [],
               'COLLECTION_DOCUMENT_ATTRIBUTE_NAMES': {},
               'COLLECTION_DOCUMENT_REPLACE_ATTRIBUTE_NAMES': {},
               'COLLECTION_DOCUMENT_PRIVATE_KEYS': {},
               'COLLECTION_DOCUMENT_INDICES': {},
-              'COLLECTION_CONTENT': {}}
+              'COLLECTION_CONTENT': {},
+              'COLLECTION_SUB_CATEGORY_AGGREGATES': {}}
         #
         dH = documentDefHelper
         if dH:
-            cL = dH.getCollections(schemaName)
-            rD['CONTENT_TYPE_COLLECTION_MAP'][schemaName] = cL
-            for c in cL:
+            # cdL  = list of [{'NAME': , 'VERSION': xx }, ...]
+            cdL = dH.getCollectionInfo(schemaName)
+            rD['CONTENT_TYPE_COLLECTION_INFO'] = cdL
+            for cd in cdL:
+                c = cd['NAME']
                 rD['COLLECTION_CONTENT'][c] = {'INCLUDE': dH.getIncluded(c), 'EXCLUDE': dH.getExcluded(c), 'SLICE_FILTER': dH.getSliceFilter(c)}
                 rD['COLLECTION_DOCUMENT_ATTRIBUTE_NAMES'][c] = dH.getDocumentKeyAttributeNames(c)
                 rD['COLLECTION_DOCUMENT_REPLACE_ATTRIBUTE_NAMES'][c] = dH.getDocumentReplaceAttributeNames(c)
                 rD['COLLECTION_DOCUMENT_PRIVATE_KEYS'][c] = dH.getPrivateDocumentAttributes(c)
                 rD['COLLECTION_DOCUMENT_INDICES'][c] = dH.getDocumentIndices(c)
+                rD['COLLECTION_SUB_CATEGORY_AGGREGATES'][c] = dH.getSubCategoryAggregateFeatures(c)
         #
         return rD
 
@@ -261,6 +266,7 @@ class SchemaDefBuild(object):
             d['SCHEMA_UNIT_CARDINALITY'] = cfD['UNIT_CARDINALITY'] if 'UNIT_CARDINALITY' in cfD else False
             d['SCHEMA_CONTENT_CLASSES'] = cfD['CONTENT_CLASSES'] if 'CONTENT_CLASSES' in cfD else []
             d['SCHEMA_MANDATORY'] = cfD['IS_MANDATORY']
+            d['SCHEMA_SUB_CATEGORIES'] = []
             #
             d['ATTRIBUTES'] = {convertNameF(blockAttributeName).upper(): convertNameF(blockAttributeName)} if blockAttributeName else {}
             d['ATTRIBUTES'].update({(convertNameF(at)).upper(): convertNameF(at) for at in atNameList})
@@ -285,7 +291,8 @@ class SchemaDefBuild(object):
                     'FILTER_TYPES': [],
                     'ENUMERATION': {},
                     'IS_CHAR_TYPE': True,
-                    'CONTENT_CLASSES': ['BLOCK_ATTRIBUTE']}
+                    'CONTENT_CLASSES': ['BLOCK_ATTRIBUTE'],
+                    'SUB_CATEGORIES': []}
                 iOrder += 1
                 atId = (convertNameF(blockAttributeName)).upper()
                 atIdIndexList.append(atId)
@@ -317,7 +324,8 @@ class SchemaDefBuild(object):
                           'FILTER_TYPES': fD['FILTER_TYPES'],
                           'IS_CHAR_TYPE': fD['IS_CHAR_TYPE'],
                           'ENUMERATION': {str(ky).lower(): ky for ky in fD['ENUMS']},
-                          'CONTENT_CLASSES': fD['CONTENT_CLASSES']}
+                          'CONTENT_CLASSES': fD['CONTENT_CLASSES'],
+                          'SUB_CATEGORIES': fD['SUB_CATEGORIES']}
                     atId = (convertNameF(atName)).upper()
                     d['ATTRIBUTE_INFO'][atId] = td
                     atIdIndexList.append(atId)
@@ -356,7 +364,8 @@ class SchemaDefBuild(object):
                           'FILTER_TYPES': fD['FILTER_TYPES'],
                           'IS_CHAR_TYPE': fD['IS_CHAR_TYPE'],
                           'ENUMERATION': {str(ky).lower(): ky for ky in fD['ENUMS']},
-                          'CONTENT_CLASSES': fD['CONTENT_CLASSES']}
+                          'CONTENT_CLASSES': fD['CONTENT_CLASSES'],
+                          'SUB_CATEGORIES': fD['SUB_CATEGORIES']}
                     atId = (convertNameF(atName)).upper()
                     d['ATTRIBUTE_INFO'][atId] = td
                     mI = self.__dictInfo.getMethodImplementation(catName, atName, methodCodes=["calculate_on_load"])
@@ -412,6 +421,11 @@ class SchemaDefBuild(object):
                 else:
                     d['SLICE_CATEGORY_EXTRAS'][sliceName] = False
             #
+            scL = []
+            for atId in d['ATTRIBUTE_INFO']:
+                scL.extend(d['ATTRIBUTE_INFO'][atId]['SUB_CATEGORIES'])
+            d['SCHEMA_SUB_CATEGORIES'] = list(set(scL))
+            #
             rD[sId] = d
         #
         return rD
@@ -463,7 +477,7 @@ class SchemaDefBuild(object):
 
     def __createJsonLikeSchema(self, schemaName, collectionName, dataTyping, instDataTypeFilePath, appDataTypeFilePath,
                                schemaDefHelper, documentDefHelper, includeContentClasses=None, jsonSpecDraft='4',
-                               enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
+                               enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums", removeSubCategoryPrefix=True):
         """Internal method to integrate dictionary and instance metadata into a common json/bson schema description data structure.
 
            Working only for practical schema style: rowwise_by_name_with_cardinality
@@ -488,6 +502,7 @@ class SchemaDefBuild(object):
         suppressSingleton = not documentDefHelper.getRetainSingletonObjects(collectionName)
         logger.debug("Collection %s suppress singleton %r" % (collectionName, suppressSingleton))
         subCategoryAggregates = documentDefHelper.getSubCategoryAggregates(collectionName)
+        logger.debug("%s %s Sub_category aggregates %r" % (schemaName, collectionName, subCategoryAggregates))
         privDocKeyL = documentDefHelper.getPrivateDocumentAttributes(collectionName)
         # enforceOpts = "mandatoryKeys|mandatoryAttributes|bounds|enums"
         #
@@ -598,20 +613,28 @@ class SchemaDefBuild(object):
 
             #  First, filter any subcategory aggregates from the available list of a category attributes
             #
+
             subCatPropD = {}
             if subCategoryAggregates:
+                logger.debug("%s %s %s subcategories %r" % (schemaName, collectionName, catName, cfD['SUB_CATEGORIES']))
                 for subCategory in subCategoryAggregates:
+                    if subCategory not in cfD['SUB_CATEGORIES']:
+                        continue
+                    logger.debug("%s %s %s processing subcategory %r" % (schemaName, collectionName, catName, subCategory))
                     reqL = []
                     scD = {typeKey: "object", 'properties': {}, }
                     for atName in sorted(atNameList):
                         fD = aD[atName]
                         # Exclude primary data attributes with no instance coverage except if in a protected content class
-                        if not dtInstInfo.exists(catName, atName) and not self.__testContentClasses(contentClasses, fD['CONTENT_CLASSES']):
-                            continue
+                        # if not dtInstInfo.exists(catName, atName) and not self.__testContentClasses(contentClasses, fD['CONTENT_CLASSES']):
+                        #    continue
                         if subCategory not in fD['SUB_CATEGORIES']:
                             continue
                         #
                         schemaAttributeName = convertNameF(atName)
+                        if (removeSubCategoryPrefix):
+                            schemaAttributeName = schemaAttributeName.replace(subCategory + '_', '')
+                        #
                         isRequired = ('mandatoryAttributes' in enforceOpts and fD['IS_MANDATORY'])
                         if isRequired:
                             reqL.append(schemaAttributeName)
@@ -620,10 +643,10 @@ class SchemaDefBuild(object):
                         scD['properties'][schemaAttributeName] = atPropD
                     if reqL:
                         scD['required'] = reqL
-                subCatPropD[subCategory] = {typeKey: 'array', 'items': scD, 'uniqueItems': True}
+                    subCatPropD[subCategory] = {typeKey: 'array', 'items': scD, 'uniqueItems': False}
             #
             if subCatPropD:
-                logger.debug("subCatPropD %r" % subCatPropD.items())
+                logger.debug("%s %s %s processing subcategory properties %r" % (schemaName, collectionName, catName, subCatPropD.items()))
             #
             for atName in sorted(atNameList):
                 fD = aD[atName]
@@ -646,8 +669,9 @@ class SchemaDefBuild(object):
                 else:
                     pD['properties'][schemaAttributeName] = atPropD
 
-            pD['properties'].update(subCatPropD)
-            pD['required'].extend(list(subCatPropD.keys()))
+            if subCatPropD:
+                pD['properties'].update(copy.copy(subCatPropD))
+            # pD['required'].extend(list(subCatPropD.keys()))
             #
             if 'required' in catPropD and len(catPropD['required']) < 1:
                 logger.info("Category %s cfD %r" % (catName, cfD.items()))
@@ -690,10 +714,21 @@ class SchemaDefBuild(object):
                 rD['required'] = mandatoryCategoryL
 
         if dataTypingU == 'JSON':
+            sdType = dataTyping.lower()
+            sLevel = 'full' if 'bounds' in enforceOpts else 'min'
+            fn = "%s-schema-%s-%s.json" % (sdType, sLevel, collectionName)
+            collectionVersion = documentDefHelper.getCollectionVersion(schemaName, collectionName)
             jsonSchemaUrl = "http://json-schema.org/draft-0%s/schema#" % jsonSpecDraft if jsonSpecDraft in ['3', '4', '6', '7'] else "http://json-schema.org/schema#"
-            rD.update({"$id": "https://github.com/rcsb/py-rcsb.db/tree/master/rcsb.db/data/json-schema/",
+            schemaRepo = 'https://github.com/rcsb/py-rcsb.db/tree/master/rcsb.db/data/json-schema/'
+            desc1 = 'RCSB Exchange Database JSON schema derived from the %s content type schema. ' % schemaName
+            desc2 = 'This schema supports collection %s version %s. ' % (collectionName, collectionVersion)
+            desc3 = 'This schema is hosted in repository %s%s and follows JSON schema specification version %s' % (schemaRepo, fn, jsonSpecDraft)
+            rD.update({"$id": "%s%s" % (schemaRepo, fn),
                        "$schema": jsonSchemaUrl,
-                       'title': 'Schema for content type %s collection %s' % (schemaName, collectionName)})
+                       'title': 'schema: %s collection: %s version: %s' % (schemaName, collectionName, collectionVersion),
+                       'description': desc1 + desc2 + desc3,
+                       '$comment': 'schema_version: %s' % collectionVersion
+                       })
 
         return rD
 

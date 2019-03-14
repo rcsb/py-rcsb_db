@@ -72,22 +72,26 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=configName)
         self.__drugBankMappingFile = self.__cfgOb.getPath('DRUGBANK_MAPPING_LOCATOR', sectionName=configName)
         self.__csdModelMappingFile = self.__cfgOb.getPath('CCDC_MAPPING_LOCATOR', sectionName=configName)
-        self.__pathTaxonomyMappingFile = self.__cfgOb.getPath('NCBI_TAXONOMY_LOCATOR', sectionName=configName)
+        #
+        # self.__pathTaxonomyMappingFile = self.__cfgOb.getPath('NCBI_TAXONOMY_LOCATOR', sectionName=configName)
+        #
+        self.__pathTaxonomyData = self.__cfgOb.getPath('NCBI_TAXONOMY_PATH', sectionName=configName)
+        self.__pathEnzymeData = self.__cfgOb.getPath('ENZYME_CLASSIFICATION_DATA_PATH', sectionName=configName)
         #
         self.__testDirPath = os.path.join(HERE, "test-output", 'pdbx-fails')
         self.__exportJson = False
         #
 
         self.__xschemaNameD = {'ihm_dev': ['ihm_dev_v1_0_1'],
-                               'pdbx': ['pdbx_v5_0_2', 'pdbx_ext_v5_0_2'],
-                               'pdbx_core': ['pdbx_core_entity_monomer_v5_0_2', 'pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2', 'pdbx_core_entity_instance_v5_0_2', ],
-                               'bird': ['bird_v5_0_2'],
-                               'bird_family': ['family_v5_0_2'],
-                               'chem_comp': ['chem_comp_v5_0_2'],
-                               'chem_comp_core': ['chem_comp_core_v5_0_2'],
-                               'bird_chem_comp': ['bird_chem_comp_v5_0_2'],
-                               'bird_chem_comp_core': ['bird_chem_comp_core_v5_0_2']}
-        self.__schemaNameD = {'pdbx_core': ['pdbx_core_entity_monomer_v5_0_2', 'pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2', 'pdbx_core_assembly_v5_0_2', 'pdbx_core_entity_instance_v5_0_2', ],
+                               'pdbx': ['pdbx', 'pdbx_ext'],
+                               'pdbx_core': ['pdbx_core_entity_monomer', 'pdbx_core_entity', 'pdbx_core_entry', 'pdbx_core_assembly', 'pdbx_core_entity_instance', ],
+                               'bird': ['bird'],
+                               'bird_family': ['family'],
+                               'chem_comp': ['chem_comp'],
+                               'chem_comp_core': ['chem_comp_core'],
+                               'bird_chem_comp': ['bird_chem_comp'],
+                               'bird_chem_comp_core': ['bird_chem_comp_core']}
+        self.__schemaNameD = {'pdbx_core': ['pdbx_core_entity_monomer', 'pdbx_core_entity', 'pdbx_core_entry', 'pdbx_core_assembly', 'pdbx_core_entity_instance', ],
                               }
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
@@ -112,7 +116,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         if not inputPathList:
             self.assertTrue(True)
             return True
-        schemaNameD = {'pdbx_core': ['pdbx_core_entity_v5_0_2', 'pdbx_core_entry_v5_0_2']}
+        schemaNameD = {'pdbx_core': ['pdbx_core_entity', 'pdbx_core_entry']}
         eCount = self.__testValidateOpts(schemaNameD=schemaNameD, inputPathList=inputPathList, schemaLevel=schemaLevel)
         logger.info("Total validation errors schema level %s : %d" % (schemaLevel, eCount))
         # self.assertGreaterEqual(eCount, 20)
@@ -156,7 +160,9 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             sd, _, _, _ = self.__schU.getSchemaInfo(contentType=schemaName)
             #
             dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath,
-                                        csdModelMappingFilePath=self.__csdModelMappingFile, taxonomyMappingFilePath=self.__pathTaxonomyMappingFile)
+                                        csdModelMappingFilePath=self.__csdModelMappingFile,
+                                        enzymeDataPath=self.__pathEnzymeData,
+                                        taxonomyDataPath=self.__pathTaxonomyData)
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
@@ -178,6 +184,8 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                                                                           sliceFilter=sliceFilter)
 
             docList = sdp.addDocumentPrivateAttributes(docList, collectionName)
+            docList = sdp.addDocumentSubCategoryAggregates(docList, collectionName)
+            #
             if self.__exportJson:
                 fp = os.path.join(HERE, "test-output", "export-%s-%s-prep-rowwise-by-name-with-cardinality.json" % (schemaName, collectionName))
                 self.__mU.doExport(fp, docList, format="json", indent=3)

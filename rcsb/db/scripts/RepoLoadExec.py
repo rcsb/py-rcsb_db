@@ -47,9 +47,9 @@ def loadStatus(statusList, cfgOb, readBackCheck=True):
     dl = DocumentLoader(cfgOb, "MONGO_DB", numProc=2, chunkSize=2,
                         documentLimit=None, verbose=False, readBackCheck=readBackCheck)
     #
-    databaseName = cfgOb.get('DATABASE_NAME', sectionName=sectionName) + '_' + cfgOb.get('DATABASE_VERSION_STRING', sectionName=sectionName)
-    collectionVersion = cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
-    collectionName = cfgOb.get('COLLECTION_UPDATE_STATUS', sectionName=sectionName) + '_' + collectionVersion
+    databaseName = cfgOb.get('DATABASE_NAME', sectionName=sectionName)
+    # collectionVersion = cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
+    collectionName = cfgOb.get('COLLECTION_UPDATE_STATUS', sectionName=sectionName)
     ok = dl.load(databaseName, collectionName, loadType='append', documentList=statusList,
                  indexAttributeList=['update_id', 'database_name', 'object_name'], keyNames=None)
     return ok
@@ -100,6 +100,7 @@ def main():
     parser.add_argument("--debug", default=False, action='store_true', help="Turn on verbose logging")
     parser.add_argument("--mock", default=False, action='store_true', help="Use MOCK repository configuration for testing")
     parser.add_argument("--working_path", default=None, help="Working path for temporary files")
+    parser.add_argument("--vrpt_repo_path", default=None, help="Path to validation report repository")
     args = parser.parse_args()
     #
     debugFlag = args.debug
@@ -122,6 +123,16 @@ def main():
         cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=defaultConfigName, mockTopPath=mockTopPath)
         if configName != defaultConfigName:
             cfgOb.replaceSectionName(defaultConfigName, configName)
+
+        #
+        if args.vrpt_repo_path:
+            vrptPath = args.vrpt_repo_path
+            if not os.access(vrptPath, os.R_OK):
+                logger.error("Unreadable validation report repository path %r" % vrptPath)
+            envName = cfgOb.get("VRPT_REPO_PATH_ENV", sectionName=configName)
+            os.environ[envName] = vrptPath
+            logger.info("Using alternate validation report path %s" % os.getenv(envName))
+
     except Exception as e:
         logger.error("Missing or access issue with config file %r with %s" % (configPath, str(e)))
         exit(1)
@@ -229,25 +240,25 @@ def main():
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
         #
         if args.load_pdbx_core_entity:
-            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entity_v5_0_2'], loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entity'], loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
         #
         if args.load_pdbx_core_entity_monomer:
-            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entity_monomer_v5_0_2'], loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entity_monomer'], loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
         #
         if args.load_pdbx_core_entry:
-            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entry_v5_0_2'], loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entry'], loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
         if args.load_pdbx_core_assembly:
-            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_assembly_v5_0_2'], loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
+            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_assembly'], loadType=loadType, inputPathList=inputPathList, styleType=args.document_style,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=failedFilePath,
                          saveInputFileListPath=saveInputFileListPath, pruneDocumentSize=pruneDocumentSize, schemaLevel=schemaLevel)
             okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)

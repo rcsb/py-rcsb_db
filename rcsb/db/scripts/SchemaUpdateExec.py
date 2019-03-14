@@ -165,13 +165,14 @@ def main():
         for schemaType in schemaTypes:
             if schemaType == 'rcsb':
                 for dataTyping in dataTypingList:
-                    logger.info("Creating schema defininition for content type %s data typing %s" % (schemaName, dataTyping))
+                    logger.info("Creating schema definition for content type %s data typing %s" % (schemaName, dataTyping))
                     sdu.makeSchemaDef(schemaName, dataTyping=dataTyping, saveSchema=True, altDirPath=schemaDirPath)
             else:
                 if schemaName in scnD:
-                    for collectionName in scnD[schemaName]:
+                    for d in scnD[schemaName]:
+                        collectionName = d['NAME']
                         for schemaLevel in schemaLevels:
-                            logger.info("Creating Exchange %r schema for content type %s %s" % (schemaType, schemaName, collectionName))
+                            logger.info("Creating %r schema for content type %s collection %s" % (schemaType, schemaName, collectionName))
                             sdu.makeSchema(schemaName, collectionName, schemaType=schemaType, level=schemaLevel, saveSchema=True, altDirPath=schemaDirPath)
 
 

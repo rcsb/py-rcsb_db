@@ -34,7 +34,7 @@ class DataExchangeStatus(object):
      _rcsb_data_exchange_status.update_status_flag
      _rcsb_data_exchange_status.update_begin_timestamp
      _rcsb_data_exchange_status.update_end_timestamp
-    2018_23 chem_comp_v5 chem_comp_v5_0_2 Y '2018-07-11 11:51:37.958508+00:00' '2018-07-11 11:55:03.966508+00:00'
+    2018_23 chem_comp_v5 chem_comp Y '2018-07-11 11:51:37.958508+00:00' '2018-07-11 11:55:03.966508+00:00'
     # ... abbreviated ...
 
     """

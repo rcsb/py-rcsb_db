@@ -76,18 +76,18 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
 
     def __testValidateOpts(self, updateId, schemaLevel='full'):
         schemaNames = ['repository_holdings']
-        collectionNames = {'repository_holdings_min': ['repository_holdings_superseded_v0_1'],
-                           'repository_holdings': ['repository_holdings_update_v0_1',
-                                                   'repository_holdings_current_v0_1',
-                                                   'repository_holdings_unreleased_v0_1',
-                                                   'repository_holdings_prerelease_v0_1',
-                                                   'repository_holdings_removed_v0_1',
-                                                   'repository_holdings_removed_audit_authors_v0_1',
-                                                   'repository_holdings_superseded_v0_1',
-                                                   'repository_holdings_transferred_v0_1',
-                                                   'repository_holdings_insilico_models_v0_1'
+        collectionNames = {'repository_holdings_min': ['repository_holdings_superseded'],
+                           'repository_holdings': ['repository_holdings_update',
+                                                   'repository_holdings_current',
+                                                   'repository_holdings_unreleased',
+                                                   'repository_holdings_prerelease',
+                                                   'repository_holdings_removed',
+                                                   'repository_holdings_removed_audit_authors',
+                                                   'repository_holdings_superseded',
+                                                   'repository_holdings_transferred',
+                                                   'repository_holdings_insilico_models'
                                                    ],
-                           'entity_sequence_clusters': ['cluster_members_v0_1', 'cluster_provenance_v0_1', 'entity_members_v0_1']
+                           'entity_sequence_clusters': ['cluster_members', 'cluster_provenance', 'entity_members']
                            }
         #
         eCount = 0
@@ -121,47 +121,47 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
         rL = []
         try:
             rhdp = RepoHoldingsDataPrep(sandboxPath=self.__sandboxPath, workPath=self.__workPath)
-            if collectionName == 'repository_holdings_update_v0_1':
+            if collectionName == 'repository_holdings_update':
                 rL = rhdp.getHoldingsUpdate(updateId=updateId)
                 self.assertGreaterEqual(len(rL), 10)
                 logger.debug("update data length %r" % len(rL))
             #
-            elif collectionName == 'repository_holdings_current_v0_1':
+            elif collectionName == 'repository_holdings_current':
                 rL = rhdp.getHoldingsCurrent(updateId=updateId)
                 self.assertGreaterEqual(len(rL), 10)
                 logger.debug("holdings data length %r" % len(rL))
             #
-            elif collectionName == 'repository_holdings_unreleased_v0_1':
+            elif collectionName == 'repository_holdings_unreleased':
                 rL = rhdp.getHoldingsUnreleased(updateId=updateId)
                 self.assertGreaterEqual(len(rL), 10)
                 logger.debug("unreleased data length %r" % len(rL))
             #
-            elif collectionName == 'repository_holdings_prerelease_v0_1':
+            elif collectionName == 'repository_holdings_prerelease':
                 rL = rhdp.getHoldingsPrerelease(updateId=updateId)
                 self.assertGreaterEqual(len(rL), 10)
                 logger.debug("unreleased data length %r" % len(rL))
 
-            elif collectionName in ['repository_holdings_transferred_v0_1', 'repository_holdings_insilico_models_v0_1']:
+            elif collectionName in ['repository_holdings_transferred', 'repository_holdings_insilico_models']:
                 rL1, rL2 = rhdp.getHoldingsTransferred(updateId=updateId)
-                if collectionName == 'repository_holdings_transferred_v0_1':
+                if collectionName == 'repository_holdings_transferred':
                     self.assertGreaterEqual(len(rL1), 10)
                     logger.debug("transferred data length %r" % len(rL1))
                     rL = rL1
-                elif collectionName == 'repository_holdings_insilico_models_v0_1':
+                elif collectionName == 'repository_holdings_insilico_models':
                     self.assertGreaterEqual(len(rL2), 10)
                     logger.debug("Insilico data length %r" % len(rL1))
                     rL = rL2
-            elif collectionName in ['repository_holdings_removed_v0_1', 'repository_holdings_removed_audit_authors_v0_1', 'repository_holdings_superseded_v0_1']:
+            elif collectionName in ['repository_holdings_removed', 'repository_holdings_removed_audit_authors', 'repository_holdings_superseded']:
                 rL1, rL2, rL3 = rhdp.getHoldingsRemoved(updateId=updateId)
-                if collectionName == 'repository_holdings_removed_v0_1':
+                if collectionName == 'repository_holdings_removed':
                     self.assertGreaterEqual(len(rL1), 10)
                     logger.debug("removed data length %r" % len(rL1))
                     rL = rL1
-                elif collectionName == 'repository_holdings_removed_audit_authors_v0_1':
+                elif collectionName == 'repository_holdings_removed_audit_authors':
                     self.assertGreaterEqual(len(rL2), 10)
                     logger.debug("removed author data length %r" % len(rL2))
                     rL = rL2
-                elif collectionName == 'repository_holdings_superseded_v0_1':
+                elif collectionName == 'repository_holdings_superseded':
                     self.assertGreaterEqual(len(rL3), 10)
                     logger.debug("removed data length %r" % len(rL3))
                     rL = rL3

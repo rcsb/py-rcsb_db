@@ -43,6 +43,9 @@ class DataTypeInstanceInfo(object):
            tD[category] -> d[atName]->{minWidth: , maxWidth:, minPrec:, maxPrec: , count}
         """
         try:
+            if not filePath:
+                return False
+
             self.__tD = self.__mU.doImport(filePath, format='json')
             return len(self.__tD) > 0
         except Exception:

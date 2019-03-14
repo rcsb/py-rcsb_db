@@ -64,7 +64,10 @@ class DictMethodRunnerTests(unittest.TestCase):
         self.__pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=configName)
         self.__drugBankMappingFile = self.__cfgOb.getPath('DRUGBANK_MAPPING_LOCATOR', sectionName=configName)
         self.__csdModelMappingFile = self.__cfgOb.getPath('CCDC_MAPPING_LOCATOR', sectionName=configName)
-        self.__pathTaxonomyMappingFile = self.__cfgOb.getPath('NCBI_TAXONOMY_LOCATOR', sectionName=configName)
+        # self.__pathTaxonomyData = self.__cfgOb.getPath('NCBI_TAXONOMY_LOCATOR', sectionName=configName)
+        #
+        self.__pathTaxonomyData = self.__cfgOb.getPath('NCBI_TAXONOMY_PATH', sectionName=configName)
+        self.__pathEnzymeData = self.__cfgOb.getPath('ENZYME_CLASSIFICATION_DATA_PATH', sectionName=configName)
 
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
@@ -81,7 +84,9 @@ class DictMethodRunnerTests(unittest.TestCase):
         """
         try:
             dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath,
-                                        csdModelMappingFilePath=self.__csdModelMappingFile, taxonomyMappingFilePath=self.__pathTaxonomyMappingFile)
+                                        csdModelMappingFilePath=self.__csdModelMappingFile,
+                                        enzymeDataPath=self.__pathEnzymeData,
+                                        taxonomyDataPath=self.__pathTaxonomyData)
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
             #
             inputPathList = self.__schU.getLocatorObjList(contentType='pdbx_core')
@@ -113,7 +118,9 @@ class DictMethodRunnerTests(unittest.TestCase):
         """
         try:
             dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath,
-                                        csdModelMappingFilePath=self.__csdModelMappingFile, taxonomyMappingFilePath=self.__pathTaxonomyMappingFile)
+                                        csdModelMappingFilePath=self.__csdModelMappingFile,
+                                        enzymeDataPath=self.__pathEnzymeData,
+                                        taxonomyDataPath=self.__pathTaxonomyData)
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
             #
             inputPathList = self.__schU.getLocatorObjList(contentType='chem_comp_core')
@@ -145,7 +152,9 @@ class DictMethodRunnerTests(unittest.TestCase):
         """
         try:
             dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath,
-                                        csdModelMappingFilePath=self.__csdModelMappingFile, taxonomyMappingFilePath=self.__pathTaxonomyMappingFile)
+                                        csdModelMappingFilePath=self.__csdModelMappingFile,
+                                        enzymeDataPath=self.__pathEnzymeData,
+                                        taxonomyDataPath=self.__pathTaxonomyData)
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
             #
             inputPathList = self.__schU.getLocatorObjList(contentType='bird_chem_comp_core')

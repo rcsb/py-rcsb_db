@@ -117,7 +117,17 @@ class DictInfo(object):
                 self.__sliceUnitCardinalityD[sliceName].extend(dictHelper.getSliceCardinalityCategoryExtras(dictSubset, sliceName))
                 logger.debug("Slicename %s unit cardinality categories %r" % (sliceName, self.__sliceUnitCardinalityD[sliceName]))
             #
-            self.__categoryFeatures = {catName: self.__getCategoryFeatures(catName, unitCardinalityList) for catName in self.__categoryList}
+            #
+            subCategoryD = {}
+            for catName, atNameList in self.__dictSchema.items():
+                scL = []
+                for atName in atNameList:
+                    scL.extend(self.__dApi.getItemSubCategoryIdList(catName, atName))
+                scL = list(set(scL)) if scL else []
+                subCategoryD[catName] = scL
+            logger.debug("Subcategory category dictionary %r" % subCategoryD)
+            #
+            self.__categoryFeatures = {catName: self.__getCategoryFeatures(catName, unitCardinalityList, subCategoryD) for catName in self.__categoryList}
             iTypeCodes = dictHelper.getTypeCodes('iterable')
             iQueryStrings = dictHelper.getQueryStrings('iterable')
             logger.debug("iterable types %r iterable query %r" % (iTypeCodes, iQueryStrings))
@@ -472,13 +482,14 @@ class DictInfo(object):
         #
         return aD
 
-    def __getCategoryFeatures(self, catName, unitCardinalityList):
+    def __getCategoryFeatures(self, catName, unitCardinalityList, subCategoryD):
         cD = {'KEY_ATTRIBUTES': []}
         # cD['KEY_ATTRIBUTES'] = [CifName.attributePart(keyItem) for keyItem in self.__dApi.getCategoryKeyList(catName)]
         cD['KEY_ATTRIBUTES'] = [CifName.attributePart(keyItem) for keyItem in self.__getCategoryKeysWithReplacement(catName)]
         cD['UNIT_CARDINALITY'] = catName in unitCardinalityList
         cD['CONTENT_CLASSES'] = self.__getContentClasses(catName)
         cD['IS_MANDATORY'] = True if str(self.__dApi.getCategoryMandatoryCode(catName)).lower() == 'yes' else False
+        cD['SUB_CATEGORIES'] = subCategoryD[catName] if catName in subCategoryD else []
         #
         return cD
 

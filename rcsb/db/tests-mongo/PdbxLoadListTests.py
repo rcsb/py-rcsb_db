@@ -95,7 +95,7 @@ class PdbxLoadListTests(unittest.TestCase):
             logger.info("Found %d files in test path %s" % (len(inputPathList), self.__testDirPath))
             mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
-            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entry_v5_0_2'], loadType='full', inputPathList=inputPathList, styleType=self.__documentStyle,
+            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entry'], loadType='full', inputPathList=inputPathList, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedEntryFilePath, pruneDocumentSize=14.0)
             self.assertTrue(ok)
         except Exception as e:
@@ -111,7 +111,7 @@ class PdbxLoadListTests(unittest.TestCase):
             mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('pdbx_core', loadType='full', inputPathList=inputPathList, styleType=self.__documentStyle,
-                         dataSelectors=["PUBLIC_RELEASE"], collectionLoadList=['pdbx_core_entity_v5_0_2'],
+                         dataSelectors=["PUBLIC_RELEASE"], collectionLoadList=['pdbx_core_entity'],
                          failedFilePath=self.__failedEntityFilePath, mergeContentTypes=['vrpt'], logSize=True, pruneDocumentSize=15.8)
             self.assertTrue(ok)
         except Exception as e:

@@ -100,9 +100,9 @@ class DataExchangeStatusLoaderTests(unittest.TestCase):
                 dl = DocumentLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                                     documentLimit=self.__documentLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
                 #
-                databaseName = self.__cfgOb.get('DATABASE_NAME', sectionName=sectionName) + '_' + self.__cfgOb.get('DATABASE_VERSION_STRING', sectionName=sectionName)
-                collectionVersion = self.__cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
-                collectionName = self.__cfgOb.get('COLLECTION_UPDATE_STATUS', sectionName=sectionName) + '_' + collectionVersion
+                databaseName = self.__cfgOb.get('DATABASE_NAME', sectionName=sectionName)
+                # collectionVersion = self.__cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
+                collectionName = self.__cfgOb.get('COLLECTION_UPDATE_STATUS', sectionName=sectionName)
                 if ii == 1:
                     loadType = 'full'
                 else:

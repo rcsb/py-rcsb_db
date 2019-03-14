@@ -11,6 +11,8 @@
 #   8-Oct-2018 jdw added getSubCategoryAggregates() method
 #   3-Dec-2018 jdw add method getDocumentIndices()
 #  16-Jan-2019 jdw add method getDocumentReplaceAttributeNames()
+#  11-Mar-2019 jdw add methods getSubCategoryAggregateFeatures() and  getSubCategoryAggregateUnitCardinality()
+#  13-Mar-2019 jdw add getCollectionVersion() and getCollectionInfo() and remove getCollections().
 #
 ##
 """
@@ -50,15 +52,29 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
         #
         # ----
 
-    def getCollections(self, schemaName):
+    def getCollectionInfo(self, schemaName):
+        """ Returns a list of [{NAME: xx, VERSION: xxx}, ...] for the input schema.
+        """
         cL = []
         try:
-            cL = self.__cfgD['schema_collection_names'][schemaName]
+            cL = [td for td in self.__cfgD['schema_collection_names'][schemaName]]
         except Exception as e:
-            logger.debug("Schema definitiona name %s failing with %s" % (schemaName, str(e)))
+            logger.debug("Schema definitions name %s failing with %s" % (schemaName, str(e)))
         return cL
 
-    def getCollectionMap(self):
+    def getCollectionVersion(self, schemaName, collectionName):
+        """ Return the version string for the the input schema/collection
+        """
+        v = None
+        try:
+            for td in self.__cfgD['schema_collection_names'][schemaName]:
+                if collectionName == td['NAME']:
+                    return td['VERSION']
+        except Exception as e:
+            logger.debug("Schema definitiona name %s failing with %s" % (schemaName, str(e)))
+        return v
+
+    def DEPRECATEDgetCollectionMap(self):
         try:
             return self.__cfgD['schema_collection_names']
         except Exception as e:
@@ -148,7 +164,27 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
     def getSubCategoryAggregates(self, collectionName):
         r = []
         try:
-            return self.__cfgD['collection_subcategory_aggregates'][collectionName]
+            return [tS['NAME'] for tS in self.__cfgD['collection_subcategory_aggregates'][collectionName]]
+        except Exception as e:
+            logger.debug("Collection %s failing with %s" % (collectionName, str(e)))
+        return r
+
+    def getSubCategoryAggregateUnitCardinality(self, collectionName, subCategoryName):
+        ret = False
+        try:
+            if collectionName in self.__cfgD['collection_subcategory_aggregates']:
+                for d in self.__cfgD['collection_subcategory_aggregates'][collectionName]:
+                    if d['NAME'] == subCategoryName:
+                        ret = d['HAS_UNIT_CARDINALITY']
+                        break
+        except Exception as e:
+            logger.debug("Collection %s failing with %s" % (collectionName, str(e)))
+        return ret
+
+    def getSubCategoryAggregateFeatures(self, collectionName):
+        r = []
+        try:
+            return [tD for tD in self.__cfgD['collection_subcategory_aggregates'][collectionName]]
         except Exception as e:
             logger.debug("Collection %s failing with %s" % (collectionName, str(e)))
         return r

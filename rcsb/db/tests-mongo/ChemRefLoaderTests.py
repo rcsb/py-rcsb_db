@@ -55,8 +55,8 @@ class ChemRefLoaderTests(unittest.TestCase):
         self.__filterType = "assign-dates"
         #
         self.__workPath = os.path.join(HERE, 'test-output')
-        self.__schemaPath = os.path.join(self.__workPath, "json-schema-drugbank_core_v0_1.json")
-        self.__dataPath = os.path.join(self.__workPath, "json-data-drugbank_core_v0_1.json")
+        self.__schemaPath = os.path.join(self.__workPath, "json-schema-drugbank_core.json")
+        self.__dataPath = os.path.join(self.__workPath, "json-data-drugbank_core.json")
         #
         # sample data set
         self.__updateId = '2018_23'

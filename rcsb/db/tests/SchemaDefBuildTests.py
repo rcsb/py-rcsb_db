@@ -75,7 +75,8 @@ class SchemaDefBuildTests(unittest.TestCase):
         for schemaName in self.__schemaNameList:
             d = self.__sdu.makeSchemaDef(schemaName, dataTyping='ANY', saveSchema=False, altDirPath=None)
             sD = SchemaDefAccess(d)
-            for collectionName in sD.getContentTypeCollections(schemaName):
+            for cd in sD.getCollectionInfo():
+                collectionName = cd['NAME']
                 for schemaType in self.__schemaTypes:
                     if schemaType.lower() == 'rcsb':
                         continue

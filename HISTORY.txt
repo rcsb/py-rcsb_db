@@ -84,3 +84,31 @@
   3-Mar-2019   V0.46 move validation analysis tools, EntityInstanceExtractor.py and related tests to package rcsb.utils.anal.
                Change helper criteria for identifying chemical component objects and warn for missing chem_comp_atom category cases.
                Change release filter for chem_comp_* collection to allow only status codes 'REL' and 'REF_ONLY' -
+ 14-Mar-2019   V0.47 Additonal dictionary content and helper method support for -
+                _entity.rcsb_macromolecular_names_combined,   _rcsb_entry_info.software_programs_combined,
+                _rcsb_entity_container_identifiers.chem_comp_ligand, _rcsb_entity_container_identifiers.chem_comp_monomers,
+
+                Added new data types int-csv and int-scsv
+
+                Added automated subcategory aggregation in the general data processing pipeline.
+
+                New sub-category taxonomy_lineage with items: _rcsb_entity_source_organism.taxonomy_lineage_id, _rcsb_entity_source_organism.taxonomy_lineage_name, _rcsb_entity_source_organism.taxonomy_lineage_depth
+                and _rcsb_entity_host_organism.taxonomy_lineage_id, _rcsb_entity_host_organism.taxonomy_lineage_name,
+                _rcsb_entity_host_organism.taxonomy_lineage_depth
+
+                New sub-category rcsb_ec_lineage with items _entity.rcsb_ec_lineage_name _entity.rcsb_ec_lineage_id
+                and _entity.rcsb_ec_lineage_depth
+
+                Add_rcsb_schema_container_identifiers.schema_name, _rcsb_schema_container_identifiers.collection_name
+                _rcsb_schema_container_identifiers.collection_schema_version
+
+               Configuration changes to simplify the handling of versioning removing these from database and collection names
+               and schema file names, version configuration now managed in separate configuration options,
+               NCBI_TAXONOMY_LOCATOR removed, added configuration options NCBI_TAXONOMY_PATH and ENZYME_CLASSIFICATION_DATA_PATH,
+               provide separate configuration options schema version assignment within collections,
+               up-version api and json schema, add config option VRPT_REPO_PATH_ENV.
+
+               chem_comp category attributes normalized between chem_comp_core and bird_chem_comp_core collections.
+
+
+

@@ -130,9 +130,11 @@ class SchemaDefUtil(object):
                 sd = SchemaDefAccess(schemaDef)
                 if sd:
                     dbName = sd.getDatabaseName()
-                    collectionNameList = sd.getContentTypeCollections(contentType)
-                    logger.debug("Schema %s database name %s collections %r" % (contentType, dbName, collectionNameList))
-                    for collectionName in collectionNameList:
+                    collectionInfoList = sd.getCollectionInfo()
+                    logger.debug("Schema %s database name %s collections %r" % (contentType, dbName, collectionInfoList))
+                    for cd in collectionInfoList:
+                        collectionName = cd['NAME']
+                        collectionNameList.append(collectionName)
                         docIndexD[collectionName] = sd.getDocumentIndices(collectionName)
 
         except Exception as e:

@@ -53,7 +53,7 @@ class DocumentLoader(object):
         #
         #
 
-    def load(self, databaseName, collectionName, loadType='full', documentList=None, indexAttributeList=None, keyNames=None, schemaLevel='full'):
+    def load(self, databaseName, collectionName, loadType='full', documentList=None, indexAttributeList=None, keyNames=None, schemaLevel='full', addValues=None):
         """  Driver method for loading MongoDb content -
 
 
@@ -77,6 +77,15 @@ class DocumentLoader(object):
             logger.debug("Full document list length %d limit %r" % (len(documentList), self.__documentLimit))
             numProc = self.__numProc
             chunkSize = self.__chunkSize if docList and self.__chunkSize < len(docList) else 0
+            #
+            if addValues:
+                try:
+                    for doc in docList:
+                        for k, v in addValues.items():
+                            doc[k] = v
+                except Exception as e:
+                    logger.error("Add values %r fails with %s" % (addValues, str(e)))
+
             #
             indAtList = indexAttributeList if indexAttributeList else []
             bsonSchema = None

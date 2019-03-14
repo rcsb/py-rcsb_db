@@ -76,7 +76,7 @@ class ClusterDataPrepValidateTests(unittest.TestCase):
 
     def __testValidateOpts(self, updateId, schemaLevel='full'):
         schemaNames = ['entity_sequence_clusters']
-        collectionNames = {'entity_sequence_clusters': ['cluster_provenance_v0_1', 'cluster_members_v0_1', 'entity_members_v0_1']}
+        collectionNames = {'entity_sequence_clusters': ['cluster_provenance', 'cluster_members', 'entity_members']}
         #
         eCount = 0
         for schemaName in schemaNames:
@@ -121,7 +121,7 @@ class ClusterDataPrepValidateTests(unittest.TestCase):
         """
         try:
             #
-            if collectionName == 'cluster_provenance_v0_1':
+            if collectionName == 'cluster_provenance':
                 return [self.__fetchProvenance()]
             #
             entitySchemaName = 'rcsb_entity_sequence_cluster_list'
@@ -131,9 +131,9 @@ class ClusterDataPrepValidateTests(unittest.TestCase):
             self.assertEqual(len(cifD), 1)
             self.assertEqual(len(docBySequenceD), 1)
             self.assertEqual(len(docByClusterD), 1)
-            if collectionName == 'entity_members_v0_1':
+            if collectionName == 'entity_members':
                 return docBySequenceD[entitySchemaName]
-            elif collectionName == 'cluster_members_v0_1':
+            elif collectionName == 'cluster_members':
                 return docByClusterD[clusterSchemaName]
 
         except Exception as e:

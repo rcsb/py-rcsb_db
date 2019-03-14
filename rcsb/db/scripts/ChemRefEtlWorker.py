@@ -88,6 +88,9 @@ class ChemRefEtlWorker(object):
             indexL = sD.getDocumentIndex(collectionName, 'primary')
             logger.info("Database %r collection %r index attributes %r " % (databaseName, collectionName, indexL))
             #
+            collectionVersion = sD.getCollectionVersion(collectionName)
+            addValues = {'_schema_version': collectionVersion}
+            #
             dl = DocumentLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                                 documentLimit=self.__documentLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
             # JDW --
@@ -96,7 +99,7 @@ class ChemRefEtlWorker(object):
             # collectionName = self.__cfgOb.get('COLLECTION_DRUGBANK_CORE', sectionName=sectionName) + '_' + collectionVersion
             #
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList,
-                         indexAttributeList=indexL, keyNames=None)
+                         indexAttributeList=indexL, keyNames=None, addValues=addValues)
 
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 

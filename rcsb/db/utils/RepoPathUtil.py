@@ -16,6 +16,7 @@
 #   13-Dec-2018  jdw add preliminary I/HM repository support
 #    5-Feb-2019  jdw add just method naming conventions, add getLocator() method,
 #                    consolidate deliver of path configuration details in __getRepoTopPath().
+#   14-Mar-2019  jdw add VRPT_REPO_PATH_ENV as an override for the validation report repo path.
 #
 #
 ##
@@ -141,7 +142,11 @@ class RepoPathUtil(object):
             elif contentType in ['pdb_distro', 'da_internal', 'status_history']:
                 pass
             elif contentType in ['vrpt']:
-                pth = self.__cfgOb.getPath('VRPT_REPO_PATH', sectionName=self.__cfgSectionName)
+                pth = self.__cfgOb.getEnvValue('VRPT_REPO_PATH_ENV', sectionName=self.__cfgSectionName, default=None)
+                if pth is None:
+                    pth = self.__cfgOb.getPath('VRPT_REPO_PATH', sectionName=self.__cfgSectionName)
+                else:
+                    logger.debug("Using validation report path from environment assignment %s" % pth)
             else:
                 logger.warning("Unsupported contentType %s" % contentType)
         except Exception as e:

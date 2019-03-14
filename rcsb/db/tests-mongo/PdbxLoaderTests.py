@@ -69,6 +69,7 @@ class PdbxLoaderTests(unittest.TestCase):
         self.__fileLimit = None
         self.__documentStyle = 'rowwise_by_name_with_cardinality'
         #
+        #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
@@ -176,6 +177,10 @@ class PdbxLoaderTests(unittest.TestCase):
         """ Test case -  Load PDBx core collections with merged content 'vrpt'
         """
         try:
+            vrptPath = self.__cfgOb.getPath("VRPT_REPO_PATH")
+            envName = self.__cfgOb.get("VRPT_REPO_PATH_ENV")
+            os.environ[envName] = vrptPath
+            #
             mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
             ok = mw.load('pdbx_core', loadType='full', inputPathList=None, styleType=self.__documentStyle,
@@ -241,11 +246,11 @@ class PdbxLoaderTests(unittest.TestCase):
         try:
             mw = PdbxLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             fileLimit=self.__fileLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck, workPath=self.__workPath)
-            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entry_v5_0_2', 'pdbx_core_entity_v5_0_2', 'pdbx_core_assembly_v5_0_2'], loadType='full', inputPathList=None, styleType=self.__documentStyle,
+            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entry', 'pdbx_core_entity', 'pdbx_core_assembly'], loadType='full', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
             self.assertTrue(ok)
             #
-            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entry_v5_0_2', 'pdbx_core_entity_v5_0_2', 'pdbx_core_assembly_v5_0_2'], loadType='replace', inputPathList=None, styleType=self.__documentStyle,
+            ok = mw.load('pdbx_core', collectionLoadList=['pdbx_core_entry', 'pdbx_core_entity', 'pdbx_core_assembly'], loadType='replace', inputPathList=None, styleType=self.__documentStyle,
                          dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath, pruneDocumentSize=14.0)
             self.assertTrue(ok)
             #
@@ -260,9 +265,13 @@ class PdbxLoaderTests(unittest.TestCase):
         dl = DocumentLoader(self.__cfgOb, resourceName=self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                             documentLimit=None, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
         #
-        databaseName = self.__cfgOb.get('DATABASE_NAME', sectionName=sectionName) + '_' + self.__cfgOb.get('DATABASE_VERSION_STRING', sectionName=sectionName)
-        collectionVersion = self.__cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
-        collectionName = self.__cfgOb.get('COLLECTION_UPDATE_STATUS', sectionName=sectionName) + '_' + collectionVersion
+        #databaseName = self.__cfgOb.get('DATABASE_NAME', sectionName=sectionName) + '_' + self.__cfgOb.get('DATABASE_VERSION_STRING', sectionName=sectionName)
+        #collectionVersion = self.__cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
+        #collectionName = self.__cfgOb.get('COLLECTION_UPDATE_STATUS', sectionName=sectionName) + '_' + collectionVersion
+        #
+        databaseName = self.__cfgOb.get('DATABASE_NAME', sectionName=sectionName)
+        collectionName = self.__cfgOb.get('COLLECTION_UPDATE_STATUS', sectionName=sectionName)
+
         ok = dl.load(databaseName, collectionName, loadType='append', documentList=statusList,
                      indexAttributeList=['update_id', 'database_name', 'object_name'], keyNames=None)
         return ok

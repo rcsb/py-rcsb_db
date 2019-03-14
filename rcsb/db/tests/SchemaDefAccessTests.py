@@ -29,7 +29,7 @@ from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
@@ -85,13 +85,14 @@ class SchemaDefAccessTests(unittest.TestCase):
         logger.debug("Database name %s" % sd.getDatabaseName())
         logger.debug("Versioned database name %s" % sd.getVersionedDatabaseName())
 
-        logger.debug("Collections %r" % sd.getContentTypeCollections(sd.getName()))
+        logger.debug("Collection info %r" % sd.getCollectionInfo())
 
         for dS in sd.getDataSelectorNames():
             logger.debug("Selector %s %r" % (dS, sd.getDataSelectors(dS)))
 
-        collectionNames = sd.getContentTypeCollections(sd.getName())
-        for collectionName in collectionNames:
+        collectionInfoL = sd.getCollectionInfo()
+        for d in collectionInfoL:
+            collectionName = d['NAME']
 
             logger.debug("Collection excluded %r" % sd.getCollectionExcluded(collectionName))
             logger.debug("Collection included %r" % sd.getCollectionSelected(collectionName))

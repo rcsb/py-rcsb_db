@@ -104,13 +104,17 @@ class PdbxLoader(object):
         #
         pathDrugBankMappingFile = self.__cfgOb.getPath('DRUGBANK_MAPPING_LOCATOR', sectionName=sectionName)
         pathCsdModelMappingFile = self.__cfgOb.getPath('CCDC_MAPPING_LOCATOR', sectionName=sectionName)
-        pathTaxonomyMappingFile = self.__cfgOb.getPath('NCBI_TAXONOMY_LOCATOR', sectionName=sectionName)
+        #
+        pathTaxonomyData = self.__cfgOb.getPath('NCBI_TAXONOMY_PATH', sectionName=sectionName)
+        pathEnzymeData = self.__cfgOb.getPath('ENZYME_CLASSIFICATION_DATA_PATH', sectionName=sectionName)
+        #
         #
         dH = self.__cfgOb.getHelper('DICT_METHOD_HELPER_MODULE', sectionName=sectionName,
                                     drugBankMappingFilePath=pathDrugBankMappingFile,
                                     workPath=self.__workPath,
                                     csdModelMappingFilePath=pathCsdModelMappingFile,
-                                    taxonomyMappingFilePath=pathTaxonomyMappingFile)
+                                    enzymeDataPath=pathEnzymeData,
+                                    taxonomyDataPath=pathTaxonomyData)
         self.__dmh = DictMethodRunner(dictLocators=[pathPdbxDictionaryFile, pathRcsbDictionaryFile, pathVrptDictionaryFile], methodHelper=dH)
 
     def load(self, schemaName, collectionLoadList=None, loadType='full', inputPathList=None, styleType='rowwise_by_name', dataSelectors=None,
@@ -353,6 +357,9 @@ class PdbxLoader(object):
                 #
                 #  Add any private document keys -
                 dList = sdp.addDocumentPrivateAttributes(dList, collectionName)
+                dList = sdp.addDocumentSubCategoryAggregates(dList, collectionName)
+                #
+
                 #
 
                 logger.debug("%s docIdL %r collectionName %r" % (procName, docIdL, collectionName))

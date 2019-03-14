@@ -14,6 +14,9 @@
 #                        getDocumentKeyAttributeInfo()
 #       16-Jan-2019 jdw  add method getDocumentReplaceAttributeNames() to return COLLECTION_DOCUMENT_REPLACE_ATTRIBUTE_NAMES
 #        9-Feb-2019 jdw  add method getSliceExtraSchemaIds()
+#       11-Mar-2019 jdw  add getSubCategories(), getAttributeSubCategories(), getSubCategoryAggregates(),
+#                        getSubCategoryAggregatesUnitCardinality(), getSubCategorySchemaIdList(),
+#                        getSubCategoryAttributeIdList()
 ##
 """
 Base classes for schema defintions.
@@ -69,15 +72,27 @@ class SchemaDefAccessBase(object):
         except Exception:
             return []
 
-    def getContentTypeCollections(self, contentType):
-        """ Return the collections defined for the input content type.
+    def getCollectionInfo(self):
+        """ Return the collection info [{'NAME': , 'VERSION': xx }, ... ] for the input content type.
         """
-        cL = []
+        cdL = []
         try:
-            cL = self.__documentDefDict['CONTENT_TYPE_COLLECTION_MAP'][contentType]
+            cdL = self.__documentDefDict['CONTENT_TYPE_COLLECTION_INFO']
         except Exception as e:
-            logger.error("Failing for content type %s with %s" % (contentType, str(e)))
-        return cL
+            logger.error("Failing for with %s" % (str(e)))
+        return cdL
+
+    def getCollectionVersion(self, collectionName):
+        """ Return the collection info [{'NAME': , 'VERSION': xx }, ... ] for the input content type.
+        """
+        r = None
+        try:
+            for cd in self.__documentDefDict['CONTENT_TYPE_COLLECTION_INFO']:
+                if collectionName == cd['NAME']:
+                    return cd['VERSION']
+        except Exception as e:
+            logger.error("Failing for with %s" % (str(e)))
+        return r
 
     def getVersionedCollection(self, prefix):
         try:
@@ -188,6 +203,52 @@ class SchemaDefAccessBase(object):
         except Exception as e:
             logger.exception("Failing for collection %s index %r with %r" % (collectionName, indexName, str(e)))
         return r
+
+    def getSubCategoryAggregates(self, collectionName):
+        """  Return the list of subcategory aggregates for the input collection.
+        """
+        try:
+            return [d['NAME'] for d in self.__documentDefDict['COLLECTION_SUB_CATEGORY_AGGREGATES'][collectionName]]
+        except Exception:
+            # logger.exception('Failing with %s' % str(e))
+            pass
+        return []
+
+    def getSubCategorySchemaIdList(self, subCategoryName):
+        """ Return the schema Ids containing the input subCategory
+        """
+        sIdL = []
+        try:
+            for sId in self.__schemaDefDict:
+                d = self.__schemaDefDict[sId]
+                if subCategoryName in d['SCHEMA_SUB_CATEGORIES']:
+                    sIdL.append(sId)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+        return sIdL
+
+    def getSubCategoryAttributeIdList(self, schemaId, subCategoryName):
+        """ Return the schema Ids containing the input subCategory
+        """
+        atIdL = []
+        try:
+            tD = self.__schemaDefDict[schemaId]
+            for atId, v in tD['ATTRIBUTE_INFO'].items():
+                if subCategoryName in v['SUB_CATEGORIES']:
+                    atIdL.append(atId)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+        return atIdL
+
+    def getSubCategoryAggregatesUnitCardinality(self, collectionName, subCategoryName):
+        """  Return if the input subcategory aggregate has unit cardinality.
+        """
+        try:
+            for d in self.__documentDefDict['COLLECTION_DOCUMENT_INDICES'][collectionName]:
+                if subCategoryName == d['NAME']:
+                    return d['HAS_UNIT_CARDINALITY']
+        except Exception:
+            return False
 
     def hasUnitCardinality(self, schemaId):
         try:
@@ -366,6 +427,12 @@ class SchemaDef(object):
         except Exception:
             return []
 
+    def getSubCategories(self):
+        try:
+            return self.__tD['SCHEMA_SUB_CATEGORIES']
+        except Exception:
+            return []
+
     def getId(self):
         try:
             return self.__tD['SCHEMA_ID']
@@ -484,11 +551,17 @@ class SchemaDef(object):
         except Exception:
             return False
 
+    def getAttributeSubCategories(self, attributeId):
+        try:
+            return self.__tD['ATTRIBUTE_INFO'][attributeId]['SUB_CATEGORIES']
+        except Exception:
+            return []
+
     def getAttributeFilterTypes(self, attributeId):
         try:
             return self.__tD['ATTRIBUTE_INFO'][attributeId]['FILTER_TYPES']
         except Exception:
-            return None
+            return []
 
     def getPrimaryKeyAttributeIdList(self):
         try:

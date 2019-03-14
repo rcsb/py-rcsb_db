@@ -305,9 +305,12 @@ class SchemaDefDataPrep(object):
         #
         return schemaDataDictList, containerNameList, rejectPathList
 
-    def addDocumentPrivateAttributes(self, docList, collectionName):
+    def DEPaddDocumentPrivateAttributes(self, docList, collectionName, styleType="rowwise_by_name"):
         """ For the input collection, add private document attributes to the input document list.
         """
+        if styleType not in ['rowwise_by_name', 'rowwise_by_name_with_cardinality']:
+            logger.error("Unsupported document style %s" % styleType)
+            return docList
         try:
             d = {}
             privDocKeyL = self.__sD.getPrivateDocumentAttributes(collectionName)
@@ -323,6 +326,113 @@ class SchemaDefDataPrep(object):
                         else:
                             if isMandatory:
                                 logger.info("Skipping private key for %s %s %r %r" % (catName, atName, pdk, list(d.items())[:5]))
+        except Exception as e:
+            logger.exception("Failing with %s : %r" % (str(e), list(d.items())[:5]))
+        #
+        return docList
+
+    def addDocumentPrivateAttributes(self, docList, collectionName, styleType="rowwise_by_name"):
+        """ For the input collection, add private document attributes to the input document list.
+        """
+        if styleType not in ['rowwise_by_name', 'rowwise_by_name_with_cardinality']:
+            logger.error("Unsupported document style %s" % styleType)
+            return docList
+        try:
+            d = {}
+            privDocKeyL = self.__sD.getPrivateDocumentAttributes(collectionName)
+            version = self.__sD.getCollectionVersion(collectionName)
+            #
+            if privDocKeyL:
+                for doc in docList:
+                    for pdk in privDocKeyL:
+                        pName = pdk['PRIVATE_DOCUMENT_NAME']
+                        isMandatory = pdk['MANDATORY']
+                        if pdk['UPDATE_ON_LOAD']:
+                            if pdk['NAME'] == 'rcsb_schema_container_identifiers.collection_schema_version':
+                                doc[pName] = version
+
+                        else:
+                            catName = pdk['CATEGORY_NAME']
+                            atName = pdk['ATTRIBUTE_NAME']
+                            #
+                            if catName in doc and atName in doc[catName] and doc[catName][atName] and doc[catName][atName] not in ['.', '?']:
+                                doc[pName] = doc[catName][atName]
+                            else:
+                                if isMandatory:
+                                    logger.info("Skipping private key for %s %s %r %r" % (catName, atName, pdk, list(d.items())[:5]))
+        except Exception as e:
+            logger.exception("Failing with %s : %r" % (str(e), list(d.items())[:5]))
+        #
+        return docList
+
+    def addDocumentSubCategoryAggregates(self, docList, collectionName, styleType="rowwise_by_name", removeSubCategoryPrefix=True):
+        """ For the input collection, add subcategory aggregates to the input document list.
+        """
+        if styleType not in ['rowwise_by_name', 'rowwise_by_name_with_cardinality']:
+            logger.error("Unsupported document style %s" % styleType)
+            return docList
+        try:
+            d = {}
+            scAgL = self.__sD.getSubCategoryAggregates(collectionName)
+            if scAgL:
+                scAgD = {}
+                logger.debug("%s processing subcategory aggregates %r" % (collectionName, scAgL))
+                for scAg in scAgL:
+                    scD = {}
+                    sIdL = self.__sD.getSubCategorySchemaIdList(scAg)
+                    for sId in sIdL:
+                        atIdL = self.__sD.getSubCategoryAttributeIdList(sId, scAg)
+                        scD[self.__sD.getSchemaName(sId)] = [self.__sD.getAttributeName(sId, atId) for atId in atIdL]
+                    scAgD[scAg] = scD
+                logger.debug("%s subcategory aggregate name dictionary %r" % (collectionName, scAgD))
+                #
+                for doc in docList:
+                    for scAg, scD in scAgD.items():
+                        for sName in scD:
+                            if sName not in doc:
+                                continue
+                            #
+                            hasUnitCard = self.__sD.getSubCategoryAggregatesUnitCardinality(collectionName, scAg)
+                            logger.debug("%s agg %s unit cardinalioty %r obj %s" % (collectionName, hasUnitCard, scAg, sName))
+                            atNameL = scD[sName]
+                            if isinstance(doc[sName], list):
+                                for rowD in doc[sName]:
+                                    if set(atNameL).issubset(set(rowD.keys())):
+                                        atLenL = [len(rowD[atName]) for atName in atNameL]
+                                        atLen = min(atLenL)
+                                        logger.debug("%s %s %r Candidate list row is %r" % (scAg, sName, atNameL, rowD))
+                                        # copy all of the data to the new aggregate object
+                                        rL = []
+                                        for ii in range(atLen):
+                                            d = {}
+                                            for atName in atNameL:
+                                                cAtName = atName.replace(scAg + '_', '') if removeSubCategoryPrefix else atName
+                                                d[cAtName] = rowD[atName][ii]
+                                            rL.append(d)
+                                        rowD[scAg] = rL
+                                        for atName in atNameL:
+                                            del rowD[atName]
+                                        logger.debug("Processed list row is %r" % rowD)
+                            elif isinstance(doc[sName], dict):
+                                if set(atNameL).issubset(set(doc[sName].keys())):
+                                    logger.debug("Candidate dict row is %r" % doc[sName])
+                                    atLenL = [len(doc[sName][atName]) for atName in atNameL]
+                                    atLen = min(atLenL)
+                                    # copy all of the data to the new aggregate object
+                                    rL = []
+                                    for ii in range(atLen):
+                                        d = {}
+                                        for atName in atNameL:
+                                            cAtName = atName.replace(scAg + '_', '') if removeSubCategoryPrefix else atName
+                                            d[cAtName] = doc[sName][atName][ii]
+                                        rL.append(d)
+                                    doc[sName][scAg] = rL
+                                    for atName in atNameL:
+                                        del doc[sName][atName]
+                                    logger.debug("Processed dict row is %r" % doc[sName])
+                            else:
+                                logger.error("%s unanticipated document data type for sName %s" % (collectionName, sName))
+
         except Exception as e:
             logger.exception("Failing with %s : %r" % (str(e), list(d.items())[:5]))
         #

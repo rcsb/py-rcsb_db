@@ -13,6 +13,7 @@
 #  24-Jul-2018 jdw Update selection filter names.
 #   5-Sep-2018 jdw Add tests for core collections including executing dictionary methods.
 #  14-Feb-2019 jdw Add tests for merged validation report content - add flag to suppress data export
+#  11-Mar-2019 jdw add tests for sdp.addDocumentSubCategoryAggregates()
 #
 ##
 """
@@ -81,7 +82,10 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__pathVrptDictionaryFile = self.__cfgOb.getPath('VRPT_DICT_LOCATOR', sectionName=configName)
         self.__drugBankMappingFile = self.__cfgOb.getPath('DRUGBANK_MAPPING_LOCATOR', sectionName=configName)
         self.__csdModelMappingFile = self.__cfgOb.getPath('CCDC_MAPPING_LOCATOR', sectionName=configName)
-        self.__pathTaxonomyMappingFile = self.__cfgOb.getPath('NCBI_TAXONOMY_LOCATOR', sectionName=configName)
+        # self.__pathTaxonomyMappingFile = self.__cfgOb.getPath('NCBI_TAXONOMY_LOCATOR', sectionName=configName)
+
+        self.__pathTaxonomyData = self.__cfgOb.getPath('NCBI_TAXONOMY_PATH', sectionName=configName)
+        self.__pathEnzymeData = self.__cfgOb.getPath('ENZYME_CLASSIFICATION_DATA_PATH', sectionName=configName)
         #
         self.__exportFlag = False
         self.__startTime = time.time()
@@ -311,7 +315,9 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             sd, _, collectionNameList, _ = self.__schU.getSchemaInfo(contentType=schemaName)
             #
             dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath,
-                                        csdModelMappingFilePath=self.__csdModelMappingFile, taxonomyMappingFilePath=self.__pathTaxonomyMappingFile)
+                                        csdModelMappingFilePath=self.__csdModelMappingFile,
+                                        enzymeDataPath=self.__pathEnzymeData,
+                                        taxonomyDataPath=self.__pathTaxonomyData)
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
 
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
@@ -335,6 +341,8 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 docList, containerNameList, rejectList = sdp.processDocuments(containerList, styleType=styleType,
                                                                               sliceFilter=sliceFilter)
                 docList = sdp.addDocumentPrivateAttributes(docList, collectionName)
+                #
+                docList = sdp.addDocumentSubCategoryAggregates(docList, collectionName)
                 self.__timeStep("Completed document processing collection %s" % collectionName)
                 #
                 if self.__exportFlag:
@@ -359,7 +367,9 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             #
             ##
             dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath,
-                                        csdModelMappingFilePath=self.__csdModelMappingFile, taxonomyMappingFilePath=self.__pathTaxonomyMappingFile)
+                                        csdModelMappingFilePath=self.__csdModelMappingFile,
+                                        enzymeDataPath=self.__pathEnzymeData,
+                                        taxonomyDataPath=self.__pathTaxonomyData)
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile, self.__pathVrptDictionaryFile], methodHelper=dH)
 
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
@@ -381,6 +391,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 docList, containerNameList, rejectList = sdp.processDocuments(containerList, styleType=styleType,
                                                                               sliceFilter=sliceFilter)
                 docList = sdp.addDocumentPrivateAttributes(docList, collectionName)
+                docList = sdp.addDocumentSubCategoryAggregates(docList, collectionName)
                 if self.__exportFlag:
                     fp = os.path.join(HERE, "test-output", "sdp-export-%s-%s-rowwise-by-name-with-cardinality.json" % (schemaName, collectionName))
                     self.__mU.doExport(fp, docList, format="json", indent=3)

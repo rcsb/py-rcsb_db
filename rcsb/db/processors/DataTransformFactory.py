@@ -162,13 +162,14 @@ class DataTransformFactory(object):
                         typeD[atId] = 'date'
                 else:
                     aD[atId].append(dt.castString)
-                    typeD[tObj.getAttributeName(atId)] = 'string'
+                    #typeD[tObj.getAttributeName(atId)] = 'string'
+                    typeD[atId] = 'string'
                 #
                 if self.__FLAGS['normalizeEnums'] and tObj.isEnumerated(atId):
                     logger.debug("Normalizing enums for %s %s" % (tableId, atId))
                     aD[atId].append(dt.normalizeEnum)
-            #
-                if len(aD[atId]) == 1 and typeD[atId] in ['string', 'float', 'integer']:
+                #
+                if len(aD[atId]) == 1 and atId in typeD and typeD[atId] in ['string', 'float', 'integer']:
                     pureCastD[tObj.getAttributeName(atId)] = typeD[atId]
             # Transformation functions keyed by attribute 'name'
             tD['atIdD'] = tObj.getMapAttributeIdDict()

@@ -23,7 +23,8 @@
 # 19-Feb-2019 jdw add internal method __addPdbxValidateAsymIds() to add cardinal identifiers to
 #                 pdbx_validate_* categories
 # 28-Feb-2019 jdw change criteria for adding rcsb_chem_comp_container_identiers to work with ion definitions
-#
+# 11-Mar-2019 jdw replace taxonomy file handling with calls to TaxonomyUtils()
+# 11-Mar-2019 jdw add EC lineage using EnzymeDatabaseUtils()
 ##
 """
 This helper class implements external method references in the RCSB dictionary extension.
@@ -37,14 +38,22 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 import datetime
+import functools
+import itertools
 import logging
 
 from mmcif.api.DataCategory import DataCategory
 
 from rcsb.db.helpers.DictMethodRunnerHelperBase import DictMethodRunnerHelperBase
+from rcsb.utils.ec.EnzymeDatabaseUtils import EnzymeDatabaseUtils
 from rcsb.utils.io.MarshalUtil import MarshalUtil
+from rcsb.utils.taxonomy.TaxonomyUtils import TaxonomyUtils
 
 logger = logging.getLogger(__name__)
+
+
+def cmp_elements(lhs, rhs):
+    return 0 if (lhs[-1].isdigit() or lhs[-1] in ['R', 'S']) and rhs[0].isdigit() else -1
 
 
 class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
@@ -106,13 +115,17 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         #
         self.__drugBankMappingFilePath = kwargs.get("drugBankMappingFilePath", None)
         self.__drugBankMappingDict = {}
+        #
         self.__csdModelMappingFilePath = kwargs.get("csdModelMappingFilePath", None)
         self.__csdModelMappingDict = {}
         #
-        self.__taxonomyMappingFilePath = kwargs.get("taxonomyMappingFilePath", None)
-        self.__taxonomyMappingDict = {}
+        self.__taxonomyDataPath = kwargs.get("taxonomyDataPath", None)
+        self.__taxU = None
         #
-        self.__siftsMappingFilePath = kwargs.get("taxonomyMappingFilePath", None)
+        self.__enzymeDataPath = kwargs.get("enzymeDataPath", None)
+        self.__ecU = None
+        #
+        self.__siftsMappingFilePath = kwargs.get("siftsMappingFilePath", None)
         self.__siftsMappingDict = {}
         #
         self.__workPath = kwargs.get("workPath", None)
@@ -360,14 +373,17 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         #
         _rcsb_entity_container_identifiers.asym_ids
         _rcsb_entity_container_identifiers.auth_asym_ids
-
+        #
+        _rcsb_entity_container_identifiers.chem_comp_ligand,
+        _rcsb_entity_container_identifiers.chem_comp_monomers
         ...
         """
         try:
             if not (dataContainer.exists('entry') and dataContainer.exists('entity')):
                 return False
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=['entry_id', 'entity_id', 'asym_ids', 'auth_asym_ids']))
+                dataContainer.append(DataCategory(catName, attributeNameList=['entry_id', 'entity_id', 'asym_ids',
+                                                                              'auth_asym_ids', 'chem_comp_monomers', 'chem_comp_ligand']))
             #
             cObj = dataContainer.getObj(catName)
 
@@ -387,17 +403,26 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 eType = tObj.getValue('type', ii)
                 asymIdL = []
                 authAsymIdL = []
+                ccMonomerL = []
+                ccLigandL = []
                 if eType == 'polymer' and psObj:
                     asymIdL = psObj.selectValuesWhere('asym_id', entityId, 'entity_id')
                     authAsymIdL = psObj.selectValuesWhere('pdb_strand_id', entityId, 'entity_id')
+                    ccMonomerL = psObj.selectValuesWhere('mon_id', entityId, 'entity_id')
                 elif npsObj:
                     asymIdL = npsObj.selectValuesWhere('asym_id', entityId, 'entity_id')
                     authAsymIdL = npsObj.selectValuesWhere('pdb_strand_id', entityId, 'entity_id')
+                    ccLigandL = npsObj.selectValuesWhere('mon_id', entityId, 'entity_id')
                 #
                 if asymIdL:
                     cObj.setValue(','.join(list(set(asymIdL))).strip(), 'asym_ids', ii)
                 if authAsymIdL:
                     cObj.setValue(','.join(list(set(authAsymIdL))).strip(), 'auth_asym_ids', ii)
+                if ccMonomerL:
+                    cObj.setValue(','.join(list(set(ccMonomerL))).strip(), 'chem_comp_monomers', ii)
+                if ccLigandL:
+                    cObj.setValue(','.join(list(set(ccLigandL))).strip(), 'chem_comp_ligand', ii)
+
             #
             return True
         except Exception as e:
@@ -750,25 +775,6 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
         return rL
 
-    def __fetchTaxonomyMapping(self, filePath, workPath='.'):
-        """
-
-        """
-        if self.__taxonomyMappingDict:
-            return self.__taxonomyMappingDict
-        rD = {}
-        try:
-            if not filePath:
-                return rD
-            mU = MarshalUtil(workPath=workPath)
-            rD = mU.doImport(filePath, format="pickle")
-            logger.debug("Fetching taxonomy mapping length %d" % len(rD))
-            self.__taxonomyMappingDict = rD
-            return rD
-        except Exception as e:
-            logger.exception("For %s failing with %s" % (filePath, str(e)))
-        return rD
-
     def filterSourceOrganismDetails(self, dataContainer, catName, **kwargs):
         """  Select relevant source and host organism details from primary data categories.
 
@@ -783,7 +789,10 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             _rcsb_entity_source_organism.provenance_code
             _rcsb_entity_source_organism.beg_seq_num
             _rcsb_entity_source_organism.end_seq_num
-            1 1 natural 'Homo sapiens' human 9606  'PDB Primary Data' 1 202
+            _rcsb_entity_source_organism.taxonomy_lineage_id
+            _rcsb_entity_source_organism.taxonomy_lineage_name
+            _rcsb_entity_source_organism.taxonomy_lineage_depth
+            1 1 natural 'Homo sapiens' human 9606  'PDB Primary Data' 1 202 . . .
             # ... abbreviated
 
 
@@ -796,7 +805,10 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             _rcsb_entity_host_organism.provenance_code
             _rcsb_entity_host_organism.beg_seq_num
             _rcsb_entity_host_organism.end_seq_num
-            1 1 'Escherichia coli' 'E. coli' 562  'PDB Primary Data' 1 102
+            _rcsb_entity_host_organism.taxonomy_lineage_id
+            _rcsb_entity_host_organism.taxonomy_lineage_name
+            _rcsb_entity_host_organism.taxonomy_lineage_depth
+                        1 1 'Escherichia coli' 'E. coli' 562  'PDB Primary Data' 1 102 .  . .
             # ... abbreviated
 
             And two related items -
@@ -827,7 +839,10 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                               'end_seq_num',
                                                                               'provenance_code',
                                                                               'ncbi_scientific_name',
-                                                                              'ncbi_common_names']))
+                                                                              'ncbi_common_names',
+                                                                              'taxonomy_lineage_id',
+                                                                              'taxonomy_lineage_name',
+                                                                              'taxonomy_lineage_depth']))
             #
             if not dataContainer.exists(hostCatName):
                 dataContainer.append(DataCategory(hostCatName, attributeNameList=['entity_id',
@@ -839,9 +854,14 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                                   'end_seq_num',
                                                                                   'provenance_code',
                                                                                   'ncbi_scientific_name',
-                                                                                  'ncbi_common_names']))
+                                                                                  'ncbi_common_names',
+                                                                                  'taxonomy_lineage_id',
+                                                                                  'taxonomy_lineage_name',
+                                                                                  'taxonomy_lineage_depth']))
 
-            taxD = self.__fetchTaxonomyMapping(self.__taxonomyMappingFilePath, workPath=self.__workPath)
+            #
+            if not self.__taxU:
+                self.__taxU = TaxonomyUtils(taxDirPath=self.__taxonomyDataPath)
             cObj = dataContainer.getObj(catName)
             hObj = dataContainer.getObj(hostCatName)
             #
@@ -955,11 +975,17 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                         cObj.setValue(v[ii], at, iRow)
                         if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?'] and v[ii].isdigit():
                             taxId = int(v[ii])
-                            if taxId in taxD:
-                                if 'sn' in taxD[taxId]:
-                                    cObj.setValue(taxD[taxId]['sn'], 'ncbi_scientific_name', iRow)
-                                if 'cn' in taxD[taxId]:
-                                    cObj.setValue(';'.join(list(set(taxD[taxId]['cn']))), 'ncbi_common_names', iRow)
+                            sn = self.__taxU.getScientificName(taxId)
+                            if sn:
+                                cObj.setValue(sn, 'ncbi_scientific_name', iRow)
+                            cnL = self.__taxU.getCommonNames(taxId)
+                            if cnL:
+                                cObj.setValue(';'.join(list(set(cnL))), 'ncbi_common_names', iRow)
+                            # Add lineage -
+                            linL = self.__taxU.getLineageWithNames(taxId)
+                            cObj.setValue(';'.join([str(tup[0]) for tup in linL]), 'taxonomy_lineage_depth', iRow)
+                            cObj.setValue(';'.join([str(tup[1]) for tup in linL]), 'taxonomy_lineage_id', iRow)
+                            cObj.setValue(';'.join([tup[2] for tup in linL]), 'taxonomy_lineage_name', iRow)
 
                     logger.debug("%r entity %r - UPDATED %r %r" % (sType, entityId, atL, v))
                     iRow += 1
@@ -981,12 +1007,17 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                         hObj.setValue(v[ii], at, iRow)
                         if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?'] and v[ii].isdigit():
                             taxId = int(v[ii])
-                            if taxId in taxD:
-                                if 'sn' in taxD[taxId]:
-                                    hObj.setValue(taxD[taxId]['sn'], 'ncbi_scientific_name', iRow)
-                                if 'cn' in taxD[taxId]:
-                                    hObj.setValue(';'.join(list(set(taxD[taxId]['cn']))), 'ncbi_common_names', iRow)
-
+                            sn = self.__taxU.getScientificName(taxId)
+                            if sn:
+                                hObj.setValue(sn, 'ncbi_scientific_name', iRow)
+                            cnL = self.__taxU.getCommonNames(taxId)
+                            if cnL:
+                                hObj.setValue(';'.join(list(set(cnL))), 'ncbi_common_names', iRow)
+                            # Add lineage -
+                            linL = self.__taxU.getLineageWithNames(taxId)
+                            hObj.setValue(';'.join([str(tup[0]) for tup in linL]), 'taxonomy_lineage_depth', iRow)
+                            hObj.setValue(';'.join([str(tup[1]) for tup in linL]), 'taxonomy_lineage_id', iRow)
+                            hObj.setValue(';'.join([tup[2] for tup in linL]), 'taxonomy_lineage_name', iRow)
                     logger.debug("%r entity %r - UPDATED %r %r" % (sType, entityId, atL, v))
                     iRow += 1
             if 0:
@@ -997,11 +1028,12 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                         hObj.setValue(v[ii], at, iRow)
                         if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?'] and v[ii].isdigit():
                             taxId = int(v[ii])
-                            if taxId in taxD:
-                                if 'sn' in taxD[taxId]:
-                                    hObj.setValue(taxD[taxId]['sn'], 'ncbi_scientific_name', iRow)
-                                if 'cn' in taxD[taxId]:
-                                    hObj.setValue(';'.join(list(set(taxD[taxId]['cn']))), 'ncbi_common_names', iRow)
+                            sn = self.__taxU.getScientificName(taxId)
+                            if sn:
+                                hObj.setValue(sn, 'ncbi_scientific_name', iRow)
+                            cnL = self.__taxU.getCommonNames(taxId)
+                            if cnL:
+                                hObj.setValue(';'.join(list(set(cnL))), 'ncbi_common_names', iRow)
                     logger.debug("%r entity %r - UPDATED %r %r" % (sType, entityId, atL, v))
                     iRow += 1
             # -------------------------------------------------------------------------
@@ -1721,6 +1753,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
              _rcsb_entry_info.entity_count                  2
              _rcsb_entry_info.nonpolymer_entity_count       2
              _rcsb_entry_info.branched_entity_count         0
+             _rcsb_entry_info.software_programs_combined    'Phenix;RefMac'
 
         Also add the related field:
 
@@ -1749,7 +1782,8 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                               'entity_count',
                                                                               'nonpolymer_entity_count',
                                                                               'branched_entity_count',
-                                                                              'solvent_entity_count']))
+                                                                              'solvent_entity_count',
+                                                                              'software_programs_combined']))
             #
             cObj = dataContainer.getObj(catName)
             #
@@ -1796,6 +1830,20 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             methodL = xObj.getAttributeValueList('method')
             methodCount, expMethod = self.__filterExperimentalMethod(methodL)
             #
+            # Software
+            #
+            swNameL = []
+            if dataContainer.exists('software'):
+                swObj = dataContainer.getObj('software')
+                swNameL.extend(swObj.getAttributeUniqueValueList('name'))
+            if dataContainer.exists('pdbx_nmr_software'):
+                swObj = dataContainer.getObj('pdbx_nmr_software')
+                swNameL.extend(swObj.getAttributeUniqueValueList('name'))
+            if dataContainer.exists('em_software'):
+                swObj = dataContainer.getObj('em_software')
+                swNameL.extend(swObj.getAttributeUniqueValueList('name'))
+            #
+            #
             cObj.setValue(entryId, 'entry_id', 0)
             cObj.setValue(polymerCompClass, 'polymer_composition', 0)
             cObj.setValue(numPolymers, 'polymer_entity_count', 0)
@@ -1805,6 +1853,8 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             cObj.setValue(totalEntities, 'entity_count', 0)
             cObj.setValue(expMethod, 'experimental_method', 0)
             cObj.setValue(methodCount, 'experimental_method_count', 0)
+            if swNameL:
+                cObj.setValue(';'.join(swNameL), 'software_programs_combined', 0)
 
             return True
         except Exception as e:
@@ -1934,6 +1984,101 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             return True
         except Exception as e:
             logger.exception("%s %s %s failing with %s" % (dataContainer.getName(), catName, atName, str(e)))
+        return False
+
+    def __cleanupCsv(self, tL):
+        """ Ad hoc cleanup function for comma separated lists with embedded punctuation
+        """
+        rL = []
+        try:
+            key_paths = functools.cmp_to_key(cmp_elements)
+            groups = [','.join(grp) for key, grp in itertools.groupby(tL, key_paths)]
+            rL = list(set(groups))
+        except Exception:
+            pass
+        return rL
+
+    def addEntityMisc(self, dataContainer, catName, atName, **kwargs):
+        """ Add miscellaneous entity attributes -
+
+        Add:
+
+        _entity.rcsb_macromolecular_names_combined  <<< Dictionary target
+
+        _entity.rcsb_ec_lineage_name
+        _entity.rcsb_ec_lineage_id
+        _entity.rcsb_ec_lineage_depth
+
+        """
+        try:
+            if not (dataContainer.exists('entry') and dataContainer.exists('entity')):
+                return False
+            #
+            if catName == 'entity' and atName in ['rcsb_ec_lineage_name', 'rcsb_ec_lineage_id', 'rcsb_ec_lineage_depth']:
+                return True
+            #
+            eObj = dataContainer.getObj('entity')
+            if not eObj.hasAttribute('rcsb_macromolecular_names_combined'):
+                eObj.appendAttribute('rcsb_macromolecular_names_combined')
+            #
+            if not eObj.hasAttribute('rcsb_ec_lineage_depth'):
+                eObj.appendAttribute('rcsb_ec_lineage_depth')
+            if not eObj.hasAttribute('rcsb_ec_lineage_id'):
+                eObj.appendAttribute('rcsb_ec_lineage_id')
+            if not eObj.hasAttribute('rcsb_ec_lineage_name'):
+                eObj.appendAttribute('rcsb_ec_lineage_name')
+            hasEc = eObj.hasAttribute('pdbx_ec')
+            if hasEc:
+                if not self.__ecU:
+                    self.__ecU = EnzymeDatabaseUtils(enzymeDirPath=self.__enzymeDataPath, useCache=True, clearCache=False)
+            #
+            ncObj = None
+            if dataContainer.exists('entity_name_com'):
+                ncObj = dataContainer.getObj('entity_name_com')
+
+            for ii in range(eObj.getRowCount()):
+                entityId = eObj.getValue('id', ii)
+                entityType = eObj.getValue('type', ii)
+                eObj.setValue('?', 'rcsb_ec_lineage_depth', ii)
+                eObj.setValue('?', 'rcsb_ec_lineage_id', ii)
+                eObj.setValue('?', 'rcsb_ec_lineage_name', ii)
+                eObj.setValue('?', 'rcsb_macromolecular_names_combined', ii)
+                #
+                if entityType not in ['polymer', 'branched']:
+                    continue
+                #
+                nmL = str(eObj.getValue('pdbx_description', ii)).split(',')
+                logger.debug("%s ii %d nmL %r" % (dataContainer.getName(), ii, nmL))
+                if ncObj:
+                    ncL = ncObj.selectValuesWhere('name', entityId, 'entity_id')
+                    logger.debug("%s ii %d ncL %r" % (dataContainer.getName(), ii, ncL))
+                    for nc in ncL:
+                        ncff = nc.split(',')
+                        nmL.extend(ncff)
+                nmL = self.__cleanupCsv(nmL)
+                nmL = [t.strip() for t in nmL if len(t) > 3]
+                logger.debug("%s ii %d nmL %r" % (dataContainer.getName(), ii, nmL))
+                #
+                eObj.setValue(';'.join(nmL), 'rcsb_macromolecular_names_combined', ii)
+                #
+                linL = []
+                if hasEc:
+                    ecV = eObj.getValue('pdbx_ec', ii)
+                    ecIdL = ecV.split(',') if ecV else []
+                    if ecIdL:
+                        ecIdL = list(set(ecIdL))
+                        for ecId in ecIdL:
+                            tL = self.__ecU.getLineage(ecId) if ecId and len(ecId) > 7 else None
+                            if tL:
+                                linL.extend(tL)
+                if linL:
+                    eObj.setValue(';'.join([str(tup[0]) for tup in linL]), 'rcsb_ec_lineage_depth', ii)
+                    eObj.setValue(';'.join([str(tup[1]) for tup in linL]), 'rcsb_ec_lineage_id', ii)
+                    eObj.setValue(';'.join([tup[2] for tup in linL]), 'rcsb_ec_lineage_name', ii)
+
+            return True
+        except Exception as e:
+            logger.exception("For %s %s failing with %s" % (catName, atName, str(e)))
         return False
 
     def addStructRefSeqEntityIds(self, dataContainer, catName, atName, **kwargs):

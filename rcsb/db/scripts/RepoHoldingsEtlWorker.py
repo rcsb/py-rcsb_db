@@ -86,60 +86,62 @@ class RepoHoldingsEtlWorker(object):
             dl = DocumentLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
                                 documentLimit=self.__documentLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
             #
-            databaseName = self.__cfgOb.get('DATABASE_NAME', sectionName=sectionName) + '_' + self.__cfgOb.get('DATABASE_VERSION_STRING', sectionName=sectionName)
+            databaseName = self.__cfgOb.get('DATABASE_NAME', sectionName=sectionName)
             collectionVersion = self.__cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
+            addValues = {'_schema_version': collectionVersion}
             #
             dList = rhdp.getHoldingsUpdate(updateId=updateId)
-            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_UPDATE', sectionName=sectionName) + '_' + collectionVersion
+            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_UPDATE', sectionName=sectionName)
+
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList,
-                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             #
             dList = rhdp.getHoldingsCurrent(updateId=updateId)
-            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_CURRENT', sectionName=sectionName) + '_' + collectionVersion
+            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_CURRENT', sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList,
-                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
             dList = rhdp.getHoldingsUnreleased(updateId=updateId)
-            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_UNRELEASED', sectionName=sectionName) + '_' + collectionVersion
+            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_UNRELEASED', sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList,
-                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             #
             dList = rhdp.getHoldingsPrerelease(updateId=updateId)
-            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_PRERELEASE', sectionName=sectionName) + '_' + collectionVersion
+            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_PRERELEASE', sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList,
-                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             #
             dList1, dList2, dList3 = rhdp.getHoldingsRemoved(updateId=updateId)
-            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_REMOVED', sectionName=sectionName) + '_' + collectionVersion
+            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_REMOVED', sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList1,
-                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
-            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_REMOVED_AUTHORS', sectionName=sectionName) + '_' + collectionVersion
+            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_REMOVED_AUTHORS', sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList2,
-                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
-            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_SUPERSEDED', sectionName=sectionName) + '_' + collectionVersion
+            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_SUPERSEDED', sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList3,
-                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
 #
             dList1, dList2 = rhdp.getHoldingsTransferred(updateId=updateId)
 
-            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_TRANSFERRED', sectionName=sectionName) + '_' + collectionVersion
+            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_TRANSFERRED', sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList1,
-                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
-            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_INSILICO_MODELS', sectionName=sectionName) + '_' + collectionVersion
+            collectionName = self.__cfgOb.get('COLLECTION_HOLDINGS_INSILICO_MODELS', sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList2,
-                         indexAttributeList=['update_id', 'entry_id'], keyNames=None)
+                         indexAttributeList=['update_id', 'entry_id'], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
             return True

@@ -65,7 +65,7 @@ class ChemRefDataPrepValidateTests(unittest.TestCase):
         eCount = 0
         if extResource == "DrugBank":
             schemaName = 'drugbank_core'
-            collectionNames = ['drugbank_core_v0_1']
+            collectionNames = ['drugbank_core']
             crdp = ChemRefDataPrep(self.__cfgOb)
             crExt = ChemRefExtractor(self.__cfgOb)
             idD = crExt.getChemCompAccesionMapping(extResource)
