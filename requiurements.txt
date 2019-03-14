@@ -11,7 +11,7 @@ rcsb.utils.config >= 0.16
 rcsb.utils.io >= 0.25
 rcsb.utils.multiproc >= 0.11
 rcsb.utils.chemref >= 0.17
-rcsb.utils.validtion >= 0.13
+rcsb.utils.validation >= 0.13
 scandir; python_version < "3.0"
 configparser; python_version < "3.0"
 rcsb.utils.ec >= 0.10
