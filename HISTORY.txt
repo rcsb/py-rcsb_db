@@ -109,6 +109,6 @@
                up-version api and json schema, add config option VRPT_REPO_PATH_ENV.
 
                chem_comp category attributes normalized between chem_comp_core and bird_chem_comp_core collections.
-
+ 17-Mar-2019   V0.48 adding subcategory aggregate rcsb_macromolecular_names_combined
 
 

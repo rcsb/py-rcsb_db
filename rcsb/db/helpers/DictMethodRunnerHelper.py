@@ -25,6 +25,7 @@
 # 28-Feb-2019 jdw change criteria for adding rcsb_chem_comp_container_identiers to work with ion definitions
 # 11-Mar-2019 jdw replace taxonomy file handling with calls to TaxonomyUtils()
 # 11-Mar-2019 jdw add EC lineage using EnzymeDatabaseUtils()
+# 17-Mar-2019 jdw add support for entity subcategory rcsb_macromolecular_names_combined
 ##
 """
 This helper class implements external method references in the RCSB dictionary extension.
@@ -2018,8 +2019,12 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 return True
             #
             eObj = dataContainer.getObj('entity')
-            if not eObj.hasAttribute('rcsb_macromolecular_names_combined'):
-                eObj.appendAttribute('rcsb_macromolecular_names_combined')
+            if not eObj.hasAttribute('rcsb_macromolecular_names_combined_name'):
+                eObj.appendAttribute('rcsb_macromolecular_names_combined_name')
+            if not eObj.hasAttribute('rcsb_macromolecular_names_combined_source'):
+                eObj.appendAttribute('rcsb_macromolecular_names_combined_source')
+            if not eObj.hasAttribute('rcsb_macromolecular_names_combined_provenance_code'):
+                eObj.appendAttribute('rcsb_macromolecular_names_combined_provenance_code')
             #
             if not eObj.hasAttribute('rcsb_ec_lineage_depth'):
                 eObj.appendAttribute('rcsb_ec_lineage_depth')
@@ -2039,28 +2044,54 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             for ii in range(eObj.getRowCount()):
                 entityId = eObj.getValue('id', ii)
                 entityType = eObj.getValue('type', ii)
+                #
                 eObj.setValue('?', 'rcsb_ec_lineage_depth', ii)
                 eObj.setValue('?', 'rcsb_ec_lineage_id', ii)
                 eObj.setValue('?', 'rcsb_ec_lineage_name', ii)
-                eObj.setValue('?', 'rcsb_macromolecular_names_combined', ii)
+                eObj.setValue('?', 'rcsb_macromolecular_names_combined_name', ii)
+                eObj.setValue('?', 'rcsb_macromolecular_names_combined_source', ii)
+                eObj.setValue('?', 'rcsb_macromolecular_names_combined_provenance_code', ii)
                 #
                 if entityType not in ['polymer', 'branched']:
                     continue
                 #
+                # --------------------------------------------------------------------------
+                #  PDB assigned names
+                nameL = []
+                sourceL = []
+                provCodeL = []
                 nmL = str(eObj.getValue('pdbx_description', ii)).split(',')
-                logger.debug("%s ii %d nmL %r" % (dataContainer.getName(), ii, nmL))
-                if ncObj:
-                    ncL = ncObj.selectValuesWhere('name', entityId, 'entity_id')
-                    logger.debug("%s ii %d ncL %r" % (dataContainer.getName(), ii, ncL))
-                    for nc in ncL:
-                        ncff = nc.split(',')
-                        nmL.extend(ncff)
                 nmL = self.__cleanupCsv(nmL)
                 nmL = [t.strip() for t in nmL if len(t) > 3]
+                for nm in nmL:
+                    nameL.append(nm)
+                    sourceL.append('PDB Preferred Name')
+                    provCodeL.append('ECO:0000304')
+                #
+                # PDB common names/synonyms
                 logger.debug("%s ii %d nmL %r" % (dataContainer.getName(), ii, nmL))
                 #
-                eObj.setValue(';'.join(nmL), 'rcsb_macromolecular_names_combined', ii)
+                if ncObj:
+                    ncL = []
+                    tL = ncObj.selectValuesWhere('name', entityId, 'entity_id')
+                    logger.debug("%s ii %d tL %r" % (dataContainer.getName(), ii, tL))
+                    for t in tL:
+                        tff = t.split(',')
+                        ncL.extend(tff)
+                    ncL = self.__cleanupCsv(ncL)
+                    ncL = [t.strip() for t in ncL if len(t) > 3]
+                    for nc in ncL:
+                        nameL.append(nc)
+                        sourceL.append('PDB Synonym')
+                        provCodeL.append('ECO:0000303')
+                    logger.debug("%s ii %d ncL %r" % (dataContainer.getName(), ii, ncL))
                 #
+                if nameL:
+                    eObj.setValue(';'.join(nameL), 'rcsb_macromolecular_names_combined_name', ii)
+                    eObj.setValue(';'.join(sourceL), 'rcsb_macromolecular_names_combined_source', ii)
+                    eObj.setValue(';'.join(provCodeL), 'rcsb_macromolecular_names_combined_provenance_code', ii)
+
+                # --------------------------------------------------------------------------
                 linL = []
                 if hasEc:
                     ecV = eObj.getValue('pdbx_ec', ii)
