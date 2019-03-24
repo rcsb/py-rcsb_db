@@ -393,7 +393,7 @@ class SchemaDefDataPrep(object):
                                 continue
                             #
                             hasUnitCard = self.__sD.getSubCategoryAggregatesUnitCardinality(collectionName, scAg)
-                            logger.debug("%s agg %s unit cardinalioty %r obj %s" % (collectionName, hasUnitCard, scAg, sName))
+                            logger.debug("%s agg %s unit cardinalioty %r obj %s type %r" % (collectionName, hasUnitCard, scAg, sName, type(doc[sName])))
                             atNameL = scD[sName]
                             if isinstance(doc[sName], list):
                                 for rowD in doc[sName]:

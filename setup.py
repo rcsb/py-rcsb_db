@@ -43,7 +43,6 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ),
     entry_points={
@@ -66,13 +65,13 @@ setup(
                       'mmcif >= 0.35',
                       'scandir; python_version < "3.0"',
                       # 'configparser; python_version < "3.0"',
-                      'rcsb.utils.io >= 0.25',
+                      'rcsb.utils.io >= 0.27',
                       'rcsb.utils.config >= 0.16',
-                      'rcsb.utils.multiproc >= 0.11',
+                      'rcsb.utils.multiproc >= 0.12',
                       'rcsb.utils.validation >= 0.13',
-                      'rcsb.utils.chemref >= 0.17',
+                      'rcsb.utils.chemref >= 0.18',
                       'rcsb.utils.ec >= 0.10',
-                      'rcsb.utils.taxonomy >= 0.10'],
+                      'rcsb.utils.taxonomy >= 0.11'],
     packages=find_packages(exclude=['rcsb.db.tests', 'rcsb.db.tests-*', 'tests.*']),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:

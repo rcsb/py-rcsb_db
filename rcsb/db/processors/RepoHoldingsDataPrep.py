@@ -386,11 +386,11 @@ class RepoHoldingsDataPrep(object):
                     d['audit_authors'] = [t.strip() for t in fields[10].split(';')]
                     # d['audit_authors'] = fields[10]
                 if fields[12] and len(fields[12].strip()):
-                    d['author_prerelease_sequence'] = str(fields[12]).strip()
+                    d['author_prerelease_sequence_status'] = str(fields[12]).strip().replace('REALEASE', 'RELEASE')
                 dTupL = [('deposit_date', 3),
                          ('deposit_date_coordinates', 4),
                          ('deposit_date_structure_factors', 5),
-                         ('hold_date_struct_fact', 6),
+                         ('hold_date_structure_factors', 6),
                          ('deposit_date_nmr_restraints', 7),
                          ('hold_date_nmr_restraints', 8),
                          ('release_date', 9),

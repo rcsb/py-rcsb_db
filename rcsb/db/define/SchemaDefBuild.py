@@ -209,6 +209,7 @@ class SchemaDefBuild(object):
         """
         verbose = False
         contentClasses = includeContentClasses if includeContentClasses else []
+        #
         logger.debug("Including additional category classes %r" % contentClasses)
         #
         dtInstInfo = DataTypeInstanceInfo(instDataTypeFilePath)
@@ -238,8 +239,12 @@ class SchemaDefBuild(object):
         #
         rD = {}
         for catName, fullAtNameList in dictSchema.items():
+
+            #
             atNameList = [at for at in fullAtNameList if (catName, at) not in excludeAttributesD]
+            #
             cfD = self.__dictInfo.getCategoryFeatures(catName)
+            #
             # logger.debug("catName %s contentClasses %r cfD %r" % (catName, contentClasses, cfD))
 
             if not dtInstInfo.exists(catName) and not self.__testContentClasses(contentClasses, cfD['CONTENT_CLASSES']):
@@ -269,7 +274,7 @@ class SchemaDefBuild(object):
             d['SCHEMA_SUB_CATEGORIES'] = []
             #
             d['ATTRIBUTES'] = {convertNameF(blockAttributeName).upper(): convertNameF(blockAttributeName)} if blockAttributeName else {}
-            d['ATTRIBUTES'].update({(convertNameF(at)).upper(): convertNameF(at) for at in atNameList})
+            # d['ATTRIBUTES'].update({(convertNameF(at)).upper(): convertNameF(at) for at in atNameList})
             #
             #
             d['ATTRIBUTE_MAP'] = {(convertNameF(blockAttributeName)).upper(): {'CATEGORY': None, 'ATTRIBUTE': None,
@@ -337,6 +342,7 @@ class SchemaDefBuild(object):
                     else:
                         d['ATTRIBUTE_MAP'].update({(convertNameF(atName)).upper(): {'CATEGORY': catName, 'ATTRIBUTE': atName, 'METHOD_NAME': None, 'ARGUMENTS': None}})
                     iOrder += 1
+            #
             for atName in sorted(atNameList):
                 fD = aD[atName]
                 if not dtInstInfo.exists(catName, atName) and not self.__testContentClasses(contentClasses, fD['CONTENT_CLASSES']):
@@ -426,6 +432,10 @@ class SchemaDefBuild(object):
                 scL.extend(d['ATTRIBUTE_INFO'][atId]['SUB_CATEGORIES'])
             d['SCHEMA_SUB_CATEGORIES'] = list(set(scL))
             #
+            # Make attributes dict consistent with map ...
+            d['ATTRIBUTES'].update({atId: convertNameF(tD['ATTRIBUTE']) for atId, tD in d['ATTRIBUTE_MAP'].items() if atId not in d['ATTRIBUTES']})
+
+            #
             rD[sId] = d
         #
         return rD
@@ -499,6 +509,7 @@ class SchemaDefBuild(object):
 
 
         """
+        addBlockAttribute = True
         suppressSingleton = not documentDefHelper.getRetainSingletonObjects(collectionName)
         logger.debug("Collection %s suppress singleton %r" % (collectionName, suppressSingleton))
         subCategoryAggregates = documentDefHelper.getSubCategoryAggregates(collectionName)
@@ -511,7 +522,6 @@ class SchemaDefBuild(object):
         typeKey = 'bsonType' if dataTypingU == 'BSON' else 'type'
         convertNameF = self.__getConvertNameMethod(dataTypingU)
         #
-        addBlockAttribute = False
         contentClasses = includeContentClasses if includeContentClasses else []
         logger.debug("Including additional category classes %r" % contentClasses)
         #
@@ -541,7 +551,7 @@ class SchemaDefBuild(object):
             blockAttributeName = schemaDefHelper.getBlockAttributeName(schemaName) if self.__schemaDefHelper else None
             blockAttributeCifType = schemaDefHelper.getBlockAttributeCifType(schemaName) if self.__schemaDefHelper else None
             blockAttributeAppType = dtAppInfo.getAppTypeName(blockAttributeCifType)
-            blockAttributeWidth = schemaDefHelper.getBlockAttributeMaxWidth(schemaName) if schemaDefHelper else 0
+            #blockAttributeWidth = schemaDefHelper.getBlockAttributeMaxWidth(schemaName) if schemaDefHelper else 0
             # blockAttributeMethod = schemaDefHelper.getBlockAttributeMethod(schemaName) if schemaDefHelper else None
         #
         dictSchema = self.__dictInfo.getSchemaNames()
@@ -593,7 +603,7 @@ class SchemaDefBuild(object):
             if sliceFilter and sliceFilter in sliceCardD:
                 isUnitCard = catName in sliceCardD[sliceFilter]
             #
-            pD = {typeKey: "object", 'properties': {}, 'required': []}
+            pD = {typeKey: "object", 'properties': {}, 'required': [], "additionalProperties": False}
             #
             if isUnitCard:
                 catPropD = pD
@@ -605,9 +615,10 @@ class SchemaDefBuild(object):
                     # JDW Adjusted minItems=1
                     catPropD = {typeKey: "array", 'items': pD, 'minItems': 1, 'uniqueItems': True}
             #
-            if addBlockAttribute:
+            if addBlockAttribute and blockAttributeName:
                 schemaAttributeName = convertNameF(blockAttributeName)
-                atPropD = {typeKey: blockAttributeAppType, 'maxWidth': blockAttributeWidth}
+                # atPropD = {typeKey: blockAttributeAppType, 'maxWidth': blockAttributeWidth}
+                atPropD = {typeKey: blockAttributeAppType}
                 pD['required'].append(schemaAttributeName)
                 pD['properties'][schemaAttributeName] = atPropD
 
@@ -622,7 +633,7 @@ class SchemaDefBuild(object):
                         continue
                     logger.debug("%s %s %s processing subcategory %r" % (schemaName, collectionName, catName, subCategory))
                     reqL = []
-                    scD = {typeKey: "object", 'properties': {}, }
+                    scD = {typeKey: "object", 'properties': {}, "additionalProperties": False}
                     for atName in sorted(atNameList):
                         fD = aD[atName]
                         # Exclude primary data attributes with no instance coverage except if in a protected content class
@@ -702,17 +713,22 @@ class SchemaDefBuild(object):
                 if privMandatoryD[k]:
                     pD['required'].append(k)
             rD = copy.deepcopy(pD)
-
+            # if "additionalProperties" in rD:
+            #    rD["additionalProperties"] = True
         else:
             for k, v in privKeyD.items():
                 schemaPropD[k] = v
                 if privMandatoryD[k]:
                     mandatoryCategoryL.append(k)
             #
-            rD = {typeKey: 'object', 'properties': schemaPropD}
+            rD = {typeKey: 'object', 'properties': schemaPropD, "additionalProperties": False}
             if len(mandatoryCategoryL):
                 rD['required'] = mandatoryCategoryL
 
+        if dataTypingU == 'BSON':
+            rD['properties']['_id'] = {'bsonType': 'objectId'}
+            logger.debug("Adding mongo key %r" % rD['properties']['_id'])
+        #
         if dataTypingU == 'JSON':
             sdType = dataTyping.lower()
             sLevel = 'full' if 'bounds' in enforceOpts else 'min'

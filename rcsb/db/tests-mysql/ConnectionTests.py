@@ -48,7 +48,7 @@ class ConnectionTests(unittest.TestCase):
         configName = 'site_info'
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName)
         self.__resourceName = "MYSQL_DB"
-        self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName, sectionName='')
+        self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName, sectionName=configName)
 
         self.__startTime = time.time()
         logger.debug("Starting at %s" % (time.strftime("%Y %m %d %H:%M:%S", time.localtime())))

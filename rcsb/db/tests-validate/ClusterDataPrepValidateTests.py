@@ -30,7 +30,7 @@ from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
@@ -81,6 +81,7 @@ class ClusterDataPrepValidateTests(unittest.TestCase):
         eCount = 0
         for schemaName in schemaNames:
             for collectionName in collectionNames[schemaName]:
+                _ = self.__sdu.makeSchemaDef(schemaName, dataTyping='ANY', saveSchema=True, altDirPath=self.__workPath)
                 cD = self.__sdu.makeSchema(schemaName, collectionName, schemaType='JSON', level=schemaLevel, saveSchema=True, altDirPath=self.__workPath)
                 #
                 dL = self.__getSequenceClusterData(collectionName, levels=self.__levels, dataSetId=self.__dataSetId, dataLocator=self.__pathClusterData)

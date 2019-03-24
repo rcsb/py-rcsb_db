@@ -490,7 +490,12 @@ class PdbxLoader(object):
                 sD = {}
                 sumMB = 0.0
                 for ky in d:
-                    dMB = float(sys.getsizeof(bson.BSON.encode({ky: d[ky]}))) / 1000000.0
+                    dMB = 0.0
+                    try:
+                        dMB = float(sys.getsizeof(bson.BSON.encode({ky: d[ky]}))) / 1000000.0
+                    except Exception as e:
+                        logger.error("ky %r d[ky] %r with %s" % (ky, d[ky], str(e)))
+
                     sumMB += dMB
                     sD[ky] = dMB
                 if sumMB < limitMB:

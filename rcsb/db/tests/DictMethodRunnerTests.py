@@ -216,6 +216,10 @@ def DictMethodRunnerSetupSuite():
 
 
 if __name__ == '__main__':
+
+    if True:
+        mySuite = DictMethodRunnerHelperChemCompSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
     #
     if True:
         mySuite = DictMethodRunnerSetupSuite()

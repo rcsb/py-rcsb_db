@@ -14,6 +14,7 @@
 #   5-Sep-2018 jdw Add tests for core collections including executing dictionary methods.
 #  14-Feb-2019 jdw Add tests for merged validation report content - add flag to suppress data export
 #  11-Mar-2019 jdw add tests for sdp.addDocumentSubCategoryAggregates()
+#  21-Mar-2019 jdw make all test cases reference core collections
 #
 ##
 """
@@ -108,8 +109,8 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         """Test case -  create loadable chem_comp data from files
         """
         try:
-            inputPathList = self.__schU.getLocatorObjList(contentType='chem_comp')
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='chem_comp')
+            inputPathList = self.__schU.getLocatorObjList(contentType='chem_comp_core')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='chem_comp_core')
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
             sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
@@ -123,7 +124,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.assertGreaterEqual(len(containerNameList), self.__chemCompMockLen)
             self.assertEqual(len(rejectList), 0)
             if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "chem-comp-file-prep-rowwise-by-name.json"), tableDataDictList, format="json", indent=3)
+                self.__mU.doExport(os.path.join(HERE, "test-output", "chem-comp-core-file-prep-rowwise-by-name.json"), tableDataDictList, format="json", indent=3)
 
             tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_by_name_with_cardinality",
                                                                                   filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"])
@@ -132,10 +133,10 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             #
             self.assertGreaterEqual(len(tableDataDictList), self.__chemCompMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__chemCompMockLen)
-            self.assertEqual(len(rejectList), 1)
+            self.assertGreaterEqual(len(rejectList), 2)
 
             if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "chem-comp-file-prep-rowwise-by-name-with-cardinality.json"), tableDataDictList, format="json", indent=3)
+                self.__mU.doExport(os.path.join(HERE, "test-output", "chem-comp-core-file-prep-rowwise-by-name-with-cardinality.json"), tableDataDictList, format="json", indent=3)
 
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeCol)
             sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
@@ -144,14 +145,14 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.assertGreaterEqual(len(containerNameList), self.__chemCompMockLen)
             self.assertEqual(len(rejectList), 0)
             if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "chem-comp-file-prep-columnwise-by-name.json"), tableDataDictList, format="json", indent=3)
+                self.__mU.doExport(os.path.join(HERE, "test-output", "chem-comp-core-file-prep-columnwise-by-name.json"), tableDataDictList, format="json", indent=3)
 
             tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_no_name", filterType=self.__fTypeCol)
             self.assertGreaterEqual(len(tableDataDictList), self.__chemCompMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__chemCompMockLen)
             self.assertEqual(len(rejectList), 0)
             if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "chem-comp-file-prep-rowwise-no-name.json"), tableDataDictList, format="json", indent=3)
+                self.__mU.doExport(os.path.join(HERE, "test-output", "chem-comp-core-file-prep-rowwise-no-name.json"), tableDataDictList, format="json", indent=3)
 
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -161,8 +162,8 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         """Test case -  create loadable BIRD data from files
         """
         try:
-            inputPathList = self.__schU.getLocatorObjList(contentType='bird')
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='bird')
+            inputPathList = self.__schU.getLocatorObjList(contentType='bird_chem_comp_core')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='bird_chem_comp_core')
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
             sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
@@ -176,7 +177,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
             self.assertEqual(len(rejectList), 0)
             if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-file-prep-rowwise-by-name.json"), tableDataDictList, format="json", indent=3)
+                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-chem-comp-core-file-prep-rowwise-by-name.json"), tableDataDictList, format="json", indent=3)
 
             tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_by_name_with_cardinality",
                                                                                   filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"])
@@ -184,7 +185,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen - 1)
             self.assertEqual(len(rejectList), 1)
             if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-file-prep-rowwise-by-name-with-cardinality.json"), tableDataDictList, format="json", indent=3)
+                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-chem-comp-core-file-prep-rowwise-by-name-with-cardinality.json"), tableDataDictList, format="json", indent=3)
 
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeCol)
             sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
@@ -193,14 +194,14 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
             self.assertEqual(len(rejectList), 0)
             if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-file-prep-columnwise-by-name.json"), tableDataDictList, format="json", indent=3)
+                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-chem-comp-core-file-prep-columnwise-by-name.json"), tableDataDictList, format="json", indent=3)
 
             tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_no_name", filterType=self.__fTypeCol)
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
             self.assertEqual(len(rejectList), 0)
             if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-file-prep-rowwise-no-name.json"), tableDataDictList, format="json", indent=3)
+                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-chem-comp-core-file-prep-rowwise-no-name.json"), tableDataDictList, format="json", indent=3)
 
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -211,8 +212,8 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         """
 
         try:
-            inputPathList = self.__schU.getLocatorObjList(contentType='bird')
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='bird')
+            inputPathList = self.__schU.getLocatorObjList(contentType='bird_chem_comp_core')
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType='bird_chem_comp_core')
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
             sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
             #
@@ -224,7 +225,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
             self.assertEqual(len(rejectList), 0)
             if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-container-prep-rowwise-by-name.json"), tableDataDictList, format="json", indent=3)
+                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-chem-comp-core-container-prep-rowwise-by-name.json"), tableDataDictList, format="json", indent=3)
 
             tableDataDictList, containerNameList, rejectList = sdp.processDocuments(
                 containerList, styleType="rowwise_by_name_with_cardinality", filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"])
@@ -232,7 +233,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen - 1)
             self.assertEqual(len(rejectList), 1)
             if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-container-prep-rowwise-by-name-with-cardinality.json"), tableDataDictList, format="json", indent=3)
+                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-chem-comp-core-container-prep-rowwise-by-name-with-cardinality.json"), tableDataDictList, format="json", indent=3)
 
             #
             #
@@ -243,14 +244,14 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
             self.assertEqual(len(rejectList), 0)
             if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-container-prep-columnwise-by-name.json"), tableDataDictList, format="json", indent=3)
+                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-chem-comp-core-container-prep-columnwise-by-name.json"), tableDataDictList, format="json", indent=3)
 
             tableDataDictList, containerNameList, rejectList = sdp.processDocuments(containerList, styleType="rowwise_no_name", filterType=self.__fTypeCol)
             self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
             self.assertEqual(len(rejectList), 0)
             if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-container-prep-rowwise-no-name.json"), tableDataDictList, format="json", indent=3)
+                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-chem-comp-core-container-prep-rowwise-no-name.json"), tableDataDictList, format="json", indent=3)
 
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
@@ -274,7 +275,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.assertGreaterEqual(len(containerNameList), self.__pdbxMockLen)
             self.assertEqual(len(rejectList), 0)
             if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "pdbx-file-prep-rowwise-by-name.json"), tableDataDictList, format="json", indent=3)
+                self.__mU.doExport(os.path.join(HERE, "test-output", "pdbx-core-file-prep-rowwise-by-name.json"), tableDataDictList, format="json", indent=3)
 
             tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_by_name_with_cardinality",
                                                                                   filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"])
@@ -282,7 +283,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.assertGreaterEqual(len(containerNameList), self.__pdbxMockLen - 1)
             self.assertEqual(len(rejectList), 1)
             if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "pdbx-file-prep-rowwise-by-name-with-cardinality.json"), tableDataDictList, format="json", indent=3)
+                self.__mU.doExport(os.path.join(HERE, "test-output", "pdbx-core-file-prep-rowwise-by-name-with-cardinality.json"), tableDataDictList, format="json", indent=3)
 
             # ---------------------  change global filters ----------------------------
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeCol)
@@ -292,14 +293,14 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.assertGreaterEqual(len(containerNameList), self.__pdbxMockLen)
             self.assertEqual(len(rejectList), 0)
             if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "pdbx-file-prep-columnwise-by-name.json"), tableDataDictList, format="json", indent=3)
+                self.__mU.doExport(os.path.join(HERE, "test-output", "pdbx-core-file-prep-columnwise-by-name.json"), tableDataDictList, format="json", indent=3)
 
             tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_no_name", filterType=self.__fTypeCol)
             self.assertGreaterEqual(len(tableDataDictList), self.__pdbxMockLen)
             self.assertGreaterEqual(len(containerNameList), self.__pdbxMockLen)
             self.assertEqual(len(rejectList), 0)
             if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "pdbx-file-prep-rowwise-no-name.json"), tableDataDictList, format="json", indent=3)
+                self.__mU.doExport(os.path.join(HERE, "test-output", "pdbx-core-file-prep-rowwise-no-name.json"), tableDataDictList, format="json", indent=3)
 
         except Exception as e:
             logger.exception("Failing with %s" % str(e))

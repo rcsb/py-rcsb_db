@@ -11,6 +11,7 @@
 #                 configured with a transform filter.
 #                 Refactor time critical sections of processRecords()
 #                 to minimize costly functon calls for simple casts.
+# 24-Mar-2019 jdw adjust null value filtering
 ##
 """
 Factory for functional elements of the transformations between input data and
@@ -212,7 +213,8 @@ class DataTransformFactory(object):
                 if atName not in dT['atNameD']:
                     continue
                 #
-                nullFlag = False if row[ii] else True
+                # nullFlag = False if row[ii] else True
+                nullFlag = False if row[ii] is not None else True
                 #
                 # Incorporate pure casts into this loop for performance -
                 if atName in dT['pureCast']:

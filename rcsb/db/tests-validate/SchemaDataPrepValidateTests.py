@@ -79,20 +79,21 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__pathEnzymeData = self.__cfgOb.getPath('ENZYME_CLASSIFICATION_DATA_PATH', sectionName=configName)
         #
         self.__testDirPath = os.path.join(HERE, "test-output", 'pdbx-fails')
-        self.__exportJson = False
+        self.__exportJson = True
         #
 
-        self.__xschemaNameD = {'ihm_dev': ['ihm_dev_v1_0_1'],
-                               'pdbx': ['pdbx', 'pdbx_ext'],
-                               'pdbx_core': ['pdbx_core_entity_monomer', 'pdbx_core_entity', 'pdbx_core_entry', 'pdbx_core_assembly', 'pdbx_core_entity_instance', ],
-                               'bird': ['bird'],
-                               'bird_family': ['family'],
-                               'chem_comp': ['chem_comp'],
-                               'chem_comp_core': ['chem_comp_core'],
-                               'bird_chem_comp': ['bird_chem_comp'],
-                               'bird_chem_comp_core': ['bird_chem_comp_core']}
-        self.__schemaNameD = {'pdbx_core': ['pdbx_core_entity_monomer', 'pdbx_core_entity', 'pdbx_core_entry', 'pdbx_core_assembly', 'pdbx_core_entity_instance', ],
+        self.__schemaNameD = {'ihm_dev': ['ihm_dev'],
+                              'pdbx': ['pdbx', 'pdbx_ext'],
+                              'pdbx_core': ['pdbx_core_entity_monomer', 'pdbx_core_entity', 'pdbx_core_entry', 'pdbx_core_assembly', 'pdbx_core_entity_instance', ],
+                              'bird': ['bird'],
+                              'bird_family': ['family'],
+                              'chem_comp': ['chem_comp'],
+                              'chem_comp_core': ['chem_comp_core'],
+                              'bird_chem_comp': ['bird_chem_comp'],
+                              'bird_chem_comp_core': ['bird_chem_comp_core']
                               }
+        # self.__schemaNameD = {'pdbx_core': ['pdbx_core_entity', 'pdbx_core_entry', 'pdbx_core_assembly', 'pdbx_core_entity_instance', 'pdbx_core_entity_monomer'],
+        #                      }
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
@@ -125,6 +126,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         #
         eCount = 0
         for schemaName in schemaNameD:
+            _ = self.__schU.makeSchemaDef(schemaName, dataTyping='ANY', saveSchema=True, altDirPath=self.__workPath)
             pthList = inputPathList if inputPathList else self.__schU.getLocatorObjList(contentType=schemaName)
             for collectionName in schemaNameD[schemaName]:
                 cD = self.__schU.makeSchema(schemaName, collectionName, schemaType='JSON', level=schemaLevel, saveSchema=True, altDirPath=self.__workPath)
@@ -142,7 +144,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                         cCount = 0
                         for error in sorted(v.iter_errors(d), key=str):
                             logger.info("schema %s collection %s (%s) path %s error: %s" % (schemaName, collectionName, cnL[ii], error.path, error.message))
-                            logger.info("Failing document %d : %r" % (ii, list(d.items())))
+                            logger.debug("Failing document %d : %r" % (ii, list(d.items())))
                             eCount += 1
                             cCount += 1
                         if cCount > 0:
@@ -157,7 +159,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         """
         try:
 
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType=schemaName)
+            sd, _, _, _ = self.__schU.getSchemaInfo(contentType=schemaName, altDirPath=self.__workPath)
             #
             dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath,
                                         csdModelMappingFilePath=self.__csdModelMappingFile,

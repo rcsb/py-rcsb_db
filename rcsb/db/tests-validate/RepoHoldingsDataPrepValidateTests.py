@@ -93,6 +93,7 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
         eCount = 0
         for schemaName in schemaNames:
             for collectionName in collectionNames[schemaName]:
+                _ = self.__sdu.makeSchemaDef(schemaName, dataTyping='ANY', saveSchema=True, altDirPath=self.__workPath)
                 cD = self.__sdu.makeSchema(schemaName, collectionName, schemaType='JSON', level=schemaLevel, saveSchema=True, altDirPath=self.__workPath)
                 dL = self.__getRepositoryHoldingsDocuments(schemaName, collectionName, updateId)
                 # Raises exceptions for schema compliance.

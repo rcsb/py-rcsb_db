@@ -26,6 +26,7 @@
 # 11-Mar-2019 jdw replace taxonomy file handling with calls to TaxonomyUtils()
 # 11-Mar-2019 jdw add EC lineage using EnzymeDatabaseUtils()
 # 17-Mar-2019 jdw add support for entity subcategory rcsb_macromolecular_names_combined
+# 23-Mar-2019 jdw change criteria chem_comp collection criteria to _chem_comp.pdbx_release_status
 ##
 """
 This helper class implements external method references in the RCSB dictionary extension.
@@ -1377,23 +1378,30 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         try:
             logger.debug("Starting with  %r %r" % (dataContainer.getName(), catName))
             # Exit if source categories are missing
-            if not (dataContainer.exists('chem_comp') and dataContainer.exists('pdbx_chem_comp_audit')):
+            if not dataContainer.exists('chem_comp'):
                 return False
+            ccObj = dataContainer.getObj('chem_comp')
+            if not ccObj.hasAttribute('pdbx_release_status'):
+                return False
+            ccId = ccObj.getValue('id', 0)
             #
             # Create the new target category
             #
             if not dataContainer.exists(catName):
                 dataContainer.append(DataCategory(catName, attributeNameList=['comp_id',
                                                                               'atom_count',
+                                                                              'atom_count_heavy',
                                                                               'atom_count_chiral',
                                                                               'bond_count',
-                                                                              'bond_count_aromatic',
-                                                                              'atom_count_heavy']))
+                                                                              'bond_count_aromatic'
+                                                                              ]))
             # -------
             cN = 'rcsb_chem_comp_container_identifiers'
             if not dataContainer.exists(cN):
                 dataContainer.append(DataCategory(cN, attributeNameList=['comp_id']))
             idObj = dataContainer.getObj(cN)
+            idObj.setValue(ccId, 'comp_id', 0)
+            #
             # -------
             wObj = dataContainer.getObj(catName)
             #
@@ -1405,7 +1413,6 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 numAtoms = cObj.getRowCount()
                 numAtomsHeavy = 0
                 numAtomsChiral = 0
-                ccId = cObj.getValue('comp_id', 0)
                 for ii in range(numAtoms):
                     el = cObj.getValue('type_symbol', ii)
                     if el != 'H':
@@ -1414,10 +1421,15 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     if chFlag != 'N':
                         numAtomsChiral += 1
             except Exception:
-                logger.warning("Missing chem_comp_atom category for %s" % idObj)
-                numAtoms = 1
-                numAtomsHeavy = 1
+                logger.warning("Missing chem_comp_atom category for %s" % ccId)
+                numAtoms = 0
+                numAtomsHeavy = 0
                 numAtomsChiral = 0
+            #
+            wObj.setValue(ccId, 'comp_id', 0)
+            wObj.setValue(numAtoms, 'atom_count', 0)
+            wObj.setValue(numAtomsChiral, 'atom_count_chiral', 0)
+            wObj.setValue(numAtomsHeavy, 'atom_count_heavy', 0)
             #
             #  ------
             numBonds = 0
@@ -1432,14 +1444,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                         numBondsAro += 1
             except Exception:
                 pass
-
             #
-            idObj.setValue(ccId, 'comp_id', 0)
-            #
-            wObj.setValue(ccId, 'comp_id', 0)
-            wObj.setValue(numAtoms, 'atom_count', 0)
-            wObj.setValue(numAtomsChiral, 'atom_count_chiral', 0)
-            wObj.setValue(numAtomsHeavy, 'atom_count_heavy', 0)
             wObj.setValue(numBonds, 'bond_count', 0)
             wObj.setValue(numBondsAro, 'bond_count_aromatic', 0)
             #
@@ -2021,8 +2026,8 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             eObj = dataContainer.getObj('entity')
             if not eObj.hasAttribute('rcsb_macromolecular_names_combined_name'):
                 eObj.appendAttribute('rcsb_macromolecular_names_combined_name')
-            if not eObj.hasAttribute('rcsb_macromolecular_names_combined_source'):
-                eObj.appendAttribute('rcsb_macromolecular_names_combined_source')
+            if not eObj.hasAttribute('rcsb_macromolecular_names_combined_provenance_source'):
+                eObj.appendAttribute('rcsb_macromolecular_names_combined_provenance_source')
             if not eObj.hasAttribute('rcsb_macromolecular_names_combined_provenance_code'):
                 eObj.appendAttribute('rcsb_macromolecular_names_combined_provenance_code')
             #
@@ -2049,7 +2054,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 eObj.setValue('?', 'rcsb_ec_lineage_id', ii)
                 eObj.setValue('?', 'rcsb_ec_lineage_name', ii)
                 eObj.setValue('?', 'rcsb_macromolecular_names_combined_name', ii)
-                eObj.setValue('?', 'rcsb_macromolecular_names_combined_source', ii)
+                eObj.setValue('?', 'rcsb_macromolecular_names_combined_provenance_source', ii)
                 eObj.setValue('?', 'rcsb_macromolecular_names_combined_provenance_code', ii)
                 #
                 if entityType not in ['polymer', 'branched']:
@@ -2088,7 +2093,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 #
                 if nameL:
                     eObj.setValue(';'.join(nameL), 'rcsb_macromolecular_names_combined_name', ii)
-                    eObj.setValue(';'.join(sourceL), 'rcsb_macromolecular_names_combined_source', ii)
+                    eObj.setValue(';'.join(sourceL), 'rcsb_macromolecular_names_combined_provenance_source', ii)
                     eObj.setValue(';'.join(provCodeL), 'rcsb_macromolecular_names_combined_provenance_code', ii)
 
                 # --------------------------------------------------------------------------

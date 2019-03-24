@@ -337,9 +337,9 @@ if __name__ == '__main__':
             unittest.TextTestRunner(verbosity=2).run(mySuite)
 
         if (True):
-            mySuite = mongoLoadChemRefCoreSuite()
+            mySuite = mongoLoadPdbxSuite()
             unittest.TextTestRunner(verbosity=2).run(mySuite)
 
         if (True):
-            mySuite = mongoLoadPdbxSuite()
+            mySuite = mongoLoadChemRefCoreSuite()
             unittest.TextTestRunner(verbosity=2).run(mySuite)

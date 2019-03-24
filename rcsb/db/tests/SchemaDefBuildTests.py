@@ -83,11 +83,35 @@ class SchemaDefBuildTests(unittest.TestCase):
                     for level in self.__schemaLevels:
                         self.__sdu.makeSchema(schemaName, collectionName, schemaType=schemaType, level=level, saveSchema=True, altDirPath=self.__workPath)
 
+    def testCompareSchema(self):
+        """ Compare common categories across schema definitions.
+        """
+        try:
+            sdCc, _, _, _ = self.__sdu.getSchemaInfo('chem_comp_core', altDirPath=self.__workPath)
+            sdBcc, _, _, _ = self.__sdu.getSchemaInfo('bird_chem_comp_core', altDirPath=self.__workPath)
+            #
+            logger.info("")
+            for schemaId in ['CHEM_COMP', 'PDBX_CHEM_COMP_AUDIT']:
+                atCcL = sdCc.getAttributeIdList(schemaId)
+                atBCcL = sdBcc.getAttributeIdList(schemaId)
+
+                logger.debug("%s attributes (%d) %r" % (schemaId, len(atCcL), atCcL))
+                logger.debug("%s attributes (%d) %r" % (schemaId, len(atBCcL), atBCcL))
+
+                sDif = set(atCcL) - set(atBCcL)
+                if sDif:
+                    logger.info("For %s attribute differences %r" % (schemaId, sDif))
+                self.assertEqual(len(sDif), 0)
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
+            self.fail()
+
 
 def schemaBuildSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(SchemaDefBuildTests("testBuildSchemaDefs"))
     suiteSelect.addTest(SchemaDefBuildTests("testBuildCollectionSchema"))
+    suiteSelect.addTest(SchemaDefBuildTests("testCompareSchema"))
     return suiteSelect
 
 

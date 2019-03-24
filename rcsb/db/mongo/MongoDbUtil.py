@@ -115,6 +115,7 @@ class MongoDbUtil(object):
             ok = self.__mgObj[databaseName].create_collection(collectionName)
             logger.debug("Return from create collection %r " % ok)
             if bsonSchema:
+                #bsonSchema.update({'additionalProperties': False})
                 sD = {"$jsonSchema": bsonSchema}
                 cmdD = OrderedDict([('collMod', collectionName),
                                     ('validator', sD),
@@ -177,6 +178,8 @@ class MongoDbUtil(object):
             r = c.insert_many(dList, ordered=ordered, bypass_document_validation=bypassValidation)
         except Exception as e:
             logger.error("Bulk insert failing for document length %d with %s" % (len(dList), str(e)))
+            #for ii, dd in enumerate(dList):
+            #    logger.error(" %d error doc %r" % (ii, list(dd.keys())))
         #
         try:
             rIdL = r.inserted_ids if r is not None else []
@@ -293,7 +296,7 @@ class MongoDbUtil(object):
             databaseName (str): Target database name
             collectionName (str): Target collection name
             dList (list): document list
-            selectD (dict, optional): dictiony of key/values for the selction query
+            selectD (dict, optional): dictionary of key/values for the selction query
             upsertFlag (bool, optional): set MongoDB 'upsert' option
 
         Returns:

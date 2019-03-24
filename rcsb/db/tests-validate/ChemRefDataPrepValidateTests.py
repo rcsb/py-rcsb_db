@@ -78,7 +78,8 @@ class ChemRefDataPrepValidateTests(unittest.TestCase):
 
         eCount = 0
         for collectionName in collectionNames:
-            cD = self.__schU.makeSchema(schemaName, collectionName, schemaType='JSON', level=schemaLevel, saveSchema=False)
+            _ = self.__schU.makeSchemaDef(schemaName, dataTyping='ANY', saveSchema=True, altDirPath=self.__workPath)
+            cD = self.__schU.makeSchema(schemaName, collectionName, schemaType='JSON', level=schemaLevel, saveSchema=True, altDirPath=self.__workPath)
             # Raises exceptions for schema compliance.
             Draft4Validator.check_schema(cD)
             #
