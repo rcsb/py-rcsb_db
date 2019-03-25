@@ -114,3 +114,4 @@
                address schema validation exceptions introduced by additionalProperties: False.  Add consolidated
                EC item.   Extend taxonomy lineaage to include leaf node.
  24-Mar-2019   V0.50 temporary adjustment for error handing for obsolete taxonony ids.
+ 25-Mar-2019   V0.51 remap merged taxons and adjust exception handling for taxonomy lineage generation

@@ -27,6 +27,7 @@
 # 11-Mar-2019 jdw add EC lineage using EnzymeDatabaseUtils()
 # 17-Mar-2019 jdw add support for entity subcategory rcsb_macromolecular_names_combined
 # 23-Mar-2019 jdw change criteria chem_comp collection criteria to _chem_comp.pdbx_release_status
+# 25-Mar-2019 jdw remap merged taxons and adjust exception handling for taxonomy lineage generation
 ##
 """
 This helper class implements external method references in the RCSB dictionary extension.
@@ -43,6 +44,7 @@ import datetime
 import functools
 import itertools
 import logging
+import re
 
 from mmcif.api.DataCategory import DataCategory
 
@@ -133,6 +135,8 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         self.__workPath = kwargs.get("workPath", None)
         logger.debug("Dictionary method helper init")
         #
+        #
+        self.__re_non_digit = re.compile(r'[^\d]+')
 
     def echo(self, msg):
         logger.info(msg)
@@ -975,8 +979,12 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     cObj.setValue(pCode, 'provenance_code', iRow)
                     for ii, at in enumerate(atL):
                         cObj.setValue(v[ii], at, iRow)
-                        if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?'] and v[ii].isdigit():
-                            taxId = int(v[ii])
+                        # if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?'] and v[ii].isdigit():
+                        if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?']:
+                            taxId = int(self.__re_non_digit.sub('', v[ii]))
+                            taxId = self.__taxU.getMergedTaxId(taxId)
+                            cObj.setValue(str(taxId), 'ncbi_taxonomy_id', iRow)
+                            #
                             sn = self.__taxU.getScientificName(taxId)
                             if sn:
                                 cObj.setValue(sn, 'ncbi_scientific_name', iRow)
@@ -985,11 +993,10 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                 cObj.setValue(';'.join(list(set(cnL))), 'ncbi_common_names', iRow)
                             # Add lineage -
                             linL = self.__taxU.getLineageWithNames(taxId)
-                            if linL is not None and len(linL) > 1:
-
+                            if linL is not None:
                                 cObj.setValue(';'.join([str(tup[0]) for tup in linL]), 'taxonomy_lineage_depth', iRow)
                                 cObj.setValue(';'.join([str(tup[1]) for tup in linL]), 'taxonomy_lineage_id', iRow)
-                                cObj.setValue(';'.join([tup[2] for tup in linL]), 'taxonomy_lineage_name', iRow)
+                                cObj.setValue(';'.join([str(tup[2]) for tup in linL]), 'taxonomy_lineage_name', iRow)
                             else:
                                 logger.warning("%s taxId %r lineage %r" % (dataContainer.getName(), taxId, linL))
 
@@ -1011,8 +1018,11 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     hObj.setValue(pCode, 'provenance_code', iRow)
                     for ii, at in enumerate(atL):
                         hObj.setValue(v[ii], at, iRow)
-                        if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?'] and v[ii].isdigit():
-                            taxId = int(v[ii])
+                        #  if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?'] and v[ii].isdigit():
+                        if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?']:
+                            taxId = int(self.__re_non_digit.sub('', v[ii]))
+                            taxId = self.__taxU.getMergedTaxId(taxId)
+                            hObj.setValue(str(taxId), 'ncbi_taxonomy_id', iRow)
                             sn = self.__taxU.getScientificName(taxId)
                             if sn:
                                 hObj.setValue(sn, 'ncbi_scientific_name', iRow)
@@ -1021,10 +1031,10 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                 hObj.setValue(';'.join(list(set(cnL))), 'ncbi_common_names', iRow)
                             # Add lineage -
                             linL = self.__taxU.getLineageWithNames(taxId)
-                            if linL is not None and len(linL) > 1:
+                            if linL is not None:
                                 hObj.setValue(';'.join([str(tup[0]) for tup in linL]), 'taxonomy_lineage_depth', iRow)
                                 hObj.setValue(';'.join([str(tup[1]) for tup in linL]), 'taxonomy_lineage_id', iRow)
-                                hObj.setValue(';'.join([tup[2] for tup in linL]), 'taxonomy_lineage_name', iRow)
+                                hObj.setValue(';'.join([str(tup[2]) for tup in linL]), 'taxonomy_lineage_name', iRow)
                             else:
                                 logger.warning("%s taxId %r lineage %r" % (dataContainer.getName(), taxId, linL))
                     logger.debug("%r entity %r - UPDATED %r %r" % (sType, entityId, atL, v))

@@ -201,9 +201,9 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
 
 def schemaValidateSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsRepo"))
+    #suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsRepo"))
     #
-    #suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsList"))
+    suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsList"))
     return suiteSelect
 
 
