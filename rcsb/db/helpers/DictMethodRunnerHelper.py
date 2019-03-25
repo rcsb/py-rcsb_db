@@ -985,9 +985,13 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                 cObj.setValue(';'.join(list(set(cnL))), 'ncbi_common_names', iRow)
                             # Add lineage -
                             linL = self.__taxU.getLineageWithNames(taxId)
-                            cObj.setValue(';'.join([str(tup[0]) for tup in linL]), 'taxonomy_lineage_depth', iRow)
-                            cObj.setValue(';'.join([str(tup[1]) for tup in linL]), 'taxonomy_lineage_id', iRow)
-                            cObj.setValue(';'.join([tup[2] for tup in linL]), 'taxonomy_lineage_name', iRow)
+                            if linL is not None and len(linL) > 1:
+
+                                cObj.setValue(';'.join([str(tup[0]) for tup in linL]), 'taxonomy_lineage_depth', iRow)
+                                cObj.setValue(';'.join([str(tup[1]) for tup in linL]), 'taxonomy_lineage_id', iRow)
+                                cObj.setValue(';'.join([tup[2] for tup in linL]), 'taxonomy_lineage_name', iRow)
+                            else:
+                                logger.warning("%s taxId %r lineage %r" % (dataContainer.getName(), taxId, linL))
 
                     logger.debug("%r entity %r - UPDATED %r %r" % (sType, entityId, atL, v))
                     iRow += 1
@@ -1017,9 +1021,12 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                 hObj.setValue(';'.join(list(set(cnL))), 'ncbi_common_names', iRow)
                             # Add lineage -
                             linL = self.__taxU.getLineageWithNames(taxId)
-                            hObj.setValue(';'.join([str(tup[0]) for tup in linL]), 'taxonomy_lineage_depth', iRow)
-                            hObj.setValue(';'.join([str(tup[1]) for tup in linL]), 'taxonomy_lineage_id', iRow)
-                            hObj.setValue(';'.join([tup[2] for tup in linL]), 'taxonomy_lineage_name', iRow)
+                            if linL is not None and len(linL) > 1:
+                                hObj.setValue(';'.join([str(tup[0]) for tup in linL]), 'taxonomy_lineage_depth', iRow)
+                                hObj.setValue(';'.join([str(tup[1]) for tup in linL]), 'taxonomy_lineage_id', iRow)
+                                hObj.setValue(';'.join([tup[2] for tup in linL]), 'taxonomy_lineage_name', iRow)
+                            else:
+                                logger.warning("%s taxId %r lineage %r" % (dataContainer.getName(), taxId, linL))
                     logger.debug("%r entity %r - UPDATED %r %r" % (sType, entityId, atL, v))
                     iRow += 1
             if 0:

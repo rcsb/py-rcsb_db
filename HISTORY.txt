@@ -110,7 +110,7 @@
 
                chem_comp category attributes normalized between chem_comp_core and bird_chem_comp_core collections.
  17-Mar-2019   V0.48 adding subcategory aggregate rcsb_macromolecular_names_combined
- 24-Mar-2019.  V0.49 address missing category issues in chemical reference data collections, various changes to
+ 24-Mar-2019   V0.49 address missing category issues in chemical reference data collections, various changes to
                address schema validation exceptions introduced by additionalProperties: False.  Add consolidated
                EC item.   Extend taxonomy lineaage to include leaf node.
-
+ 24-Mar-2019   V0.50 temporary adjustment for error handing for obsolete taxonony ids.
