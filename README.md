@@ -441,6 +441,7 @@ bird_chem_comp_core,.. ).
 ```bash
 # File: dbload-setup-example.yml
 #
+# Master Pinelands configuration file example
 ---
 DEFAULT: {}
 #
@@ -478,6 +479,9 @@ site_info:
     #
     NCBI_TAXONOMY_PATH: NCBI
     ENZYME_CLASSIFICATION_DATA_PATH: ec
+    # SIFTS_SUMMARY_PATH: /net/data-remote/ebi/sifts/flatfiles/csv
+    SIFTS_SUMMARY_PATH: sifts-summary
+
     #
     SCHEMA_DEF_LOCATOR_PATH: schema
     JSON_SCHEMA_LOCATOR_PATH: json-schema
@@ -510,14 +514,14 @@ schema_catalog_info:
   #
   #  Schema in active use -
   #
-  SCHEMA_NAMES_DEPLOYED: pdbx,pdbx_core,chem_comp,chem_comp_core,bird,bird_family,bird_chem_comp,bird_chem_comp_core,repository_holdings,entity_sequence_clusters,data_exchange,drugbank_core,ihm_dev
+  SCHEMA_NAMES_DEPLOYED: pdbx_core,chem_comp_core,bird_chem_comp_core,repository_holdings,entity_sequence_clusters,data_exchange,drugbank_core,ihm_dev
   DATATYPING_DEPLOYED: ANY,SQL
   SCHEMA_TYPES_DEPLOYED: rcsb,json,bson
   SCHEMA_LEVELS_DEPLOYED: min,full
   #
   # Schema subset used for CI testing -
   #
-  SCHEMA_NAMES_TEST: pdbx_core
+  SCHEMA_NAMES_TEST: pdbx,pdbx_core,chem_comp_core,bird_chem_comp_core
   DATATYPING_TEST: ANY,SQL
   SCHEMA_TYPES_TEST: rcsb,json,bson
   SCHEMA_LEVELS_TEST: min,full
@@ -536,7 +540,7 @@ entity_sequence_clusters:
     COLLECTION_ENTITY_MEMBERS_INDEX: data_set_id,entry_id,entity_id
     COLLECTION_CLUSTER_MEMBERS: cluster_members
     COLLECTION_CLUSTER_MEMBERS_INDEX: data_set_id,identity,cluster_id
-    COLLECTION_VERSION_STRING: v1_0_2
+    COLLECTION_VERSION_STRING: 1.1.0
     ENTITY_SCHEMA_NAME: rcsb_entity_sequence_cluster_entity_list
     CLUSTER_SCHEMA_NAME: rcsb_entity_sequence_cluster_identifer_list
     SEQUENCE_IDENTITY_LEVELS: 100,95,90,70,50,30
@@ -558,7 +562,7 @@ repository_holdings:
     COLLECTION_HOLDINGS_SUPERSEDED: repository_holdings_superseded
     COLLECTION_HOLDINGS_TRANSFERRED: repository_holdings_transferred
     COLLECTION_HOLDINGS_INSILICO_MODELS: repository_holdings_insilico_models
-    COLLECTION_VERSION_STRING: v1_0_2
+    COLLECTION_VERSION_STRING: 1.1.0
     #SCHEMA_NAME: entity_sequence_clusters
     #SCHEMA_DEF_FILENAME_SQL: schema_def-repository_holdings-SQL.json
     #SCHEMA_DEF_FILENAME_ANY: schema_def-repository_holdings-ANY.json
@@ -567,7 +571,7 @@ data_exchange:
     DATABASE_NAME: data_exchange
     DATABASE_VERSION_STRING: v5
     COLLECTION_UPDATE_STATUS: rcsb_data_exchange_status
-    COLLECTION_VERSION_STRING: v1_0_2
+    COLLECTION_VERSION_STRING: 1.1.0
     # SCHEMA_NAME: data_exchange
     #SCHEMA_DEF_FILENAME_SQL: schema_def-data_exchange-SQL.json
     #SCHEMA_DEF_FILENAME_ANY: schema_def-data_exchange-ANY.json
@@ -630,6 +634,7 @@ dictionary_helper:
         - pdbx_reference_molecule
         - pdbx_reference_molecule_family
         - drugbank_info
+        - drugbank_container_identifiers
     selection_filters:
         ?       - PUBLIC_RELEASE
                 - pdbx
@@ -793,10 +798,15 @@ dictionary_helper:
                   ATTRIBUTE_NAME_LIST:
                       - rcsb_multiple_source_flag
                       - rcsb_source_part_count
-                      - rcsb_macromolecular_names_combined
+                      - rcsb_macromolecular_names_combined_name
+                      - rcsb_macromolecular_names_combined_provenance_source
+                      - rcsb_macromolecular_names_combined_provenance_code
                       - rcsb_ec_lineage_name
                       - rcsb_ec_lineage_id
                       - rcsb_ec_lineage_depth
+                      - rcsb_enzyme_class_combined_ec
+                      - rcsb_enzyme_class_combined_provenance_source
+                      - rcsb_enzyme_class_combined_provenance_code
                 - CATEGORY_NAME: rcsb_entry_info
                   ATTRIBUTE_NAME_LIST:
                       - entry_id
@@ -861,7 +871,7 @@ dictionary_helper:
                 - CATEGORY_NAME: pdbx_validate_planes_atom
                 - CATEGORY_NAME: pdbx_validate_main_chain_plane
                 - CATEGORY_NAME: pdbx_validate_polymer_linkage
-                - CATEGORY_NAME: pdbx_distant_solvent_atoms
+                # - CATEGORY_NAME: pdbx_distant_solvent_atoms
                 #
         ?       - GENERATED_CONTENT
                 - data_exchange
@@ -963,7 +973,7 @@ dictionary_helper:
                       - comp_id
                       - ordinal
                       - name
-                      - provenance_code
+                      - provenance_source
                 - CATEGORY_NAME: rcsb_chem_comp_info
                   ATTRIBUTE_NAME_LIST:
                       - comp_id
@@ -996,7 +1006,7 @@ dictionary_helper:
                       - organism_common_name
                       - reference_database_name
                       - reference_database_accession_code
-                      - provenance_code
+                      - provenance_source
                 - CATEGORY_NAME: pdbx_chem_comp_audit
                   ATTRIBUTE_NAME_LIST:
                       - ordinal
@@ -1027,7 +1037,7 @@ dictionary_helper:
                       - comp_id
                       - ordinal
                       - name
-                      - provenance_code
+                      - provenance_source
                 - CATEGORY_NAME: rcsb_chem_comp_info
                   ATTRIBUTE_NAME_LIST:
                       - comp_id
@@ -1060,7 +1070,7 @@ dictionary_helper:
                       - organism_common_name
                       - reference_database_name
                       - reference_database_accession_code
-                      - provenance_code
+                      - provenance_source
                 - CATEGORY_NAME: pdbx_chem_comp_audit
                   ATTRIBUTE_NAME_LIST:
                       - ordinal
@@ -1179,15 +1189,7 @@ dictionary_helper:
                 - CATEGORY_NAME: rcsb_schema_container_identifiers
         ?       - CONSOLIDATED_BIRD_CONTENT
                 - bird_chem_comp_core
-        :       - CATEGORY_NAME: chem_comp
-                  #ATTRIBUTE_NAME_LIST:
-                  #    - id
-                  #    - name
-                  #    - formula
-                  #    - formula_weight
-                  #    - pdbx_release_status
-                  #    - type
-                - CATEGORY_NAME: pdbx_chem_comp_descriptor
+        :       - CATEGORY_NAME: pdbx_chem_comp_descriptor
                   ATTRIBUTE_NAME_LIST:
                        - comp_id
                        - type
@@ -1398,6 +1400,7 @@ dictionary_helper:
                       - reference_database_name
                       - reference_database_accession_code
                       - seq_one_letter_code
+                - CATEGORY_NAME: drugbank_container_identifiers
                 - CATEGORY_NAME: rcsb_schema_container_identifiers
     slice_parent_items:
         ?       - ENTITY
@@ -1463,59 +1466,59 @@ schemadef_helper:
     schema_info:
         ihm_dev:
             DATABASE_NAME: ihm_dev
-            VERSION: v1_0_2
+            VERSION: 1.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-ihm_dev-type-map.json
         pdbx:
             DATABASE_NAME: pdbx
-            VERSION: v5_0_3
+            VERSION: 5.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-pdbx-type-map.json
         pdbx_core:
             DATABASE_NAME: pdbx_core
-            VERSION: v5_0_3
+            VERSION: 5.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-pdbx-type-map.json
         bird:
             DATABASE_NAME: bird
-            VERSION: v5_0_3
+            VERSION: 5.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-bird-type-map.json
         bird_family:
             DATABASE_NAME: bird
-            VERSION: v5_0_3
+            VERSION: 5.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-bird_family-type-map.json
         chem_comp:
             DATABASE_NAME: chem_comp
-            VERSION: v5_0_3
+            VERSION: 5.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
         chem_comp_core:
             DATABASE_NAME: chem_comp_core
-            VERSION: v5_0_3
+            VERSION: 5.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
         bird_chem_comp:
             DATABASE_NAME: chem_comp
-            VERSION: v5_0_3
-            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-bird_chem_comp-type-map.json
+            VERSION: 5.1.0
+            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
         bird_chem_comp_core:
             DATABASE_NAME: chem_comp_core
-            VERSION: v5_0_3
-            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-bird_chem_comp-type-map.json
+            VERSION: 5.1.0
+            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
         pdb_distro:
             DATABASE_NAME: stat
-            VERSION: v1_0_2
+            VERSION: 1.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME:
         repository_holdings:
             DATABASE_NAME: repository_holdings
-            VERSION: v5_0_3
-            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-repository_holdings-type-map.json
+            VERSION: 5.1.0
+            INSTANCE_DATA_TYPE_INFO_FILENAME:
         entity_sequence_clusters:
             DATABASE_NAME: sequence_clusters
-            VERSION: v5_0_3
+            VERSION: 5.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME:
         data_exchange:
             DATABASE_NAME: data_exchange
-            VERSION: v5_0_3
+            VERSION: 5.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME:
         drugbank_core:
             DATABASE_NAME: chem_comp_core
-            VERSION: v5_0_3
+            VERSION: 5.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME:
     #
     schema_content_filters:
@@ -1669,74 +1672,74 @@ document_helper:
     schema_collection_names:
         ihm_dev:
             - NAME: ihm_dev
-              VERSION: v1_0_2
+              VERSION: 1.1.0
         pdbx:
             - NAME: pdbx
-              VERSION: v5_0_3
+              VERSION: 5.1.0
             - NAME: pdbx_ext
-              VERSION: v5_0_3
+              VERSION: 5.1.0
         pdbx_core:
             - NAME: pdbx_core_entity
-              VERSION: v5_0_3
+              VERSION: 5.1.0
             - NAME: pdbx_core_entry
-              VERSION: v5_0_3
+              VERSION: 5.1.0
             - NAME: pdbx_core_assembly
-              VERSION: v5_0_3
+              VERSION: 5.1.0
             - NAME: pdbx_core_entity_monomer
-              VERSION: v5_0_3
+              VERSION: 5.1.0
             - NAME: pdbx_core_entity_instance
-              VERSION: v5_0_3
+              VERSION: 5.1.0
         bird:
             - NAME: bird
-              VERSION: v5_0_3
+              VERSION: 5.1.0
         bird_family:
             - NAME: family
-              VERSION: v5_0_3
+              VERSION: 5.1.0
         chem_comp:
             - NAME: chem_comp
-              VERSION: v5_0_3
+              VERSION: 5.1.0
         chem_comp_core:
             - NAME: chem_comp_core
-              VERSION: v5_0_3
+              VERSION: 5.1.0
         bird_chem_comp:
             - NAME: bird_chem_comp
-              VERSION: v5_0_3
+              VERSION: 5.1.0
         bird_chem_comp_core:
             - NAME: bird_chem_comp_core
-              VERSION: v5_0_3
+              VERSION: 5.1.0
         pdb_distro: []
         repository_holdings:
             - NAME: repository_holdings_update
-              VERSION: v1_0_2
+              VERSION: 1.1.0
             - NAME: repository_holdings_current
-              VERSION: v1_0_2
+              VERSION: 1.1.0
             - NAME: repository_holdings_unreleased
-              VERSION: v1_0_2
+              VERSION: 1.1.0
             - NAME: repository_holdings_prerelease
-              VERSION: v1_0_2
+              VERSION: 1.1.0
             - NAME: repository_holdings_removed
-              VERSION: v1_0_2
+              VERSION: 1.1.0
             - NAME: repository_holdings_removed_audit_authors
-              VERSION: v1_0_2
+              VERSION: 1.1.0
             - NAME: repository_holdings_superseded
-              VERSION: v1_0_2
+              VERSION: 1.1.0
             - NAME: repository_holdings_transferred
-              VERSION: v1_0_2
+              VERSION: 1.1.0
             - NAME: repository_holdings_insilico_models
-              VERSION: v1_0_2
+              VERSION: 1.1.0
         entity_sequence_clusters:
             - NAME: cluster_members
-              VERSION: v1_0_2
+              VERSION: 1.1.0
             - NAME: cluster_provenance
-              VERSION: v1_0_2
+              VERSION: 1.1.0
             - NAME: entity_members
-              VERSION: v1_0_2
+              VERSION: 1.1.0
         data_exchange:
             - NAME: rcsb_data_exchange_status
-              VERSION: v1_0_2
+              VERSION: 1.1.0
         drugbank_core:
             - NAME: drugbank_core
-              VERSION: v1_0_2
+              VERSION: 1.1.0
     #
     schema_content_filters:
         ihm_dev:
@@ -1820,6 +1823,7 @@ document_helper:
                 - rcsb_entity_instance_container_identifiers
                 - rcsb_entity_monomer_container_identifiers
                 - rcsb_entity_poly_info
+                - entity_poly_seq
                 - pdbx_poly_seq_scheme
                 - pdbx_nonpoly_scheme
                 - pdbx_vrpt_summary
@@ -1870,6 +1874,7 @@ document_helper:
                 - EM_2D_CRYSTAL_ENTITY
                 - EM_3D_CRYSTAL_ENTITY
                 - EM_3D_FITTING
+                - EM_3D_FITTING_LIST
                 - EM_3D_RECONSTRUCTION
                 - EM_EMBEDDING
                 - EM_ENTITY_ASSEMBLY
@@ -2033,6 +2038,7 @@ document_helper:
             INCLUDE:
                 - drugbank_info
                 - drugbank_target
+                - drugbank_container_identifiers
             EXCLUDE: []
             SLICE:
     collection_private_keys:
@@ -2566,9 +2572,11 @@ document_helper:
               HAS_UNIT_CARDINALITY: False
             - NAME: rcsb_ec_lineage
               HAS_UNIT_CARDINALITY: False
+            - NAME: rcsb_macromolecular_names_combined
+              HAS_UNIT_CARDINALITY: False
+            - NAME: rcsb_enzyme_class_combined
+              HAS_UNIT_CARDINALITY: False
     collection_retain_singleton:
         pdbx_core_entity_monomer: True
-
-
 
 ```

@@ -65,13 +65,13 @@ setup(
                       'mmcif >= 0.35',
                       'scandir; python_version < "3.0"',
                       # 'configparser; python_version < "3.0"',
-                      'rcsb.utils.io >= 0.28',
+                      'rcsb.utils.io >= 0.29',
                       'rcsb.utils.config >= 0.16',
                       'rcsb.utils.multiproc >= 0.12',
                       'rcsb.utils.validation >= 0.13',
                       'rcsb.utils.chemref >= 0.18',
                       'rcsb.utils.ec >= 0.10',
-                      'rcsb.utils.taxonomy >= 0.11'],
+                      'rcsb.utils.taxonomy >= 0.13'],
     packages=find_packages(exclude=['rcsb.db.tests', 'rcsb.db.tests-*', 'tests.*']),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:
