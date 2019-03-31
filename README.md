@@ -437,9 +437,49 @@ sections specifying the dictionaries and helper functions used
 to define the schema for the each supported content type (e.g., pdbx_core, chem_comp_core,
 bird_chem_comp_core,.. ).
 
-
 ```bash
 # File: dbload-setup-example.yml
+# Date: 26-Oct-2018 jdw
+#
+# Updates:
+#
+#  4-Nov-2018 jdw add schemadef_helper/excluded_attributes
+# 11-Nov-2018 jdw add DRUGBANK_MAPPING_LOCATOR, and CCDC_MAPPING_LOCATOR and chem_comp_core schema
+# 18-Nov-2018 jdw add PRIVATE_KEY_NAME to collection_attributes_names
+# 20-Nov-2018 jdw add pdbx_chem_comp_audit.ordinal
+# 23-Nov-2018 jdw add rcsb_repository_holdings_prerelease
+# 30-Nov-2018 jdw add CONSOLIDATE_BIRD_CONTENT content class for bird_chem_comp_core collection
+#  1-Dec-2018 jdw add NCBI_TAXONOMY_LOCATOR: NCBI/taxonomy_names.pic
+#  4-Dec-2018 jdw add indices, add private keys for chemical components, align citation schema, and
+#                 add DrugBank core collection details
+#  6-Dec-2018 jdw revised DrugBank core collection details
+# 13-Dec-2018 jdw includes core_entity_monomer collection
+# 13-Dec-2018 jdw includes ihm_dev collection
+# 18-Dec-2018 jdw add entity private BIRD key based on either _pdbx_entity_nonpoly.rcsb_prd_id
+#                 _entity_poly.rcsb_prd_id
+#  1-Jan-2019 jdw restore exptl_crystal in pdbx_core_entry
+#  7-Jan-2019 jdw broad pruning and consolidation of site specific sections
+# 17-Jan-2019 jdw add a separate set of document attributes for replacing documents in collections built from slices.
+# 18-Jan-2019 jdw replace __ with _ in collection private keys
+#  2-Feb-2019 jdw adding validation report content to pdbx_core schema
+# 16-Feb-2019 jdw add search indices and private keys for entity_instance_core entity_monomer_core collections
+# 18-Feb-2019 jdw various adjustments to exclustions for entity_core and entity_instance_core schemas
+# 20-Feb-2019 jdw include em_ctf_correction and em_particle_selection in the entry core collection
+#                 exclude rcsb_entity_monomer_container_identifiers, rcsb_entity_poly_info, pdbx_poly_seq_scheme,
+#                 and pdbx_nonpoly_scheme from the entity core collection
+#  3-Mar-2019 jdw adjust release filter for chem_comp_* collections to accept only REL and REF_ONLY status codes.
+# 14-Mar-2019 jdw simplify the handling of versioning removing these from database and collection names and schema file names,
+#                 version configuration now managed in separate configuration options, NCBI_TAXONOMY_LOCATOR removed,
+#                 added configuration options NCBI_TAXONOMY_PATH and ENZYME_CLASSIFICATION_DATA_PATH, provide separate
+#                 configuration options schema version assignment within collections, normalize chem_comp attributes
+#                 between chem_comp_core and bird_chem_comp_core collections, up-version api and json schema, add VRPT_REPO_PATH_ENV.
+# 17-Mar-2019 jdw add subcategory aggregate rcsb_macromolecular_names_combined
+# 20-Mar-2019 jdw remove category chem_comp from the consolidated bird content class, excluded entity_poly_seq from pdbx_entity_core
+# 24-Mar-2019 jdw add sifts-summary path defails and miscellaneous schema updates
+# 25-Mar-2019 jdw add em_3d_fitting_list to the entry_core collection
+# 31-Mar-2019 jdw add block_attributes: REF_PARENT_CATEGORY_NAME: REF_PARENT_ATTRIBUTE_NAME: to provide parent details for this
+#                 synthetic key
+#
 #
 # Master Pinelands configuration file example
 ---
@@ -1571,16 +1611,20 @@ schemadef_helper:
                 - drugbank_target
             EXCLUDE: []
     block_attributes:
-        ihm_dev:
+        ihm_dev_NO:
             ATTRIBUTE_NAME: structure_id
             CIF_TYPE_CODE: code
             MAX_WIDTH: 16
             METHOD: datablockid()
+            REF_PARENT_CATEGORY_NAME: entry
+            REF_PARENT_ATTRIBUTE_NAME: id
         pdbx:
             ATTRIBUTE_NAME: structure_id
             CIF_TYPE_CODE: code
             MAX_WIDTH: 12
             METHOD: datablockid()
+            REF_PARENT_CATEGORY_NAME: entry
+            REF_PARENT_ATTRIBUTE_NAME: id
         bird:
             ATTRIBUTE_NAME: db_id
             CIF_TYPE_CODE: code
@@ -1596,11 +1640,15 @@ schemadef_helper:
             CIF_TYPE_CODE: code
             MAX_WIDTH: 10
             METHOD: datablockid()
+            REF_PARENT_CATEGORY_NAME: comp
+            REF_PARENT_ATTRIBUTE_NAME: id
         bird_chem_comp:
             ATTRIBUTE_NAME: component_id
             CIF_TYPE_CODE: code
             MAX_WIDTH: 10
             METHOD: datablockid()
+            REF_PARENT_CATEGORY_NAME: comp
+            REF_PARENT_ATTRIBUTE_NAME: id
         pdb_distro:
             ATTRIBUTE_NAME: structure_id
             CIF_TYPE_CODE: code
