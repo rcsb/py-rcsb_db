@@ -8,6 +8,7 @@
 #      7-Sep-2018 jdw Update JSON/BSON schema generation tests
 #      7-Oct-2018 jdw update with repository_holdings and  sequence_cluster tests
 #     29-Nov-2018 jdw add selected build tests
+#     31-Mar-2019 jdw add test to generate schema with $ref to represent parent/child relationsip
 ##
 """
 Tests for utilities employed to construct local and json schema defintions from
@@ -54,6 +55,7 @@ class SchemaDefBuildTests(unittest.TestCase):
         #
         self.__schemaNameList = self.__cfgOb.getList('SCHEMA_NAMES_TEST', sectionName='schema_catalog_info')
         self.__dataTypingList = self.__cfgOb.getList('DATATYPING_TEST', sectionName='schema_catalog_info')
+        self.__saveSchema = True
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
@@ -81,7 +83,7 @@ class SchemaDefBuildTests(unittest.TestCase):
                     if schemaType.lower() == 'rcsb':
                         continue
                     for level in self.__schemaLevels:
-                        self.__sdu.makeSchema(schemaName, collectionName, schemaType=schemaType, level=level, saveSchema=True, altDirPath=self.__workPath)
+                        self.__sdu.makeSchema(schemaName, collectionName, schemaType=schemaType, level=level, saveSchema=self.__saveSchema, altDirPath=self.__workPath)
 
     def testCompareSchema(self):
         """ Compare common categories across schema definitions.
@@ -106,6 +108,18 @@ class SchemaDefBuildTests(unittest.TestCase):
             logger.exception("Failing with %s" % str(e))
             self.fail()
 
+    def testBuildCollectionSchemaWithRefs(self):
+        for schemaName in ['ihm_dev']:
+            d = self.__sdu.makeSchemaDef(schemaName, dataTyping='ANY', saveSchema=False, altDirPath=None)
+            sD = SchemaDefAccess(d)
+            for cd in sD.getCollectionInfo():
+                collectionName = cd['NAME']
+                for schemaType in self.__schemaTypes:
+                    if schemaType.lower() == 'rcsb':
+                        continue
+                    for level in self.__schemaLevels:
+                        self.__sdu.makeSchema(schemaName, collectionName, schemaType=schemaType, level=level, saveSchema=self.__saveSchema, altDirPath=self.__workPath, extraOpts='addParentRefs')
+
 
 def schemaBuildSuite():
     suiteSelect = unittest.TestSuite()
@@ -115,8 +129,18 @@ def schemaBuildSuite():
     return suiteSelect
 
 
+def schemaBuildRefSuite():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(SchemaDefBuildTests("testBuildCollectionSchemaWithRefs"))
+    return suiteSelect
+
+
 if __name__ == '__main__':
     #
     if True:
         mySuite = schemaBuildSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+    if True:
+        mySuite = schemaBuildRefSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)

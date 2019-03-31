@@ -7,6 +7,7 @@
 # Update:
 #  7-Sep-2018 jdw add multi-level (strict/min) validation tests
 # 29-Sep-2018 jdw add plugin for extended checks of JSON Schema formats.
+# 31-Mar-2019 jdw add option to validate  'addParentRefs'
 #
 ##
 """
@@ -81,19 +82,19 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__testDirPath = os.path.join(HERE, "test-output", 'pdbx-fails')
         self.__exportJson = True
         #
-
-        self.__schemaNameD = {'ihm_dev': ['ihm_dev'],
-                              'pdbx': ['pdbx', 'pdbx_ext'],
-                              'pdbx_core': ['pdbx_core_entity_monomer', 'pdbx_core_entity', 'pdbx_core_entry', 'pdbx_core_assembly', 'pdbx_core_entity_instance', ],
-                              'bird': ['bird'],
-                              'bird_family': ['family'],
-                              'chem_comp': ['chem_comp'],
-                              'chem_comp_core': ['chem_comp_core'],
-                              'bird_chem_comp': ['bird_chem_comp'],
-                              'bird_chem_comp_core': ['bird_chem_comp_core']
-                              }
-        # self.__schemaNameD = {'pdbx_core': ['pdbx_core_entity', 'pdbx_core_entry', 'pdbx_core_assembly', 'pdbx_core_entity_instance', 'pdbx_core_entity_monomer'],
-        #                      }
+        # self.__extraOpts = 'addParentRefs'
+        self.__extraOpts = None
+        self.__allSchemaNameD = {'ihm_dev': ['ihm_dev'],
+                                 'pdbx': ['pdbx', 'pdbx_ext'],
+                                 'pdbx_core': ['pdbx_core_entity_monomer', 'pdbx_core_entity', 'pdbx_core_entry', 'pdbx_core_assembly', 'pdbx_core_entity_instance', ],
+                                 'bird': ['bird'],
+                                 'bird_family': ['family'],
+                                 'chem_comp': ['chem_comp'],
+                                 'chem_comp_core': ['chem_comp_core'],
+                                 'bird_chem_comp': ['bird_chem_comp'],
+                                 'bird_chem_comp_core': ['bird_chem_comp_core'],
+                                 }
+        self.__schemaNameD = {'pdbx_core': ['pdbx_core_entity', 'pdbx_core_entry', 'pdbx_core_assembly', 'pdbx_core_entity_instance', 'pdbx_core_entity_monomer']}
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
@@ -129,7 +130,15 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             _ = self.__schU.makeSchemaDef(schemaName, dataTyping='ANY', saveSchema=True, altDirPath=self.__workPath)
             pthList = inputPathList if inputPathList else self.__schU.getLocatorObjList(contentType=schemaName)
             for collectionName in schemaNameD[schemaName]:
-                cD = self.__schU.makeSchema(schemaName, collectionName, schemaType='JSON', level=schemaLevel, saveSchema=True, altDirPath=self.__workPath)
+                cD = self.__schU.makeSchema(
+                    schemaName,
+                    collectionName,
+                    schemaType='JSON',
+                    level=schemaLevel,
+                    saveSchema=True,
+                    altDirPath=self.__workPath,
+                    extraOpts=self.__extraOpts)
+                #
                 dL, cnL = self.__testPrepDocumentsFromContainers(pthList, schemaName, collectionName, styleType="rowwise_by_name_with_cardinality")
                 # Raises exceptions for schema compliance.
                 try:
@@ -201,7 +210,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
 
 def schemaValidateSuite():
     suiteSelect = unittest.TestSuite()
-    #suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsRepo"))
+    # suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsRepo"))
     #
     suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsList"))
     return suiteSelect

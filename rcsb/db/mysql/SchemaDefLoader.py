@@ -23,6 +23,8 @@
 #  2-Jul-2018 jdw fix working path
 # 20-Aug-2019 jdw add dynamic method invocation  -
 # 11-Nov-2018 jdw  add DrugBank and CCDC mapping path details.
+# 31-Mar-2019 jdw add more speific tests for null value suggested by
+#                 issue = MySQL SchemaDefLoader skip zero values #19
 ##
 """
 Generic mapper of PDBx/mmCIF instance data to SQL loadable data files based on external
@@ -417,7 +419,7 @@ class SchemaDefLoader(object):
             aList = []
             for id, nm in zip(tableAttributeIdList, tableAttributeNameList):
                 # if len(row[id]) > 0 and row[id] != r'\N':
-                if row[id] and row[id] != r'\N':
+                if row[id] is not None and row[id] != r'\N':
                     vList.append(row[id])
                     aList.append(nm)
             sqlInsertList.append((sqlGen.insertTemplateSQL(databaseName, tableName, aList), vList))

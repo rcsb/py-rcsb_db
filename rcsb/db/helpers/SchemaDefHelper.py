@@ -7,6 +7,7 @@
 # Updates:
 #     24-Jul-2018  jdw Make the name conversion method convention specific.
 #      4-Nov-2018  jdw add support for excluded attributes
+#     31-Mar-2019  jdw add method getBlockAttributeRefParent()
 ##
 """
 Inject additional semantic information into a schema definition applicable to all implementation types.
@@ -135,6 +136,16 @@ class SchemaDefHelper(SchemaDefHelperBase):
         r = None
         try:
             return self.__cfgD['block_attributes'][schemaName]['METHOD']
+        except Exception as e:
+            logger.debug("Schema definition %s failing with %s" % (schemaName, str(e)))
+        return r
+
+    def getBlockAttributeRefParent(self, schemaName):
+        r = None
+        try:
+            pCatName = self.__cfgD['block_attributes'][schemaName]['REF_PARENT_CATEGORY_NAME']
+            pAtName = self.__cfgD['block_attributes'][schemaName]['REF_PARENT_ATTRIBUTE_NAME']
+            return {'CATEGORY_NAME': pCatName, 'ATTRIBUTE_NAME': pAtName}
         except Exception as e:
             logger.debug("Schema definition %s failing with %s" % (schemaName, str(e)))
         return r

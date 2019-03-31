@@ -21,6 +21,8 @@
 #  3-Dec-2018 jdw add INTEGRATED_CONTENT
 #  6-Jan-2019 jdw update to the change in configuration for dataTypeInstanceFile
 # 16-Jan-2019 jdw add 'COLLECTION_DOCUMENT_REPLACE_ATTRIBUTE_NAMES'
+# 31-Mar-2019 jdw add  support for 'addParentRefs' in enforceOpts to include relative $ref properties
+#                 to describe parent relationships
 ##
 """
 Integrate dictionary metadata and file based(type/coverage) into internal and JSON/BSON schema defintions.
@@ -551,7 +553,13 @@ class SchemaDefBuild(object):
             blockAttributeName = schemaDefHelper.getBlockAttributeName(schemaName) if self.__schemaDefHelper else None
             blockAttributeCifType = schemaDefHelper.getBlockAttributeCifType(schemaName) if self.__schemaDefHelper else None
             blockAttributeAppType = dtAppInfo.getAppTypeName(blockAttributeCifType)
-            #blockAttributeWidth = schemaDefHelper.getBlockAttributeMaxWidth(schemaName) if schemaDefHelper else 0
+            blockRefPathList = None
+            if 'addParentRefs' in enforceOpts:
+                refD = schemaDefHelper.getBlockAttributeRefParent(schemaName)
+                if refD is not None:
+                    blockRefPathList = [convertNameF(refD['CATEGORY_NAME']), convertNameF(refD['ATTRIBUTE_NAME'])]
+
+            # blockAttributeWidth = schemaDefHelper.getBlockAttributeMaxWidth(schemaName) if schemaDefHelper else 0
             # blockAttributeMethod = schemaDefHelper.getBlockAttributeMethod(schemaName) if schemaDefHelper else None
         #
         dictSchema = self.__dictInfo.getSchemaNames()
@@ -617,9 +625,14 @@ class SchemaDefBuild(object):
             #
             if addBlockAttribute and blockAttributeName:
                 schemaAttributeName = convertNameF(blockAttributeName)
-                # atPropD = {typeKey: blockAttributeAppType, 'maxWidth': blockAttributeWidth}
-                atPropD = {typeKey: blockAttributeAppType}
                 pD['required'].append(schemaAttributeName)
+                #
+                if blockRefPathList:
+                    atPropD = self.__getJsonRef(blockRefPathList)
+                else:
+                    # atPropD = {typeKey: blockAttributeAppType, 'maxWidth': blockAttributeWidth}
+                    atPropD = {typeKey: blockAttributeAppType}
+
                 pD['properties'][schemaAttributeName] = atPropD
 
             #  First, filter any subcategory aggregates from the available list of a category attributes
@@ -748,10 +761,28 @@ class SchemaDefBuild(object):
 
         return rD
 
+    def __getJsonRef(self, pathList):
+        refD = {}
+        try:
+            refD = {'$ref': '#' + '/'.join(pathList)}
+        except Exception as e:
+            logger.excepion("Failing with pathList %r %s" % (pathList, str(e)))
+        return refD
+
     def __getJsonAttributeProperties(self, fD, dataTypingU, dtAppInfo, jsonSpecDraft, enforceOpts):
         #
         atPropD = {}
         try:
+            # Adding a parent reference -
+            if 'addParentRefs' in enforceOpts and fD['PARENT'] is not None:
+                convertNameF = self.__getConvertNameMethod(dataTypingU)
+                pCatName = convertNameF(fD['PARENT']['CATEGORY'])
+                pAtName = convertNameF(fD['PARENT']['ATTRIBUTE'])
+                # logger.info("Using parent ref %r %r " % (pCatName, pAtName))
+                # atPropD = {'$ref': '#/%s/%s' % (pCatName, pAtName)}
+                atPropD = self.__getJsonRef([pCatName, pAtName])
+                return atPropD
+            #
             # - assign data type attributes
             typeKey = 'bsonType' if dataTypingU == 'BSON' else 'type'
             appType = dtAppInfo.getAppTypeName(fD['TYPE_CODE'])

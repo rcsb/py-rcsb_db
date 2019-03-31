@@ -8,6 +8,8 @@
 #
 # Updates:
 #
+# 31-Mar-2019 jdw add more speific tests for null value suggested by
+#                 issue = MySQL SchemaDefLoader skip zero values #19
 ##
 """
 Generic mapper of PDBx/mmCIF instance data to SQL loadable data files based on external
@@ -180,7 +182,7 @@ class CockroachDbLoader(object):
             for row in rowList:
                 vList = []
                 for id, nm in tupL:
-                    if row[id] and row[id] != r'\N':
+                    if row[id] is not None and row[id] != r'\N':
                         vList.append(row[id])
                     else:
                         vList.append(None)

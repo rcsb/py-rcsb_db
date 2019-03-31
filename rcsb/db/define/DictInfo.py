@@ -11,6 +11,7 @@
 #  16-Jun-2018 jdw standardize method name for getAttributeDataTypeD()
 #  26-Nov-2018 jdw turn down boundary value level to standard ddl values
 #   3-Feb-2019 jdw get all child items using self.__dApi.getFullDecendentList()
+#  31-Mar-2019 jdw include parent details in __getAttributeFeatures()
 #
 #
 ##
@@ -387,6 +388,14 @@ class DictInfo(object):
         else:
             return enumList
 
+    def __itemNameToDictList(self, itemNameList):
+        rL = []
+        for itemName in itemNameList:
+            atName = CifName.attributePart(itemName)
+            catName = CifName.categoryPart(itemName)
+            rL.append({'CATEGORY': catName, 'ATTRIBUTE': atName})
+        return rL
+
     def __getAttributeFeatures(self, catName, iterableD, itemTransformD, methodD):
         """
         Args:
@@ -406,11 +415,16 @@ class DictInfo(object):
         # keyAtNames = [CifName.attributePart(kyItem) for kyItem in self.__dApi.getCategoryKeyList(catName)]
         keyAtNames = [CifName.attributePart(kyItem) for kyItem in self.__getCategoryKeysWithReplacement(catName)]
         for atName in self.__dictSchema[catName]:
+            itemName = CifName.itemName(catName, atName)
             fD = {
                 'TYPE_CODE': None,
                 'TYPE_CODE_ALT': None,
                 'IS_MANDATORY': False,
                 "CHILD_ITEMS": [],
+                "CHILDREN": [],
+                "ROOT_PARENT_ITEM": None,
+                "ROOT_PARENT": None,
+                "PARENT": None,
                 'DESCRIPTION': None,
                 'IS_KEY': False,
                 "ITERABLE_DELIMITER": None,
@@ -422,7 +436,26 @@ class DictInfo(object):
             fD['TYPE_CODE_ALT'] = self.__dApi.getTypeCodeAlt(catName, atName)
             fD['IS_MANDATORY'] = True if str(self.__dApi.getMandatoryCode(catName, atName)).lower() in ['y', 'yes'] else False
             fD['DESCRIPTION'] = textwrap.dedent(self.__dApi.getDescription(catName, atName))
+            #
             fD['CHILD_ITEMS'] = self.__dApi.getFullChildList(catName, atName)
+            fD['CHILDREN'] = self.__itemNameToDictList(self.__dApi.getFullChildList(catName, atName))
+            #
+            pItemName = self.__dApi.getUltimateParent(catName, atName)
+            pName = pItemName if pItemName != itemName else None
+            fD['ROOT_PARENT_ITEM'] = pName
+
+            fD['ROOT_PARENT'] = self.__itemNameToDictList([pName])[0] if pName else None
+            #
+            pL = self.__dApi.getFullParentList(catName, atName, stripSelfParent=True)
+            if len(pL) > 0:
+                rL = self.__itemNameToDictList(pL)
+                if len(rL) == 1:
+                    fD['PARENT'] = rL[0]
+                else:
+                    logger.warning("Unexpected multiple parent definition for %s %s : %r" % (catName, atName, rL))
+            #
+            # logger.debug("catName %s atName %s : parent %r root_parent %r" % (catName, atName, fD['PARENT'], fD['ROOT_PARENT']))
+            #
             fD['IS_KEY'] = atName in keyAtNames
             pType = self.__dApi.getTypePrimitive(catName, atName)
             fD['IS_CHAR_TYPE'] = str(pType).lower() in ['char', 'uchar']

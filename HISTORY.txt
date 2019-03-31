@@ -115,3 +115,8 @@
                EC item.   Extend taxonomy lineaage to include leaf node.
  24-Mar-2019   V0.50 temporary adjustment for error handing for obsolete taxonony ids.
  25-Mar-2019   V0.51 remap merged taxons and adjust exception handling for taxonomy lineage generation
+ 31-Mar-2019   V0.52 block_attributes: REF_PARENT_CATEGORY_NAME: REF_PARENT_ATTRIBUTE_NAME: to provide parent details for synthetic key
+               add 'addParentRefs' in enforceOpts to write relative $ref properties to describe parent relationships.
+                Address GitHub issues:
+                        Failed int cast for None in DataTransformFactory #20 and
+                        MySQL SchemaDefLoader skip zero values #19

@@ -616,6 +616,13 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             rowIdx = tObj.getRowCount()
             tObj.setValue('deposited', 'id', rowIdx)
             tObj.setValue('deposited_coordinates', 'details', rowIdx)
+            #
+            for atName in ['oligomeric_details', 'method_details', 'oligomeric_count']:
+                if tObj.hasAttribute(atName):
+                    tObj.setValue('?', atName, rowIdx)
+            #
+            #
+            #
             logger.debug("Full row is %r" % tObj.getRow(rowIdx))
             #
             return True

@@ -52,13 +52,14 @@ class SchemaDefUtil(object):
         self.__numProc = numProc
         self.__workPath = workPath
 
-    def getSchemaOptions(self, schemaLevel):
+    def getSchemaOptions(self, schemaLevel, extraOpts=None):
+        opts = extraOpts + '|' if extraOpts else ""
         if schemaLevel == 'full':
-            return "mandatoryKeys|mandatoryAttributes|bounds|enums"
+            return opts + "mandatoryKeys|mandatoryAttributes|bounds|enums"
         elif schemaLevel in ['min', 'minimum']:
-            return "mandatoryKeys|enums"
+            return opts + "mandatoryKeys|enums"
         else:
-            return ""
+            return opts
 
     def getLocatorObjList(self, contentType, inputPathList=None, mergeContentTypes=None):
         """Convenience method to get the data path list for the input repository content type.
@@ -238,13 +239,13 @@ class SchemaDefUtil(object):
             logger.error("Failed to read schema for %s %r" % (collectionName, level))
         return sObj
 
-    def makeSchema(self, schemaName, collectionName, schemaType='BSON', level='full', saveSchema=False, altDirPath=None):
+    def makeSchema(self, schemaName, collectionName, schemaType='BSON', level='full', saveSchema=False, altDirPath=None, extraOpts=None):
         try:
             smb = SchemaDefBuild(schemaName, self.__cfgOb)
             #
             cD = None
             stU = schemaType.upper()
-            cD = smb.build(collectionName, dataTyping=stU, schemaType=stU, enforceOpts=self.getSchemaOptions(level))
+            cD = smb.build(collectionName, dataTyping=stU, schemaType=stU, enforceOpts=self.getSchemaOptions(level, extraOpts=extraOpts))
             if cD and saveSchema:
                 schemaLocator = self.getJsonSchemaLocator(collectionName, schemaType=schemaType, level=level, altDirPath=altDirPath)
                 mU = MarshalUtil(workPath=self.__workPath)
