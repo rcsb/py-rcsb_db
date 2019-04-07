@@ -23,6 +23,7 @@
 # 16-Jan-2019 jdw add 'COLLECTION_DOCUMENT_REPLACE_ATTRIBUTE_NAMES'
 # 31-Mar-2019 jdw add  support for 'addParentRefs' in enforceOpts to include relative $ref properties
 #                 to describe parent relationships
+#  3-Apr-2019 jdw add experimental primary key property controlled by 'addPrimaryKey'
 ##
 """
 Integrate dictionary metadata and file based(type/coverage) into internal and JSON/BSON schema defintions.
@@ -96,8 +97,7 @@ class SchemaDefBuild(object):
                               appDataTypeFilePath=self.__appDataTypeFilePath,
                               schemaDefHelper=self.__schemaDefHelper,
                               documentDefHelper=self.__documentDefHelper,
-                              includeContentClasses=self.__includeContentClasses
-                              )
+                              includeContentClasses=self.__includeContentClasses)
         elif schemaType.lower() in ['json', 'bson']:
             rD = self.__createJsonLikeSchema(schemaName=self.__schemaName,
                                              collectionName=collectionName,
@@ -512,6 +512,7 @@ class SchemaDefBuild(object):
 
         """
         addBlockAttribute = True
+        addPrimaryKey = 'addPrimaryKey' in enforceOpts
         suppressSingleton = not documentDefHelper.getRetainSingletonObjects(collectionName)
         logger.debug("Collection %s suppress singleton %r" % (collectionName, suppressSingleton))
         subCategoryAggregates = documentDefHelper.getSubCategoryAggregates(collectionName)
@@ -633,6 +634,9 @@ class SchemaDefBuild(object):
                     # atPropD = {typeKey: blockAttributeAppType, 'maxWidth': blockAttributeWidth}
                     atPropD = {typeKey: blockAttributeAppType}
 
+                if addPrimaryKey:
+                    atPropD['_primary_key'] = True
+                #
                 pD['properties'][schemaAttributeName] = atPropD
 
             #  First, filter any subcategory aggregates from the available list of a category attributes
@@ -772,6 +776,7 @@ class SchemaDefBuild(object):
     def __getJsonAttributeProperties(self, fD, dataTypingU, dtAppInfo, jsonSpecDraft, enforceOpts):
         #
         atPropD = {}
+        addPrimaryKey = 'addPrimaryKey' in enforceOpts
         try:
             # Adding a parent reference -
             if 'addParentRefs' in enforceOpts and fD['PARENT'] is not None:
@@ -781,6 +786,8 @@ class SchemaDefBuild(object):
                 # logger.info("Using parent ref %r %r " % (pCatName, pAtName))
                 # atPropD = {'$ref': '#/%s/%s' % (pCatName, pAtName)}
                 atPropD = self.__getJsonRef([pCatName, pAtName])
+                if addPrimaryKey and fD['IS_KEY']:
+                    atPropD['_primary_key'] = True
                 return atPropD
             #
             # - assign data type attributes
@@ -834,6 +841,8 @@ class SchemaDefBuild(object):
                 if fD['DESCRIPTION']:
                     atPropD['description'] = fD['DESCRIPTION']
                 #
+            if addPrimaryKey and fD['IS_KEY']:
+                atPropD['_primary_key'] = True
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
         #

@@ -109,7 +109,7 @@ class SchemaDefBuildTests(unittest.TestCase):
             self.fail()
 
     def testBuildCollectionSchemaWithRefs(self):
-        for schemaName in ['ihm_dev']:
+        for schemaName in ['ihm_dev_full']:
             d = self.__sdu.makeSchemaDef(schemaName, dataTyping='ANY', saveSchema=False, altDirPath=None)
             sD = SchemaDefAccess(d)
             for cd in sD.getCollectionInfo():
@@ -118,7 +118,7 @@ class SchemaDefBuildTests(unittest.TestCase):
                     if schemaType.lower() == 'rcsb':
                         continue
                     for level in self.__schemaLevels:
-                        self.__sdu.makeSchema(schemaName, collectionName, schemaType=schemaType, level=level, saveSchema=self.__saveSchema, altDirPath=self.__workPath, extraOpts='addParentRefs')
+                        self.__sdu.makeSchema(schemaName, collectionName, schemaType=schemaType, level=level, saveSchema=self.__saveSchema, altDirPath=self.__workPath, extraOpts='addParentRefs|addPrimaryKey')
 
 
 def schemaBuildSuite():
@@ -137,7 +137,7 @@ def schemaBuildRefSuite():
 
 if __name__ == '__main__':
     #
-    if True:
+    if False:
         mySuite = schemaBuildSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 

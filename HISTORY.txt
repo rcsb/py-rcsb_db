@@ -120,3 +120,6 @@
                 Address GitHub issues:
                         Failed int cast for None in DataTransformFactory #20 and
                         MySQL SchemaDefLoader skip zero values #19
+  3-Apr-2019   V0.53 added private schema property _primary_key to mark attributes that are part of an object primary key.
+               This feature is controlled by 'addPrimaryKey' enforceOpts property.
+  7-Apr-2019   V0.54 adding support for integrating CATH adn SCOP structural classifiers and sequence difference type counts.

@@ -107,6 +107,7 @@ class PdbxLoader(object):
         #
         pathTaxonomyData = self.__cfgOb.getPath('NCBI_TAXONOMY_PATH', sectionName=sectionName)
         pathEnzymeData = self.__cfgOb.getPath('ENZYME_CLASSIFICATION_DATA_PATH', sectionName=sectionName)
+        structDomainDataPath = self.__cfgOb.getPath('STRUCT_DOMAIN_CLASSIFICATION_DATA_PATH', sectionName=sectionName)
         #
         #
         dH = self.__cfgOb.getHelper('DICT_METHOD_HELPER_MODULE', sectionName=sectionName,
@@ -114,7 +115,8 @@ class PdbxLoader(object):
                                     workPath=self.__workPath,
                                     csdModelMappingFilePath=pathCsdModelMappingFile,
                                     enzymeDataPath=pathEnzymeData,
-                                    taxonomyDataPath=pathTaxonomyData)
+                                    taxonomyDataPath=pathTaxonomyData,
+                                    structDomainDataPath=structDomainDataPath)
         self.__dmh = DictMethodRunner(dictLocators=[pathPdbxDictionaryFile, pathRcsbDictionaryFile, pathVrptDictionaryFile], methodHelper=dH)
 
     def load(self, schemaName, collectionLoadList=None, loadType='full', inputPathList=None, styleType='rowwise_by_name', dataSelectors=None,

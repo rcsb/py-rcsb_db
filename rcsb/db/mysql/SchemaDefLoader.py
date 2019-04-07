@@ -88,6 +88,7 @@ class SchemaDefLoader(object):
         pathCsdModelMappingFile = self.__cfgOb.getPath('CCDC_MAPPING_LOCATOR', sectionName=sectionName)
         pathTaxonomyData = self.__cfgOb.getPath('NCBI_TAXONOMY_PATH', sectionName=sectionName)
         pathEnzymeData = self.__cfgOb.getPath('ENZYME_CLASSIFICATION_DATA_PATH', sectionName=sectionName)
+        structDomainDataPath = self.__cfgOb.getPath('STRUCT_DOMAIN_CLASSIFICATION_DATA_PATH', sectionName=sectionName)
         #
         #
         dH = self.__cfgOb.getHelper('DICT_METHOD_HELPER_MODULE', sectionName=sectionName,
@@ -95,7 +96,8 @@ class SchemaDefLoader(object):
                                     workPath=self.__workingPath,
                                     csdModelMappingFilePath=pathCsdModelMappingFile,
                                     enzymeDataPath=pathEnzymeData,
-                                    taxonomyDataPath=pathTaxonomyData)
+                                    taxonomyDataPath=pathTaxonomyData,
+                                    structDomainDataPath=structDomainDataPath)
 
         self.__dmh = DictMethodRunner(dictLocators=[pathPdbxDictionaryFile, pathRcsbDictionaryFile], methodHelper=dH)
 

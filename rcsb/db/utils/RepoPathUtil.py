@@ -75,7 +75,7 @@ class RepoPathUtil(object):
                 outputPathList = inputPathList if inputPathList else self.getEntryPathList()
             elif contentType in ['bird_consolidated', 'bird_chem_comp_core']:
                 outputPathList = inputPathList if inputPathList else self.mergeBirdRefData()
-            elif contentType in ['ihm_dev', 'ihm_dev_core']:
+            elif contentType in ['ihm_dev', 'ihm_dev_core', 'ihm_dev_full']:
                 outputPathList = inputPathList if inputPathList else self.getIhmDevPathList()
             elif contentType in ['pdb_distro', 'da_internal', 'status_history']:
                 outputPathList = inputPathList if inputPathList else []
@@ -107,7 +107,7 @@ class RepoPathUtil(object):
                 pth = os.path.join(self.__getRepoTopPath(contentType), idCodel[1:3], idCodel, idCodel + '.cif.gz')
             elif contentType in ['bird_consolidated', 'bird_chem_comp_core']:
                 pth = os.path.join(self.__getRepoTopPath(contentType), idCode + '.cif')
-            elif contentType in ['ihm_dev', 'ihm_dev_core']:
+            elif contentType in ['ihm_dev', 'ihm_dev_core', 'ihm_dev_full']:
                 pth = os.path.join(self.__getRepoTopPath(contentType), idCode, idCode + '_model_%s.cif.gz' % version)
             elif contentType in ['pdb_distro', 'da_internal', 'status_history']:
                 pass
@@ -137,7 +137,7 @@ class RepoPathUtil(object):
                 pth = self.__cfgOb.getPath('PDBX_REPO_PATH', sectionName=self.__cfgSectionName)
             elif contentType in ['bird_consolidated', 'bird_chem_comp_core']:
                 pth = self.__workPath
-            elif contentType in ['ihm_dev', 'ihm_dev_core']:
+            elif contentType in ['ihm_dev', 'ihm_dev_core', 'ihm_dev_full']:
                 pth = self.__cfgOb.getPath('IHM_DEV_REPO_PATH', sectionName=self.__cfgSectionName)
             elif contentType in ['pdb_distro', 'da_internal', 'status_history']:
                 pass

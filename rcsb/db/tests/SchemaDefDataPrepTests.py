@@ -87,6 +87,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
 
         self.__pathTaxonomyData = self.__cfgOb.getPath('NCBI_TAXONOMY_PATH', sectionName=configName)
         self.__pathEnzymeData = self.__cfgOb.getPath('ENZYME_CLASSIFICATION_DATA_PATH', sectionName=configName)
+        self.__structDomainDataPath = self.__cfgOb.getPath('STRUCT_DOMAIN_CLASSIFICATION_DATA_PATH', sectionName=configName)
         #
         self.__exportFlag = False
         self.__startTime = time.time()
@@ -318,7 +319,8 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath,
                                         csdModelMappingFilePath=self.__csdModelMappingFile,
                                         enzymeDataPath=self.__pathEnzymeData,
-                                        taxonomyDataPath=self.__pathTaxonomyData)
+                                        taxonomyDataPath=self.__pathTaxonomyData,
+                                        structDomainDataPath=self.__structDomainDataPath)
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile], methodHelper=dH)
 
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
@@ -370,7 +372,8 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             dH = DictMethodRunnerHelper(drugBankMappingFilePath=self.__drugBankMappingFile, workPath=self.__workPath,
                                         csdModelMappingFilePath=self.__csdModelMappingFile,
                                         enzymeDataPath=self.__pathEnzymeData,
-                                        taxonomyDataPath=self.__pathTaxonomyData)
+                                        taxonomyDataPath=self.__pathTaxonomyData,
+                                        structDomainDataPath=self.__structDomainDataPath)
             dmh = DictMethodRunner(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile, self.__pathVrptDictionaryFile], methodHelper=dH)
 
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)

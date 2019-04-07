@@ -28,6 +28,7 @@
 # 17-Mar-2019 jdw add support for entity subcategory rcsb_macromolecular_names_combined
 # 23-Mar-2019 jdw change criteria chem_comp collection criteria to _chem_comp.pdbx_release_status
 # 25-Mar-2019 jdw remap merged taxons and adjust exception handling for taxonomy lineage generation
+#  7-Apr-2019 jdw add CathClassificationUtils and CathClassificationUtils and sequence difference type counts
 ##
 """
 This helper class implements external method references in the RCSB dictionary extension.
@@ -51,6 +52,8 @@ from mmcif.api.DataCategory import DataCategory
 from rcsb.db.helpers.DictMethodRunnerHelperBase import DictMethodRunnerHelperBase
 from rcsb.utils.ec.EnzymeDatabaseUtils import EnzymeDatabaseUtils
 from rcsb.utils.io.MarshalUtil import MarshalUtil
+from rcsb.utils.struct.CathClassificationUtils import CathClassificationUtils
+from rcsb.utils.struct.ScopClassificationUtils import CathClassificationUtils
 from rcsb.utils.taxonomy.TaxonomyUtils import TaxonomyUtils
 
 logger = logging.getLogger(__name__)
@@ -131,6 +134,10 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         #
         self.__siftsMappingFilePath = kwargs.get("siftsMappingFilePath", None)
         self.__siftsMappingDict = {}
+        #
+        self.__structDomainDataPath = kwargs.get("structDomainDataPath", None)
+        self.__scopU = None
+        self.__cathU = None
         #
         self.__workPath = kwargs.get("workPath", None)
         logger.debug("Dictionary method helper init")
@@ -2141,17 +2148,19 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             logger.exception("For %s %s failing with %s" % (catName, atName, str(e)))
         return False
 
-    def addStructRefSeqEntityIds(self, dataContainer, catName, atName, **kwargs):
+    def addStructRefSeqEntityIds(self, dataContainer, catName, **kwargs):
         """ Add entity ids in categories struct_ref_seq and struct_ref_seq_dir instances.
 
         """
         try:
-            if catName != 'struct_ref_seq' and 'atName' != 'rcsb_entity_id':
+            logger.debug("Starting with %r %r" % (dataContainer.getName(), catName))
+            if catName != 'struct_ref_seq':
                 return False
             #
             if not (dataContainer.exists(catName) and dataContainer.exists('struct_ref')):
                 return False
             #
+            atName = 'rcsb_entity_id'
             cObj = dataContainer.getObj(catName)
             if not cObj.hasAttribute(atName):
                 cObj.appendAttribute(atName)
@@ -2181,7 +2190,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
             return True
         except Exception as e:
-            logger.exception("%s %s %s failing with %s" % (dataContainer.getName(), catName, atName, str(e)))
+            logger.exception("%s %s failing with %s" % (dataContainer.getName(), catName, str(e)))
         return False
 
     def buildEntityPolyInfo(self, dataContainer, catName, **kwargs):
@@ -2268,6 +2277,188 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     idObj.setValue(entityId, "entity_id", ii)
                     idObj.setValue(compId, "comp_id", ii)
                     ii += 1
+
+            seqDifD = {}
+            if dataContainer.exists('struct_ref_seq_dif'):
+                srsdObj = dataContainer.getObj('struct_ref_seq_dif')
+                for ii in range(srsdObj.getRowCount()):
+                    entityId = srsdObj.getValue('rcsb_entity_id', ii)
+                    if entityId not in seqDifD:
+                        seqDifD[entityId] = {'mutations': 0, 'insertions': 0, 'deletions': 0, 'conflicts': 0}
+
+                    details = srsdObj.getValue('details', ii)
+                    #
+                    if details in ['ACETYLATION', 'CHROMOPHORE', 'VARIANT', 'LEADER SEQUENCE',
+                                   'INITIATING METHIONINE', 'LINKER', 'MODIFIED RESIDUE',
+                                   'ENGINEERED', 'CLONING ARTIFACT', 'ENGINEERED MUTATION',
+                                   'EXPRESSION TAG'] or ('CLONING' in details) or ('MODIFIED' in details):
+                        seqDifD[entityId]['mutations'] += 1
+                    #
+                    if details in ['INSERTION']:
+                        seqDifD[entityId]['insertions'] += 1
+                    if details in ['DELETION']:
+                        seqDifD[entityId]['deletions'] += 1
+                    if details in ['CONFLICT']:
+                        seqDifD[entityId]['conflicts'] += 1
+                #
+                logger.debug("seqDifD %r " % seqDifD)
+            return True
+        except Exception as e:
+            logger.exception("%s %s failing with %s" % (dataContainer.getName(), catName, str(e)))
+        return False
+
+    def buildEntityInstanceDomain(self, dataContainer, catName, **kwargs):
+        """ Build category rcsb_entity_instance_domain ...
+
+        Requires:
+            _rcsb_entity_container_identifiers.entry_id
+            _rcsb_entity_container_identifiers.entity_id
+            _rcsb_entity_container_identifiers.asym_ids
+            _rcsb_entity_container_identifiers.auth_asym_ids
+            _rcsb_entity_container_identifiers.chem_comp_ligand,
+            _rcsb_entity_container_identifiers.chem_comp_monomers
+        ...
+
+        Example:
+            loop_
+            _rcsb_entity_instance_domain.ordinal
+            _rcsb_entity_instance_domain.domain_id
+            _rcsb_entity_instance_domain.domain_name
+            _rcsb_entity_instance_domain.domain_class_id
+            _rcsb_entity_instance_domain.domain_class_name
+            _rcsb_entity_instance_domain.domain_class_lineage_id
+            _rcsb_entity_instance_domain.domain_class_lineage_name
+            _rcsb_entity_instance_domain.domain_class_lineage_depth
+            _rcsb_entity_instance_domain.domain_assigned_by
+            _rcsb_entity_instance_domain.beg_auth_asym_id
+            _rcsb_entity_instance_domain.beg_auth_seq_id
+            _rcsb_entity_instance_domain.end_auth_asym_id
+            _rcsb_entity_instance_domain.end_auth_seq_id
+            1 4hrtA00 ? 1.10.490.10  Globins ? ? ? CATH    A 1  A 149
+
+        """
+        logger.debug("Starting with %r %r" % (dataContainer.getName(), catName))
+        try:
+            # Exit if source categories are missing
+            if not (dataContainer.exists('rcsb_entity_container_identifiers') and dataContainer.exists('entry') and dataContainer.exists('pdbx_poly_seq_scheme')):
+                return False
+            #
+            if not self.__scopU and self.__structDomainDataPath:
+                self.__scopU = ScopClassificationUtils(scopDirPath=self.__structDomainDataPath, useCache=True)
+            if not self.__cathU and self.__structDomainDataPath:
+                self.__cathU = CathClassificationUtils(cathDirPath=self.__structDomainDataPath, useCache=True)
+            if not self.__scopU and not self.__cathU:
+                return False
+            #
+            # Create the new target category
+            if not dataContainer.exists(catName):
+                dataContainer.append(DataCategory(catName, attributeNameList=['ordinal',
+                                                                              'entry_id',
+                                                                              'entity_id',
+                                                                              'domain_id',
+                                                                              'domain_name',
+                                                                              'domain_class_id',
+                                                                              'domain_class_name',
+                                                                              'domain_class_lineage_id',
+                                                                              'domain_class_lineage_name',
+                                                                              'domain_class_lineage_depth',
+                                                                              'domain_assigned_by',
+                                                                              'domain_assigned_version',
+                                                                              'beg_auth_asym_id',
+                                                                              'beg_label_asym_id',
+                                                                              'beg_auth_seq_id',
+                                                                              'end_auth_asym_id',
+                                                                              'end_label_asym_id',
+                                                                              'end_auth_seq_id'
+                                                                              ]))
+            #
+            eObj = dataContainer.getObj('entry')
+            entryId = eObj.getValue('id', 0)
+            #
+            cObj = dataContainer.getObj(catName)
+            psObj = dataContainer.getObj('pdbx_poly_seq_scheme')
+            #
+            asymD = {}
+            authAsymD = {}
+            if psObj is not None:
+                for ii in range(psObj.getRowCount()):
+                    asymId = psObj.getValue('asym_id', ii)
+                    if asymId in asymD:
+                        continue
+                    entityId = psObj.getValue('entity_id', ii)
+                    authAsymId = psObj.getValue('pdb_strand_id', ii)
+                    asymD[asymId] = {'entry_id': entryId, 'entity_id': entityId, 'asym_id': asymId, 'auth_asym_id': authAsymId}
+                    authAsymD[authAsymId] = asymId
+                #
+                logger.debug("authAsymD (%d) %r" % (len(authAsymD), authAsymD))
+                logger.debug("asymD (%d) %r" % (len(asymD), asymD))
+            #
+            # Add CATH assignments
+            ii = cObj.getRowCount()
+            #
+            for authAsymId in authAsymD:
+                asymId = authAsymD[authAsymId]
+                ad = asymD[asymId]
+                entityId = ad['entity_id']
+                dL = self.__cathU.getCathResidueRanges(entryId.lower(), authAsymId)
+                vL = self.__cathU.getCathVersions(entryId.lower(), authAsymId)
+                for (cathId, domId, tId, seqBeg, seqEnd) in dL:
+                    logger.debug("entryId cathId %r domId %r asymId %r authAsymId %r seqBeg %r seqEnd %r" % (cathId, domId, authAsymId, authAsymD[authAsymId], seqBeg, seqEnd))
+                    cObj.setValue(ii + 1, "ordinal", ii)
+                    cObj.setValue(entryId, "entry_id", ii)
+                    cObj.setValue(ad['entity_id'], "entity_id", ii)
+                    #
+                    cObj.setValue(domId, "domain_id", ii)
+                    cObj.setValue(cathId, "domain_class_id", ii)
+                    cObj.setValue(self.__cathU.getCathName(cathId), "domain_class_name", ii)
+                    #
+                    cObj.setValue(';'.join(self.__cathU.getNameLineage(cathId)), "domain_class_lineage_name", ii)
+                    idLinL = self.__cathU.getIdLineage(cathId)
+                    cObj.setValue(';'.join(idLinL), "domain_class_lineage_id", ii)
+                    cObj.setValue(';'.join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", ii)
+                    #
+                    cObj.setValue(authAsymId, 'beg_auth_asym_id', ii)
+                    cObj.setValue(asymId, 'beg_label_asym_id', ii)
+                    cObj.setValue(seqBeg, 'beg_auth_seq_id', ii)
+                    cObj.setValue(authAsymId, 'end_auth_asym_id', ii)
+                    cObj.setValue(asymId, 'end_label_asym_id', ii)
+                    cObj.setValue(seqEnd, 'end_auth_seq_id', ii)
+                    cObj.setValue('CATH', 'domain_assigned_by', ii)
+                    cObj.setValue(vL[0], 'domain_assigned_version', ii)
+                    ii += 1
+
+            # Add SCOP assignments
+            for authAsymId in authAsymD:
+                asymId = authAsymD[authAsymId]
+                ad = asymD[asymId]
+                dL = self.__scopU.getScopResidueRanges(entryId.lower(), authAsymId)
+                version = self.__scopU.getScopVersion(entryId.lower(), authAsymId)
+                for (sunId, domId, tId, seqBeg, seqEnd) in dL:
+                    logger.debug("sunId %r domId %r asymId %r authAsymId %r  seqBeg %r seqEnd %r" % (sunId, domId, authAsymId, authAsymD[authAsymId], seqBeg, seqEnd))
+                    cObj.setValue(ii + 1, "ordinal", ii)
+                    cObj.setValue(entryId, "entry_id", ii)
+                    cObj.setValue(ad['entity_id'], "entity_id", ii)
+                    #
+                    cObj.setValue(sunId, "domain_id", ii)
+                    cObj.setValue(domId, "domain_class_id", ii)
+                    cObj.setValue(self.__scopU.getScopName(cathId), "domain_class_name", ii)
+                    #
+                    tL = [t if t is not None else '' for t in self.__scopU.getNameLineage(sunId)]
+                    cObj.setValue(';'.join(tL), "domain_class_lineage_name", ii)
+                    idLinL = self.__scopU.getIdLineage(sunId)
+                    cObj.setValue(';'.join([str(t) for t in idLinL]), "domain_class_lineage_id", ii)
+                    cObj.setValue(';'.join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", ii)
+                    #
+                    cObj.setValue(authAsymId, 'beg_auth_asym_id', ii)
+                    cObj.setValue(asymId, 'beg_label_asym_id', ii)
+                    cObj.setValue(seqBeg, 'beg_auth_seq_id', ii)
+                    cObj.setValue(authAsymId, 'end_auth_asym_id', ii)
+                    cObj.setValue(asymId, 'end_label_asym_id', ii)
+                    cObj.setValue(seqEnd, 'end_auth_seq_id', ii)
+                    cObj.setValue('SCOPe', 'domain_assigned_by', ii)
+                    cObj.setValue(version, 'domain_assigned_version', ii)
+                    ii += 1
+
             return True
         except Exception as e:
             logger.exception("%s %s failing with %s" % (dataContainer.getName(), catName, str(e)))
