@@ -232,11 +232,12 @@ class SchemaDefUtil(object):
         """
         sObj = None
         schemaLocator = self.getJsonSchemaLocator(collectionName, schemaType=schemaType, level=level, altDirPath=altDirPath)
-        if schemaLocator:
+        mU = MarshalUtil(workPath=self.__workPath)
+        if schemaLocator and mU.exists(schemaLocator):
             mU = MarshalUtil(workPath=self.__workPath)
             sObj = mU.doImport(schemaLocator, format="json")
         else:
-            logger.error("Failed to read schema for %s %r" % (collectionName, level))
+            logger.debug("Failed to read schema for %s %r" % (collectionName, level))
         return sObj
 
     def makeSchema(self, schemaName, collectionName, schemaType='BSON', level='full', saveSchema=False, altDirPath=None, extraOpts=None):

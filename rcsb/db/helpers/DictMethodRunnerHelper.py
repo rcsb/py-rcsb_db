@@ -53,7 +53,7 @@ from rcsb.db.helpers.DictMethodRunnerHelperBase import DictMethodRunnerHelperBas
 from rcsb.utils.ec.EnzymeDatabaseUtils import EnzymeDatabaseUtils
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 from rcsb.utils.struct.CathClassificationUtils import CathClassificationUtils
-from rcsb.utils.struct.ScopClassificationUtils import CathClassificationUtils
+from rcsb.utils.struct.ScopClassificationUtils import ScopClassificationUtils
 from rcsb.utils.taxonomy.TaxonomyUtils import TaxonomyUtils
 
 logger = logging.getLogger(__name__)
@@ -139,6 +139,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         self.__scopU = None
         self.__cathU = None
         #
+        self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
         self.__workPath = kwargs.get("workPath", None)
         logger.debug("Dictionary method helper init")
         #
@@ -1250,6 +1251,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                         logger.debug("Matching inchikey for %s" % ccId)
                         dbId = inKeyD[inky][0]['drugbank_id']
                         mType = 'matching InChIKey'
+            #
 
             if not dbId and dbMapD and dataContainer.getName() in dbMapD:
                 dbId = dbMapD[ccId]["drugbank_id"]
@@ -1257,6 +1259,13 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 logger.debug("Matching db assignment for %s" % ccId)
 
             if dbId:
+                #
+                if dataContainer.exists('rcsb_chem_comp_container_identifiers'):
+                    tObj = dataContainer.getObj('rcsb_chem_comp_container_identifiers')
+                    if not tObj.hasAttribute('drugbank_id'):
+                        tObj.appendAttribute('drugbank_id')
+                    tObj.setValue(dbId, 'drugbank_id', 0)
+
                 #
                 if not dataContainer.exists(catName):
                     dataContainer.append(DataCategory(catName, attributeNameList=['comp_id',
@@ -1756,6 +1765,61 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
         return methodCount, expMethod
 
+    def __isFloat(self, val):
+        try:
+            float(val)
+        except Exception:
+            return False
+        return True
+
+    def __filterExperimentalResolution(self, dataContainer):
+        """ Collect resolution estimates from method specific sources.
+        """
+        rL = []
+        if dataContainer.exists('refine'):
+            tObj = dataContainer.getObj('refine')
+            if tObj.hasAttribute('ls_d_res_high'):
+                for ii in range(tObj.getRowCount()):
+                    rv = tObj.getValue('ls_d_res_high', ii)
+                    if self.__isFloat(rv):
+                        rL.append(rv)
+
+        if dataContainer.exists('em_3d_reconstruction'):
+            tObj = dataContainer.getObj('em_3d_reconstruction')
+            if tObj.hasAttribute('resolution'):
+                for ii in range(tObj.getRowCount()):
+                    rv = tObj.getValue('resolution', ii)
+                    if self.__isFloat(rv):
+                        rL.append(rv)
+        return rL
+
+    def __getAtomSiteInfo(self, dataContainer):
+        """ Get counting information about the deposited coordinates.
+        """
+        numAtoms = 0
+        numModels = 0
+        if dataContainer.exists('atom_site'):
+            tObj = dataContainer.getObj('atom_site')
+            numAtoms = tObj.getRowCount()
+            if tObj.hasAttribute('pdbx_PDB_model_num'):
+                try:
+                    numModels = int(tObj.getValue('pdbx_PDB_model_num', numAtoms - 1))
+                except Exception:
+                    numModels = 1
+        return numAtoms, numModels
+
+    def __getStructConnInfo(self, dataContainer):
+        """ Get counting information about intermolecular linkages.
+        """
+        numDiSulf = 0
+        if dataContainer.exists('struct_conn'):
+            tObj = dataContainer.getObj('struct_conn')
+            for ii in range(tObj.getRowCount()):
+                bt = str(tObj.getValue('conn_type_id', ii)).strip().upper()
+                numDiSulf = numDiSulf + 1 if bt == 'DISULF' else numDiSulf
+        #
+        return numDiSulf
+
     def __filterEntityPolyType(self, pType):
         """
         Returns mappings:
@@ -1820,7 +1884,11 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                               'nonpolymer_entity_count',
                                                                               'branched_entity_count',
                                                                               'solvent_entity_count',
-                                                                              'software_programs_combined']))
+                                                                              'software_programs_combined',
+                                                                              'resolution_combined',
+                                                                              'deposited_atom_count',
+                                                                              'deposited_model_count',
+                                                                              'disulfide_bond_count']))
             #
             cObj = dataContainer.getObj(catName)
             #
@@ -1867,6 +1935,14 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             methodL = xObj.getAttributeValueList('method')
             methodCount, expMethod = self.__filterExperimentalMethod(methodL)
             #
+            # Resolution -
+            #
+            resL = self.__filterExperimentalResolution(dataContainer)
+            numAtoms, numModels = self.__getAtomSiteInfo(dataContainer)
+            numDiSulf = self.__getStructConnInfo(dataContainer)
+            #
+
+            #
             # Software
             #
             swNameL = []
@@ -1892,7 +1968,13 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             cObj.setValue(methodCount, 'experimental_method_count', 0)
             if swNameL:
                 cObj.setValue(';'.join(swNameL), 'software_programs_combined', 0)
-
+            if resL:
+                cObj.setValue(','.join(resL), 'resolution_combined', 0)
+            if numAtoms > 0:
+                cObj.setValue(numAtoms, 'deposited_atom_count', 0)
+                cObj.setValue(numModels, 'deposited_model_count', 0)
+            cObj.setValue(numDiSulf, 'disulfide_bond_count', 0)
+            #
             return True
         except Exception as e:
             logger.exception("For %s %r failing with %s" % (dataContainer.getName(), catName, str(e)))
@@ -2201,7 +2283,6 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             _rcsb_entity_poly_info.ordinal_id
             _rcsb_entity_poly_info.entry_id
             _rcsb_entity_poly_info.entity_id
-            _rcsb_entity_poly_info.seq_num
             _rcsb_entity_poly_info.comp_id
             _rcsb_entity_poly_info.is_modified
             _rcsb_entity_poly_info.is_heterogeneous
@@ -2219,7 +2300,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         logger.debug("Starting with %r %r" % (dataContainer.getName(), catName))
         try:
             # Exit if source categories are missing
-            if not (dataContainer.exists('entity_poly_seq') and dataContainer.exists('entry')):
+            if not (dataContainer.exists('entity_poly_seq') and dataContainer.exists('entity_poly') and dataContainer.exists('entry')):
                 return False
             #
             # Create the new target category
@@ -2244,6 +2325,58 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             #
             eObj = dataContainer.getObj('entry')
             entryId = eObj.getValue('id', 0)
+            # ------- --------- ------- --------- ------- --------- ------- --------- ------- ---------
+            seqDifD = {}
+            if dataContainer.exists('struct_ref_seq_dif'):
+                srsdObj = dataContainer.getObj('struct_ref_seq_dif')
+                for ii in range(srsdObj.getRowCount()):
+                    entityId = srsdObj.getValue('rcsb_entity_id', ii)
+                    if entityId not in seqDifD:
+                        seqDifD[entityId] = {'mutations': 0, 'insertions': 0, 'deletions': 0, 'conflicts': 0}
+
+                    details = srsdObj.getValue('details', ii)
+                    #
+                    if details in ['ACETYLATION', 'CHROMOPHORE', 'VARIANT', 'LEADER SEQUENCE',
+                                   'INITIATING METHIONINE', 'LINKER', 'MODIFIED RESIDUE',
+                                   'ENGINEERED', 'CLONING ARTIFACT', 'ENGINEERED MUTATION',
+                                   'EXPRESSION TAG'] or ('CLONING' in details) or ('MODIFIED' in details):
+                        seqDifD[entityId]['mutations'] += 1
+                    #
+                    if details in ['INSERTION']:
+                        seqDifD[entityId]['insertions'] += 1
+                    if details in ['DELETION']:
+                        seqDifD[entityId]['deletions'] += 1
+                    if details in ['CONFLICT']:
+                        seqDifD[entityId]['conflicts'] += 1
+                #
+                logger.debug("seqDifD %r " % seqDifD)
+            #
+            epObj = dataContainer.getObj('entity_poly')
+            sampleSeqLen = {}
+            if epObj.hasAttribute('pdbx_seq_one_letter_code_can'):
+                for ii in range(epObj.getRowCount()):
+                    entityId = epObj.getValue('entity_id', ii)
+                    sampleSeq = self.__stripWhiteSpace(epObj.getValue('pdbx_seq_one_letter_code_can', ii))
+                    sampleSeqLen[entityId] = len(sampleSeq) if sampleSeq and sampleSeq not in ['?', '.'] else None
+
+            for atName in ['rcsb_mutation_count', 'rcsb_conflict_count', 'rcsb_insertion_count', 'rcsb_deletion_count', 'rcsb_sample_sequence_length']:
+                if not epObj.hasAttribute(atName):
+                    epObj.appendAttribute(atName)
+            #
+            for ii in range(epObj.getRowCount()):
+                entityId = epObj.getValue('entity_id', ii)
+                mutations = seqDifD[entityId]['mutations'] if entityId in seqDifD else 0
+                conflicts = seqDifD[entityId]['conflicts'] if entityId in seqDifD else 0
+                insertions = seqDifD[entityId]['insertions'] if entityId in seqDifD else 0
+                deletions = seqDifD[entityId]['deletions'] if entityId in seqDifD else 0
+                seqLen = sampleSeqLen[entityId] if entityId in sampleSeqLen else None
+                epObj.setValue(mutations, 'rcsb_mutation_count', ii)
+                epObj.setValue(conflicts, 'rcsb_conflict_count', ii)
+                epObj.setValue(insertions, 'rcsb_insertion_count', ii)
+                epObj.setValue(deletions, 'rcsb_deletion_count', ii)
+                if seqLen is not None:
+                    epObj.setValue(seqLen, 'rcsb_sample_sequence_length', ii)
+
             #
             cObj = dataContainer.getObj(catName)
             epsObj = dataContainer.getObj('entity_poly_seq')
@@ -2278,30 +2411,6 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     idObj.setValue(compId, "comp_id", ii)
                     ii += 1
 
-            seqDifD = {}
-            if dataContainer.exists('struct_ref_seq_dif'):
-                srsdObj = dataContainer.getObj('struct_ref_seq_dif')
-                for ii in range(srsdObj.getRowCount()):
-                    entityId = srsdObj.getValue('rcsb_entity_id', ii)
-                    if entityId not in seqDifD:
-                        seqDifD[entityId] = {'mutations': 0, 'insertions': 0, 'deletions': 0, 'conflicts': 0}
-
-                    details = srsdObj.getValue('details', ii)
-                    #
-                    if details in ['ACETYLATION', 'CHROMOPHORE', 'VARIANT', 'LEADER SEQUENCE',
-                                   'INITIATING METHIONINE', 'LINKER', 'MODIFIED RESIDUE',
-                                   'ENGINEERED', 'CLONING ARTIFACT', 'ENGINEERED MUTATION',
-                                   'EXPRESSION TAG'] or ('CLONING' in details) or ('MODIFIED' in details):
-                        seqDifD[entityId]['mutations'] += 1
-                    #
-                    if details in ['INSERTION']:
-                        seqDifD[entityId]['insertions'] += 1
-                    if details in ['DELETION']:
-                        seqDifD[entityId]['deletions'] += 1
-                    if details in ['CONFLICT']:
-                        seqDifD[entityId]['conflicts'] += 1
-                #
-                logger.debug("seqDifD %r " % seqDifD)
             return True
         except Exception as e:
             logger.exception("%s %s failing with %s" % (dataContainer.getName(), catName, str(e)))
@@ -2408,7 +2517,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     cObj.setValue(entryId, "entry_id", ii)
                     cObj.setValue(ad['entity_id'], "entity_id", ii)
                     #
-                    cObj.setValue(domId, "domain_id", ii)
+                    cObj.setValue(str(domId), "domain_id", ii)
                     cObj.setValue(cathId, "domain_class_id", ii)
                     cObj.setValue(self.__cathU.getCathName(cathId), "domain_class_name", ii)
                     #
@@ -2433,15 +2542,15 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 ad = asymD[asymId]
                 dL = self.__scopU.getScopResidueRanges(entryId.lower(), authAsymId)
                 version = self.__scopU.getScopVersion(entryId.lower(), authAsymId)
-                for (sunId, domId, tId, seqBeg, seqEnd) in dL:
-                    logger.debug("sunId %r domId %r asymId %r authAsymId %r  seqBeg %r seqEnd %r" % (sunId, domId, authAsymId, authAsymD[authAsymId], seqBeg, seqEnd))
+                for (sunId, domId, sccs, tId, seqBeg, seqEnd) in dL:
+                    logger.debug("sunId %r domId %r sccs %r asymId %r authAsymId %r  seqBeg %r seqEnd %r" % (sunId, domId, sccs, authAsymId, authAsymD[authAsymId], seqBeg, seqEnd))
                     cObj.setValue(ii + 1, "ordinal", ii)
                     cObj.setValue(entryId, "entry_id", ii)
                     cObj.setValue(ad['entity_id'], "entity_id", ii)
                     #
-                    cObj.setValue(sunId, "domain_id", ii)
+                    cObj.setValue(str(sunId), "domain_id", ii)
                     cObj.setValue(domId, "domain_class_id", ii)
-                    cObj.setValue(self.__scopU.getScopName(cathId), "domain_class_name", ii)
+                    cObj.setValue(self.__scopU.getScopName(sunId), "domain_class_name", ii)
                     #
                     tL = [t if t is not None else '' for t in self.__scopU.getNameLineage(sunId)]
                     cObj.setValue(';'.join(tL), "domain_class_lineage_name", ii)
@@ -2500,3 +2609,11 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         utcnow = datetime.datetime.utcnow()
         ts = utcnow.strftime("%Y-%m-%d:%H:%M:%S")
         return ts
+
+    def __stripWhiteSpace(self, val):
+        """ Remove all white space from the input value.
+
+        """
+        if val is None:
+            return val
+        return self.__wsPattern.sub("", val)

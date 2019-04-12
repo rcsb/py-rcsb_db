@@ -95,7 +95,8 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                                  'bird_chem_comp': ['bird_chem_comp'],
                                  'bird_chem_comp_core': ['bird_chem_comp_core'],
                                  }
-        self.__schemaNameD = {'pdbx_core': ['pdbx_core_entity', 'pdbx_core_entry', 'pdbx_core_assembly', 'pdbx_core_entity_instance', 'pdbx_core_entity_monomer']}
+        self.__schemaNameD = {'pdbx_core': ['pdbx_core_entity', 'pdbx_core_entry', 'pdbx_core_assembly', 'pdbx_core_entity_instance', 'pdbx_core_entity_monomer', 'pdbx_core_entity_instance_validation']}
+        #self.__schemaNameD = {'pdbx_core': ['pdbx_core_entity_instance_validation']}
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
@@ -109,7 +110,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
     def testValidateOptsRepo(self):
         schemaLevel = 'min'
         inputPathList = None
-        eCount = self.__testValidateOpts(schemaNameD=self.__schemaNameD, inputPathList=inputPathList, schemaLevel=schemaLevel)
+        eCount = self.__testValidateOpts(schemaNameD=self.__schemaNameD, inputPathList=inputPathList, schemaLevel=schemaLevel, mergeContentTypes=['vrpt'])
         logger.info("Total validation errors schema level %s : %d" % (schemaLevel, eCount))
         # self.assertGreaterEqual(eCount, 20)
 
@@ -120,16 +121,16 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             self.assertTrue(True)
             return True
         schemaNameD = {'pdbx_core': ['pdbx_core_entity', 'pdbx_core_entry']}
-        eCount = self.__testValidateOpts(schemaNameD=schemaNameD, inputPathList=inputPathList, schemaLevel=schemaLevel)
+        eCount = self.__testValidateOpts(schemaNameD=schemaNameD, inputPathList=inputPathList, schemaLevel=schemaLevel, mergeContentTypes=['vrpt'])
         logger.info("Total validation errors schema level %s : %d" % (schemaLevel, eCount))
         # self.assertGreaterEqual(eCount, 20)
 
-    def __testValidateOpts(self, schemaNameD, inputPathList=None, schemaLevel='full'):
+    def __testValidateOpts(self, schemaNameD, inputPathList=None, schemaLevel='full', mergeContentTypes=None):
         #
         eCount = 0
         for schemaName in schemaNameD:
             _ = self.__schU.makeSchemaDef(schemaName, dataTyping='ANY', saveSchema=True, altDirPath=self.__workPath)
-            pthList = inputPathList if inputPathList else self.__schU.getLocatorObjList(contentType=schemaName)
+            pthList = inputPathList if inputPathList else self.__schU.getLocatorObjList(contentType=schemaName, mergeContentTypes=mergeContentTypes)
             for collectionName in schemaNameD[schemaName]:
                 cD = self.__schU.makeSchema(
                     schemaName,
@@ -212,9 +213,9 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
 
 def schemaValidateSuite():
     suiteSelect = unittest.TestSuite()
-    # suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsRepo"))
+    suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsRepo"))
     #
-    suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsList"))
+    #suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsList"))
     return suiteSelect
 
 

@@ -8,6 +8,7 @@
 #  15-Jul-2018 jdw add repository holdings, move all path configuration to a separate site dependent config section.
 #   9-Dec-2018 jdw add chemical reference ETL options
 #   4-Jan-2019 jdw differentiate config sections for provenance
+#   9-Apr-2019 jdw add tree node list loader
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -24,6 +25,7 @@ from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.scripts.ChemRefEtlWorker import ChemRefEtlWorker
 from rcsb.db.scripts.RepoHoldingsEtlWorker import RepoHoldingsEtlWorker
 from rcsb.db.scripts.SequenceClustersEtlWorker import SequenceClustersEtlWorker
+from rcsb.db.scripts.TreeNodeListWorker import TreeNodeListWorker
 from rcsb.db.utils.TimeUtil import TimeUtil
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
@@ -40,7 +42,6 @@ def loadStatus(statusList, cfgOb, readBackCheck=True):
                         documentLimit=None, verbose=False, readBackCheck=readBackCheck)
     #
     databaseName = cfgOb.get('DATABASE_NAME', sectionName=sectionName)
-    #collectionVersion = cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
     collectionName = cfgOb.get('COLLECTION_UPDATE_STATUS', sectionName=sectionName)
     ok = dl.load(databaseName, collectionName, loadType='append', documentList=statusList,
                  indexAttributeList=['update_id', 'database_name', 'object_name'], keyNames=None)
@@ -57,6 +58,7 @@ def main():
     parser.add_argument("--etl_entity_sequence_clusters", default=False, action='store_true', help="ETL entity sequence clusters")
     parser.add_argument("--etl_repository_holdings", default=False, action='store_true', help="ETL repository holdings")
     parser.add_argument("--etl_chemref", default=False, action='store_true', help="ETL integrated chemical reference data")
+    parser.add_argument("--etl_tree_node_lists", default=False, action='store_true', help="ETL tree node lists")
 
     parser.add_argument("--data_set_id", default=None, help="Data set identifier (default= 2018_14 for current week)")
     #
@@ -172,6 +174,18 @@ def main():
             ok = crw.load(dataSetId, extResource="DrugBank", loadType=loadType)
             okS = loadStatus(crw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
 
+        if args.etl_tree_node_lists:
+            rhw = TreeNodeListWorker(
+                cfgOb,
+                mockTopPath=mockTopPath,
+                numProc=numProc,
+                chunkSize=chunkSize,
+                documentLimit=documentLimit,
+                verbose=debugFlag,
+                readBackCheck=readBackCheck,
+                workPath=workPath)
+            ok = rhw.load(dataSetId, loadType=loadType)
+            okS = loadStatus(rhw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
         logger.info("Operation completed with status %r " % ok and okS)
 
 

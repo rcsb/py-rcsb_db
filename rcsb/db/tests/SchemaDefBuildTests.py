@@ -137,7 +137,7 @@ def schemaBuildRefSuite():
 
 if __name__ == '__main__':
     #
-    if False:
+    if True:
         mySuite = schemaBuildSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)
 
