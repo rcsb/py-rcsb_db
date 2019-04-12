@@ -73,7 +73,7 @@ class TreeNodeListWorker(object):
         """
         try:
             useCache = True
-            topPath = self.__mockTopPath
+            topCachePath = self.__workPath
             #
             sectionName = 'tree_node_lists'
             self.__statusList = []
@@ -86,28 +86,28 @@ class TreeNodeListWorker(object):
             collectionVersion = self.__cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
             addValues = {'_schema_version': collectionVersion}
             #
-            ccu = CathClassificationUtils(cathDirPath=os.path.join(topPath, 'struct'), useCache=useCache)
+            ccu = CathClassificationUtils(cathDirPath=os.path.join(topCachePath, 'domains_struct'), useCache=useCache)
             nL = ccu.getTreeNodeList()
             collectionName = self.__cfgOb.get('COLLECTION_CATH', sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL,
                          indexAttributeList=['update_id'], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
-            scu = ScopClassificationUtils(scopDirPath=os.path.join(topPath, 'struct'), useCache=useCache)
+            scu = ScopClassificationUtils(scopDirPath=os.path.join(topCachePath, 'domains_struct'), useCache=useCache)
             nL = scu.getTreeNodeList()
             collectionName = self.__cfgOb.get('COLLECTION_SCOP', sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL,
                          indexAttributeList=['update_id'], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
-            edbu = EnzymeDatabaseUtils(enzymeDirPath=os.path.join(topPath, 'ec'), useCache=useCache, clearCache=False)
+            edbu = EnzymeDatabaseUtils(enzymeDirPath=os.path.join(topCachePath, 'ec'), useCache=useCache, clearCache=False)
             nL = edbu.getTreeNodeList()
             collectionName = self.__cfgOb.get('COLLECTION_ENZYME', sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL,
                          indexAttributeList=['update_id'], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
-            tU = TaxonomyUtils(taxDirPath=os.path.join(topPath, 'NCBI'), useCache=useCache)
+            tU = TaxonomyUtils(taxDirPath=os.path.join(topCachePath, 'NCBI'), useCache=useCache)
             nL = tU.exportNodeList()
             collectionName = self.__cfgOb.get('COLLECTION_TAXONOMY', sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL,
