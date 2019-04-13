@@ -332,7 +332,7 @@ class SchemaDefBuild(object):
                           'IS_CHAR_TYPE': fD['IS_CHAR_TYPE'],
                           'ENUMERATION': {str(ky).lower(): ky for ky in fD['ENUMS']},
                           'CONTENT_CLASSES': fD['CONTENT_CLASSES'],
-                          'SUB_CATEGORIES': fD['SUB_CATEGORIES']}
+                          'SUB_CATEGORIES': [d['id'] for d in fD['SUB_CATEGORIES']]}
                     atId = (convertNameF(atName)).upper()
                     d['ATTRIBUTE_INFO'][atId] = td
                     atIdIndexList.append(atId)
@@ -373,7 +373,7 @@ class SchemaDefBuild(object):
                           'IS_CHAR_TYPE': fD['IS_CHAR_TYPE'],
                           'ENUMERATION': {str(ky).lower(): ky for ky in fD['ENUMS']},
                           'CONTENT_CLASSES': fD['CONTENT_CLASSES'],
-                          'SUB_CATEGORIES': fD['SUB_CATEGORIES']}
+                          'SUB_CATEGORIES': [d['id'] for d in fD['SUB_CATEGORIES']]}
                     atId = (convertNameF(atName)).upper()
                     d['ATTRIBUTE_INFO'][atId] = td
                     mI = self.__dictInfo.getMethodImplementation(catName, atName, methodCodes=["calculate_on_load"])
@@ -514,6 +514,7 @@ class SchemaDefBuild(object):
         addBlockAttribute = True
         addPrimaryKey = 'addPrimaryKey' in enforceOpts
         suppressSingleton = not documentDefHelper.getRetainSingletonObjects(collectionName)
+        suppressRelations = documentDefHelper.getSuppressedCategoryRelationships(collectionName)
         logger.debug("Collection %s suppress singleton %r" % (collectionName, suppressSingleton))
         subCategoryAggregates = documentDefHelper.getSubCategoryAggregates(collectionName)
         logger.debug("%s %s Sub_category aggregates %r" % (schemaName, collectionName, subCategoryAggregates))
@@ -656,7 +657,7 @@ class SchemaDefBuild(object):
                         # Exclude primary data attributes with no instance coverage except if in a protected content class
                         # if not dtInstInfo.exists(catName, atName) and not self.__testContentClasses(contentClasses, fD['CONTENT_CLASSES']):
                         #    continue
-                        if subCategory not in fD['SUB_CATEGORIES']:
+                        if subCategory not in [d['id'] for d in fD['SUB_CATEGORIES']]:
                             continue
                         #
                         schemaAttributeName = convertNameF(atName)
@@ -667,7 +668,7 @@ class SchemaDefBuild(object):
                         if isRequired:
                             reqL.append(schemaAttributeName)
                         #
-                        atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, jsonSpecDraft, enforceOpts)
+                        atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, jsonSpecDraft, enforceOpts, suppressRelations)
                         scD['properties'][schemaAttributeName] = atPropD
                     if reqL:
                         scD['required'] = reqL
@@ -681,7 +682,7 @@ class SchemaDefBuild(object):
                 # Exclude primary data attributes with no instance coverage except if in a protected content class
                 if not dtInstInfo.exists(catName, atName) and not self.__testContentClasses(contentClasses, fD['CONTENT_CLASSES']):
                     continue
-                if subCategoryAggregates and self.__subCategoryTest(subCategoryAggregates, fD['SUB_CATEGORIES']):
+                if subCategoryAggregates and self.__subCategoryTest(subCategoryAggregates, [d['id'] for d in fD['SUB_CATEGORIES']]):
                     continue
                 #
                 schemaAttributeName = convertNameF(atName)
@@ -689,7 +690,7 @@ class SchemaDefBuild(object):
                 if isRequired:
                     pD['required'].append(schemaAttributeName)
                 #
-                atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, jsonSpecDraft, enforceOpts)
+                atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, jsonSpecDraft, enforceOpts, suppressRelations)
 
                 delimiter = fD['ITERABLE_DELIMITER']
                 if delimiter:
@@ -714,7 +715,7 @@ class SchemaDefBuild(object):
             for pdk in privDocKeyL:
                 aD = self.__dictInfo.getAttributeFeatures(convertNameF(pdk['CATEGORY_NAME']))
                 fD = aD[convertNameF(pdk['ATTRIBUTE_NAME'])]
-                atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, jsonSpecDraft, enforceOpts)
+                atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, jsonSpecDraft, enforceOpts, suppressRelations)
                 privKeyD[pdk['PRIVATE_DOCUMENT_NAME']] = atPropD
                 privMandatoryD[pdk['PRIVATE_DOCUMENT_NAME']] = pdk['MANDATORY']
 
@@ -765,27 +766,49 @@ class SchemaDefBuild(object):
 
         return rD
 
-    def __getJsonRef(self, pathList):
+    def __getJsonRef(self, pathList, itemSubCategoryList=None):
+        """ Add parent reference and optional group membership and labeling.
+        """
         refD = {}
         try:
             refD = {'$ref': '#' + '/'.join(pathList)}
+            if itemSubCategoryList:
+                logger.debug("Subcategory membership %r %r" % (pathList, itemSubCategoryList))
+                refD['_attribute_groups'] = itemSubCategoryList
         except Exception as e:
             logger.excepion("Failing with pathList %r %s" % (pathList, str(e)))
         return refD
 
-    def __getJsonAttributeProperties(self, fD, dataTypingU, dtAppInfo, jsonSpecDraft, enforceOpts):
+    def __testSuppressRelation(self, fD, suppressRelations):
+        ret = False
+        childCatName = fD['CATEGORY_NAME']
+        parentCatName = fD['PARENT']['CATEGORY']
+        for srD in suppressRelations:
+            if 'CHILD_CATEGORY_NAME' in srD and 'PARENT_CATEGORY_NAME' in srD:
+                ret = (childCatName == srD['CHILD_CATEGORY_NAME'] and parentCatName == srD['PARENT_CATEGORY_NAME']) or ret
+            elif 'PARENT_CATEGORY_NAME' in srD:
+                ret = (parentCatName == srD['PARENT_CATEGORY_NAME']) or ret
+            elif 'CHILD_CATEGORY_NAME' in srD:
+                ret = (childCatName == srD['CHILD_CATEGORY_NAME']) or ret
+        if ret:
+            logger.debug("Suppressing relationships for catName %r parent %r" % (childCatName, parentCatName))
+
+        return ret
+
+    def __getJsonAttributeProperties(self, fD, dataTypingU, dtAppInfo, jsonSpecDraft, enforceOpts, suppressRelations):
         #
         atPropD = {}
         addPrimaryKey = 'addPrimaryKey' in enforceOpts
+        addParentRefs = 'addParentRefs' in enforceOpts
         try:
             # Adding a parent reference -
-            if 'addParentRefs' in enforceOpts and fD['PARENT'] is not None:
+            if addParentRefs and fD['PARENT'] is not None and not self.__testSuppressRelation(fD, suppressRelations):
                 convertNameF = self.__getConvertNameMethod(dataTypingU)
                 pCatName = convertNameF(fD['PARENT']['CATEGORY'])
                 pAtName = convertNameF(fD['PARENT']['ATTRIBUTE'])
                 # logger.info("Using parent ref %r %r " % (pCatName, pAtName))
                 # atPropD = {'$ref': '#/%s/%s' % (pCatName, pAtName)}
-                atPropD = self.__getJsonRef([pCatName, pAtName])
+                atPropD = self.__getJsonRef([pCatName, pAtName], fD['SUB_CATEGORIES'])
                 if addPrimaryKey and fD['IS_KEY']:
                     atPropD['_primary_key'] = True
                 return atPropD
@@ -843,6 +866,9 @@ class SchemaDefBuild(object):
                 #
             if addPrimaryKey and fD['IS_KEY']:
                 atPropD['_primary_key'] = True
+            if addParentRefs and fD['SUB_CATEGORIES'] and len(fD['SUB_CATEGORIES']):
+                atPropD['_attribute_groups'] = fD['SUB_CATEGORIES']
+            #
         except Exception as e:
             logger.exception("Failing with %s" % str(e))
         #

@@ -29,7 +29,7 @@ class TreeNodeListWorker(object):
     """ Prepare and load repository holdings and repository update data.
     """
 
-    def __init__(self, cfgOb, mockTopPath, workPath=None, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False):
+    def __init__(self, cfgOb, mockTopPath, workPath=None, numProc=1, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False):
         self.__cfgOb = cfgOb
         self.__mockTopPath = mockTopPath
         self.__workPath = os.path.abspath(workPath)
@@ -112,6 +112,8 @@ class TreeNodeListWorker(object):
             collectionName = self.__cfgOb.get('COLLECTION_TAXONOMY', sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL,
                          indexAttributeList=['update_id'], keyNames=None, addValues=addValues)
+            logger.info("Tree loading operations completed.")
+            #
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
             #

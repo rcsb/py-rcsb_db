@@ -390,7 +390,7 @@ class DictInfo(object):
 
     def __itemNameToDictList(self, itemNameList):
         rL = []
-        for itemName in itemNameList:
+        for itemName in list(set(itemNameList)):
             atName = CifName.attributePart(itemName)
             catName = CifName.categoryPart(itemName)
             rL.append({'CATEGORY': catName, 'ATTRIBUTE': atName})
@@ -417,6 +417,8 @@ class DictInfo(object):
         for atName in self.__dictSchema[catName]:
             itemName = CifName.itemName(catName, atName)
             fD = {
+                'CATEGORY_NAME': catName,
+                'ATTRIBUTE_NAME': atName,
                 'TYPE_CODE': None,
                 'TYPE_CODE_ALT': None,
                 'IS_MANDATORY': False,
@@ -449,9 +451,8 @@ class DictInfo(object):
             pL = self.__dApi.getFullParentList(catName, atName, stripSelfParent=True)
             if len(pL) > 0:
                 rL = self.__itemNameToDictList(pL)
-                if len(rL) == 1:
-                    fD['PARENT'] = rL[0]
-                else:
+                fD['PARENT'] = rL[0] if len(rL) else None
+                if len(rL) > 1:
                     logger.warning("Unexpected multiple parent definition for %s %s : %r" % (catName, atName, rL))
             #
             # logger.debug("catName %s atName %s : parent %r root_parent %r" % (catName, atName, fD['PARENT'], fD['ROOT_PARENT']))
@@ -469,7 +470,16 @@ class DictInfo(object):
             fD['CONTENT_CLASSES'] = self.__getContentClasses(catName, atName)
             fD['ENUMS'] = self.__assignEnumTypes(self.__dApi.getEnumList(catName, atName), pType)
             fD['EXAMPLES'] = self.__dApi.getExampleList(catName, atName)
-            fD['SUB_CATEGORIES'] = self.__dApi.getItemSubCategoryIdList(catName, atName)
+            scL = []
+            for scTup in self.__dApi.getItemSubCategoryList(catName, atName):
+                if scTup[1] is not None:
+                    d = {'id': scTup[0], 'label': scTup[1]}
+                else:
+                    d = {'id': scTup[0]}
+                scL.append(d)
+            fD['SUB_CATEGORIES'] = scL
+            if len(scL) > 1:
+                logger.debug("Multiple subcategories for %r %r %r" % (catName, atName, scL))
             #
             # bList = self.__dApi.getBoundaryListAlt(catName, atName, fallBack=True)
             bList = self.__dApi.getBoundaryList(catName, atName)

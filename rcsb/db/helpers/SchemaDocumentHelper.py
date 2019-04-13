@@ -199,3 +199,22 @@ class SchemaDocumentHelper(SchemaDocumentHelperBase):
         except Exception as e:
             logger.debug("Collection %s failing with %s" % (collectionName, str(e)))
         return r
+
+    def getSuppressedCategoryRelationships(self, collectionName):
+        """
+         Example:
+
+            collection_suppress_category_relationships:
+                ihm_dev:
+                    - PARENT_CATEGORY_NAME: chem_comp
+                      CHILD_CATEGORY_NAME: atom_site
+                    - PARENT_CATEGORY_NAME: entity_poly_seq
+                      CHILD_CATEGORY_NAME: atom_site
+        """
+        rL = []
+        try:
+            rL = [tD for tD in self.__cfgD['collection_suppress_category_relationships'][collectionName]]
+        except Exception as e:
+            logger.debug("Collection %s failing with %s" % (collectionName, str(e)))
+
+        return rL
