@@ -163,6 +163,7 @@ class SchemaDefUtil(object):
              str: schema definition file locator
 
         """
+        schemaLocator = None
         try:
             prefixName = 'SCHEMA_DEF_LOCATOR_PATH'
             pth = self.__cfgOb.getPath(prefixName, sectionName=self.__cfgOb.getDefaultSectionName())
@@ -192,24 +193,28 @@ class SchemaDefUtil(object):
             str: schema file locator
 
         """
-        prefixName = 'JSON_SCHEMA_LOCATOR_PATH'
-        sdType = None
-        sLevel = None
         schemaLocator = None
-        if schemaType.upper() in ['JSON', 'BSON']:
-            sdType = schemaType.lower()
-        if level.lower() in ['min', 'minimun']:
-            sLevel = 'min'
-        elif level.lower() in ['full']:
-            sLevel = level.lower()
-        #
-        if sdType and sLevel:
-            pth = self.__cfgOb.getPath(prefixName, sectionName=self.__cfgOb.getDefaultSectionName())
-            fn = "%s-schema-%s-%s.json" % (sdType, sLevel, collectionName)
-            schemaLocator = os.path.join(altDirPath, fn) if altDirPath else os.path.join(pth, fn)
-        else:
-            logger.error("Unsupported schema options:  %s level %r type %r" % (collectionName, level, schemaType))
+        try:
+            prefixName = 'JSON_SCHEMA_LOCATOR_PATH'
+            sdType = None
+            sLevel = None
             schemaLocator = None
+            if schemaType.upper() in ['JSON', 'BSON']:
+                sdType = schemaType.lower()
+            if level.lower() in ['min', 'minimun']:
+                sLevel = 'min'
+            elif level.lower() in ['full']:
+                sLevel = level.lower()
+            #
+            if sdType and sLevel:
+                pth = self.__cfgOb.getPath(prefixName, sectionName=self.__cfgOb.getDefaultSectionName())
+                fn = "%s-schema-%s-%s.json" % (sdType, sLevel, collectionName)
+                schemaLocator = os.path.join(altDirPath, fn) if altDirPath else os.path.join(pth, fn)
+            else:
+                logger.error("Unsupported schema options:  %s level %r type %r" % (collectionName, level, schemaType))
+                schemaLocator = None
+        except Exception as e:
+            logger.debug("Retreiving JSON schema definition for %s type %s failing with %s" % (collectionName, schemaType, str(e)))
         #
         return schemaLocator
 
