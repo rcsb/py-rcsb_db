@@ -71,8 +71,8 @@ setup(
                       'rcsb.utils.validation >= 0.13',
                       'rcsb.utils.chemref >= 0.19',
                       'rcsb.utils.ec >= 0.12',
-                      'rcsb.utils.taxonomy >= 0.14',
-                      'rcsb.utils.struct >= 0.13'],
+                      'rcsb.utils.taxonomy >= 0.15',
+                      'rcsb.utils.struct >= 0.14'],
     packages=find_packages(exclude=['rcsb.db.tests', 'rcsb.db.tests-*', 'tests.*']),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:

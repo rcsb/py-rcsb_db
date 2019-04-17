@@ -81,10 +81,13 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__structDomainDataPath = self.__cfgOb.getPath('STRUCT_DOMAIN_CLASSIFICATION_DATA_PATH', sectionName=configName)
         #
         self.__testDirPath = os.path.join(HERE, "test-output", 'pdbx-fails')
+        self.__testIhmDirPath = os.path.join(HERE, "test-output", 'ihm-files')
         self.__exportJson = True
         #
         # self.__extraOpts = 'addParentRefs'
         self.__extraOpts = None
+        # The following for extended parent/child info -
+        # self.__extraOpts = 'addParentRefs|addPrimaryKey'
         self.__allSchemaNameD = {'ihm_dev': ['ihm_dev'],
                                  'pdbx': ['pdbx', 'pdbx_ext'],
                                  'pdbx_core': ['pdbx_core_entity_monomer', 'pdbx_core_entity', 'pdbx_core_entry', 'pdbx_core_assembly', 'pdbx_core_entity_instance', ],
@@ -95,8 +98,15 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                                  'bird_chem_comp': ['bird_chem_comp'],
                                  'bird_chem_comp_core': ['bird_chem_comp_core'],
                                  }
-        self.__schemaNameD = {'pdbx_core': ['pdbx_core_entity', 'pdbx_core_entry', 'pdbx_core_assembly', 'pdbx_core_entity_instance', 'pdbx_core_entity_monomer', 'pdbx_core_entity_instance_validation']}
-        #self.__schemaNameD = {'pdbx_core': ['pdbx_core_entity_instance_validation']}
+        self.__schemaNameD = {
+            'pdbx_core': [
+                'pdbx_core_entity',
+                'pdbx_core_entry',
+                'pdbx_core_assembly',
+                'pdbx_core_entity_instance',
+                'pdbx_core_entity_monomer',
+                'pdbx_core_entity_instance_validation']}
+        # self.__schemaNameD = {'pdbx_core': ['pdbx_core_entity_instance_validation']}
         self.__startTime = time.time()
         logger.debug("Starting %s at %s" % (self.id(),
                                             time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
@@ -124,6 +134,18 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         eCount = self.__testValidateOpts(schemaNameD=schemaNameD, inputPathList=inputPathList, schemaLevel=schemaLevel, mergeContentTypes=['vrpt'])
         logger.info("Total validation errors schema level %s : %d" % (schemaLevel, eCount))
         # self.assertGreaterEqual(eCount, 20)
+
+    def testValidateOptsIhmList(self):
+        schemaLevel = 'full'
+        inputPathList = glob.glob(self.__testIhmDirPath + "/*.cif")
+        if not inputPathList:
+            self.assertTrue(True)
+            return True
+        schemaNameD = {'ihm_dev_full': ['ihm_dev_full']}
+        eCount = self.__testValidateOpts(schemaNameD=schemaNameD, inputPathList=inputPathList, schemaLevel=schemaLevel, mergeContentTypes=None)
+        logger.info("Total validation errors schema level %s : %d" % (schemaLevel, eCount))
+        # self.assertGreaterEqual(eCount, 20)
+        #
 
     def __testValidateOpts(self, schemaNameD, inputPathList=None, schemaLevel='full', mergeContentTypes=None):
         #
@@ -201,9 +223,11 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             docList = sdp.addDocumentSubCategoryAggregates(docList, collectionName)
             #
             if self.__exportJson:
-                fp = os.path.join(HERE, "test-output", "export-%s-%s-prep-rowwise-by-name-with-cardinality.json" % (schemaName, collectionName))
-                self.__mU.doExport(fp, docList, format="json", indent=3)
-                logger.debug("Exported %r" % fp)
+                for ii, doc in enumerate(docList):
+                    cn = containerNameList[ii]
+                    fp = os.path.join(HERE, "test-output", "%s-%s-%s-prep-rowwise-by-name-with-cardinality.json" % (cn, schemaName, collectionName))
+                    self.__mU.doExport(fp, [doc], format="json", indent=3)
+                    logger.debug("Exported %r" % fp)
             return docList, containerNameList
 
         except Exception as e:
@@ -215,7 +239,13 @@ def schemaValidateSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsRepo"))
     #
-    #suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsList"))
+    # suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsList"))
+    return suiteSelect
+
+
+def schemaIhmValidateSuite():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsIhmList"))
     return suiteSelect
 
 
@@ -223,4 +253,8 @@ if __name__ == '__main__':
     #
     if True:
         mySuite = schemaValidateSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+    if False:
+        mySuite = schemaIhmValidateSuite()
         unittest.TextTestRunner(verbosity=2).run(mySuite)

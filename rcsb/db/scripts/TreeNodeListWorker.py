@@ -12,6 +12,7 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
+import glob
 import logging
 import os.path
 
@@ -29,7 +30,7 @@ class TreeNodeListWorker(object):
     """ Prepare and load repository holdings and repository update data.
     """
 
-    def __init__(self, cfgOb, mockTopPath, workPath=None, numProc=1, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False):
+    def __init__(self, cfgOb, mockTopPath, workPath=None, numProc=1, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False, useCache=False):
         self.__cfgOb = cfgOb
         self.__mockTopPath = mockTopPath
         self.__workPath = os.path.abspath(workPath)
@@ -41,6 +42,7 @@ class TreeNodeListWorker(object):
         self.__filterType = "assign-dates"
         self.__verbose = verbose
         self.__statusList = []
+        self.__useCache = useCache
 
     def __updateStatus(self, updateId, databaseName, collectionName, status, startTimestamp):
         try:
@@ -72,8 +74,29 @@ class TreeNodeListWorker(object):
 
         """
         try:
-            useCache = True
+            useCache = self.__useCache
             topCachePath = self.__workPath
+            #
+            if not useCache:
+                cDL = ['domains_struct', 'NCBI', 'ec']
+                for cD in cDL:
+                    try:
+                        cfp = os.path.join(topCachePath, cD)
+                        os.makedirs(cfp, 0o755)
+                    except Exception:
+                        pass
+                    #
+                    try:
+                        cfp = os.path.join(topCachePath, cD)
+                        fpL = glob.glob(os.path.join(cfp, "*"))
+                        if fpL:
+                            for fp in fpL:
+                                os.remove(fp)
+                    except Exception:
+                        pass
+
+            #
+            logger.info("Using cache files in %s %r" % (topCachePath, useCache))
             #
             sectionName = 'tree_node_lists'
             self.__statusList = []
@@ -88,6 +111,7 @@ class TreeNodeListWorker(object):
             #
             ccu = CathClassificationUtils(cathDirPath=os.path.join(topCachePath, 'domains_struct'), useCache=useCache)
             nL = ccu.getTreeNodeList()
+            logger.info("Starting load SCOP node tree %d" % len(nL))
             collectionName = self.__cfgOb.get('COLLECTION_CATH', sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL,
                          indexAttributeList=['update_id'], keyNames=None, addValues=addValues)
@@ -95,6 +119,7 @@ class TreeNodeListWorker(object):
 
             scu = ScopClassificationUtils(scopDirPath=os.path.join(topCachePath, 'domains_struct'), useCache=useCache)
             nL = scu.getTreeNodeList()
+            logger.info("Starting load SCOP node tree %d" % len(nL))
             collectionName = self.__cfgOb.get('COLLECTION_SCOP', sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL,
                          indexAttributeList=['update_id'], keyNames=None, addValues=addValues)
@@ -102,6 +127,7 @@ class TreeNodeListWorker(object):
 
             edbu = EnzymeDatabaseUtils(enzymeDirPath=os.path.join(topCachePath, 'ec'), useCache=useCache, clearCache=False)
             nL = edbu.getTreeNodeList()
+            logger.info("Starting load EC node tree %d" % len(nL))
             collectionName = self.__cfgOb.get('COLLECTION_ENZYME', sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL,
                          indexAttributeList=['update_id'], keyNames=None, addValues=addValues)
@@ -109,6 +135,7 @@ class TreeNodeListWorker(object):
 
             tU = TaxonomyUtils(taxDirPath=os.path.join(topCachePath, 'NCBI'), useCache=useCache)
             nL = tU.exportNodeList()
+            logger.info("Starting load taxonomy node tree %d" % len(nL))
             collectionName = self.__cfgOb.get('COLLECTION_TAXONOMY', sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL,
                          indexAttributeList=['update_id'], keyNames=None, addValues=addValues)

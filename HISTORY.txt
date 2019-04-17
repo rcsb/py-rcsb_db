@@ -125,3 +125,4 @@
   7-Apr-2019   V0.54 adding support for integrating CATH and SCOP structural classifiers and sequence difference type counts.
  11-Apr-2019   V0.55 add tree loaders to etl cli tool, add entity_instance_validation, add a variety of counts, add atc codes.
  13-Apr-2019   V0.56 add prototypical json schema properties '_attribute_groups' mapped to subcategory id/labels.
+ 17-Apr-2019   V0.57 schema and cache adjustments for node tree loading

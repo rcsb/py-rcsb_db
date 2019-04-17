@@ -1994,7 +1994,13 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             objNameL = []
             # Don't strip anything for multiple methods at this point
             if len(methodL) > 1:
-                pass
+                isXtal = False
+                for method in methodL:
+                    if method in ['X-RAY DIFFRACTION', 'FIBER DIFFRACTION', 'POWDER DIFFRACTION', 'ELECTRON CRYSTALLOGRAPHY', 'NEUTRON DIFFRACTION']:
+                        isXtal = True
+                        break
+                if not isXtal:
+                    objNameL = ['cell', 'symmetry', 'refine', 'refine_hist', 'software', 'diffrn', 'diffrn_radiation']
             else:
                 #
                 mS = methodL[0].upper()

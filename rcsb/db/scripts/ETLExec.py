@@ -82,6 +82,9 @@ def main():
     parser.add_argument("--debug", default=False, action='store_true', help="Turn on verbose logging")
     parser.add_argument("--mock", default=False, action='store_true', help="Use MOCK repository configuration for testing")
     parser.add_argument("--working_path", default=None, help="Working path for temporary files")
+    parser.add_argument("--use_cache", default=False, action='store_true', help="Use cache files from remote resources")
+    #
+    #
     args = parser.parse_args()
     #
     debugFlag = args.debug
@@ -91,6 +94,7 @@ def main():
     #                                       Configuration Details
     configPath = args.config_path
     configName = args.config_name
+    useCache = args.use_cache
     if not configPath:
         configPath = os.getenv('DBLOAD_CONFIG_PATH', None)
     try:
@@ -183,7 +187,8 @@ def main():
                 documentLimit=documentLimit,
                 verbose=debugFlag,
                 readBackCheck=readBackCheck,
-                workPath=workPath)
+                workPath=workPath,
+                useCache=useCache)
             ok = rhw.load(dataSetId, loadType=loadType)
             okS = loadStatus(rhw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
         logger.info("Operation completed with status %r " % ok and okS)
