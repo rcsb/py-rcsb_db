@@ -26,7 +26,7 @@
 #  3-Apr-2019 jdw add experimental primary key property controlled by 'addPrimaryKey'
 ##
 """
-Integrate dictionary metadata and file based(type/coverage) into internal and JSON/BSON schema defintions.
+Integrate dictionary metadata and file based (type/coverage) into internal and JSON/BSON schema defintions.
 
 
 """

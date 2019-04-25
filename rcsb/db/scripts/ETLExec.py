@@ -9,6 +9,7 @@
 #   9-Dec-2018 jdw add chemical reference ETL options
 #   4-Jan-2019 jdw differentiate config sections for provenance
 #   9-Apr-2019 jdw add tree node list loader
+#  25-Apr-2019 jdw move the --etl_tree_node_lists function to the rcsb.exdb package.
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -58,7 +59,7 @@ def main():
     parser.add_argument("--etl_entity_sequence_clusters", default=False, action='store_true', help="ETL entity sequence clusters")
     parser.add_argument("--etl_repository_holdings", default=False, action='store_true', help="ETL repository holdings")
     parser.add_argument("--etl_chemref", default=False, action='store_true', help="ETL integrated chemical reference data")
-    parser.add_argument("--etl_tree_node_lists", default=False, action='store_true', help="ETL tree node lists")
+    # parser.add_argument("--etl_tree_node_lists", default=False, action='store_true', help="ETL tree node lists")
 
     parser.add_argument("--data_set_id", default=None, help="Data set identifier (default= 2018_14 for current week)")
     #

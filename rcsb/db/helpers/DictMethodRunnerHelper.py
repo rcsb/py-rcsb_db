@@ -29,6 +29,9 @@
 # 23-Mar-2019 jdw change criteria chem_comp collection criteria to _chem_comp.pdbx_release_status
 # 25-Mar-2019 jdw remap merged taxons and adjust exception handling for taxonomy lineage generation
 #  7-Apr-2019 jdw add CathClassificationUtils and CathClassificationUtils and sequence difference type counts
+# 25-Apr-2019 jdw For source and host organism add ncbi_parent_scientific_name
+#                 add rcsb_entry_info.deposited_modeled_polymer_monomer_count and
+#                     rcsb_entry_info.deposited_unmodeled_polymer_monomer_count,
 ##
 """
 This helper class implements external method references in the RCSB dictionary extension.
@@ -838,6 +841,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             _entity.rcsb_source_part_count
 
         """
+        #
         hostCatName = 'rcsb_entity_host_organism'
         try:
             logger.debug("Starting with  %r %r" % (dataContainer.getName(), catName))
@@ -860,6 +864,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                               'end_seq_num',
                                                                               'provenance_code',
                                                                               'ncbi_scientific_name',
+                                                                              'ncbi_parent_scientific_name',
                                                                               'ncbi_common_names',
                                                                               'taxonomy_lineage_id',
                                                                               'taxonomy_lineage_name',
@@ -875,6 +880,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                                   'end_seq_num',
                                                                                   'provenance_code',
                                                                                   'ncbi_scientific_name',
+                                                                                  'ncbi_parent_scientific_name',
                                                                                   'ncbi_common_names',
                                                                                   'taxonomy_lineage_id',
                                                                                   'taxonomy_lineage_name',
@@ -1003,6 +1009,11 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                             sn = self.__taxU.getScientificName(taxId)
                             if sn:
                                 cObj.setValue(sn, 'ncbi_scientific_name', iRow)
+                            #
+                            psn = self.__taxU.getParentScientificName(taxId)
+                            if psn:
+                                cObj.setValue(psn, 'ncbi_parent_scientific_name', iRow)
+                            #
                             cnL = self.__taxU.getCommonNames(taxId)
                             if cnL:
                                 cObj.setValue(';'.join(list(set(cnL))), 'ncbi_common_names', iRow)
@@ -1041,6 +1052,11 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                             sn = self.__taxU.getScientificName(taxId)
                             if sn:
                                 hObj.setValue(sn, 'ncbi_scientific_name', iRow)
+                            #
+                            psn = self.__taxU.getParentScientificName(taxId)
+                            if psn:
+                                hObj.setValue(psn, 'ncbi_parent_scientific_name', iRow)
+                            #
                             cnL = self.__taxU.getCommonNames(taxId)
                             if cnL:
                                 hObj.setValue(';'.join(list(set(cnL))), 'ncbi_common_names', iRow)
@@ -1843,9 +1859,51 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             rT = 'Other'
         return rT
 
+    def __getDepositedResidueCounts(self, dataContainer):
+        """ Return the number of modeled and unmodeled residues in the deposited coordinate data.
+
+            Using data from:
+                loop_
+                _pdbx_poly_seq_scheme.asym_id
+                _pdbx_poly_seq_scheme.entity_id
+                _pdbx_poly_seq_scheme.seq_id
+                _pdbx_poly_seq_scheme.mon_id
+                _pdbx_poly_seq_scheme.ndb_seq_num
+                _pdbx_poly_seq_scheme.pdb_seq_num
+                _pdbx_poly_seq_scheme.auth_seq_num <<< ----
+                _pdbx_poly_seq_scheme.pdb_mon_id
+                _pdbx_poly_seq_scheme.auth_mon_id <<< ----
+                _pdbx_poly_seq_scheme.pdb_strand_id
+                _pdbx_poly_seq_scheme.pdb_ins_code
+                _pdbx_poly_seq_scheme.hetero
+                A 1 1  MET 1  1  ?  ?   ?   A . n
+                A 1 2  ALA 2  2  ?  ?   ?   A . n
+                A 1 3  LYS 3  3  ?  ?   ?   A . n
+                A 1 4  GLY 4  4  ?  ?   ?   A . n
+                A 1 5  GLN 5  5  ?  ?   ?   A . n
+                A 1 6  SER 6  6  6  SER SER A . n
+                A 1 7  LEU 7  7  7  LEU LEU A . n
+
+        """
+        modeledCount = 0
+        unModeledCount = 0
+        try:
+            psObj = dataContainer.getObj('pdbx_poly_seq_scheme')
+            if psObj is not None:
+                asnL = psObj.getAttributeValueList('auth_seq_num')
+                aaidL = psObj.getAttributeValueList('pdb_strand_id')
+                unModeledCount = asnL.count('?')
+                tL = [(a, b) for (a, b) in zip(asnL, aaidL) if a not in ['?']]
+                uL = set(tL)
+                modeledCount = len(uL) if '?' not in uL else len(uL) - 1
+        except Exception as e:
+            logger.exception("Failing for %s with %s" % (dataContainer.getName(), str(e)))
+        #
+        return modeledCount, unModeledCount
+
     def addEntryInfo(self, dataContainer, catName, **kwargs):
         """
-        Add rcsb_entry_info, for example:
+        Add  _rcsb_entry_info, for example:
              _rcsb_entry_info.entry_id                      1ABC
              _rcsb_entry_info.polymer_composition           'heteromeric protein'
              _rcsb_entry_info.experimental_method           'multiple methods'
@@ -1855,6 +1913,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
              _rcsb_entry_info.nonpolymer_entity_count       2
              _rcsb_entry_info.branched_entity_count         0
              _rcsb_entry_info.software_programs_combined    'Phenix;RefMac'
+             ....
 
         Also add the related field:
 
@@ -1888,7 +1947,9 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                               'resolution_combined',
                                                                               'deposited_atom_count',
                                                                               'deposited_model_count',
-                                                                              'disulfide_bond_count']))
+                                                                              'disulfide_bond_count',
+                                                                              'deposited_modeled_polymer_monomer_count',
+                                                                              'deposited_unmodeled_polymer_monomer_count']))
             #
             cObj = dataContainer.getObj(catName)
             #
@@ -1938,10 +1999,11 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             # Resolution -
             #
             resL = self.__filterExperimentalResolution(dataContainer)
+            # Various counts -
             numAtoms, numModels = self.__getAtomSiteInfo(dataContainer)
             numDiSulf = self.__getStructConnInfo(dataContainer)
-            #
-
+            #  modeled and unmodeled residue counts
+            modeledCount, unModeledCount = self.__getDepositedResidueCounts(dataContainer)
             #
             # Software
             #
@@ -1975,6 +2037,9 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 cObj.setValue(numModels, 'deposited_model_count', 0)
             cObj.setValue(numDiSulf, 'disulfide_bond_count', 0)
             #
+            cObj.setValue(modeledCount, 'deposited_modeled_polymer_monomer_count', 0)
+            cObj.setValue(unModeledCount, 'deposited_unmodeled_polymer_monomer_count', 0)
+            #
             return True
         except Exception as e:
             logger.exception("For %s %r failing with %s" % (dataContainer.getName(), catName, str(e)))
@@ -1992,7 +2057,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             xObj = dataContainer.getObj('exptl')
             methodL = xObj.getAttributeValueList('method')
             objNameL = []
-            # Don't strip anything for multiple methods at this point
+            # Test for a diffraction method in the case of multiple methods
             if len(methodL) > 1:
                 isXtal = False
                 for method in methodL:
