@@ -141,3 +141,5 @@
                 and categories
                     rcsb_entity_instance_domain_scop
                     rcsb_entity_instance_domain_cath
+  4-May-2019  V0.61 extend content in and categories rcsb_entity_instance_domain_scop
+                    rcsb_entity_instance_domain_cath to support slicing

@@ -43,6 +43,7 @@
 #               _rcsb_entry_info.polymer_entity_taxonomy_count
 #               _rcsb_entry_info.assembly_count
 #           Add categories rcsb_entity_instance_domain_scop and rcsb_entity_instance_domain_cath
+# 4-May-2019 jdw extend content in categories rcsb_entity_instance_domain_scop and rcsb_entity_instance_domain_cath
 ##
 """
 This helper class implements external method references in the RCSB dictionary extension.
@@ -2648,6 +2649,8 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             #
             if not dataContainer.exists('rcsb_entity_instance_domain_cath'):
                 dataContainer.append(DataCategory('rcsb_entity_instance_domain_cath', attributeNameList=['ordinal',
+                                                                                                         'entry_id',
+                                                                                                         'entity_id',
                                                                                                          'domain_id',
                                                                                                          'domain_name',
                                                                                                          'domain_class_id',
@@ -2655,10 +2658,19 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                                                          'domain_class_lineage_id',
                                                                                                          'domain_class_lineage_name',
                                                                                                          'domain_class_lineage_depth',
+                                                                                                         'domain_assigned_by',
                                                                                                          'domain_assigned_version',
+                                                                                                         'beg_auth_asym_id',
+                                                                                                         'beg_label_asym_id',
+                                                                                                         'beg_auth_seq_id',
+                                                                                                         'end_auth_asym_id',
+                                                                                                         'end_label_asym_id',
+                                                                                                         'end_auth_seq_id'
                                                                                                          ]))
             if not dataContainer.exists('rcsb_entity_instance_domain_scop'):
                 dataContainer.append(DataCategory('rcsb_entity_instance_domain_scop', attributeNameList=['ordinal',
+                                                                                                         'entry_id',
+                                                                                                         'entity_id',
                                                                                                          'domain_id',
                                                                                                          'domain_name',
                                                                                                          'domain_class_id',
@@ -2666,7 +2678,14 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                                                          'domain_class_lineage_id',
                                                                                                          'domain_class_lineage_name',
                                                                                                          'domain_class_lineage_depth',
+                                                                                                         'domain_assigned_by',
                                                                                                          'domain_assigned_version',
+                                                                                                         'beg_auth_asym_id',
+                                                                                                         'beg_label_asym_id',
+                                                                                                         'beg_auth_seq_id',
+                                                                                                         'end_auth_asym_id',
+                                                                                                         'end_label_asym_id',
+                                                                                                         'end_auth_seq_id'
                                                                                                          ]))
 
             eObj = dataContainer.getObj('entry')
@@ -2717,19 +2736,6 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     idLinL = self.__cathU.getIdLineage(cathId)
                     cObj.setValue(';'.join(idLinL), "domain_class_lineage_id", ii)
                     cObj.setValue(';'.join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", ii)
-                    #
-                    cathObj.setValue(kk + 1, "ordinal", kk)
-                    cathObj.setValue(str(domId), "domain_id", kk)
-                    cathObj.setValue(cathId, "domain_class_id", kk)
-                    cathObj.setValue(self.__cathU.getCathName(cathId), "domain_class_name", kk)
-                    #
-                    cathObj.setValue(';'.join(self.__cathU.getNameLineage(cathId)), "domain_class_lineage_name", kk)
-                    cathObj.setValue(';'.join(idLinL), "domain_class_lineage_id", kk)
-                    cathObj.setValue(';'.join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", kk)
-                    cathObj.setValue(vL[0], 'domain_assigned_version', kk)
-                    #
-                    kk += 1
-                    #
                     cObj.setValue(authAsymId, 'beg_auth_asym_id', ii)
                     cObj.setValue(asymId, 'beg_label_asym_id', ii)
                     cObj.setValue(seqBeg, 'beg_auth_seq_id', ii)
@@ -2738,7 +2744,28 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     cObj.setValue(seqEnd, 'end_auth_seq_id', ii)
                     cObj.setValue('CATH', 'domain_assigned_by', ii)
                     cObj.setValue(vL[0], 'domain_assigned_version', ii)
+                    #
+                    cathObj.setValue(kk + 1, "ordinal", kk)
+                    cathObj.setValue(entryId, "entry_id", kk)
+                    cathObj.setValue(ad['entity_id'], "entity_id", kk)
+                    cathObj.setValue(str(domId), "domain_id", kk)
+                    cathObj.setValue(cathId, "domain_class_id", kk)
+                    cathObj.setValue(self.__cathU.getCathName(cathId), "domain_class_name", kk)
+                    cathObj.setValue(';'.join(self.__cathU.getNameLineage(cathId)), "domain_class_lineage_name", kk)
+                    cathObj.setValue(';'.join(idLinL), "domain_class_lineage_id", kk)
+                    cathObj.setValue(';'.join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", kk)
+                    cathObj.setValue(vL[0], 'domain_assigned_version', kk)
+                    #
+                    cathObj.setValue(authAsymId, 'beg_auth_asym_id', kk)
+                    cathObj.setValue(asymId, 'beg_label_asym_id', kk)
+                    cathObj.setValue(seqBeg, 'beg_auth_seq_id', kk)
+                    cathObj.setValue(authAsymId, 'end_auth_asym_id', kk)
+                    cathObj.setValue(asymId, 'end_label_asym_id', kk)
+                    cathObj.setValue(seqEnd, 'end_auth_seq_id', kk)
+                    cathObj.setValue('CATH', 'domain_assigned_by', kk)
+                    cathObj.setValue(vL[0], 'domain_assigned_version', kk)
                     ii += 1
+                    kk += 1
 
             # Add SCOP assignments
             kk = 0
@@ -2763,8 +2790,19 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     cObj.setValue(';'.join([str(t) for t in idLinL]), "domain_class_lineage_id", ii)
                     cObj.setValue(';'.join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", ii)
                     #
+                    cObj.setValue(authAsymId, 'beg_auth_asym_id', ii)
+                    cObj.setValue(asymId, 'beg_label_asym_id', ii)
+                    cObj.setValue(seqBeg, 'beg_auth_seq_id', ii)
+                    cObj.setValue(authAsymId, 'end_auth_asym_id', ii)
+                    cObj.setValue(asymId, 'end_label_asym_id', ii)
+                    cObj.setValue(seqEnd, 'end_auth_seq_id', ii)
+                    cObj.setValue('SCOPe', 'domain_assigned_by', ii)
+                    cObj.setValue(version, 'domain_assigned_version', ii)
+                    #
                     #
                     scopObj.setValue(kk + 1, "ordinal", kk)
+                    scopObj.setValue(entryId, "entry_id", kk)
+                    scopObj.setValue(ad['entity_id'], "entity_id", kk)
                     scopObj.setValue(str(sunId), "domain_id", kk)
                     scopObj.setValue(domId, "domain_class_id", kk)
                     scopObj.setValue(self.__scopU.getScopName(sunId), "domain_class_name", kk)
@@ -2774,18 +2812,17 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     scopObj.setValue(';'.join([str(t) for t in idLinL]), "domain_class_lineage_id", kk)
                     scopObj.setValue(';'.join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", kk)
                     scopObj.setValue(version, 'domain_assigned_version', kk)
-                    kk += 1
+                    scopObj.setValue(authAsymId, 'beg_auth_asym_id', kk)
+                    scopObj.setValue(asymId, 'beg_label_asym_id', kk)
+                    scopObj.setValue(seqBeg, 'beg_auth_seq_id', kk)
+                    scopObj.setValue(authAsymId, 'end_auth_asym_id', kk)
+                    scopObj.setValue(asymId, 'end_label_asym_id', kk)
+                    scopObj.setValue(seqEnd, 'end_auth_seq_id', kk)
+                    scopObj.setValue('SCOPe', 'domain_assigned_by', kk)
+                    scopObj.setValue(version, 'domain_assigned_version', kk)
                     #
-                    #
-                    cObj.setValue(authAsymId, 'beg_auth_asym_id', ii)
-                    cObj.setValue(asymId, 'beg_label_asym_id', ii)
-                    cObj.setValue(seqBeg, 'beg_auth_seq_id', ii)
-                    cObj.setValue(authAsymId, 'end_auth_asym_id', ii)
-                    cObj.setValue(asymId, 'end_label_asym_id', ii)
-                    cObj.setValue(seqEnd, 'end_auth_seq_id', ii)
-                    cObj.setValue('SCOPe', 'domain_assigned_by', ii)
-                    cObj.setValue(version, 'domain_assigned_version', ii)
                     ii += 1
+                    kk += 1
 
             return True
         except Exception as e:
