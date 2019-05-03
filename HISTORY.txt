@@ -127,3 +127,17 @@
  13-Apr-2019   V0.56 add prototypical json schema properties '_attribute_groups' mapped to subcategory id/labels.
  17-Apr-2019   V0.57/58 schema and cache adjustments for node tree loading
  25-Apr-2019   V0.59 adds parent source/host organism and polymer monomer counts
+  3-May-2019   V0.60 adds helper support for attributes:
+                   _rcsb_entry_info.deposited_polymer_monomer_count,
+                   _rcsb_entry_info.polymer_entity_count_protein,
+                   _rcsb_entry_info.polymer_entity_count_nucleic_acid,
+                   _rcsb_entry_info.polymer_entity_count_nucleic_acid_hybrid,
+                   _rcsb_entry_info.polymer_entity_count_DNA,
+                   _rcsb_entry_info.polymer_entity_count_RNA,
+                   _rcsb_entry_info.nonpolymer_ligand_entity_count
+                   _rcsb_entry_info.selected_polymer_entity_types
+                   _rcsb_entry_info.polymer_entity_taxonomy_count
+                   _rcsb_entry_info.assembly_count
+                and categories
+                    rcsb_entity_instance_domain_scop
+                    rcsb_entity_instance_domain_cath

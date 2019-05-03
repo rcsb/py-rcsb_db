@@ -32,6 +32,17 @@
 # 25-Apr-2019 jdw For source and host organism add ncbi_parent_scientific_name
 #                 add rcsb_entry_info.deposited_modeled_polymer_monomer_count and
 #                     rcsb_entry_info.deposited_unmodeled_polymer_monomer_count,
+# 1-May-2019 jdw add support for _rcsb_entry_info.deposited_polymer_monomer_count,
+#               _rcsb_entry_info.polymer_entity_count_protein,
+#               _rcsb_entry_info.polymer_entity_count_nucleic_acid,
+#               _rcsb_entry_info.polymer_entity_count_nucleic_acid_hybrid,
+#               _rcsb_entry_info.polymer_entity_count_DNA,
+#               _rcsb_entry_info.polymer_entity_count_RNA,
+#               _rcsb_entry_info.nonpolymer_ligand_entity_count
+#               _rcsb_entry_info.selected_polymer_entity_types
+#               _rcsb_entry_info.polymer_entity_taxonomy_count
+#               _rcsb_entry_info.assembly_count
+#           Add categories rcsb_entity_instance_domain_scop and rcsb_entity_instance_domain_cath
 ##
 """
 This helper class implements external method references in the RCSB dictionary extension.
@@ -737,6 +748,15 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 else:
                     tObj.setValue('N', 'rcsb_candidate_assembly', iRow)
                 logger.debug("Full row is %r" % tObj.getRow(iRow))
+
+            #
+            numAssemblies = tObj.getRowCount()
+            logger.debug("Assembly count is %d" % numAssemblies)
+            if dataContainer.exists('rcsb_entry_info'):
+                eiObj = dataContainer.getObj('rcsb_entry_info')
+                eiObj.setValue(numAssemblies, 'assembly_count', 0)
+            #
+            #
             return True
         except Exception as e:
             logger.exception("For %s %s failing with %s" % (catName, atName, str(e)))
@@ -985,6 +1005,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                         continue
 
             iRow = 0
+            entryTaxIdD = {}
             for (entityId, sType, atL, tv) in srcL:
                 ii = atL.index('ncbi_taxonomy_id') if 'ncbi_taxonomy_id' in atL else -1
                 if ii > 0 and len(tv[ii].split(',')) > 1:
@@ -1005,6 +1026,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                             taxId = int(self.__re_non_digit.sub('', v[ii]))
                             taxId = self.__taxU.getMergedTaxId(taxId)
                             cObj.setValue(str(taxId), 'ncbi_taxonomy_id', iRow)
+                            entryTaxIdD[taxId] = entryTaxIdD[taxId] + 1 if taxId in entryTaxIdD else 1
                             #
                             sn = self.__taxU.getScientificName(taxId)
                             if sn:
@@ -1100,6 +1122,11 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 eObj.setValue(partCountD[entityId], 'rcsb_source_part_count', ii)
                 eObj.setValue(cFlag, 'rcsb_multiple_source_flag', ii)
 
+            logger.debug("Entry taxonomy count is %d" % len(entryTaxIdD))
+            if dataContainer.exists('rcsb_entry_info'):
+                eiObj = dataContainer.getObj('rcsb_entry_info')
+                eiObj.setValue(len(entryTaxIdD), 'polymer_entity_taxonomy_count', 0)
+            #
             return True
         except Exception as e:
             logger.exception("In %s for %s failing with %s" % (dataContainer.getName(), catName, str(e)))
@@ -1693,8 +1720,8 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
         Output composition classes:
 
-            'homomeric protein' 'Single protein entity'
-            'heteromeric protein' 'Multiple protein entities'
+            'homomeric protein' 'single protein entity'
+            'heteromeric protein' 'multiple protein entities'
             'DNA' 'DNA entity/entities only'
             'RNA' 'RNA entity/entities only'
             'NA-hybrid' 'DNA/RNA hybrid entity/entities only'
@@ -1703,8 +1730,16 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             'oligosaccharide' 'One of more oligosaccharide entities'
             'protein/oligosaccharide' 'Both protein and oligosaccharide entities'
             'NA/oligosaccharide' 'Both NA and oligosaccharide entities'
+            'other' 'Neither an individual protein, nucleic acid polymer nor oligosaccharide entity'
+            'other type pair' 'Other combinations of 2 polymer types'
+            'other type composition' 'Other combinations of 3 or more polymer types'
 
-            'Other' 'Neither protein nor nucleic acid polymer entities'
+        And selected types -
+            'Protein (only)' 'protein entity/entities only'
+            'DNA (only)' 'DNA entity/entities only'
+            'RNA (only)' 'RNA entity/entities only'
+            'Protein/NA' 'Both protein and nucleic acid (DNA or RNA) polymer entities'
+            'Other' 'Another polymer type composition'
         """
 
         compClass = 'other'
@@ -1748,7 +1783,19 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         elif len(cD) >= 3:
             compClass = "other type composition"
 
-        return compClass
+        # Subset type class -
+        if compClass in ['homomeric protein', 'heteromeric protein']:
+            ptClass = 'Protein (only)'
+        elif compClass in ['DNA']:
+            ptClass = 'DNA (only)'
+        elif compClass in ['RNA']:
+            ptClass = 'RNA (only)'
+        elif compClass in ['protein/NA']:
+            ptClass = 'Protein/NA'
+        else:
+            ptClass = 'Other'
+        #
+        return compClass, ptClass, cD
 
     def __filterExperimentalMethod(self, methodL):
         """
@@ -1925,6 +1972,14 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             'NA-hybrid' 'polydeoxyribonucleotide/polyribonucleotide hybrid'
             'Other'      'polysaccharide(D), polysaccharide(L), cyclic-pseudo-peptide, peptide nucleic acid, or other'
     #
+          _rcsb_entry_info.deposited_polymer_monomer_count
+          'polymer_entity_count_protein',
+          'polymer_entity_count_nucleic_acid',
+          'polymer_entity_count_nucleic_acid_hybrid',
+          'polymer_entity_count_DNA',
+          'polymer_entity_count_RNA',
+
+          _rcsb_entry_info.nonpolymer_ligand_entity_count
         """
         try:
             logger.debug("Starting with %r %r" % (dataContainer.getName(), catName))
@@ -1941,6 +1996,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                               'polymer_entity_count',
                                                                               'entity_count',
                                                                               'nonpolymer_entity_count',
+                                                                              'nonpolymer_ligand_entity_count',
                                                                               'branched_entity_count',
                                                                               'solvent_entity_count',
                                                                               'software_programs_combined',
@@ -1948,8 +2004,18 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                               'deposited_atom_count',
                                                                               'deposited_model_count',
                                                                               'disulfide_bond_count',
+                                                                              'deposited_polymer_monomer_count',
                                                                               'deposited_modeled_polymer_monomer_count',
-                                                                              'deposited_unmodeled_polymer_monomer_count']))
+                                                                              'deposited_unmodeled_polymer_monomer_count',
+                                                                              'polymer_entity_count_protein',
+                                                                              'polymer_entity_count_nucleic_acid',
+                                                                              'polymer_entity_count_nucleic_acid_hybrid',
+                                                                              'polymer_entity_count_DNA',
+                                                                              'polymer_entity_count_RNA',
+                                                                              'selected_polymer_entity_types',
+                                                                              'polymer_entity_taxonomy_count',
+                                                                              'assembly_count'
+                                                                              ]))
             #
             cObj = dataContainer.getObj(catName)
             #
@@ -1989,7 +2055,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 ebObj = dataContainer.getObj('entity_branch')
                 pTypeL.extend(ebObj.getAttributeValueList('type'))
             #
-            polymerCompClass = self.__getPolymerComposition(pTypeL)
+            polymerCompClass, ptClass, eptD = self.__getPolymerComposition(pTypeL)
             #
             xObj = dataContainer.getObj('exptl')
             entryId = xObj.getValue('entry_id', 0)
@@ -2021,8 +2087,10 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             #
             cObj.setValue(entryId, 'entry_id', 0)
             cObj.setValue(polymerCompClass, 'polymer_composition', 0)
+            cObj.setValue(ptClass, 'selected_polymer_entity_types', 0)
             cObj.setValue(numPolymers, 'polymer_entity_count', 0)
-            cObj.setValue(numNonPolymers, 'nonpolymer_entity_count', 0)
+            cObj.setValue(numNonPolymers + numSolvent, 'nonpolymer_entity_count', 0)
+            cObj.setValue(numNonPolymers, 'nonpolymer_ligand_entity_count', 0)
             cObj.setValue(numBranched, 'branched_entity_count', 0)
             cObj.setValue(numSolvent, 'solvent_entity_count', 0)
             cObj.setValue(totalEntities, 'entity_count', 0)
@@ -2039,6 +2107,18 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             #
             cObj.setValue(modeledCount, 'deposited_modeled_polymer_monomer_count', 0)
             cObj.setValue(unModeledCount, 'deposited_unmodeled_polymer_monomer_count', 0)
+            cObj.setValue(modeledCount + unModeledCount, 'deposited_polymer_monomer_count', 0)
+            num = eptD['protein'] if 'protein' in eptD else 0
+            cObj.setValue(num, 'polymer_entity_count_protein', 0)
+
+            num = eptD['NA-hybrid'] if 'NA-hybrid' in eptD else 0
+            cObj.setValue(num, 'polymer_entity_count_nucleic_acid_hybrid', 0)
+            numDNA = eptD['DNA'] if 'DNA' in eptD else 0
+            cObj.setValue(numDNA, 'polymer_entity_count_DNA', 0)
+            numRNA = eptD['RNA'] if 'RNA' in eptD else 0
+            cObj.setValue(numRNA, 'polymer_entity_count_RNA', 0)
+            cObj.setValue(numDNA + numRNA, 'polymer_entity_count_nucleic_acid', 0)
+            cObj.setValue(None, 'polymer_entity_taxonomy_count', 0)
             #
             return True
         except Exception as e:
@@ -2516,9 +2596,23 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             _rcsb_entity_instance_domain.end_auth_seq_id
             1 4hrtA00 ? 1.10.490.10  Globins ? ? ? CATH    A 1  A 149
 
+
+        And the CATH and SCOP variants for indexing -
+            _rcsb_entity_instance_domain_cath.ordinal
+            _rcsb_entity_instance_domain_cath.domain_id
+            _rcsb_entity_instance_domain_cath.domain_name
+            _rcsb_entity_instance_domain_cath.domain_class_id
+            _rcsb_entity_instance_domain_cath.domain_class_name
+            _rcsb_entity_instance_domain_cath.domain_class_lineage_id
+            _rcsb_entity_instance_domain_cath.domain_class_lineage_name
+            _rcsb_entity_instance_domain_cath.domain_class_lineage_depth
+            _rcsb_entity_instance_domain_cath.domain_assigned_by
+            _rcsb_entity_instance_domain_cath.domain_assigned_version
         """
         logger.debug("Starting with %r %r" % (dataContainer.getName(), catName))
         try:
+            if catName != 'rcsb_entity_instance_domain':
+                return False
             # Exit if source categories are missing
             if not (dataContainer.exists('rcsb_entity_container_identifiers') and dataContainer.exists('entry') and dataContainer.exists('pdbx_poly_seq_scheme')):
                 return False
@@ -2552,6 +2646,29 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                               'end_auth_seq_id'
                                                                               ]))
             #
+            if not dataContainer.exists('rcsb_entity_instance_domain_cath'):
+                dataContainer.append(DataCategory('rcsb_entity_instance_domain_cath', attributeNameList=['ordinal',
+                                                                                                         'domain_id',
+                                                                                                         'domain_name',
+                                                                                                         'domain_class_id',
+                                                                                                         'domain_class_name',
+                                                                                                         'domain_class_lineage_id',
+                                                                                                         'domain_class_lineage_name',
+                                                                                                         'domain_class_lineage_depth',
+                                                                                                         'domain_assigned_version',
+                                                                                                         ]))
+            if not dataContainer.exists('rcsb_entity_instance_domain_scop'):
+                dataContainer.append(DataCategory('rcsb_entity_instance_domain_scop', attributeNameList=['ordinal',
+                                                                                                         'domain_id',
+                                                                                                         'domain_name',
+                                                                                                         'domain_class_id',
+                                                                                                         'domain_class_name',
+                                                                                                         'domain_class_lineage_id',
+                                                                                                         'domain_class_lineage_name',
+                                                                                                         'domain_class_lineage_depth',
+                                                                                                         'domain_assigned_version',
+                                                                                                         ]))
+
             eObj = dataContainer.getObj('entry')
             entryId = eObj.getValue('id', 0)
             #
@@ -2574,7 +2691,11 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 logger.debug("asymD (%d) %r" % (len(asymD), asymD))
             #
             # Add CATH assignments
+            cathObj = dataContainer.getObj('rcsb_entity_instance_domain_cath')
+            scopObj = dataContainer.getObj('rcsb_entity_instance_domain_scop')
+            #
             ii = cObj.getRowCount()
+            kk = 0
             #
             for authAsymId in authAsymD:
                 asymId = authAsymD[authAsymId]
@@ -2597,6 +2718,18 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     cObj.setValue(';'.join(idLinL), "domain_class_lineage_id", ii)
                     cObj.setValue(';'.join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", ii)
                     #
+                    cathObj.setValue(kk + 1, "ordinal", kk)
+                    cathObj.setValue(str(domId), "domain_id", kk)
+                    cathObj.setValue(cathId, "domain_class_id", kk)
+                    cathObj.setValue(self.__cathU.getCathName(cathId), "domain_class_name", kk)
+                    #
+                    cathObj.setValue(';'.join(self.__cathU.getNameLineage(cathId)), "domain_class_lineage_name", kk)
+                    cathObj.setValue(';'.join(idLinL), "domain_class_lineage_id", kk)
+                    cathObj.setValue(';'.join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", kk)
+                    cathObj.setValue(vL[0], 'domain_assigned_version', kk)
+                    #
+                    kk += 1
+                    #
                     cObj.setValue(authAsymId, 'beg_auth_asym_id', ii)
                     cObj.setValue(asymId, 'beg_label_asym_id', ii)
                     cObj.setValue(seqBeg, 'beg_auth_seq_id', ii)
@@ -2608,6 +2741,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     ii += 1
 
             # Add SCOP assignments
+            kk = 0
             for authAsymId in authAsymD:
                 asymId = authAsymD[authAsymId]
                 ad = asymD[asymId]
@@ -2628,6 +2762,20 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     idLinL = self.__scopU.getIdLineage(sunId)
                     cObj.setValue(';'.join([str(t) for t in idLinL]), "domain_class_lineage_id", ii)
                     cObj.setValue(';'.join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", ii)
+                    #
+                    #
+                    scopObj.setValue(kk + 1, "ordinal", kk)
+                    scopObj.setValue(str(sunId), "domain_id", kk)
+                    scopObj.setValue(domId, "domain_class_id", kk)
+                    scopObj.setValue(self.__scopU.getScopName(sunId), "domain_class_name", kk)
+                    #
+                    tL = [t if t is not None else '' for t in self.__scopU.getNameLineage(sunId)]
+                    scopObj.setValue(';'.join(tL), "domain_class_lineage_name", kk)
+                    scopObj.setValue(';'.join([str(t) for t in idLinL]), "domain_class_lineage_id", kk)
+                    scopObj.setValue(';'.join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", kk)
+                    scopObj.setValue(version, 'domain_assigned_version', kk)
+                    kk += 1
+                    #
                     #
                     cObj.setValue(authAsymId, 'beg_auth_asym_id', ii)
                     cObj.setValue(asymId, 'beg_label_asym_id', ii)

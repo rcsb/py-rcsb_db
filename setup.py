@@ -71,7 +71,7 @@ setup(
                       'rcsb.utils.validation >= 0.13',
                       'rcsb.utils.chemref >= 0.19',
                       'rcsb.utils.ec >= 0.13',
-                      'rcsb.utils.taxonomy >= 0.18',
+                      'rcsb.utils.taxonomy >= 0.19',
                       'rcsb.utils.struct >= 0.16'],
     packages=find_packages(exclude=['rcsb.db.tests', 'rcsb.db.tests-*', 'tests.*']),
     package_data={

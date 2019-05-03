@@ -15,5 +15,5 @@ rcsb.utils.validation >= 0.13
 scandir; python_version < "3.0"
 configparser; python_version < "3.0"
 rcsb.utils.ec >= 0.13
-rcsb.utils.taxonomy >= 0.18
+rcsb.utils.taxonomy >= 0.19
 rcsb.utils.struct >= 0.16
