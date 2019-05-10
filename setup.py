@@ -62,7 +62,7 @@ setup(
                       'strict-rfc3339',
                       'mysqlclient >= 1.3.12',
                       'pymongo >= 3.7.0',
-                      'mmcif >= 0.36',
+                      'mmcif >= 0.37',
                       'scandir; python_version < "3.0"',
                       # 'configparser; python_version < "3.0"',
                       'rcsb.utils.io >= 0.30',
