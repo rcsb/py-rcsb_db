@@ -32,18 +32,23 @@
 # 25-Apr-2019 jdw For source and host organism add ncbi_parent_scientific_name
 #                 add rcsb_entry_info.deposited_modeled_polymer_monomer_count and
 #                     rcsb_entry_info.deposited_unmodeled_polymer_monomer_count,
-# 1-May-2019 jdw add support for _rcsb_entry_info.deposited_polymer_monomer_count,
-#               _rcsb_entry_info.polymer_entity_count_protein,
-#               _rcsb_entry_info.polymer_entity_count_nucleic_acid,
-#               _rcsb_entry_info.polymer_entity_count_nucleic_acid_hybrid,
-#               _rcsb_entry_info.polymer_entity_count_DNA,
-#               _rcsb_entry_info.polymer_entity_count_RNA,
-#               _rcsb_entry_info.nonpolymer_ligand_entity_count
-#               _rcsb_entry_info.selected_polymer_entity_types
-#               _rcsb_entry_info.polymer_entity_taxonomy_count
-#               _rcsb_entry_info.assembly_count
-#           Add categories rcsb_entity_instance_domain_scop and rcsb_entity_instance_domain_cath
-# 4-May-2019 jdw extend content in categories rcsb_entity_instance_domain_scop and rcsb_entity_instance_domain_cath
+#  1-May-2019 jdw add support for _rcsb_entry_info.deposited_polymer_monomer_count,
+#                   _rcsb_entry_info.polymer_entity_count_protein,
+#                   _rcsb_entry_info.polymer_entity_count_nucleic_acid,
+#                   _rcsb_entry_info.polymer_entity_count_nucleic_acid_hybrid,
+#                   _rcsb_entry_info.polymer_entity_count_DNA,
+#                   _rcsb_entry_info.polymer_entity_count_RNA,
+#                   _rcsb_entry_info.nonpolymer_ligand_entity_count
+#                   _rcsb_entry_info.selected_polymer_entity_types
+#                   _rcsb_entry_info.polymer_entity_taxonomy_count
+#                   _rcsb_entry_info.assembly_count
+#                    add categories rcsb_entity_instance_domain_scop and rcsb_entity_instance_domain_cath
+#  4-May-2019 jdw extend content in categories rcsb_entity_instance_domain_scop and rcsb_entity_instance_domain_cath
+# 13-May-2019 jdw add rcsb_entry_info.deposited_polymer_entity_instance_count and deposited_nonpolymer_entity_instance_count
+#                 add entity_poly.rcsb_non_std_monomer_count and rcsb_non_std_monomers
+# 15-May-2019 jdw add _rcsb_entry_info.na_polymer_entity_types update enumerations for _rcsb_entry_info.selected_polymer_entity_types
+#
+#
 ##
 """
 This helper class implements external method references in the RCSB dictionary extension.
@@ -61,6 +66,7 @@ import functools
 import itertools
 import logging
 import re
+from collections import Counter
 
 from mmcif.api.DataCategory import DataCategory
 
@@ -161,10 +167,11 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         #
         self.__re_non_digit = re.compile(r'[^\d]+')
         #
-        # Cache initialization for instance type and atom counts -
+        # Entry specifoc cache initialization for instance type and atom counts -
         #
-        self.__instanceTypeD = None
-        self.__atomCountD = None
+        self.__cacheEntryId = None
+        self.__instanceD = None
+        self.__atomSiteCountD = None
         #
 
     def echo(self, msg):
@@ -597,7 +604,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             if operExpression.find('(') < 0:
                 opL = [operExpression]
             else:
-                opL = [t.strip().strip('(').rstrip(')') for t in re.findall('\(.*?\)', operExpression)]
+                opL = [t.strip().strip('(').rstrip(')') for t in re.findall(r'\(.*?\)', operExpression)]
             #
             for op in opL:
                 teL = []
@@ -620,7 +627,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         return opCount, rL
 
     def __getAssemblyComposition(self, dataContainer):
-        """
+        """ Return assembly composition by entity and instance type counts.
 
             Example -
                 loop_
@@ -645,21 +652,297 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 4 '(1,2,6,10,23,24)' A,B,C
                 5 P                  A,B,C
                 #
-
         """
-        rD = {}
+        #
+        instanceD = self.__getInstanceTypes(dataContainer)
+        instanceTypeD = instanceD['instanceTypeD'] if 'instanceTypeD' in instanceD else {}
+        instancePolymerTypeD = instanceD['instancePolymerTypeD'] if 'instancePolymerTypeD' in instanceD else {}
+        instEntityD = instanceD['instEntityD'] if 'instEntityD' in instanceD else {}
+        epTypeD = instanceD['epTypeD'] if 'epTypeD' in instanceD else {}
+        eTypeD = instanceD['eTypeD'] if 'eTypeD' in instanceD else {}
+        epTypeFilteredD = instanceD['epTypeFilteredD'] if 'epTypeFilteredD' in instanceD else {}
+        #
+        atomSiteCountD = self.__getQualifiedAtomSiteInfo(dataContainer, instanceTypeD)
+        instAtomCount = atomSiteCountD['instanceAtomCountD'] if 'instanceAtomCountD' in atomSiteCountD else {}
+        instModeledMonomerCount = atomSiteCountD['instanceModeledMonomerCountD'] if 'instanceModeledMonomerCountD' in atomSiteCountD else {}
+        instUnmodeledMonomerCount = atomSiteCountD['instanceUnmodeledMonomerCountD'] if 'instanceUnmodeledMonomerCountD' in atomSiteCountD else {}
+        #
+        # -------------------------
+        assemblyInstanceCountByTypeD = {}
+        assemblyAtomCountByTypeD = {}
+        assemblyAtomCountD = {}
+        assemblyModeledMonomerCountD = {}
+        assemblyUnmodeledMonomerCountD = {}
+        # Pre-generation (source instances)
+        assemblyInstanceD = {}
+        # Post-generation (gerated instances)
+        assemblyInstanceGenD = {}
+        assemblyInstanceCountByPolymerTypeD = {}
+        assemblyPolymerInstanceCountD = {}
+        assemblyPolymerClassD = {}
+        #
+        assemblyEntityCountByPolymerTypeD = {}
+        assemblyEntityCountByTypeD = {}
+        # --------------
+        #
         try:
             if dataContainer.exists('pdbx_struct_assembly_gen'):
                 tObj = dataContainer.getObj('pdbx_struct_assembly_gen')
                 for ii in range(tObj.getRowCount()):
                     assemblyId = tObj.getValue('assembly_id', ii)
+                    # Initialize instances count
+                    if assemblyId not in assemblyInstanceCountByTypeD:
+                        assemblyInstanceCountByTypeD[assemblyId] = {eType: 0 for eType in ['polymer', 'non-polymer', 'branched', 'macrolide', 'water']}
+                    if assemblyId not in assemblyAtomCountByTypeD:
+                        assemblyAtomCountByTypeD[assemblyId] = {eType: 0 for eType in ['polymer', 'non-polymer', 'branched', 'macrolide', 'water']}
+                    if assemblyId not in assemblyModeledMonomerCountD:
+                        assemblyModeledMonomerCountD[assemblyId] = 0
+                    if assemblyId not in assemblyUnmodeledMonomerCountD:
+                        assemblyUnmodeledMonomerCountD[assemblyId] = 0
+                    if assemblyId not in assemblyAtomCountD:
+                        assemblyAtomCountD[assemblyId] = 0
+                    #
                     opExpression = tObj.getValue('oper_expression', ii)
                     opCount, opL = self.__expandOperatorList(opExpression)
-                    asymIdList = tObj.getValue('asym_id_list', ii)
-                    logger.info("%s assembly %r opExpression %r opCount %d opL %r" % (dataContainer.getName(), assemblyId, opExpression, opCount, opL))
+                    tS = tObj.getValue('asym_id_list', ii)
+                    asymIdList = [t.strip() for t in tS.strip().split(',')]
+                    assemblyInstanceD.setdefault(assemblyId, []).extend(asymIdList)
+                    assemblyInstanceGenD.setdefault(assemblyId, []).extend(asymIdList * opCount)
+                    #
+                    logger.debug("%s assembly %r opExpression %r opCount %d opL %r" % (dataContainer.getName(), assemblyId, opExpression, opCount, opL))
+                    logger.debug("%s assembly %r length asymIdList %r" % (dataContainer.getName(), assemblyId, len(asymIdList)))
+                    #
+                    for eType in ['polymer', 'non-polymer', 'branched', 'macrolide', 'water']:
+                        iList = [asymId for asymId in asymIdList if asymId in instanceTypeD and instanceTypeD[asymId] == eType]
+                        assemblyInstanceCountByTypeD[assemblyId][eType] += len(iList) * opCount
+                        #
+                        atCountList = [instAtomCount[asymId] for asymId in asymIdList if asymId in instanceTypeD and instanceTypeD[asymId] == eType and asymId in instAtomCount]
+                        assemblyAtomCountByTypeD[assemblyId][eType] += sum(atCountList) * opCount
+                        assemblyAtomCountD[assemblyId] += sum(atCountList) * opCount
+                        #
+                    #
+                    modeledMonomerCountList = [instModeledMonomerCount[asymId]
+                                               for asymId in asymIdList if asymId in instanceTypeD and instanceTypeD[asymId] == 'polymer' and asymId in instModeledMonomerCount]
+                    assemblyModeledMonomerCountD[assemblyId] += sum(modeledMonomerCountList) * opCount
+                    #
+                    unmodeledMonomerCountList = [instUnmodeledMonomerCount[asymId]
+                                                 for asymId in asymIdList if asymId in instanceTypeD and instanceTypeD[asymId] == 'polymer' and asymId in instUnmodeledMonomerCount]
+                    assemblyUnmodeledMonomerCountD[assemblyId] += sum(unmodeledMonomerCountList) * opCount
+
+                #
+                assemblyInstanceCountByPolymerTypeD = {}
+                assemblyPolymerInstanceCountD = {}
+                assemblyPolymerClassD = {}
+                #
+                assemblyEntityCountByPolymerTypeD = {}
+                assemblyEntityCountByTypeD = {}
+                #
+                # Using the generated list of instance assembly components ...
+                for assemblyId, asymIdList in assemblyInstanceGenD.items():
+                    # ------
+                    #  Instance polymer composition
+                    pInstTypeList = [instancePolymerTypeD[asymId] for asymId in asymIdList if asymId in instancePolymerTypeD]
+                    pInstTypeD = Counter(pInstTypeList)
+                    assemblyInstanceCountByPolymerTypeD[assemblyId] = {pType: 0 for pType in ['Protein', 'DNA', 'RNA', 'NA-hybrid', 'Other']}
+                    assemblyInstanceCountByPolymerTypeD[assemblyId] = {pType: pInstTypeD[pType] for pType in ['Protein', 'DNA', 'RNA', 'NA-hybrid', 'Other'] if pType in pInstTypeD}
+                    assemblyPolymerInstanceCountD[assemblyId] = len(pInstTypeList)
+                    #
+                    logger.debug("%s assemblyId %r pInstTypeD %r" % (dataContainer.getName(), assemblyId, pInstTypeD.items()))
+
+                    # -------------
+                    # Entity and polymer entity composition
+                    #
+                    entityIdList = list(set([instEntityD[asymId] for asymId in asymIdList if asymId in instEntityD]))
+                    pTypeL = [epTypeD[entityId] for entityId in entityIdList if entityId in epTypeD]
+                    #
+                    polymerCompClass, subsetCompClass, naCompClass, _ = self.__getPolymerComposition(pTypeL)
+                    assemblyPolymerClassD[assemblyId] = {'polymerCompClass': polymerCompClass, 'subsetCompClass': subsetCompClass, 'naCompClass': naCompClass}
+                    #
+                    logger.debug("%s assemblyId %s polymerCompClass %r subsetCompClass %r naCompClass %r pTypeL %r" %
+                                 (dataContainer.getName(), assemblyId, polymerCompClass, subsetCompClass, naCompClass, pTypeL))
+
+                    pTypeFilteredL = [epTypeFilteredD[entityId] for entityId in entityIdList if entityId in epTypeFilteredD]
+                    #
+                    pEntityTypeD = Counter(pTypeFilteredL)
+                    assemblyEntityCountByPolymerTypeD[assemblyId] = {pType: 0 for pType in ['Protein', 'DNA', 'RNA', 'NA-hybrid', 'Other']}
+                    assemblyEntityCountByPolymerTypeD[assemblyId] = {pType: pEntityTypeD[pType]
+                                                                     for pType in ['Protein', 'DNA', 'RNA', 'NA-hybrid', 'Other'] if pType in pEntityTypeD}
+                    #
+                    eTypeL = [eTypeD[entityId] for entityId in entityIdList if entityId in eTypeD]
+                    entityTypeD = Counter(eTypeL)
+                    assemblyEntityCountByTypeD[assemblyId] = {eType: 0 for eType in ['polymer', 'non-polymer', 'branched', 'macrolide', 'water']}
+                    assemblyEntityCountByTypeD[assemblyId] = {eType: entityTypeD[eType]
+                                                              for eType in ['polymer', 'non-polymer', 'branched', 'macrolide', 'water'] if eType in entityTypeD}
+                    #
+                    # ---------------
+                    #
+            #
+            logger.debug("%s assemblyInstanceCountByTypeD %r" % (dataContainer.getName(), assemblyInstanceCountByTypeD.items()))
+            logger.debug("%s assemblyAtomCountByTypeD %r" % (dataContainer.getName(), assemblyAtomCountByTypeD.items()))
+            logger.debug("%s assemblyAtomCountD %r" % (dataContainer.getName(), assemblyAtomCountD.items()))
+            logger.debug("%s assemblyModeledMonomerCountD %r" % (dataContainer.getName(), assemblyModeledMonomerCountD.items()))
+            logger.debug("%s assemblyUnmodeledMonomerCountD %r" % (dataContainer.getName(), assemblyUnmodeledMonomerCountD.items()))
+            logger.debug("%s assemblyPolymerClassD %r" % (dataContainer.getName(), assemblyPolymerClassD.items()))
+            logger.debug("%s assemblyPolymerInstanceCountD %r" % (dataContainer.getName(), assemblyPolymerInstanceCountD.items()))
+            logger.debug("%s assemblyInstanceCountByPolymerTypeD %r" % (dataContainer.getName(), assemblyInstanceCountByPolymerTypeD.items()))
+            logger.debug("%s assemblyEntityCountByPolymerTypeD %r" % (dataContainer.getName(), assemblyEntityCountByPolymerTypeD.items()))
+            logger.debug("%s assemblyEntityCountByTypeD %r" % (dataContainer.getName(), assemblyEntityCountByTypeD.items()))
+            #
+            rD = {'assemblyInstanceCountByTypeD': assemblyInstanceCountByTypeD,
+                  'assemblyAtomCountByTypeD': assemblyAtomCountByTypeD,
+                  'assemblyAtomCountD': assemblyAtomCountD,
+                  'assemblyModeledMonomerCountD': assemblyModeledMonomerCountD,
+                  'assemblyUnmodeledMonomerCountD': assemblyUnmodeledMonomerCountD,
+                  'assemblyInstanceCountByPolymerTypeD': assemblyInstanceCountByPolymerTypeD,
+                  'assemblyPolymerInstanceCountD': assemblyPolymerInstanceCountD,
+                  'assemblyPolymerClassD': assemblyPolymerClassD,
+                  'assemblyEntityCountByPolymerTypeD': assemblyEntityCountByPolymerTypeD,
+                  'assemblyEntityCountByTypeD': assemblyEntityCountByTypeD
+                  }
         except Exception as e:
             logger.exception("Failing %s with %s" % (dataContainer.getName(), str(e)))
         return rD
+
+    def addAssemblyInfo(self, dataContainer, catName, **kwargs):
+        """ Build rcsb_assembly_info category.
+        """
+        try:
+            if not (dataContainer.exists('entry') and dataContainer.exists('pdbx_struct_assembly')):
+                return False
+            logger.debug("%s beginning for %s" % (dataContainer.getName(), catName))
+            # Create the new target category rcsb_assembly_info
+            if not dataContainer.exists(catName):
+                dataContainer.append(DataCategory(catName, attributeNameList=['entry_id',
+                                                                              'assembly_id',
+                                                                              'polymer_atom_count',
+                                                                              'nonpolymer_atom_count',
+                                                                              'branched_atom_count',
+                                                                              'solvent_atom_count',
+                                                                              'atom_count',
+                                                                              'modeled_polymer_monomer_count',
+                                                                              'unmodeled_polymer_monomer_count',
+                                                                              'polymer_monomer_count',
+                                                                              'polymer_composition',
+                                                                              'selected_polymer_entity_types',
+                                                                              'na_polymer_entity_types',
+                                                                              'polymer_entity_instance_count',
+                                                                              'nonpolymer_entity_instance_count',
+                                                                              'branched_entity_instance_count',
+                                                                              'solvent_entity_instance_count',
+                                                                              'polymer_entity_instance_count_protein',
+                                                                              'polymer_entity_instance_count_nucleic_acid',
+                                                                              'polymer_entity_instance_count_DNA',
+                                                                              'polymer_entity_instance_count_RNA',
+                                                                              'polymer_entity_instance_count_nucleic_acid_hybrid',
+                                                                              'polymer_entity_count',
+                                                                              'nonpolymer_entity_count',
+                                                                              'branched_entity_count',
+                                                                              'solvent_entity_count',
+                                                                              'polymer_entity_count_protein',
+                                                                              'polymer_entity_count_nucleic_acid',
+                                                                              'polymer_entity_count_DNA',
+                                                                              'polymer_entity_count_RNA',
+                                                                              'polymer_entity_count_nucleic_acid_hybrid']))
+            #
+            #
+            logger.debug("%s beginning for %s" % (dataContainer.getName(), catName))
+            #
+            # Get assembly comp details -
+            #
+            rD = self.__getAssemblyComposition(dataContainer)
+            #
+            cObj = dataContainer.getObj(catName)
+
+            tObj = dataContainer.getObj('entry')
+            entryId = tObj.getValue('id', 0)
+            #
+            tObj = dataContainer.getObj('pdbx_struct_assembly')
+            assemblyIdL = tObj.getAttributeValueList('id')
+            #
+            #
+            for ii, assemblyId in enumerate(assemblyIdL):
+                cObj.setValue(entryId, 'entry_id', ii)
+                cObj.setValue(assemblyId, 'assembly_id', ii)
+                #
+                d = rD['assemblyAtomCountByTypeD'][assemblyId]
+                num = d['polymer'] if 'polymer' in d else 0
+                cObj.setValue(num, 'polymer_atom_count', ii)
+
+                num = d['non-polymer'] if 'non-polymer' in d else 0
+                cObj.setValue(num, 'nonpolymer_atom_count', ii)
+
+                num = d['water'] if 'water' in d else 0
+                cObj.setValue(num, 'solvent_atom_count', ii)
+
+                num = d['branched'] if 'branched' in d else 0
+                cObj.setValue(num, 'branched_atom_count', ii)
+
+                num = rD['assemblyAtomCountD'][assemblyId]
+                cObj.setValue(num, 'atom_count', ii)
+                #
+                num1 = rD['assemblyModeledMonomerCountD'][assemblyId]
+                num2 = rD['assemblyUnmodeledMonomerCountD'][assemblyId]
+                cObj.setValue(num1, 'modeled_polymer_monomer_count', ii)
+                cObj.setValue(num2, 'unmodeled_polymer_monomer_count', ii)
+                cObj.setValue(num1 + num2, 'polymer_monomer_count', ii)
+                #
+                d = rD['assemblyPolymerClassD'][assemblyId]
+                cObj.setValue(d['polymerCompClass'], 'polymer_composition', ii)
+                cObj.setValue(d['subsetCompClass'], 'selected_polymer_entity_types', ii)
+                cObj.setValue(d['naCompClass'], 'na_polymer_entity_types', ii)
+                #
+                d = rD['assemblyInstanceCountByTypeD'][assemblyId]
+                num = d['polymer'] if 'polymer' in d else 0
+                cObj.setValue(num, 'polymer_entity_instance_count', ii)
+                #
+                num = d['non-polymer'] if 'non-polymer' in d else 0
+                cObj.setValue(num, 'nonpolymer_entity_instance_count', ii)
+                #
+                num = d['branched'] if 'branched' in d else 0
+                cObj.setValue(num, 'branched_entity_instance_count', ii)
+                #
+                num = d['water'] if 'water' in d else 0
+                cObj.setValue(num, 'solvent_entity_instance_count', ii)
+                #
+                d = rD['assemblyInstanceCountByPolymerTypeD'][assemblyId]
+                num = d['Protein'] if 'Protein' in d else 0
+                cObj.setValue(num, 'polymer_entity_instance_count_protein', ii)
+                num1 = d['DNA'] if 'DNA' in d else 0
+                cObj.setValue(num1, 'polymer_entity_instance_count_DNA', ii)
+                num2 = d['RNA'] if 'RNA' in d else 0
+                cObj.setValue(num2, 'polymer_entity_instance_count_RNA', ii)
+                cObj.setValue(num1 + num2, 'polymer_entity_instance_count_nucleic_acid', ii)
+                num = d['NA-hybrid'] if 'NA-hybrid' in d else 0
+                cObj.setValue(num, 'polymer_entity_instance_count_nucleic_acid_hybrid', ii)
+                #
+                d = rD['assemblyEntityCountByPolymerTypeD'][assemblyId]
+                num = d['Protein'] if 'Protein' in d else 0
+                cObj.setValue(num, 'polymer_entity_count_protein', ii)
+                num1 = d['DNA'] if 'DNA' in d else 0
+                cObj.setValue(num1, 'polymer_entity_count_DNA', ii)
+                num2 = d['RNA'] if 'RNA' in d else 0
+                cObj.setValue(num2, 'polymer_entity_count_RNA', ii)
+                cObj.setValue(num1 + num2, 'polymer_entity_count_nucleic_acid', ii)
+                num = d['NA-hybrid'] if 'NA-hybrid' in d else 0
+                cObj.setValue(num, 'polymer_entity_count_nucleic_acid_hybrid', ii)
+                #
+                d = rD['assemblyEntityCountByTypeD'][assemblyId]
+                num = d['polymer'] if 'polymer' in d else 0
+                cObj.setValue(num, 'polymer_entity_count', ii)
+                #
+                num = d['non-polymer'] if 'non-polymer' in d else 0
+                cObj.setValue(num, 'nonpolymer_entity_count', ii)
+                #
+                num = d['branched'] if 'branched' in d else 0
+                cObj.setValue(num, 'branched_entity_count', ii)
+                #
+                num = d['water'] if 'water' in d else 0
+                cObj.setValue(num, 'solvent_entity_count', ii)
+            #
+            return
+        except Exception as e:
+            logger.exception("For %s failing with %s" % (catName, str(e)))
+        return False
 
     def buildContainerAssemblyIds(self, dataContainer, catName, **kwargs):
         """
@@ -690,8 +973,6 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 cObj.setValue(entryId, 'entry_id', ii)
                 cObj.setValue(assemblyId, 'assembly_id', ii)
 
-            #
-            rD = self.__getAssemblyComposition(dataContainer)
             #
             return True
         except Exception as e:
@@ -1836,9 +2117,15 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
         And selected types -
             'Protein (only)' 'protein entity/entities only'
+            'Nucleic acid (only)' 'DNA, RNA or NA-hybrid entity/entities only'
+            'Protein/NA' 'Both protein and nucleic acid (DNA, RNA, or NA-hybrid) polymer entities'
+            'Other' 'Another polymer type composition'
+
+        And selected NA types -
             'DNA (only)' 'DNA entity/entities only'
             'RNA (only)' 'RNA entity/entities only'
-            'Protein/NA' 'Both protein and nucleic acid (DNA or RNA) polymer entities'
+            'NA-hybrid (only)' 'NA-hybrid entity/entities only'
+            'DNA/RNA (only)' 'Both DNA and RNA polymer entities only'
             'Other' 'Another polymer type composition'
         """
 
@@ -1880,22 +2167,54 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 compClass = 'NA/oligosaccharide'
             else:
                 compClass = "other type pair"
-        elif len(cD) >= 3:
+        elif len(cD) == 3:
+            if 'DNA' in cD and 'RNA' in cD and 'NA-hybrid' in cD:
+                compClass = 'DNA/RNA'
+            elif 'oligosaccharide' in cD and all([cD[j] in ['oligosaccharide', 'DNA', 'RNA', 'NA-hybrid'] for j in cD]):
+                compClass = 'NA/oligosaccharide'
+            elif 'protein' in cD and all([cD[j] in ['protein', 'DNA', 'RNA', 'NA-hybrid'] for j in cD]):
+                compClass = 'protein/NA'
+            elif 'oligosaccharide' in cD and 'protein' in cD and all([cD[j] in ['protein', 'oligosaccharide', 'DNA', 'RNA', 'NA-hybrid'] for j in cD]):
+                compClass = 'protein/NA/oligosaccharide'
+            else:
+                compClass = "other type composition"
+        elif len(cD) >= 4:
+            if 'oligosaccharide' in cD and all([cD[j] in ['oligosaccharide', 'DNA', 'RNA', 'NA-hybrid'] for j in cD]):
+                compClass = 'NA/oligosaccharide'
+            elif 'protein' in cD and all([cD[j] in ['protein', 'DNA', 'RNA', 'NA-hybrid'] for j in cD]):
+                compClass = 'protein/NA'
+            elif 'oligosaccharide' in cD and 'protein' in cD and all([cD[j] in ['protein', 'oligosaccharide', 'DNA', 'RNA', 'NA-hybrid'] for j in cD]):
+                compClass = 'protein/NA/oligosaccharide'
+            else:
+                compClass = "other type composition"
+        else:
             compClass = "other type composition"
 
-        # Subset type class -
+        # Subset type class --
+        #
         if compClass in ['homomeric protein', 'heteromeric protein']:
             ptClass = 'Protein (only)'
-        elif compClass in ['DNA']:
-            ptClass = 'DNA (only)'
-        elif compClass in ['RNA']:
-            ptClass = 'RNA (only)'
+        elif compClass in ['DNA', 'RNA', 'NA-hybrid']:
+            ptClass = 'Nucleic acid (only)'
         elif compClass in ['protein/NA']:
             ptClass = 'Protein/NA'
         else:
             ptClass = 'Other'
         #
-        return compClass, ptClass, cD
+        # NA subtype class ---
+        #
+        if compClass in ['DNA']:
+            naClass = 'DNA (only)'
+        elif compClass in ['RNA']:
+            naClass = 'RNA (only)'
+        elif compClass in ['NA-hybrid']:
+            naClass = 'NA-hybrid (only)'
+        elif compClass in ['DNA/RNA']:
+            naClass = 'DNA/RNA (only)'
+        else:
+            naClass = 'Other'
+        #
+        return compClass, ptClass, naClass, cD
 
     def __filterExperimentalMethod(self, methodL):
         """
@@ -2011,40 +2330,98 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                         rL.append(rv)
         return rL
 
+    def __setEntryCache(self, entryId):
+        self.__cacheEntryId = entryId
+
+    def __testEntryCache(self, entryId):
+        return self.__cacheEntryId == entryId
+
     def __getInstanceTypes(self, dataContainer):
-        """ Return dictionary entity types for each instance in the deposited unit.
+        """ Return dictionary entity types, type counts and polymer type (where applicable) for
+            each instance in the deposited unit.
 
             Returns:
 
-              iD[asymId] = <entity_type>
+              instanceTypeD[asymId] = <entity_type>
+              instanceCountD[<entity_type>] = #
 
+              For polymer instances:
+              instancePolymerTypeD[asymId] = <filtered polymer type>
+
+'             instEntityD[asymId] = entityId
+              epTypeD[entityId] = <polymer type>
         """
-        iD = {}
-        if not dataContainer.exists('entity') or not dataContainer.exists('struct_asym'):
-            return iD
+
+        rD = {}
         #
-        if self.__instanceTypeD:
-            return self.__instanceTypeD
+        try:
+            if self.__instanceD and self.__testEntryCache(dataContainer.getName()):
+                return self.__instanceD
+            #
+            self.__instanceD = None
+            #
+            if not dataContainer.exists('entity') or not dataContainer.exists('struct_asym'):
+                return {}
+
+            instanceTypeD = {}
+            instancePolymerTypeD = {}
+            instanceTypeCountD = {}
+            #
+            eObj = dataContainer.getObj('entity')
+            eTypeD = {}
+            for ii in range(eObj.getRowCount()):
+                # logger.info("Attribute %r %r" % (ii, eObj.getAttributeList()))
+                entityId = eObj.getValue('id', ii)
+                eType = eObj.getValue('type', ii)
+                eTypeD[entityId] = eType
+            #
+            epTypeD = {}
+            epTypeFilteredD = {}
+            if dataContainer.exists('entity_poly'):
+                epObj = dataContainer.getObj('entity_poly')
+                for ii in range(epObj.getRowCount()):
+                    entityId = epObj.getValue('entity_id', ii)
+                    pType = epObj.getValue('type', ii)
+                    epTypeFilteredD[entityId] = self.__filterEntityPolyType(pType)
+                    epTypeD[entityId] = pType
+            #
+            instEntityD = {}
+            sObj = dataContainer.getObj('struct_asym')
+            for ii in range(sObj.getRowCount()):
+                entityId = sObj.getValue('entity_id', ii)
+                asymId = sObj.getValue('id', ii)
+                instEntityD[asymId] = entityId
+                if entityId in eTypeD:
+                    instanceTypeD[asymId] = eTypeD[entityId]
+                else:
+                    logger.warning("Missing entity id entry %r asymId %r entityId %r" % (dataContainer.getName(), entityId, asymId))
+                if entityId in epTypeD:
+                    instancePolymerTypeD[asymId] = epTypeFilteredD[entityId]
+                #
+            #
+            # Count the instance by type - initialize all types
+            #
+            instanceTypeCountD = {k: 0 for k in ['polymer', 'non-polymer', 'branched', 'macrolide', 'water']}
+            for asymId, eType in instanceTypeD.items():
+                instanceTypeCountD[eType] += 1
+
+            rD = {'instanceTypeD': instanceTypeD,
+                  'instancePolymerTypeD': instancePolymerTypeD,
+                  'instanceTypeCountD': instanceTypeCountD,
+                  'instEntityD': instEntityD,
+                  'eTypeD': eTypeD,
+                  'epTypeD': epTypeD,
+                  'epTypeFilteredD': epTypeFilteredD,
+                  }
+            self.__instanceD = rD
+            #
+            logger.debug("%s length struct_asym %d (%d) instanceTypeD %r" % (dataContainer.getName(), sObj.getRowCount(), len(instanceTypeD), instanceTypeD))
+
         #
-        eObj = dataContainer.getObj('entity')
-        etD = {}
-        for ii in range(eObj.getRowCount()):
-            # logger.info("Attribute %r %r" % (ii, eObj.getAttributeList()))
-            entityId = eObj.getValue('id', ii)
-            eType = eObj.getValue('type', ii)
-            etD[entityId] = eType
+        except Exception as e:
+            logger.exception("Failing with %r with %r" % (dataContainer.getName(), str(e)))
         #
-        sObj = dataContainer.getObj('struct_asym')
-        for ii in range(sObj.getRowCount()):
-            entityId = sObj.getValue('entity_id', ii)
-            asymId = sObj.getValue('id', ii)
-            if entityId in etD:
-                iD[asymId] = etD[entityId]
-            else:
-                logger.warning("Missing entity id entry %r asymId %r entityId %r" % (dataContainer.getName(), entityId, asymId))
-        #
-        self.__instanceTypeD = iD
-        return self.__instanceTypeD
+        return rD
 
     def __getAtomSiteInfo(self, dataContainer):
         """ Get counting information about the deposited coordinates.
@@ -2067,15 +2444,18 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             instanceTypeD [asymId] = <entity type>
         """
         # Return cached dictionary
-        if len(self.__atomCountD):
-            logger.info("Using cached qualified atom_site count info")
-            return self.__atomCountD
+        if self.__atomSiteCountD and self.__testEntryCache(dataContainer.getName()):
+            logger.debug("Using cached qualified atom_site count info for %s" % dataContainer.getName())
+            return self.__atomSiteCountD
         #
         numAtomsAll = 0
         numAtomsModel = 0
         typeCountD = {}
         instanceAtomCountD = {}
-
+        instanceModeledMonomerCountD = {}
+        instanceUnmodeledMonomerCountD = {}
+        modelIdL = []
+        #
         try:
             if dataContainer.exists('atom_site'):
                 tObj = dataContainer.getObj('atom_site')
@@ -2093,17 +2473,54 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 for asymId, aCount in instanceAtomCountD.items():
                     tt = instanceTypeD[asymId]
                     typeCountD[tt] += aCount
+            else:
+                logger.warning("Missing atom_site category for %s" % dataContainer.getName())
+            #
+            numModels = len(modelIdL)
+            if numModels < 1:
+                logger.warning("Missing model details in atom_site category for %s" % dataContainer.getName())
+            #
+            self.__atomSiteCountD = {'instanceAtomCountD': instanceAtomCountD,
+                                     'typeAtomCountD': typeCountD,
+                                     'numAtomsAll': numAtomsAll,
+                                     'numAtomsModel': numAtomsModel,
+                                     'numModels': len(modelIdL),
+                                     'modelId': modelId,
+                                     'instanceModeledMonomerCountD': {},
+                                     'instanceUnmodeledMonomerCountD': {}
+                                     }
         except Exception as e:
             logger.exception("Failing with %r with %r" % (dataContainer.getName(), str(e)))
+
         #
-        self.__atomCountD = {'instanceAtomCountD': instanceAtomCountD,
-                             'typeCountD': typeCountD,
-                             'numAtomsAll': numAtomsAll,
-                             'numAtomsModel': numAtomsModel,
-                             'numModels': len(modelIdL),
-                             'modelId': modelId}
+        #  Get the modeled and unmodeled monomer counts by asymId
         #
-        return self.__atomCountD
+        try:
+            psObj = dataContainer.getObj('pdbx_poly_seq_scheme')
+            if psObj is not None:
+                aSeqD = {}
+                for ii in range(psObj.getRowCount()):
+                    asymId = psObj.getValue('asym_id', ii)
+                    # entityId = psObj.getValue('entity_id', ii)
+                    authSeqNum = psObj.getValue('auth_seq_num', ii)
+                    # compId = psObj.getValue('auth_mon_id', ii)
+                    aSeqD.setdefault(asymId, []).append(authSeqNum)
+                #
+                for asymId, sL in aSeqD.items():
+                    instanceModeledMonomerCountD[asymId] = len([t for t in sL if t not in ['?', '.']])
+                    instanceUnmodeledMonomerCountD[asymId] = len([t for t in sL if t in ['?', '.']])
+
+            self.__atomSiteCountD['instanceModeledMonomerCountD'] = instanceModeledMonomerCountD
+            self.__atomSiteCountD['instanceUnmodeledMonomerCountD'] = instanceUnmodeledMonomerCountD
+            logger.debug("%s instanceModeledMonomerCountD(%d) %r" % (dataContainer.getName(), sum(self.__atomSiteCountD[
+                'instanceModeledMonomerCountD'].values()), self.__atomSiteCountD['instanceModeledMonomerCountD']))
+            logger.debug("%s instanceUnmodeledMonomerCountD %r" % (dataContainer.getName(), self.__atomSiteCountD['instanceUnmodeledMonomerCountD']))
+
+        except Exception as e:
+            logger.exception("Failing for %s with %s" % (dataContainer.getName(), str(e)))
+
+        #
+        return self.__atomSiteCountD
 
     def __getStructConnInfo(self, dataContainer):
         """ Get counting information about intermolecular linkages.
@@ -2164,6 +2581,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 A 1 5  GLN 5  5  ?  ?   ?   A . n
                 A 1 6  SER 6  6  6  SER SER A . n
                 A 1 7  LEU 7  7  7  LEU LEU A . n
+                                ^^      ^^^
 
         """
         modeledCount = 0
@@ -2175,8 +2593,9 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 aaidL = psObj.getAttributeValueList('pdb_strand_id')
                 unModeledCount = asnL.count('?')
                 tL = [(a, b) for (a, b) in zip(asnL, aaidL) if a not in ['?']]
-                uL = set(tL)
-                modeledCount = len(uL) if '?' not in uL else len(uL) - 1
+                modeledCount = len(set(tL))
+                # modeledCount = len(uL) if ('?', '?') not in uL else len(uL) - 1
+                logger.debug("%s %d (%d)" % (dataContainer.getName(), modeledCount, unModeledCount))
         except Exception as e:
             logger.exception("Failing for %s with %s" % (dataContainer.getName(), str(e)))
         #
@@ -2213,7 +2632,6 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
           'polymer_entity_count_DNA',
           'polymer_entity_count_RNA',
 
-          _rcsb_entry_info.nonpolymer_ligand_entity_count
         """
         try:
             logger.debug("Starting with %r %r" % (dataContainer.getName(), catName))
@@ -2221,7 +2639,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             if not (dataContainer.exists('exptl') and dataContainer.exists('entity')):
                 return False
             #
-            # Create the new target category
+            # Create the new target category rcsb_entry_info
             if not dataContainer.exists(catName):
                 dataContainer.append(DataCategory(catName, attributeNameList=['entry_id',
                                                                               'polymer_composition',
@@ -2230,7 +2648,6 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                               'polymer_entity_count',
                                                                               'entity_count',
                                                                               'nonpolymer_entity_count',
-                                                                              'nonpolymer_ligand_entity_count',
                                                                               'branched_entity_count',
                                                                               'solvent_entity_count',
                                                                               'software_programs_combined',
@@ -2247,15 +2664,57 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                                                                               'polymer_entity_count_DNA',
                                                                               'polymer_entity_count_RNA',
                                                                               'selected_polymer_entity_types',
+                                                                              'na_polymer_entity_types',
                                                                               'polymer_entity_taxonomy_count',
-                                                                              'assembly_count'
+                                                                              'assembly_count',
+                                                                              'deposited_polymer_entity_instance_count',
+                                                                              'deposited_nonpolymer_entity_instance_count'
                                                                               ]))
-            #
+            # --------------------------------------------------------------------------------------------------------
+            # catName = rcsb_entry_info
             cObj = dataContainer.getObj(catName)
             #
+            # --------------------------------------------------------------------------------------------------------
+            #  Filter experimental methods
+            #
+            xObj = dataContainer.getObj('exptl')
+            entryId = xObj.getValue('entry_id', 0)
+            methodL = xObj.getAttributeValueList('method')
+            methodCount, expMethod = self.__filterExperimentalMethod(methodL)
+            cObj.setValue(entryId, 'entry_id', 0)
+            cObj.setValue(expMethod, 'experimental_method', 0)
+            cObj.setValue(methodCount, 'experimental_method_count', 0)
+            #
+            # --------------------------------------------------------------------------------------------------------
+            #  Experimental resolution -
+            #
+            resL = self.__filterExperimentalResolution(dataContainer)
+            if resL:
+                cObj.setValue(','.join(resL), 'resolution_combined', 0)
+            #
+            # ---------------------------------------------------------------------------------------------------------
+            # Consolidate software details -
+            #
+            swNameL = []
+            if dataContainer.exists('software'):
+                swObj = dataContainer.getObj('software')
+                swNameL.extend(swObj.getAttributeUniqueValueList('name'))
+            if dataContainer.exists('pdbx_nmr_software'):
+                swObj = dataContainer.getObj('pdbx_nmr_software')
+                swNameL.extend(swObj.getAttributeUniqueValueList('name'))
+            if dataContainer.exists('em_software'):
+                swObj = dataContainer.getObj('em_software')
+                swNameL.extend(swObj.getAttributeUniqueValueList('name'))
+            if swNameL:
+                cObj.setValue(';'.join(swNameL), 'software_programs_combined', 0)
+            # ---------------------------------------------------------------------------------------------------------
+            #  ENTITY FEATURES
+            #
+            #  entity and polymer entity counts -
+            ##
             eObj = dataContainer.getObj('entity')
             eTypeL = eObj.getAttributeValueList('type')
-
+            #
             numPolymers = 0
             numNonPolymers = 0
             numBranched = 0
@@ -2273,6 +2732,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     logger.error("Unexpected entity type for %s %s" % (dataContainer.getName(), eType))
             totalEntities = numPolymers + numNonPolymers + numBranched + numSolvent
             #
+            # Simplified entity polymer type: 'Protein', 'DNA', 'RNA', 'NA-hybrid', or 'Other'
             pTypeL = []
             if dataContainer.exists('entity_poly'):
                 epObj = dataContainer.getObj('entity_poly')
@@ -2284,89 +2744,89 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 for ii in range(epObj.getRowCount()):
                     epObj.setValue(self.__filterEntityPolyType(pTypeL[ii]), atName, ii)
             #
-            # Add any branched entity types to the
+            # Add any branched entity types to the type list -
             if dataContainer.exists('entity_branch'):
                 ebObj = dataContainer.getObj('entity_branch')
                 pTypeL.extend(ebObj.getAttributeValueList('type'))
             #
-            polymerCompClass, ptClass, eptD = self.__getPolymerComposition(pTypeL)
+            polymerCompClass, ptClass, naClass, eptD = self.__getPolymerComposition(pTypeL)
             #
-            xObj = dataContainer.getObj('exptl')
-            entryId = xObj.getValue('entry_id', 0)
-            methodL = xObj.getAttributeValueList('method')
-            methodCount, expMethod = self.__filterExperimentalMethod(methodL)
+
+            cObj.setValue(polymerCompClass, 'polymer_composition', 0)
+            cObj.setValue(ptClass, 'selected_polymer_entity_types', 0)
+            cObj.setValue(naClass, 'na_polymer_entity_types', 0)
+            cObj.setValue(numPolymers, 'polymer_entity_count', 0)
+            cObj.setValue(numNonPolymers, 'nonpolymer_entity_count', 0)
+            cObj.setValue(numBranched, 'branched_entity_count', 0)
+            cObj.setValue(numSolvent, 'solvent_entity_count', 0)
+            cObj.setValue(totalEntities, 'entity_count', 0)
             #
-            # Resolution -
+            num = eptD['protein'] if 'protein' in eptD else 0
+            cObj.setValue(num, 'polymer_entity_count_protein', 0)
             #
-            resL = self.__filterExperimentalResolution(dataContainer)
+            num = eptD['NA-hybrid'] if 'NA-hybrid' in eptD else 0
+            cObj.setValue(num, 'polymer_entity_count_nucleic_acid_hybrid', 0)
             #
-            ##
+            numDNA = eptD['DNA'] if 'DNA' in eptD else 0
+            cObj.setValue(numDNA, 'polymer_entity_count_DNA', 0)
+            #
+            numRNA = eptD['RNA'] if 'RNA' in eptD else 0
+            cObj.setValue(numRNA, 'polymer_entity_count_RNA', 0)
+            cObj.setValue(numDNA + numRNA, 'polymer_entity_count_nucleic_acid', 0)
+            #
+            # ---------------------------------------------------------------------------------------------------------
+            # INSTANCE FEATURES
+            #
             ##
             repModelL = ['1']
             if self.__hasMethodNMR(methodL):
                 repModelL = self.__getRepresentativeModels(dataContainer)
-            #
             logger.debug("Representative model list %r" % repModelL)
-            instanceTypeD = self.__getInstanceTypes(dataContainer)
+            #
+            #  instanceTypeD[asymId] = <entity_type>
+            #  instanceTypeCountD[entity_type] = #
+            #
+            #
+            instanceD = self.__getInstanceTypes(dataContainer)
+            instanceTypeD = instanceD['instanceTypeD'] if 'instanceTypeD' in instanceD else {}
+            instanceTypeCountD = instanceD['instanceTypeCountD'] if 'instanceTypeCountD' in instanceD else {}
+
+            cObj.setValue(instanceTypeCountD['polymer'], 'deposited_polymer_entity_instance_count', 0)
+            cObj.setValue(instanceTypeCountD['non-polymer'], 'deposited_nonpolymer_entity_instance_count', 0)
+
             atomCountD = self.__getQualifiedAtomSiteInfo(dataContainer, instanceTypeD, modelId=repModelL[0])
+            self.__setEntryCache(dataContainer.getName())
             #
-            # Various counts -
+            # Various atom counts -
             #
-            logger.debug("numAtomsAll %d numAtomsModel %d numModels %d" % (atomCountD['numAtomsAll'], atomCountD['numAtomsModel'], atomCountD['numModels']))
-            logger.debug("typeCountD %r" % atomCountD['typeCountD'])
+            logger.debug("numAtomsAll %d numAtomsModel %d numModels %d" %
+                         (atomCountD['numAtomsAll'], atomCountD['numAtomsModel'], atomCountD['numModels']))
+            #
+            logger.debug("typeAtomCountD %r" % atomCountD['typeAtomCountD'])
             logger.debug("instanceAtomCoundD %r" % (atomCountD['instanceAtomCountD']))
-            # ---------------------------------------------------------------------------------------------------------
-            numDiSulf = self.__getStructConnInfo(dataContainer)
-            #  modeled and unmodeled residue counts
-            modeledCount, unModeledCount = self.__getDepositedResidueCounts(dataContainer)
             #
-            # Software
-            #
-            swNameL = []
-            if dataContainer.exists('software'):
-                swObj = dataContainer.getObj('software')
-                swNameL.extend(swObj.getAttributeUniqueValueList('name'))
-            if dataContainer.exists('pdbx_nmr_software'):
-                swObj = dataContainer.getObj('pdbx_nmr_software')
-                swNameL.extend(swObj.getAttributeUniqueValueList('name'))
-            if dataContainer.exists('em_software'):
-                swObj = dataContainer.getObj('em_software')
-                swNameL.extend(swObj.getAttributeUniqueValueList('name'))
-            #
-            #
-            cObj.setValue(entryId, 'entry_id', 0)
-            cObj.setValue(polymerCompClass, 'polymer_composition', 0)
-            cObj.setValue(ptClass, 'selected_polymer_entity_types', 0)
-            cObj.setValue(numPolymers, 'polymer_entity_count', 0)
-            cObj.setValue(numNonPolymers + numSolvent, 'nonpolymer_entity_count', 0)
-            cObj.setValue(numNonPolymers, 'nonpolymer_ligand_entity_count', 0)
-            cObj.setValue(numBranched, 'branched_entity_count', 0)
-            cObj.setValue(numSolvent, 'solvent_entity_count', 0)
-            cObj.setValue(totalEntities, 'entity_count', 0)
-            cObj.setValue(expMethod, 'experimental_method', 0)
-            cObj.setValue(methodCount, 'experimental_method_count', 0)
-            if swNameL:
-                cObj.setValue(';'.join(swNameL), 'software_programs_combined', 0)
-            if resL:
-                cObj.setValue(','.join(resL), 'resolution_combined', 0)
             if atomCountD['numAtomsModel'] > 0:
                 cObj.setValue(atomCountD['numAtomsModel'], 'deposited_atom_count', 0)
                 cObj.setValue(atomCountD['numModels'], 'deposited_model_count', 0)
-            cObj.setValue(numDiSulf, 'disulfide_bond_count', 0)
             #
+
+            # ---------------------------------------------------------------------------------------------------------
+            #  Deposited monomer/residue instance counts
+            #
+            #  Get modeled and unmodeled residue counts
+            #
+            modeledCount, unModeledCount = self.__getDepositedResidueCounts(dataContainer)
             cObj.setValue(modeledCount, 'deposited_modeled_polymer_monomer_count', 0)
             cObj.setValue(unModeledCount, 'deposited_unmodeled_polymer_monomer_count', 0)
             cObj.setValue(modeledCount + unModeledCount, 'deposited_polymer_monomer_count', 0)
-            num = eptD['protein'] if 'protein' in eptD else 0
-            cObj.setValue(num, 'polymer_entity_count_protein', 0)
-
-            num = eptD['NA-hybrid'] if 'NA-hybrid' in eptD else 0
-            cObj.setValue(num, 'polymer_entity_count_nucleic_acid_hybrid', 0)
-            numDNA = eptD['DNA'] if 'DNA' in eptD else 0
-            cObj.setValue(numDNA, 'polymer_entity_count_DNA', 0)
-            numRNA = eptD['RNA'] if 'RNA' in eptD else 0
-            cObj.setValue(numRNA, 'polymer_entity_count_RNA', 0)
-            cObj.setValue(numDNA + numRNA, 'polymer_entity_count_nucleic_acid', 0)
+            #
+            # ---------------------------------------------------------------------------------------------------------
+            #  Counts of intermolecular bonds/linkages
+            #
+            numDiSulf = self.__getStructConnInfo(dataContainer)
+            cObj.setValue(numDiSulf, 'disulfide_bond_count', 0)
+            #
+            # This is reset in  mehtod - filterSourceOrganismDetails()
             cObj.setValue(None, 'polymer_entity_taxonomy_count', 0)
             #
             return True
