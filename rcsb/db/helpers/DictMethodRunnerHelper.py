@@ -47,7 +47,7 @@
 # 13-May-2019 jdw add rcsb_entry_info.deposited_polymer_entity_instance_count and deposited_nonpolymer_entity_instance_count
 #                 add entity_poly.rcsb_non_std_monomer_count and rcsb_non_std_monomers
 # 15-May-2019 jdw add _rcsb_entry_info.na_polymer_entity_types update enumerations for _rcsb_entry_info.selected_polymer_entity_types
-#
+# 19-May-2019 jdw add method __getStructConfInfo()
 #
 ##
 """
@@ -2304,7 +2304,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         #
         repModelL = list(set(repModelL))
         if len(repModelL) < 1:
-            logger.warning("Missing representative model data for %s using 1" % (dataContainer.getName()))
+            logger.debug("Missing representative model data for %s using 1" % (dataContainer.getName()))
             repModelL = ['1']
 
         return repModelL
@@ -2376,6 +2376,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 eTypeD[entityId] = eType
             #
             epTypeD = {}
+            epLengthD = {}
             epTypeFilteredD = {}
             if dataContainer.exists('entity_poly'):
                 epObj = dataContainer.getObj('entity_poly')
@@ -2384,6 +2385,10 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     pType = epObj.getValue('type', ii)
                     epTypeFilteredD[entityId] = self.__filterEntityPolyType(pType)
                     epTypeD[entityId] = pType
+                    if epObj.hasAttribute('pdbx_seq_one_letter_code_can'):
+                        sampleSeq = self.__stripWhiteSpace(epObj.getValue('pdbx_seq_one_letter_code_can', ii))
+                        epLengthD[entityId] = len(sampleSeq) if sampleSeq and sampleSeq not in ['?', '.'] else None
+
             #
             instEntityD = {}
             sObj = dataContainer.getObj('struct_asym')
@@ -2410,6 +2415,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                   'instanceTypeCountD': instanceTypeCountD,
                   'instEntityD': instEntityD,
                   'eTypeD': eTypeD,
+                  'epLengthD': epLengthD,
                   'epTypeD': epTypeD,
                   'epTypeFilteredD': epTypeFilteredD,
                   }
@@ -2466,7 +2472,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 cD = tObj.getCombinationCounts(['label_asym_id', 'pdbx_PDB_model_num'])
                 #
                 for asymId, eType in instanceTypeD.items():
-                    instanceAtomCountD[asymId] = cD[(asymId, modelId)]
+                    instanceAtomCountD[asymId] = cD[(asymId, modelId)] if (asymId, modelId) in cD else 0
                 #
                 # for eType in ['polymer', 'non-polymer', 'branched', 'macrolide', 'solvent']:
                 typeCountD = {k: 0 for k in ['polymer', 'non-polymer', 'branched', 'macrolide', 'water']}
@@ -2524,6 +2530,71 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
     def __getStructConnInfo(self, dataContainer):
         """ Get counting information about intermolecular linkages.
+            covale  .
+            disulf  .
+            hydrog  .
+            metalc
+
+            loop_
+            _struct_asym.id
+            _struct_asym.pdbx_blank_PDB_chainid_flag
+            _struct_asym.pdbx_modified
+            _struct_asym.entity_id
+            _struct_asym.details
+            A N N 1 ?
+            B N N 1 ?
+            #
+            _struct_biol.id   1
+            #
+            loop_
+            _struct_conn.id
+            _struct_conn.conn_type_id
+            _struct_conn.pdbx_leaving_atom_flag
+            _struct_conn.pdbx_PDB_id
+            _struct_conn.ptnr1_label_asym_id
+            _struct_conn.ptnr1_label_comp_id
+            _struct_conn.ptnr1_label_seq_id
+            _struct_conn.ptnr1_label_atom_id
+            _struct_conn.pdbx_ptnr1_label_alt_id
+            _struct_conn.pdbx_ptnr1_PDB_ins_code
+            _struct_conn.pdbx_ptnr1_standard_comp_id
+            _struct_conn.ptnr1_symmetry
+            _struct_conn.ptnr2_label_asym_id
+            _struct_conn.ptnr2_label_comp_id
+            _struct_conn.ptnr2_label_seq_id
+            _struct_conn.ptnr2_label_atom_id
+            _struct_conn.pdbx_ptnr2_label_alt_id
+            _struct_conn.pdbx_ptnr2_PDB_ins_code
+            _struct_conn.ptnr1_auth_asym_id
+            _struct_conn.ptnr1_auth_comp_id
+            _struct_conn.ptnr1_auth_seq_id
+            _struct_conn.ptnr2_auth_asym_id
+            _struct_conn.ptnr2_auth_comp_id
+            _struct_conn.ptnr2_auth_seq_id
+            _struct_conn.ptnr2_symmetry
+            _struct_conn.pdbx_ptnr3_label_atom_id
+            _struct_conn.pdbx_ptnr3_label_seq_id
+            _struct_conn.pdbx_ptnr3_label_comp_id
+            _struct_conn.pdbx_ptnr3_label_asym_id
+            _struct_conn.pdbx_ptnr3_label_alt_id
+            _struct_conn.pdbx_ptnr3_PDB_ins_code
+            _struct_conn.details
+            _struct_conn.pdbx_dist_value
+            _struct_conn.pdbx_value_order
+            disulf1  disulf ? ? A CYS 31 SG ? ? ? 1_555 B CYS 31 SG ? ? A CYS 31 B CYS 31 1_555 ? ? ? ? ? ? ? 1.997 ?
+            covale1  covale ? ? A VAL 8  C  ? ? ? 1_555 A DPR 9  N  ? ? A VAL 8  A DPR 9  1_555 ? ? ? ? ? ? ? 1.360 ?
+            covale2  covale ? ? A DPR 9  C  ? ? ? 1_555 A GLY 10 N  ? ? A DPR 9  A GLY 10 1_555 ? ? ? ? ? ? ? 1.324 ?
+            covale3  covale ? ? A THR 16 C  ? ? ? 1_555 A DPR 17 N  ? ? A THR 16 A DPR 17 1_555 ? ? ? ? ? ? ? 1.361 ?
+            covale4  covale ? ? A DPR 17 C  ? ? ? 1_555 A ALA 18 N  ? ? A DPR 17 A ALA 18 1_555 ? ? ? ? ? ? ? 1.326 ?
+            covale5  covale ? ? A LEU 26 C  ? ? ? 1_555 A DPR 27 N  ? ? A LEU 26 A DPR 27 1_555 ? ? ? ? ? ? ? 1.359 ?
+            covale6  covale ? ? A DPR 27 C  ? ? ? 1_555 A GLY 28 N  ? ? A DPR 27 A GLY 28 1_555 ? ? ? ? ? ? ? 1.326 ?
+            covale7  covale ? ? B VAL 8  C  ? ? ? 1_555 B DPR 9  N  ? ? B VAL 8  B DPR 9  1_555 ? ? ? ? ? ? ? 1.361 ?
+            covale8  covale ? ? B DPR 9  C  ? ? ? 1_555 B GLY 10 N  ? ? B DPR 9  B GLY 10 1_555 ? ? ? ? ? ? ? 1.324 ?
+            covale9  covale ? ? B THR 16 C  ? ? ? 1_555 B DPR 17 N  ? ? B THR 16 B DPR 17 1_555 ? ? ? ? ? ? ? 1.361 ?
+            covale10 covale ? ? B DPR 17 C  ? ? ? 1_555 B ALA 18 N  ? ? B DPR 17 B ALA 18 1_555 ? ? ? ? ? ? ? 1.324 ?
+            covale11 covale ? ? B LEU 26 C  ? ? ? 1_555 B DPR 27 N  ? ? B LEU 26 B DPR 27 1_555 ? ? ? ? ? ? ? 1.361 ?
+            covale12 covale ? ? B DPR 27 C  ? ? ? 1_555 B GLY 28 N  ? ? B DPR 27 B GLY 28 1_555 ? ? ? ? ? ? ? 1.323 ?
+            #
         """
         numDiSulf = 0
         if dataContainer.exists('struct_conn'):
@@ -2533,6 +2604,410 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 numDiSulf = numDiSulf + 1 if bt == 'DISULF' else numDiSulf
         #
         return numDiSulf
+
+    def __toRangeList(self, iterable):
+        iterable = sorted(set(iterable))
+        for key, group in itertools.groupby(enumerate(iterable), lambda t: t[1] - t[0]):
+            group = list(group)
+            yield group[0][1], group[-1][1]
+    #
+
+    def __getProtSecStructInfo(self, dataContainer):
+        """ Get
+            #
+            loop_
+            _struct_conf.conf_type_id
+            _struct_conf.id
+            _struct_conf.pdbx_PDB_helix_id
+            _struct_conf.beg_label_comp_id
+            _struct_conf.beg_label_asym_id
+            _struct_conf.beg_label_seq_id
+            _struct_conf.pdbx_beg_PDB_ins_code
+            _struct_conf.end_label_comp_id
+            _struct_conf.end_label_asym_id
+            _struct_conf.end_label_seq_id
+            _struct_conf.pdbx_end_PDB_ins_code
+
+            _struct_conf.beg_auth_comp_id
+            _struct_conf.beg_auth_asym_id
+            _struct_conf.beg_auth_seq_id
+            _struct_conf.end_auth_comp_id
+            _struct_conf.end_auth_asym_id
+            _struct_conf.end_auth_seq_id
+            _struct_conf.pdbx_PDB_helix_class
+            _struct_conf.details
+            _struct_conf.pdbx_PDB_helix_length
+            HELX_P HELX_P1 AA1 SER A 5   ? LYS A 19  ? SER A 2   LYS A 16  1 ? 15
+            HELX_P HELX_P2 AA2 GLU A 26  ? LYS A 30  ? GLU A 23  LYS A 27  5 ? 5
+            HELX_P HELX_P3 AA3 GLY A 47  ? LYS A 60  ? GLY A 44  LYS A 57  1 ? 14
+            HELX_P HELX_P4 AA4 ASP A 111 ? LEU A 125 ? ASP A 108 LEU A 122 1 ? 15
+            #
+            _struct_conf_type.id          HELX_P
+            _struct_conf_type.criteria    ?
+            _struct_conf_type.reference   ?
+            # -------------------------------------------------------------------
+
+            loop_
+            _struct_asym.id
+            _struct_asym.pdbx_blank_PDB_chainid_flag
+            _struct_asym.pdbx_modified
+            _struct_asym.entity_id
+            _struct_asym.details
+            A N N 1 ?
+            B N N 1 ?
+            loop_
+            _struct_conn_type.id
+            _struct_conn_type.criteria
+            _struct_conn_type.reference
+            disulf ? ?
+            covale ? ?
+            #
+            _struct_sheet.id               A
+            _struct_sheet.type             ?
+            _struct_sheet.number_strands   8
+            _struct_sheet.details          ?
+            #
+            loop_
+            _struct_sheet_order.sheet_id
+            _struct_sheet_order.range_id_1
+            _struct_sheet_order.range_id_2
+            _struct_sheet_order.offset
+            _struct_sheet_order.sense
+            A 1 2 ? anti-parallel
+            A 2 3 ? anti-parallel
+            A 3 4 ? anti-parallel
+            A 4 5 ? anti-parallel
+            A 5 6 ? anti-parallel
+            A 6 7 ? anti-parallel
+            A 7 8 ? anti-parallel
+            #
+            loop_
+            _struct_sheet_range.sheet_id
+            _struct_sheet_range.id
+            _struct_sheet_range.beg_label_comp_id
+            _struct_sheet_range.beg_label_asym_id
+            _struct_sheet_range.beg_label_seq_id
+            _struct_sheet_range.pdbx_beg_PDB_ins_code
+            _struct_sheet_range.end_label_comp_id
+            _struct_sheet_range.end_label_asym_id
+            _struct_sheet_range.end_label_seq_id
+            _struct_sheet_range.pdbx_end_PDB_ins_code
+
+            _struct_sheet_range.beg_auth_comp_id
+            _struct_sheet_range.beg_auth_asym_id
+            _struct_sheet_range.beg_auth_seq_id
+            _struct_sheet_range.end_auth_comp_id
+            _struct_sheet_range.end_auth_asym_id
+            _struct_sheet_range.end_auth_seq_id
+            A 1 LYS A 5  ? VAL A 8  ? LYS A 5  VAL A 8
+            A 2 ARG A 11 ? THR A 16 ? ARG A 11 THR A 16
+            A 3 VAL A 19 ? LEU A 26 ? VAL A 19 LEU A 26
+            A 4 TYR A 29 ? ALA A 35 ? TYR A 29 ALA A 35
+            A 5 TYR B 29 ? ALA B 35 ? TYR B 29 ALA B 35
+            A 6 VAL B 19 ? LEU B 26 ? VAL B 19 LEU B 26
+            A 7 ARG B 11 ? THR B 16 ? ARG B 11 THR B 16
+            A 8 LYS B 5  ? VAL B 8  ? LYS B 5  VAL B 8
+            #
+
+        """
+        #
+        rD = {'helixCountD': {},
+              'sheetStrandCountD': {},
+              'unassignedCountD': {},
+
+              'helixLengthD': {},
+              'sheetStrandLengthD': {},
+              'unassignedLengthD': {},
+
+              'helixFracD': {},
+              'sheetStrandFracD': {},
+              'unassignedFracD': {},
+
+              'sheetSenseD': {},
+              'sheetFullStrandCountD': {},
+
+              'featureMonomerSequenceD': {},
+              'featureSequenceD': {},
+              }
+        try:
+            instanceD = self.__getInstanceTypes(dataContainer)
+            instancePolymerTypeD = instanceD['instancePolymerTypeD'] if 'instancePolymerTypeD' in instanceD else {}
+            instEntityD = instanceD['instEntityD'] if 'instEntityD' in instanceD else {}
+            epLengthD = instanceD['epLengthD'] if 'epLengthD' in instanceD else {}
+            #
+            helixRangeD = {}
+            sheetRangeD = {}
+            sheetSenseD = {}
+            unassignedRangeD = {}
+            #
+            if dataContainer.exists('struct_conf'):
+                tObj = dataContainer.getObj('struct_conf')
+                helixRangeD = {}
+                for ii in range(tObj.getRowCount()):
+                    confType = str(tObj.getValue('conf_type_id', ii)).strip().upper()
+                    if confType in ['HELX_P']:
+                        hId = tObj.getValue('id', ii)
+                        begAsymId = tObj.getValue('beg_label_asym_id', ii)
+                        endAsymId = tObj.getValue('end_label_asym_id', ii)
+                        begSeqId = int(tObj.getValue('beg_label_seq_id', ii))
+                        endSeqId = int(tObj.getValue('end_label_seq_id', ii))
+                        if (begAsymId == endAsymId) and (begSeqId <= endSeqId):
+                            helixRangeD.setdefault(hId, []).append((begAsymId, begSeqId, endSeqId))
+                        else:
+                            logger.warning("%s inconsistent struct_sheet_range description id = %s" % (dataContainer.getName(), hId))
+
+            logger.debug("%s helixRangeD %r" % (dataContainer.getName(), helixRangeD.items()))
+
+            if dataContainer.exists('struct_sheet_range'):
+                tObj = dataContainer.getObj('struct_sheet_range')
+                sheetRangeD = {}
+                for ii in range(tObj.getRowCount()):
+                    sId = tObj.getValue('sheet_id', ii)
+                    begAsymId = tObj.getValue('beg_label_asym_id', ii)
+                    endAsymId = tObj.getValue('end_label_asym_id', ii)
+                    begSeqId = int(tObj.getValue('beg_label_seq_id', ii))
+                    endSeqId = int(tObj.getValue('end_label_seq_id', ii))
+                    if (begAsymId == endAsymId) and (begSeqId <= endSeqId):
+                        sheetRangeD.setdefault(sId, []).append((begAsymId, begSeqId, endSeqId))
+                    else:
+                        logger.warning("%s inconsistent struct_conf description id = %s" % (dataContainer.getName(), sId))
+
+            logger.debug("%s sheetRangeD %r" % (dataContainer.getName(), sheetRangeD.items()))
+            #
+            if dataContainer.exists('struct_sheet_order'):
+                tObj = dataContainer.getObj('struct_sheet_order')
+                #
+                sheetSenseD = {}
+                for ii in range(tObj.getRowCount()):
+                    sId = tObj.getValue('sheet_id', ii)
+                    sense = str(tObj.getValue('sense', ii)).strip().lower()
+                    sheetSenseD.setdefault(sId, []).append(sense)
+            #
+            logger.debug("%s sheetSenseD %r" % (dataContainer.getName(), sheetSenseD.items()))
+            # --------
+
+            unassignedCoverageD = {}
+            unassignedCountD = {}
+            unassignedLengthD = {}
+            unassignedFracD = {}
+
+            helixCoverageD = {}
+            helixCountD = {}
+            helixLengthD = {}
+            helixFracD = {}
+
+            sheetCoverageD = {}
+            sheetStrandCountD = {}
+            sheetStrandLengthD = {}
+            strandsPerBetaSheetD = {}
+            sheetFullStrandCountD = {}
+            sheetStrandFracD = {}
+            instSheetD = {}
+            instSheetSenseD = {}
+            #
+            featureMonomerSequenceD = {}
+            featureSequenceD = {}
+            #
+            # ------------
+            # Initialize over all protein instances
+            for asymId, filteredType in instancePolymerTypeD.items():
+                if filteredType != 'Protein':
+                    continue
+                helixCoverageD[asymId] = []
+                helixLengthD[asymId] = []
+                helixCountD[asymId] = 0
+                helixFracD[asymId] = 0.0
+                #
+                sheetCoverageD[asymId] = []
+                sheetStrandCountD[asymId] = 0
+                sheetStrandLengthD[asymId] = []
+                sheetFullStrandCountD[asymId] = []
+                sheetStrandFracD[asymId] = 0.0
+                instSheetD[asymId] = []
+                instSheetSenseD[asymId] = []
+                #
+                unassignedCountD[asymId] = 0
+                unassignedLengthD[asymId] = []
+                unassignedFracD[asymId] = 0.0
+                #
+                featureMonomerSequenceD[asymId] = None
+                featureSequenceD[asymId] = None
+            # -------------
+            #
+            for hId, hL in helixRangeD.items():
+                for (asymId, begSeqId, endSeqId) in hL:
+                    helixCoverageD.setdefault(asymId, []).extend(range(begSeqId, endSeqId + 1))
+                    helixLengthD.setdefault(asymId, []).append(abs(begSeqId - endSeqId) + 1)
+                    helixCountD[asymId] = helixCountD[asymId] + 1 if asymId in helixCountD else 0
+            #
+            # ---------
+            # betaSheetCount = len(sheetRangeD)
+            #
+            for sId, sL in sheetRangeD.items():
+                strandsPerBetaSheetD[sId] = len(sL)
+                for (asymId, begSeqId, endSeqId) in sL:
+                    sheetCoverageD.setdefault(asymId, []).extend(range(begSeqId, endSeqId + 1))
+                    sheetStrandLengthD.setdefault(asymId, []).append(abs(begSeqId - endSeqId) + 1)
+                    sheetStrandCountD[asymId] = sheetStrandCountD[asymId] + 1 if asymId in sheetStrandCountD else 0
+                    instSheetD.setdefault(asymId, []).append(sId)
+            #
+            # ---------
+            senseTypeD = {}
+            for sheetId, sL in sheetSenseD.items():
+                if len(sL) < 1:
+                    continue
+                usL = list(set(sL))
+                if len(usL) == 1:
+                    senseTypeD[sheetId] = usL[0]
+                else:
+                    senseTypeD[sheetId] = 'mixed'
+            # ---------
+            #
+            for asymId, filteredType in instancePolymerTypeD.items():
+                logger.debug("%s processing %s type %r" % (dataContainer.getName(), asymId, filteredType))
+                if filteredType != 'Protein':
+                    continue
+                entityId = instEntityD[asymId]
+                entityLen = epLengthD[entityId]
+                entityS = set(range(1, entityLen + 1))
+                eLen = len(entityS)
+                #
+                helixS = set(helixCoverageD[asymId])
+                sheetS = set(sheetCoverageD[asymId])
+                commonS = helixS & sheetS
+                if len(commonS):
+                    logger.warning("%s asymId %s overlapping secondary structure assignments for monomers %r" % (dataContainer.getName(), asymId, commonS))
+                    continue
+
+                hLen = len(helixS) if asymId in helixCoverageD else 0
+                sLen = len(sheetS) if asymId in sheetCoverageD else 0
+                #
+                unassignedS = entityS - helixS if hLen else entityS
+                unassignedS = unassignedS - sheetS if sLen else unassignedS
+                tLen = len(unassignedS)
+                #
+                if eLen != hLen + sLen + tLen:
+                    logger.warning("%s overlapping secondary structure assignments for asymId %s" % (dataContainer.getName(), asymId))
+                    continue
+                #
+                unassignedCoverageD[asymId] = list(unassignedS)
+                helixFracD[asymId] = float(hLen) / float(eLen)
+                sheetStrandFracD[asymId] = float(sLen) / float(eLen)
+                unassignedFracD[asymId] = float(tLen) / float(eLen)
+                #
+                unassignedRangeD[asymId] = list(self.__toRangeList(unassignedS))
+                unassignedCountD[asymId] = len(unassignedRangeD[asymId])
+                unassignedLengthD[asymId] = [abs(i - j) + 1 for (i, j) in unassignedRangeD[asymId]]
+                #
+                # ------
+                sIdL = instSheetD[asymId]
+                #
+                instSheetSenseD[asymId] = [senseTypeD[sId] for sId in sIdL if sId in senseTypeD]
+                sheetFullStrandCountD[asymId] = [strandsPerBetaSheetD[sId] for sId in sIdL if sId in strandsPerBetaSheetD]
+                #
+
+                # ------
+                ssTypeL = ['_'] * eLen
+                if hLen:
+                    for idx in helixCoverageD[asymId]:
+                        ssTypeL[idx - 1] = 'H'
+                if sLen:
+                    for idx in sheetCoverageD[asymId]:
+                        ssTypeL[idx - 1] = 'S'
+                if tLen:
+                    for idx in unassignedCoverageD[asymId]:
+                        ssTypeL[idx - 1] = '_'
+                #
+                featureMonomerSequenceD[asymId] = ''. join(ssTypeL)
+                featureSequenceD[asymId] = ''.join([t[0] for t in itertools.groupby(ssTypeL)])
+            # ---------
+
+            rD = {'helixCountD': helixCountD,
+                  'sheetStrandCountD': sheetStrandCountD,
+                  'unassignedCountD': unassignedCountD,
+
+                  'helixLengthD': helixLengthD,
+                  'sheetStrandLengthD': sheetStrandLengthD,
+                  'unassignedLengthD': unassignedLengthD,
+
+                  'helixFracD': helixFracD,
+                  'sheetStrandFracD': sheetStrandFracD,
+                  'unassignedFracD': unassignedFracD,
+
+                  'sheetSenseD': instSheetSenseD,
+                  'sheetFullStrandCountD': sheetFullStrandCountD,
+
+                  'featureMonomerSequenceD': featureMonomerSequenceD,
+                  'featureSequenceD': featureSequenceD,
+                  }
+        except Exception as e:
+            logger.exception("Failing for %s with %s" % (dataContainer.getName(), str(e)))
+        #
+        return rD
+
+    def addProtSecStructInfo(self, dataContainer, catName, **kwargs):
+        """
+        Add category rcsb_prot_sec_struct_info.
+
+        """
+        try:
+            logger.debug("Starting with %r %r" % (dataContainer.getName(), catName))
+            # Exit if source categories are missing
+            if not dataContainer.exists('entry') and not (dataContainer.exists('struct_conf') or dataContainer.exists('struct_sheet_range')):
+                return False
+            #
+            # Create the new target category rcsb_prot_sec_struct_info
+            if not dataContainer.exists(catName):
+                dataContainer.append(DataCategory(catName, attributeNameList=['entry_id',
+                                                                              'label_asym_id',
+                                                                              'helix_count',
+                                                                              'beta_strand_count',
+                                                                              'unassigned_count',
+                                                                              'helix_length',
+                                                                              'beta_strand_length',
+                                                                              'unassigned_length',
+                                                                              'helix_coverage_percent',
+                                                                              'beta_strand_coverage_percent',
+                                                                              'unassigned_coverage_percent',
+                                                                              'beta_sheet_sense',
+                                                                              'beta_sheet_strand_count',
+                                                                              'feature_monomer_sequence',
+                                                                              'feature_sequence'
+                                                                              ]))
+            # --------------------------------------------------------------------------------------------------------
+            sD = self.__getProtSecStructInfo(dataContainer)
+            # catName = rcsb_prot_sec_struct_info
+            cObj = dataContainer.getObj(catName)
+            #
+            xObj = dataContainer.getObj('entry')
+            entryId = xObj.getValue('id', 0)
+            #
+            for ii, asymId in enumerate(sD['helixCountD']):
+                cObj.setValue(entryId, 'entry_id', ii)
+                cObj.setValue(asymId, 'label_asym_id', ii)
+                #
+                cObj.setValue(sD['helixCountD'][asymId], 'helix_count', ii)
+                cObj.setValue(sD['sheetStrandCountD'][asymId], 'beta_strand_count', ii)
+                cObj.setValue(sD['unassignedCountD'][asymId], 'unassigned_count', ii)
+                #
+                cObj.setValue(','.join([str(t) for t in sD['helixLengthD'][asymId]]), 'helix_length', ii)
+                cObj.setValue(','.join([str(t) for t in sD['sheetStrandLengthD'][asymId]]), 'beta_strand_length', ii)
+                cObj.setValue(','.join([str(t) for t in sD['unassignedLengthD'][asymId]]), 'unassigned_length', ii)
+
+                cObj.setValue('%.2f' % (100.0 * sD['helixFracD'][asymId]), 'helix_coverage_percent', ii)
+                cObj.setValue('%.2f' % (100.0 * sD['sheetStrandFracD'][asymId]), 'beta_strand_coverage_percent', ii)
+                cObj.setValue('%.2f' % (100.0 * sD['unassignedFracD'][asymId]), 'unassigned_coverage_percent', ii)
+
+                cObj.setValue(','.join(sD['sheetSenseD'][asymId]), 'beta_sheet_sense', ii)
+                cObj.setValue(','.join([str(t) for t in sD['sheetFullStrandCountD'][asymId]]), 'beta_sheet_strand_count', ii)
+
+                cObj.setValue(sD['featureMonomerSequenceD'][asymId], 'feature_monomer_sequence', ii)
+                cObj.setValue(sD['featureSequenceD'][asymId], 'feature_sequence', ii)
+
+            return True
+        except Exception as e:
+            logger.exception("For %s %r failing with %s" % (dataContainer.getName(), catName, str(e)))
+        return False
 
     def __filterEntityPolyType(self, pType):
         """

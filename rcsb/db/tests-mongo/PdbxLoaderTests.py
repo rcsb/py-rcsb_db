@@ -320,7 +320,7 @@ def mongoReloadSlicedSuite():
 
 if __name__ == '__main__':
     if (True):
-        if (True):
+        if (False):
             mySuite = mongoLoadIhmSuite()
             unittest.TextTestRunner(verbosity=2).run(mySuite)
         #
