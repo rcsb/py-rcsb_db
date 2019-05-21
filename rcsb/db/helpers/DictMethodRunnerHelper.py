@@ -48,6 +48,7 @@
 #                 add entity_poly.rcsb_non_std_monomer_count and rcsb_non_std_monomers
 # 15-May-2019 jdw add _rcsb_entry_info.na_polymer_entity_types update enumerations for _rcsb_entry_info.selected_polymer_entity_types
 # 19-May-2019 jdw add method __getStructConfInfo()
+# 21-May-2019 jdw handle odd ordering of records in struct_ref_seq_dif.
 #
 ##
 """
@@ -3679,9 +3680,12 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 srsdObj = dataContainer.getObj('struct_ref_seq_dif')
                 for ii in range(srsdObj.getRowCount()):
                     entityId = srsdObj.getValue('rcsb_entity_id', ii)
+                    alignId = srsdObj.getValue('align_id', ii)
                     if entityId not in seqDifD:
                         seqDifD[entityId] = {'mutations': 0, 'insertions': 0, 'deletions': 0, 'conflicts': 0}
-
+                        firstAlignId = alignId
+                    if alignId != firstAlignId:
+                        continue
                     details = srsdObj.getValue('details', ii)
                     #
                     if details in ['ACETYLATION', 'CHROMOPHORE', 'VARIANT', 'LEADER SEQUENCE',

@@ -147,5 +147,6 @@
                     adjust classificatoin of ternary complexes extending enumeration for _rcsb_entry_info.selected_polymer_entity_types
                     add new classifier _rcsb_entry_info.na_polymer_entity_types
                     and removed _rcsb_entry_info.nonpolymer_ligand_entity_count
- 20-May-2019. V0.63 Category rcsb_prot_sec_struct_info added to core_entity_instance and prune primary secondary structure
+ 20-May-2019  V0.63 Category rcsb_prot_sec_struct_info added to core_entity_instance and prune primary secondary structure
                     categories from this collection.
+ 21-May-2019  V0.64 Handle odd ordering of records in struct_ref_seq_dif
