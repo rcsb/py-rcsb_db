@@ -55,25 +55,40 @@ class DictMethodRunner(object):
         dApi = DictionaryApi(containerList=containerList, consolidate=True, verbose=True)
         return dApi
 
-    def __getMethodInfo(self):
+    def __getMethodInfo(self, implementationSource='reference'):
+        """ Get method implementation with the input implementation source.
+
+        """
+
         methodD = {}
-        methodIndex = self.__dApi.getMethodIndex()
-        for item, mrL in methodIndex.items():
-            for mr in mrL:
-                mId = mr.getId()
-                catName = mr.getCategoryName()
-                atName = mr.getAttributeName()
-                mType = mr.getType()
-                if (catName, atName) not in methodD:
-                    methodD[(catName, atName)] = []
-                methDef = self.__dApi.getMethod(mId)
-                mLang = methDef.getLanguage()
-                mCode = methDef.getCode()
-                mImplement = methDef.getInline()
-                mPriority = methDef.getPriority()
-                d = {'METHOD_LANGUAGE': mLang, 'METHOD_IMPLEMENT': mImplement, 'METHOD_TYPE': mType, 'METHOD_CODE': mCode, 'METHOD_PRIORITY': mPriority}
-                methodD[(catName, atName)].append(d)
-            #
+        try:
+            methodIndex = self.__dApi.getMethodIndex()
+            for item, mrL in methodIndex.items():
+                for mr in mrL:
+                    mId = mr.getId()
+                    catName = mr.getCategoryName()
+                    atName = mr.getAttributeName()
+                    mType = mr.getType()
+                    if (catName, atName) not in methodD:
+                        methodD[(catName, atName)] = []
+                    methDef = self.__dApi.getMethod(mId)
+                    logger.debug("Category %s attribute %s mId %r type %r methDef %r" % (catName, atName, mId, mType, methDef))
+
+                    mSource = methDef.getImplementationSource()
+                    if mSource == implementationSource:
+                        mPriority = methDef.getPriority()
+                        mLang = methDef.getLanguage()
+                        mCode = methDef.getCode()
+                        mImplement = methDef.getImplementation()
+                        d = {'METHOD_LANGUAGE': mLang,
+                             'METHOD_IMPLEMENT': mImplement,
+                             'METHOD_TYPE': mType,
+                             'METHOD_CODE': mCode,
+                             'METHOD_PRIORITY': mPriority}
+                        methodD[(catName, atName)].append(d)
+                #
+        except Exception as e:
+            logger.exception("Failing with %s" % str(e))
         ##
         logger.debug("Method dictionary %r" % methodD)
         return methodD
@@ -131,7 +146,7 @@ class DictMethodRunner(object):
 
         return True
 
-    def __getDatablockMethods(self, container, methodCodes=["calculate_with_helper"]):
+    def __getDatablockMethods(self, container, methodCodes=["calculation_with_helper"]):
         mL = []
         try:
             for (dictName, _), mDL in self.__methodD.items():
@@ -146,7 +161,7 @@ class DictMethodRunner(object):
             logger.exception("Failing dictName %s with %s" % (dictName, str(e)))
         return mL
 
-    def __getCategoryMethods(self, container, methodCodes=["calculate_with_helper"]):
+    def __getCategoryMethods(self, container, methodCodes=["calculation_with_helper"]):
         mL = []
         try:
             for (catName, _), mDL in self.__methodD.items():
@@ -161,7 +176,7 @@ class DictMethodRunner(object):
             logger.exception("Failing catName %r with %s" % (catName, str(e)))
         return mL
 
-    def __getAttributeMethods(self, container, methodCodes=["calculate_with_helper"]):
+    def __getAttributeMethods(self, container, methodCodes=["calculation_with_helper"]):
         mL = []
         try:
             for (catName, atName), mDL in self.__methodD.items():
@@ -175,3 +190,18 @@ class DictMethodRunner(object):
         except Exception as e:
             logger.exception("Failing catName %s atName %s with %s" % (catName, atName, str(e)))
         return mL
+
+    def __getHelper(self, modulePath, **kwargs):
+        aObj = None
+        try:
+            aMod = __import__(modulePath, globals(), locals(), [''])
+            sys.modules[modulePath] = aMod
+            #
+            # Strip off any leading path to the module before we instaniate the object.
+            mpL = str(modulePath).split('.')
+            moduleName = mpL[-1]
+            #
+            aObj = getattr(aMod, moduleName)(**kwargs)
+        except Exception as e:
+            logger.error("Failing to instance helper %r with %s" % (modulePath, str(e)))
+        return aObj

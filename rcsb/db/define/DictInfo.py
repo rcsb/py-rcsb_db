@@ -280,14 +280,14 @@ class DictInfo(object):
                 methDef = self.__dApi.getMethod(mId)
                 mLang = methDef.getLanguage()
                 mCode = methDef.getCode()
-                mImplement = methDef.getInline()
+                mImplement = methDef.getImplementation()
                 d = {'METHOD_LANGUAGE': mLang, 'METHOD_IMPLEMENT': mImplement, 'METHOD_TYPE': mType, 'METHOD_CODE': mCode}
                 methodD[(catName, atName)].append(d)
         ##
         logger.debug("Method dictionary %r" % methodD)
         return methodD
 
-    def getMethodImplementation(self, catName, atName, methodCodes=["calculate_on_load"]):
+    def getMethodImplementation(self, catName, atName, methodCodes=["calculation_with_helper"]):
         try:
             if (catName, atName) in self.__methodD:
                 for mD in self.__methodD[(catName, atName)]:
