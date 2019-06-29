@@ -83,7 +83,7 @@ class SchemaDefDataPrep(object):
             self.__schemaIdExcludeD = {sId: True for sId in schemaIdList}
             return True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return False
 
     def setSchemaIdIncludeList(self, schemaIdList):
@@ -96,7 +96,7 @@ class SchemaDefDataPrep(object):
             self.__schemaIdIncludeD = {sId: True for sId in schemaIdList}
             return True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return False
 
     def __getTimeStamp(self):
@@ -104,7 +104,7 @@ class SchemaDefDataPrep(object):
         ts = utcnow.strftime("%Y-%m-%d:%H:%M:%S")
         return ts
 
-    def __mergeContainers(self, locatorObj, format="mmcif", mergeTarget=0):
+    def __mergeContainers(self, locatorObj, fmt="mmcif", mergeTarget=0):
         """ Consolidate content in auxiliary files locatorObj[1:] into
             locatorObj[0] container index 'mergeTarget'.
 
@@ -113,16 +113,16 @@ class SchemaDefDataPrep(object):
         cL = []
         try:
             if isinstance(locatorObj, str):
-                cL = self.__mU.doImport(locatorObj, format=format)
+                cL = self.__mU.doImport(locatorObj, fmt=fmt)
                 return cL if cL else []
-            elif isinstance(locatorObj, (list, tuple)) and len(locatorObj) > 0:
-                d = locatorObj[0]
-                kw = d['kwargs']
-                cL = self.__mU.doImport(d['locator'], format=d['format'], **kw)
-                if cL and len(cL) > 0:
-                    for d in locatorObj[1:]:
-                        kw = d['kwargs']
-                        rObj = self.__mU.doImport(d['locator'], format=d['format'], **kw)
+            elif isinstance(locatorObj, (list, tuple)) and locatorObj:
+                dD = locatorObj[0]
+                kw = dD["kwargs"]
+                cL = self.__mU.doImport(dD["locator"], fmt=dD["fmt"], **kw)
+                if cL:
+                    for dD in locatorObj[1:]:
+                        kw = dD["kwargs"]
+                        rObj = self.__mU.doImport(dD["locator"], fmt=dD["fmt"], **kw)
                         mergeL = rObj if rObj else []
                         for mc in mergeL:
                             cL[mergeTarget].merge(mc)
@@ -131,7 +131,7 @@ class SchemaDefDataPrep(object):
             else:
                 return []
         except Exception as e:
-            logger.exception("Failing for %r with %s" % (locatorObj, str(e)))
+            logger.exception("Failing for %r with %s", locatorObj, str(e))
 
         return cL
 
@@ -139,12 +139,13 @@ class SchemaDefDataPrep(object):
         """ Return the data container list obtained by parsing the input locator list.
         """
         cL = []
+        _ = filterType
         for locatorObj in locatorObjList:
-            # myContainerList = self.__mU.doImport(locatorObj, format="mmcif")
+            # myContainerList = self.__mU.doImport(locatorObj, fmt="mmcif")
             # logger.info("locatorObj is %r" % type(locatorObj))
-            myContainerList = self.__mergeContainers(locatorObj, format="mmcif", mergeTarget=0)
-            for c in myContainerList:
-                cL.append(c)
+            myContainerList = self.__mergeContainers(locatorObj, fmt="mmcif", mergeTarget=0)
+            for cA in myContainerList:
+                cL.append(cA)
         return cL
 
     def getLocatorsFromPaths(self, locatorObjList, pathList, locatorIndex=0):
@@ -159,15 +160,15 @@ class SchemaDefDataPrep(object):
             #
             locIdx = {}
             for ii, locatorObj in enumerate(locatorObjList):
-                if 'locator' in locatorObj[locatorIndex]:
-                    locIdx[locatorObj[locatorIndex]['locator']] = ii
+                if "locator" in locatorObj[locatorIndex]:
+                    locIdx[locatorObj[locatorIndex]["locator"]] = ii
             #
             for pth in pathList:
                 jj = locIdx[pth] if pth in locIdx else None
                 if jj is not None:
                     rL.append(locatorObjList[jj])
         except Exception as e:
-            logger.exception("Faliing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         #
         return rL
 
@@ -176,9 +177,9 @@ class SchemaDefDataPrep(object):
             if locatorObjList and isinstance(locatorObjList[0], str):
                 return locatorObjList
             else:
-                return [locatorObj[locatorIndex]['locator'] for locatorObj in locatorObjList]
+                return [locatorObj[locatorIndex]["locator"] for locatorObj in locatorObjList]
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return []
 
     def fetch(self, locatorObjList, styleType="rowwise_by_id", filterType="none", dataSelectors=None):
@@ -204,7 +205,7 @@ class SchemaDefDataPrep(object):
         schemaDataDict = self.__reShape.applyShape(schemaDataDictById, styleType=styleType)
         return schemaDataDict, containerNameList
 
-    def fetchDocuments(self, locatorObjList, styleType="rowwise_by_id", filterType="none", logSize=False, dataSelectors=None, sliceFilter=None):
+    def fetchDocuments(self, locatorObjList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, sliceFilter=None):
         """ Return a list of dictionaries of loadable data for each table defined in the current schema
             definition object.   Data are extracted from the each input file, and each data
             set is stored in a separate schema instance (document).  The organization
@@ -261,7 +262,7 @@ class SchemaDefDataPrep(object):
 
         return schemaDataDict, containerNameList
 
-    def processDocuments(self, containerList, styleType="rowwise_by_id", filterType="none", logSize=False, dataSelectors=None, sliceFilter=None):
+    def processDocuments(self, containerList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, sliceFilter=None):
         """ Return a list of dictionaries of loadable data for each table defined in the current schema
             definition object.   Data are extracted from the each input container, and each data
             set is stored in a separate schema instance (document).  The organization of the loadable
@@ -289,10 +290,10 @@ class SchemaDefDataPrep(object):
             if not schemaDataDictById:
                 continue
             #
-            logger.debug("Reshape container %s using %s" % (container.getName(), sliceFilter))
+            logger.debug("Reshape container %s using %s", container.getName(), sliceFilter)
             sddL = self.__reShape.applySlicedShape(schemaDataDictById, styleType=styleType, sliceFilter=sliceFilter)
-            if len(sddL) == 0:
-                logger.info("No result on reshaping container %s using %s" % (container.getName(), sliceFilter))
+            if not sddL:
+                logger.info("No result on reshaping container %s using %s", container.getName(), sliceFilter)
             else:
                 schemaDataDictList.extend(sddL)
                 #
@@ -305,78 +306,52 @@ class SchemaDefDataPrep(object):
         #
         return schemaDataDictList, containerNameList, rejectPathList
 
-    def DEPaddDocumentPrivateAttributes(self, docList, collectionName, styleType="rowwise_by_name"):
-        """ For the input collection, add private document attributes to the input document list.
-        """
-        if styleType not in ['rowwise_by_name', 'rowwise_by_name_with_cardinality']:
-            logger.error("Unsupported document style %s" % styleType)
-            return docList
-        try:
-            d = {}
-            privDocKeyL = self.__sD.getPrivateDocumentAttributes(collectionName)
-            if privDocKeyL:
-                for pdk in privDocKeyL:
-                    catName = pdk['CATEGORY_NAME']
-                    atName = pdk['ATTRIBUTE_NAME']
-                    pName = pdk['PRIVATE_DOCUMENT_NAME']
-                    isMandatory = pdk['MANDATORY']
-                    for d in docList:
-                        if catName in d and atName in d[catName] and d[catName][atName] and d[catName][atName] not in ['.', '?']:
-                            d[pName] = d[catName][atName]
-                        else:
-                            if isMandatory:
-                                logger.info("Skipping private key for %s %s %r %r" % (catName, atName, pdk, list(d.items())[:5]))
-        except Exception as e:
-            logger.exception("Failing with %s : %r" % (str(e), list(d.items())[:5]))
-        #
-        return docList
-
     def addDocumentPrivateAttributes(self, docList, collectionName, styleType="rowwise_by_name"):
         """ For the input collection, add private document attributes to the input document list.
         """
-        if styleType not in ['rowwise_by_name', 'rowwise_by_name_with_cardinality']:
-            logger.error("Unsupported document style %s" % styleType)
+        if styleType not in ["rowwise_by_name", "rowwise_by_name_with_cardinality"]:
+            logger.error("Unsupported document style %s", styleType)
             return docList
         try:
-            d = {}
+            doc = {}
             privDocKeyL = self.__sD.getPrivateDocumentAttributes(collectionName)
             version = self.__sD.getCollectionVersion(collectionName)
             #
             if privDocKeyL:
                 for doc in docList:
                     for pdk in privDocKeyL:
-                        pName = pdk['PRIVATE_DOCUMENT_NAME']
-                        isMandatory = pdk['MANDATORY']
-                        if pdk['UPDATE_ON_LOAD']:
-                            if pdk['NAME'] == 'rcsb_schema_container_identifiers.collection_schema_version':
+                        pName = pdk["PRIVATE_DOCUMENT_NAME"]
+                        isMandatory = pdk["MANDATORY"]
+                        if pdk["UPDATE_ON_LOAD"]:
+                            if pdk["NAME"] == "rcsb_schema_container_identifiers.collection_schema_version":
                                 doc[pName] = version
 
                         else:
-                            catName = pdk['CATEGORY_NAME']
-                            atName = pdk['ATTRIBUTE_NAME']
+                            catName = pdk["CATEGORY_NAME"]
+                            atName = pdk["ATTRIBUTE_NAME"]
                             #
-                            if catName in doc and atName in doc[catName] and doc[catName][atName] and doc[catName][atName] not in ['.', '?']:
+                            if catName in doc and atName in doc[catName] and doc[catName][atName] and doc[catName][atName] not in [".", "?"]:
                                 doc[pName] = doc[catName][atName]
                             else:
                                 if isMandatory:
-                                    logger.info("Skipping private key for %s %s %r %r" % (catName, atName, pdk, list(d.items())[:5]))
+                                    logger.info("Skipping private key for %s %s %r %r", catName, atName, pdk, list(doc.items())[:5])
         except Exception as e:
-            logger.exception("Failing with %s : %r" % (str(e), list(d.items())[:5]))
+            logger.exception("Failing with %s : %r", str(e), list(doc.items())[:5])
         #
         return docList
 
     def addDocumentSubCategoryAggregates(self, docList, collectionName, styleType="rowwise_by_name", removeSubCategoryPrefix=True):
         """ For the input collection, add subcategory aggregates to the input document list.
         """
-        if styleType not in ['rowwise_by_name', 'rowwise_by_name_with_cardinality']:
-            logger.error("Unsupported document style %s" % styleType)
+        if styleType not in ["rowwise_by_name", "rowwise_by_name_with_cardinality"]:
+            logger.error("Unsupported document style %s", styleType)
             return docList
         try:
-            d = {}
+            dD = {}
             scAgL = self.__sD.getSubCategoryAggregates(collectionName)
             if scAgL:
                 scAgD = {}
-                logger.debug("%s processing subcategory aggregates %r" % (collectionName, scAgL))
+                logger.debug("%s processing subcategory aggregates %r", collectionName, scAgL)
                 for scAg in scAgL:
                     scD = {}
                     sIdL = self.__sD.getSubCategorySchemaIdList(scAg)
@@ -384,7 +359,7 @@ class SchemaDefDataPrep(object):
                         atIdL = self.__sD.getSubCategoryAttributeIdList(sId, scAg)
                         scD[self.__sD.getSchemaName(sId)] = [self.__sD.getAttributeName(sId, atId) for atId in atIdL]
                     scAgD[scAg] = scD
-                logger.debug("%s subcategory aggregate name dictionary %r" % (collectionName, scAgD))
+                logger.debug("%s subcategory aggregate name dictionary %r", collectionName, scAgD)
                 #
                 for doc in docList:
                     for scAg, scD in scAgD.items():
@@ -393,48 +368,48 @@ class SchemaDefDataPrep(object):
                                 continue
                             #
                             hasUnitCard = self.__sD.getSubCategoryAggregatesUnitCardinality(collectionName, scAg)
-                            logger.debug("%s agg %s unit cardinalioty %r obj %s type %r" % (collectionName, hasUnitCard, scAg, sName, type(doc[sName])))
+                            logger.debug("%s agg %s unit cardinalioty %r obj %s type %r", collectionName, hasUnitCard, scAg, sName, type(doc[sName]))
                             atNameL = scD[sName]
                             if isinstance(doc[sName], list):
                                 for rowD in doc[sName]:
                                     if set(atNameL).issubset(set(rowD.keys())):
                                         atLenL = [len(rowD[atName]) for atName in atNameL]
                                         atLen = min(atLenL)
-                                        logger.debug("%s %s %r Candidate list row is %r" % (scAg, sName, atNameL, rowD))
+                                        logger.debug("%s %s %r Candidate list row is %r", scAg, sName, atNameL, rowD)
                                         # copy all of the data to the new aggregate object
                                         rL = []
                                         for ii in range(atLen):
-                                            d = {}
+                                            dD = {}
                                             for atName in atNameL:
-                                                cAtName = atName.replace(scAg + '_', '') if removeSubCategoryPrefix else atName
-                                                d[cAtName] = rowD[atName][ii]
-                                            rL.append(d)
+                                                cAtName = atName.replace(scAg + "_", "") if removeSubCategoryPrefix else atName
+                                                dD[cAtName] = rowD[atName][ii]
+                                            rL.append(dD)
                                         rowD[scAg] = rL
                                         for atName in atNameL:
                                             del rowD[atName]
-                                        logger.debug("Processed list row is %r" % rowD)
+                                        logger.debug("Processed list row is %r", rowD)
                             elif isinstance(doc[sName], dict):
                                 if set(atNameL).issubset(set(doc[sName].keys())):
-                                    logger.debug("Candidate dict row is %r" % doc[sName])
+                                    logger.debug("Candidate dict row is %r", doc[sName])
                                     atLenL = [len(doc[sName][atName]) for atName in atNameL]
                                     atLen = min(atLenL)
                                     # copy all of the data to the new aggregate object
                                     rL = []
                                     for ii in range(atLen):
-                                        d = {}
+                                        dD = {}
                                         for atName in atNameL:
-                                            cAtName = atName.replace(scAg + '_', '') if removeSubCategoryPrefix else atName
-                                            d[cAtName] = doc[sName][atName][ii]
-                                        rL.append(d)
+                                            cAtName = atName.replace(scAg + "_", "") if removeSubCategoryPrefix else atName
+                                            dD[cAtName] = doc[sName][atName][ii]
+                                        rL.append(dD)
                                     doc[sName][scAg] = rL
                                     for atName in atNameL:
                                         del doc[sName][atName]
-                                    logger.debug("Processed dict row is %r" % doc[sName])
+                                    logger.debug("Processed dict row is %r", doc[sName])
                             else:
-                                logger.error("%s unanticipated document data type for sName %s" % (collectionName, sName))
+                                logger.error("%s unanticipated document data type for sName %s", collectionName, sName)
 
         except Exception as e:
-            logger.exception("Failing with %s : %r" % (str(e), list(d.items())[:5]))
+            logger.exception("Failing with %s : %r", str(e), list(dD.items())[:5])
         #
         return docList
 
@@ -453,12 +428,12 @@ class SchemaDefDataPrep(object):
         containerNameList = []
         schemaDataDict = {}
         for locatorObj in locatorObjList:
-            # myContainerList = self.__mU.doImport(locatorObj, format="mmcif")
-            myContainerList = self.__mergeContainers(locatorObj, format="mmcif", mergeTarget=0)
+            # myContainerList = self.__mU.doImport(locatorObj, fmt="mmcif")
+            myContainerList = self.__mergeContainers(locatorObj, fmt="mmcif", mergeTarget=0)
             cL = []
-            for c in myContainerList:
-                if self.__testdataSelectors(c, dataSelectors):
-                    cL.append(c)
+            for cA in myContainerList:
+                if self.__testdataSelectors(cA, dataSelectors):
+                    cL.append(cA)
                     # self.__loadInfo[c.getName()] = {'load_date': self.__getTimeStamp(), 'locator': locatorObj}
                 else:
                     rejectLocatorObjList.append(locatorObj)
@@ -466,9 +441,9 @@ class SchemaDefDataPrep(object):
             containerNameList.extend([myC.getName() for myC in myContainerList])
         #
         schemaDataDictF = {}
-        if 'drop-empty-tables' in filterType:
+        if "drop-empty-tables" in filterType:
             for k, v in schemaDataDict.items():
-                if len(v) > 0:
+                if v:
                     schemaDataDictF[k] = v
         else:
             schemaDataDictF = schemaDataDict
@@ -478,8 +453,7 @@ class SchemaDefDataPrep(object):
         #
         #
         endTime = time.time()
-        logger.debug("completed at %s (%.3f seconds)" %
-                     (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+        logger.debug("completed at %s (%.3f seconds)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
 
         return schemaDataDictF, containerNameList, rejectLocatorObjList
 
@@ -499,32 +473,31 @@ class SchemaDefDataPrep(object):
         containerNameList = []
         schemaDataDict = {}
         cL = []
-        for c in containerList:
-            if self.__testdataSelectors(c, dataSelectors):
-                cL.append(c)
+        for cA in containerList:
+            if self.__testdataSelectors(cA, dataSelectors):
+                cL.append(cA)
             else:
                 try:
                     # rejectList.append(self.__loadInfo[c.getName()]['locator'])
-                    rejectPathList.append(c.getProp['locator'])
+                    rejectPathList.append(cA.getProp["locator"])
                 except Exception:
-                    rejectPathList.append(c.getName())
+                    rejectPathList.append(cA.getName())
         #
         self.__mapData(cL, schemaDataDict, filterType)
         containerNameList.extend([myC.getName() for myC in containerList])
         #
         #
         schemaDataDictF = {}
-        if 'drop-empty-tables' in filterType:
+        if "drop-empty-tables" in filterType:
             for k, v in schemaDataDict.items():
-                if len(v) > 0:
+                if v:
                     schemaDataDictF[k] = v
         else:
             schemaDataDictF = schemaDataDict
         #
         #
         endTime = time.time()
-        logger.debug("completed at %s (%.3f seconds)\n" %
-                     (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+        logger.debug("completed at %s (%.3f seconds)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
 
         return schemaDataDictF, containerNameList, rejectPathList
 
@@ -535,74 +508,75 @@ class SchemaDefDataPrep(object):
 
             Return:  True fo sucess or False otherwise
         """
-        logger.debug("Applying selectors: %r" % dataSelectors)
+        logger.debug("Applying selectors: %r", dataSelectors)
         if not dataSelectors:
             return True
         try:
             for cs in dataSelectors:
                 csDL = self.__sD.getDataSelectors(cs)
                 for csD in csDL:
-                    tn = csD['CATEGORY_NAME']
-                    an = csD['ATTRIBUTE_NAME']
-                    vals = csD['VALUES']
-                    logger.debug("Applying selector %s: tn %s an %s vals %r" % (cs, tn, an, vals))
+                    tn = csD["CATEGORY_NAME"]
+                    an = csD["ATTRIBUTE_NAME"]
+                    vals = csD["VALUES"]
+                    logger.debug("Applying selector %s: tn %s an %s vals %r", cs, tn, an, vals)
                     if not container.exists(tn):
                         return False
                     catObj = container.getObj(tn)
                     numRows = catObj.getRowCount()
                     if numRows:
                         for ii in range(numRows):
-                            logger.debug("Testing %s type %r row %d of %d" % (an, type(an), ii, numRows))
+                            logger.debug("Testing %s type %r row %d of %d", an, type(an), ii, numRows)
                             v = catObj.getValue(attributeName=an, rowIndex=ii)
                             if v not in vals:
-                                logger.debug("Selector %s rejects : tn %s an %s value %r" % (cs, tn, an, v))
+                                logger.debug("Selector %s rejects : tn %s an %s value %r", cs, tn, an, v)
                                 return False
                     else:
-                        logger.debug("Selector %s rejects container with missing category %s" % (cs, tn))
+                        logger.debug("Selector %s rejects container with missing category %s", cs, tn)
                         return False
             #
             # all selectors satisfied
             return True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
 
         return False
 
     def __showOverwrite(self):
         #
-        if (self.__verbose):
-            if len(self.__overWrite) > 0:
+        if self.__verbose:
+            if self.__overWrite:
                 for k, v in self.__overWrite.items():
-                    logger.debug("+SchemaDefLoader(load) %r maximum width %r" % (k, v))
+                    logger.debug("+SchemaDefLoader(load) %r maximum width %r", k, v)
 
     def __evalMapFunction(self, dataContainer, rowDList, attributeId, functionName, functionArgs=None):
         """ Evaluate dynamic schema methods on the input data container.
 
         """
         # logger.debug("Evaluating function %s on attribute %s" % (functionName, attributeId))
+        _ = functionArgs
         fn = functionName.lower()
         cName = dataContainer.getName()
-        if (fn in "datablockid()"):
+        if fn in "datablockid()":
             val = cName
             for rowD in rowDList:
                 rowD[attributeId] = val
-        elif (fn == "getdatetime()"):
+        elif fn == "getdatetime()":
             # val = self.__loadInfo[cName]['load_date'] if cName in self.__loadInfo else self.__getTimeStamp()
-            v = dataContainer.getProp('load_date')
+            v = dataContainer.getProp("load_date")
             val = v if v else self.__getTimeStamp()
             for rowD in rowDList:
                 rowD[attributeId] = val
-        elif (fn == "getlocator()"):
+        elif fn == "getlocator()":
             # val = self.__loadInfo[cName]['locator'] if cName in self.__loadInfo else 'unknown'
-            v = dataContainer.getProp('locator')
-            val = v if v else 'unknown'
+            v = dataContainer.getProp("locator")
+            val = v if v else "unknown"
             for rowD in rowDList:
                 rowD[attributeId] = val
-        elif (fn == "rowindex()"):
+        elif fn == "rowindex()":
             for ii, rowD in enumerate(rowDList, 1):
                 rowD[attributeId] = ii
         else:
-            logger.error("Unsupported dynamic method %s for attribute %s" % (functionName, attributeId))
+            logger.error("Unsupported dynamic method %s for attribute %s", functionName, attributeId)
             return False
 
         return True
@@ -673,6 +647,7 @@ class SchemaDefDataPrep(object):
             mapped from the input instance category.
         """
         #
+        _ = filterType
         retList = []
         catObj = myContainer.getObj(categoryName)
         if catObj is None:
@@ -680,8 +655,8 @@ class SchemaDefDataPrep(object):
         attributeNameList = catObj.getAttributeList()
         #
         for row in catObj.getRowList():
-            d = self.__dtObj.processRecord(tObj.getId(), row, attributeNameList, containerName=myContainer.getName())
-            retList.append(d)
+            dD = self.__dtObj.processRecord(tObj.getId(), row, attributeNameList, containerName=myContainer.getName())
+            retList.append(dD)
 
         return retList
 
@@ -696,6 +671,7 @@ class SchemaDefDataPrep(object):
             mapped from the input instance category.
         """
         # Consider mD as orderdict
+        _ = filterType
         mD = {}
         for categoryName in categoryNameList:
             catObj = myContainer.getObj(categoryName)
@@ -716,11 +692,11 @@ class SchemaDefDataPrep(object):
                         mK.append(row[attributeIndexDict[atName]])
                     except Exception as e:
                         # would reflect a serious issue of missing key-
-                        if (self.__debug):
-                            logger.exception("Failing with %s" % str(e))
+                        if self.__debug:
+                            logger.exception("Failing with %s", str(e))
                 #
 
-                d = self.__dtObj.processRecord(tObj.getId(), row, attributeNameList, containerName=myContainer.getName())
+                dD = self.__dtObj.processRecord(tObj.getId(), row, attributeNameList, containerName=myContainer.getName())
 
                 #
                 # Update this row using exact matching of the merging key --
@@ -730,10 +706,10 @@ class SchemaDefDataPrep(object):
                 if tk not in mD:
                     mD[tk] = {}
 
-                mD[tk].update(d)
+                mD[tk].update(dD)
 
         return mD.values()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

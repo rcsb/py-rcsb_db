@@ -30,12 +30,11 @@ import logging
 import os
 
 import dateutil.parser
-
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logger = logging.getLogger(__name__)
 
-
+# Xpylint: disable=no-member,unsubscriptable-object,unsupported-membership-test
 class RepoHoldingsDataPrep(object):
     """
     Consolidate legacy data describing repository content updates and repository entry status.
@@ -43,10 +42,10 @@ class RepoHoldingsDataPrep(object):
     """
 
     def __init__(self, **kwargs):
-        self.__workPath = kwargs.get('workPath', None)
-        self.__sandboxPath = kwargs.get('sandboxPath', None)
-        self.__filterType = kwargs.get('filterType', '')
-        self.__assignDates = 'assign-dates' in self.__filterType
+        self.__workPath = kwargs.get("workPath", None)
+        self.__sandboxPath = kwargs.get("sandboxPath", None)
+        self.__filterType = kwargs.get("filterType", "")
+        self.__assignDates = "assign-dates" in self.__filterType
         #
         self.__mU = MarshalUtil(workPath=self.__workPath)
         #
@@ -84,99 +83,97 @@ class RepoHoldingsDataPrep(object):
         trsfL = []
         insL = []
         dirPath = dirPath if dirPath else self.__sandboxPath
+        _ = kwargs
         try:
-            fp = os.path.join(dirPath, 'status', 'theoretical_model_obsolete.tsv')
-            lineL = self.__mU.doImport(fp, 'list')
+            fp = os.path.join(dirPath, "status", "theoretical_model_obsolete.tsv")
+            lineL = self.__mU.doImport(fp, "list")  # pylint: disable=no-member
             #
             obsDateD = {}
             obsIdD = {}
             for line in lineL:
-                fields = line.split('\t')
+                fields = line.split("\t")
                 if len(fields) < 3:
                     continue
                 entryId = str(fields[0]).strip().upper()
                 obsDateD[entryId] = dateutil.parser.parse(fields[2]) if self.__assignDates else fields[2]
                 if len(fields) > 3 and len(fields[3]) > 3:
                     obsIdD[entryId] = fields[3]
-            logger.debug("Read %d obsolete insilico id codes" % len(obsDateD))
+            logger.debug("Read %d obsolete insilico id codes", len(obsDateD))
             # ---------  ---------  ---------  ---------  ---------  ---------  ---------
-            fp = os.path.join(dirPath, 'status', 'model-archive-PDB-insilico-mapping.list')
-            lineL = self.__mU.doImport(fp, 'list')
+            fp = os.path.join(dirPath, "status", "model-archive-PDB-insilico-mapping.list")
+            lineL = self.__mU.doImport(fp, "list")
             #
             trD = {}
             for line in lineL:
-                fields = line.split(':')
+                fields = line.split(":")
                 if len(fields) < 2:
                     continue
                 entryId = str(fields[1]).strip().upper()[:4]
                 maId = str(fields[0]).strip()
                 trD[entryId] = maId
-            logger.debug("Read %d model archive id codes" % len(trD))
+            logger.debug("Read %d model archive id codes", len(trD))
             #
             # ---------  ---------  ---------  ---------  ---------  ---------  ---------
-            fp = os.path.join(dirPath, 'status', 'theoretical_model_v2.tsv')
-            lineL = self.__mU.doImport(fp, 'list')
+            fp = os.path.join(dirPath, "status", "theoretical_model_v2.tsv")
+            lineL = self.__mU.doImport(fp, "list")
             #
-            logger.debug("Read %d insilico id codes" % len(lineL))
+            logger.debug("Read %d insilico id codes", len(lineL))
             for line in lineL:
-                fields = str(line).split('\t')
+                fields = str(line).split("\t")
                 if len(fields) < 6:
                     continue
                 depDate = dateutil.parser.parse(fields[2]) if self.__assignDates else fields[2]
                 relDate = None
-                if len(fields[3]) >= 10 and not fields[3].startswith('0000'):
+                if len(fields[3]) >= 10 and not fields[3].startswith("0000"):
                     relDate = dateutil.parser.parse(fields[3]) if self.__assignDates else fields[3]
 
-                statusCode = 'TRSF' if fields[1] == 'REL' else fields[1]
+                statusCode = "TRSF" if fields[1] == "REL" else fields[1]
 
                 entryId = str(fields[0]).upper()
                 title = fields[4]
                 #
-                auditAuthors = [t.strip() for t in fields[5].split(';')]
+                auditAuthors = [t.strip() for t in fields[5].split(";")]
                 repId = None
                 if entryId in trD:
-                    repName = 'Model Archive'
+                    repName = "Model Archive"
                     repId = trD[entryId]
 
                 #
-                d = {'update_id': updateId,
-                     'entry_id': entryId,
-                     'status_code': statusCode,
-                     'deposit_date': depDate,
-                     'repository_content_types': ['coordinates'],
-                     'title': title,
-                     'audit_authors': auditAuthors}
+                dD = {
+                    "update_id": updateId,
+                    "entry_id": entryId,
+                    "status_code": statusCode,
+                    "deposit_date": depDate,
+                    "repository_content_types": ["coordinates"],
+                    "title": title,
+                    "audit_authors": auditAuthors,
+                }
                 #
                 if relDate:
-                    d['release_date'] = relDate
+                    dD["release_date"] = relDate
                 #
                 if repId:
-                    d['remote_accession_code'] = repId
-                    d['remote_repository_name'] = repName
-                if statusCode == 'TRSF':
-                    trsfL.append(d)
+                    dD["remote_accession_code"] = repId
+                    dD["remote_repository_name"] = repName
+                if statusCode == "TRSF":
+                    trsfL.append(dD)
                 #
                 #
-                d = {'update_id': updateId,
-                     'entry_id': entryId,
-                     'status_code': statusCode,
-                     'deposit_date': depDate,
-                     'title': title,
-                     'audit_authors': auditAuthors}
+                dD = {"update_id": updateId, "entry_id": entryId, "status_code": statusCode, "deposit_date": depDate, "title": title, "audit_authors": auditAuthors}
                 #
                 if relDate:
-                    d['release_date'] = relDate
+                    dD["release_date"] = relDate
                 #
                 if entryId in obsDateD:
-                    d['remove_date'] = relDate
+                    dD["remove_date"] = relDate
                 #
                 if entryId in obsIdD:
-                    d['id_codes_replaced_by'] = [obsIdD[entryId]]
+                    dD["id_codes_replaced_by"] = [obsIdD[entryId]]
                 #
-                insL.append(d)
+                insL.append(dD)
             #
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
 
         return trsfL, insL
 
@@ -193,15 +190,16 @@ class RepoHoldingsDataPrep(object):
         """
         retL = []
         dirPath = dirPath if dirPath else self.__sandboxPath
+        _ = kwargs
         try:
-            updateTypeList = ['added', 'modified', 'obsolete']
-            contentTypeList = ['entries', 'mr', 'cs', 'sf']
-            contentNameD = {'entries': 'coordinates', 'mr': 'NMR restraints', 'cs': 'NMR chemical shifts', 'sf': 'structure factors'}
+            updateTypeList = ["added", "modified", "obsolete"]
+            contentTypeList = ["entries", "mr", "cs", "sf"]
+            contentNameD = {"entries": "coordinates", "mr": "NMR restraints", "cs": "NMR chemical shifts", "sf": "structure factors"}
             #
             for updateType in updateTypeList:
                 for contentType in contentTypeList:
-                    fp = os.path.join(dirPath, 'update-lists', updateType + '-' + contentType)
-                    entryIdL = self.__mU.doImport(fp, 'list')
+                    fp = os.path.join(dirPath, "update-lists", updateType + "-" + contentType)
+                    entryIdL = self.__mU.doImport(fp, "list")
                     #
                     uD = {}
                     for entryId in entryIdL:
@@ -210,11 +208,11 @@ class RepoHoldingsDataPrep(object):
                             uD[entryId] = []
                         uD[entryId].append(contentNameD[contentType])
                 for entryId in uD:
-                    uType = 'removed' if updateType == 'obsolete' else updateType
-                    retL.append({'update_id': updateId, 'entry_id': entryId, 'update_type': uType, 'repository_content_types': uD[entryId]})
+                    uType = "removed" if updateType == "obsolete" else updateType
+                    retL.append({"update_id": updateId, "entry_id": entryId, "update_type": uType, "repository_content_types": uD[entryId]})
             return retL
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
 
         return retL
 
@@ -229,19 +227,20 @@ class RepoHoldingsDataPrep(object):
         Returns:
             list: List of dictionaries containing data for rcsb_repository_holdings_current
         """
+        _ = kwargs
         rD = {}
         retL = []
         dirPath = dirPath if dirPath else self.__sandboxPath
         try:
-            updateTypeList = ['all']
-            contentTypeList = ['pdb', 'mr', 'cs', 'sf']
-            contentNameD = {'pdb': 'coordinates', 'mr': 'NMR restraints', 'cs': 'NMR chemical shifts', 'sf': 'structure factors'}
+            updateTypeList = ["all"]
+            contentTypeList = ["pdb", "mr", "cs", "sf"]
+            contentNameD = {"pdb": "coordinates", "mr": "NMR restraints", "cs": "NMR chemical shifts", "sf": "structure factors"}
             #
             tD = {}
             for updateType in updateTypeList:
                 for contentType in contentTypeList:
-                    fp = os.path.join(dirPath, 'update-lists', updateType + '-' + contentType + '-list')
-                    entryIdL = self.__mU.doImport(fp, 'list')
+                    fp = os.path.join(dirPath, "update-lists", updateType + "-" + contentType + "-list")
+                    entryIdL = self.__mU.doImport(fp, "list")
                     #
                     for entryId in entryIdL:
                         entryId = entryId.strip().upper()
@@ -249,11 +248,11 @@ class RepoHoldingsDataPrep(object):
                             tD[entryId] = {}
                         tD[entryId][contentNameD[contentType]] = True
             #
-            fp = os.path.join(dirPath, 'status', 'biounit_file_list.tsv')
-            lines = self.__mU.doImport(fp, 'list')
+            fp = os.path.join(dirPath, "status", "biounit_file_list.tsv")
+            lines = self.__mU.doImport(fp, "list")
             assemD = {}
             for line in lines:
-                fields = line.split('\t')
+                fields = line.split("\t")
                 entryId = fields[0].strip().upper()
                 assemId = fields[1].strip()
                 if entryId not in assemD:
@@ -261,44 +260,44 @@ class RepoHoldingsDataPrep(object):
                 assemD[entryId].append(assemId)
             #
             #
-            fp = os.path.join(dirPath, 'status', 'pdb_bundle_index_list.tsv')
-            bundleIdList = self.__mU.doImport(fp, 'list')
+            fp = os.path.join(dirPath, "status", "pdb_bundle_index_list.tsv")
+            bundleIdList = self.__mU.doImport(fp, "list")
             bundleD = {}
             for entryId in bundleIdList:
                 bundleD[entryId.strip().upper()] = True
             #
-            fp = os.path.join(dirPath, 'status', 'validation_report_list.tsv')
-            vList = self.__mU.doImport(fp, 'list')
+            fp = os.path.join(dirPath, "status", "validation_report_list.tsv")
+            vList = self.__mU.doImport(fp, "list")
             valD = {}
             for entryId in vList:
                 valD[entryId.strip().upper()] = True
             #
             #
-            fp = os.path.join(dirPath, 'status', 'entries_without_polymers.tsv')
-            pList = self.__mU.doImport(fp, 'list')
+            fp = os.path.join(dirPath, "status", "entries_without_polymers.tsv")
+            pList = self.__mU.doImport(fp, "list")
             pD = {}
             for entryId in pList:
                 pD[entryId.strip().upper()] = False
             #
             #
-            fp = os.path.join(dirPath, 'status', 'nmr_restraints_v2_list.tsv')
-            nmrV2List = self.__mU.doImport(fp, 'list')
+            fp = os.path.join(dirPath, "status", "nmr_restraints_v2_list.tsv")
+            nmrV2List = self.__mU.doImport(fp, "list")
             nmrV2D = {}
             for entryId in nmrV2List:
                 nmrV2D[entryId.strip().upper()] = False
             #
-            fp = os.path.join(dirPath, 'status', 'edmaps.json')
-            qD = self.__mU.doImport(fp, 'json')
+            fp = os.path.join(dirPath, "status", "edmaps.json")
+            qD = self.__mU.doImport(fp, "json")
             edD = {}
             for entryId in qD:
                 edD[entryId.upper()] = qD[entryId]
             #
-            fp = os.path.join(dirPath, 'status', 'obsolete_entry.json_2')
-            oL = self.__mU.doImport(fp, 'json')
+            fp = os.path.join(dirPath, "status", "obsolete_entry.json_2")
+            oL = self.__mU.doImport(fp, "json")
             obsD = {}
-            for d in oL:
-                obsD[d['entryId'].upper()] = True
-            logger.info("Removed entry length %d" % len(obsD))
+            for dD in oL:
+                obsD[dD["entryId"].upper()] = True
+            logger.info("Removed entry length %d", len(obsD))
             #
             #
             # Revise content types bundles and assemblies
@@ -307,46 +306,46 @@ class RepoHoldingsDataPrep(object):
                 if entryId in obsD:
                     continue
                 rD[entryId] = []
-                if 'coordinates' in dD and entryId in bundleD:
-                    rD[entryId].append('entry PDB bundle')
-                    rD[entryId].append('entry mmCIF')
-                    rD[entryId].append('entry PDBML')
+                if "coordinates" in dD and entryId in bundleD:
+                    rD[entryId].append("entry PDB bundle")
+                    rD[entryId].append("entry mmCIF")
+                    rD[entryId].append("entry PDBML")
                 else:
-                    rD[entryId].append('entry PDB')
-                    rD[entryId].append('entry mmCIF')
-                    rD[entryId].append('entry PDBML')
+                    rD[entryId].append("entry PDB")
+                    rD[entryId].append("entry mmCIF")
+                    rD[entryId].append("entry PDBML")
                 if entryId in assemD:
                     if entryId in bundleD:
-                        rD[entryId].append('assembly mmCIF')
+                        rD[entryId].append("assembly mmCIF")
                     else:
-                        rD[entryId].append('assembly PDB')
+                        rD[entryId].append("assembly PDB")
                 #
                 for cType in dD:
-                    if cType not in ['coordinates', 'NMR restraints']:
+                    if cType not in ["coordinates", "NMR restraints"]:
                         rD[entryId].append(cType)
-                    if cType == 'NMR restraints':
-                        rD[entryId].append('NMR restraints V1')
+                    if cType == "NMR restraints":
+                        rD[entryId].append("NMR restraints V1")
 
                 if entryId in nmrV2D:
-                    rD[entryId].append('NMR restraints V2')
+                    rD[entryId].append("NMR restraints V2")
                 #
                 if entryId in valD:
-                    rD[entryId].append('validation report')
+                    rD[entryId].append("validation report")
                 if entryId in edD:
-                    rD[entryId].append('2fo-fc Map')
-                    rD[entryId].append('fo-fc Map')
-                    rD[entryId].append('Map Coefficients')
+                    rD[entryId].append("2fo-fc Map")
+                    rD[entryId].append("fo-fc Map")
+                    rD[entryId].append("Map Coefficients")
                 if entryId not in pD:
-                    rD[entryId].append('FASTA sequence')
+                    rD[entryId].append("FASTA sequence")
             #
             for entryId in rD:
                 if entryId in assemD:
-                    retL.append({'update_id': updateId, 'entry_id': entryId, 'assembly_ids': assemD[entryId], 'repository_content_types': rD[entryId]})
+                    retL.append({"update_id": updateId, "entry_id": entryId, "assembly_ids": assemD[entryId], "repository_content_types": rD[entryId]})
                 else:
-                    retL.append({'update_id': updateId, 'entry_id': entryId, 'repository_content_types': rD[entryId]})
+                    retL.append({"update_id": updateId, "entry_id": entryId, "repository_content_types": rD[entryId]})
             return retL
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
 
         return retL
 
@@ -362,48 +361,52 @@ class RepoHoldingsDataPrep(object):
             list: List of dictionaries containing data for rcsb_repository_holdings_unreleased
 
         """
+        _ = kwargs
         retL = []
         fields = []
         dirPath = dirPath if dirPath else self.__sandboxPath
         try:
             #
-            fp = os.path.join(dirPath, 'status', 'status_v2.txt')
-            lines = self.__mU.doImport(fp, 'list')
+            fp = os.path.join(dirPath, "status", "status_v2.txt")
+            lines = self.__mU.doImport(fp, "list")
             for line in lines:
-                fields = line.split('\t')
+                fields = line.split("\t")
                 if len(fields) < 15:
                     continue
                 entryId = fields[1]
-                d = {'update_id': updateId,
-                     'entry_id': entryId,
-                     'status_code': fields[2]
-                     # 'sg_project_name': fields[14],
-                     # 'sg_project_abbreviation_': fields[15]}
-                     }
-                if fields[11] and len(fields[11].strip()):
-                    d['title'] = fields[11]
-                if fields[10] and len(fields[10].strip()):
-                    d['audit_authors'] = [t.strip() for t in fields[10].split(';')]
+                dD = {
+                    "update_id": updateId,
+                    "entry_id": entryId,
+                    "status_code": fields[2]
+                    # 'sg_project_name': fields[14],
+                    # 'sg_project_abbreviation_': fields[15]}
+                }
+                if fields[11] and fields[11].strip():
+                    dD["title"] = fields[11]
+                if fields[10] and fields[10].strip():
+                    dD["audit_authors"] = [t.strip() for t in fields[10].split(";")]
                     # d['audit_authors'] = fields[10]
-                if fields[12] and len(fields[12].strip()):
-                    d['author_prerelease_sequence_status'] = str(fields[12]).strip().replace('REALEASE', 'RELEASE')
-                dTupL = [('deposit_date', 3),
-                         ('deposit_date_coordinates', 4),
-                         ('deposit_date_structure_factors', 5),
-                         ('hold_date_structure_factors', 6),
-                         ('deposit_date_nmr_restraints', 7),
-                         ('hold_date_nmr_restraints', 8),
-                         ('release_date', 9),
-                         ('hold_date_coordinates', 13)]
+                if fields[12] and fields[12].strip():
+                    dD["author_prerelease_sequence_status"] = str(fields[12]).strip().replace("REALEASE", "RELEASE")
+                dTupL = [
+                    ("deposit_date", 3),
+                    ("deposit_date_coordinates", 4),
+                    ("deposit_date_structure_factors", 5),
+                    ("hold_date_structure_factors", 6),
+                    ("deposit_date_nmr_restraints", 7),
+                    ("hold_date_nmr_restraints", 8),
+                    ("release_date", 9),
+                    ("hold_date_coordinates", 13),
+                ]
                 for dTup in dTupL:
                     fN = dTup[1]
                     if fields[fN] and len(fields[fN]) >= 4:
-                        d[dTup[0]] = dateutil.parser.parse(fields[fN]) if self.__assignDates else fields[fN]
+                        dD[dTup[0]] = dateutil.parser.parse(fields[fN]) if self.__assignDates else fields[fN]
                 #
-                retL.append({k: v for k, v in d.items() if v})
+                retL.append({k: v for k, v in dD.items() if v})
         except Exception as e:
-            logger.error("Fields: %r" % fields)
-            logger.exception("Failing with %s" % str(e))
+            logger.error("Fields: %r", fields)
+            logger.exception("Failing with %s", str(e))
 
         return retL
 
@@ -431,6 +434,7 @@ class RepoHoldingsDataPrep(object):
             (list) : list of dictionaries for rcsb_repository_holdings_superseded
 
         """
+        _ = kwargs
         # rcsb_repository_holdings_removed
         rL1 = []
         # rcsb_repository_holdings_removed_audit_authors
@@ -441,44 +445,38 @@ class RepoHoldingsDataPrep(object):
         sD = {}
         dirPath = dirPath if dirPath else self.__sandboxPath
         try:
-            fp = os.path.join(dirPath, 'status', 'obsolete_entry.json_2')
-            dD = self.__mU.doImport(fp, 'json')
-            for d in dD:
-                rbL = d['obsoletedBy'] if 'obsoletedBy' in d else []
-                d1 = {'update_id': updateId,
-                      'entry_id': d['entryId'],
-                      'title': d['title'],
-                      'details': d['details'],
-                      'audit_authors': d['depositionAuthors']}
+            fp = os.path.join(dirPath, "status", "obsolete_entry.json_2")
+            dD = self.__mU.doImport(fp, "json")
+            for dT in dD:
+                rbL = dT["obsoletedBy"] if "obsoletedBy" in dT else []
+                d1 = {"update_id": updateId, "entry_id": dT["entryId"], "title": dT["title"], "details": dT["details"], "audit_authors": dT["depositionAuthors"]}
                 if rbL:
-                    d1['id_codes_replaced_by'] = rbL
+                    d1["id_codes_replaced_by"] = rbL
 
-                dTupL = [('deposit_date', 'depositionDate'),
-                         ('remove_date', 'obsoletedDate'),
-                         ('release_date', 'releaseDate')]
+                dTupL = [("deposit_date", "depositionDate"), ("remove_date", "obsoletedDate"), ("release_date", "releaseDate")]
                 for dTup in dTupL:
                     fN = dTup[1]
-                    if d[fN] and len(d[fN]) > 4:
-                        d1[dTup[0]] = dateutil.parser.parse(d[fN]) if self.__assignDates else d[fN]
+                    if dT[fN] and len(dT[fN]) > 4:
+                        d1[dTup[0]] = dateutil.parser.parse(dT[fN]) if self.__assignDates else dT[fN]
 
                 rL1.append({k: v for k, v in d1.items() if v})
                 #
-                for ii, author in enumerate(d['depositionAuthors']):
-                    d2 = {'update_id': updateId, 'entry_id': d['entryId'], 'ordinal_id': ii + 1, 'audit_author': author}
+                for ii, author in enumerate(dT["depositionAuthors"]):
+                    d2 = {"update_id": updateId, "entry_id": dT["entryId"], "ordinal_id": ii + 1, "audit_author": author}
                     rL2.append(d2)
-                if 'obsoletedBy' in d:
-                    for pdbId in d['obsoletedBy']:
+                if "obsoletedBy" in dT:
+                    for pdbId in dT["obsoletedBy"]:
                         if pdbId not in sD:
                             sD[pdbId] = []
-                        sD[pdbId].append(d['entryId'])
+                        sD[pdbId].append(dT["entryId"])
             for pdbId in sD:
                 if len(sD[pdbId]) > 1:
-                    rL3.append({'update_id': updateId, 'entry_id': pdbId, 'id_codes_superseded': sD[pdbId]})
+                    rL3.append({"update_id": updateId, "entry_id": pdbId, "id_codes_superseded": sD[pdbId]})
 
-            logger.debug("rl3 %r" % rL3)
-            logger.debug("Computed data lengths  %d %d %d" % (len(rL1), len(rL2), len(rL3)))
+            logger.debug("rl3 %r", rL3)
+            logger.debug("Computed data lengths  %d %d %d", len(rL1), len(rL2), len(rL3))
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
 
         return rL1, rL2, rL3
 
@@ -494,28 +492,29 @@ class RepoHoldingsDataPrep(object):
             list: List of dictionaries containing data for rcsb_repository_holdings_prerelease
 
         """
+        _ = kwargs
         retL = []
         fields = []
         dirPath = dirPath if dirPath else self.__sandboxPath
         try:
             # Get prerelease sequence data
-            fp = os.path.join(dirPath, 'sequence', 'pdb_seq_prerelease.fasta')
-            sD = self.__mU.doImport(fp, 'fasta', commentStyle="prerelease")
+            fp = os.path.join(dirPath, "sequence", "pdb_seq_prerelease.fasta")
+            sD = self.__mU.doImport(fp, "fasta", commentStyle="prerelease")
             seqD = {}
             for sid in sD:
-                fields = sid.split('_')
+                fields = sid.split("_")
                 entryId = str(fields[0]).upper()
                 if entryId not in seqD:
                     seqD[entryId] = []
-                seqD[entryId].append(sD[sid]['sequence'])
-            logger.debug("Loaded prerelease sequences for %d entries" % len(seqD))
+                seqD[entryId].append(sD[sid]["sequence"])
+            logger.debug("Loaded prerelease sequences for %d entries", len(seqD))
             #
             for entryId, seqL in seqD.items():
-                d = {'update_id': updateId, 'entry_id': entryId, 'seq_one_letter_code': seqL}
-                logger.debug("Adding prerelease sequences for %s" % entryId)
-                retL.append({k: v for k, v in d.items() if v})
+                dD = {"update_id": updateId, "entry_id": entryId, "seq_one_letter_code": seqL}
+                logger.debug("Adding prerelease sequences for %s", entryId)
+                retL.append({k: v for k, v in dD.items() if v})
         except Exception as e:
-            logger.error("Fields: %r" % fields)
-            logger.exception("Failing with %s" % str(e))
+            logger.error("Fields: %r", fields)
+            logger.exception("Failing with %s", str(e))
 
         return retL

@@ -43,30 +43,31 @@ class ChemRefExtractor(object):
 
         """
         idD = {}
+        logger.debug("With %r %r", extResource, kwargs)
         try:
             docList = []
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
                 if mg.collectionExists("chem_comp_core", "chem_comp_core"):
-                    logger.info("Document count is %d" % mg.count("chem_comp_v5", "chem_comp_core"))
-                    qD = {'rcsb_chem_comp_related.resource_name': extResource}
-                    selectL = ['rcsb_chem_comp_related', '__comp_id']
+                    logger.info("Document count is %d", mg.count("chem_comp_v5", "chem_comp_core"))
+                    qD = {"rcsb_chem_comp_related.resource_name": extResource}
+                    selectL = ["rcsb_chem_comp_related", "__comp_id"]
                     tL = mg.fetch("chem_comp_core", "chem_comp_core", selectL, queryD=qD)
-                    logger.info("CC mapping count %d" % len(tL))
+                    logger.info("CC mapping count %d", len(tL))
                     docList.extend(tL)
 
                 if mg.collectionExists("chem_comp_core", "bird_chem_comp_core"):
-                    qD = {'rcsb_chem_comp_related.resource_name': extResource}
-                    selectL = ['rcsb_chem_comp_related', '__prd_id']
+                    qD = {"rcsb_chem_comp_related.resource_name": extResource}
+                    selectL = ["rcsb_chem_comp_related", "__prd_id"]
                     tL = mg.fetch("chem_comp_core", "bird_chem_comp_core", selectL, queryD=qD)
-                    logger.info("BIRD mapping count %d" % len(tL))
+                    logger.info("BIRD mapping count %d", len(tL))
                     docList.extend(tL)
                 #
                 for doc in docList:
-                    dL = doc['rcsb_chem_comp_related'] if 'rcsb_chem_comp_related' in doc else []
-                    for d in dL:
-                        if d['resource_name'] == extResource and 'resource_accession_code' in d:
-                            idD[d['resource_accession_code']] = True
+                    dL = doc["rcsb_chem_comp_related"] if "rcsb_chem_comp_related" in doc else []
+                    for dD in dL:
+                        if dD["resource_name"] == extResource and "resource_accession_code" in dD:
+                            idD[dD["resource_accession_code"]] = True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return idD

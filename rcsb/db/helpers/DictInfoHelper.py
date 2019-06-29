@@ -21,6 +21,7 @@
 #  30-Sep-2018  jdw add source and host organism categories
 #   2-Oct-2018  jdw add repository_holdings and sequence_cluster content types and associated category content.
 #  12-Feb-2019  jdw add wildCardAtName argument on __getItemTransformD()
+#   6-Jun-2019  jdw remove dictSubset and dictPath keywords and methods
 ##
 """
 This helper class supplements dictionary information as required for schema production.
@@ -41,13 +42,12 @@ __license__ = "Apache 2.0"
 
 import logging
 
-from rcsb.db.helpers.DictInfoHelperBase import DictInfoHelperBase
 from rcsb.db.processors.DataTransformFactory import DataTransformInfo
 
 logger = logging.getLogger(__name__)
 
 
-class DictInfoHelper(DictInfoHelperBase):
+class DictInfoHelper(object):
     """ Supplements dictionary information as required for schema production.
 
     """
@@ -56,24 +56,21 @@ class DictInfoHelper(DictInfoHelperBase):
         """
         Args:
             **kwargs: (below)
-            dictPath (str, optional): path to the current dictioonary text
-            dictSubset (str, optional): name of dictionary content subset - alias for schema name
+            (deprecated) dictPath (str, optional): path to the current dictionary text
+            (deprecated) dictSubset (str, optional): name of dictionary content subset - alias for schema name
 
 
             Add - Include exclude filters on dictionary content -
 
 
         """
-        super(DictInfoHelper, self).__init__(**kwargs)
-        # ----
-        #
-        self.__cfgOb = kwargs.get('cfgOb', None)
-        sectionName = kwargs.get('config_section', 'dictionary_helper')
+        self.__cfgOb = kwargs.get("cfgOb", None)
+        sectionName = kwargs.get("config_section", "dictionary_helper")
         self.__cfgD = self.__cfgOb.exportConfig(sectionName=sectionName)
         #
         # ----
-        self._dictSubset = kwargs.get('dictSubset', None)
-        self._dictPath = kwargs.get("dictPath", None)
+        # self._dictSubset = kwargs.get('dictSubset', None)
+        # self._dictPath = kwargs.get("dictPath", None)
         #
         self.__dti = DataTransformInfo()
         self.__itD = self.__getItemTransformD()
@@ -81,10 +78,10 @@ class DictInfoHelper(DictInfoHelperBase):
         self.__categoryClasses = self.__getCategoryContentClasses()
         self.__attributeClasses = self.__getAttributeContentClasses()
 
-    def getDelimiter(self, categoryName, attributeName, default=','):
-        for tD in self.__cfgD['iterable_delimiters']:
-            if tD['CATEGORY_NAME'] == categoryName and tD['ATTRIBUTE_NAME'] == attributeName:
-                return tD['DELIMITER']
+    def getDelimiter(self, categoryName, attributeName, default=","):
+        for tD in self.__cfgD["iterable_delimiters"]:
+            if tD["CATEGORY_NAME"] == categoryName and tD["ATTRIBUTE_NAME"] == attributeName:
+                return tD["DELIMITER"]
         return default
 
     def getCategoryContentClasses(self, dictSubset):
@@ -92,13 +89,13 @@ class DictInfoHelper(DictInfoHelperBase):
             rD = {}
             for catName, cDL in self.__categoryClasses.items():
                 for cD in cDL:
-                    if cD['DICT_SUBSET'] == dictSubset:
+                    if cD["DICT_SUBSET"] == dictSubset:
                         if catName not in rD:
                             rD[catName] = []
-                        rD[catName].append(cD['CONTENT_CLASS'])
+                        rD[catName].append(cD["CONTENT_CLASS"])
 
         except Exception as e:
-            logger.debug("Failing with %s" % str(e))
+            logger.debug("Failing with %s", str(e))
         return rD
 
     def getAttributeContentClasses(self, dictSubset):
@@ -106,66 +103,60 @@ class DictInfoHelper(DictInfoHelperBase):
             rD = {}
             for (catName, atName), cDL in self.__attributeClasses.items():
                 for cD in cDL:
-                    if cD['DICT_SUBSET'] == dictSubset:
+                    if cD["DICT_SUBSET"] == dictSubset:
                         if (catName, atName) not in rD:
                             rD[(catName, atName)] = []
-                        rD[(catName, atName)].append(cD['CONTENT_CLASS'])
+                        rD[(catName, atName)].append(cD["CONTENT_CLASS"])
 
         except Exception as e:
-            logger.debug("Failing with %s" % str(e))
+            logger.debug("Failing with %s", str(e))
         return rD
 
     def __getCategoryContentClasses(self):
         classD = {}
         try:
-            for cTup, cDL in self.__cfgD['content_classes'].items():
+            for cTup, cDL in self.__cfgD["content_classes"].items():
                 for cD in cDL:
-                    if cD['CATEGORY_NAME'] not in classD:
-                        classD[cD['CATEGORY_NAME']] = []
-                    classD[cD['CATEGORY_NAME']].append({'CONTENT_CLASS': cTup[0], 'DICT_SUBSET': cTup[1]})
+                    if cD["CATEGORY_NAME"] not in classD:
+                        classD[cD["CATEGORY_NAME"]] = []
+                    classD[cD["CATEGORY_NAME"]].append({"CONTENT_CLASS": cTup[0], "DICT_SUBSET": cTup[1]})
         except Exception as e:
-            logger.debug("Failing with %s" % str(e))
+            logger.debug("Failing with %s", str(e))
         return classD
 
-    def __getAttributeContentClasses(self, wildCardAtName='__all__'):
+    def __getAttributeContentClasses(self, wildCardAtName="__all__"):
         classD = {}
         try:
-            for cTup, cDL in self.__cfgD['content_classes'].items():
+            for cTup, cDL in self.__cfgD["content_classes"].items():
                 for cD in cDL:
-                    catName = cD['CATEGORY_NAME']
+                    catName = cD["CATEGORY_NAME"]
                     # if now optional 'ATTRIBUTE_NAME_LIST' is absent insert wildcard attribute
-                    if 'ATTRIBUTE_NAME_LIST' in cD:
-                        for atName in cD['ATTRIBUTE_NAME_LIST']:
+                    if "ATTRIBUTE_NAME_LIST" in cD:
+                        for atName in cD["ATTRIBUTE_NAME_LIST"]:
                             if (catName, atName) not in classD:
                                 classD[(catName, atName)] = []
-                            classD[(catName, atName)].append({'CONTENT_CLASS': cTup[0], 'DICT_SUBSET': cTup[1]})
+                            classD[(catName, atName)].append({"CONTENT_CLASS": cTup[0], "DICT_SUBSET": cTup[1]})
                     else:
                         if (catName, wildCardAtName) not in classD:
                             classD[(catName, wildCardAtName)] = []
-                        classD[(catName, wildCardAtName)].append({'CONTENT_CLASS': cTup[0], 'DICT_SUBSET': cTup[1]})
+                        classD[(catName, wildCardAtName)].append({"CONTENT_CLASS": cTup[0], "DICT_SUBSET": cTup[1]})
         except Exception as e:
-            logger.debug("Failing with %s" % str(e))
+            logger.debug("Failing with %s", str(e))
         return classD
 
-    def __getItemTransformD(self, wildCardAtName='__all__'):
+    def __getItemTransformD(self, wildCardAtName="__all__"):
         itD = {}
-        for f, dL in self.__cfgD['item_transformers'].items():
-            logger.debug("Verify transform method %r" % f)
-            if self.__dti.isImplemented(f):
+        for iFilter, dL in self.__cfgD["item_transformers"].items():
+            logger.debug("Verify transform method %r", iFilter)
+            if self.__dti.isImplemented(iFilter):
                 for d in dL:
-                    atN = d['ATTRIBUTE_NAME'] if 'ATTRIBUTE_NAME' in d else wildCardAtName
-                    itD.setdefault((d['CATEGORY_NAME'], atN), []).append(f)
+                    atN = d["ATTRIBUTE_NAME"] if "ATTRIBUTE_NAME" in d else wildCardAtName
+                    itD.setdefault((d["CATEGORY_NAME"], atN), []).append(iFilter)
                     # if (d['CATEGORY_NAME'], d['ATTRIBUTE_NAME']) not in itD:
                     #     itD[(d['CATEGORY_NAME'], d['ATTRIBUTE_NAME'])] = []
                     # itD[(d['CATEGORY_NAME'], d['ATTRIBUTE_NAME'])].append(f)
 
         return itD
-
-    def getDictPath(self):
-        return self._dictPath
-
-    def getDictSubSet(self):
-        return self._dictSubset
 
     def getTransformItems(self, transformName):
         """ Return the list of items subject to the input attribute filter.
@@ -174,7 +165,7 @@ class DictInfoHelper(DictInfoHelperBase):
         """
         try:
             if self.__dti.isImplemented(transformName):
-                return self.__cfgD['item_transformers'][transformName]
+                return self.__cfgD["item_transformers"][transformName]
         except Exception:
             return []
 
@@ -195,7 +186,7 @@ class DictInfoHelper(DictInfoHelperBase):
             return {}
 
     def getCardinalityCategoryExtras(self):
-        return self.__cfgD['cardinality_category_extras']
+        return self.__cfgD["cardinality_category_extras"]
 
     def getCardinalityKeyItem(self, dictSubset):
         """ Identify the parent item for the dictionary subset that can be used to
@@ -204,10 +195,10 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return self.__cfgD['cardinality_parent_items'][dictSubset]
+            return self.__cfgD["cardinality_parent_items"][dictSubset]
         except Exception:
             pass
-        return {'CATEGORY_NAME': None, 'ATTRIBUTE_NAME': None}
+        return {"CATEGORY_NAME": None, "ATTRIBUTE_NAME": None}
 
     def getTypeCodes(self, kind):
         """ Get the list of CIF type codes of a particular kind.
@@ -215,15 +206,14 @@ class DictInfoHelper(DictInfoHelperBase):
            returns (dict) [{'TYPE_CODE': <type> ... other feature of the type}]
         """
         try:
-            return self.__cfgD['type_code_classes'][kind]
+            return self.__cfgD["type_code_classes"][kind]
         except Exception as e:
-            logger.exception("Failing for kind %r with %s" % (kind, str(e)))
-            pass
+            logger.exception("Failing for kind %r with %s", kind, str(e))
         return []
 
     def getQueryStrings(self, kind):
         try:
-            return self.__cfgD['query_string_selectors'][kind]
+            return self.__cfgD["query_string_selectors"][kind]
         except Exception:
             pass
 
@@ -234,7 +224,7 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return self.__cfgD['selection_filters'][(kind, dictSubset)]
+            return self.__cfgD["selection_filters"][(kind, dictSubset)]
         except Exception:
             pass
         return []
@@ -244,7 +234,7 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return {kind: v for (kind, dS), v in self.__cfgD['selection_filters'].items() if dS == dictSubset}
+            return {kind: v for (kind, dS), v in self.__cfgD["selection_filters"].items() if dS == dictSubset}
         except Exception:
             pass
         return {}
@@ -254,7 +244,7 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return self.__cfgD['special_content'][(kind, dictSubset)]
+            return self.__cfgD["special_content"][(kind, dictSubset)]
         except Exception:
             pass
         return []
@@ -264,7 +254,7 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return {kind: v for (kind, dS), v in self.__cfgD['special_content'].items() if dS == dictSubset}
+            return {kind: v for (kind, dS), v in self.__cfgD["special_content"].items() if dS == dictSubset}
         except Exception:
             pass
         return {}
@@ -274,7 +264,7 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return self.__cfgD['slice_parent_items'][(kind, dictSubset)]
+            return self.__cfgD["slice_parent_items"][(kind, dictSubset)]
         except Exception:
             pass
         return []
@@ -284,7 +274,7 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return {kind: v for (kind, dS), v in self.__cfgD['slice_parent_items'].items() if dS == dictSubset}
+            return {kind: v for (kind, dS), v in self.__cfgD["slice_parent_items"].items() if dS == dictSubset}
         except Exception:
             pass
         return {}
@@ -294,7 +284,7 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return self.__cfgD['slice_parent_filters'][(kind, dictSubset)]
+            return self.__cfgD["slice_parent_filters"][(kind, dictSubset)]
         except Exception:
             pass
         return []
@@ -304,19 +294,19 @@ class DictInfoHelper(DictInfoHelperBase):
 
         """
         try:
-            return {kind: v for (kind, dS), v in self.__cfgD['slice_parent_filters'].items() if dS == dictSubset}
+            return {kind: v for (kind, dS), v in self.__cfgD["slice_parent_filters"].items() if dS == dictSubset}
         except Exception:
             pass
         return {}
 
     def getSliceCardinalityCategoryExtras(self, dictSubset, kind):
         try:
-            return self.__cfgD['slice_cardinality_category_extras'][(kind, dictSubset)]
+            return self.__cfgD["slice_cardinality_category_extras"][(kind, dictSubset)]
         except Exception:
             return []
 
     def getSliceCategoryExtras(self, dictSubset, kind):
         try:
-            return self.__cfgD['slice_category_extras'][(kind, dictSubset)]
+            return self.__cfgD["slice_category_extras"][(kind, dictSubset)]
         except Exception:
             return []

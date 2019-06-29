@@ -36,7 +36,7 @@ class Connection(object):
     """ Class to encapsulate connection semantics for PostgresSQL DBI connection for CockroachDB.
     """
 
-    def __init__(self, cfgOb=None, infoD=None, resourceName=None, sectionName='site_info', verbose=False):
+    def __init__(self, cfgOb=None, infoD=None, resourceName=None, sectionName="site_info", verbose=False):
         self.__verbose = verbose
 
         self.__dbcon = None
@@ -53,7 +53,7 @@ class Connection(object):
         self.__dbPort = None
         #
         self.__defaultPort = 26257
-        self.__dbServer = 'cockroach'
+        self.__dbServer = "cockroach"
         self.__resourceName = resourceName
         #
         self.__cfgOb = cfgOb
@@ -71,31 +71,31 @@ class Connection(object):
         try:
             self.__infoD = copy.deepcopy(infoD)
             self.__dbName = self.__infoD.get("DB_NAME")
-            self.__dbHost = self.__infoD.get("DB_HOST", 'localhost')
+            self.__dbHost = self.__infoD.get("DB_HOST", "localhost")
             self.__dbUser = self.__infoD.get("DB_USER", None)
             self.__dbPw = self.__infoD.get("DB_PW", None)
             self.__dbSocket = self.__infoD.get("DB_SOCKET", None)
             self.__dbServer = self.__infoD.get("DB_SERVER", "cockroach")
             #
             port = self.__infoD.get("DB_PORT", self.__defaultPort)
-            if port and len(str(port)) > 0:
+            if port and str(port):
                 self.__dbPort = int(str(port))
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
 
     def assignResource(self, resourceName=None, sectionName=None):
         #
         defaultPort = 26257
-        defaultHost = 'localhost'
-        dbServer = 'cockroach'
-        defaultDbName = 'system'
+        defaultHost = "localhost"
+        dbServer = "cockroach"
+        defaultDbName = "system"
 
         self.__resourceName = resourceName
         infoD = {}
         if not self.__cfgOb:
             return infoD
         #
-        if (resourceName == "COCKROACH_DB"):
+        if resourceName == "COCKROACH_DB":
             infoD["DB_NAME"] = self.__cfgOb.get("COCKROACH_DB_NAME", default=defaultDbName, sectionName=sectionName)
             infoD["DB_HOST"] = self.__cfgOb.get("COCKROACH_DB_HOST", sectionName=sectionName)
             infoD["DB_SOCKET"] = self.__cfgOb.get("COCKROACH_DB_SOCKET", default=None, sectionName=sectionName)
@@ -111,7 +111,7 @@ class Connection(object):
             infoD["DB_USER"] = self.__cfgOb.get("DB_USER_NAME", sectionName=sectionName)
             infoD["DB_PW"] = self.__cfgOb.get("DB_PASSWORD", sectionName=sectionName)
         #
-        infoD['DB_SERVER'] = dbServer
+        infoD["DB_SERVER"] = dbServer
         self.setPreferences(infoD)
         #
         return copy.deepcopy(infoD)
@@ -130,21 +130,14 @@ class Connection(object):
 
         try:
             if self.__dbPw:
-                dbcon = psycopg2.connect(database="%s" % self.__dbName,
-                                         user="%s" % self.__dbUser,
-                                         password="%s" % self.__dbPw,
-                                         host="%s" % self.__dbHost,
-                                         port=self.__dbPort)
+                dbcon = psycopg2.connect(database="%s" % self.__dbName, user="%s" % self.__dbUser, password="%s" % self.__dbPw, host="%s" % self.__dbHost, port=self.__dbPort)
             else:
-                dbcon = psycopg2.connect(database="%s" % self.__dbName,
-                                         user="%s" % self.__dbUser,
-                                         host="%s" % self.__dbHost,
-                                         port=self.__dbPort)
+                dbcon = psycopg2.connect(database="%s" % self.__dbName, user="%s" % self.__dbUser, host="%s" % self.__dbHost, port=self.__dbPort)
 
             dbcon.set_session(autocommit=True)
             self.__dbcon = dbcon
         except Exception as e:
-            logger.error("Failing with %s" % str(e))
+            logger.error("Failing with %s", str(e))
             self.__dbcon = None
 
         return self.__dbcon
@@ -158,7 +151,7 @@ class Connection(object):
                 self.__dbcon = None
                 return True
             except Exception as e:
-                logger.exception("Connection close error %s" % str(e))
+                logger.exception("Connection close error %s", str(e))
 
         return False
 

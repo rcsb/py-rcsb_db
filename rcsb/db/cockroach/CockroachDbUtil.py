@@ -38,18 +38,11 @@ class CockroachDbQuery(object):
     def __init__(self, dbcon, verbose=True):
         self.__dbcon = dbcon
         self.__verbose = verbose
-        self.__ops = ['EQ', 'GE', 'GT', 'LT', 'LE', 'LIKE', 'NOT LIKE']
-        self.__opDict = {'EQ': '=',
-                         'GE': '>=',
-                         'GT': '>',
-                         'LT': '<',
-                         'LE': '<=',
-                         'LIKE': 'LIKE',
-                         'NOT LIKE': 'NOT LIKE'
-                         }
-        self.__logOps = ['AND', 'OR', 'NOT']
-        self.__grpOps = ['BEGIN', 'END']
-        self.__warningAction = 'default'
+        self.__ops = ["EQ", "GE", "GT", "LT", "LE", "LIKE", "NOT LIKE"]
+        self.__opDict = {"EQ": "=", "GE": ">=", "GT": ">", "LT": "<", "LE": "<=", "LIKE": "LIKE", "NOT LIKE": "NOT LIKE"}
+        self.__logOps = ["AND", "OR", "NOT"]
+        self.__grpOps = ["BEGIN", "END"]
+        self.__warningAction = "default"
 
     def sqlTemplateCommandMany(self, sqlTemplate, valueLists=None, pageSize=100):
         """  Execute a batch sql commands followed by a single commit. Commands are
@@ -66,39 +59,40 @@ class CockroachDbQuery(object):
             curs.close()
             return True
         except psycopg2.DatabaseError as e:
-            logger.info("sqlTemplate: %s" % sqlTemplate)
-            logger.debug("valueLists:  %r" % valueLists)
-            logger.error("Database error is:\n%s" % str(e))
+            logger.info("sqlTemplate: %s", sqlTemplate)
+            logger.debug("valueLists:  %r", valueLists)
+            logger.error("Database error is:\n%s", str(e))
             curs.close()
         except Warning as e:
-            logger.warning("Warning is:\n%s" % str(e))
+            logger.warning("Warning is:\n%s", str(e))
             curs.close()
         except Exception as e:
-            logger.exception("Exception is:\n%s" % str(e))
+            logger.exception("Exception is:\n%s", str(e))
             curs.close()
         #
         return False
 
-    def sqlTemplateCommand(self, sqlTemplate=None, valueList=[]):
+    def sqlTemplateCommand(self, sqlTemplate=None, valueList=None):
         """  Execute sql template command with associated value list.
 
              Insert one row -
 
              Errors and warnings that generate exceptions are caught by this method.
         """
+        valueList = valueList if valueList else []
         try:
             curs = self.__dbcon.cursor()
             curs.execute(sqlTemplate, valueList)
             curs.close()
             return True
         except psycopg2.DatabaseError as e:
-            logger.info(" error is:\n%s\n" % str(e))
+            logger.info(" error is:\n%s\n", str(e))
             curs.close()
         except Warning as e:
-            logger.info(" warning is:\n%s\n" % str(e))
+            logger.info(" warning is:\n%s\n", str(e))
             curs.close()
         except Exception as e:
-            logger.info(" exception is:\n%s\n" % str(e))
+            logger.info(" exception is:\n%s\n", str(e))
             curs.close()
         return False
 
@@ -120,29 +114,29 @@ class CockroachDbQuery(object):
             #
             lenT = len(sqlTemplateValueList)
             for ii in range(lenT):
-                t, vL = sqlTemplateValueList[ii]
+                tV, vL = sqlTemplateValueList[ii]
                 try:
-                    curs.execute(t, vL)
+                    curs.execute(tV, vL)
                 except Exception as e:
                     iFail += 1
-                    logger.info(" Error is: %s" % str(e))
-                    # logger.info(" Template for record %d of %d : %s" % (ii, lenT, t))
-                    logger.info(" Record %d of %d value list: %s" % (ii, lenT, vL))
+                    logger.info(" Error is: %s", str(e))
+                    # logger.info(" Template for record %d of %d : %s", ii, lenT, t)
+                    logger.info(" Record %d of %d value list: %s", ii, lenT, vL)
             #
             curs.close()
-            logger.debug(" Inserted %d of %d values" % (ii - iFail, lenT))
+            logger.debug(" Inserted %d of %d values", ii - iFail, lenT)
             return ii - iFail + 1
         except psycopg2.DatabaseError as e:
-            logger.exception(" error is: %s" % str(e))
-            logger.info(" Record %d of %d value list: %s" % (ii, lenT, vL))
+            logger.exception(" error is: %s", str(e))
+            logger.info(" Record %d of %d value list: %s", ii, lenT, vL)
             curs.close()
         except Warning as e:
-            logger.info(" Warning is: %s" % str(e))
-            logger.info(" Record %d of %d value list: %s" % (ii, lenT, vL))
+            logger.info(" Warning is: %s", str(e))
+            logger.info(" Record %d of %d value list: %s", ii, lenT, vL)
             curs.close()
         except Exception as e:
-            logger.info(" Exception is: %s" % str(e))
-            logger.info(" Record %d of %d value list: %s" % (ii, lenT, vL))
+            logger.info(" Exception is: %s", str(e))
+            logger.info(" Record %d of %d value list: %s", ii, lenT, vL)
             curs.close()
         return ii - iFail + 1
 
@@ -154,7 +148,7 @@ class CockroachDbQuery(object):
         """
 
         try:
-            sqlCommand = ''
+            sqlCommand = ""
             curs = self.__dbcon.cursor()
             for sqlCommand in sqlCommandList:
                 curs.execute(sqlCommand)
@@ -162,16 +156,16 @@ class CockroachDbQuery(object):
             curs.close()
             return True
         except psycopg2.DatabaseError as e:
-            logger.info(" SQL command failed for:\n%s" % sqlCommand)
-            logger.info(" database error is message is:\n%s" % str(e))
+            logger.info(" SQL command failed for:\n%s", sqlCommand)
+            logger.info(" database error is message is:\n%s", str(e))
             curs.close()
         except Warning as e:
-            logger.info(" warning message is:\n%s" % str(e))
-            logger.info(" generated warnings for command:\n%s" % sqlCommand)
+            logger.info(" warning message is:\n%s", str(e))
+            logger.info(" generated warnings for command:\n%s", sqlCommand)
             curs.close()
         except Exception as e:
-            logger.info(" exception message is:\n%s\n" % str(e))
-            logger.exception(" SQL command failed for:\n%s\n" % sqlCommand)
+            logger.info(" exception message is:\n%s\n", str(e))
+            logger.exception(" SQL command failed for:\n%s\n", sqlCommand)
             curs.close()
 
         return False
@@ -185,16 +179,16 @@ class CockroachDbQuery(object):
             curs.close()
             return True
         except psycopg2.OperationalError as e:
-            logger.info(" SQL command failed for:\n%s" % queryString)
-            logger.info(" Warning is message is:\n%s" % str(e))
+            logger.info(" SQL command failed for:\n%s", queryString)
+            logger.info(" Warning is message is:\n%s", str(e))
             curs.close()
         except psycopg2.DatabaseError as e:
-            logger.info(" SQL command failed for:\n%s" % queryString)
-            logger.info(" Warning is message is:\n%s" % str(e))
+            logger.info(" SQL command failed for:\n%s", queryString)
+            logger.info(" Warning is message is:\n%s", str(e))
             curs.close()
         except Exception as e:
-            logger.info(" SQL command failed for:\n%s" % queryString)
-            logger.info(" Warning is message is:\n%s" % str(e))
+            logger.info(" SQL command failed for:\n%s", queryString)
+            logger.info(" Warning is message is:\n%s", str(e))
             curs.close()
         return []
 
@@ -217,54 +211,57 @@ class CockroachDbQuery(object):
             curs.execute(queryString)
             while True:
                 result = curs.fetchone()
-                if (result is not None):
+                if result is not None:
                     rowList.append(result)
                 else:
                     break
             curs.close()
             return rowList
         except psycopg2.ProgrammingError as e:
-            logger.info(" Warning is message is:\n%s" % str(e))
+            logger.info(" Warning is message is:\n%s", str(e))
             curs.close()
         except psycopg2.OperationalError as e:
-            logger.info(" Warning is message is:\n%s" % str(e))
-            logger.info(" SQL command failed for:\n%s" % queryString)
+            logger.info(" Warning is message is:\n%s", str(e))
+            logger.info(" SQL command failed for:\n%s", queryString)
             curs.close()
         except psycopg2.DatabaseError as e:
-            logger.info(" Warning is message is:\n%s" % str(e))
-            logger.info(" SQL command failed for:\n%s" % queryString)
+            logger.info(" Warning is message is:\n%s", str(e))
+            logger.info(" SQL command failed for:\n%s", queryString)
             curs.close()
         except Exception as e:
-            logger.info(" Error message is:\n%s" % str(e))
-            logger.exception(" SQL command failed for:\n%s" % queryString)
+            logger.info(" Error message is:\n%s", str(e))
+            logger.exception(" SQL command failed for:\n%s", queryString)
             curs.close()
 
         return []
 
-    def simpleQuery(self, selectList=[], fromList=[], condition='',
-                    orderList=[], returnObj=[]):
+    def simpleQuery(self, selectList=None, fromList=None, condition="", orderList=None, returnObj=None):
         """
         """
         #
+        selectList = selectList if selectList else []
+        fromList = fromList if fromList else []
+        orderList = orderList if orderList else []
+        returnObj = returnObj if returnObj else []
         colsCsv = ",".join(["%s" % k for k in selectList])
         tablesCsv = ",".join(["%s" % k for k in fromList])
 
         order = ""
-        if (len(orderList) > 0):
-            (a, t) = orderList[0]
-            order = " ORDER BY CAST(%s AS %s) " % (a, t)
-            for (a, t) in orderList[1:]:
-                order += ", CAST(%s AS %s) " % (a, t)
+        if orderList:
+            (aV, tV) = orderList[0]
+            order = " ORDER BY CAST(%s AS %s) " % (aV, tV)
+            for (aV, tV) in orderList[1:]:
+                order += ", CAST(%s AS %s) " % (aV, tV)
 
         #
         query = "SELECT " + colsCsv + " FROM " + tablesCsv + condition + order
-        if (self.__verbose):
-            logger.info("Query: %s\n" % query)
+        if self.__verbose:
+            logger.info("Query: %s\n", query)
         curs = self.__dbcon.cursor()
         curs.execute(query)
         while True:
             result = curs.fetchone()
-            if (result is not None):
+            if result is not None:
                 returnObj.append(result)
             else:
                 break

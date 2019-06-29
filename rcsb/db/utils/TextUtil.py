@@ -16,30 +16,30 @@ except ImportError:
     unescape = HTMLParser().unescape
 
 
-def unescapeXmlCharRef(i_str):
+def unescapeXmlCharRef(iStr):
     """
     Convert html character entities into unicode.
     """
     try:
-        return unescape(i_str)
+        return unescape(iStr)
     except Exception:
-        return i_str
+        return iStr
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("BEGIN")
     print("%r" % unescapeXmlCharRef(None))
-    print("%r" % unescapeXmlCharRef(''))
-    print("%r" % unescapeXmlCharRef('&lt;b&gt;'))
-    print("%r" % unescapeXmlCharRef('Here is a &quot;').encode('utf-8'))
-    print("%r" % unescapeXmlCharRef('Here is a &Phi;').encode('utf-8'))
-    print("%r" % unescapeXmlCharRef('Here is a &Psi;'))
-    print("%r" % unescapeXmlCharRef('Here is a &alpha;'))
-    print("%r" % unescapeXmlCharRef('Here is a &#xa3;'))
+    print("%r" % unescapeXmlCharRef(""))
+    print("%r" % unescapeXmlCharRef("&lt;b&gt;"))
+    print("%r" % unescapeXmlCharRef("Here is a &quot;").encode("utf-8"))
+    print("%r" % unescapeXmlCharRef("Here is a &Phi;").encode("utf-8"))
+    print("%r" % unescapeXmlCharRef("Here is a &Psi;"))
+    print("%r" % unescapeXmlCharRef("Here is a &alpha;"))
+    print("%r" % unescapeXmlCharRef("Here is a &#xa3;"))
 
-    print("%r" % unescapeXmlCharRef('Here is a &#8453;'))
-    print("%r" % unescapeXmlCharRef('Here is a &#9734;'))
-    print("%r" % unescapeXmlCharRef('Here is a &#120171;'))
+    print("%r" % unescapeXmlCharRef("Here is a &#8453;"))
+    print("%r" % unescapeXmlCharRef("Here is a &#9734;"))
+    print("%r" % unescapeXmlCharRef("Here is a &#120171;"))
     for ichar in range(1, 8000):
         myStr = "decimal %6d char &#%d;" % (ichar, ichar)
         print("%r" % unescapeXmlCharRef(myStr))

@@ -54,16 +54,16 @@ class ClusterDataPrep(object):
     """
 
     def __init__(self, **kwargs):
-        self.__workPath = kwargs.get('workPath', None)
-        self.__instanceSchemaName = kwargs.get('instanceSchemaName', 'rcsb_instance_sequence_cluster_list')
-        self.__entitySchemaName = kwargs.get('entitySchemaName', 'rcsb_entity_sequence_cluster_list')
-        self.__clusterSchemaName = kwargs.get('clusterSchemaName', 'rcsb_entity_sequence_cluster_identifer_list')
-        self.__entityAttributeName = kwargs.get('entityAttributeName', 'entity_id')
-        self.__instanceAttributeName = kwargs.get('instanceAttributeName', 'instance_id')
+        self.__workPath = kwargs.get("workPath", None)
+        self.__instanceSchemaName = kwargs.get("instanceSchemaName", "rcsb_instance_sequence_cluster_list")
+        self.__entitySchemaName = kwargs.get("entitySchemaName", "rcsb_entity_sequence_cluster_list")
+        self.__clusterSchemaName = kwargs.get("clusterSchemaName", "rcsb_entity_sequence_cluster_identifer_list")
+        self.__entityAttributeName = kwargs.get("entityAttributeName", "entity_id")
+        self.__instanceAttributeName = kwargs.get("instanceAttributeName", "instance_id")
         # Just a note for the assumned naming conventions clusters-by-%(clusterType)s-%(level)s.txt of the cluster data files
-        self.__clusterFileNameTemplate = kwargs.get('clusterFileNameTemplate ', 'clusters-by-%(clusterType)s-%(level)s.txt')
+        self.__clusterFileNameTemplate = kwargs.get("clusterFileNameTemplate ", "clusters-by-%(clusterType)s-%(level)s.txt")
 
-    def extract(self, dataSetId, clusterSetLocator, levels, clusterType='entity'):
+    def extract(self, dataSetId, clusterSetLocator, levels, clusterType="entity"):
         """Extract cluster membership details from an RSCB sequence cluster data set.   Data are
         returned for either entity or instance cluster types for all sequence identiry levels in the
         data set.  Naming follows conventions in the RCSB extension dictionary.
@@ -84,16 +84,16 @@ class ClusterDataPrep(object):
         docByClusterD = {}
         try:
             ok = True
-            if clusterType not in ['entity', 'chain', 'instance']:
+            if clusterType not in ["entity", "chain", "instance"]:
                 ok = False
             # Levels must be string values internally -
             levelList = [str(level) for level in levels]
             #
             schemaNameMembers = self.__clusterSchemaName
-            if clusterType.lower() == 'entity':
+            if clusterType.lower() == "entity":
                 clusterTypeKey = self.__entityAttributeName
                 schemaNameMembership = self.__entitySchemaName
-            elif clusterType.lower() in ['chain', 'instance']:
+            elif clusterType.lower() in ["chain", "instance"]:
                 clusterTypeKey = self.__instanceAttributeName
                 schemaNameMembership = self.__instanceSchemaName
             else:
@@ -109,10 +109,10 @@ class ClusterDataPrep(object):
         mD = {}
         cD = {}
         for level in levelList:
-            levelLoc = os.path.join(clusterSetLocator, self.__clusterFileNameTemplate % ({'clusterType': clusterType, 'level': level}))
-            cL = mU.doImport(levelLoc, format="list")
+            levelLoc = os.path.join(clusterSetLocator, self.__clusterFileNameTemplate % ({"clusterType": clusterType, "level": level}))
+            cL = mU.doImport(levelLoc, fmt="list")
             clusterD = {ii: line.split() for ii, line in enumerate(cL, 1)}
-            logger.debug("Cluster level %s length %d" % (level, len(clusterD)))
+            logger.debug("Cluster level %s length %d", level, len(clusterD))
             cD[level] = clusterD
             mD[level] = self.__makeIdDict(clusterD)
 
@@ -129,45 +129,45 @@ class ClusterDataPrep(object):
                 if seqId in mD[level]:
                     memberL.append(int(mD[level][seqId]))
                 else:
-                    logger.info("Missing value for level %s sequence id  %s\n" % (level, seqId))
+                    logger.info("Missing value for level %s sequence id  %s\n", level, seqId)
                     memberL.append(None)
             # membership tuple
             rD[seqId] = tuple(memberL)
-        logger.info("Length of cluster solution %d" % len(rD))
+        logger.info("Length of cluster solution %d", len(rD))
         #
         #  - Document friendly organizations -
         #
         cL = []
         for seqId, memberTup in rD.items():
-            seqIdL = seqId.split('_')
-            d = {'data_set_id': dataSetId, 'entry_id': seqIdL[0], clusterTypeKey: seqIdL[1]}
+            seqIdL = seqId.split("_")
+            dD = {"data_set_id": dataSetId, "entry_id": seqIdL[0], clusterTypeKey: seqIdL[1]}
             mL = []
             for ii, cId in enumerate(memberTup):
                 if cId:
-                    mL.append({'identity': int(levelList[ii]), 'cluster_id': cId})
-            d['cluster_membership'] = mL
-            cL.append(d)
+                    mL.append({"identity": int(levelList[ii]), "cluster_id": cId})
+            dD["cluster_membership"] = mL
+            cL.append(dD)
         docBySequenceD[schemaNameMembership] = cL
         #
         cL = []
         for level, clusterD in cD.items():
             for cId, mL in clusterD.items():
-                d = {'data_set_id': dataSetId, 'identity': int(levelList[ii]), 'cluster_id': cId}
+                dD = {"data_set_id": dataSetId, "identity": int(level), "cluster_id": cId}
                 tL = []
                 for seqId in mL:
-                    seqIdL = seqId.split('_')
-                    tL.append({'entry_id': seqIdL[0], clusterTypeKey: seqIdL[1]})
-                d['sequence_membership'] = tL
-                cL.append(d)
+                    seqIdL = seqId.split("_")
+                    tL.append({"entry_id": seqIdL[0], clusterTypeKey: seqIdL[1]})
+                dD["sequence_membership"] = tL
+                cL.append(dD)
         docByClusterD[schemaNameMembers] = cL
         # - CIF friendly organization --
         #
         cL = []
         for ii, level in enumerate(levelList):
             for ky, cTup in rD.items():
-                seqIdL = ky.split('_')
-                d = {'data_set_id': dataSetId, 'entry_id': seqIdL[0], clusterTypeKey: seqIdL[1], 'identity': int(level), 'cluster_id': int(cTup[ii])}
-                cL.append(d)
+                seqIdL = ky.split("_")
+                dD = {"data_set_id": dataSetId, "entry_id": seqIdL[0], clusterTypeKey: seqIdL[1], "identity": int(level), "cluster_id": int(cTup[ii])}
+                cL.append(dD)
         cifD[schemaNameMembership] = cL
         #
         return cifD, docBySequenceD, docByClusterD
@@ -178,6 +178,6 @@ class ClusterDataPrep(object):
         """
         idD = {}
         for k, vL in clusterD.items():
-            for id in vL:
-                idD[id] = k
+            for tid in vL:
+                idD[tid] = k
         return idD

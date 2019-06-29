@@ -58,18 +58,11 @@ class MyDbQuery(object):
     def __init__(self, dbcon, verbose=True):
         self.__dbcon = dbcon
         self.__verbose = verbose
-        self.__ops = ['EQ', 'GE', 'GT', 'LT', 'LE', 'LIKE', 'NOT LIKE']
-        self.__opDict = {'EQ': '=',
-                         'GE': '>=',
-                         'GT': '>',
-                         'LT': '<',
-                         'LE': '<=',
-                         'LIKE': 'LIKE',
-                         'NOT LIKE': 'NOT LIKE'
-                         }
-        self.__logOps = ['AND', 'OR', 'NOT']
-        self.__grpOps = ['BEGIN', 'END']
-        self.__warningAction = 'default'
+        self.__ops = ["EQ", "GE", "GT", "LT", "LE", "LIKE", "NOT LIKE"]
+        self.__opDict = {"EQ": "=", "GE": ">=", "GT": ">", "LT": "<", "LE": "<=", "LIKE": "LIKE", "NOT LIKE": "NOT LIKE"}
+        self.__logOps = ["AND", "OR", "NOT"]
+        self.__grpOps = ["BEGIN", "END"]
+        self.__warningAction = "default"
 
     def sqlBatchTemplateCommand(self, templateValueList, prependSqlList=None):
         """  Execute a batch sql commands followed by a single commit. Commands are
@@ -83,71 +76,72 @@ class MyDbQuery(object):
         with warnings.catch_warnings():
             self.__setWarningHandler()
             try:
-                t = ''
-                v = []
+                tpl = ""
+                vL = []
                 curs = self.__dbcon.cursor()
-                if ((prependSqlList is not None) and (len(prependSqlList) > 0)):
-                    sqlCommand = '\n'.join(prependSqlList)
+                if (prependSqlList is not None) and prependSqlList:
+                    sqlCommand = "\n".join(prependSqlList)
                     curs.execute(sqlCommand)
 
-                for t, v in templateValueList:
-                    curs.execute(t, v)
+                for tpl, vL in templateValueList:
+                    curs.execute(tpl, vL)
                 self.__dbcon.commit()
                 curs.close()
                 return True
             except MySQLdb.Error as e:
-                logger.info("MySQL error message is:\n%s\n" % e)
-                logger.error("SQL command failed for:\n%s\n" % (t % tuple(v)))
+                logger.info("MySQL error message is:\n%s\n", str(e))
+                logger.error("SQL command failed for:\n%s\n", (tpl % tuple(vL)))
                 self.__dbcon.rollback()
                 curs.close()
             except MySQLdb.Warning as e:
-                logger.info("MySQL warning message is:\n%s\n" % e)
-                logger.info("SQL Command generated warnings for command:\n%s\n" % (t % tuple(v)))
+                logger.info("MySQL warning message is:\n%s\n", str(e))
+                logger.info("SQL Command generated warnings for command:\n%s\n", (tpl % tuple(vL)))
                 self.__dbcon.rollback()
                 curs.close()
             except Exception as e:
-                logger.info("SQL Command generated exception for command:\n%s\n" % (t % tuple(v)))
-                logger.exception("Failing with %s" % str(e))
+                logger.info("SQL Command generated exception for command:\n%s\n", (tpl % tuple(vL)))
+                logger.exception("Failing with %s", str(e))
                 self.__dbcon.rollback()
                 curs.close()
             return False
 
-    def sqlTemplateCommand(self, sqlTemplate=None, valueList=[]):
+    def sqlTemplateCommand(self, sqlTemplate=None, valueList=None):
         """  Execute sql template command with associated value list.
 
              Errors and warnings that generate exceptions are caught by this method.
         """
+        vList = valueList if valueList else []
         with warnings.catch_warnings():
             self.__setWarningHandler()
             try:
                 curs = self.__dbcon.cursor()
-                curs.execute(sqlTemplate, valueList)
+                curs.execute(sqlTemplate, vList)
                 self.__dbcon.commit()
                 curs.close()
                 return True
             except MySQLdb.Error as e:
-                logger.info("SQL command failed for:\n%s\n" % (sqlTemplate % tuple(valueList)))
-                logger.error("MySQL error message is:\n%s\n" % str(e))
+                logger.info("SQL command failed for:\n%s\n", (sqlTemplate % tuple(vList)))
+                logger.error("MySQL error message is:\n%s\n", str(e))
                 self.__dbcon.rollback()
                 curs.close()
             except MySQLdb.Warning as e:
-                logger.info("MYSQL warnings for command:\n%s\n" % (sqlTemplate % tuple(valueList)))
-                logger.warning("MySQL warning message is:\n%s\n" % str(e))
+                logger.info("MYSQL warnings for command:\n%s\n", (sqlTemplate % tuple(vList)))
+                logger.warning("MySQL warning message is:\n%s\n", str(e))
                 self.__dbcon.rollback()
                 curs.close()
             except Exception as e:
-                logger.info("SQL Command generated warnings command:\n%s\n" % (sqlTemplate % tuple(valueList)))
-                logger.exception("Failing with %s" % str(e))
+                logger.info("SQL Command generated warnings command:\n%s\n", (sqlTemplate % tuple(vList)))
+                logger.exception("Failing with %s", str(e))
                 self.__dbcon.rollback()
                 curs.close()
             return False
 
     def setWarning(self, action):
-        if action in ['error', 'ignore', 'default']:
+        if action in ["error", "ignore", "default"]:
             self.__warningAction = action
             return True
         else:
-            self.__warningAction = 'default'
+            self.__warningAction = "default"
             return False
 
     def __setWarningHandler(self):
@@ -157,12 +151,12 @@ class MyDbQuery(object):
 
              other settings may print warning directly to stderr
         """
-        if self.__warningAction == 'error':
+        if self.__warningAction == "error":
             warnings.simplefilter("error", category=MySQLdb.Warning)
-        elif self.__warningAction in ['ignore', 'default']:
+        elif self.__warningAction in ["ignore", "default"]:
             warnings.simplefilter(self.__warningAction)
         else:
-            warnings.simplefilter('default')
+            warnings.simplefilter("default")
 
     def sqlCommand(self, sqlCommandList):
         """  Execute the input list of SQL commands catching exceptions from the server.
@@ -176,7 +170,7 @@ class MyDbQuery(object):
             self.__setWarningHandler()
             curs = None
             try:
-                sqlCommand = ''
+                sqlCommand = ""
                 curs = self.__dbcon.cursor()
                 for sqlCommand in sqlCommandList:
                     curs.execute(sqlCommand)
@@ -185,21 +179,21 @@ class MyDbQuery(object):
                 curs.close()
                 return True
             except MySQLdb.Error as e:
-                logger.info("SQL command failed for:\n%s\n" % sqlCommand)
-                logger.error("MySQL error is message is:\n%s\n" % e)
+                logger.info("SQL command failed for:\n%s\n", sqlCommand)
+                logger.error("MySQL error is message is:\n%s\n", str(e))
                 # self.__dbcon.rollback()
                 if curs:
                     curs.close()
             except MySQLdb.Warning as e:
-                logger.info("SQL generated warnings for command:\n%s\n" % sqlCommand)
-                logger.warning("MySQL warning message is:\n%s\n" % str(e))
+                logger.info("SQL generated warnings for command:\n%s\n", sqlCommand)
+                logger.warning("MySQL warning message is:\n%s\n", str(e))
                 # self.__dbcon.rollback()
                 if curs:
                     curs.close()
                 return True
             except Exception as e:
-                logger.info("SQL command failed for:\n%s\n" % sqlCommand)
-                logger.exception("Failing with %s" % str(e))
+                logger.info("SQL command failed for:\n%s\n", sqlCommand)
+                logger.exception("Failing with %s", str(e))
                 # self.__dbcon.rollback()
                 if curs:
                     curs.close()
@@ -218,24 +212,24 @@ class MyDbQuery(object):
                 curs.close()
                 return True
             except MySQLdb.ProgrammingError as e:
-                logger.error("MySQL warning is message is:\n%s\n" % str(e))
+                logger.error("MySQL warning is message is:\n%s\n", str(e))
                 if curs:
                     curs.close()
             except MySQLdb.OperationalError as e:
-                logger.info("SQL command failed for:\n%s\n" % queryString)
-                logger.info("MySQL warning is message is:\n%s\n" % e)
+                logger.info("SQL command failed for:\n%s\n", queryString)
+                logger.info("MySQL warning is message is:\n%s\n", str(e))
                 if curs:
                     curs.close()
             except MySQLdb.Error as e:
-                logger.info("SQL command failed for:\n%s\n" % queryString)
-                logger.info("MySQL warning is message is:\n%s\n" % e)
+                logger.info("SQL command failed for:\n%s\n", queryString)
+                logger.info("MySQL warning is message is:\n%s\n", str(e))
                 if curs:
                     curs.close()
             except Exception as e:
-                logger.info("SQL command failed for:\n%s\n" % queryString)
+                logger.info("SQL command failed for:\n%s\n", queryString)
                 if curs:
                     curs.close()
-                logger.exception("Failing with %s" % str(e))
+                logger.exception("Failing with %s", str(e))
         return []
 
     def __fetchIter(self, cursor, rowSize=1000):
@@ -253,64 +247,66 @@ class MyDbQuery(object):
         """
         rowList = []
         with warnings.catch_warnings():
-            warnings.simplefilter('error')
+            warnings.simplefilter("error")
             try:
                 curs = self.__dbcon.cursor()
                 curs.execute(queryString)
                 while True:
                     result = curs.fetchone()
-                    if (result is not None):
+                    if result is not None:
                         rowList.append(result)
                     else:
                         break
                 curs.close()
                 return rowList
             except MySQLdb.ProgrammingError as e:
-                logger.warning("MySQL warning is message is:\n%s\n" % str(e))
+                logger.warning("MySQL warning is message is:\n%s\n", str(e))
                 curs.close()
             except MySQLdb.OperationalError as e:
-                logger.info("SQL command failed for:\n%s\n" % queryString)
-                logger.warning("MySQL warning is message is:\n%s\n" % e)
+                logger.info("SQL command failed for:\n%s\n", queryString)
+                logger.warning("MySQL warning is message is:\n%s\n", str(e))
                 curs.close()
             except MySQLdb.Error as e:
-                logger.info("SQL command failed for:\n%s\n" % queryString)
-                logger.error("MySQL warning is message is:\n%s\n" % e)
+                logger.info("SQL command failed for:\n%s\n", queryString)
+                logger.error("MySQL warning is message is:\n%s\n", str(e))
                 curs.close()
             except Exception as e:
-                logger.info("SQL command failed for:\n%s\n" % queryString)
-                logger.exception("Failing with %s" % str(e))
+                logger.info("SQL command failed for:\n%s\n", queryString)
+                logger.exception("Failing with %s", str(e))
                 curs.close()
 
         return []
 
-    def simpleQuery(self, selectList=[], fromList=[], condition='',
-                    orderList=[], returnObj=[]):
+    def simpleQuery(self, selectList, fromList, condition="", orderList=None, returnObj=None):
         """
         """
+        #
+        oL = orderList if orderList else []
+        retObj = returnObj if returnObj else []
         #
         colsCsv = ",".join(["%s" % k for k in selectList])
         tablesCsv = ",".join(["%s" % k for k in fromList])
 
         order = ""
-        if (len(orderList) > 0):
-            (a, t) = orderList[0]
-            order = " ORDER BY CAST(%s AS %s) " % (a, t)
-            for (a, t) in orderList[1:]:
-                order += ", CAST(%s AS %s) " % (a, t)
+        if oL:
+            (sV, tV) = oL[0]
+            order = " ORDER BY CAST(%s AS %s) " % (sV, tV)
+            for (sV, tV) in oL[1:]:
+                order += ", CAST(%s AS %s) " % (sV, tV)
 
         #
         query = "SELECT " + colsCsv + " FROM " + tablesCsv + condition + order
-        logger.debug("Query: %s\n" % query)
+        logger.debug("Query: %s\n", query)
         curs = self.__dbcon.cursor()
         curs.execute(query)
         while True:
             result = curs.fetchone()
-            if (result is not None):
-                returnObj.append(result)
+            if result is not None:
+                retObj.append(result)
             else:
                 break
         curs.close()
-        return returnObj
+        return retObj
 
     def testSelectQuery(self, count):
         tSQL = "select %d" % count

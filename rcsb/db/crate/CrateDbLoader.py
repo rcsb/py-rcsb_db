@@ -26,14 +26,10 @@ import logging
 import time
 
 from rcsb.db.crate.CrateDbUtil import CrateDbQuery
+from rcsb.db.processors.DataTransformFactory import DataTransformFactory
 from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb.db.sql.SqlGen import SqlGenAdmin
 
-#
-try:
-    from mmcif.io.IoAdapterCore import IoAdapterCore as IoAdapter
-except Exception:
-    from mmcif.io.IoAdapterPy import IoAdapterPy as IoAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +39,7 @@ class CrateDbLoader(object):
     """ Map PDBx/mmCIF instance data to SQL loadable data using external schema definition.
     """
 
-    def __init__(self, schemaDefObj, ioObj=None, dbCon=None, workPath='.', cleanUp=False, warnings='default', verbose=True):
+    def __init__(self, schemaDefObj, ioObj=None, dbCon=None, workPath=".", cleanUp=False, warnings="default", verbose=True):
         self.__verbose = verbose
         self.__debug = False
         self.__sD = schemaDefObj
@@ -54,9 +50,16 @@ class CrateDbLoader(object):
         self.__pathList = []
         self.__cleanUp = cleanUp
         #
-        self.__sdp = SchemaDefDataPrep(schemaDefAccessObj=schemaDefObj, ioObj=IoAdapter(), verbose=True)
+        # self.__sdp = SchemaDefDataPrep(schemaDefAccessObj=schemaDefObj, ioObj=IoAdapter(), verbose=True)
+        #
+        self.__warningAction = warnings
+        #
+        self.__fTypeRow = "skip-max-width"
+        dtf = DataTransformFactory(schemaDefAccessObj=self.__sD, filterType=self.__fTypeRow)
+        self.__sdp = SchemaDefDataPrep(schemaDefAccessObj=self.__sD, dtObj=dtf, workPath=self.__workingPath, verbose=self.__verbose)
+        #
 
-    def load(self, inputPathList=None, containerList=None, loadType='batch-file', deleteOpt=None, tableIdSkipD=None):
+    def load(self, inputPathList=None, containerList=None, loadType="batch-file", deleteOpt=None, tableIdSkipD=None):
         """ Load data for each table defined in the current schema definition object.
             Data are extracted from the input path or container list.
 
@@ -89,14 +92,14 @@ class CrateDbLoader(object):
         #
 
         #
-        if loadType in ['crate-insert', 'crate-insert-many']:
-            sqlMode = 'single'
-            if loadType in ['crate-insert-many']:
-                sqlMode = 'many'
+        if loadType in ["crate-insert", "crate-insert-many"]:
+            sqlMode = "single"
+            if loadType in ["crate-insert-many"]:
+                sqlMode = "many"
             for tableId, rowList in tableDataDict.items():
                 if tableId in tableIdSkipD:
                     continue
-                if deleteOpt in ['all', 'selected'] or len(rowList) > 0:
+                if deleteOpt in ["all", "selected"] or rowList:
                     self.__crateInsertImport(tableId, rowList=rowList, containerNameList=containerNameList, deleteOpt=deleteOpt, sqlMode=sqlMode)
             return True
         else:
@@ -104,7 +107,7 @@ class CrateDbLoader(object):
 
         return False
 
-    def __crateInsertImport(self, tableId, rowList=None, containerNameList=None, deleteOpt='selected', sqlMode='many', refresh=True):
+    def __crateInsertImport(self, tableId, rowList=None, containerNameList=None, deleteOpt="selected", sqlMode="many", refresh=True):
         """ Load the input table using sql crate templated inserts of the input rowlist of dictionaries (i.e. d[attributeId]=value).
 
             The containerNameList corresponding to the data within loadable data in rowList can be provided
@@ -128,74 +131,75 @@ class CrateDbLoader(object):
         tableAttributeNameList = tableDefObj.getAttributeNameList()
         #
         sqlDeleteList = None
-        if deleteOpt in ['selected', 'delete'] and containerNameList is not None:
+        if deleteOpt in ["selected", "delete"] and containerNameList is not None:
             deleteAttributeName = tableDefObj.getDeleteAttributeName()
             sqlDeleteList = sqlGen.deleteFromListSQL(databaseName, tableName, deleteAttributeName, containerNameList, chunkSize=10)
-            logger.debug("Delete SQL for %s : %r" % (tableId, sqlDeleteList))
-        elif deleteOpt in ['all', 'truncate']:
+            logger.debug("Delete SQL for %s : %r", tableId, sqlDeleteList)
+        elif deleteOpt in ["all", "truncate"]:
             sqlDeleteList = [sqlGen.truncateTableSQL(databaseName, tableName)]
         #
-        logger.debug("Deleting from table %s length %d" % (tableName, len(containerNameList)))
+        logger.debug("Deleting from table %s length %d", tableName, len(containerNameList))
         crQ.sqlCommandList(sqlDeleteList)
-        logger.debug("Delete commands %s" % sqlDeleteList)
-        if len(rowList) == 0:
+        logger.debug("Delete commands %s", sqlDeleteList)
+        if not rowList:
             return True
         if refresh:
             sqlRefresh = sqlGen.refreshTableSQLCrate(databaseName, tableName)
             crQ.sqlCommand(sqlRefresh)
         #
-        logger.info("Insert begins for table %s with row length %d" % (tableName, len(rowList)))
+        logger.info("Insert begins for table %s with row length %d", tableName, len(rowList))
         sqlInsertList = []
         tupL = list(zip(tableAttributeIdList, tableAttributeNameList))
-        if sqlMode == 'many':
+        if sqlMode == "many":
             aList = []
-            for id, nm in tupL:
+            for tId, nm in tupL:
                 aList.append(nm)
             #
             vLists = []
             for row in rowList:
                 vList = []
-                for id, nm in tupL:
-                    if row[id] and row[id] != r'\N':
-                        vList.append(row[id])
+                for tId, nm in tupL:
+                    if row[tId] and row[tId] != r"\N":
+                        vList.append(row[tId])
                     else:
                         vList.append(None)
                 vLists.append(vList)
             #
             lenT = len(vLists)
             lenR = crQ.sqlTemplateCommandMany(sqlTemplate=sqlGen.insertTemplateSQLCrate(databaseName, tableName, aList), valueLists=vLists)
-            ret = (lenR == len(vLists))
+            ret = lenR == len(vLists)
         else:
             aList = []
-            for id, nm in tupL:
+            for tId, nm in tupL:
                 aList.append(nm)
             #
             for row in rowList:
                 vList = []
-                for id, nm in tupL:
-                    if row[id] is not None and row[id] != r'\N':
-                        vList.append(row[id])
+                for tId, nm in tupL:
+                    if row[tId] is not None and row[tId] != r"\N":
+                        vList.append(row[tId])
                     else:
                         vList.append(None)
                 sqlInsertList.append((sqlGen.insertTemplateSQLCrate(databaseName, tableName, aList), vList))
             #
             lenT = len(sqlInsertList)
             lenR = crQ.sqlTemplateCommandList(sqlInsertList)
-            ret = (lenR == lenT)
+            ret = lenR == lenT
         if refresh:
             sqlRefresh = sqlGen.refreshTableSQLCrate(databaseName, tableName)
             crQ.sqlCommand(sqlRefresh)
         #
         endTime = time.time()
-        if (ret):
-            logger.info("Insert succeeds for table %s %d of %d rows at %s (%.3f seconds)" %
-                        (tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+        if ret:
+            logger.info(
+                "Insert succeeds for table %s %d of %d rows at %s (%.3f seconds)", tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime
+            )
         else:
-            logger.info("Insert fails for table %s %d of %d rows at %s (%.3f seconds)" %
-                        (tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
-
+            logger.info(
+                "Insert fails for table %s %d of %d rows at %s (%.3f seconds)", tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime
+            )
         return ret
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

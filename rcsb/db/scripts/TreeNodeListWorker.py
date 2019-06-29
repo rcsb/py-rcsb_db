@@ -46,7 +46,7 @@ class TreeNodeListWorker(object):
 
     def __updateStatus(self, updateId, databaseName, collectionName, status, startTimestamp):
         try:
-            sFlag = 'Y' if status else 'N'
+            sFlag = "Y" if status else "N"
             desp = DataExchangeStatus()
             desp.setStartTime(tS=startTimestamp)
             desp.setObject(databaseName, collectionName)
@@ -55,10 +55,10 @@ class TreeNodeListWorker(object):
             self.__statusList.append(desp.getStatus())
             return True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return False
 
-    def load(self, updateId, loadType='full'):
+    def load(self, updateId, loadType="full"):
         """ Load tree node lists and status data -
 
         Relevant configuration options:
@@ -78,7 +78,7 @@ class TreeNodeListWorker(object):
             topCachePath = self.__workPath
             #
             if not useCache:
-                cDL = ['domains_struct', 'NCBI', 'ec']
+                cDL = ["domains_struct", "NCBI", "ec"]
                 for cD in cDL:
                     try:
                         cfp = os.path.join(topCachePath, cD)
@@ -96,49 +96,52 @@ class TreeNodeListWorker(object):
                         pass
 
             #
-            logger.info("Using cache files in %s %r" % (topCachePath, useCache))
+            logger.info("Using cache files in %s %r", topCachePath, useCache)
             #
-            sectionName = 'tree_node_lists'
+            sectionName = "tree_node_lists"
             self.__statusList = []
             desp = DataExchangeStatus()
             statusStartTimestamp = desp.setStartTime()
-            dl = DocumentLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
-                                documentLimit=self.__documentLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
+            dl = DocumentLoader(
+                self.__cfgOb,
+                self.__resourceName,
+                numProc=self.__numProc,
+                chunkSize=self.__chunkSize,
+                documentLimit=self.__documentLimit,
+                verbose=self.__verbose,
+                readBackCheck=self.__readBackCheck,
+            )
             #
-            databaseName = self.__cfgOb.get('DATABASE_NAME', sectionName=sectionName)
-            collectionVersion = self.__cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
-            addValues = {'_schema_version': collectionVersion}
+            databaseName = self.__cfgOb.get("DATABASE_NAME", sectionName=sectionName)
+            collectionVersion = self.__cfgOb.get("COLLECTION_VERSION_STRING", sectionName=sectionName)
+            addValues = {"_schema_version": collectionVersion}
             #
-            ccu = CathClassificationUtils(cathDirPath=os.path.join(topCachePath, 'domains_struct'), useCache=useCache)
+            ccu = CathClassificationUtils(cathDirPath=os.path.join(topCachePath, "domains_struct"), useCache=useCache)
             nL = ccu.getTreeNodeList()
-            logger.info("Starting load SCOP node tree %d" % len(nL))
-            collectionName = self.__cfgOb.get('COLLECTION_CATH', sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL,
-                         indexAttributeList=['update_id'], keyNames=None, addValues=addValues)
+            logger.info("Starting load SCOP node tree %d", len(nL))
+            collectionName = self.__cfgOb.get("COLLECTION_CATH", sectionName=sectionName)
+            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
-            scu = ScopClassificationUtils(scopDirPath=os.path.join(topCachePath, 'domains_struct'), useCache=useCache)
+            scu = ScopClassificationUtils(scopDirPath=os.path.join(topCachePath, "domains_struct"), useCache=useCache)
             nL = scu.getTreeNodeList()
-            logger.info("Starting load SCOP node tree %d" % len(nL))
-            collectionName = self.__cfgOb.get('COLLECTION_SCOP', sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL,
-                         indexAttributeList=['update_id'], keyNames=None, addValues=addValues)
+            logger.info("Starting load SCOP node tree %d", len(nL))
+            collectionName = self.__cfgOb.get("COLLECTION_SCOP", sectionName=sectionName)
+            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
-            edbu = EnzymeDatabaseUtils(enzymeDirPath=os.path.join(topCachePath, 'ec'), useCache=useCache, clearCache=False)
+            edbu = EnzymeDatabaseUtils(enzymeDirPath=os.path.join(topCachePath, "ec"), useCache=useCache, clearCache=False)
             nL = edbu.getTreeNodeList()
-            logger.info("Starting load EC node tree %d" % len(nL))
-            collectionName = self.__cfgOb.get('COLLECTION_ENZYME', sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL,
-                         indexAttributeList=['update_id'], keyNames=None, addValues=addValues)
+            logger.info("Starting load EC node tree %d", len(nL))
+            collectionName = self.__cfgOb.get("COLLECTION_ENZYME", sectionName=sectionName)
+            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
-            tU = TaxonomyUtils(taxDirPath=os.path.join(topCachePath, 'NCBI'), useCache=useCache)
+            tU = TaxonomyUtils(taxDirPath=os.path.join(topCachePath, "NCBI"), useCache=useCache)
             nL = tU.exportNodeList()
-            logger.info("Starting load taxonomy node tree %d" % len(nL))
-            collectionName = self.__cfgOb.get('COLLECTION_TAXONOMY', sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL,
-                         indexAttributeList=['update_id'], keyNames=None, addValues=addValues)
+            logger.info("Starting load taxonomy node tree %d", len(nL))
+            collectionName = self.__cfgOb.get("COLLECTION_TAXONOMY", sectionName=sectionName)
+            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=nL, indexAttributeList=["update_id"], keyNames=None, addValues=addValues)
             logger.info("Tree loading operations completed.")
             #
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
@@ -146,7 +149,7 @@ class TreeNodeListWorker(object):
             #
             return True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return False
 
     def getLoadStatus(self):

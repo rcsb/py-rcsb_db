@@ -46,7 +46,7 @@ class ChemRefEtlWorker(object):
 
     def __updateStatus(self, updateId, databaseName, collectionName, status, startTimestamp):
         try:
-            sFlag = 'Y' if status else 'N'
+            sFlag = "Y" if status else "N"
             desp = DataExchangeStatus()
             desp.setStartTime(tS=startTimestamp)
             desp.setObject(databaseName, collectionName)
@@ -55,10 +55,10 @@ class ChemRefEtlWorker(object):
             self.__statusList.append(desp.getStatus())
             return True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return False
 
-    def load(self, updateId, extResource, loadType='full'):
+    def load(self, updateId, extResource, loadType="full"):
         """ Load chemical reference integrated data for the input external resource-
 
         Relevant configuration options:
@@ -79,33 +79,39 @@ class ChemRefEtlWorker(object):
             idD = crExt.getChemCompAccesionMapping(extResource)
             dList = crdp.getDocuments(extResource, idD)
             #
-            logger.info("Resource %r mapped document length %d" % (extResource, len(dList)))
-            logger.debug("Objects %r" % dList[:2])
+            logger.info("Resource %r mapped document length %d", extResource, len(dList))
+            logger.debug("Objects %r", dList[:2])
 
-            schemaName = 'drugbank_core'
+            schemaName = "drugbank_core"
             sD, databaseName, collectionList, _ = self.__schU.getSchemaInfo(schemaName)
-            collectionName = collectionList[0] if len(collectionList) > 0 else 'unassigned'
-            indexL = sD.getDocumentIndex(collectionName, 'primary')
-            logger.info("Database %r collection %r index attributes %r " % (databaseName, collectionName, indexL))
+            collectionName = collectionList[0] if collectionList else "unassigned"
+            indexL = sD.getDocumentIndex(collectionName, "primary")
+            logger.info("Database %r collection %r index attributes %r", databaseName, collectionName, indexL)
             #
             collectionVersion = sD.getCollectionVersion(collectionName)
-            addValues = {'_schema_version': collectionVersion}
+            addValues = {"_schema_version": collectionVersion}
             #
-            dl = DocumentLoader(self.__cfgOb, self.__resourceName, numProc=self.__numProc, chunkSize=self.__chunkSize,
-                                documentLimit=self.__documentLimit, verbose=self.__verbose, readBackCheck=self.__readBackCheck)
+            dl = DocumentLoader(
+                self.__cfgOb,
+                self.__resourceName,
+                numProc=self.__numProc,
+                chunkSize=self.__chunkSize,
+                documentLimit=self.__documentLimit,
+                verbose=self.__verbose,
+                readBackCheck=self.__readBackCheck,
+            )
             # JDW --
             # databaseName = self.__cfgOb.get('DATABASE_NAME', sectionName=sectionName) + '_' + self.__cfgOb.get('DATABASE_VERSION_STRING', sectionName=sectionName)
             # collectionVersion = self.__cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
             # collectionName = self.__cfgOb.get('COLLECTION_DRUGBANK_CORE', sectionName=sectionName) + '_' + collectionVersion
             #
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList,
-                         indexAttributeList=indexL, keyNames=None, addValues=addValues)
+            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=indexL, keyNames=None, addValues=addValues)
 
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
             return True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return False
 
     def getLoadStatus(self):

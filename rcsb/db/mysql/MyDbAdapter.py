@@ -25,12 +25,11 @@ __license__ = "Apache 2.0"
 
 import copy
 import logging
-import sys
 import time
 
 from rcsb.db.mysql.Connection import Connection
 from rcsb.db.mysql.MyDbUtil import MyDbQuery
-from rcsb.db.mysql.SqlGen import SqlGenAdmin, SqlGenCondition, SqlGenQuery
+from rcsb.db.sql.SqlGen import SqlGenAdmin, SqlGenCondition, SqlGenQuery
 
 logger = logging.getLogger(__name__)
 
@@ -43,9 +42,10 @@ class MyDbAdapter(object):
     def __init__(self, schemaDefObj, cfgOb=None, verbose=False):
         self.__verbose = verbose
         self.__debug = False
+        self.__cfgOb = cfgOb
         #
-        self.__sd = schemaDefObj
-        self.__databaseName = self.__sd.getDatabaseName()
+        self.__sD = schemaDefObj
+        self.__databaseName = self.__sD.getDatabaseName()
         self.__dbCon = None
         self.__cObj = None
         self.__defaultD = {}
@@ -77,13 +77,13 @@ class MyDbAdapter(object):
              Internal configuration details will be used if these are not externally supplied.
         """
         infoD = {}
-        infoD["DB_HOST"] = dbHost if dbHost is not None else self.__cI.get('SITE_DB_HOST_NAME')
-        infoD["DB_PORT"] = dbPort if dbPort is not None else self.__cI.get('SITE_DB_PORT_NUMBER')
-        infoD["DB_NAME"] = dbName if dbName is not None else self.__cI.get('SITE_DB_DATABASE_NAME')
-        infoD["DB_USER"] = dbUser if dbUser is not None else self.__cI.get('SITE_DB_USER_NAME')
-        infoD["DB_PW"] = dbPw if dbPw is not None else self.__cI.get('SITE_DB_PASSWORD')
-        infoD["DB_SERVER"] = dbServer if dbServer is not None else self.__cI.get('SITE_DB_SERVER')
-        infoD["DB_SOCKET"] = dbSocket if dbSocket is not None else self.__cI.get('SITE_DB_SOCKET')
+        infoD["DB_HOST"] = dbHost if dbHost is not None else self.__cfgOb.get("SITE_DB_HOST_NAME")
+        infoD["DB_PORT"] = dbPort if dbPort is not None else self.__cfgOb.get("SITE_DB_PORT_NUMBER")
+        infoD["DB_NAME"] = dbName if dbName is not None else self.__cfgOb.get("SITE_DB_DATABASE_NAME")
+        infoD["DB_USER"] = dbUser if dbUser is not None else self.__cfgOb.get("SITE_DB_USER_NAME")
+        infoD["DB_PW"] = dbPw if dbPw is not None else self.__cfgOb.get("SITE_DB_PASSWORD")
+        infoD["DB_SERVER"] = dbServer if dbServer is not None else self.__cfgOb.get("SITE_DB_SERVER")
+        infoD["DB_SOCKET"] = dbSocket if dbSocket is not None else self.__cfgOb.get("SITE_DB_SOCKET")
         #
         self.__cObj = self.__open(infoD)
         self.__dbCon = self.__getClientConnection(self.__cObj)
@@ -134,7 +134,7 @@ class MyDbAdapter(object):
 
              mapL=[ (atId1,paramName1),(atId2,paramName2),... ]
         """
-        return self.__sd.getDefaultAttributeParameterMap(tableId)
+        return self.__sD.getDefaultAttributeParameterMap(tableId)
 
     def _getAttributeParameterMap(self, tableId):
         """
@@ -170,11 +170,9 @@ class MyDbAdapter(object):
     def _createSchema(self):
         """ Create table schema using the current class schema definition
         """
-        if (self.__debug):
+        if self.__debug:
             startTime = time.time()
-            logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                      sys._getframe().f_code.co_name,
-                                                      time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+            logger.info("Starting at %s", time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
         ret = False
         try:
             iOpened = False
@@ -192,24 +190,21 @@ class MyDbAdapter(object):
                 sqlL.extend(myAd.createTableSQL(databaseName=self.__databaseName, tableDefObj=tableDefObj))
 
                 ret = myQ.sqlCommand(sqlCommandList=sqlL)
-                if (self.__verbose):
-                    logger.info("+%s.%s for tableId %s server returns: %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, tableId, ret))
-                if (self.__debug):
-                    logger.info("+%s.%s SQL: %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, '\n'.join(sqlL)))
+                if self.__verbose:
+                    logger.info("For tableId %s server returns: %s\n", tableId, ret)
+                if self.__debug:
+                    logger.info("SQL: %s\n", "\n".join(sqlL))
             if iOpened:
                 self._close()
         except Exception as e:
             status = " table create error " + str(e)
-            logger.info("+%s.%s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, status))
-            if (self.__verbose):
-                logger.exception("Failing with %s" % str(e))
+            logger.info("status %s\n", status)
+            if self.__verbose:
+                logger.exception("Failing with %s", str(e))
 
-        if (self.__debug):
+        if self.__debug:
             endTime = time.time()
-            logger.info("\nCompleted %s %s at %s (%.3f seconds)\n" % (self.__class__.__name__,
-                                                                      sys._getframe().f_code.co_name,
-                                                                      time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                      endTime - startTime))
+            logger.info("Completed at %s (%.3f seconds)\n", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
         return ret
 
     def _getSecondsSinceEpoch(self):
@@ -227,9 +222,7 @@ class MyDbAdapter(object):
         """
         startTime = time.time()
         if self.__debug:
-            logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                      sys._getframe().f_code.co_name,
-                                                      time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+            logger.info("Starting at %s\n", time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
         ret = False
         try:
             iOpened = False
@@ -263,26 +256,23 @@ class MyDbAdapter(object):
 
             sqlT = myAd.idInsertTemplateSQL(self.__databaseName, tableDefObj, insertAttributeIdList=aList)
             if self.__debug:
-                logger.info("+%s.%s  aList %d vList %d\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, len(aList), len(vList)))
-                logger.info("+%s.%s insert template sql=\n%s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, sqlT))
-                logger.info("+%s.%s insert values vList=\n%r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, vList))
+                logger.info("aList %d vList %d\n", len(aList), len(vList))
+                logger.info("insert template sql=\n%s\n", sqlT)
+                logger.info("insert values vList=\n%r\n", vList)
                 # sqlC = sqlT % vList
-                # logger.info("+%s.%s insert sql command =\n%s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, sqlC))
+                # logger.info("insert sql command =\n%s\n",  sqlC)
             ret = myQ.sqlTemplateCommand(sqlTemplate=sqlT, valueList=vList)
             if iOpened:
                 self._close()
 
         except Exception as e:
             status = " insert operation error " + str(e)
-            logger.info("+%s.%s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, status))
-            if (self.__verbose):
-                logger.exception("Failing with %s" % str(e))
+            logger.info("status %s\n", status)
+            if self.__verbose:
+                logger.exception("Failing with %s", str(e))
         if self.__debug:
             endTime = time.time()
-            logger.info("\nCompleted %s %s at %s (%.3f seconds)\n" % (self.__class__.__name__,
-                                                                      sys._getframe().f_code.co_name,
-                                                                      time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                      endTime - startTime))
+            logger.info("Completed %s (%.3f seconds)\n", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
 
         return ret
 
@@ -294,9 +284,7 @@ class MyDbAdapter(object):
         """
         startTime = time.time()
         if self.__debug:
-            logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                      sys._getframe().f_code.co_name,
-                                                      time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+            logger.info("Starting at %s", time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
         ret = False
         try:
             iOpened = False
@@ -334,24 +322,21 @@ class MyDbAdapter(object):
                     cList.append(atId)
 
             sqlT = myAd.idUpdateTemplateSQL(self.__databaseName, tableDefObj, updateAttributeIdList=aList, conditionAttributeIdList=cList)
-            if (self.__debug):
-                logger.info("+%s.%s update sql: %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, sqlT))
-                logger.info("+%s.%s update values: %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, vList))
+            if self.__debug:
+                logger.info("update sql: %s", sqlT)
+                logger.info("update values: %r", vList)
             ret = myQ.sqlTemplateCommand(sqlTemplate=sqlT, valueList=vList)
             if iOpened:
                 self._close()
 
         except Exception as e:
             status = " update operation error " + str(e)
-            logger.info("+%s.%s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, status))
-            if (self.__verbose):
-                logger.exception("Failing with %s" % str(e))
+            logger.info("status %s", status)
+            if self.__verbose:
+                logger.exception("Failing with %s", str(e))
         if self.__debug:
             endTime = time.time()
-            logger.info("\nCompleted %s %s at %s (%.3f seconds)\n" % (self.__class__.__name__,
-                                                                      sys._getframe().f_code.co_name,
-                                                                      time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                      endTime - startTime))
+            logger.info("Completed at %s (%.3f seconds)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
         return ret
 
     def _select(self, tableId, **kwargs):
@@ -360,9 +345,7 @@ class MyDbAdapter(object):
         """
         startTime = time.time()
         if self.__debug:
-            logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                      sys._getframe().f_code.co_name,
-                                                      time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+            logger.info("Starting at %s", time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
         rdList = []
         try:
             iOpened = False
@@ -372,35 +355,35 @@ class MyDbAdapter(object):
             #
             tableDefObj = self.__sD.getSchemaObject(tableId)
             myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
-            sqlGen = SqlGenQuery(schemaDefObj=self.__sd, verbose=self.__verbose)
+            sqlGen = SqlGenQuery(schemaDefObj=self.__sD, verbose=self.__verbose)
             sqlGen.setDatabase(databaseName=self.__databaseName)
-            sqlConstraint = SqlGenCondition(schemaDefObj=self.__sd, verbose=self.__verbose)
+            sqlConstraint = SqlGenCondition(schemaDefObj=self.__sD, verbose=self.__verbose)
             #
             atMapL = self._getAttributeParameterMap(tableId=tableId)
-            for kwArg, kwVal in kwargs.items():
+            for kwArg, _ in kwargs.items():
                 for atId, kwId in atMapL:
                     if kwId == kwArg:
                         if tableDefObj.isAttributeStringType(atId):
-                            cTup = ((tableId, atId), 'EQ', (kwargs[kwId], 'CHAR'))
+                            cTup = ((tableId, atId), "EQ", (kwargs[kwId], "CHAR"))
                         else:
-                            cTup = ((tableId, atId), 'EQ', (kwargs[kwId], 'OTHER'))
+                            cTup = ((tableId, atId), "EQ", (kwargs[kwId], "OTHER"))
                         sqlConstraint.addValueCondition(cTup[0], cTup[1], cTup[2])
                         break
             #
             # Add optional constraints OR ordering by primary key attributes
-            if len(sqlConstraint.get()) > 0:
+            if sqlConstraint.get():
                 sqlGen.setCondition(sqlConstraint)
             else:
                 for atId in tableDefObj.getPrimaryKeyAttributeIdList():
                     sqlGen.addOrderByAttributeId(attributeTuple=(tableId, atId))
 
-            atIdList = self.__sd.getAttributeIdList(tableId)
+            atIdList = self.__sD.getAttributeIdList(tableId)
             for atId in atIdList:
                 sqlGen.addSelectAttributeId(attributeTuple=(tableId, atId))
             #
             sqlS = sqlGen.getSql()
-            if (self.__debug):
-                logger.info("+%s.%s selection sql: %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, sqlS))
+            if self.__debug:
+                logger.info("selection sql: %s", sqlS)
 
             rowList = myQ.selectRows(queryString=sqlS)
             sqlGen.clear()
@@ -411,23 +394,20 @@ class MyDbAdapter(object):
                 rD = {}
                 for colVal, atId in zip(row, atIdList):
                     rD[atId] = colVal
-                if (self.__debug):
-                    logger.info("+%s.%s result set row %d dictionary %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, iRow, rD.items()))
+                if self.__debug:
+                    logger.info("result set row %d dictionary %r", iRow, rD.items())
                 rdList.append(rD)
             if iOpened:
                 self._close()
         except Exception as e:
             status = " operation error " + str(e)
-            logger.info("+%s.%s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, status))
-            if (self.__verbose):
-                logger.exception("Failing with %s" % str(e))
+            logger.info("status %s", status)
+            if self.__verbose:
+                logger.exception("Failing with %s", str(e))
 
         if self.__debug:
             endTime = time.time()
-            logger.info("\nCompleted %s %s at %s (%.3f seconds)\n" % (self.__class__.__name__,
-                                                                      sys._getframe().f_code.co_name,
-                                                                      time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                      endTime - startTime))
+            logger.info("Completed at %s (%.3f seconds)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
         return rdList
 
     def _deleteRequest(self, tableId, **kwargs):
@@ -435,9 +415,7 @@ class MyDbAdapter(object):
         """
         startTime = time.time()
         if self.__debug:
-            logger.info("\nStarting %s %s at %s\n" % (self.__class__.__name__,
-                                                      sys._getframe().f_code.co_name,
-                                                      time.strftime("%Y %m %d %H:%M:%S", time.localtime())))
+            logger.info("Starting at %s", time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
         ret = False
         try:
             iOpened = False
@@ -461,9 +439,9 @@ class MyDbAdapter(object):
                     aList.append(atId)
 
             sqlT = myAd.idDeleteTemplateSQL(self.__databaseName, tableDefObj, conditionAttributeIdList=aList)
-            if (self.__debug):
-                logger.info("+%s.%s delete sql: %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, sqlT))
-                logger.info("+%s.%s delete values: %r\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, vList))
+            if self.__debug:
+                logger.info("delete sql: %s", sqlT)
+                logger.info("delete values: %r", vList)
             ret = myQ.sqlTemplateCommand(sqlTemplate=sqlT, valueList=vList)
 
             if iOpened:
@@ -471,14 +449,11 @@ class MyDbAdapter(object):
 
         except Exception as e:
             status = " delete operation error " + str(e)
-            logger.info("+%s.%s %s\n" % (self.__class__.__name__, sys._getframe().f_code.co_name, status))
-            if (self.__verbose):
-                logger.exception("Failing with %s" % str(e))
+            logger.info("status %s", status)
+            if self.__verbose:
+                logger.exception("Failing with %s", str(e))
 
         if self.__debug:
             endTime = time.time()
-            logger.info("\nCompleted %s %s at %s (%.3f seconds)\n" % (self.__class__.__name__,
-                                                                      sys._getframe().f_code.co_name,
-                                                                      time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
-                                                                      endTime - startTime))
+            logger.info("Completedat %s (%.3f seconds)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
         return ret

@@ -13,25 +13,25 @@ try:
 except Exception:
     import scandir
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()
 
 
-def makePdbxPathList(fp, cachePath='.', skipFile=None):
+def makePdbxPathList(fp, cachePath=".", skipFile=None):
     """ Return the list of pdbx file paths in the current repository.
     """
 
     try:
         skipD = {}
-        if skipFile and os.access(skipFile, 'r'):
-            with open(skipFile, 'r') as ifh:
+        if skipFile and os.access(skipFile, "r"):
+            with open(skipFile, "r") as ifh:
                 for line in ifh:
-                    idcode = str(line[:-1]).strip().lower() + '.cif'
+                    idcode = str(line[:-1]).strip().lower() + ".cif"
                     skipD[idcode] = idcode
-            logger.info("Skip list length %d" % len(skipD))
+            logger.info("Skip list length %d", len(skipD))
         #
-        with open(fp, 'w') as ofh:
-            for root, dirs, files in scandir.walk(cachePath, topdown=False):
+        with open(fp, "w") as ofh:
+            for root, _, files in scandir.walk(cachePath, topdown=False):
                 if "REMOVE" in root:
                     continue
                 for name in files:
@@ -41,7 +41,7 @@ def makePdbxPathList(fp, cachePath='.', skipFile=None):
             # logger.info("\nFound %d files in %s\n" % (len(pathList), cachePath))
         return True
     except Exception as e:
-        logger.exception("Failing with %s" % str(e))
+        logger.exception("Failing with %s", str(e))
 
     return False
 

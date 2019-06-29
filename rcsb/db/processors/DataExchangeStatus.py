@@ -42,11 +42,12 @@ class DataExchangeStatus(object):
     def __init__(self, **kwargs):
         self.__startTimestamp = None
         self.__endTimestamp = None
-        self.__updateId = 'unset'
-        self.__statusFlag = 'N'
-        self.__databaseName = 'unset'
-        self.__objectName = 'unset'
+        self.__updateId = "unset"
+        self.__statusFlag = "N"
+        self.__databaseName = "unset"
+        self.__objectName = "unset"
         self.__tU = TimeUtil()
+        self.__kwargs = kwargs
 
     def setObject(self, databaseName, objectName):
         """Set the object for current status record.
@@ -63,7 +64,7 @@ class DataExchangeStatus(object):
             self.__objectName = objectName
             return True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return False
 
     def setStartTime(self, tS=None, useUtc=True):
@@ -80,7 +81,7 @@ class DataExchangeStatus(object):
             self.__startTimestamp = tS if tS else self.__tU.getTimestamp(useUtc=useUtc)
             return self.__startTimestamp
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return None
 
     def setEndTime(self, tS=None, useUtc=True):
@@ -97,10 +98,10 @@ class DataExchangeStatus(object):
             self.__endTimestamp = tS if tS else self.__tU.getTimestamp(useUtc=useUtc)
             return self.__endTimestamp
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return None
 
-    def setStatus(self, updateId=None, successFlag='Y'):
+    def setStatus(self, updateId=None, successFlag="Y"):
         """Set the update identifier (yyyy_<week_in_year>) and success flag for the current exchange operation.
 
         Args:
@@ -115,7 +116,7 @@ class DataExchangeStatus(object):
             self.__updateId = updateId if updateId else self.__tU.getCurrentWeekSignature()
             return True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return False
 
     def getStatus(self, useTimeStrings=False):
@@ -127,16 +128,24 @@ class DataExchangeStatus(object):
         """
         try:
             if useTimeStrings:
-                sD = {'update_id': self.__updateId,
-                      'database_name': self.__databaseName, 'object_name': self.__objectName,
-                      'update_status_flag': self.__statusFlag,
-                      'update_begin_timestamp': self.__startTimestamp, 'update_end_timestamp': self.__endTimestamp}
+                sD = {
+                    "update_id": self.__updateId,
+                    "database_name": self.__databaseName,
+                    "object_name": self.__objectName,
+                    "update_status_flag": self.__statusFlag,
+                    "update_begin_timestamp": self.__startTimestamp,
+                    "update_end_timestamp": self.__endTimestamp,
+                }
             else:
-                sD = {'update_id': self.__updateId,
-                      'database_name': self.__databaseName, 'object_name': self.__objectName,
-                      'update_status_flag': self.__statusFlag,
-                      'update_begin_timestamp': self.__tU.getDateTimeObj(self.__startTimestamp), 'update_end_timestamp': self.__tU.getDateTimeObj(self.__endTimestamp)}
+                sD = {
+                    "update_id": self.__updateId,
+                    "database_name": self.__databaseName,
+                    "object_name": self.__objectName,
+                    "update_status_flag": self.__statusFlag,
+                    "update_begin_timestamp": self.__tU.getDateTimeObj(self.__startTimestamp),
+                    "update_end_timestamp": self.__tU.getDateTimeObj(self.__endTimestamp),
+                }
             return sD
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return {}

@@ -12,6 +12,7 @@
 #  26-Nov-2018 jdw turn down boundary value level to standard ddl values
 #   3-Feb-2019 jdw get all child items using self.__dApi.getFullDecendentList()
 #  31-Mar-2019 jdw include parent details in __getAttributeFeatures()
+#   6-Jun-2019 jdw take dictionary API as an argument.
 #
 #
 ##
@@ -27,10 +28,7 @@ __license__ = "Apache 2.0"
 import logging
 import textwrap
 
-from mmcif.api.DictionaryApi import DictionaryApi
 from mmcif.api.PdbxContainers import CifName
-
-from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logger = logging.getLogger(__name__)
 
@@ -40,29 +38,21 @@ class DictInfo(object):
 
     """
 
-    def __init__(self, dictLocators, dictHelper=None, **kwargs):
+    def __init__(self, dictApi, dictHelper=None, **kwargs):
         """
         Args:
-            dictLocators (list string): dictionary locator list
-
+            dictApi (object): instance of DictionaryApi() class
             dictHelper (class, optional): a subclass of of DictInfoHelperBase.
             dictSubset (string, optional): name of dictionary subset (e.g. 'chem_comp', 'bird', 'bird_family', 'pdbx')
 
         """
-        self.__setup(dictLocators, dictHelper, **kwargs)
+        self.__dApi = dictApi
+        self.__setup(dictHelper, **kwargs)
         #
 
-    def __setup(self, dictLocators, dictHelper, **kwargs):
+    def __setup(self, dictHelper, **kwargs):
 
-        dictSubset = kwargs.get('dictSubset', None)
-        mU = MarshalUtil()
-        containerList = []
-        for dictLocator in dictLocators:
-            containerList.extend(mU.doImport(dictLocator, format="mmcif-dict"))
-        #
-        #  Not used in any public methods -
-        #
-        self.__dApi = DictionaryApi(containerList=containerList, consolidate=True, replaceDefinition=True, verbose=True)
+        dictSubset = kwargs.get("dictSubset", None)
         #
         iTypeCodes = []
         iQueryStrings = []
@@ -77,46 +67,46 @@ class DictInfo(object):
 
         self.__dictSchema = {catName: self.__dApi.getAttributeNameList(catName) for catName in self.__categoryList}
         ##
-        categoryContextIndex, attributeContextIndex = self.__indexContexts(self.__dictSchema)
-        self.__keyReplaceItems = attributeContextIndex['RCSB_CATEGORY_KEY_SUBSTITION'] if 'RCSB_CATEGORY_KEY_SUBSTITION' in attributeContextIndex else []
+        _, attributeContextIndex = self.__indexContexts(self.__dictSchema)
+        self.__keyReplaceItems = attributeContextIndex["RCSB_CATEGORY_KEY_SUBSTITION"] if "RCSB_CATEGORY_KEY_SUBSTITION" in attributeContextIndex else []
         self.__keyReplaceCategoryD = {}
         for catName, atName in self.__keyReplaceItems:
             self.__keyReplaceCategoryD.setdefault(catName, []).append(atName)
         #
-        logger.debug("Primary key replacements: %r" % self.__keyReplaceItems)
-        logger.debug("Primary key replacement category index: %r" % self.__keyReplaceCategoryD)
+        logger.debug("Primary key replacements: %r", self.__keyReplaceItems)
+        logger.debug("Primary key replacement category index: %r", self.__keyReplaceCategoryD)
         #
         if dictHelper and dictSubset:
             cardD = dictHelper.getCardinalityKeyItem(dictSubset)
-            logger.debug("Cardinality attribute %r" % cardD.items())
+            logger.debug("Cardinality attribute %r", cardD.items())
             #
             unitCardinalityList = self.__getUnitCardinalityCategories([cardD])
             unitCardinalityList.extend(dictHelper.getCardinalityCategoryExtras())
-            logger.debug("Cardinality categories %r" % unitCardinalityList)
+            logger.debug("Cardinality categories %r", unitCardinalityList)
             #
             #
             #
             self.__categoryContentClasses = dictHelper.getCategoryContentClasses(dictSubset)
-            logger.debug("categoryContentClasses %r" % self.__categoryContentClasses)
+            logger.debug("categoryContentClasses %r", self.__categoryContentClasses)
             #
             self.__attributeContentClasses = dictHelper.getAttributeContentClasses(dictSubset)
-            logger.debug("attributeContentClasses %r" % self.__attributeContentClasses)
+            logger.debug("attributeContentClasses %r", self.__attributeContentClasses)
             #
             self.__sliceParentItemsD = dictHelper.getSliceParentsBySubset(dictSubset)
             self.__sliceUnitCardinalityD = {}
             self.__sliceCategoryExtrasD = {}
             for sliceName, pDL in self.__sliceParentItemsD.items():
-                logger.debug("Slicename %s parents %r" % (sliceName, pDL))
+                logger.debug("Slicename %s parents %r", sliceName, pDL)
                 #
                 # Some categories are include in a slice even if they are unconnected to the slice parent.
                 self.__sliceCategoryExtrasD[sliceName] = dictHelper.getSliceCategoryExtras(dictSubset, sliceName)
-                logger.debug("Slice extra categories %r" % self.__sliceCategoryExtrasD[sliceName])
+                logger.debug("Slice extra categories %r", self.__sliceCategoryExtrasD[sliceName])
                 #
                 self.__sliceUnitCardinalityD[sliceName] = self.__getUnitCardinalityCategories(pDL)
-                logger.debug("Slice Unit cardinality categories %r" % self.__sliceUnitCardinalityD[sliceName])
+                logger.debug("Slice Unit cardinality categories %r", self.__sliceUnitCardinalityD[sliceName])
                 #
                 self.__sliceUnitCardinalityD[sliceName].extend(dictHelper.getSliceCardinalityCategoryExtras(dictSubset, sliceName))
-                logger.debug("Slicename %s unit cardinality categories %r" % (sliceName, self.__sliceUnitCardinalityD[sliceName]))
+                logger.debug("Slicename %s unit cardinality categories %r", sliceName, self.__sliceUnitCardinalityD[sliceName])
             #
             #
             subCategoryD = {}
@@ -126,22 +116,22 @@ class DictInfo(object):
                     scL.extend(self.__dApi.getItemSubCategoryIdList(catName, atName))
                 scL = list(set(scL)) if scL else []
                 subCategoryD[catName] = scL
-            logger.debug("Subcategory category dictionary %r" % subCategoryD)
+            logger.debug("Subcategory category dictionary %r", subCategoryD)
             #
             self.__categoryFeatures = {catName: self.__getCategoryFeatures(catName, unitCardinalityList, subCategoryD) for catName in self.__categoryList}
-            iTypeCodes = dictHelper.getTypeCodes('iterable')
-            iQueryStrings = dictHelper.getQueryStrings('iterable')
-            logger.debug("iterable types %r iterable query %r" % (iTypeCodes, iQueryStrings))
+            iTypeCodes = dictHelper.getTypeCodes("iterable")
+            iQueryStrings = dictHelper.getQueryStrings("iterable")
+            logger.debug("iterable types %r iterable query %r", iTypeCodes, iQueryStrings)
             iterableD = self.__getIterables(iTypeCodes, iQueryStrings, dictHelper)
-            logger.debug("iterableD %r" % iterableD.items())
+            logger.debug("iterableD %r", iterableD.items())
             dataSelectFilterD = dictHelper.getSelectionFiltersBySubset(dictSubset)
             itemTransformD = dictHelper.getItemTransformD()
-            logger.debug("itemTransformD %r " % itemTransformD.items())
+            logger.debug("itemTransformD %r", itemTransformD.items())
             #
             self.__selectionFiltersD = dictHelper.getSelectionFiltersBySubset(dictSubset)
             self.__sliceParentFiltersD = dictHelper.getSliceParentFiltersBySubset(dictSubset)
         else:
-            logger.debug("Dictionary helper not loaded for subset %r locators %r" % (dictSubset, dictLocators), stack_info=True)
+            logger.debug("Dictionary helper not loaded for subset %r", dictSubset, stack_info=True)
             self.__selectionFiltersD = {}
             self.__sliceParentItemsD = {}
             self.__sliceParentFiltersD = {}
@@ -151,11 +141,7 @@ class DictInfo(object):
 
         #
         self.__methodD = self.__getMethodInfo()
-        self.__attributeFeatures = {
-            catName: self.__getAttributeFeatures(catName,
-                                                 iterableD,
-                                                 itemTransformD,
-                                                 self.__methodD) for catName in self.__categoryList}
+        self.__attributeFeatures = {catName: self.__getAttributeFeatures(catName, iterableD, itemTransformD, self.__methodD) for catName in self.__categoryList}
         self.__attributeDataTypeD = {catName: self.__getAttributeTypeD(catName) for catName in self.__categoryList}
         self.__dataSelectFilterD = dataSelectFilterD
         self.__sliceD = self.__getSliceChildren(self.__sliceParentItemsD)
@@ -195,7 +181,7 @@ class DictInfo(object):
             pass
         return {}
 
-    def __getContentClasses(self, catName, atName=None, wildCardAtName='__all__'):
+    def __getContentClasses(self, catName, atName=None, wildCardAtName="__all__"):
         """ Return a list of contexts for input categpry and optional attribute.
 
             Handle the special case of unspecified attributes interpreted as wildcard.
@@ -212,7 +198,7 @@ class DictInfo(object):
             else:
                 cL = self.__attributeContentClasses[(catName, atName)] if (catName, atName) in self.__attributeContentClasses else []
         except Exception as e:
-            logger.exception("Failing catName %s atName %s with %s" % (catName, atName, str(e)))
+            logger.exception("Failing catName %s atName %s with %s", catName, atName, str(e))
         #
         return cL
 
@@ -225,10 +211,10 @@ class DictInfo(object):
         for sliceName, sliceParents in sliceParentD.items():
             sD = {}
             for pD in sliceParents:
-                parentCategoryName = pD['CATEGORY_NAME']
-                parentAttributeName = pD['ATTRIBUTE_NAME']
+                parentCategoryName = pD["CATEGORY_NAME"]
+                parentAttributeName = pD["ATTRIBUTE_NAME"]
                 #
-                sD[parentCategoryName] = [{'PARENT_CATEGORY_NAME': parentCategoryName, 'PARENT_ATTRIBUTE_NAME': parentAttributeName, 'CHILD_ATTRIBUTE_NAME': parentAttributeName}]
+                sD[parentCategoryName] = [{"PARENT_CATEGORY_NAME": parentCategoryName, "PARENT_ATTRIBUTE_NAME": parentAttributeName, "CHILD_ATTRIBUTE_NAME": parentAttributeName}]
                 #
                 # childItems = self.__dApi.getFullChildList(parentCategoryName, parentAttributeName)
                 childItems = self.__dApi.getFullDecendentList(parentCategoryName, parentAttributeName)
@@ -241,7 +227,7 @@ class DictInfo(object):
                         continue
                     if catName not in sD:
                         sD[catName] = []
-                    sD[catName].append({'PARENT_CATEGORY_NAME': parentCategoryName, 'PARENT_ATTRIBUTE_NAME': parentAttributeName, 'CHILD_ATTRIBUTE_NAME': atName})
+                    sD[catName].append({"PARENT_CATEGORY_NAME": parentCategoryName, "PARENT_ATTRIBUTE_NAME": parentAttributeName, "CHILD_ATTRIBUTE_NAME": atName})
                 #
             retD[sliceName] = sD
         return retD
@@ -249,7 +235,7 @@ class DictInfo(object):
     def __getIterables(self, iTypeCodes, iQueryStrings, dictHelper):
         itD = {}
         #
-        typD = {d['TYPE_CODE']: d['DELIMITER'] for d in iTypeCodes}
+        typD = {d["TYPE_CODE"]: d["DELIMITER"] for d in iTypeCodes}
 
         for catName in self.__categoryList:
             for atName in self.__dictSchema[catName]:
@@ -262,41 +248,42 @@ class DictInfo(object):
                 for qs in iQueryStrings:
                     if qs in description:
                         itD[(catName, atName)] = dictHelper.getDelimiter(catName, atName)
-        logger.debug("iterableD: %r" % list(itD.items()))
+        logger.debug("iterableD: %r", list(itD.items()))
         return itD
 
     def __getMethodInfo(self):
         methodD = {}
         methodIndex = self.__dApi.getMethodIndex()
-        for item, mrL in methodIndex.items():
+        for _, mrL in methodIndex.items():
             for mr in mrL:
                 mId = mr.getId()
                 catName = mr.getCategoryName()
                 atName = mr.getAttributeName()
                 mType = mr.getType()
-                logger.debug("mId %r catName %r atName %r mType %r" % (mId, catName, atName, mType))
+                logger.debug("mId %r catName %r atName %r mType %r", mId, catName, atName, mType)
                 if (catName, atName) not in methodD:
                     methodD[(catName, atName)] = []
                 methDef = self.__dApi.getMethod(mId)
                 mLang = methDef.getLanguage()
                 mCode = methDef.getCode()
                 mImplement = methDef.getImplementation()
-                d = {'METHOD_LANGUAGE': mLang, 'METHOD_IMPLEMENT': mImplement, 'METHOD_TYPE': mType, 'METHOD_CODE': mCode}
+                d = {"METHOD_LANGUAGE": mLang, "METHOD_IMPLEMENT": mImplement, "METHOD_TYPE": mType, "METHOD_CODE": mCode}
                 methodD[(catName, atName)].append(d)
         ##
-        logger.debug("Method dictionary %r" % methodD)
+        logger.debug("Method dictionary %r", methodD)
         return methodD
 
-    def getMethodImplementation(self, catName, atName, methodCodes=["calculation_with_helper"]):
+    def getMethodImplementation(self, catName, atName, methodCodes=None):
         try:
+            mC = methodCodes if methodCodes else ["calculation"]
             if (catName, atName) in self.__methodD:
                 for mD in self.__methodD[(catName, atName)]:
-                    if mD['METHOD_CODE'].lower() in methodCodes:
-                        return mD['METHOD_IMPLEMENT']
+                    if mD["METHOD_CODE"].lower() in mC:
+                        return mD["METHOD_IMPLEMENT"]
             return None
 
         except Exception as e:
-            logger.exception("Failing catName %s atName %s with %s" % (catName, atName, str(e)))
+            logger.exception("Failing catName %s atName %s with %s", catName, atName, str(e))
         return None
 
     def getSelectionFilters(self):
@@ -326,14 +313,14 @@ class DictInfo(object):
         try:
             return self.__categoryFeatures[catName]
         except Exception as e:
-            logger.error("Missing category %s %s" % (catName, str(e)))
+            logger.error("Missing category %s %s", catName, str(e))
         return {}
 
     def getAttributeFeatures(self, catName):
         try:
             return self.__attributeFeatures[catName]
         except Exception as e:
-            logger.error("Missing category %s %s" % (catName, str(e)))
+            logger.error("Missing category %s %s", catName, str(e))
         return {}
 
     def getAttributeDataTypeD(self):
@@ -343,23 +330,21 @@ class DictInfo(object):
         try:
             return list(self.__sliceD.keys())
         except Exception as e:
-            logger.error("Failing with %s" % (str(e)))
+            logger.error("Failing with %s", str(e))
         return []
 
     def getSliceAttributes(self, sliceName, catName):
         try:
             return self.__sliceD[sliceName][catName]
         except Exception as e:
-            logger.debug("Failing to access sliceName %s catName %s with %s" % (sliceName, catName, str(e)))
-            pass
+            logger.debug("Failing to access sliceName %s catName %s with %s", sliceName, catName, str(e))
         return []
 
     def getSliceCategories(self, sliceName):
         try:
             return list(self.__sliceD[sliceName].keys())
         except Exception as e:
-            logger.debug("Failing to access sliceName %s with %s" % (sliceName, str(e)))
-            pass
+            logger.debug("Failing to access sliceName %s with %s", sliceName, str(e))
         return []
 
     def __getAttributeTypeD(self, catName):
@@ -371,12 +356,12 @@ class DictInfo(object):
     def __assignEnumTypes(self, enumList, pT):
         rL = []
         if enumList:
-            if pT != 'numb':
+            if pT != "numb":
                 return enumList
             else:
                 isFloat = False
                 for enum in enumList:
-                    if '.' in enum:
+                    if "." in enum:
                         isFloat = True
                         break
                 if isFloat:
@@ -393,7 +378,7 @@ class DictInfo(object):
         for itemName in list(set(itemNameList)):
             atName = CifName.attributePart(itemName)
             catName = CifName.categoryPart(itemName)
-            rL.append({'CATEGORY': catName, 'ATTRIBUTE': atName})
+            rL.append({"CATEGORY": catName, "ATTRIBUTE": atName})
         return rL
 
     def __getAttributeFeatures(self, catName, iterableD, itemTransformD, methodD):
@@ -417,122 +402,119 @@ class DictInfo(object):
         for atName in self.__dictSchema[catName]:
             itemName = CifName.itemName(catName, atName)
             fD = {
-                'CATEGORY_NAME': catName,
-                'ATTRIBUTE_NAME': atName,
-                'TYPE_CODE': None,
-                'TYPE_CODE_ALT': None,
-                'IS_MANDATORY': False,
+                "CATEGORY_NAME": catName,
+                "ATTRIBUTE_NAME": atName,
+                "TYPE_CODE": None,
+                "TYPE_CODE_ALT": None,
+                "IS_MANDATORY": False,
                 "CHILD_ITEMS": [],
                 "CHILDREN": [],
                 "ROOT_PARENT_ITEM": None,
                 "ROOT_PARENT": None,
                 "PARENT": None,
-                'DESCRIPTION': None,
-                'IS_KEY': False,
+                "DESCRIPTION": None,
+                "IS_KEY": False,
                 "ITERABLE_DELIMITER": None,
-                'FILTER_TYPES': [],
-                'IS_CHAR_TYPE': False,
-                'METHODS': [],
-                'CONTENT_CLASSES': []}
-            fD['TYPE_CODE'] = self.__dApi.getTypeCode(catName, atName)
-            fD['TYPE_CODE_ALT'] = self.__dApi.getTypeCodeAlt(catName, atName)
-            fD['IS_MANDATORY'] = True if str(self.__dApi.getMandatoryCode(catName, atName)).lower() in ['y', 'yes'] else False
-            fD['DESCRIPTION'] = textwrap.dedent(self.__dApi.getDescription(catName, atName))
+                "FILTER_TYPES": [],
+                "IS_CHAR_TYPE": False,
+                "METHODS": [],
+                "CONTENT_CLASSES": [],
+            }
+            fD["TYPE_CODE"] = self.__dApi.getTypeCode(catName, atName)
+            fD["TYPE_CODE_ALT"] = self.__dApi.getTypeCodeAlt(catName, atName)
+            fD["IS_MANDATORY"] = True if str(self.__dApi.getMandatoryCode(catName, atName)).lower() in ["y", "yes"] else False
+            fD["DESCRIPTION"] = textwrap.dedent(self.__dApi.getDescription(catName, atName))
             #
-            fD['CHILD_ITEMS'] = self.__dApi.getFullChildList(catName, atName)
-            fD['CHILDREN'] = self.__itemNameToDictList(self.__dApi.getFullChildList(catName, atName))
+            fD["CHILD_ITEMS"] = self.__dApi.getFullChildList(catName, atName)
+            fD["CHILDREN"] = self.__itemNameToDictList(self.__dApi.getFullChildList(catName, atName))
             #
             pItemName = self.__dApi.getUltimateParent(catName, atName)
             pName = pItemName if pItemName != itemName else None
-            fD['ROOT_PARENT_ITEM'] = pName
+            fD["ROOT_PARENT_ITEM"] = pName
 
-            fD['ROOT_PARENT'] = self.__itemNameToDictList([pName])[0] if pName else None
+            fD["ROOT_PARENT"] = self.__itemNameToDictList([pName])[0] if pName else None
             #
             pL = self.__dApi.getFullParentList(catName, atName, stripSelfParent=True)
-            if len(pL) > 0:
+            if pL:
                 rL = self.__itemNameToDictList(pL)
-                fD['PARENT'] = rL[0] if len(rL) else None
+                fD["PARENT"] = rL[0] if rL else None
                 if len(rL) > 1:
-                    logger.warning("Unexpected multiple parent definition for %s %s : %r" % (catName, atName, rL))
+                    logger.warning("Unexpected multiple parent definition for %s %s : %r", catName, atName, rL)
             #
-            # logger.debug("catName %s atName %s : parent %r root_parent %r" % (catName, atName, fD['PARENT'], fD['ROOT_PARENT']))
+            # logger.debug("catName %s atName %s : parent %r root_parent %r", catName, atName, fD['PARENT'], fD['ROOT_PARENT'])
             #
-            fD['IS_KEY'] = atName in keyAtNames
+            fD["IS_KEY"] = atName in keyAtNames
             pType = self.__dApi.getTypePrimitive(catName, atName)
-            fD['IS_CHAR_TYPE'] = str(pType).lower() in ['char', 'uchar']
+            fD["IS_CHAR_TYPE"] = str(pType).lower() in ["char", "uchar"]
             #
-            fD['ITERABLE_DELIMITER'] = iterableD[(catName, atName)] if (catName, atName) in iterableD else None
+            fD["ITERABLE_DELIMITER"] = iterableD[(catName, atName)] if (catName, atName) in iterableD else None
             #
-            fD['FILTER_TYPES'] = itemTransformD[(catName, '__all__')] if (catName, '__all__') in itemTransformD else []
-            fD['FILTER_TYPES'] = itemTransformD[(catName, atName)] if (catName, atName) in itemTransformD else fD['FILTER_TYPES']
+            fD["FILTER_TYPES"] = itemTransformD[(catName, "__all__")] if (catName, "__all__") in itemTransformD else []
+            fD["FILTER_TYPES"] = itemTransformD[(catName, atName)] if (catName, atName) in itemTransformD else fD["FILTER_TYPES"]
             #
-            fD['METHODS'] = methodD[(catName, atName)] if (catName, atName) in methodD else []
-            fD['CONTENT_CLASSES'] = self.__getContentClasses(catName, atName)
-            fD['ENUMS'] = self.__assignEnumTypes(self.__dApi.getEnumList(catName, atName), pType)
-            fD['EXAMPLES'] = self.__dApi.getExampleList(catName, atName)
+            fD["METHODS"] = methodD[(catName, atName)] if (catName, atName) in methodD else []
+            fD["CONTENT_CLASSES"] = self.__getContentClasses(catName, atName)
+            fD["ENUMS"] = self.__assignEnumTypes(self.__dApi.getEnumList(catName, atName), pType)
+            fD["EXAMPLES"] = self.__dApi.getExampleList(catName, atName)
             scL = []
             for scTup in self.__dApi.getItemSubCategoryList(catName, atName):
                 if scTup[1] is not None:
-                    d = {'id': scTup[0], 'label': scTup[1]}
+                    d = {"id": scTup[0], "label": scTup[1]}
                 else:
-                    d = {'id': scTup[0]}
+                    d = {"id": scTup[0]}
                 scL.append(d)
-            fD['SUB_CATEGORIES'] = scL
+            fD["SUB_CATEGORIES"] = scL
             if len(scL) > 1:
-                logger.debug("Multiple subcategories for %r %r %r" % (catName, atName, scL))
+                logger.debug("Multiple subcategories for %r %r %r", catName, atName, scL)
             #
             # bList = self.__dApi.getBoundaryListAlt(catName, atName, fallBack=True)
-            bList = self.__dApi.getBoundaryList(catName, atName)
-            if bList:
+            bdList = self.__dApi.getBoundaryList(catName, atName)
+            if bdList:
                 minD = {}
                 maxD = {}
-                for b in bList:
-                    minV = b[0]
-                    maxV = b[1]
+                for (minV, maxV) in bdList:
                     if minV == maxV:
                         continue
-                    if minV not in ['.', '?']:
+                    if minV not in [".", "?"]:
                         minD[minV] = False
-                    if maxV not in ['.', '?']:
+                    if maxV not in [".", "?"]:
                         maxD[maxV] = False
-                for b in bList:
-                    minV = b[0]
-                    maxV = b[1]
+                for (minV, maxV) in bdList:
                     if minV == maxV and minV in minD:
                         minD[minV] = True
                     if minV == maxV and maxV in maxD:
                         maxD[maxV] = True
                 for ky in minD:
-                    if '.' in ky:
+                    if "." in ky:
                         kyV = float(ky)
                     else:
                         kyV = int(ky)
                     if minD[ky]:
-                        fD['MIN_VALUE'] = kyV
+                        fD["MIN_VALUE"] = kyV
                     else:
-                        fD['MIN_VALUE_EXCLUSIVE'] = kyV
+                        fD["MIN_VALUE_EXCLUSIVE"] = kyV
                 for ky in maxD:
-                    if '.' in ky:
+                    if "." in ky:
                         kyV = float(ky)
                     else:
                         kyV = int(ky)
                     if maxD[ky]:
-                        fD['MAX_VALUE'] = kyV
+                        fD["MAX_VALUE"] = kyV
                     else:
-                        fD['MAX_VALUE_EXCLUSIVE'] = kyV
+                        fD["MAX_VALUE_EXCLUSIVE"] = kyV
             #
             aD[atName] = fD
         #
         return aD
 
     def __getCategoryFeatures(self, catName, unitCardinalityList, subCategoryD):
-        cD = {'KEY_ATTRIBUTES': []}
+        cD = {"KEY_ATTRIBUTES": []}
         # cD['KEY_ATTRIBUTES'] = [CifName.attributePart(keyItem) for keyItem in self.__dApi.getCategoryKeyList(catName)]
-        cD['KEY_ATTRIBUTES'] = [CifName.attributePart(keyItem) for keyItem in self.__getCategoryKeysWithReplacement(catName)]
-        cD['UNIT_CARDINALITY'] = catName in unitCardinalityList
-        cD['CONTENT_CLASSES'] = self.__getContentClasses(catName)
-        cD['IS_MANDATORY'] = True if str(self.__dApi.getCategoryMandatoryCode(catName)).lower() == 'yes' else False
-        cD['SUB_CATEGORIES'] = subCategoryD[catName] if catName in subCategoryD else []
+        cD["KEY_ATTRIBUTES"] = [CifName.attributePart(keyItem) for keyItem in self.__getCategoryKeysWithReplacement(catName)]
+        cD["UNIT_CARDINALITY"] = catName in unitCardinalityList
+        cD["CONTENT_CLASSES"] = self.__getContentClasses(catName)
+        cD["IS_MANDATORY"] = True if str(self.__dApi.getCategoryMandatoryCode(catName)).lower() == "yes" else False
+        cD["SUB_CATEGORIES"] = subCategoryD[catName] if catName in subCategoryD else []
         #
         return cD
 
@@ -544,17 +526,17 @@ class DictInfo(object):
             Return: category name list
         """
         numParents = len(parentDList)
-        logger.debug("Parent slice count %d def %r" % (numParents, parentDList))
+        logger.debug("Parent slice count %d def %r", numParents, parentDList)
         ucL = []
         #
         #  Find the common set of child categories for the input parent items
         comCatList = []
         for pD in parentDList:
-            catList = [pD['CATEGORY_NAME']]
-            for childItem in self.__dApi.getFullChildList(pD['CATEGORY_NAME'], pD['ATTRIBUTE_NAME']):
+            catList = [pD["CATEGORY_NAME"]]
+            for childItem in self.__dApi.getFullChildList(pD["CATEGORY_NAME"], pD["ATTRIBUTE_NAME"]):
                 childCategoryName = CifName.categoryPart(childItem)
                 primaryKeyItemList = self.__dApi.getCategoryKeyList(childCategoryName)
-                logger.debug("child category %r primary key items  %r" % (childCategoryName, primaryKeyItemList))
+                logger.debug("child category %r primary key items  %r", childCategoryName, primaryKeyItemList)
                 # child must be part of the primary key to be a candidate
                 if childItem in primaryKeyItemList:
                     catList.append(childCategoryName)
@@ -562,14 +544,15 @@ class DictInfo(object):
                 comCatList = list(set(catList) & set(comCatList))
             else:
                 comCatList.extend(catList)
-        logger.debug("Common category list %r" % comCatList)
+        logger.debug("Common category list %r", comCatList)
         for cat in comCatList:
             primaryKeyItemList = self.__dApi.getCategoryKeyList(cat)
             if len(primaryKeyItemList) == numParents:
                 ucL.append(cat)
         #
-        logger.debug("Slice unit cardinality categories from parent-child relationships %r " % ucL)
+        logger.debug("Slice unit cardinality categories from parent-child relationships %r", ucL)
         return ucL
+
     #
 
     def __getCategoryKeysWithReplacement(self, categoryName):
@@ -585,10 +568,10 @@ class DictInfo(object):
         catIndex = {}
         atIndex = {}
         for catName in dictSchema:
-            for c in self.__dApi.getCategoryContextList(catName):
-                catIndex.setdefault(c, []).append(catName)
+            for cT in self.__dApi.getCategoryContextList(catName):
+                catIndex.setdefault(cT, []).append(catName)
 
             for atName in dictSchema[catName]:
-                for c in self.__dApi.getContextList(catName, atName):
-                    atIndex.setdefault(c, []).append((catName, atName))
+                for cT in self.__dApi.getContextList(catName, atName):
+                    atIndex.setdefault(cT, []).append((catName, atName))
         return catIndex, atIndex

@@ -28,15 +28,15 @@ logger = logging.getLogger(__name__)
 #
 if platform.system() == "Linux":
     try:
-        import sqlalchemy.pool as pool
+        import sqlalchemy.pool as pool  # pylint: disable=import-error
+
         MySQLdb = pool.manage(MySQLdb, pool_size=12, max_overflow=12, timeout=30, echo=False, use_threadlocal=False)
     except Exception as e:
-        logger.exception("Creating MYSQL connection pool failing with %s" % str(e))
+        logger.exception("Creating MYSQL connection pool failing with %s", str(e))
 
 
 class Connection(ConnectionBase):
-
-    def __init__(self, cfgOb=None, infoD=None, resourceName=None, sectionName='site_info', verbose=False):
+    def __init__(self, cfgOb=None, infoD=None, resourceName=None, sectionName="site_info", verbose=False):
         super(Connection, self).__init__(verbose=verbose)
         #
         self.__cfgOb = cfgOb
@@ -53,15 +53,15 @@ class Connection(ConnectionBase):
         """
         #
         defaultPort = 3306
-        dbServer = 'mysql'
-        self._assignResource(resourceName)
+        dbServer = "mysql"
+        self._assignResource(resourceName, sectionName)
         infoD = {}
         # if not self.__cfgOb:
         #    return infoD
         #
         if not resourceName or not sectionName:
-            logger.exception("Missing resource specifiers resourceName %r sectionName %r" % (resourceName, sectionName))
-        if (resourceName == "PRD"):
+            logger.exception("Missing resource specifiers resourceName %r sectionName %r", resourceName, sectionName)
+        if resourceName == "PRD":
             infoD["DB_NAME"] = self.__cfgOb.get("SITE_REFDATA_PRD_DB_NAME", sectionName=sectionName)
             infoD["DB_HOST"] = self.__cfgOb.get("SITE_REFDATA_DB_HOST_NAME", sectionName=sectionName)
             infoD["DB_SOCKET"] = self.__cfgOb.get("SITE_REFDATA_DB_SOCKET", default=None, sectionName=sectionName)
@@ -70,7 +70,7 @@ class Connection(ConnectionBase):
             infoD["DB_USER"] = self.__cfgOb.get("SITE_REFDATA_DB_USER_NAME", sectionName=sectionName)
             infoD["DB_PW"] = self.__cfgOb.get("SITE_REFDATA_DB_PASSWORD", sectionName=sectionName)
 
-        elif (resourceName == "CC"):
+        elif resourceName == "CC":
             infoD["DB_NAME"] = self.__cfgOb.get("SITE_REFDATA_CC_DB_NAME", sectionName=sectionName)
             infoD["DB_HOST"] = self.__cfgOb.get("SITE_REFDATA_DB_HOST_NAME", sectionName=sectionName)
             infoD["DB_SOCKET"] = self.__cfgOb.get("SITE_REFDATA_DB_SOCKET", default=None, sectionName=sectionName)
@@ -79,7 +79,7 @@ class Connection(ConnectionBase):
             infoD["DB_USER"] = self.__cfgOb.get("SITE_REFDATA_DB_USER_NAME", sectionName=sectionName)
             infoD["DB_PW"] = self.__cfgOb.get("SITE_REFDATA_DB_PASSWORD", sectionName=sectionName)
 
-        elif (resourceName == "RCSB_INSTANCE"):
+        elif resourceName == "RCSB_INSTANCE":
             infoD["DB_NAME"] = self.__cfgOb.get("SITE_INSTANCE_DB_NAME", sectionName=sectionName)
             infoD["DB_HOST"] = self.__cfgOb.get("SITE_INSTANCE_DB_HOST_NAME", sectionName=sectionName)
             infoD["DB_SOCKET"] = self.__cfgOb.get("SITE_INSTANCE_DB_SOCKET", default=None, sectionName=sectionName)
@@ -88,7 +88,7 @@ class Connection(ConnectionBase):
             self.__dbUser = self.__cfgOb.get("SITE_INSTANCE_DB_USER_NAME", sectionName=sectionName)
             infoD["DB_PW"] = self.__cfgOb.get("SITE_INSTANCE_DB_PASSWORD", sectionName=sectionName)
 
-        elif (resourceName == "DA_INTERNAL"):
+        elif resourceName == "DA_INTERNAL":
             infoD["DB_NAME"] = self.__cfgOb.get("SITE_DA_INTERNAL_DB_NAME", sectionName=sectionName)
             infoD["DB_HOST"] = self.__cfgOb.get("SITE_DA_INTERNAL_DB_HOST_NAME", sectionName=sectionName)
             infoD["DB_PORT"] = self.__cfgOb.get("SITE_DA_INTERNAL_DB_PORT_NUMBER", default=defaultPort, sectionName=sectionName)
@@ -97,7 +97,7 @@ class Connection(ConnectionBase):
             infoD["DB_USER"] = self.__cfgOb.get("SITE_DA_INTERNAL_DB_USER_NAME", sectionName=sectionName)
             infoD["DB_PW"] = self.__cfgOb.get("SITE_DA_INTERNAL_DB_PASSWORD", sectionName=sectionName)
 
-        elif (resourceName == "DA_INTERNAL_COMBINE"):
+        elif resourceName == "DA_INTERNAL_COMBINE":
             infoD["DB_NAME"] = self.__cfgOb.get("SITE_DA_INTERNAL_COMBINE_DB_NAME", sectionName=sectionName)
             infoD["DB_HOST"] = self.__cfgOb.get("SITE_DA_INTERNAL_COMBINE_DB_HOST_NAME", sectionName=sectionName)
             infoD["DB_PORT"] = self.__cfgOb.get("SITE_DA_INTERNAL_COMBINE_DB_PORT_NUMBER", default=defaultPort, sectionName=sectionName)
@@ -105,7 +105,7 @@ class Connection(ConnectionBase):
 
             infoD["DB_USER"] = self.__cfgOb.get("SITE_DA_INTERNAL_COMBINE_DB_USER_NAME", sectionName=sectionName)
             infoD["DB_PW"] = self.__cfgOb.get("SITE_DA_INTERNAL_COMBINE_DB_PASSWORD", sectionName=sectionName)
-        elif (resourceName == "DISTRO"):
+        elif resourceName == "DISTRO":
             infoD["DB_NAME"] = self.__cfgOb.get("SITE_DISTRO_DB_NAME", sectionName=sectionName)
             infoD["DB_HOST"] = self.__cfgOb.get("SITE_DISTRO_DB_HOST_NAME", sectionName=sectionName)
             infoD["DB_PORT"] = self.__cfgOb.get("SITE_DISTRO_DB_PORT_NUMBER", default=defaultPort, sectionName=sectionName)
@@ -114,7 +114,7 @@ class Connection(ConnectionBase):
             infoD["DB_USER"] = self.__cfgOb.get("SITE_DISTRO_DB_USER_NAME", sectionName=sectionName)
             infoD["DB_PW"] = self.__cfgOb.get("SITE_DISTRO_DB_PASSWORD", sectionName=sectionName)
 
-        elif (resourceName == "STATUS"):
+        elif resourceName == "STATUS":
             infoD["DB_NAME"] = self.__cfgOb.get("SITE_DB_DATABASE_NAME", sectionName=sectionName)
             infoD["DB_HOST"] = self.__cfgOb.get("SITE_DB_HOST_NAME", sectionName=sectionName)
             infoD["DB_PORT"] = self.__cfgOb.get("SITE_DB_PORT_NUMBER", default=defaultPort, sectionName=sectionName)
@@ -122,7 +122,7 @@ class Connection(ConnectionBase):
 
             infoD["DB_USER"] = self.__cfgOb.get("SITE_DB_USER_NAME", sectionName=sectionName)
             infoD["DB_PW"] = self.__cfgOb.get("SITE_DB_PASSWORD", sectionName=sectionName)
-        elif (resourceName == "MYSQL_DB"):
+        elif resourceName == "MYSQL_DB":
 
             infoD["DB_NAME"] = self.__cfgOb.get("MYSQL_DB_DATABASE_NAME", sectionName=sectionName)
             infoD["DB_HOST"] = self.__cfgOb.get("MYSQL_DB_HOST_NAME", sectionName=sectionName)
@@ -134,14 +134,15 @@ class Connection(ConnectionBase):
         else:
             pass
 
-        infoD['DB_PORT'] = int(str(infoD['DB_PORT']))
-        infoD['DB_SERVER'] = dbServer
+        infoD["DB_PORT"] = int(str(infoD["DB_PORT"]))
+        infoD["DB_SERVER"] = dbServer
 
         self.setPreferences(infoD)
         #
         return infoD
 
         #
+
     def __enter__(self):
         self.openConnection()
         return self.getClientConnection()

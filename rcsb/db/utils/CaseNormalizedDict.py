@@ -28,13 +28,15 @@ class CaseNormalizedDict(dict):
         case of the input keys.
 
     """
+
     # This example subclasses dict directly following the example from the requests module.
     # proxy = {}
 
     def __init__(self, data):
+        super(CaseNormalizedDict, self).__init__(data)
         self.__local = dict((k.lower(), k) for k in data)
-        for k in data:
-            self[k] = data[k]
+        # for k in data:
+        #    self[k] = data[k]
 
     def __contains__(self, k):
         return k.lower() in self.__local
@@ -62,6 +64,7 @@ class CaseNormalizedDict2(collections.MutableMapping):
         case of the input keys.
 
     """
+
     # This example subclasses the abstract base class MutableMapping.
 
     def __init__(self, *args, **kwargs):
@@ -80,8 +83,8 @@ class CaseNormalizedDict2(collections.MutableMapping):
     def __getitem__(self, k):
         return self.__dict__[self.__local[k.lower()]]
 
-    def __setitem__(self, k, v):
-        self.__dict__[k] = v
+    def __setitem__(self, k, val):
+        self.__dict__[k] = val
         self.__local[k.lower()] = k
 
     def __delitem__(self, k):
@@ -100,4 +103,4 @@ class CaseNormalizedDict2(collections.MutableMapping):
         return str(self.__dict__)
 
     def __repr__(self):
-        return '{}, ({})'.format(super(CaseNormalizedDict2, self).__repr__(), self.__dict__)
+        return "{}, ({})".format(super(CaseNormalizedDict2, self).__repr__(), self.__dict__)

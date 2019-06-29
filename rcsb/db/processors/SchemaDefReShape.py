@@ -34,8 +34,8 @@ class SliceValues(object):
         spfL = self.__sD.getSliceParentFilters(sliceFilter)
         vD = {}
         for sp in spiL:
-            catId = sp['CATEGORY']
-            atId = sp['ATTRIBUTE']
+            catId = sp["CATEGORY"]
+            atId = sp["ATTRIBUTE"]
             vals = []
             if catId in schemaDataDictById:
                 for rowD in schemaDataDictById[catId]:
@@ -44,25 +44,25 @@ class SliceValues(object):
             vD[(catId, atId)] = vals
         #
         self.index = 0
-        logger.debug("Parent value dict %r" % vD.items())
+        logger.debug("Parent value dict %r", vD.items())
         # Make a list of lists and then get the product
         #
         valueL = []
-        for ky, vL in vD.items():
+        for _, vL in vD.items():
             valueL.append(vL)
         self.data = list(itertools.product(*valueL))
-        logger.debug("Parent value product list %r" % self.data)
+        logger.debug("Parent value product list %r", self.data)
 
     def isEmpty(self):
         return len(self.data) < 1
 
     def __testFilter(self, rowD, catId, filters):
         ok = True
-        for filter in filters:
-            if catId != filter['CATEGORY']:
+        for flt in filters:
+            if catId != flt["CATEGORY"]:
                 ok = False
                 break
-            if filter['ATTRIBUTE'] in rowD and rowD[filter['ATTRIBUTE']] in filter['VALUES']:
+            if flt["ATTRIBUTE"] in rowD and rowD[flt["ATTRIBUTE"]] in flt["VALUES"]:
                 continue
             else:
                 ok = False
@@ -108,14 +108,14 @@ class SchemaDefReShape(object):
         """
         return self.__reshapeSchemaData(schemaDataDictById, styleType=styleType)
 
-    def applySlicedShape(self, schemaDataDictById, styleType="rowwise_by_name", logSize=False, sliceFilter=None):
+    def applySlicedShape(self, schemaDataDictById, styleType="rowwise_by_name", sliceFilter=None):
         """
         """
         rL = []
         if sliceFilter:
             rL = []
             sliceIndex = self.__sD.getSliceIndex(sliceFilter)
-            logger.debug("Slice index %r" % sliceIndex)
+            logger.debug("Slice index %r", sliceIndex)
             #
             #
             sliceValues = SliceValues(schemaDataDictById, self.__sD, sliceFilter)
@@ -125,15 +125,15 @@ class SchemaDefReShape(object):
             flagNew = True
             # JDW - This path is better performing -
             if styleType == "rowwise_by_name_with_cardinality" and flagNew:
-                logger.debug("Invoking one-pass slice filter %s" % sliceFilter)
+                logger.debug("Invoking one-pass slice filter %s", sliceFilter)
                 rL = self.__sliceRowwiseByNameWithCardOnePass(schemaDataDictById, sliceFilter, sliceIndex)
-                logger.debug("Completed one-pass slice filter %s" % sliceFilter)
+                logger.debug("Completed one-pass slice filter %s", sliceFilter)
             else:
                 # JDW - This path works but is not well performing
                 for ii, sliceValue in enumerate(sliceValues):
-                    logger.debug(" %4d filter %s slice value %r" % (ii, sliceFilter, sliceValue))
+                    logger.debug(" %4d filter %s slice value %r", ii, sliceFilter, sliceValue)
                     rD = self.__reshapeSlicedSchemaData(schemaDataDictById, sliceFilter, sliceValue, sliceIndex, styleType=styleType)
-                    logger.debug("rD keys %s" % (rD.keys()))
+                    logger.debug("rD keys %s", rD.keys())
                     rL.append(rD)
         else:
             return [self.__reshapeSchemaData(schemaDataDictById, styleType=styleType)]
@@ -166,9 +166,9 @@ class SchemaDefReShape(object):
                 rD = schemaDataDictById
             else:
                 rD = schemaDataDictById
-                logger.warning("Unsupported style type %s" % styleType)
+                logger.warning("Unsupported style type %s", styleType)
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
             rD = schemaDataDictById
 
         return rD
@@ -199,7 +199,7 @@ class SchemaDefReShape(object):
                 ok = False
 
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
             ok = False
         return ok
 
@@ -209,7 +209,7 @@ class SchemaDefReShape(object):
             schemaObj = self.__sD.getSchemaObject(schemaId)
             lExtra = schemaObj.isSliceExtra(sliceFilter)
             if lExtra:
-                logger.debug("SchemaId %r slice extra %r" % (schemaId, lExtra))
+                logger.debug("SchemaId %r slice extra %r", schemaId, lExtra)
             if schemaId not in sliceIndex and not schemaObj.isSliceExtra(sliceFilter):
                 continue
             # ------
@@ -226,8 +226,8 @@ class SchemaDefReShape(object):
                         oRowD[schemaObj.getAttributeName(atId)] = iRowD[atId]
                     oRowDList.append(oRowD)
 
-            if (len(oRowDList) < 1) and not schemaObj.isMandatory():
-                logger.debug("Schema id %r row length %r mandatory %r" % (schemaId, len(oRowDList), schemaObj.isMandatory()))
+            if not oRowDList and not schemaObj.isMandatory():
+                logger.debug("Schema id %r row length %r mandatory %r", schemaId, len(oRowDList), schemaObj.isMandatory())
                 continue
 
             if schemaObj.hasSliceUnitCardinality(sliceFilter) and len(oRowDList) == 1:
@@ -243,7 +243,7 @@ class SchemaDefReShape(object):
             schemaObj = self.__sD.getSchemaObject(schemaId)
             lExtra = schemaObj.isSliceExtra(sliceFilter)
             if lExtra:
-                logger.debug("SchemaId %r slice extra %r" % (schemaId, lExtra))
+                logger.debug("SchemaId %r slice extra %r", schemaId, lExtra)
             if schemaId not in sliceIndex and not schemaObj.isSliceExtra(sliceFilter):
                 continue
             # ------
@@ -259,8 +259,8 @@ class SchemaDefReShape(object):
                         oRowD[schemaObj.getAttributeName(atId)] = iRowD[atId]
                     oRowDList.append(oRowD)
             #
-            if (len(oRowDList) < 1) and not schemaObj.isMandatory():
-                logger.debug("Schema id %r row length %r mandatory %r" % (schemaId, len(oRowDList), schemaObj.isMandatory()))
+            if not oRowDList and not schemaObj.isMandatory():
+                logger.debug("Schema id %r row length %r mandatory %r", schemaId, len(oRowDList), schemaObj.isMandatory())
                 continue
             rD[schemaObjName] = oRowDList
 
@@ -272,7 +272,7 @@ class SchemaDefReShape(object):
             schemaObj = self.__sD.getSchemaObject(schemaId)
             lExtra = schemaObj.isSliceExtra(sliceFilter)
             if lExtra:
-                logger.debug("SchemaId %r slice extra %r" % (schemaId, lExtra))
+                logger.debug("SchemaId %r slice extra %r", schemaId, lExtra)
             if schemaId not in sliceIndex and not schemaObj.isSliceExtra(sliceFilter):
                 continue
             # ------
@@ -288,8 +288,8 @@ class SchemaDefReShape(object):
                             colD[atName] = []
                         colD[atName].append(iRowD[atId])
 
-            if (len(colD) < 1) and not schemaObj.isMandatory():
-                logger.debug("Schema id %r row length %r mandatory %r" % (schemaId, len(colD), schemaObj.isMandatory()))
+            if not colD and not schemaObj.isMandatory():
+                logger.debug("Schema id %r row length %r mandatory %r", schemaId, len(colD), schemaObj.isMandatory())
                 continue
             rD[schemaObjName] = colD
 
@@ -301,7 +301,7 @@ class SchemaDefReShape(object):
             schemaObj = self.__sD.getSchemaObject(schemaId)
             lExtra = schemaObj.isSliceExtra(sliceFilter)
             if lExtra:
-                logger.debug("SchemaId %r slice extra %r" % (schemaId, lExtra))
+                logger.debug("SchemaId %r slice extra %r", schemaId, lExtra)
             if schemaId not in sliceIndex and not schemaObj.isSliceExtra(sliceFilter):
                 continue
             # ------
@@ -320,10 +320,10 @@ class SchemaDefReShape(object):
                         oRowL.append(iRowD[atId])
                     oRowList.append(oRowL)
             #
-            if (len(oRowList) < 1) and not schemaObj.isMandatory():
-                logger.debug("Schema id %r row length %r mandatory %r" % (schemaId, len(oRowList), schemaObj.isMandatory()))
+            if not oRowList and not schemaObj.isMandatory():
+                logger.debug("Schema id %r row length %r mandatory %r", schemaId, len(oRowList), schemaObj.isMandatory())
                 continue
-            rD[schemaObjName] = {'attributes': atNameList, 'data': oRowList}
+            rD[schemaObjName] = {"attributes": atNameList, "data": oRowList}
 
         return rD
 
@@ -353,9 +353,9 @@ class SchemaDefReShape(object):
                 rD = schemaDataDictById
             else:
                 rD = schemaDataDictById
-                logger.warning("Unsupported style type %s" % styleType)
+                logger.warning("Unsupported style type %s", styleType)
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
             rD = schemaDataDictById
 
         return rD
@@ -431,21 +431,21 @@ class SchemaDefReShape(object):
                     oRowL.append(iRowD[atId])
                 oRowList.append(oRowL)
             #
-            rD[schemaObjName] = {'attributes': atNameList, 'data': oRowList}
+            rD[schemaObjName] = {"attributes": atNameList, "data": oRowList}
         return rD
 
     # ---------------------- ---------------------- ---------------------- ---------------------- ----------------------
     #
     def __sliceRowwiseByNameWithCardOnePass(self, schemaDataDictById, sliceFilter, sliceIndex):
-
+        debug = False
         #
         schemaIdExtraL = self.__sD.getSliceExtraSchemaIds(sliceFilter)
-        #logger.info("Schema Id extras %r" % schemaIdExtraL)
+        # logger.info("Schema Id extras %r" % schemaIdExtraL)
         #
         for schemaId in schemaDataDictById:
             # sliceIndex = {'schemaId0': {(pCat0,pAt0): chAt0,  (pCat1,pAt1): chAt1}, ... }, ... }
             if schemaId in sliceIndex:
-                logger.debug("SLICE %s - schemaId %s -> %r" % (sliceFilter, schemaId, sliceIndex[schemaId]))
+                logger.debug("SLICE %s - schemaId %s -> %r", sliceFilter, schemaId, sliceIndex[schemaId])
         #
         # Build  value -> parent attributes dictionary -
         #
@@ -474,7 +474,7 @@ class SchemaDefReShape(object):
         # Each parent key in the slice filter -
         ##
         for pvTup in pvTupL:
-            logger.debug("VALUES > Slice filter %s parent %r value %r" % (sliceFilter, pvTup[0], pvTup[1]))
+            logger.debug("VALUES > Slice filter %s parent %r value %r", sliceFilter, pvTup[0], pvTup[1])
             # sliceIndex = {'schemaId0': mD, ... }
             #         mD = {(pCat0,pAt0): chAt0,  (pCat1,pAt1): chAt1}, ... }, ... }
             for schemaId, mD in sliceIndex.items():
@@ -483,8 +483,8 @@ class SchemaDefReShape(object):
                     sfAtD[schemaId].setdefault(pvTup[0], []).extend([k for k in mD[pvTup[0]]])
                     singleKeyAtD.setdefault(schemaId, []).extend([k for k in mD[pvTup[0]]])
                 if len(sfAtD[schemaId]) > 1:
-                    logger.error("Unsupported slice complexity %s key length %d" % (sliceFilter, len(sfAtD[schemaId])))
-        logger.debug("Ordered slice filter attribute dictionary %r" % singleKeyAtD)
+                    logger.error("Unsupported slice complexity %s key length %d", sliceFilter, len(sfAtD[schemaId]))
+        logger.debug("Ordered slice filter attribute dictionary %r", singleKeyAtD)
         #
         # Slice extra objects get replicated in each slice -
         #
@@ -502,8 +502,8 @@ class SchemaDefReShape(object):
                         oRowD[schemaObj.getAttributeName(atId)] = iRowD[atId]
                     oRowDList.append(oRowD)
 
-                if (len(oRowDList) < 1) and not schemaObj.isMandatory():
-                    logger.debug("Schema id %r row length %r mandatory %r" % (schemaId, len(oRowDList), schemaObj.isMandatory()))
+                if not oRowDList and not schemaObj.isMandatory():
+                    logger.debug("Schema id %r row length %r mandatory %r", schemaId, len(oRowDList), schemaObj.isMandatory())
                     continue
 
                 if schemaObj.hasSliceUnitCardinality(sliceFilter) and len(oRowDList) == 1:
@@ -513,13 +513,13 @@ class SchemaDefReShape(object):
             for pv in pVals:
                 retD[pv] = copy.copy(rD)
         #
-        # logger.info("slice %s retD keys after slice extra insertion %r" % (sliceFilter, list(retD.keys())))
-        # logger.info("slice %s retD after slice extra insertion %r" % (sliceFilter, retD))
+        # logger.info("slice %s retD keys after slice extra insertion %r", sliceFilter, list(retD.keys()))
+        # logger.info("slice %s retD after slice extra insertion %r", sliceFilter, retD)
 
         #
         # Split of the rest by slice value - for single parent key slices  -
         #
-        # logger.info("slice %s singleKeyAtD.keys() %r" % (sliceFilter, list(singleKeyAtD.keys())))
+        # logger.info("slice %s singleKeyAtD.keys() %r", sliceFilter, list(singleKeyAtD.keys()))
         #
         for schemaId, atL in singleKeyAtD.items():
             #
@@ -547,14 +547,15 @@ class SchemaDefReShape(object):
                         pass
 
             #
-            #logger.info("Slice %s Finished loading schema name %s values %r" % (sliceFilter, schemaObjName, rvS))
+            # logger.info("Slice %s Finished loading schema name %s values %r" % (sliceFilter, schemaObjName, rvS))
             #
+
             #
-            if False:
+            if debug:
                 for pv in retD:
                     if schemaObjName in retD[pv]:
                         logger.info(">>>>>>>>")
-                        logger.info("slice %s schemaObjName %s value %r obj %r" % (sliceFilter, schemaObjName, pv, retD[pv][schemaObjName]))
+                        logger.info("slice %s schemaObjName %s value %r obj %r", sliceFilter, schemaObjName, pv, retD[pv][schemaObjName])
                         logger.info(">>>>>>>>")
         #
         return list(retD.values())

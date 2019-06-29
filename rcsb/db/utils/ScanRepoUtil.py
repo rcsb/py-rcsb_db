@@ -29,16 +29,16 @@ import datetime
 import logging
 import time
 
-from mmcif.api.DataCategory import DataCategory
-
 from rcsb.db.utils.RepoPathUtil import RepoPathUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
 
+from mmcif.api.DataCategory import DataCategory
+
 logger = logging.getLogger(__name__)
 
-ScanValue = collections.namedtuple('ScanValue', 'containerId, catName, atName, minWidth, maxWidth, minPrec, maxPrec')
-ScanSummary = collections.namedtuple('ScanSummary', 'containerId, fromPath, scanDate, scanCategoryDict')
+ScanValue = collections.namedtuple("ScanValue", "containerId, catName, atName, minWidth, maxWidth, minPrec, maxPrec")
+ScanSummary = collections.namedtuple("ScanSummary", "containerId, fromPath, scanDate, scanCategoryDict")
 
 
 class ScanRepoUtil(object):
@@ -72,12 +72,12 @@ class ScanRepoUtil(object):
         #
         self.__cfgOb = cfgOb
         #
-        self.__mpFormat = '[%(levelname)s] %(asctime)s %(processName)s-%(module)s.%(funcName)s: %(message)s'
+        self.__mpFormat = "[%(levelname)s] %(asctime)s %(processName)s-%(module)s.%(funcName)s: %(message)s"
 
         self.__workPath = workPath
         self.__mU = MarshalUtil(workPath=self.__workPath)
 
-    def scanContentType(self, contentType, scanType='full', inputPathList=None, scanDataFilePath=None, failedFilePath=None, saveInputFileListPath=None):
+    def scanContentType(self, contentType, scanType="full", inputPathList=None, scanDataFilePath=None, failedFilePath=None, saveInputFileListPath=None):
         """Driver method for scan operation
 
         Args:
@@ -99,14 +99,14 @@ class ScanRepoUtil(object):
             pathList = rpU.getLocatorList(contentType=contentType, inputPathList=inputPathList)
             #
             if saveInputFileListPath:
-                self.__mU.doExport(saveInputFileListPath, pathList, format="list")
-                logger.debug("Saving %d paths in %s" % (len(pathList), saveInputFileListPath))
+                self.__mU.doExport(saveInputFileListPath, pathList, fmt="list")
+                logger.debug("Saving %d paths in %s", len(pathList), saveInputFileListPath)
             #
 
             optD = {}
-            optD['contentType'] = contentType
-            optD['logSize'] = True
-            optD['scanType'] = scanType
+            optD["contentType"] = contentType
+            optD["logSize"] = True
+            optD["scanType"] = scanType
             # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             #
 
@@ -115,7 +115,7 @@ class ScanRepoUtil(object):
             #
             # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             numPaths = len(pathList)
-            logger.debug("Processing %d total paths" % numPaths)
+            logger.debug("Processing %d total paths", numPaths)
             numProc = min(numProc, numPaths)
             maxStepLength = self.__maxStepLength
             if numPaths > maxStepLength:
@@ -124,15 +124,15 @@ class ScanRepoUtil(object):
             else:
                 subLists = [pathList]
             #
-            if subLists and len(subLists) > 0:
-                logger.debug("Starting with numProc %d outer subtask count %d subtask length ~ %d" % (numProc, len(subLists), len(subLists[0])))
+            if subLists:
+                logger.debug("Starting with numProc %d outer subtask count %d subtask length ~ %d", numProc, len(subLists), len(subLists[0]))
             #
             numResults = 1
             failList = []
             retLists = [[] for ii in range(numResults)]
             diagList = []
             for ii, subList in enumerate(subLists):
-                logger.debug("Running outer subtask %d or %d length %d" % (ii + 1, len(subLists), len(subList)))
+                logger.debug("Running outer subtask %d or %d length %d", ii + 1, len(subLists), len(subList))
                 #
                 mpu = MultiProcUtil(verbose=True)
                 mpu.setOptions(optionsD=optD)
@@ -140,33 +140,33 @@ class ScanRepoUtil(object):
                 ok, failListT, retListsT, diagListT = mpu.runMulti(dataList=subList, numProc=numProc, numResults=numResults, chunkSize=chunkSize)
                 failList.extend(failListT)
                 # retLists is a list of lists -
-                for ii in range(numResults):
+                for _ in range(numResults):
                     retLists[ii].extend(retListsT[ii])
                 diagList.extend(diagListT)
-            logger.debug("Scan failed path list %r" % failList)
-            logger.debug("Scan path list success length %d load list failed length %d" % (len(pathList), len(failList)))
-            logger.debug("Returned metadata length %r" % len(retLists[0]))
+            logger.debug("Scan failed path list %r", failList)
+            logger.debug("Scan path list success length %d load list failed length %d", len(pathList), len(failList))
+            logger.debug("Returned metadata length %r", len(retLists[0]))
             #
-            if failedFilePath and len(failList):
-                wOk = self.__mU.doExport(failedFilePath, failList, format="list")
-                logger.debug("Writing scan failure path list to %s status %r" % (failedFilePath, wOk))
+            if failedFilePath and failList:
+                wOk = self.__mU.doExport(failedFilePath, failList, fmt="list")
+                logger.debug("Writing scan failure path list to %s status %r", failedFilePath, wOk)
             #
-            if scanType == 'incr':
-                scanDataD = self.__mU.doImport(scanDataFilePath, format='pickle', default=None)
-                logger.info("Imported scan data with keys %r" % list(scanDataD.keys()))
+            if scanType == "incr":
+                scanDataD = self.__mU.doImport(scanDataFilePath, fmt="pickle", default=None)
+                logger.info("Imported scan data with keys %r", list(scanDataD.keys()))
             else:
                 scanDataD = {}
             #
-            if scanDataFilePath and len(retLists[0]):
+            if scanDataFilePath and retLists[0]:
                 for ssTup in retLists[0]:
                     cId = ssTup.containerId
-                    if scanType == 'full' and cId in scanDataD:
-                        logger.error("Duplicate container id %s in %r and %r" % (cId, ssTup.fromPath, scanDataD[cId].fromPath))
+                    if scanType == "full" and cId in scanDataD:
+                        logger.error("Duplicate container id %s in %r and %r", cId, ssTup.fromPath, scanDataD[cId].fromPath)
                     #
                     scanDataD[cId] = ssTup
 
-                ok = self.__mU.doExport(scanDataFilePath, scanDataD, format='pickle')
-                tscanDataD = self.__mU.doImport(scanDataFilePath, format='pickle')
+                ok = self.__mU.doExport(scanDataFilePath, scanDataD, fmt="pickle")
+                tscanDataD = self.__mU.doImport(scanDataFilePath, fmt="pickle")
                 ok = tscanDataD == scanDataD
 
             self.__end(startTime, "scanning operation with status " + str(ok))
@@ -174,20 +174,20 @@ class ScanRepoUtil(object):
             #
             return ok
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
 
         return False
 
-    def evalScan(self, scanDataFilePath, evalJsonFilePath, evalType='data_type'):
+    def evalScan(self, scanDataFilePath, evalJsonFilePath, evalType="data_type"):
 
-        scanDataD = self.__mU.doImport(scanDataFilePath, format='pickle')
-        if evalType in ['data_type']:
+        scanDataD = self.__mU.doImport(scanDataFilePath, fmt="pickle")
+        if evalType in ["data_type"]:
             rD = self.__evalScanDataType(scanDataD)
-        elif evalType in ['data_coverage']:
+        elif evalType in ["data_coverage"]:
             rD = self.__evalScanDataCoverage(scanDataD)
         else:
-            logger.debug("Unknown evalType %r " % evalType)
-        ok = self.__mU.doExport(evalJsonFilePath, rD, format='json')
+            logger.debug("Unknown evalType %r", evalType)
+        ok = self.__mU.doExport(evalJsonFilePath, rD, fmt="json")
 
         return ok
 
@@ -201,19 +201,19 @@ class ScanRepoUtil(object):
         sD = {}
         for cId in scanDataD:
             ssTup = scanDataD[cId]
-            d = ssTup.scanCategoryDict
-            for catName in d:
+            dD = ssTup.scanCategoryDict
+            for catName in dD:
                 if catName not in sD:
                     sD[catName] = {}
-                for svTup in d[catName]:
+                for svTup in dD[catName]:
                     if svTup.atName not in sD[catName]:
-                        sD[catName][svTup.atName] = {'minWidth': svTup.minWidth, 'maxWidth': svTup.maxWidth, 'minPrec': svTup.minPrec, 'maxPrec': svTup.maxPrec, 'count': 1}
+                        sD[catName][svTup.atName] = {"minWidth": svTup.minWidth, "maxWidth": svTup.maxWidth, "minPrec": svTup.minPrec, "maxPrec": svTup.maxPrec, "count": 1}
                         continue
-                    sD[catName][svTup.atName]['minWidth'] = min(sD[catName][svTup.atName]['minWidth'], svTup.minWidth)
-                    sD[catName][svTup.atName]['maxWidth'] = max(sD[catName][svTup.atName]['maxWidth'], svTup.maxWidth)
-                    sD[catName][svTup.atName]['minPrec'] = min(sD[catName][svTup.atName]['minPrec'], svTup.minPrec)
-                    sD[catName][svTup.atName]['maxPrec'] = max(sD[catName][svTup.atName]['maxPrec'], svTup.maxPrec)
-                    sD[catName][svTup.atName]['count'] += 1
+                    sD[catName][svTup.atName]["minWidth"] = min(sD[catName][svTup.atName]["minWidth"], svTup.minWidth)
+                    sD[catName][svTup.atName]["maxWidth"] = max(sD[catName][svTup.atName]["maxWidth"], svTup.maxWidth)
+                    sD[catName][svTup.atName]["minPrec"] = min(sD[catName][svTup.atName]["minPrec"], svTup.minPrec)
+                    sD[catName][svTup.atName]["maxPrec"] = max(sD[catName][svTup.atName]["maxPrec"], svTup.maxPrec)
+                    sD[catName][svTup.atName]["count"] += 1
         return sD
 
     def __evalScanDataCoverage(self, scanDataD):
@@ -227,15 +227,15 @@ class ScanRepoUtil(object):
         sD = {}
         for cId in scanDataD:
             ssTup = scanDataD[cId]
-            d = ssTup.scanCategoryDict
-            for catName in d:
+            dD = ssTup.scanCategoryDict
+            for catName in dD:
                 if catName not in sD:
                     sD[catName] = {}
-                for svTup in d[catName]:
+                for svTup in dD[catName]:
                     if svTup.atName not in sD[catName]:
-                        sD[catName][svTup.atName] = {'count': 0, 'instances': []}
-                    sD[catName][svTup.atName]['instances'].append(svTup.containerId)
-                    sD[catName][svTup.atName]['count'] += 1
+                        sD[catName][svTup.atName] = {"count": 0, "instances": []}
+                    sD[catName][svTup.atName]["instances"].append(svTup.containerId)
+                    sD[catName][svTup.atName]["count"] += 1
         return sD
 
     def scanWorker(self, dataList, procName, optionsD, workingDir):
@@ -244,11 +244,12 @@ class ScanRepoUtil(object):
 
         """
         try:
+            _ = workingDir
             startTime = self.__begin(message=procName)
             # Recover common options
 
-            scanType = optionsD['scanType']
-            contentType = optionsD['contentType']
+            scanType = optionsD["scanType"]
+            contentType = optionsD["contentType"]
             #
             successList = []
             retList = []
@@ -260,7 +261,7 @@ class ScanRepoUtil(object):
                 retList.append(ret)
             #
 
-            logger.debug("%s scanType %s contentType %spathlist length %d containerList length %d" % (procName, scanType, contentType, len(dataList), len(containerList)))
+            logger.debug("%s scanType %s contentType %spathlist length %d containerList length %d", procName, scanType, contentType, len(dataList), len(containerList))
 
             ok = len(successList) == len(dataList)
             #
@@ -268,8 +269,8 @@ class ScanRepoUtil(object):
             return successList, retList, []
 
         except Exception as e:
-            logger.error("Failing with dataList %r" % dataList)
-            logger.exception("Failing with %s" % str(e))
+            logger.error("Failing with dataList %r", dataList)
+            logger.exception("Failing with %s", str(e))
 
         return [], [], []
 
@@ -281,13 +282,13 @@ class ScanRepoUtil(object):
 
         cL = []
         for lPath in inputPathList:
-            myContainerList = self.__mU.doImport(lPath, format="mmcif")
+            myContainerList = self.__mU.doImport(lPath, fmt="mmcif")
 
-            for c in myContainerList:
-                dc = DataCategory('rcsb_load_status', ['name', 'load_date', 'locator'], [[c.getName(), ts, lPath]])
-                logger.debug("data category %r" % dc)
-                c.append(dc)
-                cL.append(c)
+            for cA in myContainerList:
+                dc = DataCategory("rcsb_load_status", ["name", "load_date", "locator"], [[cA.getName(), ts, lPath]])
+                logger.debug("data category %r", dc)
+                cA.append(dc)
+                cL.append(cA)
         return cL
 
     def __scanContainer(self, container):
@@ -296,14 +297,14 @@ class ScanRepoUtil(object):
           Get the file name -
         """
         cName = container.getName()
-        loadStatusObj = container.getObj('rcsb_load_status')
-        lName = loadStatusObj.getValue(attributeName='name', rowIndex=0)
-        lFilePath = loadStatusObj.getValue(attributeName='locator', rowIndex=0)
-        lDate = loadStatusObj.getValue(attributeName='load_date', rowIndex=0)
+        loadStatusObj = container.getObj("rcsb_load_status")
+        lName = loadStatusObj.getValue(attributeName="name", rowIndex=0)
+        lFilePath = loadStatusObj.getValue(attributeName="locator", rowIndex=0)
+        lDate = loadStatusObj.getValue(attributeName="load_date", rowIndex=0)
         #
         oD = {}
         for objName in container.getObjNameList():
-            if objName == 'rcsb_load_status':
+            if objName == "rcsb_load_status":
                 continue
             obj = container.getObj(objName)
             afD = self.__attributeDataTypeD[objName] if objName in self.__attributeDataTypeD else {}
@@ -315,23 +316,23 @@ class ScanRepoUtil(object):
             for row in obj.getRowList():
                 for ii, val in enumerate(row):
                     valLen = len(val)
-                    if ((valLen == 0) or (val == '?') or (val == '.')):
+                    if (valLen == 0) or (val == "?") or (val == "."):
                         continue
                     atName = atNameList[ii]
                     wMin[atName] = min(wMin[atName], valLen)
                     wMax[atName] = max(wMax[atName], valLen)
-                    if atName in afD and afD[atName] == 'float':
+                    if atName in afD and afD[atName] == "float":
                         vPrec = 0
                         try:
-                            fields = val.split('.')
+                            fields = val.split(".")
                             vPrec = len(fields[1])
                             pMin[atName] = min(pMin[atName], vPrec)
                             pMax[atName] = max(pMax[atName], vPrec)
                         except Exception as e:
-                            logger.debug("Failed to process float %s %r %r %s" % (atName, val, vPrec, str(e)))
+                            logger.debug("Failed to process float %s %r %r %s", atName, val, vPrec, str(e))
                             pMin[atName] = 0
                             pMax[atName] = 0
-                        logger.debug("Got float for %s %r %r" % (atName, val, vPrec))
+                        logger.debug("Got float for %s %r %r", atName, val, vPrec)
                     else:
                         pMin[atName] = 0
                         pMax[atName] = 0
@@ -347,11 +348,11 @@ class ScanRepoUtil(object):
     def __begin(self, message=""):
         startTime = time.time()
         ts = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
-        logger.debug("Starting %s at %s" % (message, ts))
+        logger.debug("Starting %s at %s", message, ts)
         return startTime
 
     def __end(self, startTime, message=""):
         endTime = time.time()
         ts = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
         delta = endTime - startTime
-        logger.debug("Completed %s at %s (%.4f seconds)" % (message, ts, delta))
+        logger.debug("Completed %s at %s (%.4f seconds)", message, ts, delta)

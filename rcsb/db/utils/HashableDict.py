@@ -9,35 +9,34 @@ except ImportError:
 
 
 class HashableDict(Mapping):
-
     def __init__(self, *args, **kwargs):
-        self._d = dict(*args, **kwargs)
+        self._dD = dict(*args, **kwargs)
 
     def __iter__(self):
-        return iter(self._d)
+        return iter(self._dD)
 
     def __len__(self):
-        return len(self._d)
+        return len(self._dD)
 
     def __getitem__(self, key):
-        return self._d[key]
+        return self._dD[key]
 
     def __hash__(self):
-        return hash(tuple(sorted(self._d.items())))
+        return hash(tuple(sorted(self._dD.items())))
 
     def __repr__(self):
-        return self._d.__repr__()
+        return self._dD.__repr__()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     hd = HashableDict()
     print(hd)
 
-    td = HashableDict({'a': 1, 'b': 2})
+    td = HashableDict({"a": 1, "b": 2})
     print(td)
     print(type(td))
 
-    rd = HashableDict({'a': 1, 'b': 2, 'c': 3})
+    rd = HashableDict({"a": 1, "b": 2, "c": 3})
     l1 = [td, td, td]
     t1 = tuple(l1)
     l2 = [rd, rd, rd, rd]
@@ -50,8 +49,8 @@ if __name__ == '__main__':
     q = set(l1) == set(l1)
     print("l1-l1 %r" % q)
     #
-    kwD = HashableDict({'dictMapPath': 'pth string'})
-    hd = HashableDict({'locator': 1, 'format': 'vrpt-xml-to-cif', 'kwargs': kwD})
+    kwD = HashableDict({"dictMapPath": "pth string"})
+    hd = HashableDict({"locator": 1, "format": "vrpt-xml-to-cif", "kwargs": kwD})
     w1 = [hd, hd, hd]
     q = list(set(w1))
     print(q)

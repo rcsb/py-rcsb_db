@@ -6,14 +6,14 @@ jsonschema >= 2.6.0
 strict-rfc3339
 mysqlclient >= 1.3.12
 pymongo >= 3.7.0
-mmcif >= 0.37
-rcsb.utils.config >= 0.17
-rcsb.utils.io >= 0.30
-rcsb.utils.multiproc >= 0.12
-rcsb.utils.chemref >= 0.19
-rcsb.utils.validation >= 0.13
+mmcif >= 0.40
+rcsb.utils.config >= 0.18
+rcsb.utils.io >= 0.31
+rcsb.utils.multiproc >= 0.13
+rcsb.utils.chemref >= 0.20
+rcsb.utils.validation >= 0.14
 scandir; python_version < "3.0"
 configparser; python_version < "3.0"
-rcsb.utils.ec >= 0.13
-rcsb.utils.taxonomy >= 0.19
-rcsb.utils.struct >= 0.16
+rcsb.utils.ec >= 0.14
+rcsb.utils.taxonomy >= 0.21
+rcsb.utils.struct >= 0.17

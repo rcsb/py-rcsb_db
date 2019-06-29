@@ -20,6 +20,7 @@ import os
 import sys
 
 from rcsb.db.define.DictInfo import DictInfo
+from rcsb.db.define.DictionaryProvider import DictionaryProvider
 from rcsb.db.utils.ScanRepoUtil import ScanRepoUtil
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
@@ -27,51 +28,66 @@ from rcsb.utils.io.MarshalUtil import MarshalUtil
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()
 
 
-def scanRepo(cfgOb, contentType, scanDataFilePath, dictFilePath, numProc, chunkSize, fileLimit, scanType='full',
-             inputPathList=None, pathListFilePath=None, dataCoverageFilePath=None, dataTypeFilePath=None,
-             failedFilePath=None, workPath=None):
+def scanRepo(
+    cfgOb,
+    contentType,
+    scanDataFilePath,
+    dictFilePath,
+    numProc,
+    chunkSize,
+    fileLimit,
+    scanType="full",
+    inputPathList=None,
+    pathListFilePath=None,
+    dataCoverageFilePath=None,
+    dataTypeFilePath=None,
+    failedFilePath=None,
+    workPath=None,
+):
     """ Utility method to scan the data repository of the input content type and store type and coverage details.
     """
     try:
         #
-        #
-        dI = DictInfo(dictLocators=[dictFilePath])
+        dP = DictionaryProvider()
+        dictApi = dP.getApi(dictLocators=[dictFilePath])
+        dI = DictInfo(dictApi)
         attributeDataTypeD = dI.getAttributeDataTypeD()
         #
         sr = ScanRepoUtil(cfgOb, attributeDataTypeD=attributeDataTypeD, numProc=numProc, chunkSize=chunkSize, fileLimit=fileLimit, workPath=workPath)
-        ok = sr.scanContentType(contentType, scanType=scanType, inputPathList=inputPathList, scanDataFilePath=scanDataFilePath,
-                                failedFilePath=failedFilePath, saveInputFileListPath=pathListFilePath)
+        ok = sr.scanContentType(
+            contentType, scanType=scanType, inputPathList=inputPathList, scanDataFilePath=scanDataFilePath, failedFilePath=failedFilePath, saveInputFileListPath=pathListFilePath
+        )
         if dataTypeFilePath:
-            ok = sr.evalScan(scanDataFilePath, dataTypeFilePath, evalType='data_type')
+            ok = sr.evalScan(scanDataFilePath, dataTypeFilePath, evalType="data_type")
         if dataCoverageFilePath:
-            ok = sr.evalScan(scanDataFilePath, dataCoverageFilePath, evalType='data_coverage')
+            ok = sr.evalScan(scanDataFilePath, dataCoverageFilePath, evalType="data_coverage")
 
         return ok
     except Exception as e:
-        logger.exception("Failing with %s" % str(e))
+        logger.exception("Failing with %s", str(e))
 
 
 def main():
     parser = argparse.ArgumentParser()
-    defaultConfigName = 'site_info'
+    defaultConfigName = "site_info"
     #
     parser.add_argument("--dict_file_path", default=None, help="PDBx/mmCIF dictionary file path")
     #
-    parser.add_argument("--scanType", default='full', help="Repository scan type (full|incr)")
+    parser.add_argument("--scanType", default="full", help="Repository scan type (full|incr)")
     #
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("--scan_chem_comp_ref", default=False, action='store_true', help="Scan Chemical Component reference definitions (public subset)")
-    group.add_argument("--scan_chem_comp_core_ref", default=False, action='store_true', help="Scan Chemical Component Core reference definitions (public subset)")
-    group.add_argument("--scan_bird_chem_comp_ref", default=False, action='store_true', help="Scan Bird Chemical Component reference definitions (public subset)")
-    group.add_argument("--scan_bird_chem_comp_core_ref", default=False, action='store_true', help="Scan Bird Chemical Component Core reference definitions (public subset)")
-    group.add_argument("--scan_bird_ref", default=False, action='store_true', help="Scan Bird reference definitions (public subset)")
-    group.add_argument("--scan_bird_family_ref", default=False, action='store_true', help="Scan Bird Family reference definitions (public subset)")
-    group.add_argument("--scan_entry_data", default=False, action='store_true', help="Scan PDB entry data (current released subset)")
-    group.add_argument("--scan_ihm_dev", default=False, action='store_true', help="Scan PDBDEV I/HM entry data (current released subset)")
+    group.add_argument("--scan_chem_comp_ref", default=False, action="store_true", help="Scan Chemical Component reference definitions (public subset)")
+    group.add_argument("--scan_chem_comp_core_ref", default=False, action="store_true", help="Scan Chemical Component Core reference definitions (public subset)")
+    group.add_argument("--scan_bird_chem_comp_ref", default=False, action="store_true", help="Scan Bird Chemical Component reference definitions (public subset)")
+    group.add_argument("--scan_bird_chem_comp_core_ref", default=False, action="store_true", help="Scan Bird Chemical Component Core reference definitions (public subset)")
+    group.add_argument("--scan_bird_ref", default=False, action="store_true", help="Scan Bird reference definitions (public subset)")
+    group.add_argument("--scan_bird_family_ref", default=False, action="store_true", help="Scan Bird Family reference definitions (public subset)")
+    group.add_argument("--scan_entry_data", default=False, action="store_true", help="Scan PDB entry data (current released subset)")
+    group.add_argument("--scan_ihm_dev", default=False, action="store_true", help="Scan PDBDEV I/HM entry data (current released subset)")
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
     parser.add_argument("--config_name", default=defaultConfigName, help="Configuration section name")
@@ -86,8 +102,8 @@ def main():
     parser.add_argument("--num_proc", default=2, help="Number of processes to execute (default=2)")
     parser.add_argument("--chunk_size", default=10, help="Number of files loaded per process")
     parser.add_argument("--file_limit", default=None, help="Load file limit for testing")
-    parser.add_argument("--debug", default=False, action='store_true', help="Turn on verbose logging")
-    parser.add_argument("--mock", default=False, action='store_true', help="Use MOCK repository configuration for testing")
+    parser.add_argument("--debug", default=False, action="store_true", help="Turn on verbose logging")
+    parser.add_argument("--mock", default=False, action="store_true", help="Use MOCK repository configuration for testing")
     parser.add_argument("--working_path", default=None, help="Working path for temporary files")
     args = parser.parse_args()
     #
@@ -99,20 +115,20 @@ def main():
     configPath = args.config_path
     configName = args.config_name
     if not configPath:
-        configPath = os.getenv('DBLOAD_CONFIG_PATH', None)
+        configPath = os.getenv("DBLOAD_CONFIG_PATH", None)
     try:
         if os.access(configPath, os.R_OK):
-            os.environ['DBLOAD_CONFIG_PATH'] = configPath
-            logger.info("Using configuation path %s (%s)" % (configPath, configName))
+            os.environ["DBLOAD_CONFIG_PATH"] = configPath
+            logger.info("Using configuation path %s (%s)", configPath, configName)
         else:
-            logger.error("Missing or access issue with config file %r" % configPath)
+            logger.error("Missing or access issue with config file %r", configPath)
             exit(1)
-        mockTopPath = os.path.join(TOPDIR, 'rcsb', 'mock-data') if args.mock else None
+        mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data") if args.mock else None
         cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=defaultConfigName, mockTopPath=mockTopPath)
         if configName != defaultConfigName:
             cfgOb.replaceSectionName(defaultConfigName, configName)
     except Exception as e:
-        logger.error("Missing or access issue with config file %r with %s" % (configPath, str(e)))
+        logger.error("Missing or access issue with config file %r with %s", configPath, str(e))
         exit(1)
 
     #
@@ -130,10 +146,10 @@ def main():
         scanDataFilePath = args.scan_data_file_path
         dataCoverageFilePath = args.coverage_file_path
         dataTypeFilePath = args.type_map_file_path
-        dictFilePath = args.dict_file_path if args.dict_file_path else cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=configName)
-        workPath = args.working_path if args.working_path else '.'
+        dictFilePath = args.dict_file_path if args.dict_file_path else cfgOb.getPath("PDBX_DICT_LOCATOR", sectionName=configName)
+        workPath = args.working_path if args.working_path else "."
     except Exception as e:
-        logger.exception("Argument processing problem %s" % str(e))
+        logger.exception("Argument processing problem %s", str(e))
         parser.print_help(sys.stderr)
         exit(1)
     # ----------------------- - ----------------------- - ----------------------- - ----------------------- - ----------------------- -
@@ -143,40 +159,53 @@ def main():
     inputPathList = None
     if inputFileListPath:
         mu = MarshalUtil(workPath=workPath)
-        inputPathList = mu.doImport(inputFileListPath, format='list')
+        inputPathList = mu.doImport(inputFileListPath, fmt="list")
     #
     ##
 
     if args.scan_chem_comp_ref:
-        contentType = 'chem_comp'
+        contentType = "chem_comp"
 
     elif args.scan_chem_comp_core_ref:
-        contentType = 'chem_comp_core'
+        contentType = "chem_comp_core"
 
     elif args.scan_bird_chem_comp_ref:
-        contentType = 'bird_chem_comp'
+        contentType = "bird_chem_comp"
 
     elif args.scan_bird_chem_comp_core_ref:
-        contentType = 'bird_chem_comp_core'
+        contentType = "bird_chem_comp_core"
 
     elif args.scan_bird_ref:
-        contentType = 'bird'
+        contentType = "bird"
 
     elif args.scan_bird_family_ref:
-        contentType = 'bird_family'
+        contentType = "bird_family"
 
     elif args.scan_entry_data:
-        contentType = 'pdbx'
+        contentType = "pdbx"
 
     elif args.scan_ihm_dev:
-        contentType = 'ihm_dev'
+        contentType = "ihm_dev"
 
-    ok = scanRepo(cfgOb, contentType, scanDataFilePath, dictFilePath, numProc, chunkSize, fileLimit, scanType=scanType,
-                  inputPathList=inputPathList, pathListFilePath=outputFileListPath, dataCoverageFilePath=dataCoverageFilePath,
-                  dataTypeFilePath=dataTypeFilePath, failedFilePath=failedFilePath, workPath=workPath)
+    ok = scanRepo(
+        cfgOb,
+        contentType,
+        scanDataFilePath,
+        dictFilePath,
+        numProc,
+        chunkSize,
+        fileLimit,
+        scanType=scanType,
+        inputPathList=inputPathList,
+        pathListFilePath=outputFileListPath,
+        dataCoverageFilePath=dataCoverageFilePath,
+        dataTypeFilePath=dataTypeFilePath,
+        failedFilePath=failedFilePath,
+        workPath=workPath,
+    )
 
-    logger.info("Operation completed with status %r " % ok)
+    logger.info("Operation completed with status %r", ok)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -40,7 +40,6 @@ if platform.system() == "Linux":
 
 
 class ConnectionBase(object):
-
     def __init__(self, verbose=False):
         self.__verbose = verbose
         #
@@ -56,15 +55,21 @@ class ConnectionBase(object):
         self.__dbAdminDb = None
         self.__dbPort = None
         self.__defaultPort = 27017
-        self.__dbServer = 'mongo'
+        self.__dbServer = "mongo"
         self.__resourceName = None
+        self.__sectionName = None
+        self.__writeConcern = None
+        self.__readConcern = None
+        self.__readPreference = None
+        self.__writeJournalOpt = None
 
-    def assignResource(self, resourceName=None):
+    def assignResource(self, resourceName=None, sectionName=None):
         # implement in the derived class
-        self._assignResource(resourceName)
+        self._assignResource(resourceName, sectionName)
 
-    def _assignResource(self, resourceName):
+    def _assignResource(self, resourceName, sectionName):
         self.__resourceName = resourceName
+        self.__sectionName = sectionName
 
     def getPreferences(self):
         return self.__infoD
@@ -73,7 +78,7 @@ class ConnectionBase(object):
         try:
             self.__infoD = copy.deepcopy(infoD)
             self.__databaseName = self.__infoD.get("DB_NAME", None)
-            self.__dbHost = self.__infoD.get("DB_HOST", 'localhost')
+            self.__dbHost = self.__infoD.get("DB_HOST", "localhost")
             self.__dbUser = self.__infoD.get("DB_USER", None)
             self.__dbPw = self.__infoD.get("DB_PW", None)
             self.__dbSocket = self.__infoD.get("DB_SOCKET", None)
@@ -85,10 +90,10 @@ class ConnectionBase(object):
             self.__writeJournalOpt = self.__infoD.get("DB_WRITE_TO_JOURNAL", True)
             #
             port = self.__infoD.get("DB_PORT", self.__defaultPort)
-            if port and len(str(port)) > 0:
+            if port and str(port):
                 self.__dbPort = int(str(port))
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
 
     def openConnection(self):
         """ Create a database connection and store a connection object.
@@ -102,30 +107,30 @@ class ConnectionBase(object):
             self.closeConnection()
 
         try:
-            if self.__dbUser and (len(self.__dbUser) > 0) and self.__dbPw and (len(self.__dbPw) > 0):
+            if self.__dbUser and self.__dbPw:
                 uri = "mongodb://%s:%s@%s/%s" % (quote_plus(self.__dbUser), quote_plus(self.__dbPw), self.__dbHost, self.__dbAdminDb)
             else:
                 uri = "mongodb://%s:%d" % (self.__dbHost, self.__dbPort)
 
             kw = {}
-            kw['w'] = self.__writeConcern
-            kw['j'] = True
-            kw['appname'] = 'dbloader'
-            kw['readConcernLevel'] = self.__readConcern
-            kw['readPreference'] = self.__readPreference
+            kw["w"] = self.__writeConcern
+            kw["j"] = True
+            kw["appname"] = "dbloader"
+            kw["readConcernLevel"] = self.__readConcern
+            kw["readPreference"] = self.__readPreference
             #
             # logger.debug("URI is %s" % uri)
             self.__dbClient = MongoClient(uri, **kw)
         except Exception as e:
-            logger.error("Connection to resource %s failing with %s" % (self.__resourceName, str(e)))
+            logger.error("Connection to resource %s failing with %s", self.__resourceName, str(e))
 
         try:
             # The ismaster command is cheap and does not require auth.
-            d = self.__dbClient.admin.command('ismaster')
-            logger.debug("Server status: %r " % d)
+            dD = self.__dbClient.admin.command("ismaster")
+            logger.debug("Server status: %r", dD)
             return True
         except ConnectionFailure:
-            logger.exception("Connection failing to resource %s " % self.__resourceName)
+            logger.exception("Connection failing to resource %s", self.__resourceName)
 
         self.__dbClient = None
 

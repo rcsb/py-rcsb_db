@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 
 
 class DataTypeInstanceInfo(object):
-
     def __init__(self, filePath, **kwargs):
         self.__filePath = filePath
         # Turn off warnings for missing values
@@ -46,7 +45,7 @@ class DataTypeInstanceInfo(object):
             if not filePath:
                 return False
 
-            self.__tD = self.__mU.doImport(filePath, format='json')
+            self.__tD = self.__mU.doImport(filePath, fmt="json")
             return len(self.__tD) > 0
         except Exception:
             return False
@@ -69,7 +68,7 @@ class DataTypeInstanceInfo(object):
             return self.__tD[catName][atName]
         except Exception as e:
             if self.__verbose:
-                logger.warning("Missing instance type info for category %r attribute %r %s" % (catName, atName, str(e)))
+                logger.warning("Missing instance type info for category %r attribute %r %s", catName, atName, str(e))
         return {}
 
     def getCategoryTypeInfo(self, catName):
@@ -77,45 +76,45 @@ class DataTypeInstanceInfo(object):
             return self.__tD[catName]
         except Exception as e:
             if self.__verbose:
-                logger.warning("Missing instance type info for category %r  %s" % (catName, str(e)))
+                logger.warning("Missing instance type info for category %r  %s", catName, str(e))
         return {}
 
     def getMinWidth(self, catName, atName):
         try:
-            return self.__tD[catName][atName]['minWidth']
+            return self.__tD[catName][atName]["minWidth"]
         except Exception as e:
             if self.__verbose:
-                logger.warning("Missing instance type info for category %r attribute %r %s" % (catName, atName, str(e)))
+                logger.warning("Missing instance type info for category %r attribute %r %s", catName, atName, str(e))
         return 0
 
     def getMaxWidth(self, catName, atName):
         try:
-            return self.__tD[catName][atName]['maxWidth']
+            return self.__tD[catName][atName]["maxWidth"]
         except Exception as e:
             if self.__verbose:
-                logger.warning("Missing instance type info for category %r attribute %r %s" % (catName, atName, str(e)))
+                logger.warning("Missing instance type info for category %r attribute %r %s", catName, atName, str(e))
         return 0
 
     def getMinPrecision(self, catName, atName):
         try:
-            return self.__tD[catName][atName]['minPrec']
+            return self.__tD[catName][atName]["minPrec"]
         except Exception as e:
             if self.__verbose:
-                logger.warning("Missing instance type info for category %r attribute %r %s" % (catName, atName, str(e)))
+                logger.warning("Missing instance type info for category %r attribute %r %s", catName, atName, str(e))
         return 0
 
     def getMaxPrecision(self, catName, atName):
         try:
-            return self.__tD[catName][atName]['maxPrec']
+            return self.__tD[catName][atName]["maxPrec"]
         except Exception as e:
             if self.__verbose:
-                logger.warning("Missing instance type info for category %r attribute %r %s" % (catName, atName, str(e)))
+                logger.warning("Missing instance type info for category %r attribute %r %s", catName, atName, str(e))
         return 0
 
     def getCount(self, catName, atName):
         try:
-            return self.__tD[catName][atName]['count']
+            return self.__tD[catName][atName]["count"]
         except Exception as e:
             if self.__verbose:
-                logger.warning("Missing instance type info for category %r attribute %r %s" % (catName, atName, str(e)))
+                logger.warning("Missing instance type info for category %r attribute %r %s", catName, atName, str(e))
         return 0

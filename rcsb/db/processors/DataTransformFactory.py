@@ -30,12 +30,10 @@ import re
 from functools import reduce
 
 import dateutil.parser
-
 import pytz
-
 from rcsb.db.utils.TextUtil import unescapeXmlCharRef
 
-TrfValue = collections.namedtuple('TrfValue', 'value, atId, origLength, isNull')
+TrfValue = collections.namedtuple("TrfValue", "value, atId, origLength, isNull")
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +45,7 @@ class DataTransformInfo(object):
 
     def __init__(self):
         # mapD {<external attribute filter name>: <implementation names>, ...}
-        self.__mapD = {'STRIP_WS': 'STRIP_WS', 'TRANSLATE_XMLCHARREFS': 'TRANSLATE_XMLCHARREFS'}
+        self.__mapD = {"STRIP_WS": "STRIP_WS", "TRANSLATE_XMLCHARREFS": "TRANSLATE_XMLCHARREFS"}
 
     def isImplemented(self, attributeFilter):
         ok = False
@@ -55,9 +53,9 @@ class DataTransformInfo(object):
             if attributeFilter in self.__mapD:
                 ok = True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
 
-        logger.debug("Filter %r status %r" % (attributeFilter, ok))
+        logger.debug("Filter %r status %r", attributeFilter, ok)
         return ok
 
     def getTransformFilterName(self, attributeFilter):
@@ -82,22 +80,22 @@ class DataTransformFactory(object):
     def __init__(self, schemaDefAccessObj, filterType):
         self.__sD = schemaDefAccessObj
         self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
-        logger.debug("filterType %r" % filterType)
-        logger.debug("Schema database %r" % self.__sD.getDatabaseName())
-        self.__FLAGS = {}
-        self.__FLAGS['dropEmpty'] = 'drop-empty-attributes' in filterType
-        self.__FLAGS['skipMaxWidth'] = 'skip-max-width' in filterType
-        self.__FLAGS['assignDates'] = 'assign-dates' in filterType
-        self.__FLAGS['convertIterables'] = 'convert-iterables' in filterType
-        self.__FLAGS['normalizeEnums'] = 'normalize-enums' in filterType
-        self.__FLAGS['translateXMLCharRefs'] = 'translateXMLCharRefs' in filterType
-        self.__FLAGS['normalizeDates'] = True
-        logger.debug("FLAGS settings are %r" % self.__FLAGS)
+        logger.debug("filterType %r", filterType)
+        logger.debug("Schema database %r", self.__sD.getDatabaseName())
+        self.__transFlags = {}
+        self.__transFlags["dropEmpty"] = "drop-empty-attributes" in filterType
+        self.__transFlags["skipMaxWidth"] = "skip-max-width" in filterType
+        self.__transFlags["assignDates"] = "assign-dates" in filterType
+        self.__transFlags["convertIterables"] = "convert-iterables" in filterType
+        self.__transFlags["normalizeEnums"] = "normalize-enums" in filterType
+        self.__transFlags["translateXMLCharRefs"] = "translateXMLCharRefs" in filterType
+        self.__transFlags["normalizeDates"] = True
+        logger.debug("FLAGS settings are %r", self.__transFlags)
         #
         self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
         self.__dti = DataTransformInfo()
         self.__dT = self.__build()
-        self.__nullValueD = {'string': '', 'integer': r'\N', 'float': r'\N', 'date': r'\N', 'datetime': r'\N'}
+        self.__nullValueD = {"string": "", "integer": r"\N", "float": r"\N", "date": r"\N", "datetime": r"\N"}
 
     def __build(self):
         """ Internal method that stores transformations for each table so that these may
@@ -120,11 +118,11 @@ class DataTransformFactory(object):
                 #
                 aD[atId] = []
                 #
-                if self.__FLAGS['convertIterables'] and tObj.isIterable(atId):
+                if self.__transFlags["convertIterables"] and tObj.isIterable(atId):
                     if tObj.isAttributeStringType(atId):
                         aD[atId].append(dt.castIterableString)
                         #
-                        if self.__FLAGS['translateXMLCharRefs']:
+                        if self.__transFlags["translateXMLCharRefs"]:
                             aD[atId].append(dt.translateXMLCharRefsIt)
                     elif tObj.isAttributeIntegerType(atId):
                         aD[atId].append(dt.castIterableInteger)
@@ -132,52 +130,52 @@ class DataTransformFactory(object):
                         aD[atId].append(dt.castIterableFloat)
                 #
                 elif tObj.isAttributeStringType(atId):
-                    typeD[atId] = 'string'
+                    typeD[atId] = "string"
                     aD[atId].append(dt.castString)
-                    if not self.__FLAGS['skipMaxWidth']:
+                    if not self.__transFlags["skipMaxWidth"]:
                         aD[atId].append(dt.truncateString)
                     #
                     for ft in tObj.getAttributeFilterTypes(atId):
                         if self.__dti.getTransformFilterName(ft) == "STRIP_WS":
                             aD[atId].append(dt.stripWhiteSpace)
-                        if self.__FLAGS['translateXMLCharRefs'] and self.__dti.getTransformFilterName(ft) == "TRANSLATE_XMLCHARREFS":
+                        if self.__transFlags["translateXMLCharRefs"] and self.__dti.getTransformFilterName(ft) == "TRANSLATE_XMLCHARREFS":
                             aD[atId].append(dt.translateXMLCharRefs)
                     #
-                    # if self.__FLAGS['translateXMLCharRefs']:
+                    # if self.__transFlags['translateXMLCharRefs']:
                     #    aD[atId].append(dt.translateXMLCharRefs)
                 elif tObj.isAttributeIntegerType(atId):
                     aD[atId].append(dt.castInteger)
-                    typeD[atId] = 'integer'
+                    typeD[atId] = "integer"
                 elif tObj.isAttributeFloatType(atId):
                     aD[atId].append(dt.castFloat)
-                    typeD[atId] = 'float'
-                elif self.__FLAGS['assignDates'] and tObj.isAttributeDateType(atId):
-                    typeD[atId] = 'date'
+                    typeD[atId] = "float"
+                elif self.__transFlags["assignDates"] and tObj.isAttributeDateType(atId):
+                    typeD[atId] = "date"
                     aD[atId].append(dt.castDateToObj)
-                elif self.__FLAGS['normalizeDates'] and tObj.isAttributeDateType(atId):
-                    if tObj.getAttributeType(atId).lower() == 'datetime':
-                        typeD[atId] = 'datetime'
+                elif self.__transFlags["normalizeDates"] and tObj.isAttributeDateType(atId):
+                    if tObj.getAttributeType(atId).lower() == "datetime":
+                        typeD[atId] = "datetime"
                         aD[atId].append(dt.castDateTimeToIsoDate)
-                    elif tObj.getAttributeType(atId).lower() == 'date':
+                    elif tObj.getAttributeType(atId).lower() == "date":
                         aD[atId].append(dt.castDateToIsoDate)
-                        typeD[atId] = 'date'
+                        typeD[atId] = "date"
                 else:
                     aD[atId].append(dt.castString)
-                    #typeD[tObj.getAttributeName(atId)] = 'string'
-                    typeD[atId] = 'string'
+                    # typeD[tObj.getAttributeName(atId)] = 'string'
+                    typeD[atId] = "string"
                 #
-                if self.__FLAGS['normalizeEnums'] and tObj.isEnumerated(atId):
-                    logger.debug("Normalizing enums for %s %s" % (tableId, atId))
+                if self.__transFlags["normalizeEnums"] and tObj.isEnumerated(atId):
+                    logger.debug("Normalizing enums for %s %s", tableId, atId)
                     aD[atId].append(dt.normalizeEnum)
                 #
-                if len(aD[atId]) == 1 and atId in typeD and typeD[atId] in ['string', 'float', 'integer']:
+                if len(aD[atId]) == 1 and atId in typeD and typeD[atId] in ["string", "float", "integer"]:
                     pureCastD[tObj.getAttributeName(atId)] = typeD[atId]
             # Transformation functions keyed by attribute 'name'
-            tD['atIdD'] = tObj.getMapAttributeIdDict()
-            tD['atNameD'] = tObj.getMapAttributeNameDict()
-            tD['atNullValues'] = tObj.getAppNullValueDict()
-            tD['atFuncD'] = {tD['atIdD'][k]: v for k, v in aD.items()}
-            tD['pureCast'] = pureCastD
+            tD["atIdD"] = tObj.getMapAttributeIdDict()
+            tD["atNameD"] = tObj.getMapAttributeNameDict()
+            tD["atNullValues"] = tObj.getAppNullValueDict()
+            tD["atFuncD"] = {tD["atIdD"][k]: v for k, v in aD.items()}
+            tD["pureCast"] = pureCastD
             #
             fD[tableId] = tD
         ##
@@ -187,7 +185,7 @@ class DataTransformFactory(object):
         try:
             return self.__dT[tableId]
         except Exception as e:
-            logger.error("Missing table %r with error %s" % (tableId, str(e)))
+            logger.error("Missing table %r with error %s", tableId, str(e))
         return {}
 
     def processRecord(self, tableId, row, attributeNameList, containerName=None):
@@ -208,43 +206,43 @@ class DataTransformFactory(object):
         #
         atName = None
         try:
-            d = {} if self.__FLAGS['dropEmpty'] else {k: v for k, v in dT['atNullValues'].items()}
+            dD = {} if self.__transFlags["dropEmpty"] else {k: v for k, v in dT["atNullValues"].items()}
             for ii, atName in enumerate(attributeNameList):
-                if atName not in dT['atNameD']:
+                if atName not in dT["atNameD"]:
                     continue
                 #
                 # nullFlag = False if row[ii] else True
                 nullFlag = False if row[ii] is not None else True
                 #
                 # Incorporate pure casts into this loop for performance -
-                if atName in dT['pureCast']:
-                    if nullFlag and self.__FLAGS['dropEmpty']:
+                if atName in dT["pureCast"]:
+                    if nullFlag and self.__transFlags["dropEmpty"]:
                         continue
-                    if ((row[ii] == '?') or (row[ii] == '.') or (row[ii]) == ''):
-                        if self.__FLAGS['dropEmpty']:
+                    if (row[ii] == "?") or (row[ii] == ".") or (row[ii]) == "":
+                        if self.__transFlags["dropEmpty"]:
                             continue
                         else:
-                            d[dT['atNameD'][atName]] = self.__nullValueD[dT['pureCast'][atName]]
+                            dD[dT["atNameD"][atName]] = self.__nullValueD[dT["pureCast"][atName]]
                             continue
                     else:
-                        if dT['pureCast'][atName] == 'string':
-                            d[dT['atNameD'][atName]] = row[ii]
-                        elif dT['pureCast'][atName] == 'integer':
-                            d[dT['atNameD'][atName]] = int(row[ii])
-                        elif dT['pureCast'][atName] == 'float':
-                            d[dT['atNameD'][atName]] = float(row[ii])
+                        if dT["pureCast"][atName] == "string":
+                            dD[dT["atNameD"][atName]] = row[ii]
+                        elif dT["pureCast"][atName] == "integer":
+                            dD[dT["atNameD"][atName]] = int(row[ii])
+                        elif dT["pureCast"][atName] == "float":
+                            dD[dT["atNameD"][atName]] = float(row[ii])
                         continue
                 else:
                     # Apply list of functions on an initial value (i.e. TrfValue for the ii(th) element of the row.
-                    vT = reduce(lambda x, y: y(x), dT['atFuncD'][atName], TrfValue(row[ii], dT['atNameD'][atName], 0, nullFlag))
-                    if self.__FLAGS['dropEmpty'] and vT.isNull:
+                    vT = reduce(lambda x, y: y(x), dT["atFuncD"][atName], TrfValue(row[ii], dT["atNameD"][atName], 0, nullFlag))
+                    if self.__transFlags["dropEmpty"] and vT.isNull:
                         continue
-                    d[dT['atNameD'][atName]] = vT.value
+                    dD[dT["atNameD"][atName]] = vT.value
         except Exception as e:
-            logger.error("Failing for %r table %s atName %s with %s" % (containerName, tableId, atName, str(e)))
-            logger.exception("Failing for %r table %s atName %s with %s" % (containerName, tableId, atName, str(e)))
+            logger.error("Failing for %r table %s atName %s with %s", containerName, tableId, atName, str(e))
+            logger.exception("Failing for %r table %s atName %s with %s", containerName, tableId, atName, str(e))
 
-        return d
+        return dD
 
 
 class DataTransform(object):
@@ -264,8 +262,8 @@ class DataTransform(object):
         #
         #
         # Set null / missing value place holders
-        self.__nullValueString = ''
-        self.__nullValueOther = r'\N'
+        self.__nullValueString = ""
+        self.__nullValueOther = r"\N"
         self.__tObj = tObj
         #
 
@@ -286,14 +284,14 @@ class DataTransform(object):
         # logger.info("Normalizing %r %r" % (trfTup.atId, trfTup.value))
         return TrfValue(nVal, trfTup.atId, trfTup.origLength, False)
 
-    def XcastString(self, trfTup):
+    def castStringX(self, trfTup):
         """
             Return:  TrfValue tuple
         """
         if trfTup.isNull:
             return trfTup
         origLength = len(trfTup.value)
-        if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
+        if (origLength == 0) or (trfTup.value == "?") or (trfTup.value == "."):
             return TrfValue(self.__nullValueString, trfTup.atId, origLength, True)
         return TrfValue(trfTup.value, trfTup.atId, origLength, False)
 
@@ -303,7 +301,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        if ((trfTup.value == '?') or (trfTup.value == '.') or (len(trfTup.value) == 0)):
+        if (trfTup.value == "?") or (trfTup.value == ".") or (not trfTup.value):
             return TrfValue(self.__nullValueString, trfTup.atId, trfTup.origLength, True)
         return TrfValue(trfTup.value, trfTup.atId, trfTup.origLength, False)
 
@@ -313,7 +311,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        if ((trfTup.value == '?') or (trfTup.value == '.') or (len(trfTup.value) == 0)):
+        if (trfTup.value == "?") or (trfTup.value == ".") or (not trfTup.value):
             return TrfValue(self.__nullValueString, trfTup.atId, trfTup.origLength, True)
         vL = [v.strip() for v in trfTup.value.split(self.__tObj.getIterableSeparator(trfTup.atId))]
         return TrfValue(vL, trfTup.atId, trfTup.origLength, False)
@@ -324,7 +322,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        if ((trfTup.value == '?') or (trfTup.value == '.') or (len(trfTup.value) == 0)):
+        if (trfTup.value == "?") or (trfTup.value == ".") or (not trfTup.value):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
         return TrfValue(int(trfTup.value), trfTup.atId, trfTup.origLength, False)
 
@@ -334,7 +332,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        if ((trfTup.value == '?') or (trfTup.value == '.') or (len(trfTup.value) == 0)):
+        if (trfTup.value == "?") or (trfTup.value == ".") or (not trfTup.value):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
         vL = [int(v.strip()) for v in trfTup.value.split(self.__tObj.getIterableSeparator(trfTup.atId))]
         return TrfValue(vL, trfTup.atId, trfTup.origLength, False)
@@ -345,7 +343,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        if ((trfTup.value == '?') or (trfTup.value == '.') or (len(trfTup.value) == 0)):
+        if (trfTup.value == "?") or (trfTup.value == ".") or (not trfTup.value):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
         return TrfValue(float(trfTup.value), trfTup.atId, trfTup.origLength, False)
 
@@ -355,7 +353,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        if ((trfTup.value == '?') or (trfTup.value == '.') or (len(trfTup.value) == 0)):
+        if (trfTup.value == "?") or (trfTup.value == ".") or (not trfTup.value):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
         vL = [float(v.strip()) for v in trfTup.value.split(self.__tObj.getIterableSeparator(trfTup.atId))]
         return TrfValue(vL, trfTup.atId, trfTup.origLength, False)
@@ -368,7 +366,7 @@ class DataTransform(object):
         if trfTup.isNull:
             return trfTup
         origLength = len(trfTup.value)
-        if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
+        if (origLength == 0) or (trfTup.value == "?") or (trfTup.value == "."):
             return TrfValue(self.__nullValueOther, trfTup.atId, origLength, True)
         tv = trfTup.value.replace(":", " ", 1)
         return TrfValue(dateutil.parser.parse(tv), trfTup.atId, origLength, False)
@@ -381,7 +379,7 @@ class DataTransform(object):
         if trfTup.isNull:
             return trfTup
         origLength = len(trfTup.value)
-        if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
+        if (origLength == 0) or (trfTup.value == "?") or (trfTup.value == "."):
             return TrfValue(self.__nullValueOther, trfTup.atId, origLength, True)
         tv = trfTup.value.replace(":", " ", 1)
         tS = dateutil.parser.parse(tv).replace(tzinfo=pytz.UTC).isoformat()
@@ -396,7 +394,7 @@ class DataTransform(object):
         if trfTup.isNull:
             return trfTup
         origLength = len(trfTup.value)
-        if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
+        if (origLength == 0) or (trfTup.value == "?") or (trfTup.value == "."):
             return TrfValue(self.__nullValueOther, trfTup.atId, origLength, True)
         tv = trfTup.value.replace(":", " ", 1)
         tS = dateutil.parser.parse(tv).isoformat()
@@ -411,7 +409,7 @@ class DataTransform(object):
         if trfTup.isNull:
             return trfTup
         origLength = len(trfTup.value)
-        if ((origLength == 0) or (trfTup.value == '?') or (trfTup.value == '.')):
+        if (origLength == 0) or (trfTup.value == "?") or (trfTup.value == "."):
             return TrfValue(self.__nullValueOther, trfTup.atId, origLength, True)
         return TrfValue(trfTup.value, trfTup.atId, origLength, False)
 
@@ -432,7 +430,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        return TrfValue(trfTup.value[:self.__tObj.getAttributeWidth(trfTup.atId)], trfTup.atId, trfTup.origLength, False)
+        return TrfValue(trfTup.value[: self.__tObj.getAttributeWidth(trfTup.atId)], trfTup.atId, trfTup.origLength, False)
 
     def translateXMLCharRefs(self, trfTup):
         """ Convert XML Character references to unicode.

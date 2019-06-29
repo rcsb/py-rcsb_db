@@ -4,6 +4,7 @@
 # Date:    18-Aug-2018
 # Version: 0.001 Initial version
 #
+#
 # Updates:
 #  4-Sep-2018 jdw add methods to construct entry and entity identier categories.
 # 10-Sep-2018 jdw add method for citation author aggregation
@@ -62,6 +63,8 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
+# pylint: disable=too-many-lines
+
 import datetime
 import functools
 import itertools
@@ -71,67 +74,17 @@ from collections import Counter
 
 from mmcif.api.DataCategory import DataCategory
 
-from rcsb.db.helpers.DictMethodRunnerHelperBase import DictMethodRunnerHelperBase
-from rcsb.utils.ec.EnzymeDatabaseUtils import EnzymeDatabaseUtils
-from rcsb.utils.io.MarshalUtil import MarshalUtil
-from rcsb.utils.struct.CathClassificationUtils import CathClassificationUtils
-from rcsb.utils.struct.ScopClassificationUtils import ScopClassificationUtils
-from rcsb.utils.taxonomy.TaxonomyUtils import TaxonomyUtils
-
 logger = logging.getLogger(__name__)
 
 
-def cmp_elements(lhs, rhs):
-    return 0 if (lhs[-1].isdigit() or lhs[-1] in ['R', 'S']) and rhs[0].isdigit() else -1
+def cmpElements(lhs, rhs):
+    return 0 if (lhs[-1].isdigit() or lhs[-1] in ["R", "S"]) and rhs[0].isdigit() else -1
 
 
-class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
+class DictMethodRunnerHelper(object):
     """ Helper class implements external method references in the RCSB dictionary extension.
 
     """
-    # Dictionary of current standard monomers -
-    monDict3 = {
-        "ALA": "A",
-        "ARG": "R",
-        "ASN": "N",
-        "ASP": "D",
-        "ASX": "B",
-        "CYS": "C",
-        "GLN": "Q",
-        "GLU": "E",
-        "GLX": "Z",
-        "GLY": "G",
-        "HIS": "H",
-        "ILE": "I",
-        "LEU": "L",
-        "LYS": "K",
-        "MET": "M",
-        "PHE": "F",
-        "PRO": "P",
-        "SER": "S",
-        "THR": "T",
-        "TRP": "W",
-        "TYR": "Y",
-        "VAL": "V",
-        "PYL": "O",
-        "SEC": "U",
-        "DA": "A",
-        "DC": "C",
-        "DG": "G",
-        "DT": "T",
-        "DU": "U",
-        "DI": "I",
-        "A": "A",
-        "C": "C",
-        "G": "G",
-        "I": "I",
-        "N": "N",
-        "T": "T",
-        "U": "U",
-        # "UNK": "X",
-        #         "MSE":"M",
-        # ".": "."
-    }
 
     def __init__(self, **kwargs):
         """
@@ -139,46 +92,24 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             **kwargs: (dict)  Placeholder for future key-value arguments
 
         """
-        super(DictMethodRunnerHelper, self).__init__(**kwargs)
-        self._thing = kwargs.get("thing", None)
         #
-        self.__drugBankMappingFilePath = kwargs.get("drugBankMappingFilePath", None)
-        self.__drugBankMappingDict = {}
-        #
-        self.__csdModelMappingFilePath = kwargs.get("csdModelMappingFilePath", None)
-        self.__csdModelMappingDict = {}
-        #
-        self.__taxonomyDataPath = kwargs.get("taxonomyDataPath", None)
-        self.__taxU = None
-        #
-        self.__enzymeDataPath = kwargs.get("enzymeDataPath", None)
-        self.__ecU = None
-        #
-        self.__siftsMappingFilePath = kwargs.get("siftsMappingFilePath", None)
-        self.__siftsMappingDict = {}
-        #
-        self.__structDomainDataPath = kwargs.get("structDomainDataPath", None)
-        self.__scopU = None
-        self.__cathU = None
-        #
+        self._raiseExceptions = kwargs.get("raiseExceptions", False)
         self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
-        self.__workPath = kwargs.get("workPath", None)
-        logger.debug("Dictionary method helper init")
+        self.__reNonDigit = re.compile(r"[^\d]+")
         #
-        #
-        self.__re_non_digit = re.compile(r'[^\d]+')
-        #
-        # Entry specifoc cache initialization for instance type and atom counts -
+        # Entry specific cache initialization for instance type and atom counts -
         #
         self.__cacheEntryId = None
         self.__instanceD = None
         self.__atomSiteCountD = None
         #
+        logger.debug("Dictionary method helper init")
 
     def echo(self, msg):
         logger.info(msg)
 
     def setDatablockId(self, dataContainer, catName, atName, **kwargs):
+        logger.debug("Starting catName %s atName %s kwargs %r", catName, atName, kwargs)
         try:
             val = dataContainer.getName()
             if not dataContainer.exists(catName):
@@ -194,12 +125,13 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 cObj.setValue(val, atName, ii)
             return True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return False
 
     def setLoadDateTime(self, dataContainer, catName, atName, **kwargs):
+        logger.debug("Starting catName %s atName %s kwargs %r", catName, atName, kwargs)
         try:
-            val = dataContainer.getProp('load_date')
+            val = dataContainer.getProp("load_date")
             if not dataContainer.exists(catName):
                 dataContainer.append(DataCategory(catName, attributeNameList=[atName]))
             #
@@ -213,12 +145,13 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 cObj.setValue(val, atName, ii)
             return True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return False
 
     def setLocator(self, dataContainer, catName, atName, **kwargs):
+        logger.debug("Starting catName %s atName %s kwargs %r", catName, atName, kwargs)
         try:
-            val = dataContainer.getProp('locator')
+            val = dataContainer.getProp("locator")
             if not dataContainer.exists(catName):
                 dataContainer.append(DataCategory(catName, attributeNameList=[atName]))
             #
@@ -232,10 +165,11 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 cObj.setValue(val, atName, ii)
             return True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return False
 
     def setRowIndex(self, dataContainer, catName, atName, **kwargs):
+        logger.debug("Starting catName %s atName %s kwargs %r", catName, atName, kwargs)
         try:
             if not dataContainer.exists(catName):
                 # exit if there is no category to index
@@ -252,7 +186,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 cObj.setValue(str(ii), atName, iRow)
             return True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return False
 
     def __addPdbxValidateAsymIds(self, dataContainer, asymMapD, npAuthAsymMapD):
@@ -278,31 +212,37 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 _pdbx_validate_polymer_linkage.rcsb_label_asym_id_2
         """
         #
-        mD = {'pdbx_validate_close_contact': [('auth_asym_id_1', 'auth_seq_id_1', 'rcsb_label_asym_id_1'), ('auth_asym_id_2', 'auth_seq_id_2', 'rcsb_label_asym_id_2')],
-              'pdbx_validate_symm_contact': [('auth_asym_id_1', 'auth_seq_id_1', 'rcsb_label_asym_id_1'), ('auth_asym_id_2', 'auth_seq_id_2', 'rcsb_label_asym_id_2')],
-              'pdbx_validate_rmsd_bond': [('auth_asym_id_1', 'auth_seq_id_1', 'rcsb_label_asym_id_1'), ('auth_asym_id_2', 'auth_seq_id_2', 'rcsb_label_asym_id_2')],
-              'pdbx_validate_rmsd_angle': [('auth_asym_id_1', 'auth_seq_id_1', 'rcsb_label_asym_id_1'), ('auth_asym_id_2', 'auth_seq_id_2', 'rcsb_label_asym_id_2'), ('auth_asym_id_3', 'auth_seq_id_3', 'rcsb_label_asym_id_3')],
-              'pdbx_validate_torsion': [('auth_asym_id', 'auth_seq_id', 'rcsb_label_asym_id')],
-              'pdbx_validate_peptide_omega': [('auth_asym_id_1', 'auth_seq_id_1', 'rcsb_label_asym_id_1'), ('auth_asym_id_2', 'auth_seq_id_2', 'rcsb_label_asym_id_2')],
-              'pdbx_validate_chiral': [('auth_asym_id', 'auth_seq_id', 'rcsb_label_asym_id')],
-              'pdbx_validate_planes': [('auth_asym_id', 'auth_seq_id', 'rcsb_label_asym_id')],
-              'pdbx_validate_planes_atom': [('auth_asym_id', 'auth_seq_id', 'rcsb_label_asym_id')],
-              'pdbx_validate_main_chain_plane': [('auth_asym_id', 'auth_seq_id', 'rcsb_label_asym_id')],
-              'pdbx_validate_polymer_linkage': [('auth_asym_id_1', 'auth_seq_id_1', 'rcsb_label_asym_id_1'), ('auth_asym_id_2', 'auth_seq_id_2', 'rcsb_label_asym_id_2')],
-              'pdbx_distant_solvent_atoms': [('auth_asym_id', 'auth_seq_id', 'rcsb_label_asym_id')]}
+        mD = {
+            "pdbx_validate_close_contact": [("auth_asym_id_1", "auth_seq_id_1", "rcsb_label_asym_id_1"), ("auth_asym_id_2", "auth_seq_id_2", "rcsb_label_asym_id_2")],
+            "pdbx_validate_symm_contact": [("auth_asym_id_1", "auth_seq_id_1", "rcsb_label_asym_id_1"), ("auth_asym_id_2", "auth_seq_id_2", "rcsb_label_asym_id_2")],
+            "pdbx_validate_rmsd_bond": [("auth_asym_id_1", "auth_seq_id_1", "rcsb_label_asym_id_1"), ("auth_asym_id_2", "auth_seq_id_2", "rcsb_label_asym_id_2")],
+            "pdbx_validate_rmsd_angle": [
+                ("auth_asym_id_1", "auth_seq_id_1", "rcsb_label_asym_id_1"),
+                ("auth_asym_id_2", "auth_seq_id_2", "rcsb_label_asym_id_2"),
+                ("auth_asym_id_3", "auth_seq_id_3", "rcsb_label_asym_id_3"),
+            ],
+            "pdbx_validate_torsion": [("auth_asym_id", "auth_seq_id", "rcsb_label_asym_id")],
+            "pdbx_validate_peptide_omega": [("auth_asym_id_1", "auth_seq_id_1", "rcsb_label_asym_id_1"), ("auth_asym_id_2", "auth_seq_id_2", "rcsb_label_asym_id_2")],
+            "pdbx_validate_chiral": [("auth_asym_id", "auth_seq_id", "rcsb_label_asym_id")],
+            "pdbx_validate_planes": [("auth_asym_id", "auth_seq_id", "rcsb_label_asym_id")],
+            "pdbx_validate_planes_atom": [("auth_asym_id", "auth_seq_id", "rcsb_label_asym_id")],
+            "pdbx_validate_main_chain_plane": [("auth_asym_id", "auth_seq_id", "rcsb_label_asym_id")],
+            "pdbx_validate_polymer_linkage": [("auth_asym_id_1", "auth_seq_id_1", "rcsb_label_asym_id_1"), ("auth_asym_id_2", "auth_seq_id_2", "rcsb_label_asym_id_2")],
+            "pdbx_distant_solvent_atoms": [("auth_asym_id", "auth_seq_id", "rcsb_label_asym_id")],
+        }
         #
         # polymer lookup
         authAsymD = {}
-        for asymId, d in asymMapD.items():
-            if d['entity_type'].lower() in ['polymer', 'branched']:
-                authAsymD[(d['auth_asym_id'], '?')] = asymId
+        for asymId, dD in asymMapD.items():
+            if dD["entity_type"].lower() in ["polymer", "branched"]:
+                authAsymD[(dD["auth_asym_id"], "?")] = asymId
         #
         # non-polymer lookup
         #
-        logger.debug("%s authAsymD %r" % (dataContainer.getName(), authAsymD))
-        for (authAsymId, seqId), d in npAuthAsymMapD.items():
-            if d['entity_type'].lower() not in ['polymer', 'branched']:
-                authAsymD[(authAsymId, seqId)] = d['asym_id']
+        logger.debug("%s authAsymD %r", dataContainer.getName(), authAsymD)
+        for (authAsymId, seqId), dD in npAuthAsymMapD.items():
+            if dD["entity_type"].lower() not in ["polymer", "branched"]:
+                authAsymD[(authAsymId, seqId)] = dD["asym_id"]
 
         #
         for catName, mTupL in mD.items():
@@ -321,41 +261,42 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                             if not cObj.hasAttribute(mTup[2]):
                                 cObj.appendAttribute(mTup[2])
                             cObj.setValue(authAsymD[(authVal, authSeqId)], mTup[2], ii)
-                        elif (authVal, '?') in authAsymD:
+                        elif (authVal, "?") in authAsymD:
                             if not cObj.hasAttribute(mTup[2]):
                                 cObj.appendAttribute(mTup[2])
-                            cObj.setValue(authAsymD[(authVal, '?')], mTup[2], ii)
+                            cObj.setValue(authAsymD[(authVal, "?")], mTup[2], ii)
 
                         else:
-                            if authVal not in ['.']:
-                                logger.error("%s %s missing mapping auth asymId %s" % (dataContainer.getName(), catName, authVal))
+                            if authVal not in ["."]:
+                                logger.error("%s %s missing mapping auth asymId %s", dataContainer.getName(), catName, authVal)
                     else:
-                        logger.error("%s %s missing required attributes %s %s" % (dataContainer.getName(), catName, mTup[0], mTup[1]))
+                        logger.error("%s %s missing required attributes %s %s", dataContainer.getName(), catName, mTup[0], mTup[1])
 
         return True
 
     def aggregateCitationAuthors(self, dataContainer, catName, atName, **kwargs):
+        logger.debug("Starting catName %s atName %s kwargs %r", catName, atName, kwargs)
         try:
-            if not dataContainer.exists(catName) or not dataContainer.exists('citation_author'):
+            if not dataContainer.exists(catName) or not dataContainer.exists("citation_author"):
                 return False
             #
             cObj = dataContainer.getObj(catName)
             if not cObj.hasAttribute(atName):
                 cObj.appendAttribute(atName)
-            citIdL = cObj.getAttributeValueList('id')
+            citIdL = cObj.getAttributeValueList("id")
             #
-            tObj = dataContainer.getObj('citation_author')
+            tObj = dataContainer.getObj("citation_author")
             #
             citIdL = list(set(citIdL))
             tD = {}
             for ii, citId in enumerate(citIdL):
-                tD[citId] = tObj.selectValuesWhere('name', citId, 'citation_id')
+                tD[citId] = tObj.selectValuesWhere("name", citId, "citation_id")
             for ii in range(cObj.getRowCount()):
-                citId = cObj.getValue('id', ii)
-                cObj.setValue('|'.join(tD[citId]), atName, ii)
+                citId = cObj.getValue("id", ii)
+                cObj.setValue("|".join(tD[citId]), atName, ii)
             return True
         except Exception as e:
-            logger.exception("Failing with %s" % str(e))
+            logger.exception("Failing with %s", str(e))
         return False
 
     def buildContainerEntryIds(self, dataContainer, catName, **kwargs):
@@ -370,40 +311,40 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         _rcsb_entry_container_identifiers.assembly_ids
         ...
         """
+        logger.debug("Starting catName  %s kwargs %r", catName, kwargs)
         try:
-            if not dataContainer.exists('entry'):
+            if not dataContainer.exists("entry"):
                 return False
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=['entry_id', 'entity_ids', 'polymer_entity_ids',
-                                                                              'non-polymer_entity_ids', 'assembly_ids']))
+                dataContainer.append(DataCategory(catName, attributeNameList=["entry_id", "entity_ids", "polymer_entity_ids", "non-polymer_entity_ids", "assembly_ids"]))
             #
             cObj = dataContainer.getObj(catName)
 
-            tObj = dataContainer.getObj('entry')
-            entryId = tObj.getValue('id', 0)
-            cObj.setValue(entryId, 'entry_id', 0)
+            tObj = dataContainer.getObj("entry")
+            entryId = tObj.getValue("id", 0)
+            cObj.setValue(entryId, "entry_id", 0)
             #
-            tObj = dataContainer.getObj('entity')
-            entityIdL = tObj.getAttributeValueList('id')
-            cObj.setValue(','.join(entityIdL), 'entity_ids', 0)
+            tObj = dataContainer.getObj("entity")
+            entityIdL = tObj.getAttributeValueList("id")
+            cObj.setValue(",".join(entityIdL), "entity_ids", 0)
             #
             #
-            pIdL = tObj.selectValuesWhere('id', 'polymer', 'type')
-            tV = ','.join(pIdL) if pIdL else '?'
-            cObj.setValue(tV, 'polymer_entity_ids', 0)
+            pIdL = tObj.selectValuesWhere("id", "polymer", "type")
+            tV = ",".join(pIdL) if pIdL else "?"
+            cObj.setValue(tV, "polymer_entity_ids", 0)
 
-            npIdL = tObj.selectValuesWhere('id', 'non-polymer', 'type')
-            tV = ','.join(npIdL) if npIdL else '?'
-            cObj.setValue(tV, 'non-polymer_entity_ids', 0)
+            npIdL = tObj.selectValuesWhere("id", "non-polymer", "type")
+            tV = ",".join(npIdL) if npIdL else "?"
+            cObj.setValue(tV, "non-polymer_entity_ids", 0)
             #
-            tObj = dataContainer.getObj('pdbx_struct_assembly')
-            assemblyIdL = tObj.getAttributeValueList('id') if tObj else []
-            tV = ','.join(assemblyIdL) if assemblyIdL else '?'
-            cObj.setValue(tV, 'assembly_ids', 0)
+            tObj = dataContainer.getObj("pdbx_struct_assembly")
+            assemblyIdL = tObj.getAttributeValueList("id") if tObj else []
+            tV = ",".join(assemblyIdL) if assemblyIdL else "?"
+            cObj.setValue(tV, "assembly_ids", 0)
 
             return True
         except Exception as e:
-            logger.exception("For %s failing with %s" % (catName, str(e)))
+            logger.exception("For %s failing with %s", catName, str(e))
         return False
 
     def buildContainerEntityIds(self, dataContainer, catName, **kwargs):
@@ -421,60 +362,60 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         _rcsb_entity_container_identifiers.chem_comp_monomers
         ...
         """
+        logger.debug("Starting catName %s  kwargs %r", catName, kwargs)
         try:
-            if not (dataContainer.exists('entry') and dataContainer.exists('entity')):
+            if not (dataContainer.exists("entry") and dataContainer.exists("entity")):
                 return False
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=['entry_id', 'entity_id', 'asym_ids',
-                                                                              'auth_asym_ids', 'chem_comp_monomers', 'nonpolymer_comp_id']))
+                dataContainer.append(DataCategory(catName, attributeNameList=["entry_id", "entity_id", "asym_ids", "auth_asym_ids", "chem_comp_monomers", "nonpolymer_comp_id"]))
             #
             cObj = dataContainer.getObj(catName)
 
-            psObj = dataContainer.getObj('pdbx_poly_seq_scheme')
-            npsObj = dataContainer.getObj('pdbx_nonpoly_scheme')
+            psObj = dataContainer.getObj("pdbx_poly_seq_scheme")
+            npsObj = dataContainer.getObj("pdbx_nonpoly_scheme")
             #
-            tObj = dataContainer.getObj('entry')
-            entryId = tObj.getValue('id', 0)
-            cObj.setValue(entryId, 'entry_id', 0)
+            tObj = dataContainer.getObj("entry")
+            entryId = tObj.getValue("id", 0)
+            cObj.setValue(entryId, "entry_id", 0)
             #
-            tObj = dataContainer.getObj('entity')
-            entityIdL = tObj.getAttributeValueList('id')
+            tObj = dataContainer.getObj("entity")
+            entityIdL = tObj.getAttributeValueList("id")
             #
             for ii, entityId in enumerate(entityIdL):
-                cObj.setValue(entryId, 'entry_id', ii)
-                cObj.setValue(entityId, 'entity_id', ii)
-                eType = tObj.getValue('type', ii)
+                cObj.setValue(entryId, "entry_id", ii)
+                cObj.setValue(entityId, "entity_id", ii)
+                eType = tObj.getValue("type", ii)
                 asymIdL = []
                 authAsymIdL = []
                 ccMonomerL = []
                 ccLigandL = []
-                if eType == 'polymer' and psObj:
-                    asymIdL = psObj.selectValuesWhere('asym_id', entityId, 'entity_id')
-                    authAsymIdL = psObj.selectValuesWhere('pdb_strand_id', entityId, 'entity_id')
-                    ccMonomerL = psObj.selectValuesWhere('mon_id', entityId, 'entity_id')
+                if eType == "polymer" and psObj:
+                    asymIdL = psObj.selectValuesWhere("asym_id", entityId, "entity_id")
+                    authAsymIdL = psObj.selectValuesWhere("pdb_strand_id", entityId, "entity_id")
+                    ccMonomerL = psObj.selectValuesWhere("mon_id", entityId, "entity_id")
                 elif npsObj:
-                    asymIdL = npsObj.selectValuesWhere('asym_id', entityId, 'entity_id')
-                    authAsymIdL = npsObj.selectValuesWhere('pdb_strand_id', entityId, 'entity_id')
-                    ccLigandL = npsObj.selectValuesWhere('mon_id', entityId, 'entity_id')
-                    logger.debug("entityId %r ligands %r" % (entityId, set(ccLigandL)))
+                    asymIdL = npsObj.selectValuesWhere("asym_id", entityId, "entity_id")
+                    authAsymIdL = npsObj.selectValuesWhere("pdb_strand_id", entityId, "entity_id")
+                    ccLigandL = npsObj.selectValuesWhere("mon_id", entityId, "entity_id")
+                    # logger.debug("entityId %r ligands %r", entityId, set(ccLigandL))
                 #
                 if asymIdL:
-                    cObj.setValue(','.join(list(set(asymIdL))).strip(), 'asym_ids', ii)
+                    cObj.setValue(",".join(list(set(asymIdL))).strip(), "asym_ids", ii)
                 if authAsymIdL:
-                    cObj.setValue(','.join(list(set(authAsymIdL))).strip(), 'auth_asym_ids', ii)
+                    cObj.setValue(",".join(list(set(authAsymIdL))).strip(), "auth_asym_ids", ii)
                 if ccMonomerL:
-                    cObj.setValue(','.join(list(set(ccMonomerL))).strip(), 'chem_comp_monomers', ii)
+                    cObj.setValue(",".join(list(set(ccMonomerL))).strip(), "chem_comp_monomers", ii)
                 else:
-                    cObj.setValue('?', 'chem_comp_monomers', ii)
+                    cObj.setValue("?", "chem_comp_monomers", ii)
                 if ccLigandL:
-                    cObj.setValue(','.join(set(ccLigandL)).strip(), 'nonpolymer_comp_id', ii)
+                    cObj.setValue(",".join(set(ccLigandL)).strip(), "nonpolymer_comp_id", ii)
                 else:
-                    cObj.setValue('?', 'nonpolymer_comp_id', ii)
+                    cObj.setValue("?", "nonpolymer_comp_id", ii)
 
             #
             return True
         except Exception as e:
-            logger.exception("For %s failing with %s" % (catName, str(e)))
+            logger.exception("For %s failing with %s", catName, str(e))
         return False
 
     def buildContainerEntityInstanceIds(self, dataContainer, catName, **kwargs):
@@ -524,55 +465,77 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             K 3 ADP 1  102 102 ADP ADP C .
         ...
         """
+        logger.debug("Starting catName %s kwargs %r", catName, kwargs)
         try:
-            if not (dataContainer.exists('entry') and dataContainer.exists('entity')):
+            if not (dataContainer.exists("entry") and dataContainer.exists("entity")):
                 return False
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=['entry_id', 'entity_id', 'entity_type', 'asym_id', 'auth_asym_id', 'comp_id', 'auth_seq_id']))
+                dataContainer.append(DataCategory(catName, attributeNameList=["entry_id", "entity_id", "entity_type", "asym_id", "auth_asym_id", "comp_id", "auth_seq_id"]))
             #
             cObj = dataContainer.getObj(catName)
             #
-            eObj = dataContainer.getObj('entity')
+            eObj = dataContainer.getObj("entity")
             eD = {}
             for ii in range(eObj.getRowCount()):
-                entityId = eObj.getValue('id', ii)
-                entityType = eObj.getValue('type', ii)
+                entityId = eObj.getValue("id", ii)
+                entityType = eObj.getValue("type", ii)
                 eD[entityId] = entityType
             #
 
-            psObj = dataContainer.getObj('pdbx_poly_seq_scheme')
-            npsObj = dataContainer.getObj('pdbx_nonpoly_scheme')
+            psObj = dataContainer.getObj("pdbx_poly_seq_scheme")
+            npsObj = dataContainer.getObj("pdbx_nonpoly_scheme")
             #
-            tObj = dataContainer.getObj('entry')
-            entryId = tObj.getValue('id', 0)
+            tObj = dataContainer.getObj("entry")
+            entryId = tObj.getValue("id", 0)
 
-            cObj.setValue(entryId, 'entry_id', 0)
+            cObj.setValue(entryId, "entry_id", 0)
             #
             asymD = {}
             npAuthAsymD = {}
             if psObj is not None:
                 for ii in range(psObj.getRowCount()):
-                    asymId = psObj.getValue('asym_id', ii)
+                    asymId = psObj.getValue("asym_id", ii)
                     if asymId in asymD:
                         continue
-                    entityId = psObj.getValue('entity_id', ii)
-                    authAsymId = psObj.getValue('pdb_strand_id', ii)
-                    asymD[asymId] = {'entry_id': entryId, 'entity_id': entityId, 'entity_type': eD[entityId],
-                                     'asym_id': asymId, 'auth_asym_id': authAsymId, 'comp_id': '?', 'auth_seq_id': '?'}
+                    entityId = psObj.getValue("entity_id", ii)
+                    authAsymId = psObj.getValue("pdb_strand_id", ii)
+                    asymD[asymId] = {
+                        "entry_id": entryId,
+                        "entity_id": entityId,
+                        "entity_type": eD[entityId],
+                        "asym_id": asymId,
+                        "auth_asym_id": authAsymId,
+                        "comp_id": "?",
+                        "auth_seq_id": "?",
+                    }
                     #
             if npsObj is not None:
                 for ii in range(npsObj.getRowCount()):
-                    asymId = npsObj.getValue('asym_id', ii)
+                    asymId = npsObj.getValue("asym_id", ii)
 
-                    entityId = npsObj.getValue('entity_id', ii)
-                    authAsymId = npsObj.getValue('pdb_strand_id', ii)
-                    resNum = npsObj.getValue('pdb_seq_num', ii)
-                    monId = npsObj.getValue('mon_id', ii)
+                    entityId = npsObj.getValue("entity_id", ii)
+                    authAsymId = npsObj.getValue("pdb_strand_id", ii)
+                    resNum = npsObj.getValue("pdb_seq_num", ii)
+                    monId = npsObj.getValue("mon_id", ii)
                     if asymId not in asymD:
-                        asymD[asymId] = {'entry_id': entryId, 'entity_id': entityId, 'entity_type': eD[entityId],
-                                         'asym_id': asymId, 'auth_asym_id': authAsymId, 'comp_id': monId, 'auth_seq_id': '?'}
-                    npAuthAsymD[(authAsymId, resNum)] = {'entry_id': entryId, 'entity_id': entityId, 'entity_type': eD[entityId],
-                                                         'asym_id': asymId, 'auth_asym_id': authAsymId, 'comp_id': monId, 'auth_seq_id': resNum}
+                        asymD[asymId] = {
+                            "entry_id": entryId,
+                            "entity_id": entityId,
+                            "entity_type": eD[entityId],
+                            "asym_id": asymId,
+                            "auth_asym_id": authAsymId,
+                            "comp_id": monId,
+                            "auth_seq_id": "?",
+                        }
+                    npAuthAsymD[(authAsymId, resNum)] = {
+                        "entry_id": entryId,
+                        "entity_id": entityId,
+                        "entity_type": eD[entityId],
+                        "asym_id": asymId,
+                        "auth_asym_id": authAsymId,
+                        "comp_id": monId,
+                        "auth_seq_id": resNum,
+                    }
 
             # JDW TODO MAKE npsObj extended mapping !
             #
@@ -583,7 +546,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             ok = self.__addPdbxValidateAsymIds(dataContainer, asymD, npAuthAsymD)
             return ok
         except Exception as e:
-            logger.exception("For %s failing with %s" % (catName, str(e)))
+            logger.exception("For %s failing with %s", catName, str(e))
         return False
 
     def __expandOperatorList(self, operExpression):
@@ -602,16 +565,16 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         rL = []
         opCount = 1
         try:
-            if operExpression.find('(') < 0:
+            if operExpression.find("(") < 0:
                 opL = [operExpression]
             else:
-                opL = [t.strip().strip('(').rstrip(')') for t in re.findall(r'\(.*?\)', operExpression)]
+                opL = [tV.strip().strip("(").rstrip(")") for tV in re.findall(r"\(.*?\)", operExpression)]
             #
             for op in opL:
                 teL = []
-                tL = op.split(',')
-                for t in tL:
-                    trngL = t.split('-')
+                tL = op.split(",")
+                for tV in tL:
+                    trngL = tV.split("-")
                     if len(trngL) == 2:
                         rngL = [str(r) for r in range(int(trngL[0]), int(trngL[1]) + 1)]
                     else:
@@ -621,9 +584,9 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 opCount *= len(teL)
 
         except Exception as e:
-            logger.exception("Failing parsing %r with %s" % (operExpression, str(e)))
+            logger.exception("Failing parsing %r with %s", operExpression, str(e))
         #
-        if len(rL) < 1:
+        if not rL:
             opCount = 0
         return opCount, rL
 
@@ -656,17 +619,17 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         """
         #
         instanceD = self.__getInstanceTypes(dataContainer)
-        instanceTypeD = instanceD['instanceTypeD'] if 'instanceTypeD' in instanceD else {}
-        instancePolymerTypeD = instanceD['instancePolymerTypeD'] if 'instancePolymerTypeD' in instanceD else {}
-        instEntityD = instanceD['instEntityD'] if 'instEntityD' in instanceD else {}
-        epTypeD = instanceD['epTypeD'] if 'epTypeD' in instanceD else {}
-        eTypeD = instanceD['eTypeD'] if 'eTypeD' in instanceD else {}
-        epTypeFilteredD = instanceD['epTypeFilteredD'] if 'epTypeFilteredD' in instanceD else {}
+        instanceTypeD = instanceD["instanceTypeD"] if "instanceTypeD" in instanceD else {}
+        instancePolymerTypeD = instanceD["instancePolymerTypeD"] if "instancePolymerTypeD" in instanceD else {}
+        instEntityD = instanceD["instEntityD"] if "instEntityD" in instanceD else {}
+        epTypeD = instanceD["epTypeD"] if "epTypeD" in instanceD else {}
+        eTypeD = instanceD["eTypeD"] if "eTypeD" in instanceD else {}
+        epTypeFilteredD = instanceD["epTypeFilteredD"] if "epTypeFilteredD" in instanceD else {}
         #
         atomSiteCountD = self.__getQualifiedAtomSiteInfo(dataContainer, instanceTypeD)
-        instAtomCount = atomSiteCountD['instanceAtomCountD'] if 'instanceAtomCountD' in atomSiteCountD else {}
-        instModeledMonomerCount = atomSiteCountD['instanceModeledMonomerCountD'] if 'instanceModeledMonomerCountD' in atomSiteCountD else {}
-        instUnmodeledMonomerCount = atomSiteCountD['instanceUnmodeledMonomerCountD'] if 'instanceUnmodeledMonomerCountD' in atomSiteCountD else {}
+        instAtomCount = atomSiteCountD["instanceAtomCountD"] if "instanceAtomCountD" in atomSiteCountD else {}
+        instModeledMonomerCount = atomSiteCountD["instanceModeledMonomerCountD"] if "instanceModeledMonomerCountD" in atomSiteCountD else {}
+        instUnmodeledMonomerCount = atomSiteCountD["instanceUnmodeledMonomerCountD"] if "instanceUnmodeledMonomerCountD" in atomSiteCountD else {}
         #
         # -------------------------
         assemblyInstanceCountByTypeD = {}
@@ -687,15 +650,15 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         # --------------
         #
         try:
-            if dataContainer.exists('pdbx_struct_assembly_gen'):
-                tObj = dataContainer.getObj('pdbx_struct_assembly_gen')
+            if dataContainer.exists("pdbx_struct_assembly_gen"):
+                tObj = dataContainer.getObj("pdbx_struct_assembly_gen")
                 for ii in range(tObj.getRowCount()):
-                    assemblyId = tObj.getValue('assembly_id', ii)
+                    assemblyId = tObj.getValue("assembly_id", ii)
                     # Initialize instances count
                     if assemblyId not in assemblyInstanceCountByTypeD:
-                        assemblyInstanceCountByTypeD[assemblyId] = {eType: 0 for eType in ['polymer', 'non-polymer', 'branched', 'macrolide', 'water']}
+                        assemblyInstanceCountByTypeD[assemblyId] = {eType: 0 for eType in ["polymer", "non-polymer", "branched", "macrolide", "water"]}
                     if assemblyId not in assemblyAtomCountByTypeD:
-                        assemblyAtomCountByTypeD[assemblyId] = {eType: 0 for eType in ['polymer', 'non-polymer', 'branched', 'macrolide', 'water']}
+                        assemblyAtomCountByTypeD[assemblyId] = {eType: 0 for eType in ["polymer", "non-polymer", "branched", "macrolide", "water"]}
                     if assemblyId not in assemblyModeledMonomerCountD:
                         assemblyModeledMonomerCountD[assemblyId] = 0
                     if assemblyId not in assemblyUnmodeledMonomerCountD:
@@ -703,17 +666,17 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     if assemblyId not in assemblyAtomCountD:
                         assemblyAtomCountD[assemblyId] = 0
                     #
-                    opExpression = tObj.getValue('oper_expression', ii)
+                    opExpression = tObj.getValue("oper_expression", ii)
                     opCount, opL = self.__expandOperatorList(opExpression)
-                    tS = tObj.getValue('asym_id_list', ii)
-                    asymIdList = [t.strip() for t in tS.strip().split(',')]
+                    tS = tObj.getValue("asym_id_list", ii)
+                    asymIdList = [t.strip() for t in tS.strip().split(",")]
                     assemblyInstanceD.setdefault(assemblyId, []).extend(asymIdList)
                     assemblyInstanceGenD.setdefault(assemblyId, []).extend(asymIdList * opCount)
                     #
-                    logger.debug("%s assembly %r opExpression %r opCount %d opL %r" % (dataContainer.getName(), assemblyId, opExpression, opCount, opL))
-                    logger.debug("%s assembly %r length asymIdList %r" % (dataContainer.getName(), assemblyId, len(asymIdList)))
+                    logger.debug("%s assembly %r opExpression %r opCount %d opL %r", dataContainer.getName(), assemblyId, opExpression, opCount, opL)
+                    logger.debug("%s assembly %r length asymIdList %r", dataContainer.getName(), assemblyId, len(asymIdList))
                     #
-                    for eType in ['polymer', 'non-polymer', 'branched', 'macrolide', 'water']:
+                    for eType in ["polymer", "non-polymer", "branched", "macrolide", "water"]:
                         iList = [asymId for asymId in asymIdList if asymId in instanceTypeD and instanceTypeD[asymId] == eType]
                         assemblyInstanceCountByTypeD[assemblyId][eType] += len(iList) * opCount
                         #
@@ -722,12 +685,18 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                         assemblyAtomCountD[assemblyId] += sum(atCountList) * opCount
                         #
                     #
-                    modeledMonomerCountList = [instModeledMonomerCount[asymId]
-                                               for asymId in asymIdList if asymId in instanceTypeD and instanceTypeD[asymId] == 'polymer' and asymId in instModeledMonomerCount]
+                    modeledMonomerCountList = [
+                        instModeledMonomerCount[asymId]
+                        for asymId in asymIdList
+                        if asymId in instanceTypeD and instanceTypeD[asymId] == "polymer" and asymId in instModeledMonomerCount
+                    ]
                     assemblyModeledMonomerCountD[assemblyId] += sum(modeledMonomerCountList) * opCount
                     #
-                    unmodeledMonomerCountList = [instUnmodeledMonomerCount[asymId]
-                                                 for asymId in asymIdList if asymId in instanceTypeD and instanceTypeD[asymId] == 'polymer' and asymId in instUnmodeledMonomerCount]
+                    unmodeledMonomerCountList = [
+                        instUnmodeledMonomerCount[asymId]
+                        for asymId in asymIdList
+                        if asymId in instanceTypeD and instanceTypeD[asymId] == "polymer" and asymId in instUnmodeledMonomerCount
+                    ]
                     assemblyUnmodeledMonomerCountD[assemblyId] += sum(unmodeledMonomerCountList) * opCount
 
                 #
@@ -744,11 +713,11 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     #  Instance polymer composition
                     pInstTypeList = [instancePolymerTypeD[asymId] for asymId in asymIdList if asymId in instancePolymerTypeD]
                     pInstTypeD = Counter(pInstTypeList)
-                    assemblyInstanceCountByPolymerTypeD[assemblyId] = {pType: 0 for pType in ['Protein', 'DNA', 'RNA', 'NA-hybrid', 'Other']}
-                    assemblyInstanceCountByPolymerTypeD[assemblyId] = {pType: pInstTypeD[pType] for pType in ['Protein', 'DNA', 'RNA', 'NA-hybrid', 'Other'] if pType in pInstTypeD}
+                    assemblyInstanceCountByPolymerTypeD[assemblyId] = {pType: 0 for pType in ["Protein", "DNA", "RNA", "NA-hybrid", "Other"]}
+                    assemblyInstanceCountByPolymerTypeD[assemblyId] = {pType: pInstTypeD[pType] for pType in ["Protein", "DNA", "RNA", "NA-hybrid", "Other"] if pType in pInstTypeD}
                     assemblyPolymerInstanceCountD[assemblyId] = len(pInstTypeList)
                     #
-                    logger.debug("%s assemblyId %r pInstTypeD %r" % (dataContainer.getName(), assemblyId, pInstTypeD.items()))
+                    logger.debug("%s assemblyId %r pInstTypeD %r", dataContainer.getName(), assemblyId, pInstTypeD.items())
 
                     # -------------
                     # Entity and polymer entity composition
@@ -757,96 +726,113 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     pTypeL = [epTypeD[entityId] for entityId in entityIdList if entityId in epTypeD]
                     #
                     polymerCompClass, subsetCompClass, naCompClass, _ = self.__getPolymerComposition(pTypeL)
-                    assemblyPolymerClassD[assemblyId] = {'polymerCompClass': polymerCompClass, 'subsetCompClass': subsetCompClass, 'naCompClass': naCompClass}
+                    assemblyPolymerClassD[assemblyId] = {"polymerCompClass": polymerCompClass, "subsetCompClass": subsetCompClass, "naCompClass": naCompClass}
                     #
-                    logger.debug("%s assemblyId %s polymerCompClass %r subsetCompClass %r naCompClass %r pTypeL %r" %
-                                 (dataContainer.getName(), assemblyId, polymerCompClass, subsetCompClass, naCompClass, pTypeL))
-
+                    logger.debug(
+                        "%s assemblyId %s polymerCompClass %r subsetCompClass %r naCompClass %r pTypeL %r",
+                        dataContainer.getName(),
+                        assemblyId,
+                        polymerCompClass,
+                        subsetCompClass,
+                        naCompClass,
+                        pTypeL,
+                    )
                     pTypeFilteredL = [epTypeFilteredD[entityId] for entityId in entityIdList if entityId in epTypeFilteredD]
                     #
                     pEntityTypeD = Counter(pTypeFilteredL)
-                    assemblyEntityCountByPolymerTypeD[assemblyId] = {pType: 0 for pType in ['Protein', 'DNA', 'RNA', 'NA-hybrid', 'Other']}
-                    assemblyEntityCountByPolymerTypeD[assemblyId] = {pType: pEntityTypeD[pType]
-                                                                     for pType in ['Protein', 'DNA', 'RNA', 'NA-hybrid', 'Other'] if pType in pEntityTypeD}
+                    assemblyEntityCountByPolymerTypeD[assemblyId] = {pType: 0 for pType in ["Protein", "DNA", "RNA", "NA-hybrid", "Other"]}
+                    assemblyEntityCountByPolymerTypeD[assemblyId] = {
+                        pType: pEntityTypeD[pType] for pType in ["Protein", "DNA", "RNA", "NA-hybrid", "Other"] if pType in pEntityTypeD
+                    }
                     #
                     eTypeL = [eTypeD[entityId] for entityId in entityIdList if entityId in eTypeD]
                     entityTypeD = Counter(eTypeL)
-                    assemblyEntityCountByTypeD[assemblyId] = {eType: 0 for eType in ['polymer', 'non-polymer', 'branched', 'macrolide', 'water']}
-                    assemblyEntityCountByTypeD[assemblyId] = {eType: entityTypeD[eType]
-                                                              for eType in ['polymer', 'non-polymer', 'branched', 'macrolide', 'water'] if eType in entityTypeD}
+                    assemblyEntityCountByTypeD[assemblyId] = {eType: 0 for eType in ["polymer", "non-polymer", "branched", "macrolide", "water"]}
+                    assemblyEntityCountByTypeD[assemblyId] = {
+                        eType: entityTypeD[eType] for eType in ["polymer", "non-polymer", "branched", "macrolide", "water"] if eType in entityTypeD
+                    }
                     #
                     # ---------------
                     #
             #
-            logger.debug("%s assemblyInstanceCountByTypeD %r" % (dataContainer.getName(), assemblyInstanceCountByTypeD.items()))
-            logger.debug("%s assemblyAtomCountByTypeD %r" % (dataContainer.getName(), assemblyAtomCountByTypeD.items()))
-            logger.debug("%s assemblyAtomCountD %r" % (dataContainer.getName(), assemblyAtomCountD.items()))
-            logger.debug("%s assemblyModeledMonomerCountD %r" % (dataContainer.getName(), assemblyModeledMonomerCountD.items()))
-            logger.debug("%s assemblyUnmodeledMonomerCountD %r" % (dataContainer.getName(), assemblyUnmodeledMonomerCountD.items()))
-            logger.debug("%s assemblyPolymerClassD %r" % (dataContainer.getName(), assemblyPolymerClassD.items()))
-            logger.debug("%s assemblyPolymerInstanceCountD %r" % (dataContainer.getName(), assemblyPolymerInstanceCountD.items()))
-            logger.debug("%s assemblyInstanceCountByPolymerTypeD %r" % (dataContainer.getName(), assemblyInstanceCountByPolymerTypeD.items()))
-            logger.debug("%s assemblyEntityCountByPolymerTypeD %r" % (dataContainer.getName(), assemblyEntityCountByPolymerTypeD.items()))
-            logger.debug("%s assemblyEntityCountByTypeD %r" % (dataContainer.getName(), assemblyEntityCountByTypeD.items()))
+            logger.debug("%s assemblyInstanceCountByTypeD %r", dataContainer.getName(), assemblyInstanceCountByTypeD.items())
+            logger.debug("%s assemblyAtomCountByTypeD %r", dataContainer.getName(), assemblyAtomCountByTypeD.items())
+            logger.debug("%s assemblyAtomCountD %r", dataContainer.getName(), assemblyAtomCountD.items())
+            logger.debug("%s assemblyModeledMonomerCountD %r", dataContainer.getName(), assemblyModeledMonomerCountD.items())
+            logger.debug("%s assemblyUnmodeledMonomerCountD %r", dataContainer.getName(), assemblyUnmodeledMonomerCountD.items())
+            logger.debug("%s assemblyPolymerClassD %r", dataContainer.getName(), assemblyPolymerClassD.items())
+            logger.debug("%s assemblyPolymerInstanceCountD %r", dataContainer.getName(), assemblyPolymerInstanceCountD.items())
+            logger.debug("%s assemblyInstanceCountByPolymerTypeD %r", dataContainer.getName(), assemblyInstanceCountByPolymerTypeD.items())
+            logger.debug("%s assemblyEntityCountByPolymerTypeD %r", dataContainer.getName(), assemblyEntityCountByPolymerTypeD.items())
+            logger.debug("%s assemblyEntityCountByTypeD %r", dataContainer.getName(), assemblyEntityCountByTypeD.items())
             #
-            rD = {'assemblyInstanceCountByTypeD': assemblyInstanceCountByTypeD,
-                  'assemblyAtomCountByTypeD': assemblyAtomCountByTypeD,
-                  'assemblyAtomCountD': assemblyAtomCountD,
-                  'assemblyModeledMonomerCountD': assemblyModeledMonomerCountD,
-                  'assemblyUnmodeledMonomerCountD': assemblyUnmodeledMonomerCountD,
-                  'assemblyInstanceCountByPolymerTypeD': assemblyInstanceCountByPolymerTypeD,
-                  'assemblyPolymerInstanceCountD': assemblyPolymerInstanceCountD,
-                  'assemblyPolymerClassD': assemblyPolymerClassD,
-                  'assemblyEntityCountByPolymerTypeD': assemblyEntityCountByPolymerTypeD,
-                  'assemblyEntityCountByTypeD': assemblyEntityCountByTypeD
-                  }
+            rD = {
+                "assemblyInstanceCountByTypeD": assemblyInstanceCountByTypeD,
+                "assemblyAtomCountByTypeD": assemblyAtomCountByTypeD,
+                "assemblyAtomCountD": assemblyAtomCountD,
+                "assemblyModeledMonomerCountD": assemblyModeledMonomerCountD,
+                "assemblyUnmodeledMonomerCountD": assemblyUnmodeledMonomerCountD,
+                "assemblyInstanceCountByPolymerTypeD": assemblyInstanceCountByPolymerTypeD,
+                "assemblyPolymerInstanceCountD": assemblyPolymerInstanceCountD,
+                "assemblyPolymerClassD": assemblyPolymerClassD,
+                "assemblyEntityCountByPolymerTypeD": assemblyEntityCountByPolymerTypeD,
+                "assemblyEntityCountByTypeD": assemblyEntityCountByTypeD,
+            }
         except Exception as e:
-            logger.exception("Failing %s with %s" % (dataContainer.getName(), str(e)))
+            logger.exception("Failing %s with %s", dataContainer.getName(), str(e))
         return rD
 
     def addAssemblyInfo(self, dataContainer, catName, **kwargs):
         """ Build rcsb_assembly_info category.
         """
+        logger.debug("Starting catName %s kwargs %r", catName, kwargs)
         try:
-            if not (dataContainer.exists('entry') and dataContainer.exists('pdbx_struct_assembly')):
+            if not (dataContainer.exists("entry") and dataContainer.exists("pdbx_struct_assembly")):
                 return False
-            logger.debug("%s beginning for %s" % (dataContainer.getName(), catName))
+            logger.debug("%s beginning for %s", dataContainer.getName(), catName)
             # Create the new target category rcsb_assembly_info
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=['entry_id',
-                                                                              'assembly_id',
-                                                                              'polymer_atom_count',
-                                                                              'nonpolymer_atom_count',
-                                                                              'branched_atom_count',
-                                                                              'solvent_atom_count',
-                                                                              'atom_count',
-                                                                              'modeled_polymer_monomer_count',
-                                                                              'unmodeled_polymer_monomer_count',
-                                                                              'polymer_monomer_count',
-                                                                              'polymer_composition',
-                                                                              'selected_polymer_entity_types',
-                                                                              'na_polymer_entity_types',
-                                                                              'polymer_entity_instance_count',
-                                                                              'nonpolymer_entity_instance_count',
-                                                                              'branched_entity_instance_count',
-                                                                              'solvent_entity_instance_count',
-                                                                              'polymer_entity_instance_count_protein',
-                                                                              'polymer_entity_instance_count_nucleic_acid',
-                                                                              'polymer_entity_instance_count_DNA',
-                                                                              'polymer_entity_instance_count_RNA',
-                                                                              'polymer_entity_instance_count_nucleic_acid_hybrid',
-                                                                              'polymer_entity_count',
-                                                                              'nonpolymer_entity_count',
-                                                                              'branched_entity_count',
-                                                                              'solvent_entity_count',
-                                                                              'polymer_entity_count_protein',
-                                                                              'polymer_entity_count_nucleic_acid',
-                                                                              'polymer_entity_count_DNA',
-                                                                              'polymer_entity_count_RNA',
-                                                                              'polymer_entity_count_nucleic_acid_hybrid']))
+                dataContainer.append(
+                    DataCategory(
+                        catName,
+                        attributeNameList=[
+                            "entry_id",
+                            "assembly_id",
+                            "polymer_atom_count",
+                            "nonpolymer_atom_count",
+                            "branched_atom_count",
+                            "solvent_atom_count",
+                            "atom_count",
+                            "modeled_polymer_monomer_count",
+                            "unmodeled_polymer_monomer_count",
+                            "polymer_monomer_count",
+                            "polymer_composition",
+                            "selected_polymer_entity_types",
+                            "na_polymer_entity_types",
+                            "polymer_entity_instance_count",
+                            "nonpolymer_entity_instance_count",
+                            "branched_entity_instance_count",
+                            "solvent_entity_instance_count",
+                            "polymer_entity_instance_count_protein",
+                            "polymer_entity_instance_count_nucleic_acid",
+                            "polymer_entity_instance_count_DNA",
+                            "polymer_entity_instance_count_RNA",
+                            "polymer_entity_instance_count_nucleic_acid_hybrid",
+                            "polymer_entity_count",
+                            "nonpolymer_entity_count",
+                            "branched_entity_count",
+                            "solvent_entity_count",
+                            "polymer_entity_count_protein",
+                            "polymer_entity_count_nucleic_acid",
+                            "polymer_entity_count_DNA",
+                            "polymer_entity_count_RNA",
+                            "polymer_entity_count_nucleic_acid_hybrid",
+                        ],
+                    )
+                )
             #
             #
-            logger.debug("%s beginning for %s" % (dataContainer.getName(), catName))
+            logger.debug("%s beginning for %s", dataContainer.getName(), catName)
             #
             # Get assembly comp details -
             #
@@ -854,95 +840,95 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             #
             cObj = dataContainer.getObj(catName)
 
-            tObj = dataContainer.getObj('entry')
-            entryId = tObj.getValue('id', 0)
+            tObj = dataContainer.getObj("entry")
+            entryId = tObj.getValue("id", 0)
             #
-            tObj = dataContainer.getObj('pdbx_struct_assembly')
-            assemblyIdL = tObj.getAttributeValueList('id')
+            tObj = dataContainer.getObj("pdbx_struct_assembly")
+            assemblyIdL = tObj.getAttributeValueList("id")
             #
             #
             for ii, assemblyId in enumerate(assemblyIdL):
-                cObj.setValue(entryId, 'entry_id', ii)
-                cObj.setValue(assemblyId, 'assembly_id', ii)
+                cObj.setValue(entryId, "entry_id", ii)
+                cObj.setValue(assemblyId, "assembly_id", ii)
                 #
-                d = rD['assemblyAtomCountByTypeD'][assemblyId]
-                num = d['polymer'] if 'polymer' in d else 0
-                cObj.setValue(num, 'polymer_atom_count', ii)
+                dD = rD["assemblyAtomCountByTypeD"][assemblyId]
+                num = dD["polymer"] if "polymer" in dD else 0
+                cObj.setValue(num, "polymer_atom_count", ii)
 
-                num = d['non-polymer'] if 'non-polymer' in d else 0
-                cObj.setValue(num, 'nonpolymer_atom_count', ii)
+                num = dD["non-polymer"] if "non-polymer" in dD else 0
+                cObj.setValue(num, "nonpolymer_atom_count", ii)
 
-                num = d['water'] if 'water' in d else 0
-                cObj.setValue(num, 'solvent_atom_count', ii)
+                num = dD["water"] if "water" in dD else 0
+                cObj.setValue(num, "solvent_atom_count", ii)
 
-                num = d['branched'] if 'branched' in d else 0
-                cObj.setValue(num, 'branched_atom_count', ii)
+                num = dD["branched"] if "branched" in dD else 0
+                cObj.setValue(num, "branched_atom_count", ii)
 
-                num = rD['assemblyAtomCountD'][assemblyId]
-                cObj.setValue(num, 'atom_count', ii)
+                num = rD["assemblyAtomCountD"][assemblyId]
+                cObj.setValue(num, "atom_count", ii)
                 #
-                num1 = rD['assemblyModeledMonomerCountD'][assemblyId]
-                num2 = rD['assemblyUnmodeledMonomerCountD'][assemblyId]
-                cObj.setValue(num1, 'modeled_polymer_monomer_count', ii)
-                cObj.setValue(num2, 'unmodeled_polymer_monomer_count', ii)
-                cObj.setValue(num1 + num2, 'polymer_monomer_count', ii)
+                num1 = rD["assemblyModeledMonomerCountD"][assemblyId]
+                num2 = rD["assemblyUnmodeledMonomerCountD"][assemblyId]
+                cObj.setValue(num1, "modeled_polymer_monomer_count", ii)
+                cObj.setValue(num2, "unmodeled_polymer_monomer_count", ii)
+                cObj.setValue(num1 + num2, "polymer_monomer_count", ii)
                 #
-                d = rD['assemblyPolymerClassD'][assemblyId]
-                cObj.setValue(d['polymerCompClass'], 'polymer_composition', ii)
-                cObj.setValue(d['subsetCompClass'], 'selected_polymer_entity_types', ii)
-                cObj.setValue(d['naCompClass'], 'na_polymer_entity_types', ii)
+                dD = rD["assemblyPolymerClassD"][assemblyId]
+                cObj.setValue(dD["polymerCompClass"], "polymer_composition", ii)
+                cObj.setValue(dD["subsetCompClass"], "selected_polymer_entity_types", ii)
+                cObj.setValue(dD["naCompClass"], "na_polymer_entity_types", ii)
                 #
-                d = rD['assemblyInstanceCountByTypeD'][assemblyId]
-                num = d['polymer'] if 'polymer' in d else 0
-                cObj.setValue(num, 'polymer_entity_instance_count', ii)
+                dD = rD["assemblyInstanceCountByTypeD"][assemblyId]
+                num = dD["polymer"] if "polymer" in dD else 0
+                cObj.setValue(num, "polymer_entity_instance_count", ii)
                 #
-                num = d['non-polymer'] if 'non-polymer' in d else 0
-                cObj.setValue(num, 'nonpolymer_entity_instance_count', ii)
+                num = dD["non-polymer"] if "non-polymer" in dD else 0
+                cObj.setValue(num, "nonpolymer_entity_instance_count", ii)
                 #
-                num = d['branched'] if 'branched' in d else 0
-                cObj.setValue(num, 'branched_entity_instance_count', ii)
+                num = dD["branched"] if "branched" in dD else 0
+                cObj.setValue(num, "branched_entity_instance_count", ii)
                 #
-                num = d['water'] if 'water' in d else 0
-                cObj.setValue(num, 'solvent_entity_instance_count', ii)
+                num = dD["water"] if "water" in dD else 0
+                cObj.setValue(num, "solvent_entity_instance_count", ii)
                 #
-                d = rD['assemblyInstanceCountByPolymerTypeD'][assemblyId]
-                num = d['Protein'] if 'Protein' in d else 0
-                cObj.setValue(num, 'polymer_entity_instance_count_protein', ii)
-                num1 = d['DNA'] if 'DNA' in d else 0
-                cObj.setValue(num1, 'polymer_entity_instance_count_DNA', ii)
-                num2 = d['RNA'] if 'RNA' in d else 0
-                cObj.setValue(num2, 'polymer_entity_instance_count_RNA', ii)
-                cObj.setValue(num1 + num2, 'polymer_entity_instance_count_nucleic_acid', ii)
-                num = d['NA-hybrid'] if 'NA-hybrid' in d else 0
-                cObj.setValue(num, 'polymer_entity_instance_count_nucleic_acid_hybrid', ii)
+                dD = rD["assemblyInstanceCountByPolymerTypeD"][assemblyId]
+                num = dD["Protein"] if "Protein" in dD else 0
+                cObj.setValue(num, "polymer_entity_instance_count_protein", ii)
+                num1 = dD["DNA"] if "DNA" in dD else 0
+                cObj.setValue(num1, "polymer_entity_instance_count_DNA", ii)
+                num2 = dD["RNA"] if "RNA" in dD else 0
+                cObj.setValue(num2, "polymer_entity_instance_count_RNA", ii)
+                cObj.setValue(num1 + num2, "polymer_entity_instance_count_nucleic_acid", ii)
+                num = dD["NA-hybrid"] if "NA-hybrid" in dD else 0
+                cObj.setValue(num, "polymer_entity_instance_count_nucleic_acid_hybrid", ii)
                 #
-                d = rD['assemblyEntityCountByPolymerTypeD'][assemblyId]
-                num = d['Protein'] if 'Protein' in d else 0
-                cObj.setValue(num, 'polymer_entity_count_protein', ii)
-                num1 = d['DNA'] if 'DNA' in d else 0
-                cObj.setValue(num1, 'polymer_entity_count_DNA', ii)
-                num2 = d['RNA'] if 'RNA' in d else 0
-                cObj.setValue(num2, 'polymer_entity_count_RNA', ii)
-                cObj.setValue(num1 + num2, 'polymer_entity_count_nucleic_acid', ii)
-                num = d['NA-hybrid'] if 'NA-hybrid' in d else 0
-                cObj.setValue(num, 'polymer_entity_count_nucleic_acid_hybrid', ii)
+                dD = rD["assemblyEntityCountByPolymerTypeD"][assemblyId]
+                num = dD["Protein"] if "Protein" in dD else 0
+                cObj.setValue(num, "polymer_entity_count_protein", ii)
+                num1 = dD["DNA"] if "DNA" in dD else 0
+                cObj.setValue(num1, "polymer_entity_count_DNA", ii)
+                num2 = dD["RNA"] if "RNA" in dD else 0
+                cObj.setValue(num2, "polymer_entity_count_RNA", ii)
+                cObj.setValue(num1 + num2, "polymer_entity_count_nucleic_acid", ii)
+                num = dD["NA-hybrid"] if "NA-hybrid" in dD else 0
+                cObj.setValue(num, "polymer_entity_count_nucleic_acid_hybrid", ii)
                 #
-                d = rD['assemblyEntityCountByTypeD'][assemblyId]
-                num = d['polymer'] if 'polymer' in d else 0
-                cObj.setValue(num, 'polymer_entity_count', ii)
+                dD = rD["assemblyEntityCountByTypeD"][assemblyId]
+                num = dD["polymer"] if "polymer" in dD else 0
+                cObj.setValue(num, "polymer_entity_count", ii)
                 #
-                num = d['non-polymer'] if 'non-polymer' in d else 0
-                cObj.setValue(num, 'nonpolymer_entity_count', ii)
+                num = dD["non-polymer"] if "non-polymer" in dD else 0
+                cObj.setValue(num, "nonpolymer_entity_count", ii)
                 #
-                num = d['branched'] if 'branched' in d else 0
-                cObj.setValue(num, 'branched_entity_count', ii)
+                num = dD["branched"] if "branched" in dD else 0
+                cObj.setValue(num, "branched_entity_count", ii)
                 #
-                num = d['water'] if 'water' in d else 0
-                cObj.setValue(num, 'solvent_entity_count', ii)
+                num = dD["water"] if "water" in dD else 0
+                cObj.setValue(num, "solvent_entity_count", ii)
             #
             return
         except Exception as e:
-            logger.exception("For %s failing with %s" % (catName, str(e)))
+            logger.exception("For %s failing with %s", catName, str(e))
         return False
 
     def buildContainerAssemblyIds(self, dataContainer, catName, **kwargs):
@@ -956,82 +942,117 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
 
         """
+        logger.debug("Starting catName %s kwargs %r", catName, kwargs)
         try:
-            if not (dataContainer.exists('entry') and dataContainer.exists('pdbx_struct_assembly')):
+            if not (dataContainer.exists("entry") and dataContainer.exists("pdbx_struct_assembly")):
                 return False
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=['entry_id', 'assembly_id']))
+                dataContainer.append(DataCategory(catName, attributeNameList=["entry_id", "assembly_id"]))
             #
             cObj = dataContainer.getObj(catName)
 
-            tObj = dataContainer.getObj('entry')
-            entryId = tObj.getValue('id', 0)
-            cObj.setValue(entryId, 'entry_id', 0)
+            tObj = dataContainer.getObj("entry")
+            entryId = tObj.getValue("id", 0)
+            cObj.setValue(entryId, "entry_id", 0)
             #
-            tObj = dataContainer.getObj('pdbx_struct_assembly')
-            assemblyIdL = tObj.getAttributeValueList('id')
+            tObj = dataContainer.getObj("pdbx_struct_assembly")
+            assemblyIdL = tObj.getAttributeValueList("id")
             for ii, assemblyId in enumerate(assemblyIdL):
-                cObj.setValue(entryId, 'entry_id', ii)
-                cObj.setValue(assemblyId, 'assembly_id', ii)
+                cObj.setValue(entryId, "entry_id", ii)
+                cObj.setValue(assemblyId, "assembly_id", ii)
 
             #
             return True
         except Exception as e:
-            logger.exception("For %s failing with %s" % (catName, str(e)))
+            logger.exception("For %s failing with %s", catName, str(e))
         return False
 
     def addDepositedAssembly(self, dataContainer, catName, **kwargs):
         """ Add the deposited coordinates as a separate assembly labeled as 'deposited'.
 
         """
+        logger.debug("Starting catName %s kwargs %r", catName, kwargs)
         try:
-            if not dataContainer.exists('struct_asym'):
+            if not dataContainer.exists("struct_asym"):
                 return False
-            if not dataContainer.exists('pdbx_struct_assembly'):
-                dataContainer.append(DataCategory('pdbx_struct_assembly', attributeNameList=['id', 'details', 'method_details',
-                                                                                             'oligomeric_details', 'oligomeric_count',
-                                                                                             'rcsb_details', 'rcsb_candidate_assembly']))
-            if not dataContainer.exists('pdbx_struct_assembly_gen'):
-                dataContainer.append(DataCategory('pdbx_struct_assembly_gen', attributeNameList=['assembly_id', 'oper_expression', 'asym_id_list', 'ordinal']))
+            if not dataContainer.exists("pdbx_struct_assembly"):
+                dataContainer.append(
+                    DataCategory(
+                        "pdbx_struct_assembly",
+                        attributeNameList=["id", "details", "method_details", "oligomeric_details", "oligomeric_count", "rcsb_details", "rcsb_candidate_assembly"],
+                    )
+                )
+            if not dataContainer.exists("pdbx_struct_assembly_gen"):
+                dataContainer.append(DataCategory("pdbx_struct_assembly_gen", attributeNameList=["assembly_id", "oper_expression", "asym_id_list", "ordinal"]))
 
-            if not dataContainer.exists('pdbx_struct_oper_list'):
-                row = ['1', 'identity operation', '1_555', 'x, y, z', '1.0000000000', '0.0000000000', '0.0000000000',
-                       '0.0000000000', '0.0000000000', '1.0000000000', '0.0000000000', '0.0000000000',
-                       '0.0000000000', '0.0000000000', '1.0000000000', '0.0000000000']
-                atList = ['id', 'type', 'name', 'symmetry_operation', 'matrix[1][1]', 'matrix[1][2]', 'matrix[1][3]',
-                          'vector[1]', 'matrix[2][1]', 'matrix[2][2]', 'matrix[2][3]', 'vector[2]',
-                          'matrix[3][1]', 'matrix[3][2]', 'matrix[3][3]', 'vector[3]']
-                dataContainer.append(DataCategory('pdbx_struct_oper_list', attributeNameList=atList, rowList=[row]))
+            if not dataContainer.exists("pdbx_struct_oper_list"):
+                row = [
+                    "1",
+                    "identity operation",
+                    "1_555",
+                    "x, y, z",
+                    "1.0000000000",
+                    "0.0000000000",
+                    "0.0000000000",
+                    "0.0000000000",
+                    "0.0000000000",
+                    "1.0000000000",
+                    "0.0000000000",
+                    "0.0000000000",
+                    "0.0000000000",
+                    "0.0000000000",
+                    "1.0000000000",
+                    "0.0000000000",
+                ]
+                atList = [
+                    "id",
+                    "type",
+                    "name",
+                    "symmetry_operation",
+                    "matrix[1][1]",
+                    "matrix[1][2]",
+                    "matrix[1][3]",
+                    "vector[1]",
+                    "matrix[2][1]",
+                    "matrix[2][2]",
+                    "matrix[2][3]",
+                    "vector[2]",
+                    "matrix[3][1]",
+                    "matrix[3][2]",
+                    "matrix[3][3]",
+                    "vector[3]",
+                ]
+                dataContainer.append(DataCategory("pdbx_struct_oper_list", attributeNameList=atList, rowList=[row]))
 
             #
-            logger.debug("Add deposited assembly for %s" % dataContainer.getName())
-            cObj = dataContainer.getObj('struct_asym')
-            asymIdL = cObj.getAttributeValueList('id')
-            logger.debug("AsymIdL %r" % asymIdL)
+            logger.debug("Add deposited assembly for %s", dataContainer.getName())
+            cObj = dataContainer.getObj("struct_asym")
+            asymIdL = cObj.getAttributeValueList("id")
+            logger.debug("AsymIdL %r", asymIdL)
             #
             # Ordinal is added by subsequent attribure-level method.
-            tObj = dataContainer.getObj('pdbx_struct_assembly_gen')
+            tObj = dataContainer.getObj("pdbx_struct_assembly_gen")
             rowIdx = tObj.getRowCount()
-            tObj.setValue('deposited', 'assembly_id', rowIdx)
-            tObj.setValue('1', 'oper_expression', rowIdx)
-            tObj.setValue(','.join(asymIdL), 'asym_id_list', rowIdx)
+            tObj.setValue("deposited", "assembly_id", rowIdx)
+            tObj.setValue("1", "oper_expression", rowIdx)
+            tObj.setValue(",".join(asymIdL), "asym_id_list", rowIdx)
             #
-            tObj = dataContainer.getObj('pdbx_struct_assembly')
+            tObj = dataContainer.getObj("pdbx_struct_assembly")
             rowIdx = tObj.getRowCount()
-            tObj.setValue('deposited', 'id', rowIdx)
-            tObj.setValue('deposited_coordinates', 'details', rowIdx)
+            tObj.setValue("deposited", "id", rowIdx)
+            tObj.setValue("deposited_coordinates", "details", rowIdx)
             #
-            for atName in ['oligomeric_details', 'method_details', 'oligomeric_count']:
+            for atName in ["oligomeric_details", "method_details", "oligomeric_count"]:
                 if tObj.hasAttribute(atName):
-                    tObj.setValue('?', atName, rowIdx)
+                    tObj.setValue("?", atName, rowIdx)
             #
             #
             #
-            logger.debug("Full row is %r" % tObj.getRow(rowIdx))
+            logger.debug("Full row is %r", tObj.getRow(rowIdx))
             #
             return True
         except Exception as e:
-            logger.exception("For %s failing with %s" % (catName, str(e)))
+            logger.exception("For %s failing with %s", catName, str(e))
         return False
 
     def filterAssemblyDetails(self, dataContainer, catName, atName, **kwargs):
@@ -1043,105 +1064,125 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 'software_defined_assembly'
 
         """
-        mD = {'author_and_software_defined_assembly': 'author_and_software_defined_assembly',
-              'author_defined_assembly': 'author_defined_assembly',
-              'complete icosahedral assembly': 'author_and_software_defined_assembly',
-              'complete point assembly': 'author_and_software_defined_assembly',
-              'crystal asymmetric unit': 'software_defined_assembly',
-              'crystal asymmetric unit, crystal frame': 'software_defined_assembly',
-              'details': 'software_defined_assembly',
-              'helical asymmetric unit': 'software_defined_assembly',
-              'helical asymmetric unit, std helical frame': 'software_defined_assembly',
-              'icosahedral 23 hexamer': 'software_defined_assembly',
-              'icosahedral asymmetric unit': 'software_defined_assembly',
-              'icosahedral asymmetric unit, std point frame': 'software_defined_assembly',
-              'icosahedral pentamer': 'software_defined_assembly',
-              'pentasymmetron capsid unit': 'software_defined_assembly',
-              'point asymmetric unit': 'software_defined_assembly',
-              'point asymmetric unit, std point frame': 'software_defined_assembly',
-              'representative helical assembly': 'author_and_software_defined_assembly',
-              'software_defined_assembly': 'software_defined_assembly',
-              'trisymmetron capsid unit': 'software_defined_assembly',
-              'deposited_coordinates': 'software_defined_assembly'}
+        logger.debug("Starting catName %s atName %s kwargs %r", catName, atName, kwargs)
+        mD = {
+            "author_and_software_defined_assembly": "author_and_software_defined_assembly",
+            "author_defined_assembly": "author_defined_assembly",
+            "complete icosahedral assembly": "author_and_software_defined_assembly",
+            "complete point assembly": "author_and_software_defined_assembly",
+            "crystal asymmetric unit": "software_defined_assembly",
+            "crystal asymmetric unit, crystal frame": "software_defined_assembly",
+            "details": "software_defined_assembly",
+            "helical asymmetric unit": "software_defined_assembly",
+            "helical asymmetric unit, std helical frame": "software_defined_assembly",
+            "icosahedral 23 hexamer": "software_defined_assembly",
+            "icosahedral asymmetric unit": "software_defined_assembly",
+            "icosahedral asymmetric unit, std point frame": "software_defined_assembly",
+            "icosahedral pentamer": "software_defined_assembly",
+            "pentasymmetron capsid unit": "software_defined_assembly",
+            "point asymmetric unit": "software_defined_assembly",
+            "point asymmetric unit, std point frame": "software_defined_assembly",
+            "representative helical assembly": "author_and_software_defined_assembly",
+            "software_defined_assembly": "software_defined_assembly",
+            "trisymmetron capsid unit": "software_defined_assembly",
+            "deposited_coordinates": "software_defined_assembly",
+        }
         #
         try:
-            if not dataContainer.exists('pdbx_struct_assembly'):
+            if not dataContainer.exists("pdbx_struct_assembly"):
                 return False
 
-            logger.debug("Filter assembly details for %s" % dataContainer.getName())
-            tObj = dataContainer.getObj('pdbx_struct_assembly')
+            logger.debug("Filter assembly details for %s", dataContainer.getName())
+            tObj = dataContainer.getObj("pdbx_struct_assembly")
             if not tObj.hasAttribute(atName):
                 tObj.appendAttribute(atName)
             #
             for iRow in range(tObj.getRowCount()):
-                details = tObj.getValue('details', iRow)
+                details = tObj.getValue("details", iRow)
                 if details in mD:
-                    tObj.setValue(mD[details], 'rcsb_details', iRow)
+                    tObj.setValue(mD[details], "rcsb_details", iRow)
                 else:
-                    tObj.setValue('software_defined_assembly', 'rcsb_details', iRow)
-                logger.debug("Full row is %r" % tObj.getRow(iRow))
+                    tObj.setValue("software_defined_assembly", "rcsb_details", iRow)
+                # logger.debug("Full row is %r", tObj.getRow(iRow))
             return True
         except Exception as e:
-            logger.exception("For %s %s failing with %s" % (catName, atName, str(e)))
+            logger.exception("For %s %s failing with %s", catName, atName, str(e))
         return False
 
     def assignAssemblyCandidates(self, dataContainer, catName, atName, **kwargs):
         """ Flag candidate biological assemblies as 'author_defined_assembly' ad author_and_software_defined_assembly'
 
         """
-        mD = {'author_and_software_defined_assembly': 'author_and_software_defined_assembly',
-              'author_defined_assembly': 'author_defined_assembly',
-              'complete icosahedral assembly': 'author_and_software_defined_assembly',
-              'complete point assembly': 'author_and_software_defined_assembly',
-              'crystal asymmetric unit': 'software_defined_assembly',
-              'crystal asymmetric unit, crystal frame': 'software_defined_assembly',
-              'details': 'software_defined_assembly',
-              'helical asymmetric unit': 'software_defined_assembly',
-              'helical asymmetric unit, std helical frame': 'software_defined_assembly',
-              'icosahedral 23 hexamer': 'software_defined_assembly',
-              'icosahedral asymmetric unit': 'software_defined_assembly',
-              'icosahedral asymmetric unit, std point frame': 'software_defined_assembly',
-              'icosahedral pentamer': 'software_defined_assembly',
-              'pentasymmetron capsid unit': 'software_defined_assembly',
-              'point asymmetric unit': 'software_defined_assembly',
-              'point asymmetric unit, std point frame': 'software_defined_assembly',
-              'representative helical assembly': 'author_and_software_defined_assembly',
-              'software_defined_assembly': 'software_defined_assembly',
-              'trisymmetron capsid unit': 'software_defined_assembly',
-              'deposited_coordinates': 'software_defined_assembly'}
+        logger.debug("Starting catName %s atName %s kwargs %r", catName, atName, kwargs)
+        mD = {
+            "author_and_software_defined_assembly": "author_and_software_defined_assembly",
+            "author_defined_assembly": "author_defined_assembly",
+            "complete icosahedral assembly": "author_and_software_defined_assembly",
+            "complete point assembly": "author_and_software_defined_assembly",
+            "crystal asymmetric unit": "software_defined_assembly",
+            "crystal asymmetric unit, crystal frame": "software_defined_assembly",
+            "details": "software_defined_assembly",
+            "helical asymmetric unit": "software_defined_assembly",
+            "helical asymmetric unit, std helical frame": "software_defined_assembly",
+            "icosahedral 23 hexamer": "software_defined_assembly",
+            "icosahedral asymmetric unit": "software_defined_assembly",
+            "icosahedral asymmetric unit, std point frame": "software_defined_assembly",
+            "icosahedral pentamer": "software_defined_assembly",
+            "pentasymmetron capsid unit": "software_defined_assembly",
+            "point asymmetric unit": "software_defined_assembly",
+            "point asymmetric unit, std point frame": "software_defined_assembly",
+            "representative helical assembly": "author_and_software_defined_assembly",
+            "software_defined_assembly": "software_defined_assembly",
+            "trisymmetron capsid unit": "software_defined_assembly",
+            "deposited_coordinates": "software_defined_assembly",
+        }
         #
-        eD = {k: True for k in ['crystal asymmetric unit', 'crystal asymmetric unit, crystal frame', 'helical asymmetric unit',
-                                'helical asymmetric unit, std helical frame', 'icosahedral 23 hexamer', 'icosahedral asymmetric unit',
-                                'icosahedral asymmetric unit, std point frame', 'icosahedral pentamer', 'pentasymmetron capsid unit',
-                                'point asymmetric unit', 'point asymmetric unit, std point frame', 'trisymmetron capsid unit',
-                                'deposited_coordinates', 'details']}
+        eD = {
+            k: True
+            for k in [
+                "crystal asymmetric unit",
+                "crystal asymmetric unit, crystal frame",
+                "helical asymmetric unit",
+                "helical asymmetric unit, std helical frame",
+                "icosahedral 23 hexamer",
+                "icosahedral asymmetric unit",
+                "icosahedral asymmetric unit, std point frame",
+                "icosahedral pentamer",
+                "pentasymmetron capsid unit",
+                "point asymmetric unit",
+                "point asymmetric unit, std point frame",
+                "trisymmetron capsid unit",
+                "deposited_coordinates",
+                "details",
+            ]
+        }
         try:
-            if not dataContainer.exists('pdbx_struct_assembly'):
+            if not dataContainer.exists("pdbx_struct_assembly"):
                 return False
 
-            tObj = dataContainer.getObj('pdbx_struct_assembly')
+            tObj = dataContainer.getObj("pdbx_struct_assembly")
             if not tObj.hasAttribute(atName):
                 tObj.appendAttribute(atName)
             #
             for iRow in range(tObj.getRowCount()):
-                details = tObj.getValue('details', iRow)
+                details = tObj.getValue("details", iRow)
                 if details in mD and details not in eD:
-                    tObj.setValue('Y', 'rcsb_candidate_assembly', iRow)
+                    tObj.setValue("Y", "rcsb_candidate_assembly", iRow)
                 else:
-                    tObj.setValue('N', 'rcsb_candidate_assembly', iRow)
-                logger.debug("Full row is %r" % tObj.getRow(iRow))
+                    tObj.setValue("N", "rcsb_candidate_assembly", iRow)
+                # logger.debug("Full row is %r", tObj.getRow(iRow))
 
             #
             numAssemblies = tObj.getRowCount()
-            logger.debug("Assembly count is %d" % numAssemblies)
-            if dataContainer.exists('rcsb_entry_info'):
-                eiObj = dataContainer.getObj('rcsb_entry_info')
-                eiObj.setValue(numAssemblies, 'assembly_count', 0)
+            logger.debug("Assembly count is %d", numAssemblies)
+            if dataContainer.exists("rcsb_entry_info"):
+                eiObj = dataContainer.getObj("rcsb_entry_info")
+                eiObj.setValue(numAssemblies, "assembly_count", 0)
             #
             #
             return True
         except Exception as e:
-            logger.exception("For %s %s failing with %s" % (catName, atName, str(e)))
+            logger.exception("For %s %s failing with %s", catName, atName, str(e))
         return False
 
     def __getAttribList(self, sObj, atTupL):
@@ -1154,7 +1195,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     atSL.append(atS)
         return atSL, atL
 
-    def __normalizeCsvToList(self, entryId, colL, separator=','):
+    def __normalizeCsvToList(self, entryId, colL, separator=","):
         """ Normalize a row containing some character delimited fields.
 
             Expand list of uneven lists into unifornm list of lists.
@@ -1176,7 +1217,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             return [colL]
         # Report pathological cases ...
         if (len(tL) > 2) or (tL[0] != 1 and len(tL) == 2):
-            logger.error("%s integrated source data inconsistent %r colL" % (entryId, colL))
+            logger.error("%s integrated source data inconsistent %r colL", entryId, colL)
             return [colL]
         #
         # Expand the columns with uniform length
@@ -1188,7 +1229,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 tc = tc * maxL
             icL.append(tc)
         #
-        logger.debug("%s icL %r" % (entryId, icL))
+        logger.debug("%s icL %r", entryId, icL)
         # Convert back to a row list
         #
         iRow = 0
@@ -1244,99 +1285,121 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
         """
         #
-        hostCatName = 'rcsb_entity_host_organism'
+        hostCatName = "rcsb_entity_host_organism"
         try:
-            logger.debug("Starting with  %r %r" % (dataContainer.getName(), catName))
+            logger.debug("Starting with  %r %r", dataContainer.getName(), catName)
             if catName == hostCatName:
-                logger.debug("Skipping method for %r %r" % (dataContainer.getName(), catName))
+                logger.debug("Skipping method for %r %r", dataContainer.getName(), catName)
                 return True
             #
             # if there is no source information then exit
-            if not (dataContainer.exists('entity_src_gen') or dataContainer.exists('entity_src_nat') or dataContainer.exists('pdbx_entity_src_syn')):
+            if not (dataContainer.exists("entity_src_gen") or dataContainer.exists("entity_src_nat") or dataContainer.exists("pdbx_entity_src_syn")):
                 return False
             # Create the new target category
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=['entity_id',
-                                                                              'pdbx_src_id',
-                                                                              'source_type',
-                                                                              'scientific_name',
-                                                                              'common_name',
-                                                                              'ncbi_taxonomy_id',
-                                                                              'beg_seq_num',
-                                                                              'end_seq_num',
-                                                                              'provenance_code',
-                                                                              'ncbi_scientific_name',
-                                                                              'ncbi_parent_scientific_name',
-                                                                              'ncbi_common_names',
-                                                                              'taxonomy_lineage_id',
-                                                                              'taxonomy_lineage_name',
-                                                                              'taxonomy_lineage_depth']))
+                dataContainer.append(
+                    DataCategory(
+                        catName,
+                        attributeNameList=[
+                            "entity_id",
+                            "pdbx_src_id",
+                            "source_type",
+                            "scientific_name",
+                            "common_name",
+                            "ncbi_taxonomy_id",
+                            "beg_seq_num",
+                            "end_seq_num",
+                            "provenance_code",
+                            "ncbi_scientific_name",
+                            "ncbi_parent_scientific_name",
+                            "ncbi_common_names",
+                            "taxonomy_lineage_id",
+                            "taxonomy_lineage_name",
+                            "taxonomy_lineage_depth",
+                        ],
+                    )
+                )
             #
             if not dataContainer.exists(hostCatName):
-                dataContainer.append(DataCategory(hostCatName, attributeNameList=['entity_id',
-                                                                                  'pdbx_src_id',
-                                                                                  'scientific_name',
-                                                                                  'common_name',
-                                                                                  'ncbi_taxonomy_id',
-                                                                                  'beg_seq_num',
-                                                                                  'end_seq_num',
-                                                                                  'provenance_code',
-                                                                                  'ncbi_scientific_name',
-                                                                                  'ncbi_parent_scientific_name',
-                                                                                  'ncbi_common_names',
-                                                                                  'taxonomy_lineage_id',
-                                                                                  'taxonomy_lineage_name',
-                                                                                  'taxonomy_lineage_depth']))
+                dataContainer.append(
+                    DataCategory(
+                        hostCatName,
+                        attributeNameList=[
+                            "entity_id",
+                            "pdbx_src_id",
+                            "scientific_name",
+                            "common_name",
+                            "ncbi_taxonomy_id",
+                            "beg_seq_num",
+                            "end_seq_num",
+                            "provenance_code",
+                            "ncbi_scientific_name",
+                            "ncbi_parent_scientific_name",
+                            "ncbi_common_names",
+                            "taxonomy_lineage_id",
+                            "taxonomy_lineage_name",
+                            "taxonomy_lineage_depth",
+                        ],
+                    )
+                )
 
             #
-            if not self.__taxU:
-                self.__taxU = TaxonomyUtils(taxDirPath=self.__taxonomyDataPath)
+            rP = kwargs.get("resourceProvider")
+            taxU = rP.getResource("TaxonomyUtils instance") if rP else None
+            #
             cObj = dataContainer.getObj(catName)
             hObj = dataContainer.getObj(hostCatName)
             #
-            s1Obj = dataContainer.getObj('entity_src_gen')
-            atHTupL = [('entity_id', 'entity_id'),
-                       ('pdbx_host_org_scientific_name', 'scientific_name'),
-                       ('pdbx_host_org_common_name', 'common_name'),
-                       ('pdbx_host_org_ncbi_taxonomy_id', 'ncbi_taxonomy_id'),
-                       ('pdbx_src_id', 'pdbx_src_id'),
-                       ('pdbx_beg_seq_num', 'beg_seq_num'),
-                       ('pdbx_end_seq_num', 'end_seq_num')]
+            s1Obj = dataContainer.getObj("entity_src_gen")
+            atHTupL = [
+                ("entity_id", "entity_id"),
+                ("pdbx_host_org_scientific_name", "scientific_name"),
+                ("pdbx_host_org_common_name", "common_name"),
+                ("pdbx_host_org_ncbi_taxonomy_id", "ncbi_taxonomy_id"),
+                ("pdbx_src_id", "pdbx_src_id"),
+                ("pdbx_beg_seq_num", "beg_seq_num"),
+                ("pdbx_end_seq_num", "end_seq_num"),
+            ]
             atHSL, atHL = self.__getAttribList(s1Obj, atHTupL)
             #
-            at1TupL = [('entity_id', 'entity_id'),
-                       ('pdbx_gene_src_scientific_name', 'scientific_name'),
-                       ('gene_src_common_name', 'common_name'),
-                       ('pdbx_gene_src_ncbi_taxonomy_id', 'ncbi_taxonomy_id'),
-                       ('pdbx_src_id', 'pdbx_src_id'),
-                       ('pdbx_beg_seq_num', 'beg_seq_num'),
-                       ('pdbx_end_seq_num', 'end_seq_num')]
+            at1TupL = [
+                ("entity_id", "entity_id"),
+                ("pdbx_gene_src_scientific_name", "scientific_name"),
+                ("gene_src_common_name", "common_name"),
+                ("pdbx_gene_src_ncbi_taxonomy_id", "ncbi_taxonomy_id"),
+                ("pdbx_src_id", "pdbx_src_id"),
+                ("pdbx_beg_seq_num", "beg_seq_num"),
+                ("pdbx_end_seq_num", "end_seq_num"),
+            ]
             at1SL, at1L = self.__getAttribList(s1Obj, at1TupL)
             #
-            s2Obj = dataContainer.getObj('entity_src_nat')
-            at2TupL = [('entity_id', 'entity_id'),
-                       ('pdbx_organism_scientific', 'scientific_name'),
-                       ('nat_common_name', 'common_name'),
-                       ('pdbx_ncbi_taxonomy_id', 'ncbi_taxonomy_id'),
-                       ('pdbx_src_id', 'pdbx_src_id'),
-                       ('pdbx_beg_seq_num', 'beg_seq_num'),
-                       ('pdbx_end_seq_num', 'end_seq_num')
-                       ]
+            s2Obj = dataContainer.getObj("entity_src_nat")
+            at2TupL = [
+                ("entity_id", "entity_id"),
+                ("pdbx_organism_scientific", "scientific_name"),
+                ("nat_common_name", "common_name"),
+                ("pdbx_ncbi_taxonomy_id", "ncbi_taxonomy_id"),
+                ("pdbx_src_id", "pdbx_src_id"),
+                ("pdbx_beg_seq_num", "beg_seq_num"),
+                ("pdbx_end_seq_num", "end_seq_num"),
+            ]
             at2SL, at2L = self.__getAttribList(s2Obj, at2TupL)
             #
-            s3Obj = dataContainer.getObj('pdbx_entity_src_syn')
-            at3TupL = [('entity_id', 'entity_id'),
-                       ('organism_scientific', 'scientific_name'),
-                       ('organism_common_name', 'common_name'),
-                       ('ncbi_taxonomy_id', 'ncbi_taxonomy_id'),
-                       ('pdbx_src_id', 'pdbx_src_id'),
-                       ('beg_seq_num', 'beg_seq_num'),
-                       ('end_seq_num', 'end_seq_num')]
+            s3Obj = dataContainer.getObj("pdbx_entity_src_syn")
+            at3TupL = [
+                ("entity_id", "entity_id"),
+                ("organism_scientific", "scientific_name"),
+                ("organism_common_name", "common_name"),
+                ("ncbi_taxonomy_id", "ncbi_taxonomy_id"),
+                ("pdbx_src_id", "pdbx_src_id"),
+                ("beg_seq_num", "beg_seq_num"),
+                ("end_seq_num", "end_seq_num"),
+            ]
             at3SL, at3L = self.__getAttribList(s3Obj, at3TupL)
             #
-            eObj = dataContainer.getObj('entity')
-            entityIdL = eObj.getAttributeValueList('id')
-            pCode = 'PDB Primary Data'
+            eObj = dataContainer.getObj("entity")
+            entityIdL = eObj.getAttributeValueList("id")
+            pCode = "PDB Primary Data"
             #
             partCountD = {}
             srcL = []
@@ -1346,42 +1409,42 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 eL = []
                 tf = False
                 if s1Obj:
-                    sType = 'genetically engineered'
-                    vL = s1Obj.selectValueListWhere(at1SL, entityId, 'entity_id')
+                    sType = "genetically engineered"
+                    vL = s1Obj.selectValueListWhere(at1SL, entityId, "entity_id")
                     if vL:
                         for v in vL:
                             eL.append((entityId, sType, at1L, v))
-                        logger.debug("%r entity %r - %r" % (sType, entityId, vL))
+                        logger.debug("%r entity %r - %r", sType, entityId, vL)
                         partCountD[entityId] = len(eL)
                         srcL.extend(eL)
                         tf = True
                     #
-                    vL = s1Obj.selectValueListWhere(atHSL, entityId, 'entity_id')
+                    vL = s1Obj.selectValueListWhere(atHSL, entityId, "entity_id")
                     if vL:
                         for v in vL:
                             hostL.append((entityId, sType, atHL, v))
-                        logger.debug("%r entity %r - %r" % (sType, entityId, vL))
+                        logger.debug("%r entity %r - %r", sType, entityId, vL)
                     if tf:
                         continue
 
                 if s2Obj:
-                    sType = 'natural'
-                    vL = s2Obj.selectValueListWhere(at2SL, entityId, 'entity_id')
+                    sType = "natural"
+                    vL = s2Obj.selectValueListWhere(at2SL, entityId, "entity_id")
                     if vL:
                         for v in vL:
                             eL.append((entityId, sType, at2L, v))
-                        logger.debug("%r entity %r - %r" % (sType, entityId, vL))
+                        logger.debug("%r entity %r - %r", sType, entityId, vL)
                         partCountD[entityId] = len(eL)
                         srcL.extend(eL)
                         continue
 
                 if s3Obj:
-                    sType = 'synthetic'
-                    vL = s3Obj.selectValueListWhere(at3SL, entityId, 'entity_id')
+                    sType = "synthetic"
+                    vL = s3Obj.selectValueListWhere(at3SL, entityId, "entity_id")
                     if vL:
                         for v in vL:
                             eL.append((entityId, sType, at3L, v))
-                        logger.debug("%r entity %r - %r" % (sType, entityId, vL))
+                        logger.debug("%r entity %r - %r", sType, entityId, vL)
                         partCountD[entityId] = len(eL)
                         srcL.extend(eL)
                         continue
@@ -1389,129 +1452,113 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             iRow = 0
             entryTaxIdD = {}
             for (entityId, sType, atL, tv) in srcL:
-                ii = atL.index('ncbi_taxonomy_id') if 'ncbi_taxonomy_id' in atL else -1
-                if ii > 0 and len(tv[ii].split(',')) > 1:
+                ii = atL.index("ncbi_taxonomy_id") if "ncbi_taxonomy_id" in atL else -1
+                if ii > 0 and len(tv[ii].split(",")) > 1:
                     tvL = self.__normalizeCsvToList(dataContainer.getName(), tv)
-                    ii = atL.index('pdbx_src_id') if 'pdbx_src_id' in atL else -1
+                    ii = atL.index("pdbx_src_id") if "pdbx_src_id" in atL else -1
                     for jj, row in enumerate(tvL, 1):
                         row[ii] = str(jj)
                     partCountD[entityId] = len(tvL)
                 else:
                     tvL = [tv]
                 for v in tvL:
-                    cObj.setValue(sType, 'source_type', iRow)
-                    cObj.setValue(pCode, 'provenance_code', iRow)
+                    cObj.setValue(sType, "source_type", iRow)
+                    cObj.setValue(pCode, "provenance_code", iRow)
                     for ii, at in enumerate(atL):
                         cObj.setValue(v[ii], at, iRow)
                         # if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?'] and v[ii].isdigit():
-                        if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?']:
-                            taxId = int(self.__re_non_digit.sub('', v[ii]))
-                            taxId = self.__taxU.getMergedTaxId(taxId)
-                            cObj.setValue(str(taxId), 'ncbi_taxonomy_id', iRow)
+                        if at == "ncbi_taxonomy_id" and v[ii] and v[ii] not in [".", "?"]:
+                            taxId = int(self.__reNonDigit.sub("", v[ii]))
+                            taxId = taxU.getMergedTaxId(taxId)
+                            cObj.setValue(str(taxId), "ncbi_taxonomy_id", iRow)
                             entryTaxIdD[taxId] = entryTaxIdD[taxId] + 1 if taxId in entryTaxIdD else 1
                             #
-                            sn = self.__taxU.getScientificName(taxId)
+                            sn = taxU.getScientificName(taxId)
                             if sn:
-                                cObj.setValue(sn, 'ncbi_scientific_name', iRow)
+                                cObj.setValue(sn, "ncbi_scientific_name", iRow)
                             #
-                            psn = self.__taxU.getParentScientificName(taxId)
+                            psn = taxU.getParentScientificName(taxId)
                             if psn:
-                                cObj.setValue(psn, 'ncbi_parent_scientific_name', iRow)
+                                cObj.setValue(psn, "ncbi_parent_scientific_name", iRow)
                             #
-                            cnL = self.__taxU.getCommonNames(taxId)
+                            cnL = taxU.getCommonNames(taxId)
                             if cnL:
-                                cObj.setValue(';'.join(list(set(cnL))), 'ncbi_common_names', iRow)
+                                cObj.setValue(";".join(list(set(cnL))), "ncbi_common_names", iRow)
                             # Add lineage -
-                            linL = self.__taxU.getLineageWithNames(taxId)
+                            linL = taxU.getLineageWithNames(taxId)
                             if linL is not None:
-                                cObj.setValue(';'.join([str(tup[0]) for tup in linL]), 'taxonomy_lineage_depth', iRow)
-                                cObj.setValue(';'.join([str(tup[1]) for tup in linL]), 'taxonomy_lineage_id', iRow)
-                                cObj.setValue(';'.join([str(tup[2]) for tup in linL]), 'taxonomy_lineage_name', iRow)
+                                cObj.setValue(";".join([str(tup[0]) for tup in linL]), "taxonomy_lineage_depth", iRow)
+                                cObj.setValue(";".join([str(tup[1]) for tup in linL]), "taxonomy_lineage_id", iRow)
+                                cObj.setValue(";".join([str(tup[2]) for tup in linL]), "taxonomy_lineage_name", iRow)
                             else:
-                                logger.warning("%s taxId %r lineage %r" % (dataContainer.getName(), taxId, linL))
+                                logger.warning("%s taxId %r lineage %r", dataContainer.getName(), taxId, linL)
 
-                    logger.debug("%r entity %r - UPDATED %r %r" % (sType, entityId, atL, v))
+                    logger.debug("%r entity %r - UPDATED %r %r", sType, entityId, atL, v)
                     iRow += 1
             #
             iRow = 0
             for (entityId, sType, atL, tv) in hostL:
-                ii = atL.index('ncbi_taxonomy_id') if 'ncbi_taxonomy_id' in atL else -1
-                if ii > 0 and len(tv[ii].split(',')) > 1:
+                ii = atL.index("ncbi_taxonomy_id") if "ncbi_taxonomy_id" in atL else -1
+                if ii > 0 and len(tv[ii].split(",")) > 1:
                     tvL = self.__normalizeCsvToList(dataContainer.getName(), tv)
-                    ii = atL.index('pdbx_src_id') if 'pdbx_src_id' in atL else -1
+                    ii = atL.index("pdbx_src_id") if "pdbx_src_id" in atL else -1
                     for jj, row in enumerate(tvL, 1):
                         row[ii] = str(jj)
                     partCountD[entityId] = len(tvL)
                 else:
                     tvL = [tv]
                 for v in tvL:
-                    hObj.setValue(pCode, 'provenance_code', iRow)
+                    hObj.setValue(pCode, "provenance_code", iRow)
                     for ii, at in enumerate(atL):
                         hObj.setValue(v[ii], at, iRow)
                         #  if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?'] and v[ii].isdigit():
-                        if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?']:
-                            taxId = int(self.__re_non_digit.sub('', v[ii]))
-                            taxId = self.__taxU.getMergedTaxId(taxId)
-                            hObj.setValue(str(taxId), 'ncbi_taxonomy_id', iRow)
-                            sn = self.__taxU.getScientificName(taxId)
+                        if at == "ncbi_taxonomy_id" and v[ii] and v[ii] not in [".", "?"]:
+                            taxId = int(self.__reNonDigit.sub("", v[ii]))
+                            taxId = taxU.getMergedTaxId(taxId)
+                            hObj.setValue(str(taxId), "ncbi_taxonomy_id", iRow)
+                            sn = taxU.getScientificName(taxId)
                             if sn:
-                                hObj.setValue(sn, 'ncbi_scientific_name', iRow)
+                                hObj.setValue(sn, "ncbi_scientific_name", iRow)
                             #
-                            psn = self.__taxU.getParentScientificName(taxId)
+                            psn = taxU.getParentScientificName(taxId)
                             if psn:
-                                hObj.setValue(psn, 'ncbi_parent_scientific_name', iRow)
+                                hObj.setValue(psn, "ncbi_parent_scientific_name", iRow)
                             #
-                            cnL = self.__taxU.getCommonNames(taxId)
+                            cnL = taxU.getCommonNames(taxId)
                             if cnL:
-                                hObj.setValue(';'.join(list(set(cnL))), 'ncbi_common_names', iRow)
+                                hObj.setValue(";".join(list(set(cnL))), "ncbi_common_names", iRow)
                             # Add lineage -
-                            linL = self.__taxU.getLineageWithNames(taxId)
+                            linL = taxU.getLineageWithNames(taxId)
                             if linL is not None:
-                                hObj.setValue(';'.join([str(tup[0]) for tup in linL]), 'taxonomy_lineage_depth', iRow)
-                                hObj.setValue(';'.join([str(tup[1]) for tup in linL]), 'taxonomy_lineage_id', iRow)
-                                hObj.setValue(';'.join([str(tup[2]) for tup in linL]), 'taxonomy_lineage_name', iRow)
+                                hObj.setValue(";".join([str(tup[0]) for tup in linL]), "taxonomy_lineage_depth", iRow)
+                                hObj.setValue(";".join([str(tup[1]) for tup in linL]), "taxonomy_lineage_id", iRow)
+                                hObj.setValue(";".join([str(tup[2]) for tup in linL]), "taxonomy_lineage_name", iRow)
                             else:
-                                logger.warning("%s taxId %r lineage %r" % (dataContainer.getName(), taxId, linL))
-                    logger.debug("%r entity %r - UPDATED %r %r" % (sType, entityId, atL, v))
-                    iRow += 1
-            if 0:
-                iRow = 0
-                for (entityId, sType, atL, v) in hostL:
-                    hObj.setValue(pCode, 'provenance_code', iRow)
-                    for ii, at in enumerate(atL):
-                        hObj.setValue(v[ii], at, iRow)
-                        if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?'] and v[ii].isdigit():
-                            taxId = int(v[ii])
-                            sn = self.__taxU.getScientificName(taxId)
-                            if sn:
-                                hObj.setValue(sn, 'ncbi_scientific_name', iRow)
-                            cnL = self.__taxU.getCommonNames(taxId)
-                            if cnL:
-                                hObj.setValue(';'.join(list(set(cnL))), 'ncbi_common_names', iRow)
-                    logger.debug("%r entity %r - UPDATED %r %r" % (sType, entityId, atL, v))
+                                logger.warning("%s taxId %r lineage %r", dataContainer.getName(), taxId, linL)
+                    logger.debug("%r entity %r - UPDATED %r %r", sType, entityId, atL, v)
                     iRow += 1
             # -------------------------------------------------------------------------
             # Update entity attributes
             #    _entity.rcsb_multiple_source_flag
             #    _entity.rcsb_source_part_count
-            for atName in ['rcsb_source_part_count', 'rcsb_multiple_source_flag']:
+            for atName in ["rcsb_source_part_count", "rcsb_multiple_source_flag"]:
                 if not eObj.hasAttribute(atName):
                     eObj.appendAttribute(atName)
             #
             for ii in range(eObj.getRowCount()):
-                entityId = eObj.getValue('id', ii)
-                cFlag = 'Y' if partCountD[entityId] > 1 else 'N'
-                eObj.setValue(partCountD[entityId], 'rcsb_source_part_count', ii)
-                eObj.setValue(cFlag, 'rcsb_multiple_source_flag', ii)
+                entityId = eObj.getValue("id", ii)
+                cFlag = "Y" if partCountD[entityId] > 1 else "N"
+                eObj.setValue(partCountD[entityId], "rcsb_source_part_count", ii)
+                eObj.setValue(cFlag, "rcsb_multiple_source_flag", ii)
 
-            logger.debug("Entry taxonomy count is %d" % len(entryTaxIdD))
-            if dataContainer.exists('rcsb_entry_info'):
-                eiObj = dataContainer.getObj('rcsb_entry_info')
-                eiObj.setValue(len(entryTaxIdD), 'polymer_entity_taxonomy_count', 0)
+            logger.debug("Entry taxonomy count is %d", len(entryTaxIdD))
+            if dataContainer.exists("rcsb_entry_info"):
+                eiObj = dataContainer.getObj("rcsb_entry_info")
+                eiObj.setValue(len(entryTaxIdD), "polymer_entity_taxonomy_count", 0)
             #
             return True
         except Exception as e:
-            logger.exception("In %s for %s failing with %s" % (dataContainer.getName(), catName, str(e)))
+            logger.exception("In %s for %s failing with %s", dataContainer.getName(), catName, str(e))
         return False
 
     def consolidateAccessionDetails(self, dataContainer, catName, **kwargs):
@@ -1555,86 +1602,46 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         """
         ##
         try:
-            logger.debug("Starting with  %r %r" % (dataContainer.getName(), catName))
+            logger.debug("Starting with  %r %r %r", dataContainer.getName(), catName, kwargs)
             #
             # if there is incomplete accessioninformation then exit
-            if not (dataContainer.exists('pdbx_database_status') or dataContainer.exists('pdbx_audit_revision_history')):
+            if not (dataContainer.exists("pdbx_database_status") or dataContainer.exists("pdbx_audit_revision_history")):
                 return False
             # Create the new target category
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=['entry_id',
-                                                                              'status_code',
-                                                                              'deposit_date',
-                                                                              'initial_release_date',
-                                                                              'major_revision',
-                                                                              'minor_revision',
-                                                                              'revision_date']))
+                dataContainer.append(
+                    DataCategory(
+                        catName, attributeNameList=["entry_id", "status_code", "deposit_date", "initial_release_date", "major_revision", "minor_revision", "revision_date"]
+                    )
+                )
             #
             cObj = dataContainer.getObj(catName)
             #
-            tObj = dataContainer.getObj('pdbx_database_status')
-            entryId = tObj.getValue('entry_id', 0)
-            statusCode = tObj.getValue('status_code', 0)
-            depositDate = tObj.getValue('recvd_initial_deposition_date', 0)
+            tObj = dataContainer.getObj("pdbx_database_status")
+            entryId = tObj.getValue("entry_id", 0)
+            statusCode = tObj.getValue("status_code", 0)
+            depositDate = tObj.getValue("recvd_initial_deposition_date", 0)
             #
-            cObj.setValue(entryId, 'entry_id', 0)
-            cObj.setValue(statusCode, 'status_code', 0)
-            cObj.setValue(depositDate, 'deposit_date', 0)
+            cObj.setValue(entryId, "entry_id", 0)
+            cObj.setValue(statusCode, "status_code", 0)
+            cObj.setValue(depositDate, "deposit_date", 0)
             #
-            tObj = dataContainer.getObj('pdbx_audit_revision_history')
+            tObj = dataContainer.getObj("pdbx_audit_revision_history")
             nRows = tObj.getRowCount()
             # Assuming the default sorting order from the release module -
-            releaseDate = tObj.getValue('revision_date', 0)
-            minorRevision = tObj.getValue('minor_revision', nRows - 1)
-            majorRevision = tObj.getValue('major_revision', nRows - 1)
-            revisionDate = tObj.getValue('revision_date', nRows - 1)
-            cObj.setValue(releaseDate, 'initial_release_date', 0)
-            cObj.setValue(minorRevision, 'minor_revision', 0)
-            cObj.setValue(majorRevision, 'major_revision', 0)
-            cObj.setValue(revisionDate, 'revision_date', 0)
+            releaseDate = tObj.getValue("revision_date", 0)
+            minorRevision = tObj.getValue("minor_revision", nRows - 1)
+            majorRevision = tObj.getValue("major_revision", nRows - 1)
+            revisionDate = tObj.getValue("revision_date", nRows - 1)
+            cObj.setValue(releaseDate, "initial_release_date", 0)
+            cObj.setValue(minorRevision, "minor_revision", 0)
+            cObj.setValue(majorRevision, "major_revision", 0)
+            cObj.setValue(revisionDate, "revision_date", 0)
             #
             return True
         except Exception as e:
-            logger.exception("In %s for %s failing with %s" % (dataContainer.getName(), catName, str(e)))
+            logger.exception("In %s for %s failing with %s", dataContainer.getName(), catName, str(e))
         return False
-
-    def __fetchDrugBankMapping(self, filePath, workPath='.'):
-        """
-
-        """
-        if self.__drugBankMappingDict:
-            return self.__drugBankMappingDict
-        rD = {}
-        try:
-            if not filePath:
-                return rD
-            mU = MarshalUtil(workPath=workPath)
-            rD = mU.doImport(filePath, format="json")
-            logger.debug("Fetching DrugBank mapping length %d" % len(rD))
-            self.__drugBankMappingDict = rD
-            return rD
-        except Exception as e:
-            logger.exception("For %s failing with %s" % (filePath, str(e)))
-        return rD
-
-    def __fetchCsdModelMapping(self, filePath, workPath='.'):
-        """
-
-        """
-        if self.__csdModelMappingDict:
-            return self.__csdModelMappingDict
-        rD = {}
-        try:
-            if not filePath:
-                return rD
-            mU = MarshalUtil(workPath=workPath)
-            rD = mU.doImport(filePath, format="json")
-            logger.debug("Fetching CSD model length %d" % len(rD))
-            self.__csdModelMappingDict = rD
-            return rD
-        except Exception as e:
-            logger.exception("For %s failing with %s" % (filePath, str(e)))
-        return rD
 
     def addChemCompRelated(self, dataContainer, catName, **kwargs):
         """
@@ -1650,100 +1657,90 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
              ATP 1 DrugBank DB00171 'assigned by resource'
         """
         try:
-            logger.debug("Starting with  %r %r" % (dataContainer.getName(), catName))
+            logger.debug("Starting with  %r %r", dataContainer.getName(), catName)
             # Exit if source categories are missing
-            if not (dataContainer.exists('chem_comp_atom') and dataContainer.exists('chem_comp_bond')):
+            if not (dataContainer.exists("chem_comp_atom") and dataContainer.exists("chem_comp_bond")):
                 return False
-
-            #
-            dbD = self.__fetchDrugBankMapping(self.__drugBankMappingFilePath, workPath=self.__workPath)
-            #
-            ccId = dataContainer.getName()
-            #
-            dbMapD = dbD['id_map']
-            inKeyD = dbD['inchikey_map']
-            logger.debug("inKeyD length is %d" % len(inKeyD))
-            dbId = None
-            mType = None
-            #
-            if dataContainer.exists('rcsb_chem_comp_descriptor'):
-                ccIObj = dataContainer.getObj('rcsb_chem_comp_descriptor')
-
-                if ccIObj.hasAttribute('InChIKey'):
-                    inky = ccIObj.getValue('InChIKey', 0)
-                    logger.debug("inKeyD length is %d testing %r" % (len(inKeyD), inky))
-                    if inky in inKeyD:
-                        logger.debug("Matching inchikey for %s" % ccId)
-                        dbId = inKeyD[inky][0]['drugbank_id']
-                        mType = 'matching InChIKey'
-            #
-
-            if not dbId and dbMapD and dataContainer.getName() in dbMapD:
-                dbId = dbMapD[ccId]["drugbank_id"]
-                mType = 'assigned by resource'
-                logger.debug("Matching db assignment for %s" % ccId)
-
-            if dbId:
+            rP = kwargs.get("resourceProvider")
+            #  ------------ ----------------------- ----------------------- ----------------------- -----------
+            dbD = rP.getResource("DrugBank accession mapping") if rP else None
+            if dbD:
+                ccId = dataContainer.getName()
                 #
-                if dataContainer.exists('rcsb_chem_comp_container_identifiers'):
-                    tObj = dataContainer.getObj('rcsb_chem_comp_container_identifiers')
-                    if not tObj.hasAttribute('drugbank_id'):
-                        tObj.appendAttribute('drugbank_id')
-                    tObj.setValue(dbId, 'drugbank_id', 0)
-
+                dbMapD = dbD["id_map"]
+                inKeyD = dbD["inchikey_map"]
+                logger.debug("inKeyD length is %d", len(inKeyD))
+                dbId = None
+                mType = None
                 #
-                if not dataContainer.exists(catName):
-                    dataContainer.append(DataCategory(catName, attributeNameList=['comp_id',
-                                                                                  'ordinal',
-                                                                                  'resource_name',
-                                                                                  'resource_accession_code',
-                                                                                  'related_mapping_method']))
-                wObj = dataContainer.getObj(catName)
-                logger.debug("Using DrugBank mapping length %d" % len(dbMapD))
-                rL = wObj.selectIndices('DrugBank', 'resource_name')
-                if rL:
-                    ok = wObj.removeRows(rL)
-                    if not ok:
-                        logger.debug("Error removing rows in %r %r" % (catName, rL))
-                iRow = wObj.getRowCount()
-                wObj.setValue(ccId, 'comp_id', iRow)
-                wObj.setValue(iRow + 1, 'ordinal', iRow)
-                wObj.setValue('DrugBank', 'resource_name', iRow)
-                wObj.setValue(dbId, 'resource_accession_code', iRow)
-                wObj.setValue(mType, 'related_mapping_method', iRow)
+                if dataContainer.exists("rcsb_chem_comp_descriptor"):
+                    ccIObj = dataContainer.getObj("rcsb_chem_comp_descriptor")
+
+                    if ccIObj.hasAttribute("InChIKey"):
+                        inky = ccIObj.getValue("InChIKey", 0)
+                        logger.debug("inKeyD length is %d testing %r", len(inKeyD), inky)
+                        if inky in inKeyD:
+                            logger.debug("Matching inchikey for %s", ccId)
+                            dbId = inKeyD[inky][0]["drugbank_id"]
+                            mType = "matching InChIKey"
+                #
+
+                if not dbId and dbMapD and dataContainer.getName() in dbMapD:
+                    dbId = dbMapD[ccId]["drugbank_id"]
+                    mType = "assigned by resource"
+                    logger.debug("Matching db assignment for %s", ccId)
+
+                if dbId:
+                    #
+                    if dataContainer.exists("rcsb_chem_comp_container_identifiers"):
+                        tObj = dataContainer.getObj("rcsb_chem_comp_container_identifiers")
+                        if not tObj.hasAttribute("drugbank_id"):
+                            tObj.appendAttribute("drugbank_id")
+                        tObj.setValue(dbId, "drugbank_id", 0)
+
+                    #
+                    if not dataContainer.exists(catName):
+                        dataContainer.append(DataCategory(catName, attributeNameList=["comp_id", "ordinal", "resource_name", "resource_accession_code", "related_mapping_method"]))
+                    wObj = dataContainer.getObj(catName)
+                    logger.debug("Using DrugBank mapping length %d", len(dbMapD))
+                    rL = wObj.selectIndices("DrugBank", "resource_name")
+                    if rL:
+                        ok = wObj.removeRows(rL)
+                        if not ok:
+                            logger.debug("Error removing rows in %r %r", catName, rL)
+                    iRow = wObj.getRowCount()
+                    wObj.setValue(ccId, "comp_id", iRow)
+                    wObj.setValue(iRow + 1, "ordinal", iRow)
+                    wObj.setValue("DrugBank", "resource_name", iRow)
+                    wObj.setValue(dbId, "resource_accession_code", iRow)
+                    wObj.setValue(mType, "related_mapping_method", iRow)
             #
-            #
-            csdMapD = self.__fetchCsdModelMapping(self.__csdModelMappingFilePath, workPath=self.__workPath)
-            self.__csdModelMappingDict = csdMapD
+            #  ------------ ----------------------- ----------------------- ----------------------- -----------
+            csdMapD = rP.getResource("CCDC accession mapping") if rP else None
             #
             if csdMapD and dataContainer.getName() in csdMapD:
                 if not dataContainer.exists(catName):
-                    dataContainer.append(DataCategory(catName, attributeNameList=['comp_id',
-                                                                                  'ordinal',
-                                                                                  'resource_name',
-                                                                                  'resource_accession_code',
-                                                                                  'related_mapping_method']))
+                    dataContainer.append(DataCategory(catName, attributeNameList=["comp_id", "ordinal", "resource_name", "resource_accession_code", "related_mapping_method"]))
                 wObj = dataContainer.getObj(catName)
-                self.__csdModelMappingDict = csdMapD
-                logger.debug("Using CSD model mapping length %d" % len(csdMapD))
+                logger.debug("Using CSD model mapping length %d", len(csdMapD))
                 ccId = dataContainer.getName()
                 dbId = csdMapD[ccId][0]["db_code"]
-                rL = wObj.selectIndices('CCDC/CSD', 'resource_name')
+                rL = wObj.selectIndices("CCDC/CSD", "resource_name")
                 if rL:
                     ok = wObj.removeRows(rL)
                     if not ok:
-                        logger.debug("Error removing rows in %r %r" % (catName, rL))
+                        logger.debug("Error removing rows in %r %r", catName, rL)
                 iRow = wObj.getRowCount()
-                wObj.setValue(ccId, 'comp_id', iRow)
-                wObj.setValue(iRow + 1, 'ordinal', iRow)
-                wObj.setValue('CCDC/CSD', 'resource_name', iRow)
-                wObj.setValue(dbId, 'resource_accession_code', iRow)
-                wObj.setValue('assigned by PDB', 'related_mapping_method', iRow)
+                wObj.setValue(ccId, "comp_id", iRow)
+                wObj.setValue(iRow + 1, "ordinal", iRow)
+                wObj.setValue("CCDC/CSD", "resource_name", iRow)
+                wObj.setValue(dbId, "resource_accession_code", iRow)
+                wObj.setValue("assigned by PDB", "related_mapping_method", iRow)
             #
 
             return True
         except Exception as e:
-            logger.exception("For %s failing with %s" % (catName, str(e)))
+            logger.exception("For %s failing with %s", catName, str(e))
         return False
 
     def addChemCompTargets(self, dataContainer, catName, **kwargs):
@@ -1776,58 +1773,69 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
         """
         try:
-            logger.debug("Starting with  %r %r" % (dataContainer.getName(), catName))
+            logger.debug("Starting with  %r %r", dataContainer.getName(), catName)
             # Exit if source categories are missing
-            if not (dataContainer.exists('chem_comp_atom') and dataContainer.exists('chem_comp_bond')):
+            if not (dataContainer.exists("chem_comp_atom") and dataContainer.exists("chem_comp_bond")):
                 return False
 
             #
-            dbD = self.__fetchDrugBankMapping(self.__drugBankMappingFilePath, workPath=self.__workPath)
-            dbMapD = dbD['id_map']
+            rP = kwargs.get("resourceProvider")
+            dbD = rP.getResource("DrugBank accession mapping") if rP else None
+            if not dbD:
+                return False
+
+            dbMapD = dbD["id_map"] if "id_map" in dbD else None
             #
             ccId = dataContainer.getName()
-            if dbMapD and ccId in dbMapD and 'target_interactions' in dbMapD[ccId]:
+            if dbMapD and ccId in dbMapD and "target_interactions" in dbMapD[ccId]:
                 #
                 # Create the new target category
                 if not dataContainer.exists(catName):
-                    dataContainer.append(DataCategory(catName, attributeNameList=['comp_id',
-                                                                                  'ordinal',
-                                                                                  'name',
-                                                                                  'interaction_type',
-                                                                                  'target_actions',
-                                                                                  'organism_common_name',
-                                                                                  'reference_database_name',
-                                                                                  'reference_database_accession_code',
-                                                                                  'provenance_code']))
+                    dataContainer.append(
+                        DataCategory(
+                            catName,
+                            attributeNameList=[
+                                "comp_id",
+                                "ordinal",
+                                "name",
+                                "interaction_type",
+                                "target_actions",
+                                "organism_common_name",
+                                "reference_database_name",
+                                "reference_database_accession_code",
+                                "provenance_code",
+                            ],
+                        )
+                    )
                 wObj = dataContainer.getObj(catName)
-                logger.debug("Using DrugBank mapping length %d" % len(dbMapD))
-                rL = wObj.selectIndices('DrugBank', 'provenance_code')
+                logger.debug("Using DrugBank mapping length %d", len(dbMapD))
+                rL = wObj.selectIndices("DrugBank", "provenance_code")
                 if rL:
                     ok = wObj.removeRows(rL)
                     if not ok:
-                        logger.debug("Error removing rows in %r %r" % (catName, rL))
+                        logger.debug("Error removing rows in %r %r", catName, rL)
                 #
                 iRow = wObj.getRowCount()
                 iRow = wObj.getRowCount()
-                for tD in dbMapD[ccId]['target_interactions']:
-                    wObj.setValue(ccId, 'comp_id', iRow)
-                    wObj.setValue(iRow + 1, 'ordinal', iRow)
-                    wObj.setValue(tD['name'], 'name', iRow)
-                    wObj.setValue(tD['type'], 'interaction_type', iRow)
-                    if 'actions' in tD and len(tD['actions']) > 0:
-                        wObj.setValue(';'.join(tD['actions']), 'target_actions', iRow)
-                    if 'organism' in tD:
-                        wObj.setValue(tD['organism'], 'organism_common_name', iRow)
-                    if 'uniprot_ids' in tD:
-                        wObj.setValue('UniProt', 'reference_database_name', iRow)
-                        wObj.setValue(tD['uniprot_ids'], 'reference_database_accession_code', iRow)
-                    wObj.setValue('DrugBank', 'provenance_code', iRow)
+                for tD in dbMapD[ccId]["target_interactions"]:
+                    wObj.setValue(ccId, "comp_id", iRow)
+                    wObj.setValue(iRow + 1, "ordinal", iRow)
+                    wObj.setValue(tD["name"], "name", iRow)
+                    wObj.setValue(tD["type"], "interaction_type", iRow)
+                    if "actions" in tD and tD["actions"]:
+                        wObj.setValue(";".join(tD["actions"]), "target_actions", iRow)
+                    if "organism" in tD:
+                        wObj.setValue(tD["organism"], "organism_common_name", iRow)
+                    if "uniprot_ids" in tD:
+                        wObj.setValue("UniProt", "reference_database_name", iRow)
+                        wObj.setValue(tD["uniprot_ids"], "reference_database_accession_code", iRow)
+                    wObj.setValue("DrugBank", "provenance_code", iRow)
                     iRow += 1
 
             #
             return True
         except Exception as e:
-            logger.exception("For %s failing with %s" % (catName, str(e)))
+            logger.exception("For %s failing with %s", catName, str(e))
         return False
 
     def addChemCompInfo(self, dataContainer, catName, **kwargs):
@@ -1841,31 +1849,27 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
              _rcsb_chem_comp_info.atom_count_heavy         6
         """
         try:
-            logger.debug("Starting with  %r %r" % (dataContainer.getName(), catName))
+            logger.debug("Starting with  %r %r %r", dataContainer.getName(), catName, kwargs)
             # Exit if source categories are missing
-            if not dataContainer.exists('chem_comp'):
+            if not dataContainer.exists("chem_comp"):
                 return False
-            ccObj = dataContainer.getObj('chem_comp')
-            if not ccObj.hasAttribute('pdbx_release_status'):
+            ccObj = dataContainer.getObj("chem_comp")
+            if not ccObj.hasAttribute("pdbx_release_status"):
                 return False
-            ccId = ccObj.getValue('id', 0)
+            ccId = ccObj.getValue("id", 0)
             #
             # Create the new target category
             #
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=['comp_id',
-                                                                              'atom_count',
-                                                                              'atom_count_heavy',
-                                                                              'atom_count_chiral',
-                                                                              'bond_count',
-                                                                              'bond_count_aromatic'
-                                                                              ]))
+                dataContainer.append(
+                    DataCategory(catName, attributeNameList=["comp_id", "atom_count", "atom_count_heavy", "atom_count_chiral", "bond_count", "bond_count_aromatic"])
+                )
             # -------
-            cN = 'rcsb_chem_comp_container_identifiers'
+            cN = "rcsb_chem_comp_container_identifiers"
             if not dataContainer.exists(cN):
-                dataContainer.append(DataCategory(cN, attributeNameList=['comp_id']))
+                dataContainer.append(DataCategory(cN, attributeNameList=["comp_id"]))
             idObj = dataContainer.getObj(cN)
-            idObj.setValue(ccId, 'comp_id', 0)
+            idObj.setValue(ccId, "comp_id", 0)
             #
             # -------
             wObj = dataContainer.getObj(catName)
@@ -1874,48 +1878,48 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             numAtomsHeavy = 0
             numAtomsChiral = 0
             try:
-                cObj = dataContainer.getObj('chem_comp_atom')
+                cObj = dataContainer.getObj("chem_comp_atom")
                 numAtoms = cObj.getRowCount()
                 numAtomsHeavy = 0
                 numAtomsChiral = 0
                 for ii in range(numAtoms):
-                    el = cObj.getValue('type_symbol', ii)
-                    if el != 'H':
+                    el = cObj.getValue("type_symbol", ii)
+                    if el != "H":
                         numAtomsHeavy += 1
-                    chFlag = cObj.getValue('pdbx_stereo_config', ii)
-                    if chFlag != 'N':
+                    chFlag = cObj.getValue("pdbx_stereo_config", ii)
+                    if chFlag != "N":
                         numAtomsChiral += 1
             except Exception:
-                logger.warning("Missing chem_comp_atom category for %s" % ccId)
+                logger.warning("Missing chem_comp_atom category for %s", ccId)
                 numAtoms = 0
                 numAtomsHeavy = 0
                 numAtomsChiral = 0
             #
-            wObj.setValue(ccId, 'comp_id', 0)
-            wObj.setValue(numAtoms, 'atom_count', 0)
-            wObj.setValue(numAtomsChiral, 'atom_count_chiral', 0)
-            wObj.setValue(numAtomsHeavy, 'atom_count_heavy', 0)
+            wObj.setValue(ccId, "comp_id", 0)
+            wObj.setValue(numAtoms, "atom_count", 0)
+            wObj.setValue(numAtomsChiral, "atom_count_chiral", 0)
+            wObj.setValue(numAtomsHeavy, "atom_count_heavy", 0)
             #
             #  ------
             numBonds = 0
             numBondsAro = 0
             try:
-                cObj = dataContainer.getObj('chem_comp_bond')
+                cObj = dataContainer.getObj("chem_comp_bond")
                 numBonds = cObj.getRowCount()
                 numBondsAro = 0
                 for ii in range(numAtoms):
-                    aroFlag = cObj.getValue('pdbx_aromatic_flag', ii)
-                    if aroFlag != 'N':
+                    aroFlag = cObj.getValue("pdbx_aromatic_flag", ii)
+                    if aroFlag != "N":
                         numBondsAro += 1
             except Exception:
                 pass
             #
-            wObj.setValue(numBonds, 'bond_count', 0)
-            wObj.setValue(numBondsAro, 'bond_count_aromatic', 0)
+            wObj.setValue(numBonds, "bond_count", 0)
+            wObj.setValue(numBondsAro, "bond_count_aromatic", 0)
             #
             return True
         except Exception as e:
-            logger.exception("For %s failing with %s" % (catName, str(e)))
+            logger.exception("For %s failing with %s", catName, str(e))
         return False
 
     def addChemCompDescriptor(self, dataContainer, catName, **kwargs):
@@ -1944,43 +1948,39 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
              _rcsb_chem_comp_descriptor.InChIKey                'ZKHQWZAMYRWXGA-KQYNXXCUSA-N'
         """
         try:
-            logger.debug("Starting with  %r %r" % (dataContainer.getName(), catName))
+            logger.debug("Starting with  %r %r %r", dataContainer.getName(), catName, kwargs)
             # Exit if source categories are missing
-            if not (dataContainer.exists('chem_comp') and dataContainer.exists('pdbx_chem_comp_descriptor')):
+            if not (dataContainer.exists("chem_comp") and dataContainer.exists("pdbx_chem_comp_descriptor")):
                 return False
             #
             # Create the new target category
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=['comp_id',
-                                                                              'SMILES',
-                                                                              'SMILES_stereo',
-                                                                              'InChI',
-                                                                              'InChIKey']))
+                dataContainer.append(DataCategory(catName, attributeNameList=["comp_id", "SMILES", "SMILES_stereo", "InChI", "InChIKey"]))
             #
             wObj = dataContainer.getObj(catName)
-            ccIObj = dataContainer.getObj('pdbx_chem_comp_descriptor')
+            ccIObj = dataContainer.getObj("pdbx_chem_comp_descriptor")
             iRow = 0
-            ccId = ''
+            ccId = ""
             for ii in range(ccIObj.getRowCount()):
-                ccId = ccIObj.getValue('comp_id', ii)
-                nm = ccIObj.getValue('descriptor', ii)
-                prog = ccIObj.getValue('program', ii)
-                typ = ccIObj.getValue('type', ii)
+                ccId = ccIObj.getValue("comp_id", ii)
+                nm = ccIObj.getValue("descriptor", ii)
+                prog = ccIObj.getValue("program", ii)
+                typ = ccIObj.getValue("type", ii)
                 #
-                if typ == 'SMILES_CANONICAL' and prog == "CACTVS":
-                    wObj.setValue(nm, 'SMILES_stereo', iRow)
-                elif typ == 'SMILES' and prog == "CACTVS":
-                    wObj.setValue(nm, 'SMILES', iRow)
-                elif typ == 'InChI' and prog == "InChI":
-                    wObj.setValue(nm, 'InChI', iRow)
-                elif typ == 'InChIKey' and prog == "InChI":
-                    wObj.setValue(nm, 'InChIKey', iRow)
+                if typ == "SMILES_CANONICAL" and prog == "CACTVS":
+                    wObj.setValue(nm, "SMILES_stereo", iRow)
+                elif typ == "SMILES" and prog == "CACTVS":
+                    wObj.setValue(nm, "SMILES", iRow)
+                elif typ == "InChI" and prog == "InChI":
+                    wObj.setValue(nm, "InChI", iRow)
+                elif typ == "InChIKey" and prog == "InChI":
+                    wObj.setValue(nm, "InChIKey", iRow)
             #
-            wObj.setValue(ccId, 'comp_id', iRow)
+            wObj.setValue(ccId, "comp_id", iRow)
             #
             return True
         except Exception as e:
-            logger.exception("For %s failing with %s" % (catName, str(e)))
+            logger.exception("For %s failing with %s", catName, str(e))
         return False
 
     def addChemCompSynonyms(self, dataContainer, catName, **kwargs):
@@ -2010,17 +2010,14 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
         """
         try:
-            logger.debug("Starting with  %r %r" % (dataContainer.getName(), catName))
-            if not (dataContainer.exists('chem_comp') and dataContainer.exists('pdbx_chem_comp_identifier')):
+            logger.debug("Starting with  %r %r", dataContainer.getName(), catName)
+            if not (dataContainer.exists("chem_comp") and dataContainer.exists("pdbx_chem_comp_identifier")):
                 return False
             #
             #
             # Create the new target category
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=['comp_id',
-                                                                              'ordinal',
-                                                                              'name',
-                                                                              'provenance_code']))
+                dataContainer.append(DataCategory(catName, attributeNameList=["comp_id", "ordinal", "name", "provenance_code"]))
             else:
                 # remove the rowlist -
                 pass
@@ -2030,53 +2027,55 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             # Get all of the names relevant names from the definition -
             #
             iRow = 0
-            provCode = 'PDB Reference Data'
-            ccObj = dataContainer.getObj('chem_comp')
-            ccId = ccObj.getValue('id', 0)
-            ccName = ccObj.getValue('name', 0)
+            provCode = "PDB Reference Data"
+            ccObj = dataContainer.getObj("chem_comp")
+            ccId = ccObj.getValue("id", 0)
+            ccName = ccObj.getValue("name", 0)
             ccSynonymL = []
-            if ccObj.hasAttribute('pdbx_synonyms'):
-                ccSynonymL = str(ccObj.getValue('pdbx_synonyms', 0)).split(';')
+            if ccObj.hasAttribute("pdbx_synonyms"):
+                ccSynonymL = str(ccObj.getValue("pdbx_synonyms", 0)).split(";")
             #
-            wObj.setValue(ccId, 'comp_id', iRow)
-            wObj.setValue(ccName, 'name', iRow)
-            wObj.setValue(iRow + 1, 'ordinal', iRow)
-            wObj.setValue(provCode, 'provenance_code', iRow)
+            wObj.setValue(ccId, "comp_id", iRow)
+            wObj.setValue(ccName, "name", iRow)
+            wObj.setValue(iRow + 1, "ordinal", iRow)
+            wObj.setValue(provCode, "provenance_code", iRow)
             iRow += 1
             for nm in ccSynonymL:
-                if nm in ['?', '.']:
+                if nm in ["?", "."]:
                     continue
-                wObj.setValue(ccId, 'comp_id', iRow)
-                wObj.setValue(nm, 'name', iRow)
-                wObj.setValue(iRow + 1, 'ordinal', iRow)
-                wObj.setValue(provCode, 'provenance_code', iRow)
+                wObj.setValue(ccId, "comp_id", iRow)
+                wObj.setValue(nm, "name", iRow)
+                wObj.setValue(iRow + 1, "ordinal", iRow)
+                wObj.setValue(provCode, "provenance_code", iRow)
                 iRow += 1
             #
-            ccIObj = dataContainer.getObj('pdbx_chem_comp_identifier')
+            ccIObj = dataContainer.getObj("pdbx_chem_comp_identifier")
             for ii in range(ccIObj.getRowCount()):
-                nm = ccIObj.getValue('identifier', ii)
-                prog = ccIObj.getValue('program', ii)
-                wObj.setValue(ccId, 'comp_id', iRow)
-                wObj.setValue(nm, 'name', iRow)
-                wObj.setValue(iRow + 1, 'ordinal', iRow)
-                wObj.setValue(prog, 'provenance_code', iRow)
+                nm = ccIObj.getValue("identifier", ii)
+                prog = ccIObj.getValue("program", ii)
+                wObj.setValue(ccId, "comp_id", iRow)
+                wObj.setValue(nm, "name", iRow)
+                wObj.setValue(iRow + 1, "ordinal", iRow)
+                wObj.setValue(prog, "provenance_code", iRow)
                 iRow += 1
             #
-            dbD = self.__fetchDrugBankMapping(self.__drugBankMappingFilePath, workPath=self.__workPath)
-            dbMapD = dbD['id_map']
-            #
-            if dbMapD and ccId in dbMapD and 'aliases' in dbMapD[ccId]:
-                iRow = wObj.getRowCount()
-                for nm in dbMapD[ccId]['aliases']:
-                    wObj.setValue(ccId, 'comp_id', iRow)
-                    wObj.setValue(nm, 'name', iRow)
-                    wObj.setValue(iRow + 1, 'ordinal', iRow)
-                    wObj.setValue('DrugBank', 'provenance_code', iRow)
-                    iRow += 1
+            rP = kwargs.get("resourceProvider")
+            dbD = rP.getResource("DrugBank accession mapping") if rP else None
+            if dbD:
+                dbMapD = dbD["id_map"]
+                #
+                if dbMapD and ccId in dbMapD and "aliases" in dbMapD[ccId]:
+                    iRow = wObj.getRowCount()
+                    for nm in dbMapD[ccId]["aliases"]:
+                        wObj.setValue(ccId, "comp_id", iRow)
+                        wObj.setValue(nm, "name", iRow)
+                        wObj.setValue(iRow + 1, "ordinal", iRow)
+                        wObj.setValue("DrugBank", "provenance_code", iRow)
+                        iRow += 1
 
             return True
         except Exception as e:
-            logger.exception("For %s failing with %s" % (catName, str(e)))
+            logger.exception("For %s failing with %s", catName, str(e))
 
         return False
 
@@ -2130,62 +2129,62 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             'Other' 'Another polymer type composition'
         """
 
-        compClass = 'other'
+        compClass = "other"
         # get type counts
         cD = {}
         for polymerType in polymerTypeList:
-            if polymerType in ['polypeptide(D)', 'polypeptide(L)']:
-                cD['protein'] = cD['protein'] + 1 if 'protein' in cD else 1
-            elif polymerType in ['polydeoxyribonucleotide']:
-                cD['DNA'] = cD['DNA'] + 1 if 'DNA' in cD else 1
-            elif polymerType in ['polyribonucleotide']:
-                cD['RNA'] = cD['RNA'] + 1 if 'RNA' in cD else 1
-            elif polymerType in ['polydeoxyribonucleotide/polyribonucleotide hybrid']:
-                cD['NA-hybrid'] = cD['NA-hybrid'] + 1 if 'NA-hybrid' in cD else 1
-            elif polymerType in ['oligosaccharide']:
-                cD['oligosaccharide'] = cD['oligosaccharide'] + 1 if 'oligosaccharide' in cD else 1
+            if polymerType in ["polypeptide(D)", "polypeptide(L)"]:
+                cD["protein"] = cD["protein"] + 1 if "protein" in cD else 1
+            elif polymerType in ["polydeoxyribonucleotide"]:
+                cD["DNA"] = cD["DNA"] + 1 if "DNA" in cD else 1
+            elif polymerType in ["polyribonucleotide"]:
+                cD["RNA"] = cD["RNA"] + 1 if "RNA" in cD else 1
+            elif polymerType in ["polydeoxyribonucleotide/polyribonucleotide hybrid"]:
+                cD["NA-hybrid"] = cD["NA-hybrid"] + 1 if "NA-hybrid" in cD else 1
+            elif polymerType in ["oligosaccharide"]:
+                cD["oligosaccharide"] = cD["oligosaccharide"] + 1 if "oligosaccharide" in cD else 1
             else:
-                cD['other'] = cD['other'] + 1 if 'other' in cD else 1
+                cD["other"] = cD["other"] + 1 if "other" in cD else 1
         #
         if len(cD) == 1:
             ky = list(cD.keys())[0]
-            if 'protein' in cD:
-                if cD['protein'] == 1:
-                    compClass = 'homomeric protein'
+            if "protein" in cD:
+                if cD["protein"] == 1:
+                    compClass = "homomeric protein"
                 else:
-                    compClass = 'heteromeric protein'
-            elif ky in ['DNA', 'RNA', 'NA-hybrid', 'oligosaccharide', 'other']:
+                    compClass = "heteromeric protein"
+            elif ky in ["DNA", "RNA", "NA-hybrid", "oligosaccharide", "other"]:
                 compClass = ky
         elif len(cD) == 2:
-            if 'protein' in cD:
-                if ('DNA' in cD) or ('RNA' in cD) or ('NA-hybrid' in cD):
-                    compClass = 'protein/NA'
-                elif 'oligosaccharide' in cD:
-                    compClass = 'protein/oligosaccharide'
-            elif 'DNA' in cD and 'RNA' in cD:
-                compClass = 'DNA/RNA'
-            elif 'oligosaccharide' in cD and ('RNA' in cD or 'DNA' in cD):
-                compClass = 'NA/oligosaccharide'
+            if "protein" in cD:
+                if ("DNA" in cD) or ("RNA" in cD) or ("NA-hybrid" in cD):
+                    compClass = "protein/NA"
+                elif "oligosaccharide" in cD:
+                    compClass = "protein/oligosaccharide"
+            elif "DNA" in cD and "RNA" in cD:
+                compClass = "DNA/RNA"
+            elif "oligosaccharide" in cD and ("RNA" in cD or "DNA" in cD):
+                compClass = "NA/oligosaccharide"
             else:
                 compClass = "other type pair"
         elif len(cD) == 3:
-            if 'DNA' in cD and 'RNA' in cD and 'NA-hybrid' in cD:
-                compClass = 'DNA/RNA'
-            elif 'oligosaccharide' in cD and all([cD[j] in ['oligosaccharide', 'DNA', 'RNA', 'NA-hybrid'] for j in cD]):
-                compClass = 'NA/oligosaccharide'
-            elif 'protein' in cD and all([cD[j] in ['protein', 'DNA', 'RNA', 'NA-hybrid'] for j in cD]):
-                compClass = 'protein/NA'
-            elif 'oligosaccharide' in cD and 'protein' in cD and all([cD[j] in ['protein', 'oligosaccharide', 'DNA', 'RNA', 'NA-hybrid'] for j in cD]):
-                compClass = 'protein/NA/oligosaccharide'
+            if "DNA" in cD and "RNA" in cD and "NA-hybrid" in cD:
+                compClass = "DNA/RNA"
+            elif "oligosaccharide" in cD and all([cD[j] in ["oligosaccharide", "DNA", "RNA", "NA-hybrid"] for j in cD]):
+                compClass = "NA/oligosaccharide"
+            elif "protein" in cD and all([cD[j] in ["protein", "DNA", "RNA", "NA-hybrid"] for j in cD]):
+                compClass = "protein/NA"
+            elif "oligosaccharide" in cD and "protein" in cD and all([cD[j] in ["protein", "oligosaccharide", "DNA", "RNA", "NA-hybrid"] for j in cD]):
+                compClass = "protein/NA/oligosaccharide"
             else:
                 compClass = "other type composition"
         elif len(cD) >= 4:
-            if 'oligosaccharide' in cD and all([cD[j] in ['oligosaccharide', 'DNA', 'RNA', 'NA-hybrid'] for j in cD]):
-                compClass = 'NA/oligosaccharide'
-            elif 'protein' in cD and all([cD[j] in ['protein', 'DNA', 'RNA', 'NA-hybrid'] for j in cD]):
-                compClass = 'protein/NA'
-            elif 'oligosaccharide' in cD and 'protein' in cD and all([cD[j] in ['protein', 'oligosaccharide', 'DNA', 'RNA', 'NA-hybrid'] for j in cD]):
-                compClass = 'protein/NA/oligosaccharide'
+            if "oligosaccharide" in cD and all([cD[j] in ["oligosaccharide", "DNA", "RNA", "NA-hybrid"] for j in cD]):
+                compClass = "NA/oligosaccharide"
+            elif "protein" in cD and all([cD[j] in ["protein", "DNA", "RNA", "NA-hybrid"] for j in cD]):
+                compClass = "protein/NA"
+            elif "oligosaccharide" in cD and "protein" in cD and all([cD[j] in ["protein", "oligosaccharide", "DNA", "RNA", "NA-hybrid"] for j in cD]):
+                compClass = "protein/NA/oligosaccharide"
             else:
                 compClass = "other type composition"
         else:
@@ -2193,27 +2192,27 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
         # Subset type class --
         #
-        if compClass in ['homomeric protein', 'heteromeric protein']:
-            ptClass = 'Protein (only)'
-        elif compClass in ['DNA', 'RNA', 'NA-hybrid']:
-            ptClass = 'Nucleic acid (only)'
-        elif compClass in ['protein/NA']:
-            ptClass = 'Protein/NA'
+        if compClass in ["homomeric protein", "heteromeric protein"]:
+            ptClass = "Protein (only)"
+        elif compClass in ["DNA", "RNA", "NA-hybrid"]:
+            ptClass = "Nucleic acid (only)"
+        elif compClass in ["protein/NA"]:
+            ptClass = "Protein/NA"
         else:
-            ptClass = 'Other'
+            ptClass = "Other"
         #
         # NA subtype class ---
         #
-        if compClass in ['DNA']:
-            naClass = 'DNA (only)'
-        elif compClass in ['RNA']:
-            naClass = 'RNA (only)'
-        elif compClass in ['NA-hybrid']:
-            naClass = 'NA-hybrid (only)'
-        elif compClass in ['DNA/RNA']:
-            naClass = 'DNA/RNA (only)'
+        if compClass in ["DNA"]:
+            naClass = "DNA (only)"
+        elif compClass in ["RNA"]:
+            naClass = "RNA (only)"
+        elif compClass in ["NA-hybrid"]:
+            naClass = "NA-hybrid (only)"
+        elif compClass in ["DNA/RNA"]:
+            naClass = "DNA/RNA (only)"
         else:
-            naClass = 'Other'
+            naClass = "Other"
         #
         return compClass, ptClass, naClass, cD
 
@@ -2228,30 +2227,30 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         """
         methodCount = len(methodL)
         if methodCount > 1:
-            expMethod = 'Multiple methods'
+            expMethod = "Multiple methods"
         else:
             #
             mS = methodL[0].upper()
-            expMethod = 'Other'
-            if mS in ['X-RAY DIFFRACTION', 'FIBER DIFFRACTION', 'POWDER DIFFRACTION']:
-                expMethod = 'X-ray'
-            elif mS in ['SOLUTION NMR', 'SOLID-STATE NMR']:
-                expMethod = 'NMR'
-            elif mS in ['ELECTRON MICROSCOPY', 'ELECTRON CRYSTALLOGRAPHY']:
-                expMethod = 'EM'
-            elif mS in ['NEUTRON DIFFRACTION']:
-                expMethod = 'Neutron'
-            elif mS in ['SOLUTION SCATTERING', 'EPR', 'THEORETICAL MODEL', 'INFRARED SPECTROSCOPY', 'FLUORESCENCE TRANSFER']:
-                expMethod = 'Other'
+            expMethod = "Other"
+            if mS in ["X-RAY DIFFRACTION", "FIBER DIFFRACTION", "POWDER DIFFRACTION"]:
+                expMethod = "X-ray"
+            elif mS in ["SOLUTION NMR", "SOLID-STATE NMR"]:
+                expMethod = "NMR"
+            elif mS in ["ELECTRON MICROSCOPY", "ELECTRON CRYSTALLOGRAPHY"]:
+                expMethod = "EM"
+            elif mS in ["NEUTRON DIFFRACTION"]:
+                expMethod = "Neutron"
+            elif mS in ["SOLUTION SCATTERING", "EPR", "THEORETICAL MODEL", "INFRARED SPECTROSCOPY", "FLUORESCENCE TRANSFER"]:
+                expMethod = "Other"
             else:
-                logger.error('Unexpected method ')
+                logger.error("Unexpected method ")
 
         return methodCount, expMethod
 
     def __hasMethodNMR(self, methodL):
         ok = False
         for method in methodL:
-            if method in ['SOLUTION NMR', 'SOLID-STATE NMR']:
+            if method in ["SOLUTION NMR", "SOLID-STATE NMR"]:
                 return True
         return ok
 
@@ -2288,25 +2287,25 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 _pdbx_nmr_representative.selection_criteria   'fewest violations'
         """
         repModelL = []
-        if dataContainer.exists('pdbx_nmr_representative'):
-            tObj = dataContainer.getObj('pdbx_nmr_representative')
-            if tObj.hasAttribute('conformer_id'):
+        if dataContainer.exists("pdbx_nmr_representative"):
+            tObj = dataContainer.getObj("pdbx_nmr_representative")
+            if tObj.hasAttribute("conformer_id"):
                 for ii in range(tObj.getRowCount()):
-                    nn = tObj.getValue('conformer_id', ii)
+                    nn = tObj.getValue("conformer_id", ii)
                     if nn is not None and nn.isdigit():
                         repModelL.append(nn)
 
-        if dataContainer.exists('pdbx_nmr_ensemble'):
-            tObj = dataContainer.getObj('pdbx_nmr_ensemble')
-            if tObj.hasAttribute('representative_conformer'):
-                nn = tObj.getValue('representative_conformer', 0)
+        if dataContainer.exists("pdbx_nmr_ensemble"):
+            tObj = dataContainer.getObj("pdbx_nmr_ensemble")
+            if tObj.hasAttribute("representative_conformer"):
+                nn = tObj.getValue("representative_conformer", 0)
                 if nn is not None and nn.isdigit():
                     repModelL.append(nn)
         #
         repModelL = list(set(repModelL))
-        if len(repModelL) < 1:
-            logger.debug("Missing representative model data for %s using 1" % (dataContainer.getName()))
-            repModelL = ['1']
+        if not repModelL:
+            logger.debug("Missing representative model data for %s using 1", dataContainer.getName())
+            repModelL = ["1"]
 
         return repModelL
 
@@ -2314,19 +2313,19 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         """ Collect resolution estimates from method specific sources.
         """
         rL = []
-        if dataContainer.exists('refine'):
-            tObj = dataContainer.getObj('refine')
-            if tObj.hasAttribute('ls_d_res_high'):
+        if dataContainer.exists("refine"):
+            tObj = dataContainer.getObj("refine")
+            if tObj.hasAttribute("ls_d_res_high"):
                 for ii in range(tObj.getRowCount()):
-                    rv = tObj.getValue('ls_d_res_high', ii)
+                    rv = tObj.getValue("ls_d_res_high", ii)
                     if self.__isFloat(rv):
                         rL.append(rv)
 
-        if dataContainer.exists('em_3d_reconstruction'):
-            tObj = dataContainer.getObj('em_3d_reconstruction')
-            if tObj.hasAttribute('resolution'):
+        if dataContainer.exists("em_3d_reconstruction"):
+            tObj = dataContainer.getObj("em_3d_reconstruction")
+            if tObj.hasAttribute("resolution"):
                 for ii in range(tObj.getRowCount()):
-                    rv = tObj.getValue('resolution', ii)
+                    rv = tObj.getValue("resolution", ii)
                     if self.__isFloat(rv):
                         rL.append(rv)
         return rL
@@ -2361,72 +2360,72 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             #
             self.__instanceD = None
             #
-            if not dataContainer.exists('entity') or not dataContainer.exists('struct_asym'):
+            if not dataContainer.exists("entity") or not dataContainer.exists("struct_asym"):
                 return {}
 
             instanceTypeD = {}
             instancePolymerTypeD = {}
             instanceTypeCountD = {}
             #
-            eObj = dataContainer.getObj('entity')
+            eObj = dataContainer.getObj("entity")
             eTypeD = {}
             for ii in range(eObj.getRowCount()):
                 # logger.info("Attribute %r %r" % (ii, eObj.getAttributeList()))
-                entityId = eObj.getValue('id', ii)
-                eType = eObj.getValue('type', ii)
+                entityId = eObj.getValue("id", ii)
+                eType = eObj.getValue("type", ii)
                 eTypeD[entityId] = eType
             #
             epTypeD = {}
             epLengthD = {}
             epTypeFilteredD = {}
-            if dataContainer.exists('entity_poly'):
-                epObj = dataContainer.getObj('entity_poly')
+            if dataContainer.exists("entity_poly"):
+                epObj = dataContainer.getObj("entity_poly")
                 for ii in range(epObj.getRowCount()):
-                    entityId = epObj.getValue('entity_id', ii)
-                    pType = epObj.getValue('type', ii)
+                    entityId = epObj.getValue("entity_id", ii)
+                    pType = epObj.getValue("type", ii)
                     epTypeFilteredD[entityId] = self.__filterEntityPolyType(pType)
                     epTypeD[entityId] = pType
-                    if epObj.hasAttribute('pdbx_seq_one_letter_code_can'):
-                        sampleSeq = self.__stripWhiteSpace(epObj.getValue('pdbx_seq_one_letter_code_can', ii))
-                        epLengthD[entityId] = len(sampleSeq) if sampleSeq and sampleSeq not in ['?', '.'] else None
+                    if epObj.hasAttribute("pdbx_seq_one_letter_code_can"):
+                        sampleSeq = self.__stripWhiteSpace(epObj.getValue("pdbx_seq_one_letter_code_can", ii))
+                        epLengthD[entityId] = len(sampleSeq) if sampleSeq and sampleSeq not in ["?", "."] else None
 
             #
             instEntityD = {}
-            sObj = dataContainer.getObj('struct_asym')
+            sObj = dataContainer.getObj("struct_asym")
             for ii in range(sObj.getRowCount()):
-                entityId = sObj.getValue('entity_id', ii)
-                asymId = sObj.getValue('id', ii)
+                entityId = sObj.getValue("entity_id", ii)
+                asymId = sObj.getValue("id", ii)
                 instEntityD[asymId] = entityId
                 if entityId in eTypeD:
                     instanceTypeD[asymId] = eTypeD[entityId]
                 else:
-                    logger.warning("Missing entity id entry %r asymId %r entityId %r" % (dataContainer.getName(), entityId, asymId))
+                    logger.warning("Missing entity id entry %r asymId %r entityId %r", dataContainer.getName(), entityId, asymId)
                 if entityId in epTypeD:
                     instancePolymerTypeD[asymId] = epTypeFilteredD[entityId]
                 #
             #
             # Count the instance by type - initialize all types
             #
-            instanceTypeCountD = {k: 0 for k in ['polymer', 'non-polymer', 'branched', 'macrolide', 'water']}
+            instanceTypeCountD = {k: 0 for k in ["polymer", "non-polymer", "branched", "macrolide", "water"]}
             for asymId, eType in instanceTypeD.items():
                 instanceTypeCountD[eType] += 1
 
-            rD = {'instanceTypeD': instanceTypeD,
-                  'instancePolymerTypeD': instancePolymerTypeD,
-                  'instanceTypeCountD': instanceTypeCountD,
-                  'instEntityD': instEntityD,
-                  'eTypeD': eTypeD,
-                  'epLengthD': epLengthD,
-                  'epTypeD': epTypeD,
-                  'epTypeFilteredD': epTypeFilteredD,
-                  }
+            rD = {
+                "instanceTypeD": instanceTypeD,
+                "instancePolymerTypeD": instancePolymerTypeD,
+                "instanceTypeCountD": instanceTypeCountD,
+                "instEntityD": instEntityD,
+                "eTypeD": eTypeD,
+                "epLengthD": epLengthD,
+                "epTypeD": epTypeD,
+                "epTypeFilteredD": epTypeFilteredD,
+            }
             self.__instanceD = rD
             #
-            logger.debug("%s length struct_asym %d (%d) instanceTypeD %r" % (dataContainer.getName(), sObj.getRowCount(), len(instanceTypeD), instanceTypeD))
-
+            logger.debug("%s length struct_asym %d (%d) instanceTypeD %r", dataContainer.getName(), sObj.getRowCount(), len(instanceTypeD), instanceTypeD)
         #
         except Exception as e:
-            logger.exception("Failing with %r with %r" % (dataContainer.getName(), str(e)))
+            logger.exception("Failing with %r with %r", dataContainer.getName(), str(e))
         #
         return rD
 
@@ -2435,24 +2434,24 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         """
         numAtoms = 0
         numModels = 0
-        if dataContainer.exists('atom_site'):
-            tObj = dataContainer.getObj('atom_site')
+        if dataContainer.exists("atom_site"):
+            tObj = dataContainer.getObj("atom_site")
             numAtoms = tObj.getRowCount()
-            if tObj.hasAttribute('pdbx_PDB_model_num'):
+            if tObj.hasAttribute("pdbx_PDB_model_num"):
                 try:
-                    numModels = int(tObj.getValue('pdbx_PDB_model_num', numAtoms - 1))
+                    numModels = int(tObj.getValue("pdbx_PDB_model_num", numAtoms - 1))
                 except Exception:
                     numModels = 1
         return numAtoms, numModels
 
-    def __getQualifiedAtomSiteInfo(self, dataContainer, instanceTypeD, modelId='1'):
+    def __getQualifiedAtomSiteInfo(self, dataContainer, instanceTypeD, modelId="1"):
         """ Get counting information for each instance in the deposited coordinates for the input model.
 
             instanceTypeD [asymId] = <entity type>
         """
         # Return cached dictionary
         if self.__atomSiteCountD and self.__testEntryCache(dataContainer.getName()):
-            logger.debug("Using cached qualified atom_site count info for %s" % dataContainer.getName())
+            logger.debug("Using cached qualified atom_site count info for %s", dataContainer.getName())
             return self.__atomSiteCountD
         #
         numAtomsAll = 0
@@ -2464,67 +2463,72 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         modelIdL = []
         #
         try:
-            if dataContainer.exists('atom_site'):
-                tObj = dataContainer.getObj('atom_site')
+            if dataContainer.exists("atom_site"):
+                tObj = dataContainer.getObj("atom_site")
                 numAtomsAll = tObj.getRowCount()
-                conditionsD = {'pdbx_PDB_model_num': modelId}
+                conditionsD = {"pdbx_PDB_model_num": modelId}
                 numAtomsModel = tObj.countValuesWhereConditions(conditionsD)
-                modelIdL = tObj.getAttributeUniqueValueList('pdbx_PDB_model_num')
-                cD = tObj.getCombinationCounts(['label_asym_id', 'pdbx_PDB_model_num'])
+                modelIdL = tObj.getAttributeUniqueValueList("pdbx_PDB_model_num")
+                cD = tObj.getCombinationCounts(["label_asym_id", "pdbx_PDB_model_num"])
                 #
-                for asymId, eType in instanceTypeD.items():
+                for asymId, _ in instanceTypeD.items():
                     instanceAtomCountD[asymId] = cD[(asymId, modelId)] if (asymId, modelId) in cD else 0
                 #
                 # for eType in ['polymer', 'non-polymer', 'branched', 'macrolide', 'solvent']:
-                typeCountD = {k: 0 for k in ['polymer', 'non-polymer', 'branched', 'macrolide', 'water']}
+                typeCountD = {k: 0 for k in ["polymer", "non-polymer", "branched", "macrolide", "water"]}
                 for asymId, aCount in instanceAtomCountD.items():
                     tt = instanceTypeD[asymId]
                     typeCountD[tt] += aCount
             else:
-                logger.warning("Missing atom_site category for %s" % dataContainer.getName())
+                logger.warning("Missing atom_site category for %s", dataContainer.getName())
             #
             numModels = len(modelIdL)
             if numModels < 1:
-                logger.warning("Missing model details in atom_site category for %s" % dataContainer.getName())
+                logger.warning("Missing model details in atom_site category for %s", dataContainer.getName())
             #
-            self.__atomSiteCountD = {'instanceAtomCountD': instanceAtomCountD,
-                                     'typeAtomCountD': typeCountD,
-                                     'numAtomsAll': numAtomsAll,
-                                     'numAtomsModel': numAtomsModel,
-                                     'numModels': len(modelIdL),
-                                     'modelId': modelId,
-                                     'instanceModeledMonomerCountD': {},
-                                     'instanceUnmodeledMonomerCountD': {}
-                                     }
+            self.__atomSiteCountD = {
+                "instanceAtomCountD": instanceAtomCountD,
+                "typeAtomCountD": typeCountD,
+                "numAtomsAll": numAtomsAll,
+                "numAtomsModel": numAtomsModel,
+                "numModels": len(modelIdL),
+                "modelId": modelId,
+                "instanceModeledMonomerCountD": {},
+                "instanceUnmodeledMonomerCountD": {},
+            }
         except Exception as e:
-            logger.exception("Failing with %r with %r" % (dataContainer.getName(), str(e)))
+            logger.exception("Failing with %r with %r", dataContainer.getName(), str(e))
 
         #
         #  Get the modeled and unmodeled monomer counts by asymId
         #
         try:
-            psObj = dataContainer.getObj('pdbx_poly_seq_scheme')
+            psObj = dataContainer.getObj("pdbx_poly_seq_scheme")
             if psObj is not None:
                 aSeqD = {}
                 for ii in range(psObj.getRowCount()):
-                    asymId = psObj.getValue('asym_id', ii)
+                    asymId = psObj.getValue("asym_id", ii)
                     # entityId = psObj.getValue('entity_id', ii)
-                    authSeqNum = psObj.getValue('auth_seq_num', ii)
+                    authSeqNum = psObj.getValue("auth_seq_num", ii)
                     # compId = psObj.getValue('auth_mon_id', ii)
                     aSeqD.setdefault(asymId, []).append(authSeqNum)
                 #
                 for asymId, sL in aSeqD.items():
-                    instanceModeledMonomerCountD[asymId] = len([t for t in sL if t not in ['?', '.']])
-                    instanceUnmodeledMonomerCountD[asymId] = len([t for t in sL if t in ['?', '.']])
+                    instanceModeledMonomerCountD[asymId] = len([t for t in sL if t not in ["?", "."]])
+                    instanceUnmodeledMonomerCountD[asymId] = len([t for t in sL if t in ["?", "."]])
 
-            self.__atomSiteCountD['instanceModeledMonomerCountD'] = instanceModeledMonomerCountD
-            self.__atomSiteCountD['instanceUnmodeledMonomerCountD'] = instanceUnmodeledMonomerCountD
-            logger.debug("%s instanceModeledMonomerCountD(%d) %r" % (dataContainer.getName(), sum(self.__atomSiteCountD[
-                'instanceModeledMonomerCountD'].values()), self.__atomSiteCountD['instanceModeledMonomerCountD']))
-            logger.debug("%s instanceUnmodeledMonomerCountD %r" % (dataContainer.getName(), self.__atomSiteCountD['instanceUnmodeledMonomerCountD']))
+            self.__atomSiteCountD["instanceModeledMonomerCountD"] = instanceModeledMonomerCountD
+            self.__atomSiteCountD["instanceUnmodeledMonomerCountD"] = instanceUnmodeledMonomerCountD
+            logger.debug(
+                "%s instanceModeledMonomerCountD(%d) %r",
+                dataContainer.getName(),
+                sum(self.__atomSiteCountD["instanceModeledMonomerCountD"].values()),
+                self.__atomSiteCountD["instanceModeledMonomerCountD"],
+            )
+            logger.debug("%s instanceUnmodeledMonomerCountD %r", dataContainer.getName(), self.__atomSiteCountD["instanceUnmodeledMonomerCountD"])
 
         except Exception as e:
-            logger.exception("Failing for %s with %s" % (dataContainer.getName(), str(e)))
+            logger.exception("Failing for %s with %s", dataContainer.getName(), str(e))
 
         #
         return self.__atomSiteCountD
@@ -2598,19 +2602,20 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             #
         """
         numDiSulf = 0
-        if dataContainer.exists('struct_conn'):
-            tObj = dataContainer.getObj('struct_conn')
+        if dataContainer.exists("struct_conn"):
+            tObj = dataContainer.getObj("struct_conn")
             for ii in range(tObj.getRowCount()):
-                bt = str(tObj.getValue('conn_type_id', ii)).strip().upper()
-                numDiSulf = numDiSulf + 1 if bt == 'DISULF' else numDiSulf
+                bt = str(tObj.getValue("conn_type_id", ii)).strip().upper()
+                numDiSulf = numDiSulf + 1 if bt == "DISULF" else numDiSulf
         #
         return numDiSulf
 
     def __toRangeList(self, iterable):
         iterable = sorted(set(iterable))
-        for key, group in itertools.groupby(enumerate(iterable), lambda t: t[1] - t[0]):
+        for _, group in itertools.groupby(enumerate(iterable), lambda t: t[1] - t[0]):
             group = list(group)
             yield group[0][1], group[-1][1]
+
     #
 
     def __getProtSecStructInfo(self, dataContainer):
@@ -2712,79 +2717,76 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
         """
         #
-        rD = {'helixCountD': {},
-              'sheetStrandCountD': {},
-              'unassignedCountD': {},
-
-              'helixLengthD': {},
-              'sheetStrandLengthD': {},
-              'unassignedLengthD': {},
-
-              'helixFracD': {},
-              'sheetStrandFracD': {},
-              'unassignedFracD': {},
-
-              'sheetSenseD': {},
-              'sheetFullStrandCountD': {},
-
-              'featureMonomerSequenceD': {},
-              'featureSequenceD': {},
-              }
+        rD = {
+            "helixCountD": {},
+            "sheetStrandCountD": {},
+            "unassignedCountD": {},
+            "helixLengthD": {},
+            "sheetStrandLengthD": {},
+            "unassignedLengthD": {},
+            "helixFracD": {},
+            "sheetStrandFracD": {},
+            "unassignedFracD": {},
+            "sheetSenseD": {},
+            "sheetFullStrandCountD": {},
+            "featureMonomerSequenceD": {},
+            "featureSequenceD": {},
+        }
         try:
             instanceD = self.__getInstanceTypes(dataContainer)
-            instancePolymerTypeD = instanceD['instancePolymerTypeD'] if 'instancePolymerTypeD' in instanceD else {}
-            instEntityD = instanceD['instEntityD'] if 'instEntityD' in instanceD else {}
-            epLengthD = instanceD['epLengthD'] if 'epLengthD' in instanceD else {}
+            instancePolymerTypeD = instanceD["instancePolymerTypeD"] if "instancePolymerTypeD" in instanceD else {}
+            instEntityD = instanceD["instEntityD"] if "instEntityD" in instanceD else {}
+            epLengthD = instanceD["epLengthD"] if "epLengthD" in instanceD else {}
             #
             helixRangeD = {}
             sheetRangeD = {}
             sheetSenseD = {}
             unassignedRangeD = {}
             #
-            if dataContainer.exists('struct_conf'):
-                tObj = dataContainer.getObj('struct_conf')
+            if dataContainer.exists("struct_conf"):
+                tObj = dataContainer.getObj("struct_conf")
                 helixRangeD = {}
                 for ii in range(tObj.getRowCount()):
-                    confType = str(tObj.getValue('conf_type_id', ii)).strip().upper()
-                    if confType in ['HELX_P']:
-                        hId = tObj.getValue('id', ii)
-                        begAsymId = tObj.getValue('beg_label_asym_id', ii)
-                        endAsymId = tObj.getValue('end_label_asym_id', ii)
-                        begSeqId = int(tObj.getValue('beg_label_seq_id', ii))
-                        endSeqId = int(tObj.getValue('end_label_seq_id', ii))
+                    confType = str(tObj.getValue("conf_type_id", ii)).strip().upper()
+                    if confType in ["HELX_P"]:
+                        hId = tObj.getValue("id", ii)
+                        begAsymId = tObj.getValue("beg_label_asym_id", ii)
+                        endAsymId = tObj.getValue("end_label_asym_id", ii)
+                        begSeqId = int(tObj.getValue("beg_label_seq_id", ii))
+                        endSeqId = int(tObj.getValue("end_label_seq_id", ii))
                         if (begAsymId == endAsymId) and (begSeqId <= endSeqId):
                             helixRangeD.setdefault(hId, []).append((begAsymId, begSeqId, endSeqId))
                         else:
-                            logger.warning("%s inconsistent struct_sheet_range description id = %s" % (dataContainer.getName(), hId))
+                            logger.warning("%s inconsistent struct_sheet_range description id = %s", dataContainer.getName(), hId)
 
-            logger.debug("%s helixRangeD %r" % (dataContainer.getName(), helixRangeD.items()))
+            logger.debug("%s helixRangeD %r", dataContainer.getName(), helixRangeD.items())
 
-            if dataContainer.exists('struct_sheet_range'):
-                tObj = dataContainer.getObj('struct_sheet_range')
+            if dataContainer.exists("struct_sheet_range"):
+                tObj = dataContainer.getObj("struct_sheet_range")
                 sheetRangeD = {}
                 for ii in range(tObj.getRowCount()):
-                    sId = tObj.getValue('sheet_id', ii)
-                    begAsymId = tObj.getValue('beg_label_asym_id', ii)
-                    endAsymId = tObj.getValue('end_label_asym_id', ii)
-                    begSeqId = int(tObj.getValue('beg_label_seq_id', ii))
-                    endSeqId = int(tObj.getValue('end_label_seq_id', ii))
+                    sId = tObj.getValue("sheet_id", ii)
+                    begAsymId = tObj.getValue("beg_label_asym_id", ii)
+                    endAsymId = tObj.getValue("end_label_asym_id", ii)
+                    begSeqId = int(tObj.getValue("beg_label_seq_id", ii))
+                    endSeqId = int(tObj.getValue("end_label_seq_id", ii))
                     if (begAsymId == endAsymId) and (begSeqId <= endSeqId):
                         sheetRangeD.setdefault(sId, []).append((begAsymId, begSeqId, endSeqId))
                     else:
-                        logger.warning("%s inconsistent struct_conf description id = %s" % (dataContainer.getName(), sId))
+                        logger.warning("%s inconsistent struct_conf description id = %s", dataContainer.getName(), sId)
 
-            logger.debug("%s sheetRangeD %r" % (dataContainer.getName(), sheetRangeD.items()))
+            logger.debug("%s sheetRangeD %r", dataContainer.getName(), sheetRangeD.items())
             #
-            if dataContainer.exists('struct_sheet_order'):
-                tObj = dataContainer.getObj('struct_sheet_order')
+            if dataContainer.exists("struct_sheet_order"):
+                tObj = dataContainer.getObj("struct_sheet_order")
                 #
                 sheetSenseD = {}
                 for ii in range(tObj.getRowCount()):
-                    sId = tObj.getValue('sheet_id', ii)
-                    sense = str(tObj.getValue('sense', ii)).strip().lower()
+                    sId = tObj.getValue("sheet_id", ii)
+                    sense = str(tObj.getValue("sense", ii)).strip().lower()
                     sheetSenseD.setdefault(sId, []).append(sense)
             #
-            logger.debug("%s sheetSenseD %r" % (dataContainer.getName(), sheetSenseD.items()))
+            logger.debug("%s sheetSenseD %r", dataContainer.getName(), sheetSenseD.items())
             # --------
 
             unassignedCoverageD = {}
@@ -2812,7 +2814,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             # ------------
             # Initialize over all protein instances
             for asymId, filteredType in instancePolymerTypeD.items():
-                if filteredType != 'Protein':
+                if filteredType != "Protein":
                     continue
                 helixCoverageD[asymId] = []
                 helixLengthD[asymId] = []
@@ -2855,18 +2857,18 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             # ---------
             senseTypeD = {}
             for sheetId, sL in sheetSenseD.items():
-                if len(sL) < 1:
+                if not sL:
                     continue
                 usL = list(set(sL))
                 if len(usL) == 1:
                     senseTypeD[sheetId] = usL[0]
                 else:
-                    senseTypeD[sheetId] = 'mixed'
+                    senseTypeD[sheetId] = "mixed"
             # ---------
             #
             for asymId, filteredType in instancePolymerTypeD.items():
-                logger.debug("%s processing %s type %r" % (dataContainer.getName(), asymId, filteredType))
-                if filteredType != 'Protein':
+                logger.debug("%s processing %s type %r", dataContainer.getName(), asymId, filteredType)
+                if filteredType != "Protein":
                     continue
                 entityId = instEntityD[asymId]
                 entityLen = epLengthD[entityId]
@@ -2876,8 +2878,8 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 helixS = set(helixCoverageD[asymId])
                 sheetS = set(sheetCoverageD[asymId])
                 commonS = helixS & sheetS
-                if len(commonS):
-                    logger.warning("%s asymId %s overlapping secondary structure assignments for monomers %r" % (dataContainer.getName(), asymId, commonS))
+                if commonS:
+                    logger.warning("%s asymId %s overlapping secondary structure assignments for monomers %r", dataContainer.getName(), asymId, commonS)
                     continue
 
                 hLen = len(helixS) if asymId in helixCoverageD else 0
@@ -2888,7 +2890,7 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 tLen = len(unassignedS)
                 #
                 if eLen != hLen + sLen + tLen:
-                    logger.warning("%s overlapping secondary structure assignments for asymId %s" % (dataContainer.getName(), asymId))
+                    logger.warning("%s overlapping secondary structure assignments for asymId %s", dataContainer.getName(), asymId)
                     continue
                 #
                 unassignedCoverageD[asymId] = list(unassignedS)
@@ -2908,41 +2910,38 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 #
 
                 # ------
-                ssTypeL = ['_'] * eLen
+                ssTypeL = ["_"] * eLen
                 if hLen:
                     for idx in helixCoverageD[asymId]:
-                        ssTypeL[idx - 1] = 'H'
+                        ssTypeL[idx - 1] = "H"
                 if sLen:
                     for idx in sheetCoverageD[asymId]:
-                        ssTypeL[idx - 1] = 'S'
+                        ssTypeL[idx - 1] = "S"
                 if tLen:
                     for idx in unassignedCoverageD[asymId]:
-                        ssTypeL[idx - 1] = '_'
+                        ssTypeL[idx - 1] = "_"
                 #
-                featureMonomerSequenceD[asymId] = ''. join(ssTypeL)
-                featureSequenceD[asymId] = ''.join([t[0] for t in itertools.groupby(ssTypeL)])
+                featureMonomerSequenceD[asymId] = "".join(ssTypeL)
+                featureSequenceD[asymId] = "".join([t[0] for t in itertools.groupby(ssTypeL)])
             # ---------
 
-            rD = {'helixCountD': helixCountD,
-                  'sheetStrandCountD': sheetStrandCountD,
-                  'unassignedCountD': unassignedCountD,
-
-                  'helixLengthD': helixLengthD,
-                  'sheetStrandLengthD': sheetStrandLengthD,
-                  'unassignedLengthD': unassignedLengthD,
-
-                  'helixFracD': helixFracD,
-                  'sheetStrandFracD': sheetStrandFracD,
-                  'unassignedFracD': unassignedFracD,
-
-                  'sheetSenseD': instSheetSenseD,
-                  'sheetFullStrandCountD': sheetFullStrandCountD,
-
-                  'featureMonomerSequenceD': featureMonomerSequenceD,
-                  'featureSequenceD': featureSequenceD,
-                  }
+            rD = {
+                "helixCountD": helixCountD,
+                "sheetStrandCountD": sheetStrandCountD,
+                "unassignedCountD": unassignedCountD,
+                "helixLengthD": helixLengthD,
+                "sheetStrandLengthD": sheetStrandLengthD,
+                "unassignedLengthD": unassignedLengthD,
+                "helixFracD": helixFracD,
+                "sheetStrandFracD": sheetStrandFracD,
+                "unassignedFracD": unassignedFracD,
+                "sheetSenseD": instSheetSenseD,
+                "sheetFullStrandCountD": sheetFullStrandCountD,
+                "featureMonomerSequenceD": featureMonomerSequenceD,
+                "featureSequenceD": featureSequenceD,
+            }
         except Exception as e:
-            logger.exception("Failing for %s with %s" % (dataContainer.getName(), str(e)))
+            logger.exception("Failing for %s with %s", dataContainer.getName(), str(e))
         #
         return rD
 
@@ -2952,62 +2951,68 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
         """
         try:
-            logger.debug("Starting with %r %r" % (dataContainer.getName(), catName))
+            logger.debug("Starting with %r %r %r", dataContainer.getName(), catName, kwargs)
             # Exit if source categories are missing
-            if not dataContainer.exists('entry') and not (dataContainer.exists('struct_conf') or dataContainer.exists('struct_sheet_range')):
+            if not dataContainer.exists("entry") and not (dataContainer.exists("struct_conf") or dataContainer.exists("struct_sheet_range")):
                 return False
             #
             # Create the new target category rcsb_prot_sec_struct_info
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=['entry_id',
-                                                                              'label_asym_id',
-                                                                              'helix_count',
-                                                                              'beta_strand_count',
-                                                                              'unassigned_count',
-                                                                              'helix_length',
-                                                                              'beta_strand_length',
-                                                                              'unassigned_length',
-                                                                              'helix_coverage_percent',
-                                                                              'beta_strand_coverage_percent',
-                                                                              'unassigned_coverage_percent',
-                                                                              'beta_sheet_sense',
-                                                                              'beta_sheet_strand_count',
-                                                                              'feature_monomer_sequence',
-                                                                              'feature_sequence'
-                                                                              ]))
+                dataContainer.append(
+                    DataCategory(
+                        catName,
+                        attributeNameList=[
+                            "entry_id",
+                            "label_asym_id",
+                            "helix_count",
+                            "beta_strand_count",
+                            "unassigned_count",
+                            "helix_length",
+                            "beta_strand_length",
+                            "unassigned_length",
+                            "helix_coverage_percent",
+                            "beta_strand_coverage_percent",
+                            "unassigned_coverage_percent",
+                            "beta_sheet_sense",
+                            "beta_sheet_strand_count",
+                            "feature_monomer_sequence",
+                            "feature_sequence",
+                        ],
+                    )
+                )
             # --------------------------------------------------------------------------------------------------------
             sD = self.__getProtSecStructInfo(dataContainer)
             # catName = rcsb_prot_sec_struct_info
             cObj = dataContainer.getObj(catName)
             #
-            xObj = dataContainer.getObj('entry')
-            entryId = xObj.getValue('id', 0)
+            xObj = dataContainer.getObj("entry")
+            entryId = xObj.getValue("id", 0)
             #
-            for ii, asymId in enumerate(sD['helixCountD']):
-                cObj.setValue(entryId, 'entry_id', ii)
-                cObj.setValue(asymId, 'label_asym_id', ii)
+            for ii, asymId in enumerate(sD["helixCountD"]):
+                cObj.setValue(entryId, "entry_id", ii)
+                cObj.setValue(asymId, "label_asym_id", ii)
                 #
-                cObj.setValue(sD['helixCountD'][asymId], 'helix_count', ii)
-                cObj.setValue(sD['sheetStrandCountD'][asymId], 'beta_strand_count', ii)
-                cObj.setValue(sD['unassignedCountD'][asymId], 'unassigned_count', ii)
+                cObj.setValue(sD["helixCountD"][asymId], "helix_count", ii)
+                cObj.setValue(sD["sheetStrandCountD"][asymId], "beta_strand_count", ii)
+                cObj.setValue(sD["unassignedCountD"][asymId], "unassigned_count", ii)
                 #
-                cObj.setValue(','.join([str(t) for t in sD['helixLengthD'][asymId]]), 'helix_length', ii)
-                cObj.setValue(','.join([str(t) for t in sD['sheetStrandLengthD'][asymId]]), 'beta_strand_length', ii)
-                cObj.setValue(','.join([str(t) for t in sD['unassignedLengthD'][asymId]]), 'unassigned_length', ii)
+                cObj.setValue(",".join([str(t) for t in sD["helixLengthD"][asymId]]), "helix_length", ii)
+                cObj.setValue(",".join([str(t) for t in sD["sheetStrandLengthD"][asymId]]), "beta_strand_length", ii)
+                cObj.setValue(",".join([str(t) for t in sD["unassignedLengthD"][asymId]]), "unassigned_length", ii)
 
-                cObj.setValue('%.2f' % (100.0 * sD['helixFracD'][asymId]), 'helix_coverage_percent', ii)
-                cObj.setValue('%.2f' % (100.0 * sD['sheetStrandFracD'][asymId]), 'beta_strand_coverage_percent', ii)
-                cObj.setValue('%.2f' % (100.0 * sD['unassignedFracD'][asymId]), 'unassigned_coverage_percent', ii)
+                cObj.setValue("%.2f" % (100.0 * sD["helixFracD"][asymId]), "helix_coverage_percent", ii)
+                cObj.setValue("%.2f" % (100.0 * sD["sheetStrandFracD"][asymId]), "beta_strand_coverage_percent", ii)
+                cObj.setValue("%.2f" % (100.0 * sD["unassignedFracD"][asymId]), "unassigned_coverage_percent", ii)
 
-                cObj.setValue(','.join(sD['sheetSenseD'][asymId]), 'beta_sheet_sense', ii)
-                cObj.setValue(','.join([str(t) for t in sD['sheetFullStrandCountD'][asymId]]), 'beta_sheet_strand_count', ii)
+                cObj.setValue(",".join(sD["sheetSenseD"][asymId]), "beta_sheet_sense", ii)
+                cObj.setValue(",".join([str(t) for t in sD["sheetFullStrandCountD"][asymId]]), "beta_sheet_strand_count", ii)
 
-                cObj.setValue(sD['featureMonomerSequenceD'][asymId], 'feature_monomer_sequence', ii)
-                cObj.setValue(sD['featureSequenceD'][asymId], 'feature_sequence', ii)
+                cObj.setValue(sD["featureMonomerSequenceD"][asymId], "feature_monomer_sequence", ii)
+                cObj.setValue(sD["featureSequenceD"][asymId], "feature_sequence", ii)
 
             return True
         except Exception as e:
-            logger.exception("For %s %r failing with %s" % (dataContainer.getName(), catName, str(e)))
+            logger.exception("For %s %r failing with %s", dataContainer.getName(), catName, str(e))
         return False
 
     def __filterEntityPolyType(self, pType):
@@ -3021,16 +3026,16 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
         """
         polymerType = pType.lower()
-        if polymerType in ['polypeptide(d)', 'polypeptide(l)']:
-            rT = 'Protein'
-        elif polymerType in ['polydeoxyribonucleotide']:
-            rT = 'DNA'
-        elif polymerType in ['polyribonucleotide']:
-            rT = 'RNA'
-        elif polymerType in ['polydeoxyribonucleotide/polyribonucleotide hybrid']:
-            rT = 'NA-hybrid'
+        if polymerType in ["polypeptide(d)", "polypeptide(l)"]:
+            rT = "Protein"
+        elif polymerType in ["polydeoxyribonucleotide"]:
+            rT = "DNA"
+        elif polymerType in ["polyribonucleotide"]:
+            rT = "RNA"
+        elif polymerType in ["polydeoxyribonucleotide/polyribonucleotide hybrid"]:
+            rT = "NA-hybrid"
         else:
-            rT = 'Other'
+            rT = "Other"
         return rT
 
     def __getDepositedResidueCounts(self, dataContainer):
@@ -3063,17 +3068,17 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         modeledCount = 0
         unModeledCount = 0
         try:
-            psObj = dataContainer.getObj('pdbx_poly_seq_scheme')
+            psObj = dataContainer.getObj("pdbx_poly_seq_scheme")
             if psObj is not None:
-                asnL = psObj.getAttributeValueList('auth_seq_num')
-                aaidL = psObj.getAttributeValueList('pdb_strand_id')
-                unModeledCount = asnL.count('?')
-                tL = [(a, b) for (a, b) in zip(asnL, aaidL) if a not in ['?']]
+                asnL = psObj.getAttributeValueList("auth_seq_num")
+                aaidL = psObj.getAttributeValueList("pdb_strand_id")
+                unModeledCount = asnL.count("?")
+                tL = [(a, b) for (a, b) in zip(asnL, aaidL) if a not in ["?"]]
                 modeledCount = len(set(tL))
                 # modeledCount = len(uL) if ('?', '?') not in uL else len(uL) - 1
-                logger.debug("%s %d (%d)" % (dataContainer.getName(), modeledCount, unModeledCount))
+                logger.debug("%s %d (%d)", dataContainer.getName(), modeledCount, unModeledCount)
         except Exception as e:
-            logger.exception("Failing for %s with %s" % (dataContainer.getName(), str(e)))
+            logger.exception("Failing for %s with %s", dataContainer.getName(), str(e))
         #
         return modeledCount, unModeledCount
 
@@ -3110,42 +3115,48 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
         """
         try:
-            logger.debug("Starting with %r %r" % (dataContainer.getName(), catName))
+            logger.debug("Starting with %r %r %r", dataContainer.getName(), catName, kwargs)
             # Exit if source categories are missing
-            if not (dataContainer.exists('exptl') and dataContainer.exists('entity')):
+            if not (dataContainer.exists("exptl") and dataContainer.exists("entity")):
                 return False
             #
             # Create the new target category rcsb_entry_info
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=['entry_id',
-                                                                              'polymer_composition',
-                                                                              'experimental_method',
-                                                                              'experimental_method_count',
-                                                                              'polymer_entity_count',
-                                                                              'entity_count',
-                                                                              'nonpolymer_entity_count',
-                                                                              'branched_entity_count',
-                                                                              'solvent_entity_count',
-                                                                              'software_programs_combined',
-                                                                              'resolution_combined',
-                                                                              'deposited_atom_count',
-                                                                              'deposited_model_count',
-                                                                              'disulfide_bond_count',
-                                                                              'deposited_polymer_monomer_count',
-                                                                              'deposited_modeled_polymer_monomer_count',
-                                                                              'deposited_unmodeled_polymer_monomer_count',
-                                                                              'polymer_entity_count_protein',
-                                                                              'polymer_entity_count_nucleic_acid',
-                                                                              'polymer_entity_count_nucleic_acid_hybrid',
-                                                                              'polymer_entity_count_DNA',
-                                                                              'polymer_entity_count_RNA',
-                                                                              'selected_polymer_entity_types',
-                                                                              'na_polymer_entity_types',
-                                                                              'polymer_entity_taxonomy_count',
-                                                                              'assembly_count',
-                                                                              'deposited_polymer_entity_instance_count',
-                                                                              'deposited_nonpolymer_entity_instance_count'
-                                                                              ]))
+                dataContainer.append(
+                    DataCategory(
+                        catName,
+                        attributeNameList=[
+                            "entry_id",
+                            "polymer_composition",
+                            "experimental_method",
+                            "experimental_method_count",
+                            "polymer_entity_count",
+                            "entity_count",
+                            "nonpolymer_entity_count",
+                            "branched_entity_count",
+                            "solvent_entity_count",
+                            "software_programs_combined",
+                            "resolution_combined",
+                            "deposited_atom_count",
+                            "deposited_model_count",
+                            "disulfide_bond_count",
+                            "deposited_polymer_monomer_count",
+                            "deposited_modeled_polymer_monomer_count",
+                            "deposited_unmodeled_polymer_monomer_count",
+                            "polymer_entity_count_protein",
+                            "polymer_entity_count_nucleic_acid",
+                            "polymer_entity_count_nucleic_acid_hybrid",
+                            "polymer_entity_count_DNA",
+                            "polymer_entity_count_RNA",
+                            "selected_polymer_entity_types",
+                            "na_polymer_entity_types",
+                            "polymer_entity_taxonomy_count",
+                            "assembly_count",
+                            "deposited_polymer_entity_instance_count",
+                            "deposited_nonpolymer_entity_instance_count",
+                        ],
+                    )
+                )
             # --------------------------------------------------------------------------------------------------------
             # catName = rcsb_entry_info
             cObj = dataContainer.getObj(catName)
@@ -3153,137 +3164,136 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             # --------------------------------------------------------------------------------------------------------
             #  Filter experimental methods
             #
-            xObj = dataContainer.getObj('exptl')
-            entryId = xObj.getValue('entry_id', 0)
-            methodL = xObj.getAttributeValueList('method')
+            xObj = dataContainer.getObj("exptl")
+            entryId = xObj.getValue("entry_id", 0)
+            methodL = xObj.getAttributeValueList("method")
             methodCount, expMethod = self.__filterExperimentalMethod(methodL)
-            cObj.setValue(entryId, 'entry_id', 0)
-            cObj.setValue(expMethod, 'experimental_method', 0)
-            cObj.setValue(methodCount, 'experimental_method_count', 0)
+            cObj.setValue(entryId, "entry_id", 0)
+            cObj.setValue(expMethod, "experimental_method", 0)
+            cObj.setValue(methodCount, "experimental_method_count", 0)
             #
             # --------------------------------------------------------------------------------------------------------
             #  Experimental resolution -
             #
             resL = self.__filterExperimentalResolution(dataContainer)
             if resL:
-                cObj.setValue(','.join(resL), 'resolution_combined', 0)
+                cObj.setValue(",".join(resL), "resolution_combined", 0)
             #
             # ---------------------------------------------------------------------------------------------------------
             # Consolidate software details -
             #
             swNameL = []
-            if dataContainer.exists('software'):
-                swObj = dataContainer.getObj('software')
-                swNameL.extend(swObj.getAttributeUniqueValueList('name'))
-            if dataContainer.exists('pdbx_nmr_software'):
-                swObj = dataContainer.getObj('pdbx_nmr_software')
-                swNameL.extend(swObj.getAttributeUniqueValueList('name'))
-            if dataContainer.exists('em_software'):
-                swObj = dataContainer.getObj('em_software')
-                swNameL.extend(swObj.getAttributeUniqueValueList('name'))
+            if dataContainer.exists("software"):
+                swObj = dataContainer.getObj("software")
+                swNameL.extend(swObj.getAttributeUniqueValueList("name"))
+            if dataContainer.exists("pdbx_nmr_software"):
+                swObj = dataContainer.getObj("pdbx_nmr_software")
+                swNameL.extend(swObj.getAttributeUniqueValueList("name"))
+            if dataContainer.exists("em_software"):
+                swObj = dataContainer.getObj("em_software")
+                swNameL.extend(swObj.getAttributeUniqueValueList("name"))
             if swNameL:
-                cObj.setValue(';'.join(swNameL), 'software_programs_combined', 0)
+                cObj.setValue(";".join(swNameL), "software_programs_combined", 0)
             # ---------------------------------------------------------------------------------------------------------
             #  ENTITY FEATURES
             #
             #  entity and polymer entity counts -
             ##
-            eObj = dataContainer.getObj('entity')
-            eTypeL = eObj.getAttributeValueList('type')
+            eObj = dataContainer.getObj("entity")
+            eTypeL = eObj.getAttributeValueList("type")
             #
             numPolymers = 0
             numNonPolymers = 0
             numBranched = 0
             numSolvent = 0
             for eType in eTypeL:
-                if eType == 'polymer':
+                if eType == "polymer":
                     numPolymers += 1
-                elif eType == 'non-polymer':
+                elif eType == "non-polymer":
                     numNonPolymers += 1
-                elif eType == 'branched':
+                elif eType == "branched":
                     numBranched += 1
-                elif eType == 'water':
+                elif eType == "water":
                     numSolvent += 1
                 else:
-                    logger.error("Unexpected entity type for %s %s" % (dataContainer.getName(), eType))
+                    logger.error("Unexpected entity type for %s %s", dataContainer.getName(), eType)
             totalEntities = numPolymers + numNonPolymers + numBranched + numSolvent
             #
             # Simplified entity polymer type: 'Protein', 'DNA', 'RNA', 'NA-hybrid', or 'Other'
             pTypeL = []
-            if dataContainer.exists('entity_poly'):
-                epObj = dataContainer.getObj('entity_poly')
-                pTypeL = epObj.getAttributeValueList('type')
+            if dataContainer.exists("entity_poly"):
+                epObj = dataContainer.getObj("entity_poly")
+                pTypeL = epObj.getAttributeValueList("type")
                 #
-                atName = 'rcsb_entity_polymer_type'
+                atName = "rcsb_entity_polymer_type"
                 if not epObj.hasAttribute(atName):
                     epObj.appendAttribute(atName)
                 for ii in range(epObj.getRowCount()):
                     epObj.setValue(self.__filterEntityPolyType(pTypeL[ii]), atName, ii)
             #
             # Add any branched entity types to the type list -
-            if dataContainer.exists('entity_branch'):
-                ebObj = dataContainer.getObj('entity_branch')
-                pTypeL.extend(ebObj.getAttributeValueList('type'))
+            if dataContainer.exists("entity_branch"):
+                ebObj = dataContainer.getObj("entity_branch")
+                pTypeL.extend(ebObj.getAttributeValueList("type"))
             #
             polymerCompClass, ptClass, naClass, eptD = self.__getPolymerComposition(pTypeL)
             #
 
-            cObj.setValue(polymerCompClass, 'polymer_composition', 0)
-            cObj.setValue(ptClass, 'selected_polymer_entity_types', 0)
-            cObj.setValue(naClass, 'na_polymer_entity_types', 0)
-            cObj.setValue(numPolymers, 'polymer_entity_count', 0)
-            cObj.setValue(numNonPolymers, 'nonpolymer_entity_count', 0)
-            cObj.setValue(numBranched, 'branched_entity_count', 0)
-            cObj.setValue(numSolvent, 'solvent_entity_count', 0)
-            cObj.setValue(totalEntities, 'entity_count', 0)
+            cObj.setValue(polymerCompClass, "polymer_composition", 0)
+            cObj.setValue(ptClass, "selected_polymer_entity_types", 0)
+            cObj.setValue(naClass, "na_polymer_entity_types", 0)
+            cObj.setValue(numPolymers, "polymer_entity_count", 0)
+            cObj.setValue(numNonPolymers, "nonpolymer_entity_count", 0)
+            cObj.setValue(numBranched, "branched_entity_count", 0)
+            cObj.setValue(numSolvent, "solvent_entity_count", 0)
+            cObj.setValue(totalEntities, "entity_count", 0)
             #
-            num = eptD['protein'] if 'protein' in eptD else 0
-            cObj.setValue(num, 'polymer_entity_count_protein', 0)
+            num = eptD["protein"] if "protein" in eptD else 0
+            cObj.setValue(num, "polymer_entity_count_protein", 0)
             #
-            num = eptD['NA-hybrid'] if 'NA-hybrid' in eptD else 0
-            cObj.setValue(num, 'polymer_entity_count_nucleic_acid_hybrid', 0)
+            num = eptD["NA-hybrid"] if "NA-hybrid" in eptD else 0
+            cObj.setValue(num, "polymer_entity_count_nucleic_acid_hybrid", 0)
             #
-            numDNA = eptD['DNA'] if 'DNA' in eptD else 0
-            cObj.setValue(numDNA, 'polymer_entity_count_DNA', 0)
+            numDNA = eptD["DNA"] if "DNA" in eptD else 0
+            cObj.setValue(numDNA, "polymer_entity_count_DNA", 0)
             #
-            numRNA = eptD['RNA'] if 'RNA' in eptD else 0
-            cObj.setValue(numRNA, 'polymer_entity_count_RNA', 0)
-            cObj.setValue(numDNA + numRNA, 'polymer_entity_count_nucleic_acid', 0)
+            numRNA = eptD["RNA"] if "RNA" in eptD else 0
+            cObj.setValue(numRNA, "polymer_entity_count_RNA", 0)
+            cObj.setValue(numDNA + numRNA, "polymer_entity_count_nucleic_acid", 0)
             #
             # ---------------------------------------------------------------------------------------------------------
             # INSTANCE FEATURES
             #
             ##
-            repModelL = ['1']
+            repModelL = ["1"]
             if self.__hasMethodNMR(methodL):
                 repModelL = self.__getRepresentativeModels(dataContainer)
-            logger.debug("Representative model list %r" % repModelL)
+            logger.debug("Representative model list %r", repModelL)
             #
             #  instanceTypeD[asymId] = <entity_type>
             #  instanceTypeCountD[entity_type] = #
             #
             #
             instanceD = self.__getInstanceTypes(dataContainer)
-            instanceTypeD = instanceD['instanceTypeD'] if 'instanceTypeD' in instanceD else {}
-            instanceTypeCountD = instanceD['instanceTypeCountD'] if 'instanceTypeCountD' in instanceD else {}
+            instanceTypeD = instanceD["instanceTypeD"] if "instanceTypeD" in instanceD else {}
+            instanceTypeCountD = instanceD["instanceTypeCountD"] if "instanceTypeCountD" in instanceD else {}
 
-            cObj.setValue(instanceTypeCountD['polymer'], 'deposited_polymer_entity_instance_count', 0)
-            cObj.setValue(instanceTypeCountD['non-polymer'], 'deposited_nonpolymer_entity_instance_count', 0)
+            cObj.setValue(instanceTypeCountD["polymer"], "deposited_polymer_entity_instance_count", 0)
+            cObj.setValue(instanceTypeCountD["non-polymer"], "deposited_nonpolymer_entity_instance_count", 0)
 
             atomCountD = self.__getQualifiedAtomSiteInfo(dataContainer, instanceTypeD, modelId=repModelL[0])
             self.__setEntryCache(dataContainer.getName())
             #
             # Various atom counts -
             #
-            logger.debug("numAtomsAll %d numAtomsModel %d numModels %d" %
-                         (atomCountD['numAtomsAll'], atomCountD['numAtomsModel'], atomCountD['numModels']))
+            logger.debug("numAtomsAll %d numAtomsModel %d numModels %d", atomCountD["numAtomsAll"], atomCountD["numAtomsModel"], atomCountD["numModels"])
             #
-            logger.debug("typeAtomCountD %r" % atomCountD['typeAtomCountD'])
-            logger.debug("instanceAtomCoundD %r" % (atomCountD['instanceAtomCountD']))
+            logger.debug("typeAtomCountD %r", atomCountD["typeAtomCountD"])
+            logger.debug("instanceAtomCoundD %r", atomCountD["instanceAtomCountD"])
             #
-            if atomCountD['numAtomsModel'] > 0:
-                cObj.setValue(atomCountD['numAtomsModel'], 'deposited_atom_count', 0)
-                cObj.setValue(atomCountD['numModels'], 'deposited_model_count', 0)
+            if atomCountD["numAtomsModel"] > 0:
+                cObj.setValue(atomCountD["numAtomsModel"], "deposited_atom_count", 0)
+                cObj.setValue(atomCountD["numModels"], "deposited_model_count", 0)
             #
 
             # ---------------------------------------------------------------------------------------------------------
@@ -3292,64 +3302,64 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             #  Get modeled and unmodeled residue counts
             #
             modeledCount, unModeledCount = self.__getDepositedResidueCounts(dataContainer)
-            cObj.setValue(modeledCount, 'deposited_modeled_polymer_monomer_count', 0)
-            cObj.setValue(unModeledCount, 'deposited_unmodeled_polymer_monomer_count', 0)
-            cObj.setValue(modeledCount + unModeledCount, 'deposited_polymer_monomer_count', 0)
+            cObj.setValue(modeledCount, "deposited_modeled_polymer_monomer_count", 0)
+            cObj.setValue(unModeledCount, "deposited_unmodeled_polymer_monomer_count", 0)
+            cObj.setValue(modeledCount + unModeledCount, "deposited_polymer_monomer_count", 0)
             #
             # ---------------------------------------------------------------------------------------------------------
             #  Counts of intermolecular bonds/linkages
             #
             numDiSulf = self.__getStructConnInfo(dataContainer)
-            cObj.setValue(numDiSulf, 'disulfide_bond_count', 0)
+            cObj.setValue(numDiSulf, "disulfide_bond_count", 0)
             #
             # This is reset in  mehtod - filterSourceOrganismDetails()
-            cObj.setValue(None, 'polymer_entity_taxonomy_count', 0)
+            cObj.setValue(None, "polymer_entity_taxonomy_count", 0)
             #
             return True
         except Exception as e:
-            logger.exception("For %s %r failing with %s" % (dataContainer.getName(), catName, str(e)))
+            logger.exception("For %s %r failing with %s", dataContainer.getName(), catName, str(e))
         return False
 
     def filterBlockByMethod(self, dataContainer, blockName, **kwargs):
         """ Filter empty placeholder data categories by experimental method.
 
         """
-        logger.debug("Starting with %r blockName %r" % (dataContainer.getName(), blockName))
+        logger.debug("Starting with %r blockName %r kwargs %r", dataContainer.getName(), blockName, kwargs)
         try:
-            if not dataContainer.exists('exptl'):
+            if not dataContainer.exists("exptl"):
                 return False
             #
-            xObj = dataContainer.getObj('exptl')
-            methodL = xObj.getAttributeValueList('method')
+            xObj = dataContainer.getObj("exptl")
+            methodL = xObj.getAttributeValueList("method")
             objNameL = []
             # Test for a diffraction method in the case of multiple methods
             if len(methodL) > 1:
                 isXtal = False
                 for method in methodL:
-                    if method in ['X-RAY DIFFRACTION', 'FIBER DIFFRACTION', 'POWDER DIFFRACTION', 'ELECTRON CRYSTALLOGRAPHY', 'NEUTRON DIFFRACTION']:
+                    if method in ["X-RAY DIFFRACTION", "FIBER DIFFRACTION", "POWDER DIFFRACTION", "ELECTRON CRYSTALLOGRAPHY", "NEUTRON DIFFRACTION"]:
                         isXtal = True
                         break
                 if not isXtal:
-                    objNameL = ['cell', 'symmetry', 'refine', 'refine_hist', 'software', 'diffrn', 'diffrn_radiation']
+                    objNameL = ["cell", "symmetry", "refine", "refine_hist", "software", "diffrn", "diffrn_radiation"]
             else:
                 #
                 mS = methodL[0].upper()
-                if mS in ['X-RAY DIFFRACTION', 'FIBER DIFFRACTION', 'POWDER DIFFRACTION', 'ELECTRON CRYSTALLOGRAPHY', 'NEUTRON DIFFRACTION']:
+                if mS in ["X-RAY DIFFRACTION", "FIBER DIFFRACTION", "POWDER DIFFRACTION", "ELECTRON CRYSTALLOGRAPHY", "NEUTRON DIFFRACTION"]:
                     objNameL = []
-                elif mS in ['SOLUTION NMR', 'SOLID-STATE NMR']:
-                    objNameL = ['cell', 'symmetry', 'refine', 'refine_hist', 'software', 'diffrn', 'diffrn_radiation']
-                elif mS in ['ELECTRON MICROSCOPY']:
-                    objNameL = ['cell', 'symmetry', 'refine', 'refine_hist', 'software', 'diffrn', 'diffrn_radiation']
-                elif mS in ['SOLUTION SCATTERING', 'EPR', 'THEORETICAL MODEL', 'INFRARED SPECTROSCOPY', 'FLUORESCENCE TRANSFER']:
-                    objNameL = ['cell', 'symmetry', 'refine', 'refine_hist', 'software', 'diffrn', 'diffrn_radiation']
+                elif mS in ["SOLUTION NMR", "SOLID-STATE NMR"]:
+                    objNameL = ["cell", "symmetry", "refine", "refine_hist", "software", "diffrn", "diffrn_radiation"]
+                elif mS in ["ELECTRON MICROSCOPY"]:
+                    objNameL = ["cell", "symmetry", "refine", "refine_hist", "software", "diffrn", "diffrn_radiation"]
+                elif mS in ["SOLUTION SCATTERING", "EPR", "THEORETICAL MODEL", "INFRARED SPECTROSCOPY", "FLUORESCENCE TRANSFER"]:
+                    objNameL = ["cell", "symmetry", "refine", "refine_hist", "software", "diffrn", "diffrn_radiation"]
                 else:
-                    logger.error('Unexpected method %r' % mS)
+                    logger.error("Unexpected method %r", mS)
             #
             for objName in objNameL:
                 dataContainer.remove(objName)
             return True
         except Exception as e:
-            logger.exception("For %s failing with %s" % (dataContainer.getName(), str(e)))
+            logger.exception("For %s failing with %s", dataContainer.getName(), str(e))
         return False
 
     def addBirdEntityIds(self, dataContainer, catName, atName, **kwargs):
@@ -3378,80 +3388,81 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
         """
         try:
-            if catName != 'pdbx_molecule' and 'atName' != 'rcsb_entity_id':
+            logger.debug("Starting catName %s atName %s kwargs %r", catName, atName, kwargs)
+            if catName != "pdbx_molecule" and "atName" != "rcsb_entity_id":
                 return False
             #
-            if not (dataContainer.exists(catName) and dataContainer.exists('struct_asym')):
+            if not (dataContainer.exists(catName) and dataContainer.exists("struct_asym")):
                 return False
             #
             cObj = dataContainer.getObj(catName)
             if not cObj.hasAttribute(atName):
                 cObj.appendAttribute(atName)
             #
-            if not cObj.hasAttribute('rcsb_comp_id'):
-                cObj.appendAttribute('rcsb_comp_id')
+            if not cObj.hasAttribute("rcsb_comp_id"):
+                cObj.appendAttribute("rcsb_comp_id")
             #
             aD = {}
-            aObj = dataContainer.getObj('struct_asym')
+            aObj = dataContainer.getObj("struct_asym")
             for ii in range(aObj.getRowCount()):
-                entityId = aObj.getValue('entity_id', ii)
-                asymId = aObj.getValue('id', ii)
+                entityId = aObj.getValue("entity_id", ii)
+                asymId = aObj.getValue("id", ii)
                 aD[asymId] = entityId
             #
             eD = {}
-            if dataContainer.exists('pdbx_entity_nonpoly'):
-                npObj = dataContainer.getObj('pdbx_entity_nonpoly')
+            if dataContainer.exists("pdbx_entity_nonpoly"):
+                npObj = dataContainer.getObj("pdbx_entity_nonpoly")
                 for ii in range(npObj.getRowCount()):
-                    entityId = npObj.getValue('entity_id', ii)
-                    compId = npObj.getValue('comp_id', ii)
+                    entityId = npObj.getValue("entity_id", ii)
+                    compId = npObj.getValue("comp_id", ii)
                     eD[entityId] = compId
             #
             #
             prdD = {}
             for ii in range(cObj.getRowCount()):
-                asymId = cObj.getValue('asym_id', ii)
-                prdId = cObj.getValue('prd_id', ii)
+                asymId = cObj.getValue("asym_id", ii)
+                prdId = cObj.getValue("prd_id", ii)
                 if asymId in aD:
                     entityId = aD[asymId]
                     prdD[entityId] = prdId
                     cObj.setValue(entityId, atName, ii)
-                    compId = eD[entityId] if entityId in eD else '.'
-                    cObj.setValue(compId, 'rcsb_comp_id', ii)
+                    compId = eD[entityId] if entityId in eD else "."
+                    cObj.setValue(compId, "rcsb_comp_id", ii)
                 else:
-                    logger.error("%s missing entityId for asymId %s" % (dataContainer.getName(), asymId))
+                    logger.error("%s missing entityId for asymId %s", dataContainer.getName(), asymId)
             #
-            if prdD and dataContainer.exists('pdbx_entity_nonpoly'):
-                npObj = dataContainer.getObj('pdbx_entity_nonpoly')
-                if not npObj.hasAttribute('rcsb_prd_id'):
-                    npObj.appendAttribute('rcsb_prd_id')
+            if prdD and dataContainer.exists("pdbx_entity_nonpoly"):
+                npObj = dataContainer.getObj("pdbx_entity_nonpoly")
+                if not npObj.hasAttribute("rcsb_prd_id"):
+                    npObj.appendAttribute("rcsb_prd_id")
                 for ii in range(npObj.getRowCount()):
-                    entityId = npObj.getValue('entity_id', ii)
-                    prdId = prdD[entityId] if entityId in prdD else '.'
-                    npObj.setValue(prdId, 'rcsb_prd_id', ii)
+                    entityId = npObj.getValue("entity_id", ii)
+                    prdId = prdD[entityId] if entityId in prdD else "."
+                    npObj.setValue(prdId, "rcsb_prd_id", ii)
             #
-            if prdD and dataContainer.exists('entity_poly'):
-                pObj = dataContainer.getObj('entity_poly')
-                if not pObj.hasAttribute('rcsb_prd_id'):
-                    pObj.appendAttribute('rcsb_prd_id')
+            if prdD and dataContainer.exists("entity_poly"):
+                pObj = dataContainer.getObj("entity_poly")
+                if not pObj.hasAttribute("rcsb_prd_id"):
+                    pObj.appendAttribute("rcsb_prd_id")
                 for ii in range(pObj.getRowCount()):
-                    entityId = pObj.getValue('entity_id', ii)
-                    prdId = prdD[entityId] if entityId in prdD else '.'
-                    pObj.setValue(prdId, 'rcsb_prd_id', ii)
+                    entityId = pObj.getValue("entity_id", ii)
+                    prdId = prdD[entityId] if entityId in prdD else "."
+                    pObj.setValue(prdId, "rcsb_prd_id", ii)
             #
             #
-            if prdD and dataContainer.exists('rcsb_entity_container_identifiers'):
-                pObj = dataContainer.getObj('rcsb_entity_container_identifiers')
-                if not pObj.hasAttribute('prd_id'):
-                    pObj.appendAttribute('prd_id')
+            if prdD and dataContainer.exists("rcsb_entity_container_identifiers"):
+                pObj = dataContainer.getObj("rcsb_entity_container_identifiers")
+                if not pObj.hasAttribute("prd_id"):
+                    pObj.appendAttribute("prd_id")
                 for ii in range(pObj.getRowCount()):
-                    entityId = pObj.getValue('entity_id', ii)
-                    prdId = prdD[entityId] if entityId in prdD else '.'
-                    pObj.setValue(prdId, 'prd_id', ii)
+                    entityId = pObj.getValue("entity_id", ii)
+                    prdId = prdD[entityId] if entityId in prdD else "."
+                    pObj.setValue(prdId, "prd_id", ii)
             #
             #
             return True
         except Exception as e:
-            logger.exception("%s %s %s failing with %s" % (dataContainer.getName(), catName, atName, str(e)))
+            logger.exception("%s %s %s failing with %s", dataContainer.getName(), catName, atName, str(e))
         return False
 
     def __cleanupCsv(self, tL):
@@ -3459,8 +3470,8 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
         """
         rL = []
         try:
-            key_paths = functools.cmp_to_key(cmp_elements)
-            groups = [','.join(grp) for key, grp in itertools.groupby(tL, key_paths)]
+            key_paths = functools.cmp_to_key(cmpElements)
+            groups = [",".join(grp) for key, grp in itertools.groupby(tL, key_paths)]
             rL = list(set(groups))
         except Exception:
             pass
@@ -3479,47 +3490,48 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
         """
         try:
-            if not (dataContainer.exists('entry') and dataContainer.exists('entity')):
+            if not (dataContainer.exists("entry") and dataContainer.exists("entity")):
                 return False
             #
-            if catName == 'entity' and atName in ['rcsb_ec_lineage_name', 'rcsb_ec_lineage_id', 'rcsb_ec_lineage_depth']:
+            if catName == "entity" and atName in ["rcsb_ec_lineage_name", "rcsb_ec_lineage_id", "rcsb_ec_lineage_depth"]:
                 return True
             #
-            eObj = dataContainer.getObj('entity')
-            if not eObj.hasAttribute('rcsb_macromolecular_names_combined_name'):
-                eObj.appendAttribute('rcsb_macromolecular_names_combined_name')
-            if not eObj.hasAttribute('rcsb_macromolecular_names_combined_provenance_source'):
-                eObj.appendAttribute('rcsb_macromolecular_names_combined_provenance_source')
-            if not eObj.hasAttribute('rcsb_macromolecular_names_combined_provenance_code'):
-                eObj.appendAttribute('rcsb_macromolecular_names_combined_provenance_code')
+            eObj = dataContainer.getObj("entity")
+            if not eObj.hasAttribute("rcsb_macromolecular_names_combined_name"):
+                eObj.appendAttribute("rcsb_macromolecular_names_combined_name")
+            if not eObj.hasAttribute("rcsb_macromolecular_names_combined_provenance_source"):
+                eObj.appendAttribute("rcsb_macromolecular_names_combined_provenance_source")
+            if not eObj.hasAttribute("rcsb_macromolecular_names_combined_provenance_code"):
+                eObj.appendAttribute("rcsb_macromolecular_names_combined_provenance_code")
             #
-            if not eObj.hasAttribute('rcsb_ec_lineage_depth'):
-                eObj.appendAttribute('rcsb_ec_lineage_depth')
-            if not eObj.hasAttribute('rcsb_ec_lineage_id'):
-                eObj.appendAttribute('rcsb_ec_lineage_id')
-            if not eObj.hasAttribute('rcsb_ec_lineage_name'):
-                eObj.appendAttribute('rcsb_ec_lineage_name')
-            hasEc = eObj.hasAttribute('pdbx_ec')
+            if not eObj.hasAttribute("rcsb_ec_lineage_depth"):
+                eObj.appendAttribute("rcsb_ec_lineage_depth")
+            if not eObj.hasAttribute("rcsb_ec_lineage_id"):
+                eObj.appendAttribute("rcsb_ec_lineage_id")
+            if not eObj.hasAttribute("rcsb_ec_lineage_name"):
+                eObj.appendAttribute("rcsb_ec_lineage_name")
+            hasEc = eObj.hasAttribute("pdbx_ec")
+            rP = kwargs.get("resourceProvider")
+            ecU = None
             if hasEc:
-                if not self.__ecU:
-                    self.__ecU = EnzymeDatabaseUtils(enzymeDirPath=self.__enzymeDataPath, useCache=True, clearCache=False)
+                ecU = rP.getResource("EnzymeUtils instance") if rP else None
             #
             ncObj = None
-            if dataContainer.exists('entity_name_com'):
-                ncObj = dataContainer.getObj('entity_name_com')
+            if dataContainer.exists("entity_name_com"):
+                ncObj = dataContainer.getObj("entity_name_com")
 
             for ii in range(eObj.getRowCount()):
-                entityId = eObj.getValue('id', ii)
-                entityType = eObj.getValue('type', ii)
+                entityId = eObj.getValue("id", ii)
+                entityType = eObj.getValue("type", ii)
                 #
-                eObj.setValue('?', 'rcsb_ec_lineage_depth', ii)
-                eObj.setValue('?', 'rcsb_ec_lineage_id', ii)
-                eObj.setValue('?', 'rcsb_ec_lineage_name', ii)
-                eObj.setValue('?', 'rcsb_macromolecular_names_combined_name', ii)
-                eObj.setValue('?', 'rcsb_macromolecular_names_combined_provenance_source', ii)
-                eObj.setValue('?', 'rcsb_macromolecular_names_combined_provenance_code', ii)
+                eObj.setValue("?", "rcsb_ec_lineage_depth", ii)
+                eObj.setValue("?", "rcsb_ec_lineage_id", ii)
+                eObj.setValue("?", "rcsb_ec_lineage_name", ii)
+                eObj.setValue("?", "rcsb_macromolecular_names_combined_name", ii)
+                eObj.setValue("?", "rcsb_macromolecular_names_combined_provenance_source", ii)
+                eObj.setValue("?", "rcsb_macromolecular_names_combined_provenance_code", ii)
                 #
-                if entityType not in ['polymer', 'branched']:
+                if entityType not in ["polymer", "branched"]:
                     continue
                 #
                 # --------------------------------------------------------------------------
@@ -3527,56 +3539,56 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                 nameL = []
                 sourceL = []
                 provCodeL = []
-                nmL = str(eObj.getValue('pdbx_description', ii)).split(',')
+                nmL = str(eObj.getValue("pdbx_description", ii)).split(",")
                 nmL = self.__cleanupCsv(nmL)
-                nmL = [t.strip() for t in nmL if len(t) > 3]
+                nmL = [tV.strip() for tV in nmL if len(tV) > 3]
                 for nm in nmL:
                     nameL.append(nm)
-                    sourceL.append('PDB Preferred Name')
-                    provCodeL.append('ECO:0000304')
+                    sourceL.append("PDB Preferred Name")
+                    provCodeL.append("ECO:0000304")
                 #
                 # PDB common names/synonyms
-                logger.debug("%s ii %d nmL %r" % (dataContainer.getName(), ii, nmL))
+                logger.debug("%s ii %d nmL %r", dataContainer.getName(), ii, nmL)
                 #
                 if ncObj:
                     ncL = []
-                    tL = ncObj.selectValuesWhere('name', entityId, 'entity_id')
-                    logger.debug("%s ii %d tL %r" % (dataContainer.getName(), ii, tL))
-                    for t in tL:
-                        tff = t.split(',')
+                    tL = ncObj.selectValuesWhere("name", entityId, "entity_id")
+                    logger.debug("%s ii %d tL %r", dataContainer.getName(), ii, tL)
+                    for tV in tL:
+                        tff = tV.split(",")
                         ncL.extend(tff)
                     ncL = self.__cleanupCsv(ncL)
-                    ncL = [t.strip() for t in ncL if len(t) > 3]
+                    ncL = [tV.strip() for tV in ncL if len(tV) > 3]
                     for nc in ncL:
                         nameL.append(nc)
-                        sourceL.append('PDB Synonym')
-                        provCodeL.append('ECO:0000303')
-                    logger.debug("%s ii %d ncL %r" % (dataContainer.getName(), ii, ncL))
+                        sourceL.append("PDB Synonym")
+                        provCodeL.append("ECO:0000303")
+                    logger.debug("%s ii %d ncL %r", dataContainer.getName(), ii, ncL)
                 #
                 if nameL:
-                    eObj.setValue(';'.join(nameL), 'rcsb_macromolecular_names_combined_name', ii)
-                    eObj.setValue(';'.join(sourceL), 'rcsb_macromolecular_names_combined_provenance_source', ii)
-                    eObj.setValue(';'.join(provCodeL), 'rcsb_macromolecular_names_combined_provenance_code', ii)
+                    eObj.setValue(";".join(nameL), "rcsb_macromolecular_names_combined_name", ii)
+                    eObj.setValue(";".join(sourceL), "rcsb_macromolecular_names_combined_provenance_source", ii)
+                    eObj.setValue(";".join(provCodeL), "rcsb_macromolecular_names_combined_provenance_code", ii)
 
                 # --------------------------------------------------------------------------
                 linL = []
                 if hasEc:
-                    ecV = eObj.getValue('pdbx_ec', ii)
-                    ecIdL = ecV.split(',') if ecV else []
+                    ecV = eObj.getValue("pdbx_ec", ii)
+                    ecIdL = ecV.split(",") if ecV else []
                     if ecIdL:
                         ecIdL = list(set(ecIdL))
                         for ecId in ecIdL:
-                            tL = self.__ecU.getLineage(ecId) if ecId and len(ecId) > 7 else None
+                            tL = ecU.getLineage(ecId) if ecId and len(ecId) > 7 else None
                             if tL:
                                 linL.extend(tL)
                 if linL:
-                    eObj.setValue(';'.join([str(tup[0]) for tup in linL]), 'rcsb_ec_lineage_depth', ii)
-                    eObj.setValue(';'.join([str(tup[1]) for tup in linL]), 'rcsb_ec_lineage_id', ii)
-                    eObj.setValue(';'.join([tup[2] for tup in linL]), 'rcsb_ec_lineage_name', ii)
+                    eObj.setValue(";".join([str(tup[0]) for tup in linL]), "rcsb_ec_lineage_depth", ii)
+                    eObj.setValue(";".join([str(tup[1]) for tup in linL]), "rcsb_ec_lineage_id", ii)
+                    eObj.setValue(";".join([tup[2] for tup in linL]), "rcsb_ec_lineage_name", ii)
 
             return True
         except Exception as e:
-            logger.exception("For %s %s failing with %s" % (catName, atName, str(e)))
+            logger.exception("For %s %s failing with %s", catName, atName, str(e))
         return False
 
     def addStructRefSeqEntityIds(self, dataContainer, catName, **kwargs):
@@ -3584,44 +3596,44 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
 
         """
         try:
-            logger.debug("Starting with %r %r" % (dataContainer.getName(), catName))
-            if catName != 'struct_ref_seq':
+            logger.debug("Starting with %r %r %r", dataContainer.getName(), catName, kwargs)
+            if catName != "struct_ref_seq":
                 return False
             #
-            if not (dataContainer.exists(catName) and dataContainer.exists('struct_ref')):
+            if not (dataContainer.exists(catName) and dataContainer.exists("struct_ref")):
                 return False
             #
-            atName = 'rcsb_entity_id'
+            atName = "rcsb_entity_id"
             cObj = dataContainer.getObj(catName)
             if not cObj.hasAttribute(atName):
                 cObj.appendAttribute(atName)
             #
-            srObj = dataContainer.getObj('struct_ref')
+            srObj = dataContainer.getObj("struct_ref")
             #
             srsdObj = None
-            if dataContainer.exists('struct_ref_seq_dif'):
-                srsdObj = dataContainer.getObj('struct_ref_seq_dif')
-                if not srsdObj.hasAttribute('rcsb_entity_id'):
-                    srsdObj.appendAttribute('rcsb_entity_id')
+            if dataContainer.exists("struct_ref_seq_dif"):
+                srsdObj = dataContainer.getObj("struct_ref_seq_dif")
+                if not srsdObj.hasAttribute("rcsb_entity_id"):
+                    srsdObj.appendAttribute("rcsb_entity_id")
 
             for ii in range(srObj.getRowCount()):
-                entityId = srObj.getValue('entity_id', ii)
-                refId = srObj.getValue('id', ii)
+                entityId = srObj.getValue("entity_id", ii)
+                refId = srObj.getValue("id", ii)
                 #
                 # Get indices for the target refId.
-                iRowL = cObj.selectIndices(refId, 'ref_id')
+                iRowL = cObj.selectIndices(refId, "ref_id")
                 for iRow in iRowL:
-                    cObj.setValue(entityId, 'rcsb_entity_id', iRow)
-                    alignId = cObj.getValue('align_id', iRow)
+                    cObj.setValue(entityId, "rcsb_entity_id", iRow)
+                    alignId = cObj.getValue("align_id", iRow)
                     #
                     if srsdObj:
-                        jRowL = srsdObj.selectIndices(alignId, 'align_id')
+                        jRowL = srsdObj.selectIndices(alignId, "align_id")
                         for jRow in jRowL:
-                            srsdObj.setValue(entityId, 'rcsb_entity_id', jRow)
+                            srsdObj.setValue(entityId, "rcsb_entity_id", jRow)
 
             return True
         except Exception as e:
-            logger.exception("%s %s failing with %s" % (dataContainer.getName(), catName, str(e)))
+            logger.exception("%s %s failing with %s", dataContainer.getName(), catName, str(e))
         return False
 
     def buildEntityPolyInfo(self, dataContainer, catName, **kwargs):
@@ -3646,94 +3658,101 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             _entity_poly_seq.hetero
 
         """
-        logger.debug("Starting with %r %r" % (dataContainer.getName(), catName))
+        logger.debug("Starting with %r %r", dataContainer.getName(), catName)
         try:
             # Exit if source categories are missing
-            if not (dataContainer.exists('entity_poly_seq') and dataContainer.exists('entity_poly') and dataContainer.exists('entry')):
+            if not (dataContainer.exists("entity_poly_seq") and dataContainer.exists("entity_poly") and dataContainer.exists("entry")):
                 return False
             #
             # Create the new target category
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=['ordinal_id',
-                                                                              'entry_id',
-                                                                              'entity_id',
-                                                                              'comp_id',
-                                                                              'chem_comp_count',
-                                                                              'entity_sequence_length',
-                                                                              'is_modified',
-                                                                              ]))
+                dataContainer.append(
+                    DataCategory(catName, attributeNameList=["ordinal_id", "entry_id", "entity_id", "comp_id", "chem_comp_count", "entity_sequence_length", "is_modified"])
+                )
             #
-            cN = 'rcsb_entity_monomer_container_identifiers'
+            cN = "rcsb_entity_monomer_container_identifiers"
             if not dataContainer.exists(cN):
-                dataContainer.append(DataCategory(cN, attributeNameList=['ordinal_id',
-                                                                         'entry_id',
-                                                                         'entity_id',
-                                                                         'comp_id'
-                                                                         ]))
+                dataContainer.append(DataCategory(cN, attributeNameList=["ordinal_id", "entry_id", "entity_id", "comp_id"]))
             idObj = dataContainer.getObj(cN)
             #
-            eObj = dataContainer.getObj('entry')
-            entryId = eObj.getValue('id', 0)
+            eObj = dataContainer.getObj("entry")
+            entryId = eObj.getValue("id", 0)
             # ------- --------- ------- --------- ------- --------- ------- --------- ------- ---------
             seqDifD = {}
-            if dataContainer.exists('struct_ref_seq_dif'):
-                srsdObj = dataContainer.getObj('struct_ref_seq_dif')
+            if dataContainer.exists("struct_ref_seq_dif"):
+                srsdObj = dataContainer.getObj("struct_ref_seq_dif")
                 for ii in range(srsdObj.getRowCount()):
-                    entityId = srsdObj.getValue('rcsb_entity_id', ii)
-                    alignId = srsdObj.getValue('align_id', ii)
+                    entityId = srsdObj.getValue("rcsb_entity_id", ii)
+                    alignId = srsdObj.getValue("align_id", ii)
                     if entityId not in seqDifD:
-                        seqDifD[entityId] = {'mutations': 0, 'insertions': 0, 'deletions': 0, 'conflicts': 0}
+                        seqDifD[entityId] = {"mutations": 0, "insertions": 0, "deletions": 0, "conflicts": 0}
                         firstAlignId = alignId
                     if alignId != firstAlignId:
                         continue
-                    details = srsdObj.getValue('details', ii)
+                    details = srsdObj.getValue("details", ii)
                     #
-                    if details in ['ACETYLATION', 'CHROMOPHORE', 'VARIANT', 'LEADER SEQUENCE',
-                                   'INITIATING METHIONINE', 'LINKER', 'MODIFIED RESIDUE',
-                                   'ENGINEERED', 'CLONING ARTIFACT', 'ENGINEERED MUTATION',
-                                   'EXPRESSION TAG'] or ('CLONING' in details) or ('MODIFIED' in details):
-                        seqDifD[entityId]['mutations'] += 1
+                    if (
+                        details
+                        in [
+                            "ACETYLATION",
+                            "CHROMOPHORE",
+                            "VARIANT",
+                            "LEADER SEQUENCE",
+                            "INITIATING METHIONINE",
+                            "LINKER",
+                            "MODIFIED RESIDUE",
+                            "ENGINEERED",
+                            "CLONING ARTIFACT",
+                            "ENGINEERED MUTATION",
+                            "EXPRESSION TAG",
+                        ]
+                        or ("CLONING" in details)
+                        or ("MODIFIED" in details)
+                    ):
+                        seqDifD[entityId]["mutations"] += 1
                     #
-                    if details in ['INSERTION']:
-                        seqDifD[entityId]['insertions'] += 1
-                    if details in ['DELETION']:
-                        seqDifD[entityId]['deletions'] += 1
-                    if details in ['CONFLICT']:
-                        seqDifD[entityId]['conflicts'] += 1
+                    if details in ["INSERTION"]:
+                        seqDifD[entityId]["insertions"] += 1
+                    if details in ["DELETION"]:
+                        seqDifD[entityId]["deletions"] += 1
+                    if details in ["CONFLICT"]:
+                        seqDifD[entityId]["conflicts"] += 1
                 #
-                logger.debug("seqDifD %r " % seqDifD)
+                logger.debug("seqDifD %r ", seqDifD)
             #
-            epObj = dataContainer.getObj('entity_poly')
+            epObj = dataContainer.getObj("entity_poly")
             sampleSeqLen = {}
-            if epObj.hasAttribute('pdbx_seq_one_letter_code_can'):
+            if epObj.hasAttribute("pdbx_seq_one_letter_code_can"):
                 for ii in range(epObj.getRowCount()):
-                    entityId = epObj.getValue('entity_id', ii)
-                    sampleSeq = self.__stripWhiteSpace(epObj.getValue('pdbx_seq_one_letter_code_can', ii))
-                    sampleSeqLen[entityId] = len(sampleSeq) if sampleSeq and sampleSeq not in ['?', '.'] else None
+                    entityId = epObj.getValue("entity_id", ii)
+                    sampleSeq = self.__stripWhiteSpace(epObj.getValue("pdbx_seq_one_letter_code_can", ii))
+                    sampleSeqLen[entityId] = len(sampleSeq) if sampleSeq and sampleSeq not in ["?", "."] else None
 
             #
             cObj = dataContainer.getObj(catName)
-            epsObj = dataContainer.getObj('entity_poly_seq')
+            epsObj = dataContainer.getObj("entity_poly_seq")
             eD = {}
             elD = {}
             for ii in range(epsObj.getRowCount()):
-                entityId = epsObj.getValue('entity_id', ii)
+                entityId = epsObj.getValue("entity_id", ii)
                 elD[entityId] = elD[entityId] + 1 if entityId in elD else 1
                 if entityId not in eD:
                     eD[entityId] = {}
-                compId = epsObj.getValue('mon_id', ii)
+                compId = epsObj.getValue("mon_id", ii)
                 eD[entityId][compId] = eD[entityId][compId] + 1 if compId in eD[entityId] else 1
                 # seqNum = epsObj.getValue('num', ii)
                 # hetFlag = epsObj.getValue('hetero', ii).upper()
             #
             #
             modMonD = {}
+            rP = kwargs.get("resourceProvider")
+            monDict3 = rP.getResource("monomer one-letter code mapping") if rP else {}
             ii = 0
             for entityId, cD in eD.items():
                 modMonD[entityId] = []
                 for compId, v in cD.items():
-                    modFlag = 'N' if compId in DictMethodRunnerHelper.monDict3 else 'Y'
-                    if modFlag == 'Y':
+                    modFlag = "N" if compId in monDict3 else "Y"
+                    if modFlag == "Y":
                         modMonD[entityId].append(compId)
                     cObj.setValue(ii + 1, "ordinal_id", ii)
                     cObj.setValue(entryId, "entry_id", ii)
@@ -3749,33 +3768,40 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
                     idObj.setValue(compId, "comp_id", ii)
                     ii += 1
             #
-            for atName in ['rcsb_mutation_count', 'rcsb_conflict_count', 'rcsb_insertion_count', 'rcsb_deletion_count',
-                           'rcsb_sample_sequence_length', 'rcsb_non_std_monomer_count', 'rcsb_non_std_monomers']:
+            for atName in [
+                "rcsb_mutation_count",
+                "rcsb_conflict_count",
+                "rcsb_insertion_count",
+                "rcsb_deletion_count",
+                "rcsb_sample_sequence_length",
+                "rcsb_non_std_monomer_count",
+                "rcsb_non_std_monomers",
+            ]:
                 if not epObj.hasAttribute(atName):
                     epObj.appendAttribute(atName)
             #
             for ii in range(epObj.getRowCount()):
-                entityId = epObj.getValue('entity_id', ii)
-                mutations = seqDifD[entityId]['mutations'] if entityId in seqDifD else 0
-                conflicts = seqDifD[entityId]['conflicts'] if entityId in seqDifD else 0
-                insertions = seqDifD[entityId]['insertions'] if entityId in seqDifD else 0
-                deletions = seqDifD[entityId]['deletions'] if entityId in seqDifD else 0
+                entityId = epObj.getValue("entity_id", ii)
+                mutations = seqDifD[entityId]["mutations"] if entityId in seqDifD else 0
+                conflicts = seqDifD[entityId]["conflicts"] if entityId in seqDifD else 0
+                insertions = seqDifD[entityId]["insertions"] if entityId in seqDifD else 0
+                deletions = seqDifD[entityId]["deletions"] if entityId in seqDifD else 0
                 seqLen = sampleSeqLen[entityId] if entityId in sampleSeqLen else None
-                epObj.setValue(mutations, 'rcsb_mutation_count', ii)
-                epObj.setValue(conflicts, 'rcsb_conflict_count', ii)
-                epObj.setValue(insertions, 'rcsb_insertion_count', ii)
-                epObj.setValue(deletions, 'rcsb_deletion_count', ii)
+                epObj.setValue(mutations, "rcsb_mutation_count", ii)
+                epObj.setValue(conflicts, "rcsb_conflict_count", ii)
+                epObj.setValue(insertions, "rcsb_insertion_count", ii)
+                epObj.setValue(deletions, "rcsb_deletion_count", ii)
                 if seqLen is not None:
-                    epObj.setValue(seqLen, 'rcsb_sample_sequence_length', ii)
+                    epObj.setValue(seqLen, "rcsb_sample_sequence_length", ii)
                 #
                 numMod = len(modMonD[entityId])
-                uModL = ','.join(set(modMonD[entityId])) if numMod else '?'
-                epObj.setValue(numMod, 'rcsb_non_std_monomer_count', ii)
-                epObj.setValue(uModL, 'rcsb_non_std_monomers', ii)
+                uModL = ",".join(set(modMonD[entityId])) if numMod else "?"
+                epObj.setValue(numMod, "rcsb_non_std_monomer_count", ii)
+                epObj.setValue(uModL, "rcsb_non_std_monomers", ii)
 
             return True
         except Exception as e:
-            logger.exception("%s %s failing with %s" % (dataContainer.getName(), catName, str(e)))
+            logger.exception("%s %s failing with %s", dataContainer.getName(), catName, str(e))
         return False
 
     def buildEntityInstanceDomain(self, dataContainer, catName, **kwargs):
@@ -3820,108 +3846,125 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             _rcsb_entity_instance_domain_cath.domain_assigned_by
             _rcsb_entity_instance_domain_cath.domain_assigned_version
         """
-        logger.debug("Starting with %r %r" % (dataContainer.getName(), catName))
+        logger.debug("Starting with %r %r %r", dataContainer.getName(), catName, kwargs)
         try:
-            if catName != 'rcsb_entity_instance_domain':
+            if catName != "rcsb_entity_instance_domain":
                 return False
             # Exit if source categories are missing
-            if not (dataContainer.exists('rcsb_entity_container_identifiers') and dataContainer.exists('entry') and dataContainer.exists('pdbx_poly_seq_scheme')):
+            if not (dataContainer.exists("rcsb_entity_container_identifiers") and dataContainer.exists("entry") and dataContainer.exists("pdbx_poly_seq_scheme")):
                 return False
             #
-            if not self.__scopU and self.__structDomainDataPath:
-                self.__scopU = ScopClassificationUtils(scopDirPath=self.__structDomainDataPath, useCache=True)
-            if not self.__cathU and self.__structDomainDataPath:
-                self.__cathU = CathClassificationUtils(cathDirPath=self.__structDomainDataPath, useCache=True)
-            if not self.__scopU and not self.__cathU:
+            rP = kwargs.get("resourceProvider")
+            scopU = rP.getResource("ScopUtils instance") if rP else None
+            cathU = rP.getResource("CathUtils instance") if rP else None
+            if not scopU and not cathU:
                 return False
             #
             # Create the new target category
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=['ordinal',
-                                                                              'entry_id',
-                                                                              'entity_id',
-                                                                              'domain_id',
-                                                                              'domain_name',
-                                                                              'domain_class_id',
-                                                                              'domain_class_name',
-                                                                              'domain_class_lineage_id',
-                                                                              'domain_class_lineage_name',
-                                                                              'domain_class_lineage_depth',
-                                                                              'domain_assigned_by',
-                                                                              'domain_assigned_version',
-                                                                              'beg_auth_asym_id',
-                                                                              'beg_label_asym_id',
-                                                                              'beg_auth_seq_id',
-                                                                              'end_auth_asym_id',
-                                                                              'end_label_asym_id',
-                                                                              'end_auth_seq_id'
-                                                                              ]))
+                dataContainer.append(
+                    DataCategory(
+                        catName,
+                        attributeNameList=[
+                            "ordinal",
+                            "entry_id",
+                            "entity_id",
+                            "domain_id",
+                            "domain_name",
+                            "domain_class_id",
+                            "domain_class_name",
+                            "domain_class_lineage_id",
+                            "domain_class_lineage_name",
+                            "domain_class_lineage_depth",
+                            "domain_assigned_by",
+                            "domain_assigned_version",
+                            "beg_auth_asym_id",
+                            "beg_label_asym_id",
+                            "beg_auth_seq_id",
+                            "end_auth_asym_id",
+                            "end_label_asym_id",
+                            "end_auth_seq_id",
+                        ],
+                    )
+                )
             #
-            if not dataContainer.exists('rcsb_entity_instance_domain_cath'):
-                dataContainer.append(DataCategory('rcsb_entity_instance_domain_cath', attributeNameList=['ordinal',
-                                                                                                         'entry_id',
-                                                                                                         'entity_id',
-                                                                                                         'domain_id',
-                                                                                                         'domain_name',
-                                                                                                         'domain_class_id',
-                                                                                                         'domain_class_name',
-                                                                                                         'domain_class_lineage_id',
-                                                                                                         'domain_class_lineage_name',
-                                                                                                         'domain_class_lineage_depth',
-                                                                                                         'domain_assigned_by',
-                                                                                                         'domain_assigned_version',
-                                                                                                         'beg_auth_asym_id',
-                                                                                                         'beg_label_asym_id',
-                                                                                                         'beg_auth_seq_id',
-                                                                                                         'end_auth_asym_id',
-                                                                                                         'end_label_asym_id',
-                                                                                                         'end_auth_seq_id'
-                                                                                                         ]))
-            if not dataContainer.exists('rcsb_entity_instance_domain_scop'):
-                dataContainer.append(DataCategory('rcsb_entity_instance_domain_scop', attributeNameList=['ordinal',
-                                                                                                         'entry_id',
-                                                                                                         'entity_id',
-                                                                                                         'domain_id',
-                                                                                                         'domain_name',
-                                                                                                         'domain_class_id',
-                                                                                                         'domain_class_name',
-                                                                                                         'domain_class_lineage_id',
-                                                                                                         'domain_class_lineage_name',
-                                                                                                         'domain_class_lineage_depth',
-                                                                                                         'domain_assigned_by',
-                                                                                                         'domain_assigned_version',
-                                                                                                         'beg_auth_asym_id',
-                                                                                                         'beg_label_asym_id',
-                                                                                                         'beg_auth_seq_id',
-                                                                                                         'end_auth_asym_id',
-                                                                                                         'end_label_asym_id',
-                                                                                                         'end_auth_seq_id'
-                                                                                                         ]))
+            if not dataContainer.exists("rcsb_entity_instance_domain_cath"):
+                dataContainer.append(
+                    DataCategory(
+                        "rcsb_entity_instance_domain_cath",
+                        attributeNameList=[
+                            "ordinal",
+                            "entry_id",
+                            "entity_id",
+                            "domain_id",
+                            "domain_name",
+                            "domain_class_id",
+                            "domain_class_name",
+                            "domain_class_lineage_id",
+                            "domain_class_lineage_name",
+                            "domain_class_lineage_depth",
+                            "domain_assigned_by",
+                            "domain_assigned_version",
+                            "beg_auth_asym_id",
+                            "beg_label_asym_id",
+                            "beg_auth_seq_id",
+                            "end_auth_asym_id",
+                            "end_label_asym_id",
+                            "end_auth_seq_id",
+                        ],
+                    )
+                )
+            if not dataContainer.exists("rcsb_entity_instance_domain_scop"):
+                dataContainer.append(
+                    DataCategory(
+                        "rcsb_entity_instance_domain_scop",
+                        attributeNameList=[
+                            "ordinal",
+                            "entry_id",
+                            "entity_id",
+                            "domain_id",
+                            "domain_name",
+                            "domain_class_id",
+                            "domain_class_name",
+                            "domain_class_lineage_id",
+                            "domain_class_lineage_name",
+                            "domain_class_lineage_depth",
+                            "domain_assigned_by",
+                            "domain_assigned_version",
+                            "beg_auth_asym_id",
+                            "beg_label_asym_id",
+                            "beg_auth_seq_id",
+                            "end_auth_asym_id",
+                            "end_label_asym_id",
+                            "end_auth_seq_id",
+                        ],
+                    )
+                )
 
-            eObj = dataContainer.getObj('entry')
-            entryId = eObj.getValue('id', 0)
+            eObj = dataContainer.getObj("entry")
+            entryId = eObj.getValue("id", 0)
             #
             cObj = dataContainer.getObj(catName)
-            psObj = dataContainer.getObj('pdbx_poly_seq_scheme')
+            psObj = dataContainer.getObj("pdbx_poly_seq_scheme")
             #
             asymD = {}
             authAsymD = {}
             if psObj is not None:
                 for ii in range(psObj.getRowCount()):
-                    asymId = psObj.getValue('asym_id', ii)
+                    asymId = psObj.getValue("asym_id", ii)
                     if asymId in asymD:
                         continue
-                    entityId = psObj.getValue('entity_id', ii)
-                    authAsymId = psObj.getValue('pdb_strand_id', ii)
-                    asymD[asymId] = {'entry_id': entryId, 'entity_id': entityId, 'asym_id': asymId, 'auth_asym_id': authAsymId}
+                    entityId = psObj.getValue("entity_id", ii)
+                    authAsymId = psObj.getValue("pdb_strand_id", ii)
+                    asymD[asymId] = {"entry_id": entryId, "entity_id": entityId, "asym_id": asymId, "auth_asym_id": authAsymId}
                     authAsymD[authAsymId] = asymId
                 #
-                logger.debug("authAsymD (%d) %r" % (len(authAsymD), authAsymD))
-                logger.debug("asymD (%d) %r" % (len(asymD), asymD))
+                logger.debug("authAsymD (%d) %r", len(authAsymD), authAsymD)
+                logger.debug("asymD (%d) %r", len(asymD), asymD)
             #
             # Add CATH assignments
-            cathObj = dataContainer.getObj('rcsb_entity_instance_domain_cath')
-            scopObj = dataContainer.getObj('rcsb_entity_instance_domain_scop')
+            cathObj = dataContainer.getObj("rcsb_entity_instance_domain_cath")
+            scopObj = dataContainer.getObj("rcsb_entity_instance_domain_scop")
             #
             ii = cObj.getRowCount()
             kk = 0
@@ -3929,51 +3972,53 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             for authAsymId in authAsymD:
                 asymId = authAsymD[authAsymId]
                 ad = asymD[asymId]
-                entityId = ad['entity_id']
-                dL = self.__cathU.getCathResidueRanges(entryId.lower(), authAsymId)
-                vL = self.__cathU.getCathVersions(entryId.lower(), authAsymId)
+                entityId = ad["entity_id"]
+                dL = cathU.getCathResidueRanges(entryId.lower(), authAsymId)
+                vL = cathU.getCathVersions(entryId.lower(), authAsymId)
                 for (cathId, domId, tId, seqBeg, seqEnd) in dL:
-                    logger.debug("entryId cathId %r domId %r asymId %r authAsymId %r seqBeg %r seqEnd %r" % (cathId, domId, authAsymId, authAsymD[authAsymId], seqBeg, seqEnd))
+                    logger.debug(
+                        "entryId cathId %r domId %r tId %r asymId %r authAsymId %r seqBeg %r seqEnd %r", cathId, domId, tId, authAsymId, authAsymD[authAsymId], seqBeg, seqEnd
+                    )
                     cObj.setValue(ii + 1, "ordinal", ii)
                     cObj.setValue(entryId, "entry_id", ii)
-                    cObj.setValue(ad['entity_id'], "entity_id", ii)
+                    cObj.setValue(ad["entity_id"], "entity_id", ii)
                     #
                     cObj.setValue(str(domId), "domain_id", ii)
                     cObj.setValue(cathId, "domain_class_id", ii)
-                    cObj.setValue(self.__cathU.getCathName(cathId), "domain_class_name", ii)
+                    cObj.setValue(cathU.getCathName(cathId), "domain_class_name", ii)
                     #
-                    cObj.setValue(';'.join(self.__cathU.getNameLineage(cathId)), "domain_class_lineage_name", ii)
-                    idLinL = self.__cathU.getIdLineage(cathId)
-                    cObj.setValue(';'.join(idLinL), "domain_class_lineage_id", ii)
-                    cObj.setValue(';'.join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", ii)
-                    cObj.setValue(authAsymId, 'beg_auth_asym_id', ii)
-                    cObj.setValue(asymId, 'beg_label_asym_id', ii)
-                    cObj.setValue(seqBeg, 'beg_auth_seq_id', ii)
-                    cObj.setValue(authAsymId, 'end_auth_asym_id', ii)
-                    cObj.setValue(asymId, 'end_label_asym_id', ii)
-                    cObj.setValue(seqEnd, 'end_auth_seq_id', ii)
-                    cObj.setValue('CATH', 'domain_assigned_by', ii)
-                    cObj.setValue(vL[0], 'domain_assigned_version', ii)
+                    cObj.setValue(";".join(cathU.getNameLineage(cathId)), "domain_class_lineage_name", ii)
+                    idLinL = cathU.getIdLineage(cathId)
+                    cObj.setValue(";".join(idLinL), "domain_class_lineage_id", ii)
+                    cObj.setValue(";".join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", ii)
+                    cObj.setValue(authAsymId, "beg_auth_asym_id", ii)
+                    cObj.setValue(asymId, "beg_label_asym_id", ii)
+                    cObj.setValue(seqBeg, "beg_auth_seq_id", ii)
+                    cObj.setValue(authAsymId, "end_auth_asym_id", ii)
+                    cObj.setValue(asymId, "end_label_asym_id", ii)
+                    cObj.setValue(seqEnd, "end_auth_seq_id", ii)
+                    cObj.setValue("CATH", "domain_assigned_by", ii)
+                    cObj.setValue(vL[0], "domain_assigned_version", ii)
                     #
                     cathObj.setValue(kk + 1, "ordinal", kk)
                     cathObj.setValue(entryId, "entry_id", kk)
-                    cathObj.setValue(ad['entity_id'], "entity_id", kk)
+                    cathObj.setValue(ad["entity_id"], "entity_id", kk)
                     cathObj.setValue(str(domId), "domain_id", kk)
                     cathObj.setValue(cathId, "domain_class_id", kk)
-                    cathObj.setValue(self.__cathU.getCathName(cathId), "domain_class_name", kk)
-                    cathObj.setValue(';'.join(self.__cathU.getNameLineage(cathId)), "domain_class_lineage_name", kk)
-                    cathObj.setValue(';'.join(idLinL), "domain_class_lineage_id", kk)
-                    cathObj.setValue(';'.join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", kk)
-                    cathObj.setValue(vL[0], 'domain_assigned_version', kk)
+                    cathObj.setValue(cathU.getCathName(cathId), "domain_class_name", kk)
+                    cathObj.setValue(";".join(cathU.getNameLineage(cathId)), "domain_class_lineage_name", kk)
+                    cathObj.setValue(";".join(idLinL), "domain_class_lineage_id", kk)
+                    cathObj.setValue(";".join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", kk)
+                    cathObj.setValue(vL[0], "domain_assigned_version", kk)
                     #
-                    cathObj.setValue(authAsymId, 'beg_auth_asym_id', kk)
-                    cathObj.setValue(asymId, 'beg_label_asym_id', kk)
-                    cathObj.setValue(seqBeg, 'beg_auth_seq_id', kk)
-                    cathObj.setValue(authAsymId, 'end_auth_asym_id', kk)
-                    cathObj.setValue(asymId, 'end_label_asym_id', kk)
-                    cathObj.setValue(seqEnd, 'end_auth_seq_id', kk)
-                    cathObj.setValue('CATH', 'domain_assigned_by', kk)
-                    cathObj.setValue(vL[0], 'domain_assigned_version', kk)
+                    cathObj.setValue(authAsymId, "beg_auth_asym_id", kk)
+                    cathObj.setValue(asymId, "beg_label_asym_id", kk)
+                    cathObj.setValue(seqBeg, "beg_auth_seq_id", kk)
+                    cathObj.setValue(authAsymId, "end_auth_asym_id", kk)
+                    cathObj.setValue(asymId, "end_label_asym_id", kk)
+                    cathObj.setValue(seqEnd, "end_auth_seq_id", kk)
+                    cathObj.setValue("CATH", "domain_assigned_by", kk)
+                    cathObj.setValue(vL[0], "domain_assigned_version", kk)
                     ii += 1
                     kk += 1
 
@@ -3982,67 +4027,68 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             for authAsymId in authAsymD:
                 asymId = authAsymD[authAsymId]
                 ad = asymD[asymId]
-                dL = self.__scopU.getScopResidueRanges(entryId.lower(), authAsymId)
-                version = self.__scopU.getScopVersion(entryId.lower(), authAsymId)
+                dL = scopU.getScopResidueRanges(entryId.lower(), authAsymId)
+                version = scopU.getScopVersion()
                 for (sunId, domId, sccs, tId, seqBeg, seqEnd) in dL:
-                    logger.debug("sunId %r domId %r sccs %r asymId %r authAsymId %r  seqBeg %r seqEnd %r" % (sunId, domId, sccs, authAsymId, authAsymD[authAsymId], seqBeg, seqEnd))
+                    logger.debug("sunId %r domId %r sccs %r asymId %r authAsymId %r  seqBeg %r seqEnd %r", sunId, domId, sccs, authAsymId, authAsymD[authAsymId], seqBeg, seqEnd)
                     cObj.setValue(ii + 1, "ordinal", ii)
                     cObj.setValue(entryId, "entry_id", ii)
-                    cObj.setValue(ad['entity_id'], "entity_id", ii)
+                    cObj.setValue(ad["entity_id"], "entity_id", ii)
                     #
                     cObj.setValue(str(sunId), "domain_id", ii)
                     cObj.setValue(domId, "domain_class_id", ii)
-                    cObj.setValue(self.__scopU.getScopName(sunId), "domain_class_name", ii)
+                    cObj.setValue(scopU.getScopName(sunId), "domain_class_name", ii)
                     #
-                    tL = [t if t is not None else '' for t in self.__scopU.getNameLineage(sunId)]
-                    cObj.setValue(';'.join(tL), "domain_class_lineage_name", ii)
-                    idLinL = self.__scopU.getIdLineage(sunId)
-                    cObj.setValue(';'.join([str(t) for t in idLinL]), "domain_class_lineage_id", ii)
-                    cObj.setValue(';'.join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", ii)
+                    tL = [t if t is not None else "" for t in scopU.getNameLineage(sunId)]
+                    cObj.setValue(";".join(tL), "domain_class_lineage_name", ii)
+                    idLinL = scopU.getIdLineage(sunId)
+                    cObj.setValue(";".join([str(t) for t in idLinL]), "domain_class_lineage_id", ii)
+                    cObj.setValue(";".join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", ii)
                     #
-                    cObj.setValue(authAsymId, 'beg_auth_asym_id', ii)
-                    cObj.setValue(asymId, 'beg_label_asym_id', ii)
-                    cObj.setValue(seqBeg, 'beg_auth_seq_id', ii)
-                    cObj.setValue(authAsymId, 'end_auth_asym_id', ii)
-                    cObj.setValue(asymId, 'end_label_asym_id', ii)
-                    cObj.setValue(seqEnd, 'end_auth_seq_id', ii)
-                    cObj.setValue('SCOPe', 'domain_assigned_by', ii)
-                    cObj.setValue(version, 'domain_assigned_version', ii)
+                    cObj.setValue(authAsymId, "beg_auth_asym_id", ii)
+                    cObj.setValue(asymId, "beg_label_asym_id", ii)
+                    cObj.setValue(seqBeg, "beg_auth_seq_id", ii)
+                    cObj.setValue(authAsymId, "end_auth_asym_id", ii)
+                    cObj.setValue(asymId, "end_label_asym_id", ii)
+                    cObj.setValue(seqEnd, "end_auth_seq_id", ii)
+                    cObj.setValue("SCOPe", "domain_assigned_by", ii)
+                    cObj.setValue(version, "domain_assigned_version", ii)
                     #
                     #
                     scopObj.setValue(kk + 1, "ordinal", kk)
                     scopObj.setValue(entryId, "entry_id", kk)
-                    scopObj.setValue(ad['entity_id'], "entity_id", kk)
+                    scopObj.setValue(ad["entity_id"], "entity_id", kk)
                     scopObj.setValue(str(sunId), "domain_id", kk)
                     scopObj.setValue(domId, "domain_class_id", kk)
-                    scopObj.setValue(self.__scopU.getScopName(sunId), "domain_class_name", kk)
+                    scopObj.setValue(scopU.getScopName(sunId), "domain_class_name", kk)
                     #
-                    tL = [t if t is not None else '' for t in self.__scopU.getNameLineage(sunId)]
-                    scopObj.setValue(';'.join(tL), "domain_class_lineage_name", kk)
-                    scopObj.setValue(';'.join([str(t) for t in idLinL]), "domain_class_lineage_id", kk)
-                    scopObj.setValue(';'.join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", kk)
-                    scopObj.setValue(version, 'domain_assigned_version', kk)
-                    scopObj.setValue(authAsymId, 'beg_auth_asym_id', kk)
-                    scopObj.setValue(asymId, 'beg_label_asym_id', kk)
-                    scopObj.setValue(seqBeg, 'beg_auth_seq_id', kk)
-                    scopObj.setValue(authAsymId, 'end_auth_asym_id', kk)
-                    scopObj.setValue(asymId, 'end_label_asym_id', kk)
-                    scopObj.setValue(seqEnd, 'end_auth_seq_id', kk)
-                    scopObj.setValue('SCOPe', 'domain_assigned_by', kk)
-                    scopObj.setValue(version, 'domain_assigned_version', kk)
+                    tL = [t if t is not None else "" for t in scopU.getNameLineage(sunId)]
+                    scopObj.setValue(";".join(tL), "domain_class_lineage_name", kk)
+                    scopObj.setValue(";".join([str(t) for t in idLinL]), "domain_class_lineage_id", kk)
+                    scopObj.setValue(";".join([str(jj) for jj in range(1, len(idLinL) + 1)]), "domain_class_lineage_depth", kk)
+                    scopObj.setValue(version, "domain_assigned_version", kk)
+                    scopObj.setValue(authAsymId, "beg_auth_asym_id", kk)
+                    scopObj.setValue(asymId, "beg_label_asym_id", kk)
+                    scopObj.setValue(seqBeg, "beg_auth_seq_id", kk)
+                    scopObj.setValue(authAsymId, "end_auth_asym_id", kk)
+                    scopObj.setValue(asymId, "end_label_asym_id", kk)
+                    scopObj.setValue(seqEnd, "end_auth_seq_id", kk)
+                    scopObj.setValue("SCOPe", "domain_assigned_by", kk)
+                    scopObj.setValue(version, "domain_assigned_version", kk)
                     #
                     ii += 1
                     kk += 1
 
             return True
         except Exception as e:
-            logger.exception("%s %s failing with %s" % (dataContainer.getName(), catName, str(e)))
+            logger.exception("%s %s failing with %s", dataContainer.getName(), catName, str(e))
         return False
 
     def filterEnumerations(self, dataContainer, catName, atName, **kwargs):
         """ Standardize the item value to conform to enumeration specifications.
         """
-        subD = {('pdbx_reference_molecule', 'class'): [('Anti-tumor', 'Antitumor')]}
+        logger.debug("Starting with %r %r %r %r", dataContainer.getName(), atName, catName, kwargs)
+        subD = {("pdbx_reference_molecule", "class"): [("Anti-tumor", "Antitumor")]}
         try:
             if not dataContainer.exists(catName):
                 return False
@@ -4055,20 +4101,20 @@ class DictMethodRunnerHelper(DictMethodRunnerHelperBase):
             #
             for ii in range(cObj.getRowCount()):
                 tV = cObj.getValue(atName, ii)
-                if tV and tV not in ['.', '?']:
+                if tV and tV not in [".", "?"]:
                     for sub in subL:
                         if sub[0] in tV:
                             tV = tV.replace(sub[0], sub[1])
                             cObj.setValue(tV, atName, ii)
             return True
         except Exception as e:
-            logger.exception("%s %s %s failing with %s" % (dataContainer.getName(), catName, atName, str(e)))
+            logger.exception("%s %s %s failing with %s", dataContainer.getName(), catName, atName, str(e))
         return False
 
     def deferredItemMethod(self, dataContainer, catName, atName, **kwargs):
         """ Placeholder method to
         """
-        logger.debug("Called deferred method for %r %r %r" % (dataContainer.getName(), catName, atName))
+        logger.debug("Called deferred method for %r %r %r %r", dataContainer.getName(), catName, atName, kwargs)
         return True
 
     def __getTimeStamp(self):

@@ -150,3 +150,4 @@
  20-May-2019  V0.63 Category rcsb_prot_sec_struct_info added to core_entity_instance and prune primary secondary structure
                     categories from this collection.
  21-May-2019  V0.64 Handle odd ordering of records in struct_ref_seq_dif
+ 29-Jun-2019  V0.65 Update development workflow, method code packaging,  and general housekeeping

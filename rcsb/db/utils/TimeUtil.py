@@ -20,15 +20,13 @@ import datetime
 import logging
 
 import dateutil.parser
-from dateutil.tz import tzlocal
-
 import pytz
+from dateutil.tz import tzlocal  # pylint: disable=ungrouped-imports
 
 logger = logging.getLogger(__name__)
 
 
 class TimeUtil(object):
-
     def __init__(self, **kwargs):
         pass
 
@@ -42,7 +40,7 @@ class TimeUtil(object):
             str: ISO 8601 format timestamp string
         """
         dt = datetime.datetime.utcnow().replace(tzinfo=pytz.utc) if useUtc else datetime.datetime.now().replace(tzinfo=tzlocal())
-        return dt.isoformat(' ')
+        return dt.isoformat(" ")
 
     def getWeekSignature(self, yyyy, mm, dd):
         """Return week in year signature (e.g. 2018_21) for the input date (year, month and day).
@@ -78,5 +76,5 @@ class TimeUtil(object):
         try:
             return dateutil.parser.parse(tS)
         except Exception as e:
-            logger.exception("Failing with %r" % str(e))
+            logger.exception("Failing with %r", str(e))
         return None

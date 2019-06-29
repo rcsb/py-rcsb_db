@@ -42,11 +42,14 @@ import logging
 import os
 import time
 
-from rcsb.db.define.DictMethodRunner import DictMethodRunner
+from rcsb.db.define.DictionaryProvider import DictionaryProvider
+from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.mysql.MyDbUtil import MyDbQuery
 from rcsb.db.processors.DataTransformFactory import DataTransformFactory
 from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb.db.sql.SqlGen import SqlGenAdmin
+
+from mmcif.api.DictMethodRunner import DictMethodRunner
 
 logger = logging.getLogger(__name__)
 #
@@ -57,7 +60,7 @@ class SchemaDefLoader(object):
     """ Map PDBx/mmCIF instance data to SQL loadable data using external schema definition.
     """
 
-    def __init__(self, cfgOb, schemaDefObj, cfgSectionName='site_info', dbCon=None, workPath='.', cleanUp=False, warnings='default', verbose=True):
+    def __init__(self, cfgOb, schemaDefObj, cfgSectionName="site_info", dbCon=None, workPath=".", cleanUp=False, warnings="default", verbose=True):
         self.__verbose = verbose
         self.__debug = False
         self.__cfgOb = cfgOb
@@ -68,56 +71,44 @@ class SchemaDefLoader(object):
         self.__pathList = []
         self.__cleanUp = cleanUp
         #
-        self.__colSep = '&##&\t'
-        self.__rowSep = '$##$\n'
+        self.__colSep = "&##&\t"
+        self.__rowSep = "$##$\n"
         #
         #
         self.__fTypeRow = "skip-max-width"
         self.__fTypeCol = "skip-max-width"
         #
         self.__warningAction = warnings
-        dtf = DataTransformFactory(schemaDefObj=self.__sD, filterType=self.__fTypeRow)
+        dtf = DataTransformFactory(schemaDefAccessObj=self.__sD, filterType=self.__fTypeRow)
         self.__sdp = SchemaDefDataPrep(schemaDefAccessObj=self.__sD, dtObj=dtf, workPath=self.__workingPath, verbose=self.__verbose)
-
         #
         sectionName = cfgSectionName
-        pathPdbxDictionaryFile = self.__cfgOb.getPath('PDBX_DICT_LOCATOR', sectionName=sectionName)
-        pathRcsbDictionaryFile = self.__cfgOb.getPath('RCSB_DICT_LOCATOR', sectionName=sectionName)
-#
-        pathDrugBankMappingFile = self.__cfgOb.getPath('DRUGBANK_MAPPING_LOCATOR', sectionName=sectionName)
-        pathCsdModelMappingFile = self.__cfgOb.getPath('CCDC_MAPPING_LOCATOR', sectionName=sectionName)
-        pathTaxonomyData = self.__cfgOb.getPath('NCBI_TAXONOMY_PATH', sectionName=sectionName)
-        pathEnzymeData = self.__cfgOb.getPath('ENZYME_CLASSIFICATION_DATA_PATH', sectionName=sectionName)
-        structDomainDataPath = self.__cfgOb.getPath('STRUCT_DOMAIN_CLASSIFICATION_DATA_PATH', sectionName=sectionName)
+        pathPdbxDictionaryFile = self.__cfgOb.getPath("PDBX_DICT_LOCATOR", sectionName=sectionName)
+        pathRcsbDictionaryFile = self.__cfgOb.getPath("RCSB_DICT_LOCATOR", sectionName=sectionName)
+        pathVrptDictionaryFile = self.__cfgOb.getPath("VRPT_DICT_LOCATOR", sectionName=sectionName)
         #
-        #
-        dH = self.__cfgOb.getHelper('DICT_METHOD_HELPER_MODULE', sectionName=sectionName,
-                                    drugBankMappingFilePath=pathDrugBankMappingFile,
-                                    workPath=self.__workingPath,
-                                    csdModelMappingFilePath=pathCsdModelMappingFile,
-                                    enzymeDataPath=pathEnzymeData,
-                                    taxonomyDataPath=pathTaxonomyData,
-                                    structDomainDataPath=structDomainDataPath)
-
-        self.__dmh = DictMethodRunner(dictLocators=[pathPdbxDictionaryFile, pathRcsbDictionaryFile], methodHelper=dH)
+        dP = DictionaryProvider()
+        dictApi = dP.getApi(dictLocators=[pathPdbxDictionaryFile, pathRcsbDictionaryFile, pathVrptDictionaryFile])
+        rP = DictMethodResourceProvider(self.__cfgOb, configName=sectionName, workPath=self.__workingPath)
+        self.__dmh = DictMethodRunner(dictApi, resourceProvider=rP)
 
     def setWarning(self, action):
-        if action in ['error', 'ignore', 'default']:
+        if action in ["error", "ignore", "default"]:
             self.__warningAction = action
             return True
         else:
-            self.__warningAction = 'default'
+            self.__warningAction = "default"
             return False
 
     def setDelimiters(self, colSep=None, rowSep=None):
         """  Set column and row delimiters for intermediate data files used for
              batch-file loading operations.
         """
-        self.__colSep = colSep if colSep is not None else '&##&\t'
-        self.__rowSep = rowSep if rowSep is not None else '$##$\n'
+        self.__colSep = colSep if colSep is not None else "&##&\t"
+        self.__rowSep = rowSep if rowSep is not None else "$##$\n"
         return True
 
-    def load(self, inputPathList=None, containerList=None, loadType='batch-file', deleteOpt=None, tableIdSkipD=None):
+    def load(self, inputPathList=None, containerList=None, loadType="batch-file", deleteOpt=None, tableIdSkipD=None):
         """ Load data for each table defined in the current schema definition object.
             Data are extracted from the input file list.
 
@@ -148,16 +139,16 @@ class SchemaDefLoader(object):
             #
             # Apply dynamic methods here -
             #
-            for c in cL:
-                self.__dmh.apply(c)
+            for cA in cL:
+                self.__dmh.apply(cA)
             tableDataDict, containerNameList = self.__sdp.process(cL)
 
         elif containerList is not None:
             tableDataDict, containerNameList = self.__sdp.process(containerList)
         #
         #
-        if loadType in ['batch-file', 'batch-file-append']:
-            append = True if loadType == 'batch-file-append' else False
+        if loadType in ["batch-file", "batch-file-append"]:
+            append = True if loadType == "batch-file-append" else False
             exportList = self.__exportTdd(tableDataDict, colSep=self.__colSep, rowSep=self.__rowSep, append=append)
             for tableId, loadPath in exportList:
                 if tableId in tableIdSkipD:
@@ -166,11 +157,11 @@ class SchemaDefLoader(object):
                 if self.__cleanUp:
                     self.__cleanUpFile(loadPath)
             return True
-        elif loadType == 'batch-insert':
+        elif loadType == "batch-insert":
             for tableId, rowList in tableDataDict.items():
                 if tableId in tableIdSkipD:
                     continue
-                if deleteOpt in ['all', 'selected'] or len(rowList) > 0:
+                if deleteOpt in ["all", "selected"] or rowList:
                     self.__batchInsertImport(tableId, rowList=rowList, containerNameList=containerNameList, deleteOpt=deleteOpt)
             return True
         else:
@@ -193,16 +184,17 @@ class SchemaDefLoader(object):
             Return the containerNames for the input path list, and path list for load files that are created.
 
         """
+        _ = workingDir
         try:
-            pn = procName.split('-')[-1]
+            pn = procName.split("-")[-1]
         except Exception:
             pn = procName
 
-        exportFormat = optionsD['exportFormat'] if 'exportFormat' in optionsD else 'tdd'
+        exportFormat = optionsD["exportFormat"] if "exportFormat" in optionsD else "tdd"
         r1, r2 = self.makeLoadFiles(inputPathList=dataList, partName=pn, exportFormat=exportFormat)
         return dataList, r1, r2, []
 
-    def makeLoadFiles(self, inputPathList, append=False, partName='1', exportFormat='tdd'):
+    def makeLoadFiles(self, inputPathList, append=False, partName="1", exportFormat="tdd"):
         """ Create a loadable data file for each table defined in the current schema
             definition object.   Data is extracted from the input file list.
 
@@ -212,32 +204,32 @@ class SchemaDefLoader(object):
 
         """
         cL = self.__sdp.getContainerList(inputPathList, filterType=self.__fTypeRow)
-        for c in cL:
-            self.__dmh.apply(c)
+        for cA in cL:
+            self.__dmh.apply(cA)
         tableDataDict, containerNameList = self.__sdp.process(cL)
-        if exportFormat == 'tdd':
+        if exportFormat == "tdd":
             return containerNameList, self.__exportTdd(tableDataDict, colSep=self.__colSep, rowSep=self.__rowSep, append=append, partName=partName)
-        elif exportFormat == 'csv':
+        elif exportFormat == "csv":
             return containerNameList, self.__exportCsv(tableDataDict, append=append, partName=partName)
         else:
             return [], []
 
-    def __exportCsv(self, tableDict, append=False, partName='1'):
+    def __exportCsv(self, tableDict, append=False, partName="1"):
         """
 
         """
-        modeOpt = 'a' if append else 'w'
+        modeOpt = "a" if append else "w"
 
         exportList = []
         for tableId, rowList in tableDict.items():
-            if len(rowList) == 0:
+            if not rowList:
                 continue
             tObj = self.__sD.getSchemaObject(tableId)
             schemaAttributeIdList = tObj.getAttributeIdList()
             attributeNameList = tObj.getAttributeNameList()
             #
             fn = os.path.join(self.__workingPath, tableId + "-" + partName + ".csv")
-            with open(fn, modeOpt, newline='') as ofh:
+            with open(fn, modeOpt, newline="") as ofh:
                 csvWriter = csv.writer(ofh)
                 csvWriter.writerow(attributeNameList)
                 for rD in rowList:
@@ -246,15 +238,15 @@ class SchemaDefLoader(object):
             exportList.append((tableId, fn))
         return exportList
 
-    def __exportTdd(self, tableDict, colSep='&##&\t', rowSep='$##$\n', append=False, partName='1'):
-        modeOpt = 'a' if append else 'w'
+    def __exportTdd(self, tableDict, colSep="&##&\t", rowSep="$##$\n", append=False, partName="1"):
+        modeOpt = "a" if append else "w"
 
         exportList = []
         for tableId, rowList in tableDict.items():
             tObj = self.__sD.getSchemaObject(tableId)
             schemaAttributeIdList = tObj.getAttributeIdList()
             #
-            if len(rowList) > 0:
+            if rowList:
                 fn = os.path.join(self.__workingPath, tableId + "-" + partName + ".tdd")
                 ofh = open(fn, modeOpt)
                 for rD in rowList:
@@ -289,14 +281,13 @@ class SchemaDefLoader(object):
                 self.__cleanUpFile(loadPath)
         #
         endTime = time.time()
-        logger.debug("Completed with status %r at %s (%.3f seconds)\n" %
-                     (ok, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+        logger.debug("Completed with status %r at %s (%.3f seconds)\n", ok, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
         return ok
 
-    def delete(self, tableId, containerNameList=None, deleteOpt='all'):
+    def delete(self, tableId, containerNameList=None, deleteOpt="all"):
         #
         startTime = time.time()
-        sqlCommandList = self.__getSqlDeleteList(tableId, containerNameList=None, deleteOpt=deleteOpt)
+        sqlCommandList = self.__getSqlDeleteList(tableId, containerNameList=containerNameList, deleteOpt=deleteOpt)
 
         myQ = MyDbQuery(dbcon=self.__dbCon, verbose=self.__verbose)
         myQ.setWarning(self.__warningAction)
@@ -305,12 +296,11 @@ class SchemaDefLoader(object):
         #
         endTime = time.time()
 
-        logger.debug("Delete table %s server returns %r\n" % (tableId, ret))
-        logger.debug("Completed at %s (%.3f seconds)\n" %
-                     (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+        logger.debug("Delete table %s server returns %r\n", tableId, ret)
+        logger.debug("Completed at %s (%.3f seconds)\n", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
         return ret
 
-    def __getSqlDeleteList(self, tableId, containerNameList=None, deleteOpt='all'):
+    def __getSqlDeleteList(self, tableId, containerNameList=None, deleteOpt="all"):
         """ Return the SQL delete commands for the input table and container name list.
 
         """
@@ -322,16 +312,16 @@ class SchemaDefLoader(object):
         tableName = tableDefObj.getName()
 
         sqlDeleteList = []
-        if deleteOpt in ['selected', 'delete'] and containerNameList is not None:
+        if deleteOpt in ["selected", "delete"] and containerNameList is not None:
             deleteAttributeName = tableDefObj.getDeleteAttributeName()
             sqlDeleteList = sqlGen.deleteFromListSQL(databaseName, tableName, deleteAttributeName, containerNameList, chunkSize=50)
-        elif deleteOpt in ['all', 'truncate']:
+        elif deleteOpt in ["all", "truncate"]:
             sqlDeleteList = [sqlGen.truncateTableSQL(databaseName, tableName)]
 
-        logger.debug("Delete SQL for %s : %r\n" % (tableId, sqlDeleteList))
+        logger.debug("Delete SQL for %s : %r\n", tableId, sqlDeleteList)
         return sqlDeleteList
 
-    def __batchFileImport(self, tableId, tableLoadPath, sqlFilePath=None, containerNameList=None, deleteOpt='all'):
+    def __batchFileImport(self, tableId, tableLoadPath, sqlFilePath=None, containerNameList=None, deleteOpt="all"):
         """ Batch load the input table using data in the input loadable data file.
 
             if sqlFilePath is provided then any generated SQL commands are preserved in this file.
@@ -357,14 +347,14 @@ class SchemaDefLoader(object):
 
             sqlCommandList.append(sqlGen.importTable(databaseName, tableDefObj, importPath=tableLoadPath))
 
-            if (self.__verbose):
-                logger.debug("SQL import command\n%s\n" % sqlCommandList)
+            if self.__verbose:
+                logger.debug("SQL import command\n%s\n", sqlCommandList)
             #
 
         if sqlFilePath is not None:
             try:
-                with open(sqlFilePath, 'w') as ofh:
-                    ofh.write("%s" % '\n'.join(sqlCommandList))
+                with open(sqlFilePath, "w") as ofh:
+                    ofh.write("%s" % "\n".join(sqlCommandList))
             except Exception:
                 pass
         #
@@ -374,15 +364,14 @@ class SchemaDefLoader(object):
         #
         #
         endTime = time.time()
-        logger.debug("Table %s server returns %r\n" % (tableId, ret))
-        logger.debug("Completed at %s (%.3f seconds)\n" %
-                     (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+        logger.debug("Table %s server returns %r\n", tableId, ret)
+        logger.debug("Completed at %s (%.3f seconds)\n", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
         return ret
 
-    def loadBatchData(self, tableId, rowList=None, containerNameList=None, deleteOpt='selected'):
+    def loadBatchData(self, tableId, rowList=None, containerNameList=None, deleteOpt="selected"):
         return self.__batchInsertImport(tableId, rowList=rowList, containerNameList=containerNameList, deleteOpt=deleteOpt)
 
-    def __batchInsertImport(self, tableId, rowList=None, containerNameList=None, deleteOpt='selected'):
+    def __batchInsertImport(self, tableId, rowList=None, containerNameList=None, deleteOpt="selected"):
         """ Load the input table using batch inserts of the input list of dictionaries (i.e. d[attributeId]=value).
 
             The containerNameList corresponding to the data within loadable data in rowList can be provided
@@ -407,35 +396,34 @@ class SchemaDefLoader(object):
         tableAttributeNameList = tableDefObj.getAttributeNameList()
         #
         sqlDeleteList = None
-        if deleteOpt in ['selected', 'delete'] and containerNameList is not None:
+        if deleteOpt in ["selected", "delete"] and containerNameList is not None:
             deleteAttributeName = tableDefObj.getDeleteAttributeName()
             sqlDeleteList = sqlGen.deleteFromListSQL(databaseName, tableName, deleteAttributeName, containerNameList, chunkSize=10)
-            if (self.__verbose):
-                logger.debug("Delete SQL for %s : %r\n" % (tableId, sqlDeleteList))
-        elif deleteOpt in ['all', 'truncate']:
+            if self.__verbose:
+                logger.debug("Delete SQL for %s : %r\n", tableId, sqlDeleteList)
+        elif deleteOpt in ["all", "truncate"]:
             sqlDeleteList = [sqlGen.truncateTableSQL(databaseName, tableName)]
 
         sqlInsertList = []
         for row in rowList:
             vList = []
             aList = []
-            for id, nm in zip(tableAttributeIdList, tableAttributeNameList):
+            for tid, nm in zip(tableAttributeIdList, tableAttributeNameList):
                 # if len(row[id]) > 0 and row[id] != r'\N':
-                if row[id] is not None and row[id] != r'\N':
-                    vList.append(row[id])
+                if row[tid] is not None and row[tid] != r"\N":
+                    vList.append(row[tid])
                     aList.append(nm)
             sqlInsertList.append((sqlGen.insertTemplateSQL(databaseName, tableName, aList), vList))
 
         ret = myQ.sqlBatchTemplateCommand(sqlInsertList, prependSqlList=sqlDeleteList)
-        if (ret):
-            logger.debug("Batch insert completed for table %s rows %d\n" % (tableName, len(sqlInsertList)))
+        if ret:
+            logger.debug("Batch insert completed for table %s rows %d\n", tableName, len(sqlInsertList))
         else:
-            logger.error("Batch insert fails for table %s length %d\n" % (tableName, len(sqlInsertList)))
+            logger.error("Batch insert fails for table %s length %d\n", tableName, len(sqlInsertList))
 
         endTime = time.time()
-        if (self.__verbose):
-            logger.debug("Completed at %s (%.3f seconds)\n" %
-                         (time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime))
+        if self.__verbose:
+            logger.debug("Completed at %s (%.3f seconds)\n", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
 
         return ret
 
@@ -444,13 +432,14 @@ class SchemaDefLoader(object):
              has the input value "deleteValue".
 
         """
+        databaseName = self.__sD.getDatabaseName()
         sqlList = []
         sqlGen = SqlGenAdmin(self.__verbose)
         for tableId in tableIdList:
             tableName = self.__sD.getSchemaName(tableId)
             tableDefObj = self.__sD.getSchemaObject(tableId)
             atName = tableDefObj.getDeleteAttributeName()
-            sqlTemp = sqlGen.deleteTemplate(tableName, [atName])
+            sqlTemp = sqlGen.deleteTemplateSQL(databaseName, tableName, [atName])
             sqlList.append(sqlTemp % deleteValue)
         #
         return sqlList
