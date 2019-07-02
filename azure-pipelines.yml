@@ -41,7 +41,7 @@ steps:
     displayName: 'Install flex'
   - script: sudo apt-get install bison
     displayName: 'Install bison'
-  -bash: |
+  - bash: |
       sudo apt-get install software-properties-common
       sudo apt list --installed | grep -i mysql
     displayName: 'Install mysql development libraries'
