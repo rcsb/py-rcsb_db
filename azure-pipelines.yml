@@ -53,7 +53,9 @@ steps:
       echo 'mariadb-server mysql-server/root_password password ChangeMeSoon' | sudo debconf-set-selections
       echo 'mariadb-server mysql-server/root_password_again password ChangeMeSoon' | sudo debconf-set-selections
       echo 'Presetting password details done'
-      sudo apt-get -y install mariadb-server
+      #
+      sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
+      #sudo apt-get -y install mariadb-server
       sudo apt-get install mariadb-client libmariadbclient-dev
       sudo apt list --installed | grep mariadb
     displayName: 'Installing mariadb'
