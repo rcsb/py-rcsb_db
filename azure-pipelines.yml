@@ -41,39 +41,46 @@ steps:
     displayName: 'Install flex'
   - script: sudo apt-get install bison
     displayName: 'Install bison'
-  - script: sudo apt-get install mariadb-server mariadb-client libmariadbclient-dev
-    displayName: 'Install mariadb'
+    # Pull mariadb v10.4
+    - script: |
+      sudo apt-get install software-properties-common
+      sudo apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xF1656F24C74CD1D8
+      sudo add-apt-repository 'deb [arch=amd64,arm64,i386,ppc64el] http://sfo1.mirrors.digitalocean.com/mariadb/repo/10.4/ubuntu xenial main'
+      sudo apt-get update
+      sudo apt-get install mariadb-server mariadb-client libmariadbclient-dev
+      sudo apt list --installed | grep mariadb
+    displayName: 'Installing mariadb'
+  #
   # Check the install
   - script: ls -lR .
     displayName: "Listing of installed software"
   #
   # Mongo install
-  - script: sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
-    displayName: "Get MongoDb key"
-  - script: sudo apt list --installed | grep mongodb
-    displayName: "Check for installeed mongodb"
-  - script: echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list
-    displayName: "Install repo def"
-  - script: sudo apt-get update
-    displayName: "Reload package data"
   - script: |
+      sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
+      sudo apt list --installed | grep mongodb
+      echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list
+      sudo apt-get update
       sudo apt-get install -y mongodb-org
       sudo apt list --installed | grep mongo
-    displayName: "Install MongoDb package"
+    displayName: "Installing mongodb"
+  #
   - script:  |
       sudo service mongod start
       sudo ss --tulpn
     displayName: "Start Mongo service"
+  #
+  #  install python dependencies
   - task: UsePythonVersion@0
     displayName: 'Use Python $(python.version)'
     inputs:
       versionSpec: '$(python.version)'
 
   - script: python -m pip install --upgrade pip
-    displayName: 'Install tools'
+    displayName: 'Install python tools'
 
   - script: pip install -r requirements.txt
-    displayName: 'Install dependencies'
+    displayName: 'Install python dependencies'
 
   - script: pip install tox
     displayName: 'Install Tox'
