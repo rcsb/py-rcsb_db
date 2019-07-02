@@ -41,7 +41,7 @@ steps:
     displayName: 'Install flex'
   - script: sudo apt-get install bison
     displayName: 'Install bison'
-  - script: sudo apt-get install mariadb-server mariadb-client
+  - script: sudo apt-get install mariadb-server mariadb-client libmariadbclient-dev
     displayName: 'Install mariadb'
   # Check the install
   - script: ls -lR .
@@ -56,9 +56,13 @@ steps:
     displayName: "Install repo def"
   - script: sudo apt-get update
     displayName: "Reload package data"
-  - script: sudo apt-get install -y mongodb-org
+  - script: |
+      sudo apt-get install -y mongodb-org
+      sudo apt list --installed | grep mongo
     displayName: "Install MongoDb package"
-  - script:  sudo service mongod start
+  - script:  |
+      sudo service mongod start
+      sudo ss --tulpn
     displayName: "Start Mongo service"
   - task: UsePythonVersion@0
     displayName: 'Use Python $(python.version)'
