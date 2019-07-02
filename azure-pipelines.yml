@@ -41,6 +41,25 @@ steps:
     displayName: 'Install flex'
   - script: sudo apt-get install bison
     displayName: 'Install bison'
+  - script: sudo apt-get install mariadb-server mariadb-client
+    displayName: 'Install mariadb'
+  # Check the install
+  - script: ls -lR .
+    displayName: "Listing of installed software"
+  #
+  # Mongo install
+  - script: sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
+    displaName: "Get MongoDb key"
+  - script: sudo apt list --installed | grep mongodb
+    displayName: "Check for installeed mongodb"
+  - script: echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list
+    displayName: "Install repo def"
+  - script: sudo apt-get update
+    displayName: "Reload package data"
+  - script: sudo apt-get install -y mongodb-org
+    displayName: "Install MongoDb package"
+  - script:  sudo service mongod start
+    displayName: "Start Mongo service"
   - task: UsePythonVersion@0
     displayName: 'Use Python $(python.version)'
     inputs:
