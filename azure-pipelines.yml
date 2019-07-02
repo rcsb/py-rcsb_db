@@ -67,7 +67,7 @@ steps:
         DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
         FLUSH PRIVILEGES;
       _EOF_
-    displayName: 'Start and configure mariadb'
+    displayName: 'Start and configure mariadb ...'
   #
   # Check the install
   - script: ls -lR .
