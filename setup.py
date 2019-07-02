@@ -60,7 +60,7 @@ setup(
         "pytz",
         "jsonschema >= 2.6.0",
         "strict-rfc3339",
-        "mysqlclient >= 1.3.12",
+        # "mysqlclient >= 1.3.12",
         "pymongo >= 3.7.0",
         "mmcif >= 0.40",
         'scandir; python_version < "3.0"',
