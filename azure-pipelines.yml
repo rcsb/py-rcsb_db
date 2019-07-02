@@ -49,12 +49,13 @@ steps:
       sudo add-apt-repository 'deb [arch=amd64,arm64,i386,ppc64el] http://sfo1.mirrors.digitalocean.com/mariadb/repo/10.4/ubuntu xenial main'
       sudo apt-get update
       #
-      #echo 'Presetting password details'
-      #echo 'mariadb-server mysql-server/root_password password ChangeMeSoon' | sudo debconf-set-selections
-      #echo 'mariadb-server mysql-server/root_password_again password ChangeMeSoon' | sudo debconf-set-selections
-      #echo 'Presetting password details done'
+      echo 'Presetting password details'
+      echo 'mariadb-server-10.4 mysql-server/root_password password ChangeMeSoon' | sudo debconf-set-selections
+      echo 'mariadb-server-10.4 mysql-server/root_password_again password ChangeMeSoon' | sudo debconf-set-selections
+      echo 'Presetting password details done'
       #
-      sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mariadb-server
+      sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mariadb-server-10.4
+      #sudo apt-get install -y mariadb-server-10.4
       sudo apt-get install mariadb-client libmariadbclient-dev
       sudo apt list --installed | grep mariadb
     displayName: 'Installing mariadb'
@@ -63,7 +64,7 @@ steps:
       echo "Starting mariadb service"
       sudo systemctl restart mysql.service
       mysql -V
-      mysql -u root  -e "SET PASSWORD FOR root@'localhost' = PASSWORD(‘ChangeMeSoon’);"
+      # mysql -u root  -e "SET PASSWORD FOR root@'localhost' = PASSWORD(‘ChangeMeSoon’);"
       # UPDATE mysql.user SET Password=PASSWORD('ChangeMeSoon') WHERE User='root';
       echo "Running preliminary mariadb setup"
       mysql --user=root --password=ChangeMeSoon <<_EOF_
