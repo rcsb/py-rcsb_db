@@ -41,6 +41,10 @@ steps:
     displayName: 'Install flex'
   - script: sudo apt-get install bison
     displayName: 'Install bison'
+  -bash: |
+      sudo apt-get install software-properties-common
+      sudo apt list --installed | grep -i mysql
+    displayName: 'Install mysql development libraries'
 # Pull mariadb v10.4
 #  - bash: |
 #      sudo apt-get install software-properties-common
@@ -100,6 +104,8 @@ steps:
         FLUSH PRIVILEGES;
       _EOF_
       ps -ef | grep -i my
+      mysql --user=root --password=ChangeMeSoon -e "show databases;"
+      #
     displayName: 'Start and configure mysql ...'
   #
   # Check the install
