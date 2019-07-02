@@ -62,13 +62,25 @@ steps:
       sudo systemctl list-unit-files
       #
       sudo ls -la /var/log/mysql
+      sudo ls -la /var/run
+      #sudo cat /var/log/mysql/error.log
+      #
+      echo "Standalone mode password reset"
+      sudu systemctl stop mariadb.service
+      sudo mysqld_safe --skip-grant-tables --skip-networking &
+      mysql -u root  -e "FLUSH PRIVILEGES; update mysql.user set password=password('ChangeMeSoon') where user='root'; FLUSH PRIVILEGES;"
+      mysql -u root  -e "FLUSH PRIVILEGES; UPDATE user SET authentication_string = password('ChangeMeSoon') where User='root'; FLUSH PRIVILEGES"
+      sudo systemctl stop mariadb.service
+      #
+      sudo ls -la /var/log/mysql
+      sudo ls -la /var/run
       sudo cat /var/log/mysql/error.log
       #
     displayName: 'Installing mariadb'
   #
   - bash: |
       echo "Starting mariadb service"
-      sudo systemctl restart mysql.service
+      sudo systemctl restart mariadb.service
       mysql -V
       # mysql -u root  -e "SET PASSWORD FOR root@'localhost' = PASSWORD(‘ChangeMeSoon’);"
       # UPDATE mysql.user SET Password=PASSWORD('ChangeMeSoon') WHERE User='root';
