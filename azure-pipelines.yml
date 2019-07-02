@@ -67,7 +67,7 @@ steps:
   #
   - script:  |
       sudo service mongod start
-      sudo ss --tulpn
+      sudo ss -tulpn
     displayName: "Start Mongo service"
   #
   #  install python dependencies
