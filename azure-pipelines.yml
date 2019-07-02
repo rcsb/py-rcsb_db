@@ -42,7 +42,7 @@ steps:
   - script: sudo apt-get install bison
     displayName: 'Install bison'
   - bash: |
-      sudo apt-get install software-properties-common
+      sudo apt-get install libmysqlclient-dev python-mysqldb
       sudo apt list --installed | grep -i mysql
     displayName: 'Install mysql development libraries'
 # Pull mariadb v10.4
