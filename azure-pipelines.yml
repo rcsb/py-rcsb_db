@@ -42,18 +42,31 @@ steps:
   - script: sudo apt-get install bison
     displayName: 'Install bison'
     # Pull mariadb v10.4
-  - script: |
+  - bash: |
       sudo apt-get install software-properties-common
+      sudo apt-get install debconf-utils
       sudo apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xF1656F24C74CD1D8
       sudo add-apt-repository 'deb [arch=amd64,arm64,i386,ppc64el] http://sfo1.mirrors.digitalocean.com/mariadb/repo/10.4/ubuntu xenial main'
       sudo apt-get update
-      sudo apt-get install mariadb-server mariadb-client libmariadbclient-dev > /dev/null 2>&1
+      #
+      sudo debconf-set-selections <<< 'mariadb-server mysql-server/root_password password ChangeMeSoon'
+      sudo debconf-set-selections <<< 'mariadb-server mysql-server/root_password_again password ChangeMeSoon'
+      sudo apt-get -y install mysql-server
+      sudo apt-get install mariadb-client libmariadbclient-dev
       sudo apt list --installed | grep mariadb
     displayName: 'Installing mariadb'
   - bash: |
       sudo systemctl restart mysql.service
       mysql -V
-      mysql -u root -e "SET PASSWORD FOR root@'localhost' = PASSWORD(‘ChangeMeSoon’);"
+      # mysql -u root -p 'Temp0000' -e "SET PASSWORD FOR root@'localhost' = PASSWORD(‘ChangeMeSoon’);"
+      # UPDATE mysql.user SET Password=PASSWORD('ChangeMeSoon') WHERE User='root';
+      mysql --user=root --password=ChangeMeSoon <<_EOF_
+        DELETE FROM mysql.user WHERE User='';
+        DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+        DROP DATABASE IF EXISTS test;
+        DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
+        FLUSH PRIVILEGES;
+      _EOF_
     displayName: 'Start and configure mariadb'
   #
   # Check the install
