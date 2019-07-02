@@ -82,10 +82,16 @@ steps:
       echo "Retarting mysql service"
       sudo systemctl restart mysql.service
       mysql -V
+      mysql --user=root --password=root -e "use mysql; select * from user;"
+      #
+      echo "Try resetting password"
+      mysqladmin --user=root --password=root password 'ChangeMeSoon'
+      #
       # mysql -u root  -p root -e "SET PASSWORD FOR root@'localhost' = PASSWORD(‘ChangeMeSoon’);"
-      mysql -u root  -p root -e "FLUSH PRIVILEGES; update mysql.user set password=password('ChangeMeSoon') where user='root'; FLUSH PRIVILEGES;"
+      #mysql -u root  -p root -e "FLUSH PRIVILEGES; update mysql.user set password=password('ChangeMeSoon') where user='root'; FLUSH PRIVILEGES;"
       # UPDATE mysql.user SET Password=PASSWORD('ChangeMeSoon') WHERE User='root';
-      echo "Running preliminary mariadb setup"
+
+      echo "Running preliminary mysql setup"
       mysql --user=root --password=ChangeMeSoon <<_EOF_
         DELETE FROM mysql.user WHERE User='';
         DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
