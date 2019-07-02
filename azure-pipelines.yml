@@ -50,6 +50,11 @@ steps:
       sudo apt-get install mariadb-server mariadb-client libmariadbclient-dev
       sudo apt list --installed | grep mariadb
     displayName: 'Installing mariadb'
+  - bash: |
+      sudo systemctl restart mysql.service
+      mysql -V
+      mysqladmin -u root password ChangeMeSoon
+    displayName: 'Start and configure mariadb'
   #
   # Check the install
   - script: ls -lR .
