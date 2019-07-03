@@ -45,43 +45,6 @@ steps:
       sudo apt-get install libmysqlclient-dev python-mysqldb
       sudo apt list --installed | grep -i mysql
     displayName: 'Install mysql development libraries'
-# Pull mariadb v10.4
-#  - bash: |
-#      sudo apt-get install software-properties-common
-#      sudo apt-get install debconf-utils
-#      sudo apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xF1656F24C74CD1D8
-#      sudo add-apt-repository 'deb [arch=amd64,arm64,i386,ppc64el] http://sfo1.mirrors.digitalocean.com/mariadb/repo/10.4/ubuntu xenial main'
-#      sudo apt-get update
-#      #
-#      echo 'Presetting password details'
-#      echo 'mariadb-server-10.4 mysql-server/root_password password ChangeMeSoon' | sudo debconf-set-selections
-#      echo 'mariadb-server-10.4 mysql-server/root_password_again password ChangeMeSoon' | sudo debconf-set-selections
-#      echo 'Presetting password details done'
-#      #
-#      sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mariadb-server-10.4
-#      #sudo apt-get install -y mariadb-server-10.4
-#      sudo apt-get install mariadb-client libmariadbclient-dev
-#      sudo apt list --installed | grep mariadb
-#      #
-#      sudo systemctl list-unit-files
-#      #
-#      sudo ls -la /var/log/mysql
-#      sudo ls -la /var/run
-#      #sudo cat /var/log/mysql/error.log
-#      #
-#      echo "Standalone mode password reset"
-#      sudu systemctl stop mariadb.service
-#      sudo mysqld_safe --skip-grant-tables --skip-networking &
-#      mysql -u root  -e "FLUSH PRIVILEGES; update mysql.user set password=password('ChangeMeSoon') where user='root'; FLUSH PRIVILEGES;"
-#      mysql -u root  -e "FLUSH PRIVILEGES; UPDATE user SET authentication_string = password('ChangeMeSoon') where User='root'; FLUSH PRIVILEGES"
-#      sudo systemctl stop mariadb.service
-#      #
-#      sudo ls -la /var/log/mysql
-#      sudo ls -la /var/run
-#      sudo cat /var/log/mysql/error.log
-#      #
-#    displayName: 'Installing mariadb'
-#
   - bash: |
       echo "Retarting mysql service"
       sudo systemctl restart mysql.service
@@ -92,7 +55,7 @@ steps:
       mysqladmin --user=root --password=root password 'ChangeMeSoon'
       #
       # mysql -u root  -p root -e "SET PASSWORD FOR root@'localhost' = PASSWORD(‘ChangeMeSoon’);"
-      #mysql -u root  -p root -e "FLUSH PRIVILEGES; update mysql.user set password=password('ChangeMeSoon') where user='root'; FLUSH PRIVILEGES;"
+      # mysql -u root  -p root -e "FLUSH PRIVILEGES; update mysql.user set password=password('ChangeMeSoon') where user='root'; FLUSH PRIVILEGES;"
       # UPDATE mysql.user SET Password=PASSWORD('ChangeMeSoon') WHERE User='root';
 
       echo "Running preliminary mysql setup"
