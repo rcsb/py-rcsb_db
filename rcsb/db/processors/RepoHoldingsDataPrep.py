@@ -34,6 +34,7 @@ from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logger = logging.getLogger(__name__)
 
+
 # Xpylint: disable=no-member,unsubscriptable-object,unsupported-membership-test
 class RepoHoldingsDataPrep(object):
     """

@@ -73,6 +73,7 @@ setup(
         "rcsb.utils.ec >= 0.14",
         "rcsb.utils.taxonomy >= 0.21",
         "rcsb.utils.struct >= 0.17",
+        "SQLAlchemy; sys_platform == 'linux'",
     ],
     packages=find_packages(exclude=["rcsb.db.tests", "rcsb.db.tests-*", "tests.*"]),
     package_data={

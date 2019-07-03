@@ -466,8 +466,8 @@ class SqlGenAdmin(object):
                 tS = "%-40s %-16s  %s" % (name, "string", notNull)
             elif (sqlType == "DECIMAL") or (sqlType == "NUMERIC"):
                 tS = "%-40s %-16s  %s" % (name, "float", notNull)
-                ##sW = "%-s(%d,%d)" % (sqlType, width, precision)
-                ##tS = "%-40s %-16s  %s" % (name, sW, notNull)
+                # sW = "%-s(%d,%d)" % (sqlType, width, precision)
+                # tS = "%-40s %-16s  %s" % (name, sW, notNull)
             else:
                 pass
             #

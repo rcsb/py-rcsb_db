@@ -54,7 +54,7 @@ if __name__ == "__main__":
             else:
                 uCount += 1
         except Exception as e:
-            logger.exception("Failing at (%d) %r", ii, d)
+            logger.exception("Failing at (%d) %r with %s!", ii, d, str(e))
     #
     logger.info("iCount %d jCount %d uCount %d sCount %d aCount %d", iCount, jCount, uCount, sCount, aCount)
     #

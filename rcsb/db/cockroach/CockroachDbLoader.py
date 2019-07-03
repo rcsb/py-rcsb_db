@@ -4,7 +4,7 @@
 # Date:    1-Apr-2018
 # Version: 0.001 Initial version
 #
-##  Loader variant to support stripped down support for Cockroach DB.
+# Loader variant to support stripped down support for Cockroach DB.
 #
 # Updates:
 #
@@ -14,13 +14,12 @@
 """
 Generic mapper of PDBx/mmCIF instance data to SQL loadable data files based on external
 schema definition defined in class SchemaDefBase().
-
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
-
 
 import logging
 import time
@@ -35,10 +34,21 @@ logger = logging.getLogger(__name__)
 
 class CockroachDbLoader(object):
 
-    """ Map PDBx/mmCIF instance data to SQL loadable data using external schema definition.
+    """Map PDBx/mmCIF instance data to SQL loadable data using external schema definition.
     """
 
     def __init__(self, schemaDefObj, ioObj=None, dbCon=None, workPath=".", cleanUp=False, warnings="default", verbose=True):
+        """Map PDBx/mmCIF instance data to SQL loadable data using external schema definition.
+
+        Args:
+            schemaDefObj (object): Description
+            ioObj (None, optional): Description
+            dbCon (None, optional): Description
+            workPath (str, optional): Description
+            cleanUp (bool, optional): Description
+            warnings (str, optional): Description
+            verbose (bool, optional): Description
+        """
         self.__verbose = verbose
         self.__debug = False
         self.__sD = schemaDefObj
@@ -58,11 +68,10 @@ class CockroachDbLoader(object):
         #
 
     def load(self, inputPathList=None, containerList=None, loadType="batch-file", deleteOpt=None, tableIdSkipD=None):
-        """ Load data for each table defined in the current schema definition object.
-            Data are extracted from the input file or container list.
+        """Load data for each table defined in the current schema definition object.
+        Data are extracted from the input file or container list.
 
-            Data source options:
-
+        Data source options:
               inputPathList = [<full path of target input file>, ....]
 
             or
@@ -80,6 +89,16 @@ class CockroachDbLoader(object):
             Intermediate data files for 'batch-file' loading are created in the current working path.
 
             Returns True for success or False otherwise.
+
+        Args:
+            inputPathList (list, optional): Description
+            containerList (list, optional): Description
+            loadType (str, optional): Description
+            deleteOpt (None, optional): Description
+            tableIdSkipD (None, optional): Description
+
+        Returns:
+            TYPE: Description
 
         """
         tableIdSkipD = tableIdSkipD if tableIdSkipD is not None else {}
@@ -106,15 +125,25 @@ class CockroachDbLoader(object):
         return False
 
     def __cockroachInsertImport(self, tableId, rowList=None, containerNameList=None, deleteOpt="selected", sqlMode="many"):
-        """ Load the input table using sql cockroach templated inserts of the input rowlist of dictionaries (i.e. d[attributeId]=value).
+        """Load the input table using sql cockroach templated inserts of the input rowlist of dictionaries (i.e. d[attributeId]=value).
 
-            The containerNameList corresponding to the data within loadable data in rowList can be provided
-            if 'selected' deletions are to performed prior to the the batch data inserts.
+        The containerNameList corresponding to the data within loadable data in rowList can be provided
+        if 'selected' deletions are to performed prior to the the batch data inserts.
 
-            deleteOpt = ['selected','all'] where 'selected' deletes rows corresponding to the input container
-                        list before insert.   The 'all' options truncates the table prior to insert.
+        deleteOpt = ['selected','all'] where 'selected' deletes rows corresponding to the input container
+                    list before insert.   The 'all' options truncates the table prior to insert.
 
-                        Deletions are performed in the absence of loadable data.
+                    Deletions are performed in the absence of loadable data.
+
+        Args:
+            tableId (TYPE): Description
+            rowList (None, optional): Description
+            containerNameList (None, optional): Description
+            deleteOpt (str, optional): Description
+            sqlMode (str, optional): Description
+
+        Returns:
+            TYPE: Description
 
         """
         startTime = time.time()
