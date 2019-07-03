@@ -1,0 +1,114 @@
+# File: azure-pipelines.yml
+# Date: 1-Jul-2019 jdw
+#
+# Run tox pipeline on updates to master branch or pull request targeted at master.
+#
+# Includes install of C++/flex/bison/cmake,  MongoDB and MySQL local services for testing -
+#
+trigger:
+- master
+
+pr:
+- master
+
+schedules:
+- cron: "0 12 * * 0"
+  displayName: Weekly Sunday build
+  branches:
+    include:
+    - master
+  always: true
+
+pool:
+  vmImage: 'ubuntu-latest'
+strategy:
+  matrix:
+    Python37:
+      python.version: '3.7'
+#    Python27:
+#      python.version: '2.7'
+  maxParallel: 2
+
+
+steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+      addToPath: true
+  - checkout: self
+    submodules: true
+  - script: which apt
+    displayName: 'Installing OS dependencies'
+  - script: apt-cache policy | grep http | awk '{print $2 $3}' | sort -u
+    displayName: 'Checking for repos'
+  - script: sudo apt-get install flex
+    displayName: 'Install flex'
+  - script: sudo apt-get install bison
+    displayName: 'Install bison'
+  - bash: |
+      sudo apt-get install libmysqlclient-dev python-mysqldb
+      sudo apt list --installed | grep -i mysql
+    displayName: 'Install mysql development libraries'
+  - bash: |
+      echo "Retarting mysql service"
+      sudo systemctl restart mysql.service
+      mysql -V
+      echo 'Reset the Azure default password'
+      # verify the default password
+      # mysql --user=root --password=root -e "show databases;"
+      #
+      mysqladmin --user=root --password=root password 'ChangeMeSoon'
+      echo "Try resetting password"
+
+      # mysql -u root  -p root -e "FLUSH PRIVILEGES; update mysql.user set password=password('ChangeMeSoon') where user='root'; FLUSH PRIVILEGES;"
+      # UPDATE mysql.user SET Password=PASSWORD('ChangeMeSoon') WHERE User='root';
+      echo "Running preliminary mysql setup"
+      mysql --user=root --password=ChangeMeSoon <<_EOF_
+        DELETE FROM mysql.user WHERE User='';
+        DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+        DROP DATABASE IF EXISTS test;
+        DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
+        FLUSH PRIVILEGES;
+      _EOF_
+      ps -ef | grep -i my
+      echo 'Confirm password reset'
+      mysql --user=root --password=ChangeMeSoon -e "show databases;"
+      #
+    displayName: 'Start and configure mysql ...'
+
+  # Mongo install
+  - script: |
+      sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
+      sudo apt list --installed | grep mongodb
+      echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list
+      sudo apt-get update
+      sudo apt-get install -y mongodb-org
+      sudo apt list --installed | grep mongo
+    displayName: "Installing mongodb"
+  #
+  - script:  |
+      sudo service mongod start
+      sudo ss -tulpn
+    displayName: "Start Mongo service"
+  #
+  #  install python dependencies
+  - task: UsePythonVersion@0
+    displayName: 'Use Python $(python.version)'
+    inputs:
+      versionSpec: '$(python.version)'
+
+  - script: python -m pip install --upgrade pip
+    displayName: 'Install python tools'
+
+  - script: pip install -r requirements.txt
+    displayName: 'Install python dependencies'
+
+  - script: pip install tox
+    displayName: 'Install Tox'
+  #
+  # Check the install
+  - script: ls -lR .
+    displayName: "Listing of installed software"
+  #
+  - script: tox -v
+    displayName: 'Run Tox'

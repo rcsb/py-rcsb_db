@@ -1,10 +1,10 @@
-## RCSB Pinelands
-#### A collection of Python Database Utility Classes
+# RCSB ExDB
 
-=======
+## A collection of Python Database Utility Classes
 
+[![Build Status](https://dev.azure.com/jdwestbrook/jdwestbrook/_apis/build/status/rcsb.py-rcsb_db?branchName=master)](https://dev.azure.com/jdwestbrook/jdwestbrook/_build/latest?definitionId=3&branchName=master)
 
-### Introduction
+## Introduction
 
 This module contains a collection of utility classes for processing and loading PDB repository and
 derived data content using relational and document database servers.  One target data store for
@@ -40,8 +40,11 @@ pip install -e .
 ```
 
 #### Installing in Ubuntu Linux (tested in 18.04)
+
 You will need a few packages, before `pip install .` can work:
-```
+
+```bash
+
 sudo apt install default-libmysqlclient-dev flex bison
 
 ```
@@ -151,11 +154,10 @@ schema_update_cli  --mock --schema_types json,bson \
                    --config_path ./rcsb/mock-data/config/dbload-setup-example.yml \
                    --config_name site_info
 ```
-#
+
 A convenience CLI `exdb_repo_load_cli` is provided to support loading PDB repositories
 containing entry and chemical reference data content types in the form of document collections
 compatible with MongoDB.
-
 
 ```bash
 exdb_repo_load_cli --help
@@ -258,7 +260,6 @@ the dictionary metadata with more specific data typing and coverage details.
 A scanning tools is provided to collect and organize these details for the
 other ETL tools in this package.  The following convenience CLI, `repo_scan_cli`,
 is provided to scan supported PDB repository content and update data type and coverage details.
-
 
 ```bash
 repo_scan_cli --help
@@ -403,7 +404,6 @@ python RepoLoadExec.py --full  --load_chem_comp_ref  \
                       --read_back_check
 ```
 
-
 The following illustrates, a full load of the mock structure data repository followed by a reload with replacement of
 this same data.
 
@@ -423,8 +423,6 @@ python RepoLoadExec.py --mock --replace  --load_entry_data \
                       --fail_file_list_path failed-entry-path-list.txt
 ```
 
-
-
 ### Configuration Example
 
 RCSB/PDB repository path details are stored as configuration options.
@@ -437,7 +435,7 @@ sections specifying the dictionaries and helper functions used
 to define the schema for the each supported content type (e.g., pdbx_core, chem_comp_core,
 bird_chem_comp_core,.. ).
 
-```bash
+```yaml
 # File: dbload-setup-example.yml
 # Date: 26-Oct-2018 jdw
 #
@@ -479,9 +477,20 @@ bird_chem_comp_core,.. ).
 # 25-Mar-2019 jdw add em_3d_fitting_list to the entry_core collection
 # 31-Mar-2019 jdw add block_attributes: REF_PARENT_CATEGORY_NAME: REF_PARENT_ATTRIBUTE_NAME: to provide parent details for this
 #                 synthetic key
+#  1-Apr-2019 jdw add ihm_dev_full to relax schema content exclusions.
+#  6-Apr-2019 jdw add STRUCT_DOMAIN_CLASSIFICATION_DATA_PATH
+#  8-Apr-2019 jdw adding category rcsb_entity_instance_domain
+#  9-Apr-2019 jdw add tree node list, create moved instance level validation to entity_instance_validation
+# 25-Apr-2019 jdw suppress struct_asym in core_entity, add ncbi_taxonomy_scientific_name in source and host organism collections
+#                 add polymer monomer counts in rcsb_entry_info. Upversion core entry and core entity colleciton schemas.
+#  2-May-2019 jdw update core_entity, core_entry schema, and core_entity_instance
+#  3-May-2019 jdw replace rcsb_entity_instance_domain with cath and scop specific analogs
+# 16-May-2019 jdw add rcsb_assembly_info up-version pdbx_core_assembly
+# 20-May-2019 jdw add rcsb_prot_sec_struct_info filter primary categories from pdbx_core_entity_instance and
+#                 up-version pdbx_core_entity_instance to 6.0.1
+#  3-Jul-2019 jdw Updates for the latest changes in IHM dictionaries.
 #
-#
-# Master Pinelands configuration file example
+# ExDB configuration file example
 ---
 DEFAULT: {}
 #
@@ -519,13 +528,14 @@ site_info:
     #
     NCBI_TAXONOMY_PATH: NCBI
     ENZYME_CLASSIFICATION_DATA_PATH: ec
-    # SIFTS_SUMMARY_PATH: /net/data-remote/ebi/sifts/flatfiles/csv
-    SIFTS_SUMMARY_PATH: sifts-summary
+     SIFTS_SUMMARY_PATH: sifts-summary
 
     #
     SCHEMA_DEF_LOCATOR_PATH: schema
     JSON_SCHEMA_LOCATOR_PATH: json-schema
     INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH: data_type_info
+    #
+    STRUCT_DOMAIN_CLASSIFICATION_DATA_PATH: domains_struct
     #
     MONGO_DB_HOST: localhost
     MONGO_DB_PORT: '27017'
@@ -616,6 +626,15 @@ data_exchange:
     #SCHEMA_DEF_FILENAME_SQL: schema_def-data_exchange-SQL.json
     #SCHEMA_DEF_FILENAME_ANY: schema_def-data_exchange-ANY.json
     #INSTANCE_DATA_TYPE_INFO_FILENAME: scan-data_exchange-type-map.json
+tree_node_lists:
+    DATABASE_NAME: tree_node_lists
+    DATABASE_VERSION_STRING: v5
+    COLLECTION_VERSION_STRING: 2.0.1
+    COLLECTION_TAXONOMY: tree_taxonomy_node_list
+    COLLECTION_ENZYME: tree_ec_node_list
+    COLLECTION_SCOP: tree_scop_node_list
+    COLLECTION_CATH: tree_cath_node_list
+
 #
 # Common configuration options for helper classes used for dictionary content generation
 # schema construction --
@@ -643,6 +662,9 @@ dictionary_helper:
             - CATEGORY_NAME: chem_comp
     cardinality_parent_items:
         ihm_dev:
+            CATEGORY_NAME: entry
+            ATTRIBUTE_NAME: id
+        ihm_dev_full:
             CATEGORY_NAME: entry
             ATTRIBUTE_NAME: id
         bird:
@@ -749,6 +771,8 @@ dictionary_helper:
               DELIMITER: ","
             - TYPE_CODE: int-scsv
               DELIMITER: ";"
+            - TYPE_CODE: float-csv
+              DELIMITER: ","
     query_string_selectors:
         iterable:
             - comma separate
@@ -763,6 +787,140 @@ dictionary_helper:
           ATTRIBUTE_NAME: pdbx_ec
           DELIMITER: ","
     content_classes:
+        ?       - GENERATED_CONTENT
+                - ihm_dev_full
+        :       - CATEGORY_NAME: chem_comp_atom
+                - CATEGORY_NAME: ihm_entity_poly_segment
+                - CATEGORY_NAME: ihm_starting_model_details
+                - CATEGORY_NAME: ihm_starting_comparative_models
+                - CATEGORY_NAME: ihm_starting_computational_models
+                - CATEGORY_NAME: ihm_starting_model_seq_dif
+                - CATEGORY_NAME: ihm_model_representation
+                - CATEGORY_NAME: ihm_model_representation_details
+                - CATEGORY_NAME: ihm_struct_assembly_details
+                - CATEGORY_NAME: ihm_struct_assembly
+                - CATEGORY_NAME: ihm_struct_assembly_class
+                - CATEGORY_NAME: ihm_struct_assembly_class_link
+                - CATEGORY_NAME: ihm_modeling_protocol
+                - CATEGORY_NAME: ihm_modeling_protocol_details
+                - CATEGORY_NAME: ihm_multi_state_modeling
+                - CATEGORY_NAME: ihm_multi_state_model_group_link
+                - CATEGORY_NAME: ihm_ordered_ensemble
+                - CATEGORY_NAME: ihm_modeling_post_process
+                - CATEGORY_NAME: ihm_ensemble_info
+                - CATEGORY_NAME: ihm_model_list
+                - CATEGORY_NAME: ihm_model_group
+                - CATEGORY_NAME: ihm_model_group_link
+                - CATEGORY_NAME: ihm_model_representative
+                - CATEGORY_NAME: ihm_dataset_list
+                - CATEGORY_NAME: ihm_dataset_group
+                - CATEGORY_NAME: ihm_dataset_group_link
+                - CATEGORY_NAME: ihm_related_datasets
+                - CATEGORY_NAME: ihm_dataset_related_db_reference
+                - CATEGORY_NAME: ihm_external_reference_info
+                - CATEGORY_NAME: ihm_external_files
+                - CATEGORY_NAME: ihm_dataset_external_reference
+                - CATEGORY_NAME: ihm_localization_density_files
+                - CATEGORY_NAME: ihm_predicted_contact_restraint
+                - CATEGORY_NAME: ihm_hydroxyl_radical_fp_restraint
+                - CATEGORY_NAME: ihm_cross_link_list
+                - CATEGORY_NAME: ihm_cross_link_restraint
+                - CATEGORY_NAME: ihm_cross_link_result
+                - CATEGORY_NAME: ihm_cross_link_result_parameters
+                - CATEGORY_NAME: ihm_2dem_class_average_restraint
+                - CATEGORY_NAME: ihm_2dem_class_average_fitting
+                - CATEGORY_NAME: ihm_3dem_restraint
+                - CATEGORY_NAME: ihm_sas_restraint
+                - CATEGORY_NAME: ihm_starting_model_coord
+                - CATEGORY_NAME: ihm_sphere_obj_site
+                - CATEGORY_NAME: ihm_gaussian_obj_site
+                - CATEGORY_NAME: ihm_gaussian_obj_ensemble
+                - CATEGORY_NAME: ihm_residues_not_modeled
+                - CATEGORY_NAME: ihm_feature_list
+                - CATEGORY_NAME: ihm_pseudo_site_feature
+                - CATEGORY_NAME: ihm_poly_atom_feature
+                - CATEGORY_NAME: ihm_poly_residue_feature
+                - CATEGORY_NAME: ihm_non_poly_feature
+                - CATEGORY_NAME: ihm_interface_residue_feature
+                - CATEGORY_NAME: ihm_derived_distance_restraint
+                - CATEGORY_NAME: ihm_geometric_object_list
+                - CATEGORY_NAME: ihm_geometric_object_center
+                - CATEGORY_NAME: ihm_geometric_object_transformation
+                - CATEGORY_NAME: ihm_geometric_object_sphere
+                - CATEGORY_NAME: ihm_geometric_object_torus
+                - CATEGORY_NAME: ihm_geometric_object_half_torus
+                - CATEGORY_NAME: ihm_geometric_object_axis
+                - CATEGORY_NAME: ihm_geometric_object_plane
+                - CATEGORY_NAME: ihm_geometric_object_distance_restraint
+        #
+        ?       - GENERATED_CONTENT
+                - ihm_dev
+        :       - CATEGORY_NAME: chem_comp_atom
+                - CATEGORY_NAME: ihm_entity_poly_segment
+                - CATEGORY_NAME: ihm_starting_model_details
+                - CATEGORY_NAME: ihm_starting_comparative_models
+                - CATEGORY_NAME: ihm_starting_computational_models
+                - CATEGORY_NAME: ihm_starting_model_seq_dif
+                - CATEGORY_NAME: ihm_model_representation
+                - CATEGORY_NAME: ihm_model_representation_details
+                - CATEGORY_NAME: ihm_struct_assembly_details
+                - CATEGORY_NAME: ihm_struct_assembly
+                - CATEGORY_NAME: ihm_struct_assembly_class
+                - CATEGORY_NAME: ihm_struct_assembly_class_link
+                - CATEGORY_NAME: ihm_modeling_protocol
+                - CATEGORY_NAME: ihm_modeling_protocol_details
+                - CATEGORY_NAME: ihm_multi_state_modeling
+                - CATEGORY_NAME: ihm_multi_state_model_group_link
+                - CATEGORY_NAME: ihm_ordered_ensemble
+                - CATEGORY_NAME: ihm_modeling_post_process
+                - CATEGORY_NAME: ihm_ensemble_info
+                - CATEGORY_NAME: ihm_model_list
+                - CATEGORY_NAME: ihm_model_group
+                - CATEGORY_NAME: ihm_model_group_link
+                - CATEGORY_NAME: ihm_model_representative
+                - CATEGORY_NAME: ihm_dataset_list
+                - CATEGORY_NAME: ihm_dataset_group
+                - CATEGORY_NAME: ihm_dataset_group_link
+                - CATEGORY_NAME: ihm_related_datasets
+                - CATEGORY_NAME: ihm_dataset_related_db_reference
+                - CATEGORY_NAME: ihm_external_reference_info
+                - CATEGORY_NAME: ihm_external_files
+                - CATEGORY_NAME: ihm_dataset_external_reference
+                - CATEGORY_NAME: ihm_localization_density_files
+                - CATEGORY_NAME: ihm_predicted_contact_restraint
+                - CATEGORY_NAME: ihm_hydroxyl_radical_fp_restraint
+                - CATEGORY_NAME: ihm_cross_link_list
+                - CATEGORY_NAME: ihm_cross_link_restraint
+                - CATEGORY_NAME: ihm_cross_link_result
+                - CATEGORY_NAME: ihm_cross_link_result_parameters
+                - CATEGORY_NAME: ihm_2dem_class_average_restraint
+                - CATEGORY_NAME: ihm_2dem_class_average_fitting
+                - CATEGORY_NAME: ihm_3dem_restraint
+                - CATEGORY_NAME: ihm_sas_restraint
+                - CATEGORY_NAME: ihm_starting_model_coord
+                - CATEGORY_NAME: ihm_sphere_obj_site
+                - CATEGORY_NAME: ihm_gaussian_obj_site
+                - CATEGORY_NAME: ihm_gaussian_obj_ensemble
+                - CATEGORY_NAME: ihm_residues_not_modeled
+                - CATEGORY_NAME: ihm_feature_list
+                - CATEGORY_NAME: ihm_pseudo_site_feature
+                - CATEGORY_NAME: ihm_poly_atom_feature
+                - CATEGORY_NAME: ihm_poly_residue_feature
+                - CATEGORY_NAME: ihm_non_poly_feature
+                - CATEGORY_NAME: ihm_interface_residue_feature
+                - CATEGORY_NAME: ihm_derived_distance_restraint
+                - CATEGORY_NAME: ihm_geometric_object_list
+                - CATEGORY_NAME: ihm_geometric_object_center
+                - CATEGORY_NAME: ihm_geometric_object_transformation
+                - CATEGORY_NAME: ihm_geometric_object_sphere
+                - CATEGORY_NAME: ihm_geometric_object_torus
+                - CATEGORY_NAME: ihm_geometric_object_half_torus
+                - CATEGORY_NAME: ihm_geometric_object_axis
+                - CATEGORY_NAME: ihm_geometric_object_plane
+                - CATEGORY_NAME: ihm_geometric_object_distance_restraint
+        #
+        #
+        #
         ?       - GENERATED_CONTENT
                 - pdbx
         :       - CATEGORY_NAME: rcsb_load_status
@@ -828,6 +986,7 @@ dictionary_helper:
                       - auth_asym_ids
                       - chem_comp_ligands
                       - chem_comp_monomers
+                      - nonpolymer_comp_id
                 - CATEGORY_NAME: rcsb_assembly_container_identifiers
                   ATTRIBUTE_NAME_LIST:
                       - entry_id
@@ -848,20 +1007,17 @@ dictionary_helper:
                       - rcsb_enzyme_class_combined_provenance_source
                       - rcsb_enzyme_class_combined_provenance_code
                 - CATEGORY_NAME: rcsb_entry_info
-                  ATTRIBUTE_NAME_LIST:
-                      - entry_id
-                      - polymer_composition
-                      - experimental_method
-                      - experimental_method_count
-                      - polymer_entity_count
-                      - entity_count
-                      - nonpolymer_entity_count
-                      - branched_entity_count
-                      - solvent_entity_count
+                - CATEGORY_NAME: rcsb_assembly_info
+                - CATEGORY_NAME: rcsb_prot_sec_struct_info
                 - CATEGORY_NAME: entity_poly
                   ATTRIBUTE_NAME_LIST:
                       - rcsb_entity_polymer_type
                       - rcsb_prd_id
+                      - rcsb_mutation_count
+                      - rcsb_conflict_count
+                      - rcsb_deletion_count
+                      - rcsb_insertion_count
+                      - rcsb_sample_sequence_length
                 - CATEGORY_NAME: rcsb_accession_info
                   ATTRIBUTE_NAME_LIST:
                       - entry_id
@@ -872,6 +1028,7 @@ dictionary_helper:
                       - minor_revision
                       - revision_date
                 - CATEGORY_NAME: rcsb_entity_instance_container_identifiers
+                - CATEGORY_NAME: rcsb_entity_instance_validation_container_identifiers
                 - CATEGORY_NAME: rcsb_entity_monomer_container_identifiers
                 - CATEGORY_NAME: rcsb_schema_container_identifiers
                 - CATEGORY_NAME: pdbx_vrpt_summary
@@ -911,6 +1068,9 @@ dictionary_helper:
                 - CATEGORY_NAME: pdbx_validate_planes_atom
                 - CATEGORY_NAME: pdbx_validate_main_chain_plane
                 - CATEGORY_NAME: pdbx_validate_polymer_linkage
+                #- CATEGORY_NAME: rcsb_entity_instance_domain
+                - CATEGORY_NAME: rcsb_entity_instance_domain_scop
+                - CATEGORY_NAME: rcsb_entity_instance_domain_cath
                 # - CATEGORY_NAME: pdbx_distant_solvent_atoms
                 #
         ?       - GENERATED_CONTENT
@@ -1430,6 +1590,7 @@ dictionary_helper:
                       - cas_number
                       - drug_categories
                       - drug_groups
+                      - atc_codes
                 - CATEGORY_NAME: drugbank_target
                   ATTRIBUTE_NAME_LIST:
                       - ordinal
@@ -1487,6 +1648,7 @@ dictionary_helper:
                 - pdbx_core
         :       - rcsb_load_status
                 - rcsb_entity_instance_container_identifiers
+                - rcsb_entity_instance_validation_container_identifiers
     slice_category_extras:
         ?       - ENTITY
                 - pdbx_core
@@ -1506,7 +1668,11 @@ schemadef_helper:
     schema_info:
         ihm_dev:
             DATABASE_NAME: ihm_dev
-            VERSION: 1.1.0
+            VERSION: 1.1.1
+            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-ihm_dev-type-map.json
+        ihm_dev_full:
+            DATABASE_NAME: ihm_dev
+            VERSION: 1.1.1
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-ihm_dev-type-map.json
         pdbx:
             DATABASE_NAME: pdbx
@@ -1514,7 +1680,7 @@ schemadef_helper:
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-pdbx-type-map.json
         pdbx_core:
             DATABASE_NAME: pdbx_core
-            VERSION: 5.1.0
+            VERSION: 5.2.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-pdbx-type-map.json
         bird:
             DATABASE_NAME: bird
@@ -1562,6 +1728,14 @@ schemadef_helper:
             INSTANCE_DATA_TYPE_INFO_FILENAME:
     #
     schema_content_filters:
+        ihm_dev_full:
+            INCLUDE: []
+            EXCLUDE:
+                - atom_site
+                - atom_site_anisotrop
+                - pdbx_poly_seq_scheme
+                - ihm_starting_model_coord
+                - ihm_sphere_obj_site
         ihm_dev:
             INCLUDE: []
             EXCLUDE:
@@ -1611,7 +1785,14 @@ schemadef_helper:
                 - drugbank_target
             EXCLUDE: []
     block_attributes:
-        ihm_dev_NO:
+        ihm_dev:
+            ATTRIBUTE_NAME: structure_id
+            CIF_TYPE_CODE: code
+            MAX_WIDTH: 16
+            METHOD: datablockid()
+            REF_PARENT_CATEGORY_NAME: entry
+            REF_PARENT_ATTRIBUTE_NAME: id
+        ihm_dev_full:
             ATTRIBUTE_NAME: structure_id
             CIF_TYPE_CODE: code
             MAX_WIDTH: 16
@@ -1721,6 +1902,9 @@ document_helper:
         ihm_dev:
             - NAME: ihm_dev
               VERSION: 1.1.0
+        ihm_dev_full:
+            - NAME: ihm_dev_full
+              VERSION: 1.2.0
         pdbx:
             - NAME: pdbx
               VERSION: 5.1.0
@@ -1728,14 +1912,16 @@ document_helper:
               VERSION: 5.1.0
         pdbx_core:
             - NAME: pdbx_core_entity
-              VERSION: 5.1.0
+              VERSION: 5.3.0
             - NAME: pdbx_core_entry
-              VERSION: 5.1.0
+              VERSION: 5.3.0
             - NAME: pdbx_core_assembly
-              VERSION: 5.1.0
+              VERSION: 5.2.0
             - NAME: pdbx_core_entity_monomer
               VERSION: 5.1.0
             - NAME: pdbx_core_entity_instance
+              VERSION: 6.0.1
+            - NAME: pdbx_core_entity_instance_validation
               VERSION: 5.1.0
         bird:
             - NAME: bird
@@ -1791,6 +1977,10 @@ document_helper:
     #
     schema_content_filters:
         ihm_dev:
+            INCLUDE: []
+            EXCLUDE:
+                - ATOM_SITE
+        ihm_dev_full:
             INCLUDE: []
             EXCLUDE:
                 - ATOM_SITE
@@ -1868,13 +2058,13 @@ document_helper:
         pdbx_core_entity:
             INCLUDE: []
             EXCLUDE:
+                - rcsb_entity_instance_validation_container_identifiers
                 - rcsb_entity_instance_container_identifiers
                 - rcsb_entity_monomer_container_identifiers
                 - rcsb_entity_poly_info
                 - entity_poly_seq
                 - pdbx_poly_seq_scheme
                 - pdbx_nonpoly_scheme
-                - pdbx_vrpt_summary
                 - pdbx_vrpt_summary
                 - pdbx_vrpt_model_list
                 - pdbx_vrpt_instance_results
@@ -1900,6 +2090,10 @@ document_helper:
                 - pdbx_vrpt_mogul_angle_outliers
                 - pdbx_vrpt_mogul_torsion_outliers
                 - pdbx_vrpt_mogul_ring_outliers
+                - rcsb_entity_instance_domain
+                - rcsb_entity_instance_domain_scop
+                - rcsb_entity_instance_domain_cath
+                - struct_asym
             SLICE: ENTITY
         pdbx_core_entity_monomer:
             INCLUDE: []
@@ -1991,6 +2185,7 @@ document_helper:
                 - SYMMETRY
                 - RCSB_ACCESSION_INFO
                 - RCSB_ENTRY_INFO
+                #- RCSB_ASSEMBLY_INFO
                 - RCSB_LOAD_STATUS
                 - RCSB_ENTRY_CONTAINER_IDENTIFIERS
                 - PDBX_SERIAL_CRYSTALLOGRAPHY_MEASUREMENT
@@ -2006,6 +2201,16 @@ document_helper:
         pdbx_core_entity_instance:
             INCLUDE: []
             EXCLUDE:
+                - struct_conf
+                - struct_site
+                - struct_site_gen
+                - struct_sheet_hbond
+                - pdbx_struct_sheet_hbond
+                - struct_sheet_range
+                - struct_sheet_order
+                - pdbx_struct_conn_angle
+                - pdbx_distant_solvent_atoms
+                #
                 - pdbx_poly_seq_scheme
                 - pdbx_nonpoly_scheme
                 - pdbx_struct_chem_comp_diagnostics
@@ -2014,6 +2219,87 @@ document_helper:
                 - pdbx_struct_mod_residue
                 - refine_ls_restr_ncs
                 - struct_ncs_dom_lim
+                - rcsb_entity_instance_validation_container_identifiers
+                #
+                - pdbx_vrpt_model_list
+                - pdbx_vrpt_cyrange_domain
+                - pdbx_vrpt_instance_results
+                - pdbx_vrpt_chemical_shift_list
+                - pdbx_vrpt_unmapped_chemical_shift
+                - pdbx_vrpt_unparsed_chemical_shift
+                - pdbx_vrpt_missing_nmrstar_tags
+                - pdbx_vrpt_random_coil_index
+                - pdbx_vrpt_chemical_shift_outlier
+                - pdbx_vrpt_referencing_offset
+                - pdbx_vrpt_assign_compl_well_defined
+                - pdbx_vrpt_assign_compl_full_length
+                - pdbx_vrpt_software
+                - pdbx_vrpt_bond_outliers
+                - pdbx_vrpt_angle_outliers
+                - pdbx_vrpt_stereo_outliers
+                - pdbx_vrpt_plane_outliers
+                - pdbx_vrpt_clashes
+                - pdbx_vrpt_symmetry_clashes
+                - pdbx_vrpt_mogul_bond_outliers
+                - pdbx_vrpt_mogul_angle_outliers
+                - pdbx_vrpt_mogul_torsion_outliers
+                - pdbx_vrpt_mogul_ring_outliers
+                - pdbx_validate_chiral
+                - pdbx_validate_close_contact
+                - pdbx_validate_main_chain_plane
+                - pdbx_validate_peptide_omega
+                - pdbx_validate_planes
+                - pdbx_validate_planes_atom
+                - pdbx_validate_polymer_linkage
+                - pdbx_validate_rmsd_angle
+                - pdbx_validate_rmsd_bond
+                - pdbx_validate_symm_contact
+                - pdbx_validate_torsion
+                - PDBX_UNOBS_OR_ZERO_OCC_ATOMS
+                - PDBX_UNOBS_OR_ZERO_OCC_RESIDUES
+            SLICE: ENTITY_INSTANCE
+        pdbx_core_entity_instance_validation:
+            INCLUDE:
+                - struct_asym
+                - rcsb_load_status
+                - rcsb_entity_instance_validation_container_identifiers
+                - pdbx_vrpt_model_list
+                - pdbx_vrpt_cyrange_domain
+                - pdbx_vrpt_instance_results
+                - pdbx_vrpt_chemical_shift_list
+                - pdbx_vrpt_unmapped_chemical_shift
+                - pdbx_vrpt_unparsed_chemical_shift
+                - pdbx_vrpt_missing_nmrstar_tags
+                - pdbx_vrpt_random_coil_index
+                - pdbx_vrpt_chemical_shift_outlier
+                - pdbx_vrpt_referencing_offset
+                - pdbx_vrpt_assign_compl_well_defined
+                - pdbx_vrpt_assign_compl_full_length
+                - pdbx_vrpt_software
+                - pdbx_vrpt_bond_outliers
+                - pdbx_vrpt_angle_outliers
+                - pdbx_vrpt_stereo_outliers
+                - pdbx_vrpt_plane_outliers
+                - pdbx_vrpt_clashes
+                - pdbx_vrpt_symmetry_clashes
+                - pdbx_vrpt_mogul_bond_outliers
+                - pdbx_vrpt_mogul_angle_outliers
+                - pdbx_vrpt_mogul_torsion_outliers
+                - pdbx_vrpt_mogul_ring_outliers
+                - pdbx_validate_chiral
+                - pdbx_validate_close_contact
+                - pdbx_validate_main_chain_plane
+                - pdbx_validate_peptide_omega
+                - pdbx_validate_planes
+                - pdbx_validate_planes_atom
+                - pdbx_validate_polymer_linkage
+                - pdbx_validate_rmsd_angle
+                - pdbx_validate_rmsd_bond
+                - pdbx_validate_symm_contact
+                - pdbx_validate_torsion
+                - PDBX_UNOBS_OR_ZERO_OCC_ATOMS
+                - PDBX_UNOBS_OR_ZERO_OCC_RESIDUES
+            EXCLUDE: []
             SLICE: ENTITY_INSTANCE
         repository_holdings_update:
             INCLUDE:
@@ -2103,6 +2389,19 @@ document_helper:
               PRIVATE_DOCUMENT_NAME: _schema_version
               MANDATORY: False
               UPDATE_ON_LOAD: True
+        ihm_dev_full:
+            - NAME: entry.id
+              CATEGORY_NAME: entry
+              ATTRIBUTE_NAME: id
+              PRIVATE_DOCUMENT_NAME: _entry_id
+              MANDATORY: True
+              UPDATE_ON_LOAD: False
+            - NAME: rcsb_schema_container_identifiers.collection_schema_version
+              CATEGORY_NAME: rcsb_schema_container_identifiers
+              ATTRIBUTE_NAME: collection_schema_version
+              PRIVATE_DOCUMENT_NAME: _schema_version
+              MANDATORY: False
+              UPDATE_ON_LOAD: True
         pdbx_core_entity:
             - NAME: entry.id
               CATEGORY_NAME: rcsb_entity_container_identifiers
@@ -2172,6 +2471,49 @@ document_helper:
               MANDATORY: False
               UPDATE_ON_LOAD: False
             - NAME: rcsb_entity_instance_container_identifiers.auth_seq_id
+              CATEGORY_NAME: rcsb_entity_instance_container_identifiers
+              ATTRIBUTE_NAME: auth_seq_id
+              PRIVATE_DOCUMENT_NAME: _auth_seq_id
+              MANDATORY: False
+              UPDATE_ON_LOAD: False
+            - NAME: rcsb_schema_container_identifiers.collection_schema_version
+              CATEGORY_NAME: rcsb_schema_container_identifiers
+              ATTRIBUTE_NAME: collection_schema_version
+              PRIVATE_DOCUMENT_NAME: _schema_version
+              MANDATORY: False
+              UPDATE_ON_LOAD: True
+        pdbx_core_entity_instance_validation:
+            - NAME: entry.id
+              CATEGORY_NAME: rcsb_entity_instance_validation_container_identifiers
+              ATTRIBUTE_NAME: entry_id
+              PRIVATE_DOCUMENT_NAME: _entry_id
+              MANDATORY: True
+              UPDATE_ON_LOAD: False
+            - NAME: entity.id
+              CATEGORY_NAME: rcsb_entity_instance_validation_container_identifiers
+              ATTRIBUTE_NAME: entity_id
+              PRIVATE_DOCUMENT_NAME: _entity_id
+              MANDATORY: True
+              UPDATE_ON_LOAD: False
+            - NAME: struct_asym.id
+              CATEGORY_NAME: rcsb_entity_instance_validation_container_identifiers
+              ATTRIBUTE_NAME: asym_id
+              PRIVATE_DOCUMENT_NAME: _asym_id
+              MANDATORY: True
+              UPDATE_ON_LOAD: False
+            - NAME: rcsb_entity_instance_validation_container_identifiers.auth_asym_id
+              CATEGORY_NAME: rcsb_entity_instance_validation_container_identifiers
+              ATTRIBUTE_NAME: auth_asym_id
+              PRIVATE_DOCUMENT_NAME: _auth_asym_id
+              MANDATORY: True
+              UPDATE_ON_LOAD: False
+            - NAME: rcsb_entity_instance_validation_container_identifiers.comp_id
+              CATEGORY_NAME: rcsb_entity_instance_validation_container_identifiers
+              ATTRIBUTE_NAME: comp_id
+              PRIVATE_DOCUMENT_NAME: _comp_id
+              MANDATORY: False
+              UPDATE_ON_LOAD: False
+            - NAME: rcsb_entity_instance_validation_container_identifiers.auth_seq_id
               CATEGORY_NAME: rcsb_entity_instance_container_identifiers
               ATTRIBUTE_NAME: auth_seq_id
               PRIVATE_DOCUMENT_NAME: _auth_seq_id
@@ -2382,6 +2724,10 @@ document_helper:
             - INDEX_NAME: primary
               ATTRIBUTE_NAMES:
               - entry.id
+        ihm_dev_full:
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - entry.id
         pdbx:
             - INDEX_NAME: primary
               ATTRIBUTE_NAMES:
@@ -2526,6 +2872,38 @@ document_helper:
             - INDEX_NAME: replace
               ATTRIBUTE_NAMES:
               - _entry_id
+        pdbx_core_entity_instance_validation:
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - rcsb_entity_instance_validation_container_identifiers.entry_id
+              - rcsb_entity_instance_validation_container_identifiers.asym_id
+            - INDEX_NAME: search_1
+              ATTRIBUTE_NAMES:
+              - rcsb_entity_instance_validation_container_identifiers.entry_id
+              - rcsb_entity_instance_validation_container_identifiers.auth_asym_id
+            - INDEX_NAME: search_2
+              ATTRIBUTE_NAMES:
+              - rcsb_entity_instance_validation_container_identifiers.entry_id
+              - rcsb_entity_instance_container_identifiers.entity_id
+            - INDEX_NAME: search_3
+              ATTRIBUTE_NAMES:
+              - rcsb_entity_instance_validation_container_identifiers.entry_id
+              - rcsb_entity_instance_validation_container_identifiers.comp_id
+            - INDEX_NAME: search_4
+              ATTRIBUTE_NAMES:
+              - _entry_id
+              - _asym_id
+            - INDEX_NAME: search_5
+              ATTRIBUTE_NAMES:
+              - _entry_id
+              - _auth_asym_id
+            - INDEX_NAME: search_6
+              ATTRIBUTE_NAMES:
+              - _entry_id
+              - _comp_id
+            - INDEX_NAME: replace
+              ATTRIBUTE_NAMES:
+              - _entry_id
         bird:
             - INDEX_NAME: primary
               ATTRIBUTE_NAMES:
@@ -2624,7 +3002,38 @@ document_helper:
               HAS_UNIT_CARDINALITY: False
             - NAME: rcsb_enzyme_class_combined
               HAS_UNIT_CARDINALITY: False
+        pdbx_core_entity_instance:
+            - NAME: domain_class_lineage
+              HAS_UNIT_CARDINALITY: False
+        pdbx_core_entity_instance_validation:
+            - NAME: domain_class_lineage
+              HAS_UNIT_CARDINALITY: False
     collection_retain_singleton:
         pdbx_core_entity_monomer: True
 
+    collection_suppress_category_relationships:
+        ihm_dev_full:
+            - PARENT_CATEGORY_NAME: chem_comp_atom
+            - PARENT_CATEGORY_NAME: entity_poly_seq
+              CHILD_CATEGORY_NAME: atom_site
+            - PARENT_CATEGORY_NAME: entity_poly_seq
+              CHILD_CATEGORY_NAME: IHM_STARTING_MODEL_COORD
+            - PARENT_CATEGORY_NAME: entity_poly_seq
+              CHILD_CATEGORY_NAME: IHM_SPHERE_OBJ_SITE
+            - PARENT_CATEGORY_NAME: entity_poly_seq
+              CHILD_CATEGORY_NAME: IHM_GAUSSIAN_OBJ_SITE
+            - PARENT_CATEGORY_NAME: entity_poly_seq
+              CHILD_CATEGORY_NAME: IHM_GAUSSIAN_OBJ_ENSEMBLE
+        ihm_dev:
+            - PARENT_CATEGORY_NAME: chem_comp_atom
+            - PARENT_CATEGORY_NAME: entity_poly_seq
+              CHILD_CATEGORY_NAME: atom_site
+            - PARENT_CATEGORY_NAME: entity_poly_seq
+              CHILD_CATEGORY_NAME: IHM_STARTING_MODEL_COORD
+            - PARENT_CATEGORY_NAME: entity_poly_seq
+              CHILD_CATEGORY_NAME: IHM_SPHERE_OBJ_SITE
+            - PARENT_CATEGORY_NAME: entity_poly_seq
+              CHILD_CATEGORY_NAME: IHM_GAUSSIAN_OBJ_SITE
+            - PARENT_CATEGORY_NAME: entity_poly_seq
+              CHILD_CATEGORY_NAME: IHM_GAUSSIAN_OBJ_ENSEMBLE
 ```
