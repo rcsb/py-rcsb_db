@@ -72,7 +72,7 @@ setup(
         "rcsb.utils.chemref >= 0.20",
         "rcsb.utils.ec >= 0.14",
         "rcsb.utils.taxonomy >= 0.21",
-        "rcsb.utils.struct >= 0.17",
+        "rcsb.utils.struct >= 0.18",
         "SQLAlchemy; sys_platform == 'linux'",
         "psycopg2-binary",
         "crate",
