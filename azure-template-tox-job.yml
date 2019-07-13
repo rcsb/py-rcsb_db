@@ -59,7 +59,7 @@ jobs:
         displayName: 'Install flex'
       - script: sudo apt-get install bison
         displayName: 'Install bison'
-  #
+    #
     - ${{ if and(contains(parameters.fixtures, 'mysql'), startsWith(parameters.os, 'linux')) }}:
       - bash: |
           sudo apt-get install libmysqlclient-dev python-mysqldb
