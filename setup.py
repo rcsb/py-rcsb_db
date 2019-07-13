@@ -65,7 +65,7 @@ setup(
         "mmcif >= 0.40",
         'scandir; python_version < "3.0"',
         # 'configparser; python_version < "3.0"',
-        "rcsb.utils.io >= 0.31",
+        "rcsb.utils.io >= 0.32",
         "rcsb.utils.config >= 0.18",
         "rcsb.utils.multiproc >= 0.13",
         "rcsb.utils.validation >= 0.14",
