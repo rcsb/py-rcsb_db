@@ -1,5 +1,10 @@
 # File: azure-pipelines.yml
-# Date: 1-Jul-2019 jdw
+# Date: 4-Jul-2019 jdw Created pipeline
+#       8-Jul-2019 jdw add macos test/publish
+#       8-Jul-2019 jdw templatize
+#       9-Jul-2019 jdw add publish jobs
+#
+name: $(BuildDefinitionName)_$(Date:yyyyMMdd)$(Rev:.rr)
 
 trigger:
 - master
@@ -15,95 +20,32 @@ schedules:
     - master
   always: true
 
-pool:
-  vmImage: 'ubuntu-latest'
-strategy:
-  matrix:
-    Python37:
-      python.version: '3.7'
-#    Python27:
-#      python.version: '2.7'
-  maxParallel: 2
-
-
-steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(python.version)'
-      addToPath: true
-  - checkout: self
-    submodules: true
-  - script: which apt
-    displayName: 'Installing OS dependencies'
-  - script: apt-cache policy | grep http | awk '{print $2 $3}' | sort -u
-    displayName: 'Checking for repos'
-  - script: sudo apt-get install flex
-    displayName: 'Install flex'
-  - script: sudo apt-get install bison
-    displayName: 'Install bison'
-  - bash: |
-      sudo apt-get install libmysqlclient-dev python-mysqldb
-      sudo apt list --installed | grep -i mysql
-    displayName: 'Install mysql development libraries'
-  - bash: |
-      echo "Retarting mysql service"
-      sudo systemctl restart mysql.service
-      mysql -V
-      mysql --user=root --password=root -e "use mysql; select * from user;"
-      #
-      echo "Try resetting password"
-      mysqladmin --user=root --password=root password 'ChangeMeSoon'
-      #
-      # mysql -u root  -p root -e "SET PASSWORD FOR root@'localhost' = PASSWORD(‘ChangeMeSoon’);"
-      # mysql -u root  -p root -e "FLUSH PRIVILEGES; update mysql.user set password=password('ChangeMeSoon') where user='root'; FLUSH PRIVILEGES;"
-      # UPDATE mysql.user SET Password=PASSWORD('ChangeMeSoon') WHERE User='root';
-
-      echo "Running preliminary mysql setup"
-      mysql --user=root --password=ChangeMeSoon <<_EOF_
-        DELETE FROM mysql.user WHERE User='';
-        DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
-        DROP DATABASE IF EXISTS test;
-        DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
-        FLUSH PRIVILEGES;
-      _EOF_
-      ps -ef | grep -i my
-      mysql --user=root --password=ChangeMeSoon -e "show databases;"
-      #
-    displayName: 'Start and configure mysql ...'
+jobs:
+  - template: azure-template-tox-job.yml
+    parameters: {tox: 'format_pep8', python: '3.7', os: 'linux'}
+  - template: azure-template-tox-job.yml
+    parameters: {tox: 'lint_pylint', python: '3.7', os: 'linux'}
+  - template: azure-template-tox-job.yml
+    parameters: {tox: 'test_coverage', python: '3.7', os: 'linux'}
+    #
+  - template: azure-template-tox-job.yml
+    parameters: {tox: 'py37', python: '3.7', os: 'linux'}
+  - template: azure-template-tox-job.yml
+    parameters: {tox: 'py27', python: '2.7', os: 'linux'}
   #
-  # Check the install
-  - script: ls -lR .
-    displayName: "Listing of installed software"
+  - template: azure-template-tox-job.yml
+    parameters: {tox: 'py37', python: '3.7', os: 'macos'}
+  - template: azure-template-tox-job.yml
+    parameters: {tox: 'py27', python: '2.7', os: 'macos'}
   #
-  # Mongo install
-  - script: |
-      sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
-      sudo apt list --installed | grep mongodb
-      echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list
-      sudo apt-get update
-      sudo apt-get install -y mongodb-org
-      sudo apt list --installed | grep mongo
-    displayName: "Installing mongodb"
+  - template: azure-template-publish-job.yml
+    parameters: {tox: 'py37', python: '3.7', os: 'macos'}
+  - template: azure-template-publish-job.yml
+    parameters: {tox: 'py37', python: '3.7', os: 'linux'}
   #
-  - script:  |
-      sudo service mongod start
-      sudo ss -tulpn
-    displayName: "Start Mongo service"
+  - template: azure-template-publish-job.yml
+    parameters: {tox: 'py27', python: '2.7', os: 'macos'}
+  - template: azure-template-publish-job.yml
+    parameters: {tox: 'py27', python: '2.7', os: 'linux'}
   #
-  #  install python dependencies
-  - task: UsePythonVersion@0
-    displayName: 'Use Python $(python.version)'
-    inputs:
-      versionSpec: '$(python.version)'
 
-  - script: python -m pip install --upgrade pip
-    displayName: 'Install python tools'
-
-  - script: pip install -r requirements.txt
-    displayName: 'Install python dependencies'
-
-  - script: pip install tox
-    displayName: 'Install Tox'
-
-  - script: tox -v
-    displayName: 'Run Tox'
