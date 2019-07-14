@@ -4,6 +4,8 @@
 #       8-Jul-2019 jdw templatize
 #       9-Jul-2019 jdw add publish jobs
 #
+#       Only running Py37 tasks ----
+#
 name: $(BuildDefinitionName)_$(Date:yyyyMMdd)$(Rev:.rr)
 
 trigger:
@@ -30,13 +32,13 @@ jobs:
     #
   - template: azure-template-tox-job.yml
     parameters: {tox: 'py37', python: '3.7', os: 'linux', fixtures: 'mysql,mongodb'}
-  - template: azure-template-tox-job.yml
-    parameters: {tox: 'py27', python: '2.7', os: 'linux', fixtures: 'mysql,mongodb'}
-  #
   - template: azure-template-publish-job.yml
     parameters: {tox: 'py37', python: '3.7', os: 'linux'}
-  - template: azure-template-publish-job.yml
-    parameters: {tox: 'py27', python: '2.7', os: 'linux'}
+    #
+#  - template: azure-template-tox-job.yml
+#    parameters: {tox: 'py27', python: '2.7', os: 'linux', fixtures: 'mysql,mongodb'}
+#  - template: azure-template-publish-job.yml
+#    parameters: {tox: 'py27', python: '2.7', os: 'linux'}
 #  #
 #  - template: azure-template-tox-job.yml
 #    parameters: {tox: 'py37', python: '3.7', os: 'macos'}
