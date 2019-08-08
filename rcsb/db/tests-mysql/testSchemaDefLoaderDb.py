@@ -25,6 +25,7 @@ import os
 import time
 import unittest
 
+from rcsb.db.define.SchemaDefAccess import SchemaDefAccess
 from rcsb.db.mysql.Connection import Connection
 from rcsb.db.mysql.MyDbUtil import MyDbQuery
 from rcsb.db.mysql.SchemaDefLoader import SchemaDefLoader
@@ -49,7 +50,7 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
         #
         fileLimit = 100
         numProc = 2
-        workPath = os.path.join(HERE, "test-output")
+        self.__workPath = os.path.join(HERE, "test-output")
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
         #
@@ -57,7 +58,7 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         self.__resourceName = "MYSQL_DB"
         #
-        self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=numProc, fileLimit=fileLimit, workPath=workPath)
+        self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=numProc, fileLimit=fileLimit, workPath=self.__workPath)
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -95,19 +96,23 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
     def testSchemaCreate(self):
         """  Create table schema for BIRD, chemical component, and PDBx data.
         """
-        sd, _, _, _ = self.__schU.getSchemaInfo(contentType="bird", dataTyping="SQL")
-        self.__schemaCreate(schemaDefObj=sd)
+        cD = self.__schU.makeSchemaDef("bird", dataTyping="SQL", saveSchema=True, altDirPath=self.__workPath)
+        sd = SchemaDefAccess(cD)
+        self.__schemaCreate(sd)
         #
-        sd, _, _, _ = self.__schU.getSchemaInfo(contentType="chem_comp", dataTyping="SQL")
-        self.__schemaCreate(schemaDefObj=sd)
+        cD = self.__schU.makeSchemaDef("chem_comp", dataTyping="SQL", saveSchema=True, altDirPath=self.__workPath)
+        sd = SchemaDefAccess(cD)
+        self.__schemaCreate(sd)
         #
-        sd, _, _, _ = self.__schU.getSchemaInfo(contentType="pdbx", dataTyping="SQL")
-        self.__schemaCreate(schemaDefObj=sd)
+        cD = self.__schU.makeSchemaDef("pdbx", dataTyping="SQL", saveSchema=True, altDirPath=self.__workPath)
+        sd = SchemaDefAccess(cD)
+        self.__schemaCreate(sd)
 
     def testLoadBirdReference(self):
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="bird", dataTyping="SQL")
-            self.__schemaCreate(schemaDefObj=sd)
+            cD = self.__schU.makeSchemaDef("bird", dataTyping="SQL", saveSchema=True, altDirPath=self.__workPath)
+            sd = SchemaDefAccess(cD)
+            self.__schemaCreate(sd)
 
             inputPathList = self.__schU.getLocatorObjList(contentType="bird")
             inputPathList.extend(self.__schU.getLocatorObjList(contentType="bird_family"))
@@ -124,8 +129,9 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
 
     def testReLoadBirdReference(self):
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="bird", dataTyping="SQL")
-            self.__schemaCreate(schemaDefObj=sd)
+            cD = self.__schU.makeSchemaDef("bird", dataTyping="SQL", saveSchema=True, altDirPath=self.__workPath)
+            sd = SchemaDefAccess(cD)
+            self.__schemaCreate(sd)
 
             inputPathList = self.__schU.getLocatorObjList(contentType="bird")
             inputPathList.extend(self.__schU.getLocatorObjList(contentType="bird_family"))
@@ -149,8 +155,10 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
 
     def testLoadChemCompReference(self):
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="chem_comp", dataTyping="SQL")
-            self.__schemaCreate(schemaDefObj=sd)
+            cD = self.__schU.makeSchemaDef("chem_comp", dataTyping="SQL", saveSchema=True, altDirPath=self.__workPath)
+            sd = SchemaDefAccess(cD)
+            self.__schemaCreate(sd)
+
             inputPathList = self.__schU.getLocatorObjList(contentType="chem_comp")
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = SchemaDefLoader(
@@ -164,8 +172,10 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
 
     def testLoadPdbxFiles(self):
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="pdbx", dataTyping="SQL")
-            self.__schemaCreate(schemaDefObj=sd)
+            cD = self.__schU.makeSchemaDef("pdbx", dataTyping="SQL", saveSchema=True, altDirPath=self.__workPath)
+            sd = SchemaDefAccess(cD)
+            self.__schemaCreate(sd)
+
             inputPathList = self.__schU.getLocatorObjList(contentType="pdbx")
             logger.debug("Input path list %r", inputPathList)
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:

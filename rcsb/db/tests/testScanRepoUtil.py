@@ -50,6 +50,7 @@ class ScanRepoUtilTests(unittest.TestCase):
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
         configName = "site_info"
+        self.__configName = configName
 
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         self.__pathPdbxDictionaryFile = self.__cfgOb.getPath("PDBX_DICT_LOCATOR", sectionName=configName)
@@ -73,7 +74,7 @@ class ScanRepoUtilTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)\n", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testScanIhmDevRepo(self):
-        """ Test case - scan chem comp reference data
+        """ Test case - scan ihm data
         """
         ok = self.__testScanRepo(contentType="ihm_dev")
         self.assertTrue(ok)
@@ -81,13 +82,13 @@ class ScanRepoUtilTests(unittest.TestCase):
     def testScanChemCompRepo(self):
         """ Test case - scan chem comp reference data
         """
-        ok = self.__testScanRepo(contentType="chem_comp")
+        ok = self.__testScanRepo(contentType="chem_comp_core")
         self.assertTrue(ok)
 
     def testScanBirdRepo(self):
         """ Test case - scan BIRD reference data
         """
-        ok = self.__testScanRepo(contentType="bird")
+        ok = self.__testScanRepo(contentType="bird_core")
         self.assertTrue(ok)
 
     def testScanBirdFamilyRepo(self):
@@ -99,13 +100,13 @@ class ScanRepoUtilTests(unittest.TestCase):
     def testScanPdbxRepo(self):
         """ Test case - scan PDBx structure model data
         """
-        ok = self.__testScanRepo(contentType="pdbx")
+        ok = self.__testScanRepo(contentType="pdbx_core")
         self.assertTrue(ok)
 
     def testScanPdbxRepoIncr(self):
         """ Test case - scan PDBx structure model data
         """
-        ok = self.__testScanRepo(contentType="pdbx", scanType="incr")
+        ok = self.__testScanRepo(contentType="pdbx_core", scanType="incr")
         self.assertTrue(ok)
 
     def __testScanRepo(self, contentType, scanType="full"):
@@ -123,7 +124,15 @@ class ScanRepoUtilTests(unittest.TestCase):
             dataTypeFilePath = os.path.join(HERE, "test-output", "%s-scan-data-type.json" % contentType)
             #
             dP = DictionaryProvider()
-            dictApi = dP.getApi(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathIhmDictionaryFile, self.__pathFlrDictionaryFile])
+            dictLocatorMap = self.__cfgOb.get("DICT_LOCATOR_CONFIG_MAP", sectionName=self.__configName)
+            if contentType not in dictLocatorMap:
+                logger.error("Missing dictionary locator configuration for %s", contentType)
+                dictLocators = []
+            else:
+                dictLocators = [self.__cfgOb.getPath(configLocator, sectionName=self.__configName) for configLocator in dictLocatorMap[contentType]]
+            #
+            logger.info("contentType %r dictlocators %r", contentType, dictLocators)
+            dictApi = dP.getApi(dictLocators=dictLocators)
             dI = DictInfo(dictApi)
             attributeDataTypeD = dI.getAttributeDataTypeD()
             #

@@ -38,7 +38,7 @@ class DictionaryProvider(SingletonClass):
             dictLocators {list str} -- list of dictionary locator paths
         """
         self.__apiMap = {}
-        logger.info("Leaving constructor")
+        logger.debug("Leaving constructor")
 
     def getApi(self, dictLocators, **kwargs):
         """Return a dictionary API object of the input dictioaries.

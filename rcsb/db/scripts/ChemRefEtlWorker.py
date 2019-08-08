@@ -58,7 +58,7 @@ class ChemRefEtlWorker(object):
             logger.exception("Failing with %s", str(e))
         return False
 
-    def load(self, updateId, extResource, loadType="full"):
+    def load(self, updateId, extResource, loadType="full", autoBuildSchema=False):
         """ Load chemical reference integrated data for the input external resource-
 
         Relevant configuration options:
@@ -83,7 +83,16 @@ class ChemRefEtlWorker(object):
             logger.debug("Objects %r", dList[:2])
 
             schemaName = "drugbank_core"
-            sD, databaseName, collectionList, _ = self.__schU.getSchemaInfo(schemaName)
+            #
+            logger.debug("autoBuildSchema %r schemaName %r", autoBuildSchema, schemaName)
+            if autoBuildSchema:
+                self.__schU.makeSchemaDef(schemaName, dataTyping="ANY", saveSchema=True, altDirPath=self.__workPath)
+                sD, databaseName, collectionList, _ = self.__schU.getSchemaInfo(schemaName, dataTyping="ANY", altDirPath=self.__workPath)
+            else:
+                sD, databaseName, collectionList, _ = self.__schU.getSchemaInfo(schemaName)
+
+            #
+            # sD, databaseName, collectionList, _ = self.__schU.getSchemaInfo(schemaName)
             collectionName = collectionList[0] if collectionList else "unassigned"
             indexL = sD.getDocumentIndex(collectionName, "primary")
             logger.info("Database %r collection %r index attributes %r", databaseName, collectionName, indexL)

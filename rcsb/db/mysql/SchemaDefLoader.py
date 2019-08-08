@@ -42,14 +42,13 @@ import logging
 import os
 import time
 
+from mmcif.api.DictMethodRunner import DictMethodRunner
 from rcsb.db.define.DictionaryProvider import DictionaryProvider
 from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.mysql.MyDbUtil import MyDbQuery
 from rcsb.db.processors.DataTransformFactory import DataTransformFactory
 from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb.db.sql.SqlGen import SqlGenAdmin
-
-from mmcif.api.DictMethodRunner import DictMethodRunner
 
 logger = logging.getLogger(__name__)
 #
@@ -67,7 +66,7 @@ class SchemaDefLoader(object):
         self.__sD = schemaDefObj
         #
         self.__dbCon = dbCon
-        self.__workingPath = workPath
+        self.__workPath = workPath
         self.__pathList = []
         self.__cleanUp = cleanUp
         #
@@ -80,17 +79,23 @@ class SchemaDefLoader(object):
         #
         self.__warningAction = warnings
         dtf = DataTransformFactory(schemaDefAccessObj=self.__sD, filterType=self.__fTypeRow)
-        self.__sdp = SchemaDefDataPrep(schemaDefAccessObj=self.__sD, dtObj=dtf, workPath=self.__workingPath, verbose=self.__verbose)
+        self.__sdp = SchemaDefDataPrep(schemaDefAccessObj=self.__sD, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
         #
         sectionName = cfgSectionName
-        pathPdbxDictionaryFile = self.__cfgOb.getPath("PDBX_DICT_LOCATOR", sectionName=sectionName)
-        pathRcsbDictionaryFile = self.__cfgOb.getPath("RCSB_DICT_LOCATOR", sectionName=sectionName)
-        pathVrptDictionaryFile = self.__cfgOb.getPath("VRPT_DICT_LOCATOR", sectionName=sectionName)
+        #
+        schemaName = self.__sD.getName()
+        modulePathMap = self.__cfgOb.get("DICT_HELPER_MODULE_PATH_MAP", sectionName=sectionName)
+        dictLocatorMap = self.__cfgOb.get("DICT_LOCATOR_CONFIG_MAP", sectionName=sectionName)
+        if schemaName not in dictLocatorMap:
+            logger.error("Missing dictionary locator configuration for %s", schemaName)
+            dictLocators = []
+        else:
+            dictLocators = [self.__cfgOb.getPath(configLocator, sectionName=sectionName) for configLocator in dictLocatorMap[schemaName]]
         #
         dP = DictionaryProvider()
-        dictApi = dP.getApi(dictLocators=[pathPdbxDictionaryFile, pathRcsbDictionaryFile, pathVrptDictionaryFile])
-        rP = DictMethodResourceProvider(self.__cfgOb, configName=sectionName, workPath=self.__workingPath)
-        self.__dmh = DictMethodRunner(dictApi, resourceProvider=rP)
+        dictApi = dP.getApi(dictLocators=dictLocators)
+        rP = DictMethodResourceProvider(self.__cfgOb, configName=sectionName, workPath=self.__workPath)
+        self.__dmh = DictMethodRunner(dictApi, modulePathMap=modulePathMap, resourceProvider=rP)
 
     def setWarning(self, action):
         if action in ["error", "ignore", "default"]:
@@ -228,7 +233,7 @@ class SchemaDefLoader(object):
             schemaAttributeIdList = tObj.getAttributeIdList()
             attributeNameList = tObj.getAttributeNameList()
             #
-            fn = os.path.join(self.__workingPath, tableId + "-" + partName + ".csv")
+            fn = os.path.join(self.__workPath, tableId + "-" + partName + ".csv")
             with open(fn, modeOpt, newline="") as ofh:
                 csvWriter = csv.writer(ofh)
                 csvWriter.writerow(attributeNameList)
@@ -247,7 +252,7 @@ class SchemaDefLoader(object):
             schemaAttributeIdList = tObj.getAttributeIdList()
             #
             if rowList:
-                fn = os.path.join(self.__workingPath, tableId + "-" + partName + ".tdd")
+                fn = os.path.join(self.__workPath, tableId + "-" + partName + ".tdd")
                 ofh = open(fn, modeOpt)
                 for rD in rowList:
                     # logger.info("%r" % colSep.join([str(rD[aId]) for aId in schemaAttributeIdList]))

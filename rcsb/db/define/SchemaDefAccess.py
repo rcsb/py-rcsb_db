@@ -58,6 +58,7 @@ class SchemaDefAccess(object):
         self.__sliceParentItemD = schemaDef["SLICE_PARENT_ITEMS"]
         self.__sliceParentFilterD = schemaDef["SLICE_PARENT_FILTERS"]
         self.__sliceIndexD, self.__sliceExtraD = self.__makeSliceIndex()
+        self.__nameIndex = self.__makeNameIndex()
         self.__kwargs = kwargs
         #
 
@@ -86,14 +87,14 @@ class SchemaDefAccess(object):
     def getCollectionVersion(self, collectionName):
         """ Return the collection info [{'NAME': , 'VERSION': xx }, ... ] for the input content type.
         """
-        r = None
+        ret = None
         try:
             for cd in self.__documentDefDict["CONTENT_TYPE_COLLECTION_INFO"]:
                 if collectionName == cd["NAME"]:
                     return cd["VERSION"]
         except Exception as e:
             logger.error("Failing for with %s", str(e))
-        return r
+        return ret
 
     def getVersionedCollection(self, prefix):
         try:
@@ -133,7 +134,7 @@ class SchemaDefAccess(object):
         return sL
 
     def getCollectionSliceFilter(self, collectionName):
-        """  For input collection, return an defined slice filter
+        """  For input collection, return the defined slice filter
 
         """
         sf = None
@@ -142,6 +143,27 @@ class SchemaDefAccess(object):
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
         return sf
+
+    def getCollectionExcludedAttributes(self, collectionName, asSchemaIds=False):
+        """  For input collection, return a dictionary of attributes flagged for exclusion.
+
+        """
+        eD = None
+        try:
+            eD = {}
+            for catName, atNameL in self.__documentDefDict["COLLECTION_CONTENT"][collectionName]["EXCLUDED_ATTRIBUTES"].items():
+                eD = {(catName, atName): collectionName for atName in atNameL}
+            if asSchemaIds:
+                # convert to internal schema identifiers if asSchemaIds is set.
+                rD = {}
+                for (schemaName, atName), cn in eD.items():
+                    if schemaName in self.__nameIndex and atName in self.__nameIndex[schemaName]["ATTRIBUTES"]:
+                        rD[(self.__nameIndex[schemaName]["SCHEMA_ID"], self.__nameIndex[schemaName]["ATTRIBUTES"][atName])] = cn
+                eD = rD
+            #
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return eD
 
     def getDataSelectors(self, selectorName):
         sL = []
@@ -155,55 +177,55 @@ class SchemaDefAccess(object):
     def getDocumentKeyAttributeNames(self, collectionName):
         """ Return list of key document attributes required to uniquely identify a document.
         """
-        r = []
+        ret = []
         try:
             return list(self.__documentDefDict["COLLECTION_DOCUMENT_ATTRIBUTE_NAMES"][collectionName])
         except Exception as e:
             logger.exception("Failing for collection %s with %r", collectionName, str(e))
-        return r
+        return ret
 
     def getDocumentReplaceAttributeNames(self, collectionName):
         """ Return list of document attributes required to remove all relevant documents
             prior  to load 'replace' operation.
         """
-        r = []
+        ret = []
         try:
             return list(self.__documentDefDict["COLLECTION_DOCUMENT_REPLACE_ATTRIBUTE_NAMES"][collectionName])
         except Exception as e:
             logger.exception("Failing for collection %s with %r", collectionName, str(e))
-        return r
+        return ret
 
     def getPrivateDocumentAttributes(self, collectionName):
         """ Return list of key document identifiers and document private document names.
         """
-        r = []
+        ret = []
         try:
             return [d for d in self.__documentDefDict["COLLECTION_DOCUMENT_PRIVATE_KEYS"][collectionName]]
         except Exception as e:
             logger.exception("Failing for collection %s with %r", collectionName, str(e))
-        return r
+        return ret
 
     def getDocumentIndices(self, collectionName):
         """ Return list of document indices.
         """
-        r = []
+        ret = []
         try:
             return [d for d in self.__documentDefDict["COLLECTION_DOCUMENT_INDICES"][collectionName]]
         except Exception as e:
             logger.exception("Failing for collection %s with %r", collectionName, str(e))
-        return r
+        return ret
 
     def getDocumentIndex(self, collectionName, indexName):
         """ Return the attribute list for a particular document index.
         """
-        r = []
+        ret = []
         try:
-            for d in self.__documentDefDict["COLLECTION_DOCUMENT_INDICES"][collectionName]:
-                if d["INDEX_NAME"] == indexName:
-                    return d["ATTRIBUTE_NAMES"]
+            for dD in self.__documentDefDict["COLLECTION_DOCUMENT_INDICES"][collectionName]:
+                if dD["INDEX_NAME"] == indexName:
+                    return dD["ATTRIBUTE_NAMES"]
         except Exception as e:
             logger.exception("Failing for collection %s index %r with %r", collectionName, indexName, str(e))
-        return r
+        return ret
 
     def getSubCategoryAggregates(self, collectionName):
         """  Return the list of subcategory aggregates for the input collection.
@@ -221,15 +243,15 @@ class SchemaDefAccess(object):
         sIdL = []
         try:
             for sId in self.__schemaDefDict:
-                d = self.__schemaDefDict[sId]
-                if subCategoryName in d["SCHEMA_SUB_CATEGORIES"]:
+                dD = self.__schemaDefDict[sId]
+                if subCategoryName in dD["SCHEMA_SUB_CATEGORIES"]:
                     sIdL.append(sId)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return sIdL
 
     def getSubCategoryAttributeIdList(self, schemaId, subCategoryName):
-        """ Return the schema Ids containing the input subCategory
+        """ Return the schema attribute Ids containing the input subCategory
         """
         atIdL = []
         try:
@@ -245,9 +267,9 @@ class SchemaDefAccess(object):
         """  Return if the input subcategory aggregate has unit cardinality.
         """
         try:
-            for d in self.__documentDefDict["COLLECTION_DOCUMENT_INDICES"][collectionName]:
-                if subCategoryName == d["NAME"]:
-                    return d["HAS_UNIT_CARDINALITY"]
+            for dD in self.__documentDefDict["COLLECTION_SUB_CATEGORY_AGGREGATES"][collectionName]:
+                if subCategoryName == dD["NAME"]:
+                    return dD["HAS_UNIT_CARDINALITY"]
         except Exception:
             return False
 
@@ -307,8 +329,8 @@ class SchemaDefAccess(object):
                 pL = aId.lower().split("_")
                 tL = []
                 tL.append(pL[0])
-                for p in pL[1:]:
-                    tt = p[0].upper() + p[1:]
+                for pV in pL[1:]:
+                    tt = pV[0].upper() + pV[1:]
                     tL.append(tt)
                 dL.append((aId, "".join(tL)))
         except Exception:
@@ -344,19 +366,19 @@ class SchemaDefAccess(object):
         try:
             sliceNames = self.getSliceNames()
             for sliceName in sliceNames:
-                d = {}
+                dD = {}
                 for schemaId, tD in self.__schemaDefDict.items():
                     if sliceName in tD["SLICE_ATTRIBUTES"]:
-                        if schemaId not in d:
-                            d[schemaId] = {}
+                        if schemaId not in dD:
+                            dD[schemaId] = {}
                         for sD in tD["SLICE_ATTRIBUTES"][sliceName]:
                             # d[schemaId][(sD['PARENT_CATEGORY'], sD['PARENT_ATTRIBUTE'])] = sD['CHILD_ATTRIBUTE']
-                            d[schemaId].setdefault((sD["PARENT_CATEGORY"], sD["PARENT_ATTRIBUTE"]), []).append(sD["CHILD_ATTRIBUTE"])
+                            dD[schemaId].setdefault((sD["PARENT_CATEGORY"], sD["PARENT_ATTRIBUTE"]), []).append(sD["CHILD_ATTRIBUTE"])
                     #
                     if sliceName in tD["SLICE_CATEGORY_EXTRAS"] and tD["SLICE_CATEGORY_EXTRAS"][sliceName]:
                         extraD.setdefault(sliceName, []).append(schemaId)
 
-                sliceD[sliceName] = d
+                sliceD[sliceName] = dD
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return sliceD, extraD
@@ -395,6 +417,20 @@ class SchemaDefAccess(object):
     def getSliceExtraSchemaIds(self, sliceName):
         return self.__sliceExtraD[sliceName] if sliceName in self.__sliceExtraD else []
 
+    def __makeNameIndex(self):
+        """Return an index of schema and attribute names resolving to corresponding internal ids.
+
+        Returns:
+            dict : {<schemaName> : {'SCHEMA_ID": ... , 'ATTRIBUTES': {<atName>: <atId>, ... }}
+
+        """
+        nameIndexD = {}
+        for schemaId, sD in self.__schemaDefDict.items():
+            schemaName = sD["SCHEMA_NAME"]
+            atD = {atName: atId for atId, atName in sD["ATTRIBUTES"].items()}
+            nameIndexD[schemaName] = {"SCHEMA_ID": schemaId, "ATTRIBUTES": atD}
+        return nameIndexD
+
 
 class SchemaDef(object):
 
@@ -403,6 +439,7 @@ class SchemaDef(object):
 
     def __init__(self, schemaDefDict=None):
         self.__tD = schemaDefDict if schemaDefDict else {}
+        self.__nomalizedEnumD = {}
 
     def getName(self):
         try:
@@ -529,16 +566,17 @@ class SchemaDef(object):
 
     def getAttributeEnumList(self, attributeId):
         try:
-            return self.__tD["ATTRIBUTE_INFO"][attributeId]["ENUMERATION"].values()
+            return self.__tD["ATTRIBUTE_INFO"][attributeId]["ENUMERATION"]
         except Exception:
             return []
 
     def normalizeEnum(self, attributeId, enum):
         try:
-            return self.__tD["ATTRIBUTE_INFO"][attributeId]["ENUMERATION"][str(enum).lower()]
+            if self.__tD["ATTRIBUTE_INFO"][attributeId]["ENUMERATION"] and attributeId not in self.__nomalizedEnumD:
+                self.__nomalizedEnumD[attributeId] = {str(ky).lower(): ky for ky in self.__tD["ATTRIBUTE_INFO"][attributeId]["ENUMERATION"]}
+            return self.__nomalizedEnumD[attributeId][str(enum).lower()]
         except Exception as e:
-            #
-            logger.debug("Failing for %s  %s and %r with %s", self.__tD["SCHEMA_NAME"], attributeId, enum, str(e))
+            logger.debug("Failing for %s  %s and %r - %r with %r", self.__tD["SCHEMA_NAME"], attributeId, enum, self.__nomalizedEnumD, str(e))
         return enum
 
     def isEnumerated(self, attributeId):
@@ -699,22 +737,22 @@ class SchemaDef(object):
 
             Exclude and attributes that lack a schema mapping (e.g. functional mappings )
         """
-        d = {}
+        dD = {}
         for k, vD in self.__tD["ATTRIBUTE_MAP"].items():
             if vD["ATTRIBUTE"]:
-                d[k] = vD["ATTRIBUTE"]
-        return d
+                dD[k] = vD["ATTRIBUTE"]
+        return dD
 
     def getMapAttributeNameDict(self):
         """ Return the dictionary of d[schema attribute id] = mapped instance category attribute
 
             Exclude and attributes that lack a schema mapping (e.g. functional mappings )
         """
-        d = {}
+        dD = {}
         for k, vD in self.__tD["ATTRIBUTE_MAP"].items():
             if vD["ATTRIBUTE"]:
-                d[vD["ATTRIBUTE"]] = k
-        return d
+                dD[vD["ATTRIBUTE"]] = k
+        return dD
 
     def getMapMergeIndexAttributes(self, categoryName):
         """  Return the list of merging index attribures for this mapped instance category.
@@ -748,33 +786,33 @@ class SchemaDef(object):
     def getAppNullValueDict(self):
         """ Return a dictionary containing appropriate NULL value for each attribute.
         """
-        d = {}
+        dD = {}
         atId = atInfo = None
         try:
             for atId, atInfo in self.__tD["ATTRIBUTE_INFO"].items():
 
                 if self.__isStringType(atInfo["APP_TYPE"].upper()):
-                    d[atId] = ""
+                    dD[atId] = ""
                 elif self.__isDateType(atInfo["APP_TYPE"].upper()):
-                    d[atId] = r"\N"
+                    dD[atId] = r"\N"
                 else:
-                    d[atId] = r"\N"
+                    dD[atId] = r"\N"
         except Exception as e:
             logger.exception("Failing with atId %r atInfo %r with %s", atId, atInfo, str(e))
         #
-        return d
+        return dD
 
     def getStringWidthDict(self):
         """ Return a dictionary containing maximum string widths assigned to char data types.
             Non-character type data items are assigned zero width.
         """
-        d = {}
+        dD = {}
         for atId, atInfo in self.__tD["ATTRIBUTE_INFO"].items():
             if self.__isStringType(atInfo["APP_TYPE"].upper()):
-                d[atId] = int(atInfo["WIDTH"])
+                dD[atId] = int(atInfo["WIDTH"])
             else:
-                d[atId] = 0
-        return d
+                dD[atId] = 0
+        return dD
 
     def isIterable(self, attributeId):
         try:
@@ -879,9 +917,9 @@ class SchemaDef(object):
         """ Naive method to return corresponding child attribute for the input slice parent.
         """
         try:
-            for d in self.__tD["SLICE_ATTRIBUTES"][sliceName]:
-                if d["PARENT_CATEGORY"] == parentCategoryId and d["PARENT_ATTRIBUTE"] == parentAttributeId:
-                    return d["CHILD_ATTRIBUTE"]
+            for dD in self.__tD["SLICE_ATTRIBUTES"][sliceName]:
+                if dD["PARENT_CATEGORY"] == parentCategoryId and dD["PARENT_ATTRIBUTE"] == parentAttributeId:
+                    return dD["CHILD_ATTRIBUTE"]
             return None
         except Exception:
             return None

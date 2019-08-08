@@ -281,7 +281,7 @@ class DataTransform(object):
             nVal = tL
         else:
             nVal = self.__tObj.normalizeEnum(trfTup.atId, trfTup.value)
-        # logger.info("Normalizing %r %r" % (trfTup.atId, trfTup.value))
+        # logger.info("Normalizing %r %r - normalized %r", trfTup.atId, trfTup.value, nVal)
         return TrfValue(nVal, trfTup.atId, trfTup.origLength, False)
 
     def castStringX(self, trfTup):
@@ -322,7 +322,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        if (trfTup.value == "?") or (trfTup.value == ".") or (not trfTup.value):
+        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == ""):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
         return TrfValue(int(trfTup.value), trfTup.atId, trfTup.origLength, False)
 
@@ -332,9 +332,9 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        if (trfTup.value == "?") or (trfTup.value == ".") or (not trfTup.value):
+        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == ""):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
-        vL = [int(v.strip()) for v in trfTup.value.split(self.__tObj.getIterableSeparator(trfTup.atId))]
+        vL = [int(v.strip()) for v in str(trfTup.value).split(self.__tObj.getIterableSeparator(trfTup.atId))]
         return TrfValue(vL, trfTup.atId, trfTup.origLength, False)
 
     def castFloat(self, trfTup):
@@ -343,7 +343,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        if (trfTup.value == "?") or (trfTup.value == ".") or (not trfTup.value):
+        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == ""):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
         return TrfValue(float(trfTup.value), trfTup.atId, trfTup.origLength, False)
 
@@ -353,9 +353,9 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        if (trfTup.value == "?") or (trfTup.value == ".") or (not trfTup.value):
+        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == ""):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
-        vL = [float(v.strip()) for v in trfTup.value.split(self.__tObj.getIterableSeparator(trfTup.atId))]
+        vL = [float(v.strip()) for v in str(trfTup.value).split(self.__tObj.getIterableSeparator(trfTup.atId))]
         return TrfValue(vL, trfTup.atId, trfTup.origLength, False)
 
     def castDateToObj(self, trfTup):

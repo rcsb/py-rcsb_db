@@ -6,7 +6,8 @@
 #
 #
 # Updates:
-#
+#  17-Jul-2019 jdw add resource for common utilities and dictionary api
+#   7-Aug-2019 jdw use dictionary locator map
 ##
 """
 Resource provider for DictMethodHelper tools.
@@ -19,6 +20,8 @@ __license__ = "Apache 2.0"
 
 import logging
 
+from rcsb.db.define.DictionaryProvider import DictionaryProvider
+from rcsb.db.helpers.DictMethodCommonUtils import DictMethodCommonUtils
 from rcsb.db.utils.SingletonClass import SingletonClass
 from rcsb.utils.ec.EnzymeDatabaseUtils import EnzymeDatabaseUtils
 from rcsb.utils.io.MarshalUtil import MarshalUtil
@@ -33,50 +36,6 @@ class DictMethodResourceProvider(SingletonClass):
     """ Resource provider for DictMethodHelper tools.
 
     """
-
-    # Dictionary of current standard monomers -
-    monDict3 = {
-        "ALA": "A",
-        "ARG": "R",
-        "ASN": "N",
-        "ASP": "D",
-        "ASX": "B",
-        "CYS": "C",
-        "GLN": "Q",
-        "GLU": "E",
-        "GLX": "Z",
-        "GLY": "G",
-        "HIS": "H",
-        "ILE": "I",
-        "LEU": "L",
-        "LYS": "K",
-        "MET": "M",
-        "PHE": "F",
-        "PRO": "P",
-        "SER": "S",
-        "THR": "T",
-        "TRP": "W",
-        "TYR": "Y",
-        "VAL": "V",
-        "PYL": "O",
-        "SEC": "U",
-        "DA": "A",
-        "DC": "C",
-        "DG": "G",
-        "DT": "T",
-        "DU": "U",
-        "DI": "I",
-        "A": "A",
-        "C": "C",
-        "G": "G",
-        "I": "I",
-        "N": "N",
-        "T": "T",
-        "U": "U",
-        # "UNK": "X",
-        # "MSE":"M",
-        # ".": "."
-    }
 
     def __init__(self, cfgOb, **kwargs):
         """ Resource provider for dictionary method runner.
@@ -94,23 +53,19 @@ class DictMethodResourceProvider(SingletonClass):
         self.__configName = kwargs.get("configName", self.__cfgOb.getDefaultSectionName())
         self.__workPath = kwargs.get("workPath", ".")
         #
-        # self.__pathPdbxDictionaryFile = self.__cfgOb.getPath("PDBX_DICT_LOCATOR", sectionName=configName)
-        # self.__pathRcsbDictionaryFile = self.__cfgOb.getPath("RCSB_DICT_LOCATOR", sectionName=configName)
-        #
-        # self.__siftsMappingFilePath = self.__cfgOb.getPath("SIFTS_SUMMARY_PATH", sectionName=configName)
-        # self.__siftsMappingDict = {}
-        #
         self.__drugBankMappingDict = {}
         self.__csdModelMappingDict = {}
         self.__taxU = None
         self.__ecU = None
         self.__scopU = None
         self.__cathU = None
+        self.__commonU = None
+        self.__dictApi = None
         #
         # self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
         # self.__re_non_digit = re.compile(r"[^\d]+")
         #
-        logger.info("Dictionary resource provider init completed")
+        logger.debug("Dictionary resource provider init completed")
         #
 
     def echo(self, msg):
@@ -135,18 +90,16 @@ class DictMethodResourceProvider(SingletonClass):
             "EnzymeUtils instance": self.__fetchEnzymeUtils,
             "DrugBank accession mapping": self.__fetchDrugBankMapping,
             "CCDC accession mapping": self.__fetchCsdModelMapping,
-            "monomer one-letter code mapping": self.__fetchMonomerCodes,
+            "DictMethodCommonUtils instance": self.__fetchCommonUtils,
+            "Dictionary API instance (pdbx_core)": self.__fetchDictionaryApi,
         }
+        logger.debug("Requesting resource %r", resourceName)
         if resourceName in resourcesD:
             return resourcesD[resourceName](self.__cfgOb, self.__configName, self.__workPath, **kwargs)
         else:
             logger.error("Request for unsupported resource %r returning %r", resourceName, default)
         #
         return default
-
-    def __fetchMonomerCodes(self, cfgOb, configName, workPath, **kwargs):
-        logger.debug("Default %r configName %s workPath %s kwargs %r", cfgOb.getDefaultSectionName(), configName, workPath, kwargs)
-        return DictMethodResourceProvider.monDict3
 
     def __fetchTaxonomyUtils(self, cfgOb, configName, workPath, **kwargs):
         logger.debug("configName %s workPath %s kwargs %r", configName, workPath, kwargs)
@@ -203,3 +156,20 @@ class DictMethodResourceProvider(SingletonClass):
                 logger.exception("For %s failing with %s", csdModelMappingFile, str(e))
 
         return self.__csdModelMappingDict
+
+    def __fetchCommonUtils(self, cfgOb, configName, workPath, **kwargs):
+        logger.debug("configName %s workPath %r kwargs %r", configName, workPath, kwargs)
+        _ = cfgOb
+        if not self.__commonU:
+            self.__commonU = DictMethodCommonUtils(**kwargs)
+        return self.__commonU
+
+    def __fetchDictionaryApi(self, cfgOb, configName, workPath, **kwargs):
+        logger.debug("configName %s workPath %s kwargs %r", configName, workPath, kwargs)
+        if not self.__dictApi:
+            dictLocatorMap = cfgOb.get("DICT_LOCATOR_CONFIG_MAP", sectionName=configName)
+            schemaName = kwargs.get("schemaName", "pdbx_core")
+            dictLocators = [cfgOb.getPath(configLocator, sectionName=configName) for configLocator in dictLocatorMap[schemaName]]
+            dP = DictionaryProvider()
+            self.__dictApi = dP.getApi(dictLocators=dictLocators)
+        return self.__dictApi

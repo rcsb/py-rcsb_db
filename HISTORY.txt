@@ -151,3 +151,8 @@
                     categories from this collection.
  21-May-2019  V0.64 Handle odd ordering of records in struct_ref_seq_dif
  29-Jun-2019  V0.65 Update development workflow, method code packaging,  and general housekeeping
+  8-Aug-2019  V0.66 Refactoring dictionary method helpers and external resource provisioning to
+                    reduce redundant processing and facilitate greater caching. Remove testing
+                    dependencies on mock schemas and add explicit schema differencing to better
+                    schema evolution. Add new helper methods for sites and connections and revise helper
+                    methods for all entity and instance features.

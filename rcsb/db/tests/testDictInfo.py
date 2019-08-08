@@ -49,9 +49,11 @@ class DictInfoTests(unittest.TestCase):
         configName = "site_info"
         self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
         #
+        #
         self.__pathPdbxDictionaryFile = self.__cfgOb.getPath("PDBX_DICT_LOCATOR", sectionName=configName)
         self.__pathRcsbDictionaryFile = self.__cfgOb.getPath("RCSB_DICT_LOCATOR", sectionName=configName)
         self.__pathVrptDictionaryFile = self.__cfgOb.getPath("VRPT_DICT_LOCATOR", sectionName=configName)
+
         self.__mU = MarshalUtil()
         #
         self.__pathSaveDictInfoDefaultJson = os.path.join(HERE, "test-output", "dict_info_default.json")

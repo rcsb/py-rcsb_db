@@ -36,7 +36,6 @@ def scanRepo(
     cfgOb,
     contentType,
     scanDataFilePath,
-    dictFilePath,
     numProc,
     chunkSize,
     fileLimit,
@@ -53,7 +52,15 @@ def scanRepo(
     try:
         #
         dP = DictionaryProvider()
-        dictApi = dP.getApi(dictLocators=[dictFilePath])
+        configName = cfgOb.getDefaultSectionName()
+        dictLocatorMap = cfgOb.get("DICT_LOCATOR_CONFIG_MAP", sectionName=configName)
+        if contentType not in dictLocatorMap:
+            logger.error("Missing dictionary locator configuration for %s", contentType)
+            dictLocators = []
+        else:
+            dictLocators = [cfgOb.getPath(configLocator, sectionName=configName) for configLocator in dictLocatorMap[contentType]]
+        #
+        dictApi = dP.getApi(dictLocators=dictLocators)
         dI = DictInfo(dictApi)
         attributeDataTypeD = dI.getAttributeDataTypeD()
         #
@@ -74,8 +81,6 @@ def scanRepo(
 def main():
     parser = argparse.ArgumentParser()
     defaultConfigName = "site_info"
-    #
-    parser.add_argument("--dict_file_path", default=None, help="PDBx/mmCIF dictionary file path")
     #
     parser.add_argument("--scanType", default="full", help="Repository scan type (full|incr)")
     #
@@ -146,7 +151,6 @@ def main():
         scanDataFilePath = args.scan_data_file_path
         dataCoverageFilePath = args.coverage_file_path
         dataTypeFilePath = args.type_map_file_path
-        dictFilePath = args.dict_file_path if args.dict_file_path else cfgOb.getPath("PDBX_DICT_LOCATOR", sectionName=configName)
         workPath = args.working_path if args.working_path else "."
     except Exception as e:
         logger.exception("Argument processing problem %s", str(e))
@@ -191,7 +195,6 @@ def main():
         cfgOb,
         contentType,
         scanDataFilePath,
-        dictFilePath,
         numProc,
         chunkSize,
         fileLimit,

@@ -41,6 +41,7 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 import logging
+from collections import OrderedDict
 
 from rcsb.db.processors.DataTransformFactory import DataTransformInfo
 
@@ -86,7 +87,7 @@ class DictInfoHelper(object):
 
     def getCategoryContentClasses(self, dictSubset):
         try:
-            rD = {}
+            rD = OrderedDict()
             for catName, cDL in self.__categoryClasses.items():
                 for cD in cDL:
                     if cD["DICT_SUBSET"] == dictSubset:
@@ -100,7 +101,7 @@ class DictInfoHelper(object):
 
     def getAttributeContentClasses(self, dictSubset):
         try:
-            rD = {}
+            rD = OrderedDict()
             for (catName, atName), cDL in self.__attributeClasses.items():
                 for cD in cDL:
                     if cD["DICT_SUBSET"] == dictSubset:
@@ -113,7 +114,7 @@ class DictInfoHelper(object):
         return rD
 
     def __getCategoryContentClasses(self):
-        classD = {}
+        classD = OrderedDict()
         try:
             for cTup, cDL in self.__cfgD["content_classes"].items():
                 for cD in cDL:
@@ -125,7 +126,7 @@ class DictInfoHelper(object):
         return classD
 
     def __getAttributeContentClasses(self, wildCardAtName="__all__"):
-        classD = {}
+        classD = OrderedDict()
         try:
             for cTup, cDL in self.__cfgD["content_classes"].items():
                 for cD in cDL:
@@ -145,13 +146,13 @@ class DictInfoHelper(object):
         return classD
 
     def __getItemTransformD(self, wildCardAtName="__all__"):
-        itD = {}
+        itD = OrderedDict()
         for iFilter, dL in self.__cfgD["item_transformers"].items():
             logger.debug("Verify transform method %r", iFilter)
             if self.__dti.isImplemented(iFilter):
-                for d in dL:
-                    atN = d["ATTRIBUTE_NAME"] if "ATTRIBUTE_NAME" in d else wildCardAtName
-                    itD.setdefault((d["CATEGORY_NAME"], atN), []).append(iFilter)
+                for dD in dL:
+                    atN = dD["ATTRIBUTE_NAME"] if "ATTRIBUTE_NAME" in dD else wildCardAtName
+                    itD.setdefault((dD["CATEGORY_NAME"], atN), []).append(iFilter)
                     # if (d['CATEGORY_NAME'], d['ATTRIBUTE_NAME']) not in itD:
                     #     itD[(d['CATEGORY_NAME'], d['ATTRIBUTE_NAME'])] = []
                     # itD[(d['CATEGORY_NAME'], d['ATTRIBUTE_NAME'])].append(f)

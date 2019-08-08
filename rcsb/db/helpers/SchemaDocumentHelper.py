@@ -77,7 +77,7 @@ class SchemaDocumentHelper(object):
         """
         includeL = []
         try:
-            includeL = [tS.upper() for tS in self.__cfgD["schema_content_filters"][collectionName]["EXCLUDE"]]
+            includeL = [tS.upper() for tS in self.__cfgD["collection_schema_content_filters"][collectionName]["EXCLUDE"]]
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
         return includeL
@@ -88,7 +88,7 @@ class SchemaDocumentHelper(object):
         """
         excludeL = []
         try:
-            excludeL = [tS.upper() for tS in self.__cfgD["schema_content_filters"][collectionName]["INCLUDE"]]
+            excludeL = [tS.upper() for tS in self.__cfgD["collection_schema_content_filters"][collectionName]["INCLUDE"]]
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
         return excludeL
@@ -99,96 +99,111 @@ class SchemaDocumentHelper(object):
         """
         sf = None
         try:
-            sf = self.__cfgD["schema_content_filters"][collectionName]["SLICE"]
+            sf = self.__cfgD["collection_schema_content_filters"][collectionName]["SLICE"]
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
         return sf
 
+    def getDocumentExcludedAttributes(self, collectionName, asTuple=True):
+        atExcludeD = {}
+        for cn, cDL in self.__cfgD["collection_attribute_content_filters"].items():
+            if cn != collectionName:
+                continue
+            for cD in cDL:
+                catName = cD["CATEGORY_NAME"]
+                if "ATTRIBUTE_NAME_LIST" in cD:
+                    for atName in cD["ATTRIBUTE_NAME_LIST"]:
+                        if asTuple:
+                            atExcludeD[(catName, atName)] = collectionName
+                        else:
+                            atExcludeD.setdefault(catName, []).append(atName)
+        return atExcludeD
+
     def getDocumentKeyAttributeNames(self, collectionName):
-        r = []
+        ret = []
         try:
-            for d in self.__cfgD["collection_indices"][collectionName]:
-                if d["INDEX_NAME"] == "primary":
-                    r = d["ATTRIBUTE_NAMES"]
+            for dD in self.__cfgD["collection_indices"][collectionName]:
+                if dD["INDEX_NAME"] == "primary":
+                    ret = dD["ATTRIBUTE_NAMES"]
                     break
         except Exception as e:
             logger.exception("Collection %s failing with %s", collectionName, str(e))
-        return r
+        return ret
 
     def getDocumentReplaceAttributeNames(self, collectionName):
         """ Return index labeled replace in provided or 'primary' otherwise
         """
-        r = []
+        ret = []
         try:
-            for d in self.__cfgD["collection_indices"][collectionName]:
-                if d["INDEX_NAME"] == "replace":
-                    r = d["ATTRIBUTE_NAMES"]
+            for dD in self.__cfgD["collection_indices"][collectionName]:
+                if dD["INDEX_NAME"] == "replace":
+                    ret = dD["ATTRIBUTE_NAMES"]
                     break
-            if r:
-                return r
+            if ret:
+                return ret
             #
-            for d in self.__cfgD["collection_indices"][collectionName]:
-                if d["INDEX_NAME"] == "primary":
-                    r = d["ATTRIBUTE_NAMES"]
+            for dD in self.__cfgD["collection_indices"][collectionName]:
+                if dD["INDEX_NAME"] == "primary":
+                    ret = dD["ATTRIBUTE_NAMES"]
                     break
         except Exception as e:
             logger.exception("Collection %s failing with %s", collectionName, str(e))
-        return r
+        return ret
 
     def getDocumentIndices(self, collectionName):
-        r = []
+        ret = []
         try:
-            r = [d for d in self.__cfgD["collection_indices"][collectionName] if d["ATTRIBUTE_NAMES"] and len(d["ATTRIBUTE_NAMES"]) > 0]
+            ret = [d for d in self.__cfgD["collection_indices"][collectionName] if d["ATTRIBUTE_NAMES"] and len(d["ATTRIBUTE_NAMES"]) > 0]
         except Exception as e:
             logger.exception("Collection %s failing with %s", collectionName, str(e))
-        return r
+        return ret
 
     def getPrivateDocumentAttributes(self, collectionName):
-        r = []
+        ret = []
         try:
             return [d for d in self.__cfgD["collection_private_keys"][collectionName] if d["PRIVATE_DOCUMENT_NAME"] and len(d["PRIVATE_DOCUMENT_NAME"]) > 0]
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
-        return r
+        return ret
 
     def getSubCategoryAggregates(self, collectionName):
-        r = []
+        ret = []
         try:
             return [tS["NAME"] for tS in self.__cfgD["collection_subcategory_aggregates"][collectionName]]
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
-        return r
+        return ret
 
     def getSubCategoryAggregateUnitCardinality(self, collectionName, subCategoryName):
         ret = False
         try:
             if collectionName in self.__cfgD["collection_subcategory_aggregates"]:
-                for d in self.__cfgD["collection_subcategory_aggregates"][collectionName]:
-                    if d["NAME"] == subCategoryName:
-                        ret = d["HAS_UNIT_CARDINALITY"]
+                for dD in self.__cfgD["collection_subcategory_aggregates"][collectionName]:
+                    if dD["NAME"] == subCategoryName:
+                        ret = dD["HAS_UNIT_CARDINALITY"]
                         break
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
         return ret
 
     def getSubCategoryAggregateFeatures(self, collectionName):
-        r = []
+        ret = []
         try:
             return [tD for tD in self.__cfgD["collection_subcategory_aggregates"][collectionName]]
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
-        return r
+        return ret
 
     def getRetainSingletonObjects(self, collectionName):
         """ By default singleton objects are expanded in global scope.  To avoid
             this behaviour set the retain singleton option for the collection.
         """
-        r = False
+        ret = False
         try:
             return self.__cfgD["collection_retain_singleton"][collectionName]
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
-        return r
+        return ret
 
     def getSuppressedCategoryRelationships(self, collectionName):
         """

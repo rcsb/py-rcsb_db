@@ -6,6 +6,7 @@
 # Update:
 #    12-Nov-2018 jdw add chemical component and bird chemical component tests
 #     5-Jun-2019 jdw revise for new method runner api
+#    16-Jul-2019 jdw remove schema processing.
 ##
 """
 Tests for applying dictionary methods defined as references to helper plugin methods .
@@ -25,9 +26,7 @@ import unittest
 from mmcif.api.DictMethodRunner import DictMethodRunner
 from rcsb.db.define.DictionaryProvider import DictionaryProvider
 from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
-from rcsb.db.processors.DataTransformFactory import DataTransformFactory
-from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
-from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
+from rcsb.db.utils.RepoPathUtil import RepoPathUtil
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 
@@ -50,21 +49,16 @@ class DictMethodRunnerTests(unittest.TestCase):
         self.__configName = configName
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         self.__mU = MarshalUtil(workPath=self.__workPath)
-
-        self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, workPath=self.__workPath)
-        self.__birdRepoPath = self.__cfgOb.getPath("BIRD_REPO_PATH", sectionName=configName)
+        self.__rpU = RepoPathUtil(cfgOb=self.__cfgOb, cfgSectionName=configName, numProc=self.__numProc, fileLimit=self.__fileLimit, workPath=self.__workPath, verbose=False)
         #
-        self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
-        self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
-        self.__chemCompMockLen = 5
-        self.__birdMockLen = 3
-        self.__pdbxMockLen = 14
-        self.__verbose = True
+        self.__testCaseList = [
+            {"contentType": "chem_comp_core", "mockLength": 5},
+            {"contentType": "bird_chem_comp_core", "mockLength": 3},
+            {"contentType": "pdbx_core", "mockLength": 14},
+        ]
         #
-        self.__pathPdbxDictionaryFile = self.__cfgOb.getPath("PDBX_DICT_LOCATOR", sectionName=configName)
-        self.__pathRcsbDictionaryFile = self.__cfgOb.getPath("RCSB_DICT_LOCATOR", sectionName=configName)
+        self.__modulePathMap = self.__cfgOb.get("DICT_HELPER_MODULE_PATH_MAP", sectionName=configName)
         #
-        self.__modulePathMap = {"rcsb.db.helpers.DictMethodRunnerHelper": "rcsb.db.helpers.DictMethodRunnerHelper"}
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
@@ -72,105 +66,45 @@ class DictMethodRunnerTests(unittest.TestCase):
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    def testProcessPdbxDocumentsFromContainers(self):
-        """Test case -  create loadable PDBx data from files
-
+    def __runContentType(self, contentType, mockLength):
+        """ Read and process test fixture data files from the input content type.
         """
         try:
             dP = DictionaryProvider()
-            dictApi = dP.getApi(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile])
+            dictLocatorMap = self.__cfgOb.get("DICT_LOCATOR_CONFIG_MAP", sectionName=self.__configName)
+            if contentType not in dictLocatorMap:
+                logger.error("Missing dictionary locator configuration for %s", contentType)
+                dictLocators = []
+            else:
+                dictLocators = [self.__cfgOb.getPath(configLocator, sectionName=self.__configName) for configLocator in dictLocatorMap[contentType]]
+            #
+            dictApi = dP.getApi(dictLocators=dictLocators)
             rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, workPath=self.__workPath)
             dmh = DictMethodRunner(dictApi, modulePathMap=self.__modulePathMap, resourceProvider=rP)
-            #
-            inputPathList = self.__schU.getLocatorObjList(contentType="pdbx_core")
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="pdbx_core")
-            #
-            dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
-            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
-            containerList = sdp.getContainerList(inputPathList)
-            #
+            inputPathList = self.__rpU.getLocatorList(contentType=contentType)
             #
             logger.debug("Length of path list %d\n", len(inputPathList))
-            self.assertGreaterEqual(len(inputPathList), self.__pdbxMockLen)
-
-            for container in containerList:
-                cName = container.getName()
-                logger.debug("Processing container %s", cName)
-                #
-                dmh.apply(container)
-                #
-                savePath = os.path.join(HERE, "test-output", cName + "-with-method.cif")
-                self.__mU.doExport(savePath, [container], fmt="mmcif")
+            self.assertGreaterEqual(len(inputPathList), mockLength)
+            for inputPath in inputPathList:
+                containerList = self.__mU.doImport(inputPath, fmt="mmcif")
+                for container in containerList:
+                    cName = container.getName()
+                    logger.debug("Processing container %s", cName)
+                    #
+                    dmh.apply(container)
+                    #
+                    savePath = os.path.join(HERE, "test-output", cName + "-with-method.cif")
+                    self.__mU.doExport(savePath, [container], fmt="mmcif")
 
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
 
-    def testChemCompDocumentsFromContainers(self):
-        """Test case -  create loadable PDBx data from files
+    def testMethodRunner(self):
+        """Test method runner for multiple content types.
         """
-        try:
-            dP = DictionaryProvider()
-            dictApi = dP.getApi(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile])
-            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, workPath=self.__workPath)
-            dmh = DictMethodRunner(dictApi, modulePathMap=self.__modulePathMap, resourceProvider=rP)
-            #
-            inputPathList = self.__schU.getLocatorObjList(contentType="chem_comp_core")
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="chem_comp_core")
-            #
-            dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
-            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
-            containerList = sdp.getContainerList(inputPathList)
-            #
-            #
-            logger.debug("Length of path list %d", len(inputPathList))
-            self.assertGreaterEqual(len(inputPathList), self.__chemCompMockLen)
-
-            for container in containerList:
-                cName = container.getName()
-                logger.debug("Processing container %s", cName)
-                #
-                dmh.apply(container)
-                #
-                savePath = os.path.join(HERE, "test-output", cName + "-with-method.cif")
-                self.__mU.doExport(savePath, [container], fmt="mmcif")
-
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
-
-    def testBirdChemCompDocumentsFromContainers(self):
-        """Test case -  create loadable PDBx data from files
-        """
-        try:
-            dP = DictionaryProvider()
-            dictApi = dP.getApi(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile])
-            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, workPath=self.__workPath)
-            dmh = DictMethodRunner(dictApi, modulePathMap=self.__modulePathMap, resourceProvider=rP)
-            #
-            inputPathList = self.__schU.getLocatorObjList(contentType="bird_chem_comp_core")
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="bird_chem_comp_core")
-            #
-            dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
-            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
-            containerList = sdp.getContainerList(inputPathList)
-            #
-            #
-            logger.debug("Length of path list %d", len(inputPathList))
-            self.assertGreaterEqual(len(inputPathList), self.__birdMockLen)
-
-            for container in containerList:
-                cName = container.getName()
-                logger.debug("Processing container %s", cName)
-                #
-                dmh.apply(container)
-                #
-                savePath = os.path.join(HERE, "test-output", cName + "-with-method.cif")
-                self.__mU.doExport(savePath, [container], fmt="mmcif")
-
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
+        for tD in self.__testCaseList:
+            self.__runContentType(tD["contentType"], tD["mockLength"])
 
     def testMethodRunnerSetup(self):
         """ Test the setup methods for method runner class
@@ -178,7 +112,9 @@ class DictMethodRunnerTests(unittest.TestCase):
         """
         try:
             dP = DictionaryProvider()
-            dictApi = dP.getApi(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile])
+            dictLocatorMap = self.__cfgOb.get("DICT_LOCATOR_CONFIG_MAP", sectionName=self.__configName)
+            dictLocators = [self.__cfgOb.getPath(configLocator, sectionName=self.__configName) for configLocator in dictLocatorMap["pdbx"]]
+            dictApi = dP.getApi(dictLocators=dictLocators)
             rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, workPath=self.__workPath)
             dmh = DictMethodRunner(dictApi, modulePathMap=self.__modulePathMap, resourceProvider=rP)
             ok = dmh is not None
@@ -189,16 +125,9 @@ class DictMethodRunnerTests(unittest.TestCase):
             self.fail()
 
 
-def dictMethodRunnerHelperPdbxSuite():
+def dictMethodRunnerSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(DictMethodRunnerTests("testProcessPdbxDocumentsFromContainers"))
-    return suiteSelect
-
-
-def dictMethodRunnerHelperChemCompSuite():
-    suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(DictMethodRunnerTests("testChemCompDocumentsFromContainers"))
-    suiteSelect.addTest(DictMethodRunnerTests("testBirdChemCompDocumentsFromContainers"))
+    suiteSelect.addTest(DictMethodRunnerTests("testMethodRunner"))
     return suiteSelect
 
 
@@ -210,14 +139,8 @@ def dictMethodRunnerSetupSuite():
 
 if __name__ == "__main__":
 
-    mySuite = dictMethodRunnerHelperChemCompSuite()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
-
     mySuite = dictMethodRunnerSetupSuite()
     unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-    mySuite = dictMethodRunnerHelperPdbxSuite()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
-
-    mySuite = dictMethodRunnerHelperChemCompSuite()
+    mySuite = dictMethodRunnerSuite()
     unittest.TextTestRunner(verbosity=2).run(mySuite)

@@ -364,44 +364,72 @@ class SchemaDefDataPrep(object):
                 for doc in docList:
                     for scAg, scD in scAgD.items():
                         for sName in scD:
+                            # logger.info("sName %s scAg %r scD %r", sName, scAg, scD)
                             if sName not in doc:
                                 continue
                             #
                             hasUnitCard = self.__sD.getSubCategoryAggregatesUnitCardinality(collectionName, scAg)
-                            logger.debug("%s agg %s unit cardinalioty %r obj %s type %r", collectionName, hasUnitCard, scAg, sName, type(doc[sName]))
-                            atNameL = scD[sName]
+                            atNameAllL = scD[sName]
+                            logger.debug("\n -- %s %s agg %s unit cardinality %r obj %s type %r", sName, collectionName, hasUnitCard, scAg, sName, type(doc[sName]))
+                            # logger.info("\n -- %s %s type %r", sName, collectionName, type(doc[sName]))
+                            # logger.info("\n -- %s %s atNameAllL %r", sName, collectionName, atNameAllL)
                             if isinstance(doc[sName], list):
                                 for rowD in doc[sName]:
-                                    if set(atNameL).issubset(set(rowD.keys())):
-                                        atLenL = [len(rowD[atName]) for atName in atNameL]
+                                    atNameL = list(set(atNameAllL).intersection(set(rowD.keys())))
+                                    # logger.info(" - QQQ - sName %s atNameAllL %r rowD.keys()(set) %r atNameL %r", sName, set(atNameAllL), set(rowD.keys()), atNameL)
+                                    if atNameL and set(atNameL).issubset(set(rowD.keys())):
+                                        # logger.info(" - TTT - sName %s (%r) %r", sName, hasUnitCard, [type(rowD[atName]) for atName in atNameL])
+                                        if hasUnitCard:
+                                            # all members of the the subcategory must be simple types -
+                                            dD = {}
+                                            for atName in atNameL:
+                                                cAtName = atName.replace(scAg + "_", "") if removeSubCategoryPrefix else atName
+                                                dD[cAtName] = rowD[atName]
+                                            rowD[scAg] = dD
+                                        else:
+                                            # all members of the the subcategory must be list type -
+                                            atLenL = [len(rowD[atName]) for atName in atNameL]
+                                            atLen = min(atLenL)
+                                            # logger.info("%s %s %r Candidate list row is %r", scAg, sName, atNameL, rowD)
+                                            # copy all of the data to the new aggregate object
+                                            rL = []
+                                            for ii in range(atLen):
+                                                dD = {}
+                                                for atName in atNameL:
+                                                    cAtName = atName.replace(scAg + "_", "") if removeSubCategoryPrefix else atName
+                                                    dD[cAtName] = rowD[atName][ii]
+                                                rL.append(dD)
+                                            rowD[scAg] = rL
+                                        #
+                                        for atName in atNameL:
+                                            del rowD[atName]
+                                        logger.debug("Processed list row is %r", rowD)
+                            elif isinstance(doc[sName], dict):
+                                atNameL = list(set(atNameAllL).intersection(set(doc[sName].keys())))
+                                if atNameL and set(atNameL).issubset(set(doc[sName].keys())):
+                                    # logger.info("Candidate dict row is %r", doc[sName])
+                                    if hasUnitCard:
+                                        # all members of the the subcategory must be simple types -
+                                        dD = {}
+                                        dD = {}
+                                        for atName in atNameL:
+                                            cAtName = atName.replace(scAg + "_", "") if removeSubCategoryPrefix else atName
+                                            dD[cAtName] = doc[sName][atName][ii]
+                                        doc[sName][scAg] = dD
+                                    else:
+                                        # all members of the the subcategory must be list type -
+                                        atLenL = [len(doc[sName][atName]) for atName in atNameL]
                                         atLen = min(atLenL)
-                                        logger.debug("%s %s %r Candidate list row is %r", scAg, sName, atNameL, rowD)
                                         # copy all of the data to the new aggregate object
                                         rL = []
                                         for ii in range(atLen):
                                             dD = {}
                                             for atName in atNameL:
                                                 cAtName = atName.replace(scAg + "_", "") if removeSubCategoryPrefix else atName
-                                                dD[cAtName] = rowD[atName][ii]
+                                                dD[cAtName] = doc[sName][atName][ii]
                                             rL.append(dD)
-                                        rowD[scAg] = rL
-                                        for atName in atNameL:
-                                            del rowD[atName]
-                                        logger.debug("Processed list row is %r", rowD)
-                            elif isinstance(doc[sName], dict):
-                                if set(atNameL).issubset(set(doc[sName].keys())):
-                                    logger.debug("Candidate dict row is %r", doc[sName])
-                                    atLenL = [len(doc[sName][atName]) for atName in atNameL]
-                                    atLen = min(atLenL)
-                                    # copy all of the data to the new aggregate object
-                                    rL = []
-                                    for ii in range(atLen):
-                                        dD = {}
-                                        for atName in atNameL:
-                                            cAtName = atName.replace(scAg + "_", "") if removeSubCategoryPrefix else atName
-                                            dD[cAtName] = doc[sName][atName][ii]
-                                        rL.append(dD)
-                                    doc[sName][scAg] = rL
+                                        doc[sName][scAg] = rL
+                                    #
                                     for atName in atNameL:
                                         del doc[sName][atName]
                                     logger.debug("Processed dict row is %r", doc[sName])
@@ -461,7 +489,7 @@ class SchemaDefDataPrep(object):
         """ Internal method to create loadable data corresponding to the table schema definition
             from the input container list.
 
-            Returns: dicitonary d[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
+            Returns: dictionary d[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
                                 and
                      processed container name list. []
                      list of paths or names of rejected containers. []

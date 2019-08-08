@@ -86,7 +86,7 @@ class RepoPathUtil(object):
         if self.__fileLimit:
             outputPathList = outputPathList[: self.__fileLimit]
 
-        return outputPathList
+        return sorted(outputPathList)
 
     def getLocator(self, contentType, idCode, version="v1-0"):
         """ Convenience method to return repository path for a content type and cardinal identifier.

@@ -90,10 +90,10 @@ class SchemaDefHelper(object):
 
     def getExcludedAttributes(self, schemaName):
         atExcludeD = {}
-        for sn, dL in self.__cfgD["exclude_attributes"].items():
+        for sn, dL in self.__cfgD["schema_exclude_attributes"].items():
             if sn == schemaName:
-                for d in dL:
-                    atExcludeD[(d["CATEGORY_NAME"], d["ATTRIBUTE_NAME"])] = sn
+                for dD in dL:
+                    atExcludeD[(dD["CATEGORY_NAME"], dD["ATTRIBUTE_NAME"])] = sn
         return atExcludeD
 
     def getIncluded(self, schemaName):
@@ -108,65 +108,65 @@ class SchemaDefHelper(object):
         return excludeL
 
     def getBlockAttributeName(self, schemaName):
-        r = None
+        ret = None
         try:
-            return self.__cfgD["block_attributes"][schemaName]["ATTRIBUTE_NAME"]
+            return self.__cfgD["schema_block_attributes"][schemaName]["ATTRIBUTE_NAME"]
         except Exception as e:
             logger.debug("Schema definition %s failing with %s", schemaName, str(e))
-        return r
+        return ret
 
     def getBlockAttributeCifType(self, schemaName):
-        r = None
+        ret = None
         try:
-            return self.__cfgD["block_attributes"][schemaName]["CIF_TYPE_CODE"]
+            return self.__cfgD["schema_block_attributes"][schemaName]["CIF_TYPE_CODE"]
         except Exception as e:
             logger.debug("Schema definition %s failing with %s", schemaName, str(e))
-        return r
+        return ret
 
     def getBlockAttributeMaxWidth(self, schemaName):
-        r = None
+        ret = None
         try:
-            return self.__cfgD["block_attributes"][schemaName]["MAX_WIDTH"]
+            return self.__cfgD["schema_block_attributes"][schemaName]["MAX_WIDTH"]
         except Exception as e:
             logger.debug("Schema definition %s failing with %s", schemaName, str(e))
-        return r
+        return ret
 
     def getBlockAttributeMethod(self, schemaName):
-        r = None
+        ret = None
         try:
-            return self.__cfgD["block_attributes"][schemaName]["METHOD"]
+            return self.__cfgD["schema_block_attributes"][schemaName]["METHOD"]
         except Exception as e:
             logger.debug("Schema definition %s failing with %s", schemaName, str(e))
-        return r
+        return ret
 
     def getBlockAttributeRefParent(self, schemaName):
-        r = None
+        ret = None
         try:
-            pCatName = self.__cfgD["block_attributes"][schemaName]["REF_PARENT_CATEGORY_NAME"]
-            pAtName = self.__cfgD["block_attributes"][schemaName]["REF_PARENT_ATTRIBUTE_NAME"]
+            pCatName = self.__cfgD["schema_block_attributes"][schemaName]["REF_PARENT_CATEGORY_NAME"]
+            pAtName = self.__cfgD["schema_block_attributes"][schemaName]["REF_PARENT_ATTRIBUTE_NAME"]
             return {"CATEGORY_NAME": pCatName, "ATTRIBUTE_NAME": pAtName}
         except Exception as e:
             logger.debug("Schema definition %s failing with %s", schemaName, str(e))
-        return r
+        return ret
 
     def getDatabaseName(self, schemaName):
-        r = None
+        ret = None
         try:
             return self.__cfgD["schema_info"][schemaName]["DATABASE_NAME"]
         except Exception as e:
             logger.debug("Schema definition %s failing with %s", schemaName, str(e))
-        return r
+        return ret
 
     def getDatabaseVersion(self, schemaName):
-        r = None
+        ret = None
         try:
             return self.__cfgD["schema_info"][schemaName]["VERSION"]
         except Exception as e:
             logger.debug("Schema definition %s failing with %s", schemaName, str(e))
-        return r
+        return ret
 
     def getDataTypeInstanceFile(self, schemaName):
-        r = None
+        ret = None
         try:
             fn = self.__cfgD["schema_info"][schemaName]["INSTANCE_DATA_TYPE_INFO_FILENAME"]
             if str(fn).strip():
@@ -174,4 +174,4 @@ class SchemaDefHelper(object):
 
         except Exception as e:
             logger.debug("Schema definition %s failing with %s", schemaName, str(e))
-        return r
+        return ret

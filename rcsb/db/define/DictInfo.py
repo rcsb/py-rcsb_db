@@ -27,6 +27,7 @@ __license__ = "Apache 2.0"
 
 import logging
 import textwrap
+from collections import OrderedDict
 
 from mmcif.api.PdbxContainers import CifName
 
@@ -57,19 +58,19 @@ class DictInfo(object):
         iTypeCodes = []
         iQueryStrings = []
         unitCardinalityList = []
-        dataSelectFilterD = {}
-        itemTransformD = {}
-        self.__categoryContentClasses = {}
-        self.__attributeContentClasses = {}
-        iterableD = {}
+        dataSelectFilterD = OrderedDict()
+        itemTransformD = OrderedDict()
+        self.__categoryContentClasses = OrderedDict()
+        self.__attributeContentClasses = OrderedDict()
+        iterableD = OrderedDict()
         #
-        self.__categoryList = self.__dApi.getCategoryList()
-
-        self.__dictSchema = {catName: self.__dApi.getAttributeNameList(catName) for catName in self.__categoryList}
+        self.__categoryList = sorted(self.__dApi.getCategoryList())
+        self.__dictSchema = {catName: sorted(self.__dApi.getAttributeNameList(catName)) for catName in self.__categoryList}
+        # self.__dictSchema = {catName: self.__dApi.getAttributeNameList(catName) for catName in self.__categoryList}
         ##
         _, attributeContextIndex = self.__indexContexts(self.__dictSchema)
         self.__keyReplaceItems = attributeContextIndex["RCSB_CATEGORY_KEY_SUBSTITION"] if "RCSB_CATEGORY_KEY_SUBSTITION" in attributeContextIndex else []
-        self.__keyReplaceCategoryD = {}
+        self.__keyReplaceCategoryD = OrderedDict()
         for catName, atName in self.__keyReplaceItems:
             self.__keyReplaceCategoryD.setdefault(catName, []).append(atName)
         #
@@ -84,8 +85,6 @@ class DictInfo(object):
             unitCardinalityList.extend(dictHelper.getCardinalityCategoryExtras())
             logger.debug("Cardinality categories %r", unitCardinalityList)
             #
-            #
-            #
             self.__categoryContentClasses = dictHelper.getCategoryContentClasses(dictSubset)
             logger.debug("categoryContentClasses %r", self.__categoryContentClasses)
             #
@@ -93,8 +92,8 @@ class DictInfo(object):
             logger.debug("attributeContentClasses %r", self.__attributeContentClasses)
             #
             self.__sliceParentItemsD = dictHelper.getSliceParentsBySubset(dictSubset)
-            self.__sliceUnitCardinalityD = {}
-            self.__sliceCategoryExtrasD = {}
+            self.__sliceUnitCardinalityD = OrderedDict()
+            self.__sliceCategoryExtrasD = OrderedDict()
             for sliceName, pDL in self.__sliceParentItemsD.items():
                 logger.debug("Slicename %s parents %r", sliceName, pDL)
                 #
@@ -114,7 +113,7 @@ class DictInfo(object):
                 scL = []
                 for atName in atNameList:
                     scL.extend(self.__dApi.getItemSubCategoryIdList(catName, atName))
-                scL = list(set(scL)) if scL else []
+                scL = list(OrderedDict.fromkeys(scL)) if scL else []
                 subCategoryD[catName] = scL
             logger.debug("Subcategory category dictionary %r", subCategoryD)
             #
@@ -141,8 +140,8 @@ class DictInfo(object):
 
         #
         self.__methodD = self.__getMethodInfo()
-        self.__attributeFeatures = {catName: self.__getAttributeFeatures(catName, iterableD, itemTransformD, self.__methodD) for catName in self.__categoryList}
-        self.__attributeDataTypeD = {catName: self.__getAttributeTypeD(catName) for catName in self.__categoryList}
+        self.__attributeFeatures = OrderedDict({catName: self.__getAttributeFeatures(catName, iterableD, itemTransformD, self.__methodD) for catName in self.__categoryList})
+        self.__attributeDataTypeD = OrderedDict({catName: self.__getAttributeTypeD(catName) for catName in self.__categoryList})
         self.__dataSelectFilterD = dataSelectFilterD
         self.__sliceD = self.__getSliceChildren(self.__sliceParentItemsD)
 
@@ -207,9 +206,9 @@ class DictInfo(object):
             input slice parent construction.
 
         """
-        retD = {}
+        retD = OrderedDict()
         for sliceName, sliceParents in sliceParentD.items():
-            sD = {}
+            sD = OrderedDict()
             for pD in sliceParents:
                 parentCategoryName = pD["CATEGORY_NAME"]
                 parentAttributeName = pD["ATTRIBUTE_NAME"]
@@ -228,12 +227,15 @@ class DictInfo(object):
                     if catName not in sD:
                         sD[catName] = []
                     sD[catName].append({"PARENT_CATEGORY_NAME": parentCategoryName, "PARENT_ATTRIBUTE_NAME": parentAttributeName, "CHILD_ATTRIBUTE_NAME": atName})
-                #
+                # Sort the list of dicationaries for each category
+                for catName in sD:
+                    sD[catName] = sorted(sD[catName], key=lambda k: (k["PARENT_CATEGORY_NAME"], k["PARENT_ATTRIBUTE_NAME"], k["CHILD_ATTRIBUTE_NAME"]))
+
             retD[sliceName] = sD
         return retD
 
     def __getIterables(self, iTypeCodes, iQueryStrings, dictHelper):
-        itD = {}
+        itD = OrderedDict()
         #
         typD = {d["TYPE_CODE"]: d["DELIMITER"] for d in iTypeCodes}
 
@@ -252,7 +254,7 @@ class DictInfo(object):
         return itD
 
     def __getMethodInfo(self):
-        methodD = {}
+        methodD = OrderedDict()
         methodIndex = self.__dApi.getMethodIndex()
         for _, mrL in methodIndex.items():
             for mr in mrL:
@@ -264,11 +266,14 @@ class DictInfo(object):
                 if (catName, atName) not in methodD:
                     methodD[(catName, atName)] = []
                 methDef = self.__dApi.getMethod(mId)
-                mLang = methDef.getLanguage()
-                mCode = methDef.getCode()
-                mImplement = methDef.getImplementation()
-                d = {"METHOD_LANGUAGE": mLang, "METHOD_IMPLEMENT": mImplement, "METHOD_TYPE": mType, "METHOD_CODE": mCode}
-                methodD[(catName, atName)].append(d)
+                if methDef:
+                    mLang = methDef.getLanguage()
+                    mCode = methDef.getCode()
+                    mImplement = methDef.getImplementation()
+                    dD = {"METHOD_LANGUAGE": mLang, "METHOD_IMPLEMENT": mImplement, "METHOD_TYPE": mType, "METHOD_CODE": mCode}
+                    methodD[(catName, atName)].append(dD)
+                else:
+                    logger.error("Missing method definition for %s", mId)
         ##
         logger.debug("Method dictionary %r", methodD)
         return methodD
@@ -375,7 +380,7 @@ class DictInfo(object):
 
     def __itemNameToDictList(self, itemNameList):
         rL = []
-        for itemName in list(set(itemNameList)):
+        for itemName in list(OrderedDict.fromkeys(itemNameList)):
             atName = CifName.attributePart(itemName)
             catName = CifName.categoryPart(itemName)
             rL.append({"CATEGORY": catName, "ATTRIBUTE": atName})
@@ -454,15 +459,15 @@ class DictInfo(object):
             #
             fD["METHODS"] = methodD[(catName, atName)] if (catName, atName) in methodD else []
             fD["CONTENT_CLASSES"] = self.__getContentClasses(catName, atName)
-            fD["ENUMS"] = self.__assignEnumTypes(self.__dApi.getEnumList(catName, atName), pType)
+            fD["ENUMS"] = sorted(self.__assignEnumTypes(self.__dApi.getEnumList(catName, atName), pType))
             fD["EXAMPLES"] = self.__dApi.getExampleList(catName, atName)
             scL = []
             for scTup in self.__dApi.getItemSubCategoryList(catName, atName):
                 if scTup[1] is not None:
-                    d = {"id": scTup[0], "label": scTup[1]}
+                    qD = {"id": scTup[0], "label": scTup[1]}
                 else:
-                    d = {"id": scTup[0]}
-                scL.append(d)
+                    qD = {"id": scTup[0]}
+                scL.append(qD)
             fD["SUB_CATEGORIES"] = scL
             if len(scL) > 1:
                 logger.debug("Multiple subcategories for %r %r %r", catName, atName, scL)
@@ -551,7 +556,7 @@ class DictInfo(object):
                 ucL.append(cat)
         #
         logger.debug("Slice unit cardinality categories from parent-child relationships %r", ucL)
-        return ucL
+        return sorted(ucL)
 
     #
 
@@ -560,7 +565,7 @@ class DictInfo(object):
             keyItems = [CifName.itemName(categoryName, atName) for atName in self.__keyReplaceCategoryD[categoryName]]
         else:
             keyItems = self.__dApi.getCategoryKeyList(categoryName)
-        return keyItems
+        return sorted(keyItems)
 
     def __indexContexts(self, dictSchema):
         """  Extract the category an item level dictionary contexts.

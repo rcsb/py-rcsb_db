@@ -45,17 +45,7 @@ class ChemRefLoaderTests(unittest.TestCase):
         configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
         configName = "site_info"
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
-        # self.__cfgOb.dump()
-        self.__resourceName = "MONGO_DB"
-        self.__readBackCheck = True
-        self.__numProc = 2
-        self.__chunkSize = 10
-        self.__documentLimit = 1000
-        self.__filterType = "assign-dates"
-        #
         self.__workPath = os.path.join(HERE, "test-output")
-        self.__schemaPath = os.path.join(self.__workPath, "json-schema-drugbank_core.json")
-        self.__dataPath = os.path.join(self.__workPath, "json-data-drugbank_core.json")
         #
         # sample data set
         self.__updateId = "2018_23"
@@ -72,13 +62,13 @@ class ChemRefLoaderTests(unittest.TestCase):
 
         """
         try:
-            crw = ChemRefEtlWorker(self.__cfgOb)
+            crw = ChemRefEtlWorker(self.__cfgOb, workPath=self.__workPath)
             crExt = ChemRefExtractor(self.__cfgOb)
 
             idD = crExt.getChemCompAccesionMapping(extResource="DrugBank")
             logger.info("Mapping dictionary %r", len(idD))
             #
-            ok = crw.load(self.__updateId, extResource="DrugBank", loadType="full")
+            ok = crw.load(self.__updateId, extResource="DrugBank", loadType="full", autoBuildSchema=True)
             #
             self.assertTrue(ok)
         except Exception as e:

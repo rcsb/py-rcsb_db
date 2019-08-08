@@ -12,6 +12,7 @@
 #   25-Jul-2018 jdw  Add large test case to test failure and salvage scenarios
 #   10-Sep-2018 jdw  Update assert conditions for tests
 #   11-Nov-2018 jdw  Add chem_comp_core schema support
+#    6-Aug-2019 jdw  Autogenerate schema during tests.
 #
 ##
 """
@@ -67,6 +68,7 @@ class PdbxLoaderTests(unittest.TestCase):
         self.__chunkSize = 10
         self.__fileLimit = None
         self.__documentStyle = "rowwise_by_name_with_cardinality"
+        self.__autoBuildSchema = True
         #
         #
         self.__startTime = time.time()
@@ -91,7 +93,13 @@ class PdbxLoaderTests(unittest.TestCase):
                 workPath=self.__workPath,
             )
             ok = mw.load(
-                "chem_comp_core", loadType="full", inputPathList=None, styleType=self.__documentStyle, dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedCcFilePath
+                "chem_comp_core",
+                loadType="full",
+                inputPathList=None,
+                styleType=self.__documentStyle,
+                dataSelectors=["PUBLIC_RELEASE"],
+                failedFilePath=self.__failedCcFilePath,
+                autoBuildSchema=self.__autoBuildSchema,
             )
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
@@ -121,6 +129,7 @@ class PdbxLoaderTests(unittest.TestCase):
                 styleType=self.__documentStyle,
                 dataSelectors=["PUBLIC_RELEASE"],
                 failedFilePath=self.__failedBirdFilePath,
+                autoBuildSchema=self.__autoBuildSchema,
             )
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
@@ -143,7 +152,15 @@ class PdbxLoaderTests(unittest.TestCase):
                 readBackCheck=self.__readBackCheck,
                 workPath=self.__workPath,
             )
-            ok = mw.load("bird", loadType="full", inputPathList=None, styleType=self.__documentStyle, dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+            ok = mw.load(
+                "bird",
+                loadType="full",
+                inputPathList=None,
+                styleType=self.__documentStyle,
+                dataSelectors=["PUBLIC_RELEASE"],
+                failedFilePath=self.__failedFilePath,
+                autoBuildSchema=self.__autoBuildSchema,
+            )
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
@@ -172,6 +189,7 @@ class PdbxLoaderTests(unittest.TestCase):
                 styleType=self.__documentStyle,
                 dataSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"],
                 failedFilePath=self.__failedFilePath,
+                autoBuildSchema=self.__autoBuildSchema,
             )
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
@@ -195,11 +213,23 @@ class PdbxLoaderTests(unittest.TestCase):
                 workPath=self.__workPath,
             )
             ok = mw.load(
-                "chem_comp_core", loadType="full", inputPathList=None, styleType=self.__documentStyle, dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath
+                "chem_comp_core",
+                loadType="full",
+                inputPathList=None,
+                styleType=self.__documentStyle,
+                dataSelectors=["PUBLIC_RELEASE"],
+                failedFilePath=self.__failedFilePath,
+                autoBuildSchema=self.__autoBuildSchema,
             )
             self.assertTrue(ok)
             ok = mw.load(
-                "chem_comp_core", loadType="replace", inputPathList=None, styleType=self.__documentStyle, dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath
+                "chem_comp_core",
+                loadType="replace",
+                inputPathList=None,
+                styleType=self.__documentStyle,
+                dataSelectors=["PUBLIC_RELEASE"],
+                failedFilePath=self.__failedFilePath,
+                autoBuildSchema=self.__autoBuildSchema,
             )
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
@@ -222,7 +252,15 @@ class PdbxLoaderTests(unittest.TestCase):
                 readBackCheck=self.__readBackCheck,
                 workPath=self.__workPath,
             )
-            ok = mw.load("pdbx_core", loadType="full", inputPathList=None, styleType=self.__documentStyle, dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+            ok = mw.load(
+                "pdbx_core",
+                loadType="full",
+                inputPathList=None,
+                styleType=self.__documentStyle,
+                dataSelectors=["PUBLIC_RELEASE"],
+                failedFilePath=self.__failedFilePath,
+                autoBuildSchema=self.__autoBuildSchema,
+            )
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
@@ -256,6 +294,7 @@ class PdbxLoaderTests(unittest.TestCase):
                 dataSelectors=["PUBLIC_RELEASE"],
                 failedFilePath=self.__failedFilePath,
                 mergeContentTypes=["vrpt"],
+                autoBuildSchema=self.__autoBuildSchema,
             )
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
@@ -278,7 +317,15 @@ class PdbxLoaderTests(unittest.TestCase):
                 readBackCheck=self.__readBackCheck,
                 workPath=self.__workPath,
             )
-            ok = mw.load("ihm_dev", loadType="full", inputPathList=None, styleType=self.__documentStyle, dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+            ok = mw.load(
+                "ihm_dev",
+                loadType="full",
+                inputPathList=None,
+                styleType=self.__documentStyle,
+                dataSelectors=["PUBLIC_RELEASE"],
+                failedFilePath=self.__failedFilePath,
+                autoBuildSchema=self.__autoBuildSchema,
+            )
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
@@ -287,7 +334,7 @@ class PdbxLoaderTests(unittest.TestCase):
             self.fail()
 
     def testReLoadPdbxEntryData(self):
-        """ Test case -  Load PDBx entry data with pdbx schema
+        """ Test case -  Load PDBx entry data with pdbx schema with failures
         """
         try:
             mw = PdbxLoader(
@@ -300,7 +347,15 @@ class PdbxLoaderTests(unittest.TestCase):
                 readBackCheck=self.__readBackCheck,
                 workPath=self.__workPath,
             )
-            ok = mw.load("pdbx", loadType="full", inputPathList=None, styleType=self.__documentStyle, dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
+            ok = mw.load(
+                "pdbx",
+                loadType="full",
+                inputPathList=None,
+                styleType=self.__documentStyle,
+                dataSelectors=["PUBLIC_RELEASE"],
+                failedFilePath=self.__failedFilePath,
+                autoBuildSchema=self.__autoBuildSchema,
+            )
             self.assertFalse(ok)
             ok = mw.load(
                 "pdbx",
@@ -310,6 +365,7 @@ class PdbxLoaderTests(unittest.TestCase):
                 dataSelectors=["PUBLIC_RELEASE"],
                 failedFilePath=self.__failedFilePath,
                 pruneDocumentSize=14.0,
+                autoBuildSchema=self.__autoBuildSchema,
             )
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
@@ -340,6 +396,7 @@ class PdbxLoaderTests(unittest.TestCase):
                 dataSelectors=["PUBLIC_RELEASE"],
                 failedFilePath=self.__failedFilePath,
                 pruneDocumentSize=14.0,
+                autoBuildSchema=self.__autoBuildSchema,
             )
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())
@@ -370,6 +427,7 @@ class PdbxLoaderTests(unittest.TestCase):
                 styleType=self.__documentStyle,
                 dataSelectors=["PUBLIC_RELEASE"],
                 failedFilePath=self.__failedFilePath,
+                autoBuildSchema=self.__autoBuildSchema,
             )
             self.assertTrue(ok)
             #
@@ -382,6 +440,7 @@ class PdbxLoaderTests(unittest.TestCase):
                 dataSelectors=["PUBLIC_RELEASE"],
                 failedFilePath=self.__failedFilePath,
                 pruneDocumentSize=14.0,
+                autoBuildSchema=self.__autoBuildSchema,
             )
             self.assertTrue(ok)
             #
