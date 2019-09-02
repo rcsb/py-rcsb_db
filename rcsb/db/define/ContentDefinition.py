@@ -1,5 +1,5 @@
 ##
-# File:    DictInfo.py
+# File:    ContentDefinition.py
 # Author:  J. Westbrook
 # Date:    8-May-2018
 # Version: 0.001 Initial version
@@ -13,11 +13,12 @@
 #   3-Feb-2019 jdw get all child items using self.__dApi.getFullDecendentList()
 #  31-Mar-2019 jdw include parent details in __getAttributeFeatures()
 #   6-Jun-2019 jdw take dictionary API as an argument.
+#  22-Aug-2019 jdw unify naming conventions dictSubset->databaseName and *ForSubset() -> *ForDatabase()
 #
 #
 ##
 """
-Assemble dictionary metadata required to construct and load a schema defintions.
+Assemble configuration and dictionary metadata required to build/load database schema definitions ...
 
 """
 __docformat__ = "restructuredtext en"
@@ -34,26 +35,26 @@ from mmcif.api.PdbxContainers import CifName
 logger = logging.getLogger(__name__)
 
 
-class DictInfo(object):
-    """ Assemble dictionary metadata required to build/load schema definition...
+class ContentDefinition(object):
+    """ Assemble configuration and dictionary metadata required to build/load database schema definitions ...
 
     """
 
-    def __init__(self, dictApi, dictHelper=None, **kwargs):
+    def __init__(self, dictApi, contentDefHelper=None, databaseName=None, **kwargs):
         """
         Args:
             dictApi (object): instance of DictionaryApi() class
-            dictHelper (class, optional): a subclass of of DictInfoHelperBase.
-            dictSubset (string, optional): name of dictionary subset (e.g. 'chem_comp', 'bird', 'bird_family', 'pdbx')
+            contentHelper (object, optional): an instance of a contentHelper().
+            databaseName (string, optional): name of a content database (e.g. 'chem_comp', 'bird', 'bird_family', 'pdbx')
 
         """
         self.__dApi = dictApi
-        self.__setup(dictHelper, **kwargs)
+        self.__databaseName = databaseName
+        self.__setup(contentDefHelper, databaseName)
+        _ = kwargs
         #
 
-    def __setup(self, dictHelper, **kwargs):
-
-        dictSubset = kwargs.get("dictSubset", None)
+    def __setup(self, contentDefHelper, databaseName):
         #
         iTypeCodes = []
         iQueryStrings = []
@@ -65,10 +66,9 @@ class DictInfo(object):
         iterableD = OrderedDict()
         #
         self.__categoryList = sorted(self.__dApi.getCategoryList())
-        self.__dictSchema = {catName: sorted(self.__dApi.getAttributeNameList(catName)) for catName in self.__categoryList}
-        # self.__dictSchema = {catName: self.__dApi.getAttributeNameList(catName) for catName in self.__categoryList}
+        self.__categorySchema = {catName: sorted(self.__dApi.getAttributeNameList(catName)) for catName in self.__categoryList}
         ##
-        _, attributeContextIndex = self.__indexContexts(self.__dictSchema)
+        _, attributeContextIndex = self.__indexContexts(self.__categorySchema)
         self.__keyReplaceItems = attributeContextIndex["RCSB_CATEGORY_KEY_SUBSTITION"] if "RCSB_CATEGORY_KEY_SUBSTITION" in attributeContextIndex else []
         self.__keyReplaceCategoryD = OrderedDict()
         for catName, atName in self.__keyReplaceItems:
@@ -77,39 +77,39 @@ class DictInfo(object):
         logger.debug("Primary key replacements: %r", self.__keyReplaceItems)
         logger.debug("Primary key replacement category index: %r", self.__keyReplaceCategoryD)
         #
-        if dictHelper and dictSubset:
-            cardD = dictHelper.getCardinalityKeyItem(dictSubset)
+        if contentDefHelper and databaseName:
+            cardD = contentDefHelper.getCardinalityKeyItem(databaseName)
             logger.debug("Cardinality attribute %r", cardD.items())
             #
             unitCardinalityList = self.__getUnitCardinalityCategories([cardD])
-            unitCardinalityList.extend(dictHelper.getCardinalityCategoryExtras())
+            unitCardinalityList.extend(contentDefHelper.getCardinalityCategoryExtras())
             logger.debug("Cardinality categories %r", unitCardinalityList)
             #
-            self.__categoryContentClasses = dictHelper.getCategoryContentClasses(dictSubset)
+            self.__categoryContentClasses = contentDefHelper.getCategoryContentClasses(databaseName)
             logger.debug("categoryContentClasses %r", self.__categoryContentClasses)
             #
-            self.__attributeContentClasses = dictHelper.getAttributeContentClasses(dictSubset)
+            self.__attributeContentClasses = contentDefHelper.getAttributeContentClasses(databaseName)
             logger.debug("attributeContentClasses %r", self.__attributeContentClasses)
             #
-            self.__sliceParentItemsD = dictHelper.getSliceParentsBySubset(dictSubset)
+            self.__sliceParentItemsD = contentDefHelper.getDatabaseSliceParents(databaseName)
             self.__sliceUnitCardinalityD = OrderedDict()
             self.__sliceCategoryExtrasD = OrderedDict()
             for sliceName, pDL in self.__sliceParentItemsD.items():
                 logger.debug("Slicename %s parents %r", sliceName, pDL)
                 #
                 # Some categories are include in a slice even if they are unconnected to the slice parent.
-                self.__sliceCategoryExtrasD[sliceName] = dictHelper.getSliceCategoryExtras(dictSubset, sliceName)
+                self.__sliceCategoryExtrasD[sliceName] = contentDefHelper.getSliceCategoryExtras(databaseName, sliceName)
                 logger.debug("Slice extra categories %r", self.__sliceCategoryExtrasD[sliceName])
                 #
                 self.__sliceUnitCardinalityD[sliceName] = self.__getUnitCardinalityCategories(pDL)
                 logger.debug("Slice Unit cardinality categories %r", self.__sliceUnitCardinalityD[sliceName])
                 #
-                self.__sliceUnitCardinalityD[sliceName].extend(dictHelper.getSliceCardinalityCategoryExtras(dictSubset, sliceName))
+                self.__sliceUnitCardinalityD[sliceName].extend(contentDefHelper.getSliceCardinalityCategoryExtras(databaseName, sliceName))
                 logger.debug("Slicename %s unit cardinality categories %r", sliceName, self.__sliceUnitCardinalityD[sliceName])
             #
             #
             subCategoryD = {}
-            for catName, atNameList in self.__dictSchema.items():
+            for catName, atNameList in self.__categorySchema.items():
                 scL = []
                 for atName in atNameList:
                     scL.extend(self.__dApi.getItemSubCategoryIdList(catName, atName))
@@ -118,25 +118,25 @@ class DictInfo(object):
             logger.debug("Subcategory category dictionary %r", subCategoryD)
             #
             self.__categoryFeatures = {catName: self.__getCategoryFeatures(catName, unitCardinalityList, subCategoryD) for catName in self.__categoryList}
-            iTypeCodes = dictHelper.getTypeCodes("iterable")
-            iQueryStrings = dictHelper.getQueryStrings("iterable")
+            iTypeCodes = contentDefHelper.getTypeCodes("iterable")
+            iQueryStrings = contentDefHelper.getQueryStrings("iterable")
             logger.debug("iterable types %r iterable query %r", iTypeCodes, iQueryStrings)
-            iterableD = self.__getIterables(iTypeCodes, iQueryStrings, dictHelper)
+            iterableD = self.__getIterables(iTypeCodes, iQueryStrings, contentDefHelper)
             logger.debug("iterableD %r", iterableD.items())
-            dataSelectFilterD = dictHelper.getSelectionFiltersBySubset(dictSubset)
-            itemTransformD = dictHelper.getItemTransformD()
+            dataSelectFilterD = contentDefHelper.getDatabaseSelectionFilters(databaseName)
+            itemTransformD = contentDefHelper.getItemTransformD()
             logger.debug("itemTransformD %r", itemTransformD.items())
             #
-            self.__selectionFiltersD = dictHelper.getSelectionFiltersBySubset(dictSubset)
-            self.__sliceParentFiltersD = dictHelper.getSliceParentFiltersBySubset(dictSubset)
+            self.__selectionFiltersD = contentDefHelper.getDatabaseSelectionFilters(databaseName)
+            self.__sliceParentFiltersD = contentDefHelper.getDatabaseSliceParentFilters(databaseName)
         else:
-            logger.debug("Dictionary helper not loaded for subset %r", dictSubset, stack_info=True)
+            logger.debug("Dictionary helper not loaded for schema %r", databaseName, stack_info=True)
             self.__selectionFiltersD = {}
             self.__sliceParentItemsD = {}
             self.__sliceParentFiltersD = {}
             self.__sliceUnitCardinalityD = {}
             self.__sliceCategoryExtrasD = {}
-            logger.debug("Missing dictionary helper method")
+            logger.warning("Missing dictionary helper method or schema %r", databaseName)
 
         #
         self.__methodD = self.__getMethodInfo()
@@ -145,35 +145,35 @@ class DictInfo(object):
         self.__dataSelectFilterD = dataSelectFilterD
         self.__sliceD = self.__getSliceChildren(self.__sliceParentItemsD)
 
-    def getSelectionFiltersForSubset(self):
+    def getSelectionFiltersForDatabase(self):
         try:
             return self.__selectionFiltersD
         except Exception:
             pass
         return {}
 
-    def getSliceParentFiltersForSubset(self):
+    def getSliceParentFiltersForDatabase(self):
         try:
             return self.__sliceParentFiltersD
         except Exception:
             pass
         return {}
 
-    def getSliceParentItemsForSubset(self):
+    def getSliceParentItemsForDatabase(self):
         try:
             return self.__sliceParentItemsD
         except Exception:
             pass
         return {}
 
-    def getSliceCategoryExtrasForSubset(self):
+    def getSliceCategoryExtrasForDatabase(self):
         try:
             return self.__sliceCategoryExtrasD
         except Exception:
             pass
         return {}
 
-    def getSliceUnitCardinalityForSubset(self):
+    def getSliceUnitCardinalityForDatabase(self):
         try:
             return self.__sliceUnitCardinalityD
         except Exception:
@@ -240,7 +240,7 @@ class DictInfo(object):
         typD = {d["TYPE_CODE"]: d["DELIMITER"] for d in iTypeCodes}
 
         for catName in self.__categoryList:
-            for atName in self.__dictSchema[catName]:
+            for atName in self.__categorySchema[catName]:
                 typeCode = self.__dApi.getTypeCode(catName, atName)
                 typeCodeAlt = self.__dApi.getTypeCodeAlt(catName, atName)
                 if typeCode in typD or typeCodeAlt in typD:
@@ -305,14 +305,14 @@ class DictInfo(object):
         return self.__categoryList
 
     def getSchemaNames(self):
-        return self.__dictSchema
+        return self.__categorySchema
 
     def getCategoryAttributes(self, catName):
         """
 
            Returns: list of attributes in the input category
         """
-        return self.__dictSchema[catName]
+        return self.__categorySchema[catName]
 
     def getCategoryFeatures(self, catName):
         try:
@@ -354,7 +354,7 @@ class DictInfo(object):
 
     def __getAttributeTypeD(self, catName):
         aD = {}
-        for atName in self.__dictSchema[catName]:
+        for atName in self.__categorySchema[catName]:
             aD[atName] = self.__dApi.getTypeCode(catName, atName)
         return aD
 
@@ -404,7 +404,7 @@ class DictInfo(object):
         #
         # keyAtNames = [CifName.attributePart(kyItem) for kyItem in self.__dApi.getCategoryKeyList(catName)]
         keyAtNames = [CifName.attributePart(kyItem) for kyItem in self.__getCategoryKeysWithReplacement(catName)]
-        for atName in self.__dictSchema[catName]:
+        for atName in self.__categorySchema[catName]:
             itemName = CifName.itemName(catName, atName)
             fD = {
                 "CATEGORY_NAME": catName,

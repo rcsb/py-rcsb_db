@@ -1,4 +1,4 @@
-# File:    ProvenanceUtilTests.py
+# File:    ProvenanceProviderTests.py
 # Author:  J. Westbrook
 # Date:    24-Jun-2018
 # Version: 0.001
@@ -22,7 +22,7 @@ import os
 import time
 import unittest
 
-from rcsb.db.utils.ProvenanceUtil import ProvenanceUtil
+from rcsb.db.utils.ProvenanceProvider import ProvenanceProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
@@ -33,13 +33,13 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
-class ProvenanceUtilTests(unittest.TestCase):
+class ProvenanceProviderTests(unittest.TestCase):
     def setUp(self):
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        self.__workPath = os.path.join(HERE, "test-output")
-        self.__pathConfig = os.path.join(self.__mockTopPath, "config", "dbload-setup-example.yml")
+        self.__cachePath = os.path.join(TOPDIR, "CACHE")
+        self.__pathConfig = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
         #
-        configName = "site_info"
+        configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
         #
         # Sanple provenance data -
@@ -114,13 +114,25 @@ class ProvenanceUtilTests(unittest.TestCase):
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
+    def testPrefetchProvenance(self):
+        """ Test case for pre-fetching cached provenance dictionary content.
+        """
+        try:
+            provU = ProvenanceProvider(self.__cfgOb, self.__cachePath)
+            pD = provU.fetch()
+            logger.debug("pD keys %r", list(pD.keys()))
+            self.assertGreaterEqual(len(pD.keys()), 1)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+            self.fail()
+
     def testStore(self):
         """ Test case for storing a provenance dictionary content.
         """
         try:
-            provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
+            provU = ProvenanceProvider(self.__cfgOb, self.__cachePath, useCache=False)
             pD = {self.__provKeyName: self.__provInfoL}
-            ok = provU.store(pD, cfgSectionName="site_info")
+            ok = provU.store(pD)
             #
             self.assertTrue(ok)
         except Exception as e:
@@ -131,12 +143,12 @@ class ProvenanceUtilTests(unittest.TestCase):
         """ Test case for fetching a provenance dictionary content.
         """
         try:
-            provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
+            provU = ProvenanceProvider(self.__cfgOb, self.__cachePath, useCache=False)
             pD = {self.__provKeyName: self.__provInfoL}
-            ok = provU.store(pD, cfgSectionName="site_info")
+            ok = provU.store(pD)
             self.assertTrue(ok)
             #
-            fD = provU.fetch(cfgSectionName="site_info")
+            fD = provU.fetch()
             self.assertTrue(self.__provKeyName in fD)
             self.assertDictEqual(pD, fD)
         except Exception as e:
@@ -147,15 +159,15 @@ class ProvenanceUtilTests(unittest.TestCase):
         """ Test case for updating a provenance dictionary content.
         """
         try:
-            provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
+            provU = ProvenanceProvider(self.__cfgOb, self.__cachePath, useCache=False)
             pD = {self.__provKeyName: self.__provInfoL}
-            ok = provU.store(pD, cfgSectionName="site_info")
+            ok = provU.store(pD)
             self.assertTrue(ok)
             #
-            ok = provU.update(pD, cfgSectionName="site_info")
+            ok = provU.update(pD)
             self.assertTrue(ok)
             #
-            fD = provU.fetch(cfgSectionName="site_info")
+            fD = provU.fetch()
             self.assertTrue(self.__provKeyName in fD)
             self.assertDictEqual(pD, fD)
         except Exception as e:
@@ -165,9 +177,9 @@ class ProvenanceUtilTests(unittest.TestCase):
 
 def provenanceSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(ProvenanceUtilTests("testStore"))
-    suiteSelect.addTest(ProvenanceUtilTests("testFetch"))
-    suiteSelect.addTest(ProvenanceUtilTests("testUpdate"))
+    suiteSelect.addTest(ProvenanceProviderTests("testStore"))
+    suiteSelect.addTest(ProvenanceProviderTests("testFetch"))
+    suiteSelect.addTest(ProvenanceProviderTests("testUpdate"))
     return suiteSelect
 
 

@@ -25,7 +25,7 @@ import logging
 import re
 from collections import OrderedDict
 
-from rcsb.db.utils.CacheUtils import CacheUtils
+from rcsb.utils.io.CacheUtils import CacheUtils
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +102,9 @@ class DictMethodCommonUtils(object):
 
     def echo(self, msg):
         logger.info(msg)
+
+    def testCache(self):
+        return True
 
     def isFloat(self, val):
         try:

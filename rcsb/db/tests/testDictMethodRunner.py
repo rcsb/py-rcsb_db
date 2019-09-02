@@ -24,9 +24,9 @@ import time
 import unittest
 
 from mmcif.api.DictMethodRunner import DictMethodRunner
-from rcsb.db.define.DictionaryProvider import DictionaryProvider
+from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
 from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
-from rcsb.db.utils.RepoPathUtil import RepoPathUtil
+from rcsb.db.utils.RepositoryProvider import RepositoryProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 
@@ -43,13 +43,13 @@ class DictMethodRunnerTests(unittest.TestCase):
         self.__numProc = 2
         self.__fileLimit = 200
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        self.__workPath = os.path.join(HERE, "test-output")
-        configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
-        configName = "site_info"
+        self.__cachePath = os.path.join(TOPDIR, "CACHE")
+        configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
+        configName = "site_info_configuration"
         self.__configName = configName
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
-        self.__mU = MarshalUtil(workPath=self.__workPath)
-        self.__rpU = RepoPathUtil(cfgOb=self.__cfgOb, cfgSectionName=configName, numProc=self.__numProc, fileLimit=self.__fileLimit, workPath=self.__workPath, verbose=False)
+        self.__mU = MarshalUtil(workPath=self.__cachePath)
+        self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath)
         #
         self.__testCaseList = [
             {"contentType": "chem_comp_core", "mockLength": 5},
@@ -57,7 +57,7 @@ class DictMethodRunnerTests(unittest.TestCase):
             {"contentType": "pdbx_core", "mockLength": 14},
         ]
         #
-        self.__modulePathMap = self.__cfgOb.get("DICT_HELPER_MODULE_PATH_MAP", sectionName=configName)
+        self.__modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=configName)
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -70,31 +70,23 @@ class DictMethodRunnerTests(unittest.TestCase):
         """ Read and process test fixture data files from the input content type.
         """
         try:
-            dP = DictionaryProvider()
-            dictLocatorMap = self.__cfgOb.get("DICT_LOCATOR_CONFIG_MAP", sectionName=self.__configName)
-            if contentType not in dictLocatorMap:
-                logger.error("Missing dictionary locator configuration for %s", contentType)
-                dictLocators = []
-            else:
-                dictLocators = [self.__cfgOb.getPath(configLocator, sectionName=self.__configName) for configLocator in dictLocatorMap[contentType]]
-            #
-            dictApi = dP.getApi(dictLocators=dictLocators)
-            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, workPath=self.__workPath)
+            dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)
+            dictApi = dP.getApiByName(contentType)
+            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
             dmh = DictMethodRunner(dictApi, modulePathMap=self.__modulePathMap, resourceProvider=rP)
-            inputPathList = self.__rpU.getLocatorList(contentType=contentType)
+            locatorObjList = self.__rpP.getLocatorObjList(contentType=contentType)
+            containerList = self.__rpP.getContainerList(locatorObjList)
             #
-            logger.debug("Length of path list %d\n", len(inputPathList))
-            self.assertGreaterEqual(len(inputPathList), mockLength)
-            for inputPath in inputPathList:
-                containerList = self.__mU.doImport(inputPath, fmt="mmcif")
-                for container in containerList:
-                    cName = container.getName()
-                    logger.debug("Processing container %s", cName)
-                    #
-                    dmh.apply(container)
-                    #
-                    savePath = os.path.join(HERE, "test-output", cName + "-with-method.cif")
-                    self.__mU.doExport(savePath, [container], fmt="mmcif")
+            logger.debug("Length of locator list %d\n", len(locatorObjList))
+            self.assertGreaterEqual(len(locatorObjList), mockLength)
+            for container in containerList:
+                cName = container.getName()
+                logger.debug("Processing container %s", cName)
+                #
+                dmh.apply(container)
+                #
+                savePath = os.path.join(HERE, "test-output", cName + "-with-method.cif")
+                self.__mU.doExport(savePath, [container], fmt="mmcif")
 
         except Exception as e:
             logger.exception("Failing with %s", str(e))
@@ -111,11 +103,9 @@ class DictMethodRunnerTests(unittest.TestCase):
 
         """
         try:
-            dP = DictionaryProvider()
-            dictLocatorMap = self.__cfgOb.get("DICT_LOCATOR_CONFIG_MAP", sectionName=self.__configName)
-            dictLocators = [self.__cfgOb.getPath(configLocator, sectionName=self.__configName) for configLocator in dictLocatorMap["pdbx"]]
-            dictApi = dP.getApi(dictLocators=dictLocators)
-            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, workPath=self.__workPath)
+            dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)
+            dictApi = dP.getApiByName("pdbx")
+            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
             dmh = DictMethodRunner(dictApi, modulePathMap=self.__modulePathMap, resourceProvider=rP)
             ok = dmh is not None
             self.assertTrue(ok)

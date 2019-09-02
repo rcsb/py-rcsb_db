@@ -38,12 +38,13 @@ import unittest
 
 from jsondiff import diff
 
-from rcsb.db.define.DictionaryProvider import DictionaryProvider
+from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
 from rcsb.db.define.SchemaDefAccess import SchemaDefAccess
 from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.processors.DataTransformFactory import DataTransformFactory
 from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
-from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
+from rcsb.db.utils.RepositoryProvider import RepositoryProvider
+from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 
@@ -67,15 +68,19 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__numProc = 2
         self.__fileLimit = 100
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        self.__workPath = os.path.join(HERE, "test-output")
-        self.__savePath = os.path.join(HERE, "test-saved-output")
-        configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
-        configName = "site_info"
+        self.__cachePath = os.path.join(TOPDIR, "CACHE")
+        self.__outputPath = os.path.join(HERE, "test-output")
+        self.__savedOutputPath = os.path.join(HERE, "test-saved-output")
+
+        configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
+        configName = "site_info_configuration"
         self.__configName = configName
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
-        self.__mU = MarshalUtil(workPath=self.__workPath)
+        self.__mU = MarshalUtil(workPath=self.__cachePath)
 
-        self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, workPath=self.__workPath)
+        self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=True)
+        self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath)
+        #
         #
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
@@ -169,11 +174,10 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         ]
         #
         self.__verbose = True
-        self.__modulePathMap = self.__cfgOb.get("DICT_HELPER_MODULE_PATH_MAP", sectionName=configName)
+        self.__modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=configName)
         #
-        self.__exportFlag = True
+        self.__exportFlag = False
         self.__diffFlag = False
-        self.__emptyPatchS = "[]"
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
@@ -217,12 +221,12 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         """
         try:
             dataSelectors = dataSelectors if dataSelectors else ["PUBLIC_RELEASE"]
-            dD = self.__schU.makeSchemaDef(contentType, dataTyping="ANY", saveSchema=True, altDirPath=self.__workPath)
+            dD = self.__schP.makeSchemaDef(contentType, dataTyping="ANY", saveSchema=True)
             _ = SchemaDefAccess(dD)
-            inputPathList = self.__schU.getLocatorObjList(contentType=contentType, mergeContentTypes=mergeContentTypes)
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType=contentType, dataTyping="ANY", altDirPath=self.__workPath)
+            inputPathList = self.__rpP.getLocatorObjList(contentType=contentType, mergeContentTypes=mergeContentTypes)
+            sd, _, _, _ = self.__schP.getSchemaInfo(databaseName=contentType, dataTyping="ANY")
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=filterType)
-            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
+            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__cachePath, verbose=self.__verbose)
             #
             logger.debug("For %s mock length %d length of path list %d\n", contentType, mockLength, len(inputPathList))
             self.assertEqual(len(inputPathList), mockLength)
@@ -237,10 +241,10 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.assertEqual(len(rejectList), rejectLength)
             fName = "simple-prep-%s-%s.json" % (contentType, styleType)
             if self.__exportFlag:
-                fPath = os.path.join(self.__workPath, fName)
+                fPath = os.path.join(self.__outputPath, fName)
                 self.__mU.doExport(fPath, tableDataDictList, fmt="json", indent=3)
             if self.__diffFlag:
-                fPath = os.path.join(self.__savePath, fName)
+                fPath = os.path.join(self.__savedOutputPath, fName)
                 refDocList = self.__mU.doImport(fPath, fmt="json")
                 self.assertEqual(len(refDocList), len(tableDataDictList))
                 #
@@ -248,7 +252,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 if jD:
                     _, fn = os.path.split(fPath)
                     bn, _ = os.path.splitext(fn)
-                    fPath = os.path.join(self.__workPath, bn + "-diff.json")
+                    fPath = os.path.join(self.__outputPath, bn + "-diff.json")
                     logger.debug("jsondiff for %s %s = \n%s", contentType, styleType, pprint.pformat(jD, indent=3, width=100))
                     self.__mU.doExport(fPath, jD, fmt="json", indent=3)
                 self.assertEqual(len(jD), 0)
@@ -284,26 +288,20 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             excludeExtras = excludeExtras if excludeExtras else []
             _ = mockLength
             _ = rejectLength
-            dD = self.__schU.makeSchemaDef(contentType, dataTyping="ANY", saveSchema=True, altDirPath=self.__workPath)
+            dD = self.__schP.makeSchemaDef(contentType, dataTyping="ANY", saveSchema=True)
             _ = SchemaDefAccess(dD)
-            inputPathList = self.__schU.getLocatorObjList(contentType=contentType, mergeContentTypes=mergeContentTypes)
-            sd, _, collectionNameList, _ = self.__schU.getSchemaInfo(contentType=contentType, dataTyping="ANY", altDirPath=self.__workPath)
+            inputPathList = self.__rpP.getLocatorObjList(contentType=contentType, mergeContentTypes=mergeContentTypes)
+            sd, _, collectionNameList, _ = self.__schP.getSchemaInfo(databaseName=contentType, dataTyping="ANY")
             #
-            dP = DictionaryProvider()
-            dictLocatorMap = self.__cfgOb.get("DICT_LOCATOR_CONFIG_MAP", sectionName=self.__configName)
-            if contentType not in dictLocatorMap:
-                logger.error("Missing dictionary locator configuration for %s", contentType)
-                dictLocators = []
-            else:
-                dictLocators = [self.__cfgOb.getPath(configLocator, sectionName=self.__configName) for configLocator in dictLocatorMap[contentType]]
+            dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)
+            dictApi = dP.getApiByName(contentType)
             #
-            dictApi = dP.getApi(dictLocators=dictLocators)
-            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, workPath=self.__workPath)
+            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
             dmh = DictMethodRunner(dictApi, modulePathMap=self.__modulePathMap, resourceProvider=rP)
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=filterType)
-            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
-            containerList = sdp.getContainerList(inputPathList)
+            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__cachePath, verbose=self.__verbose)
+            containerList = self.__rpP.getContainerList(inputPathList)
             for container in containerList:
                 cName = container.getName()
                 logger.debug("Processing container %s", cName)
@@ -319,19 +317,19 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 docList, _, _ = sdp.processDocuments(containerList, styleType=styleType, sliceFilter=sliceFilter, filterType=filterType, dataSelectors=dataSelectors)
                 docList = sdp.addDocumentPrivateAttributes(docList, collectionName)
                 docList = sdp.addDocumentSubCategoryAggregates(docList, collectionName)
+
                 # Special exclusions for the test harness. (removes timestamped data items to allow diffs.)
                 self.__filterDocuments(docList, excludeExtras)
-                #
-                self.__logDocumentOrder(docList)
                 mergeS = "-".join(mergeContentTypes) if mergeContentTypes else ""
                 fName = "full-prep-%s-%s-%s-%s.json" % (contentType, collectionName, mergeS, styleType)
                 if self.__exportFlag:
-                    fPath = os.path.join(self.__workPath, fName)
+                    self.__logDocumentOrder(docList)
+                    fPath = os.path.join(self.__outputPath, fName)
                     self.__mU.doExport(fPath, docList, fmt="json", indent=3)
                     logger.debug("Exported %r", fPath)
                 #
                 if self.__diffFlag:
-                    fPath = os.path.join(self.__savePath, fName)
+                    fPath = os.path.join(self.__savedOutputPath, fName)
                     refDocList = self.__mU.doImport(fPath, fmt="json")
                     self.assertEqual(len(refDocList), len(docList))
                     logger.debug("For %s %s len refDocList %d", contentType, collectionName, len(refDocList))
@@ -340,7 +338,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                     if jD:
                         _, fn = os.path.split(fPath)
                         bn, _ = os.path.splitext(fn)
-                        fPath = os.path.join(self.__workPath, bn + "-diff.json")
+                        fPath = os.path.join(self.__outputPath, bn + "-diff.json")
                         logger.debug("jsondiff for %s %s = \n%s", contentType, collectionName, pprint.pformat(jD, indent=3, width=100))
                         self.__mU.doExport(fPath, jD, fmt="json", indent=3)
                     self.assertEqual(len(jD), 0)

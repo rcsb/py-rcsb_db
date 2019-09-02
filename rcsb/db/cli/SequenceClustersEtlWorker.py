@@ -20,7 +20,7 @@ import logging
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.processors.ClusterDataPrep import ClusterDataPrep
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
-from rcsb.db.utils.ProvenanceUtil import ProvenanceUtil
+from rcsb.db.utils.ProvenanceProvider import ProvenanceProvider
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class SequenceClustersEtlWorker(object):
 
     def __init__(self, cfgOb, workPath=None, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False):
         self.__cfgOb = cfgOb
-        self.__workPath = workPath
+        self.__cachePath = workPath
         self.__readBackCheck = readBackCheck
         self.__numProc = numProc
         self.__chunkSize = chunkSize
@@ -61,7 +61,7 @@ class SequenceClustersEtlWorker(object):
         self.__resourceName = "MONGO_DB"
         self.__verbose = verbose
         #
-        self.__sectionCluster = "entity_sequence_clusters"
+        self.__sectionCluster = "entity_sequence_clusters_configuration"
         self.__clusterDataPath = self.__cfgOb.getPath("RCSB_SEQUENCE_CLUSTER_DATA_PATH", sectionName=self.__cfgOb.getDefaultSectionName())
         self.__databaseName = self.__cfgOb.get("DATABASE_NAME", sectionName=self.__sectionCluster, default="sequence_clusters")
         self.__databaseVersion = self.__cfgOb.get("DATABASE_VERSION_STRING", sectionName=self.__sectionCluster, default="v5")
@@ -104,7 +104,7 @@ class SequenceClustersEtlWorker(object):
         """ Extract sequence cluster data set  (mmseq2 or blastclust organization)
         """
         try:
-            cdp = ClusterDataPrep(workPath=self.__workPath, entitySchemaName=self.__entitySchemaName, clusterSchemaName=self.__clusterSchemaName)
+            cdp = ClusterDataPrep(workPath=self.__cachePath, entitySchemaName=self.__entitySchemaName, clusterSchemaName=self.__clusterSchemaName)
             _, docBySequenceD, docByClusterD = cdp.extract(dataSetId, clusterSetLocator=dataLocator, levels=levels, clusterType="entity")
             return docBySequenceD, docByClusterD
         except Exception as e:
@@ -117,8 +117,8 @@ class SequenceClustersEtlWorker(object):
         """
         try:
             provKeyName = self.__cfgOb.get("PROVENANCE_KEY_NAME", sectionName=self.__sectionCluster, default="rcsb_entity_sequence_cluster_prov")
-            provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
-            pD = provU.fetch(cfgSectionName=self.__cfgOb.getDefaultSectionName())
+            provU = ProvenanceProvider(self.__cfgOb, self.__cachePath, useCache=True)
+            pD = provU.fetch()
             return pD[provKeyName] if provKeyName in pD else {}
         except Exception as e:
             logger.exception("Failing with %s", str(e))
@@ -136,6 +136,7 @@ class SequenceClustersEtlWorker(object):
             #
             dl = DocumentLoader(
                 self.__cfgOb,
+                self.__cachePath,
                 self.__resourceName,
                 numProc=self.__numProc,
                 chunkSize=self.__chunkSize,

@@ -29,9 +29,9 @@ import logging
 import os
 import time
 import unittest
+from collections import OrderedDict
 
-from rcsb.db.define.DictInfo import DictInfo
-from rcsb.db.define.DictionaryProvider import DictionaryProvider
+from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
 from rcsb.db.utils.ScanRepoUtil import ScanRepoUtil
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
@@ -48,19 +48,10 @@ class ScanRepoUtilTests(unittest.TestCase):
         #
         #
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
-        configName = "site_info"
-        self.__configName = configName
-
-        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
-        self.__pathPdbxDictionaryFile = self.__cfgOb.getPath("PDBX_DICT_LOCATOR", sectionName=configName)
-        self.__pathIhmDictionaryFile = self.__cfgOb.getPath("IHMDEV_DICT_LOCATOR", sectionName=configName)
-        self.__pathFlrDictionaryFile = self.__cfgOb.getPath("FLR_DICT_LOCATOR", sectionName=configName)
-        #
-        self.__failedFilePath = os.path.join(HERE, "test-output", "failed-list.txt")
-        self.__savedFilePath = os.path.join(HERE, "test-output", "path-list.txt")
-        self.__scanDataFilePath = os.path.join(HERE, "test-output", "scan-data.pic")
-        self.__workPath = os.path.join(HERE, "test-output")
+        configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
+        self.__configName = "site_info_configuration"
+        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=self.__configName, mockTopPath=mockTopPath)
+        self.__cachePath = os.path.join(TOPDIR, "CACHE")
 
         self.__numProc = 2
         self.__chunkSize = 20
@@ -73,41 +64,14 @@ class ScanRepoUtilTests(unittest.TestCase):
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)\n", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    def testScanIhmDevRepo(self):
+    def testScanRepos(self):
         """ Test case - scan ihm data
         """
-        ok = self.__testScanRepo(contentType="ihm_dev")
-        self.assertTrue(ok)
-
-    def testScanChemCompRepo(self):
-        """ Test case - scan chem comp reference data
-        """
-        ok = self.__testScanRepo(contentType="chem_comp_core")
-        self.assertTrue(ok)
-
-    def testScanBirdRepo(self):
-        """ Test case - scan BIRD reference data
-        """
-        ok = self.__testScanRepo(contentType="bird_core")
-        self.assertTrue(ok)
-
-    def testScanBirdFamilyRepo(self):
-        """ Test case - scan BIRD Family reference data
-        """
-        ok = self.__testScanRepo(contentType="bird_family")
-        self.assertTrue(ok)
-
-    def testScanPdbxRepo(self):
-        """ Test case - scan PDBx structure model data
-        """
-        ok = self.__testScanRepo(contentType="pdbx_core")
-        self.assertTrue(ok)
-
-    def testScanPdbxRepoIncr(self):
-        """ Test case - scan PDBx structure model data
-        """
-        ok = self.__testScanRepo(contentType="pdbx_core", scanType="incr")
-        self.assertTrue(ok)
+        for contentType in ["chem_comp_core", "bird_chem_comp_core", "bird_family", "pdbx_core", "ihm_dev"]:
+            ok = self.__testScanRepo(contentType=contentType, scanType="full")
+            self.assertTrue(ok)
+            ok = self.__testScanRepo(contentType=contentType, scanType="incr")
+            self.assertTrue(ok)
 
     def __testScanRepo(self, contentType, scanType="full"):
         """ Utility method to scan repo for data type and coverage content.
@@ -115,29 +79,27 @@ class ScanRepoUtilTests(unittest.TestCase):
             Using mock repos for tests.
         """
         try:
-            failedFilePath = os.path.join(HERE, "test-output", "%s-failed-list.txt" % contentType)
-            savedFilePath = os.path.join(HERE, "test-output", "%s-path-list.txt" % contentType)
+            failedFilePath = os.path.join(HERE, "test-output", "%s-failed-list-%s.txt" % (contentType, scanType))
+            savedFilePath = os.path.join(HERE, "test-output", "%s-path-list-%s.txt" % (contentType, scanType))
+            scanDataFilePath = os.path.join(HERE, "test-output", "%s-scan-data.pic" % (contentType))
+            dataCoverageFilePath = os.path.join(HERE, "test-output", "%s-scan-data-coverage-%s.json" % (contentType, scanType))
+            dataTypeFilePath = os.path.join(HERE, "test-output", "%s-scan-data-type-%s.json" % (contentType, scanType))
             #
-            scanDataFilePath = os.path.join(HERE, "test-output", "%s-scan-data.pic" % contentType)
-            #
-            dataCoverageFilePath = os.path.join(HERE, "test-output", "%s-scan-data-coverage.json" % contentType)
-            dataTypeFilePath = os.path.join(HERE, "test-output", "%s-scan-data-type.json" % contentType)
-            #
-            dP = DictionaryProvider()
-            dictLocatorMap = self.__cfgOb.get("DICT_LOCATOR_CONFIG_MAP", sectionName=self.__configName)
-            if contentType not in dictLocatorMap:
-                logger.error("Missing dictionary locator configuration for %s", contentType)
-                dictLocators = []
-            else:
-                dictLocators = [self.__cfgOb.getPath(configLocator, sectionName=self.__configName) for configLocator in dictLocatorMap[contentType]]
-            #
-            logger.info("contentType %r dictlocators %r", contentType, dictLocators)
-            dictApi = dP.getApi(dictLocators=dictLocators)
-            dI = DictInfo(dictApi)
-            attributeDataTypeD = dI.getAttributeDataTypeD()
+            dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)
+            dictApi = dP.getApiByName(contentType)
+            ###
+            categoryList = sorted(dictApi.getCategoryList())
+            dictSchema = {catName: sorted(dictApi.getAttributeNameList(catName)) for catName in categoryList}
+            attributeDataTypeD = OrderedDict()
+            for catName in categoryList:
+                aD = {}
+                for atName in dictSchema[catName]:
+                    aD[atName] = dictApi.getTypeCode(catName, atName)
+                attributeDataTypeD[catName] = aD
+            ###
             #
             sr = ScanRepoUtil(
-                self.__cfgOb, attributeDataTypeD=attributeDataTypeD, numProc=self.__numProc, chunkSize=self.__chunkSize, fileLimit=self.__fileLimit, workPath=self.__workPath
+                self.__cfgOb, attributeDataTypeD=attributeDataTypeD, numProc=self.__numProc, chunkSize=self.__chunkSize, fileLimit=self.__fileLimit, workPath=self.__cachePath
             )
             ok = sr.scanContentType(
                 contentType, scanType=scanType, inputPathList=None, scanDataFilePath=scanDataFilePath, failedFilePath=failedFilePath, saveInputFileListPath=savedFilePath
@@ -156,12 +118,7 @@ class ScanRepoUtilTests(unittest.TestCase):
 
 def scanSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(ScanRepoUtilTests("testScanIhmDevRepo"))
-    suiteSelect.addTest(ScanRepoUtilTests("testScanChemCompRepo"))
-    suiteSelect.addTest(ScanRepoUtilTests("testScanBirdRepo"))
-    suiteSelect.addTest(ScanRepoUtilTests("testScanBirdFamilyRepo"))
-    suiteSelect.addTest(ScanRepoUtilTests("testScanPdbxRepo"))
-    suiteSelect.addTest(ScanRepoUtilTests("testScanPdbxRepoIncr"))
+    suiteSelect.addTest(ScanRepoUtilTests("testScanRepos"))
     return suiteSelect
 
 

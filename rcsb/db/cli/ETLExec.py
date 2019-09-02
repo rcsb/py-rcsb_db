@@ -10,6 +10,7 @@
 #   4-Jan-2019 jdw differentiate config sections for provenance
 #   9-Apr-2019 jdw add tree node list loader
 #  25-Apr-2019 jdw move the --etl_tree_node_lists function to the rcsb.exdb package.
+#   2-Sep-2019 jdw add cache options and move trees and chemref to module rcsb.exdb
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -22,11 +23,12 @@ import logging
 import os
 import sys
 
+from rcsb.db.cli.RepoHoldingsEtlWorker import RepoHoldingsEtlWorker
+from rcsb.db.cli.SequenceClustersEtlWorker import SequenceClustersEtlWorker
+
+# from rcsb.db.cli.TreeNodeListWorker import TreeNodeListWorker
+from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
-from rcsb.db.scripts.ChemRefEtlWorker import ChemRefEtlWorker
-from rcsb.db.scripts.RepoHoldingsEtlWorker import RepoHoldingsEtlWorker
-from rcsb.db.scripts.SequenceClustersEtlWorker import SequenceClustersEtlWorker
-from rcsb.db.scripts.TreeNodeListWorker import TreeNodeListWorker
 from rcsb.db.utils.TimeUtil import TimeUtil
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
@@ -37,9 +39,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(mo
 logger = logging.getLogger()
 
 
-def loadStatus(statusList, cfgOb, readBackCheck=True):
-    sectionName = "data_exchange"
-    dl = DocumentLoader(cfgOb, "MONGO_DB", numProc=2, chunkSize=2, documentLimit=None, verbose=False, readBackCheck=readBackCheck)
+def loadStatus(statusList, cfgOb, cachePath, readBackCheck=True):
+    sectionName = "data_exchange_configuration"
+    dl = DocumentLoader(cfgOb, cachePath, "MONGO_DB", numProc=2, chunkSize=2, documentLimit=None, verbose=False, readBackCheck=readBackCheck)
     #
     databaseName = cfgOb.get("DATABASE_NAME", sectionName=sectionName)
     collectionName = cfgOb.get("COLLECTION_UPDATE_STATUS", sectionName=sectionName)
@@ -47,16 +49,28 @@ def loadStatus(statusList, cfgOb, readBackCheck=True):
     return ok
 
 
+def buildResourceCache(cfgOb, configName, cachePath, rebuildCache=False):
+    """Generate and cache resource dependencies.
+    """
+    ret = False
+    try:
+        rp = DictMethodResourceProvider(cfgOb, configName=configName, cachePath=cachePath)
+        ret = rp.cacheResources(useCache=not rebuildCache)
+    except Exception as e:
+        logger.exception("Failing with %s", str(e))
+    return ret
+
+
 def main():
     parser = argparse.ArgumentParser()
     #
-    defaultConfigName = "site_info"
+    defaultConfigName = "site_info_configuration"
     #
     parser.add_argument("--full", default=True, action="store_true", help="Fresh full load in a new tables/collections (Default)")
     #
     parser.add_argument("--etl_entity_sequence_clusters", default=False, action="store_true", help="ETL entity sequence clusters")
     parser.add_argument("--etl_repository_holdings", default=False, action="store_true", help="ETL repository holdings")
-    parser.add_argument("--etl_chemref", default=False, action="store_true", help="ETL integrated chemical reference data")
+    # parser.add_argument("--etl_chemref", default=False, action="store_true", help="ETL integrated chemical reference data")
     # parser.add_argument("--etl_tree_node_lists", default=False, action='store_true', help="ETL tree node lists")
 
     parser.add_argument("--data_set_id", default=None, help="Data set identifier (default= 2018_14 for current week)")
@@ -80,8 +94,10 @@ def main():
     parser.add_argument("--prune_document_size", default=None, help="Prune large documents to this size limit (MB)")
     parser.add_argument("--debug", default=False, action="store_true", help="Turn on verbose logging")
     parser.add_argument("--mock", default=False, action="store_true", help="Use MOCK repository configuration for testing")
-    parser.add_argument("--working_path", default=None, help="Working path for temporary files")
-    parser.add_argument("--use_cache", default=False, action="store_true", help="Use cache files from remote resources")
+    parser.add_argument("--cache_path", default=None, help="Path containing cache directories")
+    # parser.add_argument("--use_cache", default=False, action="store_true", help="Use cache files from remote resources")
+    parser.add_argument("--rebuild_cache", default=False, action="store_true", help="Rebuild cached resource files")
+    # parser.add_argument("--rebuild_schema", default=False, action="store_true", help="Rebuild schema on-the-fly if not cached")
     #
     #
     args = parser.parse_args()
@@ -93,7 +109,7 @@ def main():
     #                                       Configuration Details
     configPath = args.config_path
     configName = args.config_name
-    useCache = args.use_cache
+    # useCache = args.use_cache
     if not configPath:
         configPath = os.getenv("DBLOAD_CONFIG_PATH", None)
     try:
@@ -126,8 +142,10 @@ def main():
         loadType = "full" if args.full else "replace"
         # loadType = 'replace' if args.replace else 'full'
 
-        workPath = args.working_path if args.working_path else "."
-
+        cachePath = args.cache_path if args.cache_path else "."
+        rebuildCache = args.rebuild_cache if args.rebuild_cache else False
+        # rebuildSchemaFlag = args.rebuild_schema if args.rebuild_schema else False
+        #
         # if args.document_style not in ['rowwise_by_name', 'rowwise_by_name_with_cardinality', 'columnwise_by_name', 'rowwise_by_id', 'rowwise_no_name']:
         #    logger.error("Unsupported document style %s" % args.document_style)
 
@@ -138,41 +156,38 @@ def main():
         parser.print_help(sys.stderr)
         exit(1)
     # ----------------------- - ----------------------- - ----------------------- - ----------------------- - ----------------------- -
+    #  Rebuild or check resource cache
+    ok = buildResourceCache(cfgOb, configName, cachePath, rebuildCache=rebuildCache)
+    if not ok:
+        logger.error("Cache rebuild or check failure (rebuild %r) %r", rebuildCache, cachePath)
+        exit(1)
     ##
     if args.db_type == "mongo":
         if args.etl_entity_sequence_clusters:
             cw = SequenceClustersEtlWorker(
-                cfgOb, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck, workPath=workPath
+                cfgOb, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck, workPath=cachePath
             )
             ok = cw.etl(dataSetId, seqDataLocator, loadType=loadType)
-            okS = loadStatus(cw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+            okS = loadStatus(cw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
         if args.etl_repository_holdings:
             rhw = RepoHoldingsEtlWorker(
-                cfgOb, sandboxPath=sandboxPath, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck, workPath=workPath
+                cfgOb, sandboxPath, cachePath, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck
             )
             ok = rhw.load(dataSetId, loadType=loadType)
-            okS = loadStatus(rhw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+            okS = loadStatus(rhw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
-        if args.etl_chemref:
-            crw = ChemRefEtlWorker(cfgOb, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck, workPath=workPath)
-            ok = crw.load(dataSetId, extResource="DrugBank", loadType=loadType)
-            okS = loadStatus(crw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+        # if args.etl_chemref:
+        #    crw = ChemRefEtlWorker(cfgOb, cachePath=cachePath, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck)
+        #    ok = crw.load(dataSetId, extResource="DrugBank", loadType=loadType)
+        #    okS = loadStatus(crw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
-        if args.etl_tree_node_lists:
-            rhw = TreeNodeListWorker(
-                cfgOb,
-                mockTopPath=mockTopPath,
-                numProc=numProc,
-                chunkSize=chunkSize,
-                documentLimit=documentLimit,
-                verbose=debugFlag,
-                readBackCheck=readBackCheck,
-                workPath=workPath,
-                useCache=useCache,
-            )
-            ok = rhw.load(dataSetId, loadType=loadType)
-            okS = loadStatus(rhw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+        # f args.etl_tree_node_lists:
+        #    rhw = TreeNodeListWorker(
+        #        cfgOb, cachePath, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck, useCache=useCache
+        #    )
+        #    ok = rhw.load(dataSetId, loadType=loadType)
+        #    okS = loadStatus(rhw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
         logger.info("Operation completed with status %r " % ok and okS)
 
 

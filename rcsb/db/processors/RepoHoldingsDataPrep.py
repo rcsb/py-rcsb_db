@@ -43,12 +43,12 @@ class RepoHoldingsDataPrep(object):
     """
 
     def __init__(self, **kwargs):
-        self.__workPath = kwargs.get("workPath", None)
+        self.__cachePath = kwargs.get("cachePath", None)
         self.__sandboxPath = kwargs.get("sandboxPath", None)
         self.__filterType = kwargs.get("filterType", "")
         self.__assignDates = "assign-dates" in self.__filterType
         #
-        self.__mU = MarshalUtil(workPath=self.__workPath)
+        self.__mU = MarshalUtil(workPath=self.__cachePath)
         #
 
     def getHoldingsTransferred(self, updateId, dirPath=None, **kwargs):

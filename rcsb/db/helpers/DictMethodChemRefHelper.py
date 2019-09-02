@@ -68,7 +68,8 @@ class DictMethodChemRefHelper(object):
                 return False
             rP = kwargs.get("resourceProvider")
             #  ------------ ----------------------- ----------------------- ----------------------- -----------
-            dbD = rP.getResource("DrugBank accession mapping") if rP else None
+            dbProvider = rP.getResource("DrugBankProvider instance") if rP else None
+            dbD = dbProvider.getMapping()
             if dbD:
                 ccId = dataContainer.getName()
                 #
@@ -121,7 +122,8 @@ class DictMethodChemRefHelper(object):
                     wObj.setValue(mType, "related_mapping_method", iRow)
             #
             #  ------------ ----------------------- ----------------------- ----------------------- -----------
-            csdMapD = rP.getResource("CCDC accession mapping") if rP else None
+            ccmProvider = rP.getResource("ChemCompModelProvider instance") if rP else None
+            csdMapD = ccmProvider.getMapping()
             #
             if csdMapD and dataContainer.getName() in csdMapD:
                 if not dataContainer.exists(catName):
@@ -192,7 +194,8 @@ class DictMethodChemRefHelper(object):
 
             #
             rP = kwargs.get("resourceProvider")
-            dbD = rP.getResource("DrugBank accession mapping") if rP else None
+            dbProvider = rP.getResource("DrugBankProvider instance") if rP else None
+            dbD = dbProvider.getMapping()
             if not dbD:
                 return False
 
@@ -485,7 +488,8 @@ class DictMethodChemRefHelper(object):
                 iRow += 1
             #
             rP = kwargs.get("resourceProvider")
-            dbD = rP.getResource("DrugBank accession mapping") if rP else None
+            dbProvider = rP.getResource("DrugBankProvider instance") if rP else None
+            dbD = dbProvider.getMapping()
             if dbD:
                 dbMapD = dbD["id_map"]
                 #

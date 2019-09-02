@@ -39,15 +39,16 @@ class ClusterDataPrepTests(unittest.TestCase):
         self.__verbose = True
         #
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        pathConfig = os.path.join(mockTopPath, "config", "dbload-setup-example.yml")
+        pathConfig = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
         #
-        configName = "site_info"
+        configName = "site_info_configuration"
         cfgOb = ConfigUtil(configPath=pathConfig, defaultSectionName=configName, mockTopPath=mockTopPath)
         self.__pathClusterData = cfgOb.getPath("RCSB_SEQUENCE_CLUSTER_DATA_PATH", sectionName=configName)
         # sample data set
         self.__dataSetId = "2018_23"
 
-        self.__levels = ["100", "95", "90", "70", "50", "30"]
+        # self.__levels = ["100", "95", "90", "70", "50", "30"]
+        self.__levels = ["95"]
         #
         self.__workPath = os.path.join(HERE, "test-output")
         self.__pathSaveStyleCif = os.path.join(HERE, "test-output", "cluster-data-cif.json")
@@ -74,6 +75,7 @@ class ClusterDataPrepTests(unittest.TestCase):
             logger.exception("Failing with %s", str(e))
             self.fail()
 
+    @unittest.skip("Disable sequence cluster troubleshooting test")
     def testExtractAndSerialize(self):
         """ Test extraction on an example sequence cluster data set.
         """

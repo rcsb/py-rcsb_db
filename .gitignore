@@ -3,6 +3,7 @@
 .env/
 test-output/
 !test-output/.gitkeep
+CACHE/
 LOGTOX
 
 # Byte-compiled / optimized / DLL files

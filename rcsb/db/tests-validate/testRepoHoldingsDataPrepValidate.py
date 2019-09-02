@@ -23,7 +23,7 @@ import unittest
 
 from jsonschema import Draft4Validator, FormatChecker
 from rcsb.db.processors.RepoHoldingsDataPrep import RepoHoldingsDataPrep
-from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
+from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
@@ -39,13 +39,13 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
         self.__verbose = True
         #
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        self.__pathConfig = os.path.join(self.__mockTopPath, "config", "dbload-setup-example.yml")
-        self.__workPath = os.path.join(HERE, "test-output")
+        self.__pathConfig = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
+        self.__cachePath = os.path.join(TOPDIR, "CACHE")
         self.__updateId = "2018_25"
         #
-        configName = "site_info"
+        configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
-        self.__sdu = SchemaDefUtil(cfgOb=self.__cfgOb)
+        self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=True)
         self.__sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=configName)
         #
         self.__startTime = time.time()
@@ -90,8 +90,8 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
         eCount = 0
         for schemaName in schemaNames:
             for collectionName in collectionNames[schemaName]:
-                _ = self.__sdu.makeSchemaDef(schemaName, dataTyping="ANY", saveSchema=True, altDirPath=self.__workPath)
-                cD = self.__sdu.makeSchema(schemaName, collectionName, schemaType="JSON", level=schemaLevel, saveSchema=True, altDirPath=self.__workPath)
+                _ = self.__schP.makeSchemaDef(schemaName, dataTyping="ANY", saveSchema=True)
+                cD = self.__schP.makeSchema(schemaName, collectionName, encodingType="JSON", level=schemaLevel, saveSchema=True)
                 dL = self.__getRepositoryHoldingsDocuments(schemaName, collectionName, updateId)
                 # Raises exceptions for schema compliance.
                 Draft4Validator.check_schema(cD)
@@ -118,7 +118,7 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
         """
         rL = []
         try:
-            rhdp = RepoHoldingsDataPrep(sandboxPath=self.__sandboxPath, workPath=self.__workPath)
+            rhdp = RepoHoldingsDataPrep(sandboxPath=self.__sandboxPath, workPath=self.__cachePath)
             if collectionName == "repository_holdings_update":
                 rL = rhdp.getHoldingsUpdate(updateId=updateId)
                 self.assertGreaterEqual(len(rL), 10)

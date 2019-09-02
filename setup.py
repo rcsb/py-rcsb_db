@@ -17,7 +17,7 @@ from setuptools import setup
 packages = []
 thisPackage = "rcsb.db"
 
-with open("rcsb/db/scripts/__init__.py", "r") as fd:
+with open("rcsb/db/cli/__init__.py", "r") as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE).group(1)
 
 if not version:
@@ -46,10 +46,10 @@ setup(
     ),
     entry_points={
         "console_scripts": [
-            "exdb_repo_load_cli=rcsb.db.scripts.RepoLoadExec:main",
-            "repo_scan_cli=rcsb.db.scripts.RepoScanExec:main",
-            "schema_update_cli=rcsb.db.scripts.SchemaUpdateExec:main",
-            "etl_exec_cli=rcsb.db.scripts.ETLExec:main",
+            "exdb_repo_load_cli=rcsb.db.cli.RepoLoadExec:main",
+            "repo_scan_cli=rcsb.db.cli.RepoScanExec:main",
+            "schema_update_cli=rcsb.db.cli.SchemaUpdateExec:main",
+            "etl_exec_cli=rcsb.db.cli.ETLExec:main",
         ]
     },
     #
@@ -63,17 +63,17 @@ setup(
         "strict-rfc3339",
         "mysqlclient >= 1.3.12",
         "pymongo >= 3.7.0",
-        "mmcif >= 0.43",
+        "mmcif >= 0.46",
         'scandir; python_version < "3.0"',
         # 'configparser; python_version < "3.0"',
-        "rcsb.utils.io >= 0.33",
-        "rcsb.utils.config >= 0.18",
+        "rcsb.utils.io >= 0.40",
+        "rcsb.utils.config >= 0.24",
         "rcsb.utils.multiproc >= 0.13",
-        "rcsb.utils.validation >= 0.14",
-        "rcsb.utils.chemref >= 0.20",
-        "rcsb.utils.ec >= 0.14",
-        "rcsb.utils.taxonomy >= 0.22",
-        "rcsb.utils.struct >= 0.18",
+        "rcsb.utils.validation >= 0.16",
+        "rcsb.utils.chemref >= 0.23",
+        "rcsb.utils.ec >= 0.16",
+        "rcsb.utils.taxonomy >= 0.25",
+        "rcsb.utils.struct >= 0.20",
         "SQLAlchemy; sys_platform == 'linux'",
         "psycopg2-binary",
         "crate",

@@ -50,6 +50,11 @@ class DataTypeInstanceInfo(object):
         except Exception:
             return False
 
+    def testCache(self):
+        logger.debug("Data length %d", len(self.__tD))
+        logger.debug("Bypass mode %r", self.__byPassMode)
+        return True if (self.__byPassMode or (not self.__byPassMode and self.__tD)) else False
+
     def exists(self, catName, atName=None):
         if self.__byPassMode:
             return True

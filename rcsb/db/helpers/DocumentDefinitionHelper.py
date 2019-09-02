@@ -29,10 +29,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class SchemaDocumentHelper(object):
-    """ Inject additional document information into a schema definition.
+class DocumentDefinitionHelper(object):
+    """ Inject additional configuration information into a document schema definition.
 
-        Single source of additional document schema semantic content.
+        Single source of document schema semantic configuration content.
     """
 
     def __init__(self, **kwargs):
@@ -44,7 +44,7 @@ class SchemaDocumentHelper(object):
         # ----
         #
         self.__cfgOb = kwargs.get("cfgOb", None)
-        sectionName = kwargs.get("config_section", "document_helper")
+        sectionName = kwargs.get("config_section", "document_helper_configuration")
         self.__cfgD = self.__cfgOb.exportConfig(sectionName=sectionName)
         #
         # ----
@@ -54,7 +54,7 @@ class SchemaDocumentHelper(object):
         """
         cL = []
         try:
-            cL = [td for td in self.__cfgD["schema_collection_names"][schemaName]]
+            cL = [td for td in self.__cfgD["document_collection_names"][schemaName]]
         except Exception as e:
             logger.debug("Schema definitions name %s failing with %s", schemaName, str(e))
         return cL
@@ -64,7 +64,7 @@ class SchemaDocumentHelper(object):
         """
         v = None
         try:
-            for td in self.__cfgD["schema_collection_names"][schemaName]:
+            for td in self.__cfgD["document_collection_names"][schemaName]:
                 if collectionName == td["NAME"]:
                     return td["VERSION"]
         except Exception as e:
@@ -77,7 +77,7 @@ class SchemaDocumentHelper(object):
         """
         includeL = []
         try:
-            includeL = [tS.upper() for tS in self.__cfgD["collection_schema_content_filters"][collectionName]["EXCLUDE"]]
+            includeL = [tS.upper() for tS in self.__cfgD["document_collection_content_filters"][collectionName]["EXCLUDE"]]
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
         return includeL
@@ -88,7 +88,7 @@ class SchemaDocumentHelper(object):
         """
         excludeL = []
         try:
-            excludeL = [tS.upper() for tS in self.__cfgD["collection_schema_content_filters"][collectionName]["INCLUDE"]]
+            excludeL = [tS.upper() for tS in self.__cfgD["document_collection_content_filters"][collectionName]["INCLUDE"]]
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
         return excludeL
@@ -99,7 +99,7 @@ class SchemaDocumentHelper(object):
         """
         sf = None
         try:
-            sf = self.__cfgD["collection_schema_content_filters"][collectionName]["SLICE"]
+            sf = self.__cfgD["document_collection_content_filters"][collectionName]["SLICE"]
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
         return sf

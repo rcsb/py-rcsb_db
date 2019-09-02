@@ -24,7 +24,7 @@ import time
 import unittest
 
 from rcsb.db.define.SchemaDefAccess import SchemaDefAccess
-from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
+from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
@@ -39,10 +39,11 @@ class SchemaDefAccessTests(unittest.TestCase):
     def setUp(self):
         self.__verbose = True
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        pathConfig = os.path.join(mockTopPath, "config", "dbload-setup-example.yml")
-        configName = "site_info"
+        self.__cachePath = os.path.join(TOPDIR, "CACHE")
+        pathConfig = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
+        configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=pathConfig, defaultSectionName=configName, mockTopPath=mockTopPath)
-        self.__sdu = SchemaDefUtil(cfgOb=self.__cfgOb)
+        self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=True, clearPath=False)
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -52,15 +53,15 @@ class SchemaDefAccessTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testAccess(self):
-        schemaNames = ["pdbx_core", "chem_comp_core", "bird_chem_comp_core"]
+        databaseNames = ["pdbx_core", "chem_comp_core", "bird_chem_comp_core"]
         dataTypingList = ["ANY", "SQL"]
-        for schemaName in schemaNames:
+        for databaseName in databaseNames:
             for dataTyping in dataTypingList:
-                self.__testAccess(schemaName, dataTyping)
+                self.__testAccess(databaseName, dataTyping)
 
-    def __testAccess(self, schemaName, dataTyping):
+    def __testAccess(self, databaseName, dataTyping):
         try:
-            sD = self.__sdu.makeSchemaDef(schemaName, dataTyping=dataTyping, saveSchema=False)
+            sD = self.__schP.makeSchemaDef(databaseName, dataTyping=dataTyping, saveSchema=False)
             ok = self.__testAccessors(sD)
             self.assertTrue(ok)
             #
@@ -87,8 +88,8 @@ class SchemaDefAccessTests(unittest.TestCase):
             logger.debug("Selector %s %r", dS, sd.getDataSelectors(dS))
 
         collectionInfoL = sd.getCollectionInfo()
-        for d in collectionInfoL:
-            collectionName = d["NAME"]
+        for dD in collectionInfoL:
+            collectionName = dD["NAME"]
 
             logger.debug("Collection excluded %r", sd.getCollectionExcluded(collectionName))
             logger.debug("Collection included %r", sd.getCollectionSelected(collectionName))
@@ -114,9 +115,9 @@ class SchemaDefAccessTests(unittest.TestCase):
             cL = tObj.getMapInstanceCategoryList()
             logger.debug("Mapped category list %s", str(cL))
 
-            for c in cL:
-                aL = tObj.getMapInstanceAttributeList(c)
-                logger.debug("Mapped attribute list in %s :  %s", c, str(aL))
+            for cV in cL:
+                aL = tObj.getMapInstanceAttributeList(cV)
+                logger.debug("Mapped attribute list in %s :  %s", cV, str(aL))
         return True
 
 

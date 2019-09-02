@@ -298,7 +298,7 @@ class DictMethodEntityInstanceHelper(object):
             instTypeD = self.__commonU.getInstanceTypes(dataContainer)
             # ---------------
             # Add CATH assignments
-            cathU = rP.getResource("CathUtils instance") if rP else None
+            cathU = rP.getResource("CathProvider instance") if rP else None
             ii = cObj.getRowCount()
             #
             for asymId, authAsymId in asymAuthIdD.items():
@@ -352,7 +352,7 @@ class DictMethodEntityInstanceHelper(object):
                     ii += 1
             # ------------
             # Add SCOP assignments
-            scopU = rP.getResource("ScopUtils instance") if rP else None
+            scopU = rP.getResource("ScopProvider instance") if rP else None
             for asymId, authAsymId in asymAuthIdD.items():
                 if instTypeD[asymId] not in ["polymer", "branched"]:
                     continue

@@ -43,12 +43,13 @@ import os
 import time
 
 from mmcif.api.DictMethodRunner import DictMethodRunner
-from rcsb.db.define.DictionaryProvider import DictionaryProvider
+from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
 from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.mysql.MyDbUtil import MyDbQuery
 from rcsb.db.processors.DataTransformFactory import DataTransformFactory
 from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb.db.sql.SqlGen import SqlGenAdmin
+from rcsb.db.utils.RepositoryProvider import RepositoryProvider
 
 logger = logging.getLogger(__name__)
 #
@@ -59,13 +60,16 @@ class SchemaDefLoader(object):
     """ Map PDBx/mmCIF instance data to SQL loadable data using external schema definition.
     """
 
-    def __init__(self, cfgOb, schemaDefObj, cfgSectionName="site_info", dbCon=None, workPath=".", cleanUp=False, warnings="default", verbose=True):
+    def __init__(self, cfgOb, schemaDefObj, cfgSectionName="site_info_configuration", dbCon=None, cachePath=".", workPath=".", cleanUp=False, warnings="default", verbose=True):
         self.__verbose = verbose
         self.__debug = False
         self.__cfgOb = cfgOb
+        sectionName = cfgSectionName
         self.__sD = schemaDefObj
+
         #
         self.__dbCon = dbCon
+        self.__cachePath = cachePath
         self.__workPath = workPath
         self.__pathList = []
         self.__cleanUp = cleanUp
@@ -79,22 +83,14 @@ class SchemaDefLoader(object):
         #
         self.__warningAction = warnings
         dtf = DataTransformFactory(schemaDefAccessObj=self.__sD, filterType=self.__fTypeRow)
-        self.__sdp = SchemaDefDataPrep(schemaDefAccessObj=self.__sD, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
-        #
-        sectionName = cfgSectionName
+        self.__sdp = SchemaDefDataPrep(schemaDefAccessObj=self.__sD, dtObj=dtf, workPath=self.__cachePath, verbose=self.__verbose)
+        self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, cachePath=self.__cachePath)
         #
         schemaName = self.__sD.getName()
-        modulePathMap = self.__cfgOb.get("DICT_HELPER_MODULE_PATH_MAP", sectionName=sectionName)
-        dictLocatorMap = self.__cfgOb.get("DICT_LOCATOR_CONFIG_MAP", sectionName=sectionName)
-        if schemaName not in dictLocatorMap:
-            logger.error("Missing dictionary locator configuration for %s", schemaName)
-            dictLocators = []
-        else:
-            dictLocators = [self.__cfgOb.getPath(configLocator, sectionName=sectionName) for configLocator in dictLocatorMap[schemaName]]
-        #
-        dP = DictionaryProvider()
-        dictApi = dP.getApi(dictLocators=dictLocators)
-        rP = DictMethodResourceProvider(self.__cfgOb, configName=sectionName, workPath=self.__workPath)
+        modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=sectionName)
+        dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)
+        dictApi = dP.getApiByName(schemaName)
+        rP = DictMethodResourceProvider(self.__cfgOb, cachePath=self.__cachePath)
         self.__dmh = DictMethodRunner(dictApi, modulePathMap=modulePathMap, resourceProvider=rP)
 
     def setWarning(self, action):
@@ -140,7 +136,7 @@ class SchemaDefLoader(object):
         """
         tableIdSkipD = tableIdSkipD if tableIdSkipD is not None else {}
         if inputPathList is not None:
-            cL = self.__sdp.getContainerList(inputPathList, filterType=self.__fTypeRow)
+            cL = self.__rpP.getContainerList(inputPathList)
             #
             # Apply dynamic methods here -
             #
@@ -208,7 +204,7 @@ class SchemaDefLoader(object):
             Return the containerNames for the input path list, and path list for load files that are created.
 
         """
-        cL = self.__sdp.getContainerList(inputPathList, filterType=self.__fTypeRow)
+        cL = self.__rpP.getContainerList(inputPathList)
         for cA in cL:
             self.__dmh.apply(cA)
         tableDataDict, containerNameList = self.__sdp.process(cL)

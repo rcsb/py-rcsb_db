@@ -1,15 +1,14 @@
 #!/bin/bash
 # File: TEST-REPOLOAD-EXEC-MOCK.sh
-# Date: 3-Jul-2018 jdw
+# Date: 1-Sep-2019 jdw
 #
 # Example mock repository load (MongoDb)
 #
-exdb_repo_load_cli  --mock --full  --load_chem_comp_ref       --working_path ./test-output  --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info --fail_file_list_path ./test-output/failed-cc-path-list.txt --read_back_check >& ./test-output/LOGCHEMCOMPFULL
-exdb_repo_load_cli  --mock --full  --load_chem_comp_core_ref  --working_path ./test-output  --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info --fail_file_list_path ./test-output/failed-cc-core-path-list.txt --read_back_check >& ./test-output/LOGCHEMCOMPCOREFULL
-exdb_repo_load_cli  --mock --full  --load_bird_chem_comp_ref  --working_path ./test-output  --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info --fail_file_list_path ./test-output/failed-bird-cc-path-list.txt --read_back_check >& ./test-output/LOGBIRDCHEMCOMPFULL
-exdb_repo_load_cli  --mock --full  --load_bird_ref            --working_path ./test-output  --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info --fail_file_list_path ./test-output/failed-bird-path-list.txt --read_back_check >& ./test-output/LOGBIRDFULL
-exdb_repo_load_cli  --mock --full  --load_bird_family_ref     --working_path ./test-output  --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info --fail_file_list_path ./test-output/failed-family-path-list.txt --read_back_check >& ./test-output/LOGBIRDFAMILY
-exdb_repo_load_cli  --mock --full  --load_entry_data          --working_path ./test-output  --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info --save_file_list_path ./test-output/LATEST_PDBX_LOAD_LIST.txt --fail_file_list_path ./test-output/failed-entry-path-list.txt >& ./test-output/LOGENTRYFULL
-exdb_repo_load_cli  --mock --full  --load_pdbx_core_merge     --vrpt_repo_path ../../mock-data/MOCK_VALIDATION_REPORTS  --working_path ./test-output  --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info --save_file_list_path ./test-output/LATEST_PDBX_CORE_LOAD_LIST.txt --fail_file_list_path ./test-output/failed-pdbx-core-path-list.txt >& ./test-output/LOGPDBXCOREFULL
-exdb_repo_load_cli  --mock --full  --load_ihm_dev             --working_path ./test-output  --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info --save_file_list_path ./test-output/LATEST_IHM_DEV_LOAD_LIST.txt --fail_file_list_path ./test-output/failed-ihm-dev-path-list.txt >& ./test-output/LOGIHMDEVFULL
+export cp=../../../CACHE/
+exdb_repo_load_cli  --mock --full  --load_chem_comp_core_ref  --rebuild_cache --cache_path ${cp}  --config_path ../config/exdb-config-example.yml  --config_name site_info_configuration --fail_file_list_path ./test-output/failed-cc-core-path-list.txt --read_back_check >& ./test-output/LOGCHEMCOMPCOREFULL
+exdb_repo_load_cli  --mock --full  --rebuild_schema --load_bird_chem_comp_ref  --cache_path ${cp}  --config_path ../config/exdb-config-example.yml  --config_name site_info_configuration --fail_file_list_path ./test-output/failed-bird-cc-path-list.txt --read_back_check >& ./test-output/LOGBIRDCHEMCOMPFULL
+exdb_repo_load_cli  --mock --full  --load_pdbx_core_merge  --cache_path ${cp} --config_path ../config/exdb-config-example.yml  --config_name site_info_configuration --save_file_list_path ./test-output/LATEST_PDBX_CORE_LOAD_LIST.txt --fail_file_list_path ./test-output/failed-pdbx-core-path-list.txt >& ./test-output/LOGPDBXCOREFULL
+#
+# exdb_repo_load_cli  --mock --full  --load_pdbx_core_merge     --vrpt_repo_path ../../mock-data/MOCK_VALIDATION_REPORTS  --cache_path ${cp}  --config_path ../config/exdb-config-example.yml  --config_name site_info_configuration --save_file_list_path ./test-output/LATEST_PDBX_CORE_LOAD_LIST.txt --fail_file_list_path ./test-output/failed-pdbx-core-path-list.txt >& ./test-output/LOGPDBXCOREFULL
+exdb_repo_load_cli  --mock --full --rebuild_schema --load_ihm_dev  --cache_path ${cp}  --config_path ../config/exdb-config-example.yml  --config_name site_info_configuration --save_file_list_path ./test-output/LATEST_IHM_DEV_LOAD_LIST.txt --fail_file_list_path ./test-output/failed-ihm-dev-path-list.txt >& ./test-output/LOGIHMDEVFULL
 #

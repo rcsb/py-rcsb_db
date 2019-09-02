@@ -29,7 +29,7 @@ import datetime
 import logging
 import time
 
-from rcsb.db.utils.RepoPathUtil import RepoPathUtil
+from rcsb.db.utils.RepositoryProvider import RepositoryProvider
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
 
@@ -43,7 +43,6 @@ ScanSummary = collections.namedtuple("ScanSummary", "containerId, fromPath, scan
 
 class ScanRepoUtil(object):
     """Tools for for scanning repositories and collecting coverage and type data information.
-
     """
 
     def __init__(self, cfgOb, attributeDataTypeD=None, numProc=4, chunkSize=15, fileLimit=None, maxStepLength=2000, workPath=None):
@@ -76,9 +75,10 @@ class ScanRepoUtil(object):
 
         self.__workPath = workPath
         self.__mU = MarshalUtil(workPath=self.__workPath)
+        self.__rpP = RepositoryProvider(self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__workPath)
 
-    def scanContentType(self, contentType, scanType="full", inputPathList=None, scanDataFilePath=None, failedFilePath=None, saveInputFileListPath=None):
-        """Driver method for scan operation
+    def scanContentType(self, contentType, mergeContentTypes=None, scanType="full", inputPathList=None, scanDataFilePath=None, failedFilePath=None, saveInputFileListPath=None):
+        """Driver method for repository scan operation
 
         Args:
             contentType (str):  one of 'bird','bird_family','bird_chem_comp', chem_comp','pdbx'
@@ -95,34 +95,31 @@ class ScanRepoUtil(object):
         try:
             startTime = self.__begin(message="scanning operation")
             #
-            rpU = RepoPathUtil(self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit)
-            pathList = rpU.getLocatorList(contentType=contentType, inputPathList=inputPathList)
+            locatorObjList = self.__rpP.getLocatorObjList(contentType=contentType, inputPathList=inputPathList, mergeContentTypes=mergeContentTypes)
             #
             if saveInputFileListPath:
-                self.__mU.doExport(saveInputFileListPath, pathList, fmt="list")
-                logger.debug("Saving %d paths in %s", len(pathList), saveInputFileListPath)
+                self.__mU.doExport(saveInputFileListPath, self.__rpP.getLocatorPaths(locatorObjList), fmt="list")
+                logger.debug("Saving %d paths in %s", len(locatorObjList), saveInputFileListPath)
             #
-
             optD = {}
             optD["contentType"] = contentType
             optD["logSize"] = True
             optD["scanType"] = scanType
             # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             #
-
             numProc = self.__numProc
-            chunkSize = self.__chunkSize if inputPathList and self.__chunkSize < len(inputPathList) else 0
+            chunkSize = self.__chunkSize if locatorObjList and self.__chunkSize < len(locatorObjList) else 0
             #
             # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
-            numPaths = len(pathList)
+            numPaths = len(locatorObjList)
             logger.debug("Processing %d total paths", numPaths)
             numProc = min(numProc, numPaths)
             maxStepLength = self.__maxStepLength
             if numPaths > maxStepLength:
                 numLists = int(numPaths / maxStepLength)
-                subLists = [pathList[i::numLists] for i in range(numLists)]
+                subLists = [locatorObjList[i::numLists] for i in range(numLists)]
             else:
-                subLists = [pathList]
+                subLists = [locatorObjList]
             #
             if subLists:
                 logger.debug("Starting with numProc %d outer subtask count %d subtask length ~ %d", numProc, len(subLists), len(subLists[0]))
@@ -144,16 +141,16 @@ class ScanRepoUtil(object):
                     retLists[ii].extend(retListsT[ii])
                 diagList.extend(diagListT)
             logger.debug("Scan failed path list %r", failList)
-            logger.debug("Scan path list success length %d load list failed length %d", len(pathList), len(failList))
+            logger.debug("Scan path list success length %d load list failed length %d", len(locatorObjList), len(failList))
             logger.debug("Returned metadata length %r", len(retLists[0]))
             #
             if failedFilePath and failList:
-                wOk = self.__mU.doExport(failedFilePath, failList, fmt="list")
+                wOk = self.__mU.doExport(failedFilePath, self.__rpP.getLocatorPaths(failList), fmt="list")
                 logger.debug("Writing scan failure path list to %s status %r", failedFilePath, wOk)
             #
             if scanType == "incr":
                 scanDataD = self.__mU.doImport(scanDataFilePath, fmt="pickle", default=None)
-                logger.info("Imported scan data with keys %r", list(scanDataD.keys()))
+                logger.debug("Imported scan data with keys %r", list(scanDataD.keys()))
             else:
                 scanDataD = {}
             #
@@ -274,18 +271,18 @@ class ScanRepoUtil(object):
 
         return [], [], []
 
-    def __getContainerList(self, inputPathList):
+    def __getContainerList(self, locatorObjList):
         """
         """
         utcnow = datetime.datetime.utcnow()
         ts = utcnow.strftime("%Y-%m-%d:%H:%M:%S")
-
         cL = []
-        for lPath in inputPathList:
-            myContainerList = self.__mU.doImport(lPath, fmt="mmcif")
-
+        myContainerList = self.__rpP.getContainerList(locatorObjList)
+        for loc in locatorObjList:
+            myContainerList = self.__rpP.getContainerList([loc])
+            lPathL = self.__rpP.getLocatorPaths([loc])
             for cA in myContainerList:
-                dc = DataCategory("rcsb_load_status", ["name", "load_date", "locator"], [[cA.getName(), ts, lPath]])
+                dc = DataCategory("rcsb_load_status", ["name", "load_date", "locator"], [[cA.getName(), ts, lPathL[0]]])
                 logger.debug("data category %r", dc)
                 cA.append(dc)
                 cL.append(cA)

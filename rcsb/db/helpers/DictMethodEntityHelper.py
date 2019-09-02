@@ -207,7 +207,7 @@ class DictMethodEntityHelper(object):
                 dataContainer.append(DataCategory(hostCatName, attributeNameList=self.__dApi.getAttributeNameList(hostCatName)))
             #
             rP = kwargs.get("resourceProvider")
-            taxU = rP.getResource("TaxonomyUtils instance") if rP else None
+            taxU = rP.getResource("TaxonomyProvider instance") if rP else None
             #
             cObj = dataContainer.getObj(catName)
             hObj = dataContainer.getObj(hostCatName)
@@ -743,7 +743,7 @@ class DictMethodEntityHelper(object):
             rP = kwargs.get("resourceProvider")
             ecU = None
             if hasEc:
-                ecU = rP.getResource("EnzymeUtils instance") if rP else None
+                ecU = rP.getResource("EnzymeProvider instance") if rP else None
             #
             ncObj = None
             if dataContainer.exists("entity_name_com"):

@@ -1,5 +1,5 @@
 ##
-# File:    RepoPathUtil.py
+# File:    RepositoryProvider.py
 # Author:  J. Westbrook
 # Date:    21-Mar-2018
 #
@@ -17,6 +17,7 @@
 #    5-Feb-2019  jdw add just method naming conventions, add getLocator() method,
 #                    consolidate deliver of path configuration details in __getRepoTopPath().
 #   14-Mar-2019  jdw add VRPT_REPO_PATH_ENV as an override for the validation report repo path.
+#   27-Aug-2019  jdw filter missing validation reports
 #
 #
 ##
@@ -33,8 +34,10 @@ import logging
 import os
 import time
 
+from rcsb.utils.io.HashableDict import HashableDict
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
+from rcsb.utils.validation.ValidationReportProvider import ValidationReportProvider
 
 try:
     from os import walk  # pylint: disable=ungrouped-imports
@@ -45,24 +48,155 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-class RepoPathUtil(object):
-    def __init__(self, cfgOb, cfgSectionName="site_info", numProc=8, fileLimit=None, workPath=None, verbose=False):
+def toCifWrapper(xrt):
+    dirPath = os.environ.get("_RP_DICT_PATH_")
+    vpr = ValidationReportProvider(dirPath=dirPath, useCache=True, cleaCache=False)
+    vrd = vpr.getReader()
+    return vrd.toCif(xrt)
+
+
+class RepositoryProvider(object):
+    def __init__(self, cfgOb, cachePath=None, numProc=8, fileLimit=None, verbose=False):
         self.__fileLimit = fileLimit
         self.__numProc = numProc
         self.__verbose = verbose
         self.__cfgOb = cfgOb
-        self.__cfgSectionName = cfgSectionName
-        self.__workPath = workPath if workPath else "."
+        self.__configName = self.__cfgOb.getDefaultSectionName()
+        cpth = cachePath if cachePath else "."
+        self.__cachePath = os.path.join(cpth, self.__cfgOb.get("REPO_UTIL_CACHE_DIR", sectionName=self.__configName))
+        #
+        self.__mU = MarshalUtil(workPath=self.__cachePath)
+        #
         #
         self.__mpFormat = "[%(levelname)s] %(asctime)s %(processName)s-%(module)s.%(funcName)s: %(message)s"
 
-    def getLocatorList(self, contentType, inputPathList=None):
-        """ Convenience method to return repository path list by content type:
+    def getLocatorObjList(self, contentType, inputPathList=None, mergeContentTypes=None):
+        """Convenience method to get the data path list for the input repository content type.
+
+        Args:
+            contentType (str): Repository content type (e.g. pdbx, chem_comp, bird, ...)
+            inputPathList (list, optional): path list that will be returned if provided.
+            mergeContentTypes (list, optional): repository content types to combined with the
+                                primary content type.
+
+        Returns:
+            Obj list: data file paths or tuple of file paths
+
+        """
+        inputPathList = inputPathList if inputPathList else []
+        locatorList = self.__getLocatorList(contentType, inputPathList=inputPathList)
+        # JDW move the following to config
+        if mergeContentTypes and "vrpt" in mergeContentTypes and contentType in ["pdbx", "pdbx_core"]:
+            dictPath = os.path.join(self.__cachePath, self.__cfgOb.get("DICTIONARY_CACHE_DIR", sectionName=self.__cfgOb.getDefaultSectionName()))
+            os.environ["_RP_DICT_PATH_"] = os.path.join(dictPath, "vprt")
+            #
+            # vpr = ValidationReportProvider(dirPath=os.path.join(dictPath, "vprt"), useCache=True, cleaCache=False)
+            # vrd = vpr.getReader()
+            locObjL = []
+            for locator in locatorList:
+                if isinstance(locator, str):
+                    kwD = HashableDict({})
+                    oL = [HashableDict({"locator": locator, "fmt": "mmcif", "kwargs": kwD})]
+                    for mergeContentType in mergeContentTypes:
+                        _, fn = os.path.split(locator)
+                        idCode = fn[:4] if fn and len(fn) >= 8 else None
+                        mergeLocator = self.__getLocator(mergeContentType, idCode, checkExists=True) if idCode else None
+                        if mergeLocator:
+                            # kwD = HashableDict({"marshalHelper": vrd.toCif})
+                            kwD = HashableDict({"marshalHelper": toCifWrapper})
+                            oL.append(HashableDict({"locator": mergeLocator, "fmt": "xml", "kwargs": kwD}))
+                    lObj = tuple(oL)
+                else:
+                    logger.error("Unexpected output locator type %r", locator)
+                    lObj = locator
+                locObjL.append(lObj)
+            #
+            locatorList = locObjL
+        # -
+        return locatorList
+
+    def getContainerList(self, locatorObjList):
+        """ Return the data container list obtained by parsing the input locator object list.
+        """
+        cL = []
+        for locatorObj in locatorObjList:
+            myContainerList = self.__mergeContainers(locatorObj, fmt="mmcif", mergeTarget=0)
+            for cA in myContainerList:
+                cL.append(cA)
+        return cL
+
+    def __mergeContainers(self, locatorObj, fmt="mmcif", mergeTarget=0):
+        """ Consolidate content in auxiliary files locatorObj[1:] into
+            locatorObj[0] container index 'mergeTarget'.
+
+        """
+        #
+        cL = []
+        try:
+            if isinstance(locatorObj, str):
+                cL = self.__mU.doImport(locatorObj, fmt=fmt)
+                return cL if cL else []
+            elif isinstance(locatorObj, (list, tuple)) and locatorObj:
+                dD = locatorObj[0]
+                kw = dD["kwargs"]
+                cL = self.__mU.doImport(dD["locator"], fmt=dD["fmt"], **kw)
+                if cL:
+                    for dD in locatorObj[1:]:
+                        kw = dD["kwargs"]
+                        rObj = self.__mU.doImport(dD["locator"], fmt=dD["fmt"], **kw)
+                        mergeL = rObj if rObj else []
+                        for mc in mergeL:
+                            cL[mergeTarget].merge(mc)
+                #
+                return cL
+            else:
+                return []
+        except Exception as e:
+            logger.exception("Failing for %r with %s", locatorObj, str(e))
+
+        return cL
+
+    def getLocatorsFromPaths(self, locatorObjList, pathList, locatorIndex=0):
+        """ Return locator objects with paths (locatorObjIndex) matching the input pathList.
+
+        """
+        # index the input locatorObjList
+        rL = []
+        try:
+            if locatorObjList and isinstance(locatorObjList[0], str):
+                return pathList
+            #
+            locIdx = {}
+            for ii, locatorObj in enumerate(locatorObjList):
+                if "locator" in locatorObj[locatorIndex]:
+                    locIdx[locatorObj[locatorIndex]["locator"]] = ii
+            #
+            for pth in pathList:
+                jj = locIdx[pth] if pth in locIdx else None
+                if jj is not None:
+                    rL.append(locatorObjList[jj])
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        #
+        return rL
+
+    def getLocatorPaths(self, locatorObjList, locatorIndex=0):
+        try:
+            if locatorObjList and isinstance(locatorObjList[0], str):
+                return locatorObjList
+            else:
+                return [locatorObj[locatorIndex]["locator"] for locatorObj in locatorObjList]
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return []
+
+    def __getLocatorList(self, contentType, inputPathList=None):
+        """ Internal convenience method to return repository path list by content type:
         """
         outputPathList = []
         inputPathList = inputPathList if inputPathList else []
         try:
-            if contentType == "bird":
+            if contentType in ["bird", "bird_core"]:
                 outputPathList = inputPathList if inputPathList else self.getBirdPathList()
             elif contentType == "bird_family":
                 outputPathList = inputPathList if inputPathList else self.getBirdFamilyPathList()
@@ -88,7 +222,7 @@ class RepoPathUtil(object):
 
         return sorted(outputPathList)
 
-    def getLocator(self, contentType, idCode, version="v1-0"):
+    def __getLocator(self, contentType, idCode, version="v1-0", checkExists=False):
         """ Convenience method to return repository path for a content type and cardinal identifier.
         """
         pth = None
@@ -117,6 +251,8 @@ class RepoPathUtil(object):
         except Exception as e:
             logger.exception("Failing with %s", str(e))
 
+        if checkExists:
+            pth = pth if self.__mU.exists(pth) else None
         return pth
 
     def __getRepoTopPath(self, contentType):
@@ -125,25 +261,25 @@ class RepoPathUtil(object):
         pth = None
         try:
             if contentType == "bird":
-                pth = self.__cfgOb.getPath("BIRD_REPO_PATH", sectionName=self.__cfgSectionName)
+                pth = self.__cfgOb.getPath("BIRD_REPO_PATH", sectionName=self.__configName)
             elif contentType == "bird_family":
-                pth = self.__cfgOb.getPath("BIRD_FAMILY_REPO_PATH", sectionName=self.__cfgSectionName)
+                pth = self.__cfgOb.getPath("BIRD_FAMILY_REPO_PATH", sectionName=self.__configName)
             elif contentType in ["chem_comp", "chem_comp_core"]:
-                pth = self.__cfgOb.getPath("CHEM_COMP_REPO_PATH", sectionName=self.__cfgSectionName)
+                pth = self.__cfgOb.getPath("CHEM_COMP_REPO_PATH", sectionName=self.__configName)
             elif contentType in ["bird_chem_comp"]:
-                pth = self.__cfgOb.getPath("BIRD_CHEM_COMP_REPO_PATH", sectionName=self.__cfgSectionName)
+                pth = self.__cfgOb.getPath("BIRD_CHEM_COMP_REPO_PATH", sectionName=self.__configName)
             elif contentType in ["pdbx", "pdbx_core"]:
-                pth = self.__cfgOb.getPath("PDBX_REPO_PATH", sectionName=self.__cfgSectionName)
+                pth = self.__cfgOb.getPath("PDBX_REPO_PATH", sectionName=self.__configName)
             elif contentType in ["bird_consolidated", "bird_chem_comp_core"]:
-                pth = self.__workPath
+                pth = self.__cachePath
             elif contentType in ["ihm_dev", "ihm_dev_core", "ihm_dev_full"]:
-                pth = self.__cfgOb.getPath("IHM_DEV_REPO_PATH", sectionName=self.__cfgSectionName)
+                pth = self.__cfgOb.getPath("IHM_DEV_REPO_PATH", sectionName=self.__configName)
             elif contentType in ["pdb_distro", "da_internal", "status_history"]:
                 pass
             elif contentType in ["vrpt"]:
-                pth = self.__cfgOb.getEnvValue("VRPT_REPO_PATH_ENV", sectionName=self.__cfgSectionName, default=None)
+                pth = self.__cfgOb.getEnvValue("VRPT_REPO_PATH_ENV", sectionName=self.__configName, default=None)
                 if pth is None:
-                    pth = self.__cfgOb.getPath("VRPT_REPO_PATH", sectionName=self.__cfgSectionName)
+                    pth = self.__cfgOb.getPath("VRPT_REPO_PATH", sectionName=self.__configName)
                 else:
                     logger.debug("Using validation report path from environment assignment %s", pth)
             else:
@@ -348,10 +484,10 @@ class RepoPathUtil(object):
         """
         prdD = {}
         try:
-            mU = MarshalUtil(workPath=self.__workPath)
-            pthL = self.getLocatorList("bird_family")
+
+            pthL = self.__getLocatorList("bird_family")
             for pth in pthL:
-                containerL = mU.doImport(pth, fmt="mmcif")
+                containerL = self.__mU.doImport(pth, fmt="mmcif")
                 for container in containerL:
                     catName = "pdbx_reference_molecule_list"
                     if container.exists(catName):
@@ -377,8 +513,7 @@ class RepoPathUtil(object):
         """
         outPathList = []
         try:
-            mU = MarshalUtil(workPath=self.__workPath)
-            birdPathList = self.getLocatorList("bird")
+            birdPathList = self.__getLocatorList("bird")
             birdPathD = {}
             for birdPath in birdPathList:
                 _, fn = os.path.split(birdPath)
@@ -387,7 +522,7 @@ class RepoPathUtil(object):
             #
             logger.debug("BIRD data length %d", len(birdPathD))
             logger.debug("BIRD keys %r", list(birdPathD.keys()))
-            birdCcPathList = self.getLocatorList("bird_chem_comp")
+            birdCcPathList = self.__getLocatorList("bird_chem_comp")
             birdCcPathD = {}
             for birdCcPath in birdCcPathList:
                 _, fn = os.path.split(birdCcPath)
@@ -403,19 +538,19 @@ class RepoPathUtil(object):
             #
             #
             for prdId in birdPathD:
-                fp = os.path.join(self.__workPath, prdId + ".cif")
+                fp = os.path.join(self.__cachePath, prdId + ".cif")
                 logger.debug("Export path is %r", fp)
                 #
                 if prdId in birdPathD:
                     pth2 = birdPathD[prdId]
-                    c2L = mU.doImport(pth2, fmt="mmcif")
+                    c2L = self.__mU.doImport(pth2, fmt="mmcif")
                     cFull = c2L[0]
                     logger.debug("Got cBird %r", cFull.getName())
                 #
                 ccBird = None
                 if prdId in birdCcPathD:
                     pth1 = birdCcPathD[prdId]
-                    c1L = mU.doImport(pth1, fmt="mmcif")
+                    c1L = self.__mU.doImport(pth1, fmt="mmcif")
                     ccBird = c1L[0]
                     logger.debug("Got cFull %r", ccBird.getName())
                     #
@@ -432,7 +567,7 @@ class RepoPathUtil(object):
                     for catName in ccBird.getObjNameList():
                         cFull.append(ccBird.getObj(catName))
                 #
-                mU.doExport(fp, [cFull], fmt="mmcif")
+                self.__mU.doExport(fp, [cFull], fmt="mmcif")
                 outPathList.append(fp)
         except Exception as e:
             logger.exception("Failing with %s", str(e))

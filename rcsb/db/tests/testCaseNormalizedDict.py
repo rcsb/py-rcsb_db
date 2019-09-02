@@ -43,7 +43,7 @@ class CaseNormalizedDictTests(unittest.TestCase):
         self.__picklePath = os.path.join(HERE, "test-output", "cnd-data.pic")
         self.__jsonPath = os.path.join(HERE, "test-output", "cnd-data.json")
         self.__startTime = time.time()
-        logger.info("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
+        logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
     def tearDown(self):
         endTime = time.time()

@@ -26,10 +26,10 @@ class RepoHoldingsEtlWorker(object):
     """ Prepare and load repository holdings and repository update data.
     """
 
-    def __init__(self, cfgOb, sandboxPath, workPath=None, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False):
+    def __init__(self, cfgOb, sandboxPath, cachePath, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False):
         self.__cfgOb = cfgOb
         self.__sandboxPath = sandboxPath
-        self.__workPath = workPath
+        self.__cachePath = cachePath
         self.__readBackCheck = readBackCheck
         self.__numProc = numProc
         self.__chunkSize = chunkSize
@@ -61,7 +61,7 @@ class RepoHoldingsEtlWorker(object):
         [DEFAULT]
         RCSB_EXCHANGE_SANDBOX_PATH=MOCK_EXCHANGE_SANDBOX
 
-        [repository_holdings]
+        [repository_holdings_configuration]
         DATABASE_NAME=repository_holdings
         DATABASE_VERSION_STRING=v5
         COLLECTION_HOLDINGS_UPDATE=rcsb_repository_holdings_update
@@ -79,12 +79,13 @@ class RepoHoldingsEtlWorker(object):
             desp = DataExchangeStatus()
             statusStartTimestamp = desp.setStartTime()
 
-            sectionName = "repository_holdings"
+            sectionName = "repository_holdings_configuration"
 
-            rhdp = RepoHoldingsDataPrep(sandboxPath=self.__sandboxPath, workPath=self.__workPath, filterType=self.__filterType)
+            rhdp = RepoHoldingsDataPrep(sandboxPath=self.__sandboxPath, cachePath=self.__cachePath, filterType=self.__filterType)
             #
             dl = DocumentLoader(
                 self.__cfgOb,
+                self.__cachePath,
                 self.__resourceName,
                 numProc=self.__numProc,
                 chunkSize=self.__chunkSize,

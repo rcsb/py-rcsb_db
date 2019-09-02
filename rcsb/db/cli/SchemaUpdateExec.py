@@ -18,7 +18,7 @@ import argparse
 import logging
 import os
 
-from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
+from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -31,7 +31,7 @@ logger = logging.getLogger()
 def main():
     parser = argparse.ArgumentParser()
     #
-    defaultConfigName = "site_info"
+    defaultConfigName = "site_info_configuration"
     #
     parser.add_argument("--update_chem_comp_ref", default=False, action="store_true", help="Update schema for Chemical Component reference definitions")
     parser.add_argument("--update_chem_comp_core_ref", default=False, action="store_true", help="Update core schema for Chemical Component reference definitions")
@@ -50,14 +50,14 @@ def main():
     parser.add_argument("--update_ihm_dev", default=False, action="store_true", help="Update schema for I/HM dev entry data")
     parser.add_argument("--update_drugbank_core", default=False, action="store_true", help="Update DrugBank schema")
     #
-    parser.add_argument("--update_config_all", default=False, action="store_true", help="Update using configuration settings (e.g. SCHEMA_NAMES_ALL)")
-    parser.add_argument("--update_config_deployed", default=False, action="store_true", help="Update using configuration settings (e.g. SCHEMA_NAMES_DEPLOYED)")
-    parser.add_argument("--update_config_test", default=False, action="store_true", help="Update using configuration settings (e.g. SCHEMA_NAMES_TEST)")
+    parser.add_argument("--update_config_all", default=False, action="store_true", help="Update using configuration settings (e.g. DATABASE_NAMES_ALL)")
+    parser.add_argument("--update_config_deployed", default=False, action="store_true", help="Update using configuration settings (e.g. DATABASE_NAMES_DEPLOYED)")
+    parser.add_argument("--update_config_test", default=False, action="store_true", help="Update using configuration settings (e.g. DATABASE_NAMES_TEST)")
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
     parser.add_argument("--config_name", default=defaultConfigName, help="Configuration section name")
     #
-    parser.add_argument("--schema_dirpath", default=None, help="Output schema directory path (overrides configuration settings)")
+    parser.add_argument("--schema_cache_path", default=None, help="Schema cache directory path")
     parser.add_argument("--schema_types", default=None, help="Schema encoding (rcsb|json|bson) (comma separated)")
     parser.add_argument("--schema_levels", default=None, help="Schema validation level (full|min) (comma separated)")
     #
@@ -73,7 +73,7 @@ def main():
     #                                       Configuration Details
     configPath = args.config_path
     configName = args.config_name
-    schemaDirPath = args.schema_dirpath
+    schemaCachePath = args.schema_cache_path
     #
     schemaTypes = args.schema_types.split(",") if args.schema_types else []
     schemaLevels = args.schema_levels.split(",") if args.schema_levels else []
@@ -137,43 +137,43 @@ def main():
         schemaNameList.append("drugbank_core")
 
     if args.update_config_deployed:
-        schemaNameList = cfgOb.getList("SCHEMA_NAMES_DEPLOYED", sectionName="schema_catalog_info")
-        dataTypingList = cfgOb.getList("DATATYPING_DEPLOYED", sectionName="schema_catalog_info")
-        schemaLevels = cfgOb.getList("SCHEMA_LEVELS_DEPLOYED", sectionName="schema_catalog_info")
-        schemaTypes = cfgOb.getList("SCHEMA_TYPES_DEPLOYED", sectionName="schema_catalog_info")
+        schemaNameList = cfgOb.getList("DATABASE_NAMES_DEPLOYED", sectionName="database_catalog_configuration")
+        dataTypingList = cfgOb.getList("DATATYPING_DEPLOYED", sectionName="database_catalog_configuration")
+        schemaLevels = cfgOb.getList("VALIDATION_LEVELS_DEPLOYED", sectionName="database_catalog_configuration")
+        schemaTypes = cfgOb.getList("ENCODING_TYPES_DEPLOYED", sectionName="database_catalog_configuration")
 
     if args.update_config_all:
-        schemaNameList = cfgOb.getList("SCHEMA_NAMES_ALL", sectionName="schema_catalog_info")
-        dataTypingList = cfgOb.getList("DATATYPING_ALL", sectionName="schema_catalog_info")
-        schemaLevels = cfgOb.getList("SCHEMA_LEVELS_ALL", sectionName="schema_catalog_info")
-        schemaTypes = cfgOb.getList("SCHEMA_TYPES_ALL", sectionName="schema_catalog_info")
+        schemaNameList = cfgOb.getList("DATABASE_NAMES_ALL", sectionName="database_catalog_configuration")
+        dataTypingList = cfgOb.getList("DATATYPING_ALL", sectionName="database_catalog_configuration")
+        schemaLevels = cfgOb.getList("VALIDATION_LEVELS_ALL", sectionName="database_catalog_configuration")
+        schemaTypes = cfgOb.getList("ENCODING_TYPES_ALL", sectionName="database_catalog_configuration")
 
     if args.update_config_test:
-        schemaNameList = cfgOb.getList("SCHEMA_NAMES_TEST", sectionName="schema_catalog_info")
-        dataTypingList = cfgOb.getList("DATATYPING_TEST", sectionName="schema_catalog_info")
-        schemaLevels = cfgOb.getList("SCHEMA_LEVELS_TEST", sectionName="schema_catalog_info")
-        schemaTypes = cfgOb.getList("SCHEMA_TYPES_TEST", sectionName="schema_catalog_info")
+        schemaNameList = cfgOb.getList("DATABASE_NAMES_TEST", sectionName="database_catalog_configuration")
+        dataTypingList = cfgOb.getList("DATATYPING_TEST", sectionName="database_catalog_configuration")
+        schemaLevels = cfgOb.getList("VALIDATION_LEVELS_TEST", sectionName="database_catalog_configuration")
+        schemaTypes = cfgOb.getList("ENCODING_TYPES_TEST", sectionName="database_catalog_configuration")
     #
-    scnD = cfgOb.get("schema_collection_names", sectionName="document_helper")
+    scnD = cfgOb.get("document_collection_names", sectionName="document_helper_configuration")
     #
     schemaNameList = list(set(schemaNameList))
     logger.debug("Collections %s", list(scnD.items()))
     logger.debug("schemaNameList %s", schemaNameList)
 
-    sdu = SchemaDefUtil(cfgOb)
+    schP = SchemaProvider(cfgOb, schemaCachePath, useCache=False)
     for schemaName in schemaNameList:
         for schemaType in schemaTypes:
             if schemaType == "rcsb":
                 for dataTyping in dataTypingList:
                     logger.info("Creating schema definition for content type %s data typing %s", schemaName, dataTyping)
-                    sdu.makeSchemaDef(schemaName, dataTyping=dataTyping, saveSchema=True, altDirPath=schemaDirPath)
+                    schP.makeSchemaDef(schemaName, dataTyping=dataTyping, saveSchema=True)
             else:
                 if schemaName in scnD:
                     for dD in scnD[schemaName]:
                         collectionName = dD["NAME"]
                         for schemaLevel in schemaLevels:
                             logger.info("Creating %r schema for content type %s collection %s", schemaType, schemaName, collectionName)
-                            sdu.makeSchema(schemaName, collectionName, schemaType=schemaType, level=schemaLevel, saveSchema=True, altDirPath=schemaDirPath)
+                            schP.makeSchema(schemaName, collectionName, encodingType=schemaType, level=schemaLevel, saveSchema=True)
 
 
 if __name__ == "__main__":

@@ -253,6 +253,9 @@ class DataTypeApplicationInfo(object):
         #
         return dtmD
 
+    def testCache(self):
+        return len(self.__dtmD) > 48 and len(DataTypeApplicationInfo.cifTypes) >= 40
+
     def getDefaultDataTypeMap(self, dataTyping="ANY"):
         try:
             mapD = {}
@@ -386,10 +389,10 @@ class DataTypeApplicationInfo(object):
                     catObj = container.getObj("pdbx_data_type_application_map")
                     rIL = []
                     for ii in range(catObj.getRowCount()):
-                        d = catObj.getRowAttributeDict(ii)
-                        if d["application_name"] == dataTyping:
+                        dD = catObj.getRowAttributeDict(ii)
+                        if dD["application_name"] == dataTyping:
                             rIL.append(ii)
-                            mD[d["type_code"]] = {k: d[k] for k in ["application_name", "app_type_code", "app_precision_default", "app_width_default", "type_code"]}
+                            mD[dD["type_code"]] = {k: dD[k] for k in ["application_name", "app_type_code", "app_precision_default", "app_width_default", "type_code"]}
                             continue
                     ok = catObj.removeRows(rIL)
                     atNameL = catObj.getAttributeList()
@@ -431,10 +434,10 @@ class DataTypeApplicationInfo(object):
                 if container.getName() == "rcsb_data_type_map":
                     catObj = container.getObj("pdbx_data_type_application_map")
                     for ii in range(catObj.getRowCount()):
-                        d = catObj.getRowAttributeDict(ii)
-                        if d["application_name"] == dataTyping:
-                            mapD[d["type_code"]] = {k: d[k] for k in ["app_type_code", "application_name", "type_code"]}
-                            mapD[d["type_code"]].update({k: int(d[k]) for k in ["app_precision_default", "app_width_default"]})
+                        dD = catObj.getRowAttributeDict(ii)
+                        if dD["application_name"] == dataTyping:
+                            mapD[dD["type_code"]] = {k: dD[k] for k in ["app_type_code", "application_name", "type_code"]}
+                            mapD[dD["type_code"]].update({k: int(dD[k]) for k in ["app_precision_default", "app_width_default"]})
             return mapD
         except Exception as e:
             logger.exception("Failing with %s", str(e))

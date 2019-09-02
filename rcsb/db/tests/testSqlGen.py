@@ -25,7 +25,7 @@ import unittest
 
 from rcsb.db.define.SchemaDefAccess import SchemaDefAccess
 from rcsb.db.sql.SqlGen import SqlGenAdmin, SqlGenCondition, SqlGenQuery
-from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
+from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
@@ -41,11 +41,12 @@ class SqlGenTests(unittest.TestCase):
         self.__verbose = True
         #
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        pathConfig = os.path.join(mockTopPath, "config", "dbload-setup-example.yml")
+        pathConfig = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
+        self.__cachePath = os.path.join(TOPDIR, "CACHE")
         #
-        configName = "site_info"
+        configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=pathConfig, defaultSectionName=configName, mockTopPath=mockTopPath)
-        self.__sdu = SchemaDefUtil(cfgOb=self.__cfgOb)
+        self.__sdu = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=True)
         #
 
         self.__startTime = time.time()
@@ -55,8 +56,8 @@ class SqlGenTests(unittest.TestCase):
         schemaNames = ["pdbx_core"]
         dataTyping = "SQL"
         for schemaName in schemaNames:
-            d = self.__sdu.makeSchemaDef(schemaName, dataTyping=dataTyping, saveSchema=False)
-            sD = SchemaDefAccess(d)
+            dD = self.__sdu.makeSchemaDef(schemaName, dataTyping=dataTyping, saveSchema=False)
+            sD = SchemaDefAccess(dD)
             self.__testSchemaCreate(sD)
             self.__testImportExport(sD)
             self.__testSelectionAndConditions(sD)

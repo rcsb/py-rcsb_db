@@ -30,6 +30,7 @@ import logging
 import os
 import sys
 
+from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.mongo.PdbxLoader import PdbxLoader
 from rcsb.utils.config.ConfigUtil import ConfigUtil
@@ -42,9 +43,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(mo
 logger = logging.getLogger()
 
 
-def loadStatus(statusList, cfgOb, readBackCheck=True):
-    sectionName = "data_exchange"
-    dl = DocumentLoader(cfgOb, "MONGO_DB", numProc=2, chunkSize=2, documentLimit=None, verbose=False, readBackCheck=readBackCheck)
+def loadStatus(statusList, cfgOb, cachePath, readBackCheck=True):
+    sectionName = "data_exchange_configuration"
+    dl = DocumentLoader(cfgOb, cachePath, "MONGO_DB", numProc=2, chunkSize=2, documentLimit=None, verbose=False, readBackCheck=readBackCheck)
     #
     databaseName = cfgOb.get("DATABASE_NAME", sectionName=sectionName)
     # collectionVersion = cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
@@ -53,10 +54,22 @@ def loadStatus(statusList, cfgOb, readBackCheck=True):
     return ok
 
 
+def buildResourceCache(cfgOb, configName, cachePath, rebuildCache=False):
+    """Generate and cache resource dependencies.
+    """
+    ret = False
+    try:
+        rp = DictMethodResourceProvider(cfgOb, configName=configName, cachePath=cachePath)
+        ret = rp.cacheResources(useCache=not rebuildCache)
+    except Exception as e:
+        logger.exception("Failing with %s", str(e))
+    return ret
+
+
 def main():
     parser = argparse.ArgumentParser()
     #
-    defaultConfigName = "site_info"
+    defaultConfigName = "site_info_configuration"
     #
     parser.add_argument("--full", default=False, action="store_true", help="Fresh full load in a new tables/collections")
     parser.add_argument("--replace", default=False, action="store_true", help="Load with replacement in an existing table/collection (default)")
@@ -100,7 +113,9 @@ def main():
     parser.add_argument("--prune_document_size", default=None, help="Prune large documents to this size limit (MB)")
     parser.add_argument("--debug", default=False, action="store_true", help="Turn on verbose logging")
     parser.add_argument("--mock", default=False, action="store_true", help="Use MOCK repository configuration for testing")
-    parser.add_argument("--working_path", default=None, help="Working path for temporary files")
+    parser.add_argument("--cache_path", default=None, help="Cache path for resource files")
+    parser.add_argument("--rebuild_cache", default=False, action="store_true", help="Rebuild cached resource files")
+    parser.add_argument("--rebuild_schema", default=False, action="store_true", help="Rebuild schema on-the-fly if not cached")
     parser.add_argument("--vrpt_repo_path", default=None, help="Path to validation report repository")
     args = parser.parse_args()
     #
@@ -151,7 +166,9 @@ def main():
         loadType = "replace" if args.replace else "full"
         saveInputFileListPath = args.save_file_list_path
         pruneDocumentSize = float(args.prune_document_size) if args.prune_document_size else None
-        workPath = args.working_path if args.working_path else "."
+        cachePath = args.cache_path if args.cache_path else "."
+        rebuildCache = args.rebuild_cache if args.rebuild_cache else False
+        rebuildSchemaFlag = args.rebuild_schema if args.rebuild_schema else False
         if args.document_style not in ["rowwise_by_name", "rowwise_by_name_with_cardinality", "columnwise_by_name", "rowwise_by_id", "rowwise_no_name"]:
             logger.error("Unsupported document style %s", args.document_style)
         if args.db_type != "mongo":
@@ -160,14 +177,20 @@ def main():
         logger.exception("Argument processing problem %s", str(e))
         parser.print_help(sys.stderr)
         exit(1)
+
     # ----------------------- - ----------------------- - ----------------------- - ----------------------- - ----------------------- -
-    #
+    #  Rebuild or check resource cache
+    ok = buildResourceCache(cfgOb, configName, cachePath, rebuildCache=rebuildCache)
+    if not ok:
+        logger.error("Cache rebuild or check failure (rebuild %r) %r", rebuildCache, cachePath)
+        exit(1)
+
+    # ----------------------- - ----------------------- - ----------------------- - ----------------------- - ----------------------- -
     # Read any input path lists -
     #
-
     inputPathList = None
     if fPath:
-        mu = MarshalUtil(workPath=workPath)
+        mu = MarshalUtil(workPath=cachePath)
         inputPathList = mu.doImport(fPath, fmt="list")
         if not inputPathList:
             logger.error("Missing or empty input file path list %s", fPath)
@@ -176,7 +199,15 @@ def main():
     ##
     if args.db_type == "mongo":
         mw = PdbxLoader(
-            cfgOb, resourceName="MONGO_DB", numProc=numProc, chunkSize=chunkSize, fileLimit=fileLimit, verbose=debugFlag, readBackCheck=readBackCheck, workPath=workPath
+            cfgOb,
+            cachePath,
+            resourceName="MONGO_DB",
+            numProc=numProc,
+            chunkSize=chunkSize,
+            fileLimit=fileLimit,
+            verbose=debugFlag,
+            readBackCheck=readBackCheck,
+            rebuildSchemaFlag=rebuildSchemaFlag,
         )
 
         if args.load_chem_comp_ref:
@@ -189,9 +220,9 @@ def main():
                 failedFilePath=failedFilePath,
                 saveInputFileListPath=saveInputFileListPath,
                 pruneDocumentSize=pruneDocumentSize,
-                schemaLevel=schemaLevel,
+                validationLevel=schemaLevel,
             )
-            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
         if args.load_chem_comp_core_ref:
             ok = mw.load(
@@ -203,9 +234,9 @@ def main():
                 failedFilePath=failedFilePath,
                 saveInputFileListPath=saveInputFileListPath,
                 pruneDocumentSize=pruneDocumentSize,
-                schemaLevel=schemaLevel,
+                validationLevel=schemaLevel,
             )
-            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
         if args.load_bird_chem_comp_ref:
             ok = mw.load(
@@ -217,9 +248,9 @@ def main():
                 failedFilePath=failedFilePath,
                 saveInputFileListPath=saveInputFileListPath,
                 pruneDocumentSize=pruneDocumentSize,
-                schemaLevel=schemaLevel,
+                validationLevel=schemaLevel,
             )
-            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
         if args.load_bird_chem_comp_core_ref:
             ok = mw.load(
@@ -231,9 +262,9 @@ def main():
                 failedFilePath=failedFilePath,
                 saveInputFileListPath=saveInputFileListPath,
                 pruneDocumentSize=pruneDocumentSize,
-                schemaLevel=schemaLevel,
+                validationLevel=schemaLevel,
             )
-            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
         if args.load_bird_ref:
             ok = mw.load(
@@ -245,9 +276,9 @@ def main():
                 failedFilePath=failedFilePath,
                 saveInputFileListPath=saveInputFileListPath,
                 pruneDocumentSize=pruneDocumentSize,
-                schemaLevel=schemaLevel,
+                validationLevel=schemaLevel,
             )
-            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
         if args.load_bird_family_ref:
             ok = mw.load(
@@ -259,9 +290,9 @@ def main():
                 failedFilePath=failedFilePath,
                 saveInputFileListPath=saveInputFileListPath,
                 pruneDocumentSize=pruneDocumentSize,
-                schemaLevel=schemaLevel,
+                validationLevel=schemaLevel,
             )
-            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
         if args.load_entry_data:
             ok = mw.load(
@@ -273,9 +304,9 @@ def main():
                 failedFilePath=failedFilePath,
                 saveInputFileListPath=saveInputFileListPath,
                 pruneDocumentSize=pruneDocumentSize,
-                schemaLevel=schemaLevel,
+                validationLevel=schemaLevel,
             )
-            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
         if args.load_pdbx_core:
             ok = mw.load(
@@ -287,9 +318,9 @@ def main():
                 failedFilePath=failedFilePath,
                 saveInputFileListPath=saveInputFileListPath,
                 pruneDocumentSize=pruneDocumentSize,
-                schemaLevel=schemaLevel,
+                validationLevel=schemaLevel,
             )
-            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
         #
         if args.load_pdbx_core_merge:
             ok = mw.load(
@@ -301,10 +332,10 @@ def main():
                 failedFilePath=failedFilePath,
                 saveInputFileListPath=saveInputFileListPath,
                 pruneDocumentSize=pruneDocumentSize,
-                schemaLevel=schemaLevel,
+                validationLevel=schemaLevel,
                 mergeContentTypes=["vrpt"],
             )
-            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
         #
         if args.load_pdbx_core_entity:
             ok = mw.load(
@@ -317,9 +348,9 @@ def main():
                 failedFilePath=failedFilePath,
                 saveInputFileListPath=saveInputFileListPath,
                 pruneDocumentSize=pruneDocumentSize,
-                schemaLevel=schemaLevel,
+                validationLevel=schemaLevel,
             )
-            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
         #
         if args.load_pdbx_core_entity_monomer:
             ok = mw.load(
@@ -332,9 +363,9 @@ def main():
                 failedFilePath=failedFilePath,
                 saveInputFileListPath=saveInputFileListPath,
                 pruneDocumentSize=pruneDocumentSize,
-                schemaLevel=schemaLevel,
+                validationLevel=schemaLevel,
             )
-            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
         #
         if args.load_pdbx_core_entry:
             ok = mw.load(
@@ -347,9 +378,9 @@ def main():
                 failedFilePath=failedFilePath,
                 saveInputFileListPath=saveInputFileListPath,
                 pruneDocumentSize=pruneDocumentSize,
-                schemaLevel=schemaLevel,
+                validationLevel=schemaLevel,
             )
-            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
         if args.load_pdbx_core_assembly:
             ok = mw.load(
@@ -362,9 +393,9 @@ def main():
                 failedFilePath=failedFilePath,
                 saveInputFileListPath=saveInputFileListPath,
                 pruneDocumentSize=pruneDocumentSize,
-                schemaLevel=schemaLevel,
+                validationLevel=schemaLevel,
             )
-            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
         if args.load_ihm_dev:
             ok = mw.load(
@@ -376,9 +407,9 @@ def main():
                 failedFilePath=failedFilePath,
                 saveInputFileListPath=saveInputFileListPath,
                 pruneDocumentSize=pruneDocumentSize,
-                schemaLevel=schemaLevel,
+                validationLevel=schemaLevel,
             )
-            okS = loadStatus(mw.getLoadStatus(), cfgOb, readBackCheck=readBackCheck)
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
         #
         logger.info("Operation completed with status %r " % ok and okS)
 

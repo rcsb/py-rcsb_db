@@ -18,9 +18,9 @@ import argparse
 import logging
 import os
 import sys
+from collections import OrderedDict
 
-from rcsb.db.define.DictInfo import DictInfo
-from rcsb.db.define.DictionaryProvider import DictionaryProvider
+from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
 from rcsb.db.utils.ScanRepoUtil import ScanRepoUtil
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
@@ -51,18 +51,19 @@ def scanRepo(
     """
     try:
         #
-        dP = DictionaryProvider()
-        configName = cfgOb.getDefaultSectionName()
-        dictLocatorMap = cfgOb.get("DICT_LOCATOR_CONFIG_MAP", sectionName=configName)
-        if contentType not in dictLocatorMap:
-            logger.error("Missing dictionary locator configuration for %s", contentType)
-            dictLocators = []
-        else:
-            dictLocators = [cfgOb.getPath(configLocator, sectionName=configName) for configLocator in dictLocatorMap[contentType]]
-        #
-        dictApi = dP.getApi(dictLocators=dictLocators)
-        dI = DictInfo(dictApi)
-        attributeDataTypeD = dI.getAttributeDataTypeD()
+        # configName = cfgOb.getDefaultSectionName()
+        dP = DictionaryApiProviderWrapper(cfgOb, workPath, useCache=True)
+        dictApi = dP.getApiByName(contentType)
+        ###
+        categoryList = sorted(dictApi.getCategoryList())
+        dictSchema = {catName: sorted(dictApi.getAttributeNameList(catName)) for catName in categoryList}
+        attributeDataTypeD = OrderedDict()
+        for catName in categoryList:
+            aD = {}
+            for atName in dictSchema[catName]:
+                aD[atName] = dictApi.getTypeCode(catName, atName)
+            attributeDataTypeD[catName] = aD
+        ###
         #
         sr = ScanRepoUtil(cfgOb, attributeDataTypeD=attributeDataTypeD, numProc=numProc, chunkSize=chunkSize, fileLimit=fileLimit, workPath=workPath)
         ok = sr.scanContentType(
@@ -80,7 +81,7 @@ def scanRepo(
 
 def main():
     parser = argparse.ArgumentParser()
-    defaultConfigName = "site_info"
+    defaultConfigName = "site_info_configuration"
     #
     parser.add_argument("--scanType", default="full", help="Repository scan type (full|incr)")
     #
@@ -168,13 +169,13 @@ def main():
     ##
 
     if args.scan_chem_comp_ref:
-        contentType = "chem_comp"
+        contentType = "chem_comp_core"
 
     elif args.scan_chem_comp_core_ref:
         contentType = "chem_comp_core"
 
     elif args.scan_bird_chem_comp_ref:
-        contentType = "bird_chem_comp"
+        contentType = "bird_chem_comp_core"
 
     elif args.scan_bird_chem_comp_core_ref:
         contentType = "bird_chem_comp_core"
