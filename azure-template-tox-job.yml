@@ -15,6 +15,7 @@ parameters:
 
 jobs:
 - job: ${{ format('build_test_{0}_{1}', parameters.tox, parameters.os) }}
+  timeoutInMinutes: 0
   pool:
     ${{ if eq(parameters.os, 'macos') }}:
       vmImage: 'macOS-10.14'
