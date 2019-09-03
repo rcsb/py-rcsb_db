@@ -119,12 +119,12 @@ optional arguments:
   --update_drugbank_core
                         Update DrugBank schema
   --update_config_all   Update using configuration settings (e.g.
-                        SCHEMA_NAMES_ALL)
+                        DATABASE_NAMES_ALL)
   --update_config_deployed
                         Update using configuration settings (e.g.
-                        SCHEMA_NAMES_DEPLOYED)
+                        DATABASE_NAMES_DEPLOYED)
   --update_config_test  Update using configuration settings (e.g.
-                        SCHEMA_NAMES_TEST)
+                        DATABASE_NAMES_TEST)
   --config_path CONFIG_PATH
                         Path to configuration options file
   --config_name CONFIG_NAME
@@ -398,7 +398,7 @@ For instance, to perform a fresh/full load of all of the chemical component defi
 
 cd rcsb/db/scripts
 python RepoLoadExec.py --full  --load_chem_comp_ref  \
-                      --config_path ../../mock-data/config/dbload-setup-example.yml \
+                      --config_path ../config/exdb-config-example.yml \
                       --config_name site_info \
                       --fail_file_list_path failed-cc-path-list.txt \
                       --read_back_check
@@ -411,13 +411,13 @@ this same data.
 
 cd rcsb/db/scripts
 python RepoLoadExec.py  --mock --full  --load_entry_data \
-                     --config_path ../../mock-data/config/dbload-setup-example.yml \
+                     --config_path ../config/exdb-config-example.yml \
                      --config_name site_info \
                      --save_file_list_path  LATEST_PDBX_LOAD_LIST.txt \
                      --fail_file_list_path failed-entry-path-list.txt
 
 python RepoLoadExec.py --mock --replace  --load_entry_data \
-                      --config_path ../../mock-data/config/dbload-setup-example.yml \
+                      --config_path ../config/exdb-config-example.yml \
                       --config_name site_info \
                       --load_file_list_path  LATEST_PDBX_LOAD_LIST.txt \
                       --fail_file_list_path failed-entry-path-list.txt
@@ -468,7 +468,7 @@ bird_chem_comp_core,.. ).
 #  3-Mar-2019 jdw adjust release filter for chem_comp_* collections to accept only REL and REF_ONLY status codes.
 # 14-Mar-2019 jdw simplify the handling of versioning removing these from database and collection names and schema file names,
 #                 version configuration now managed in separate configuration options, NCBI_TAXONOMY_LOCATOR removed,
-#                 added configuration options NCBI_TAXONOMY_PATH and ENZYME_CLASSIFICATION_DATA_PATH, provide separate
+#                 added configuration options NCBI_TAXONOMY_CACHE_PATH and ENZYME_CLASSIFICATION_CACHE_PATH, provide separate
 #                 configuration options schema version assignment within collections, normalize chem_comp attributes
 #                 between chem_comp_core and bird_chem_comp_core collections, up-version api and json schema, add VRPT_REPO_PATH_ENV.
 # 17-Mar-2019 jdw add subcategory aggregate rcsb_macromolecular_names_combined
@@ -478,7 +478,7 @@ bird_chem_comp_core,.. ).
 # 31-Mar-2019 jdw add block_attributes: REF_PARENT_CATEGORY_NAME: REF_PARENT_ATTRIBUTE_NAME: to provide parent details for this
 #                 synthetic key
 #  1-Apr-2019 jdw add ihm_dev_full to relax schema content exclusions.
-#  6-Apr-2019 jdw add STRUCT_DOMAIN_CLASSIFICATION_DATA_PATH
+#  6-Apr-2019 jdw add STRUCT_DOMAIN_CLASSIFICATION_CACHE_PATH
 #  8-Apr-2019 jdw adding category rcsb_entity_instance_domain
 #  9-Apr-2019 jdw add tree node list, create moved instance level validation to entity_instance_validation
 # 25-Apr-2019 jdw suppress struct_asym in core_entity, add ncbi_taxonomy_scientific_name in source and host organism collections
@@ -526,16 +526,16 @@ site_info:
     DRUGBANK_DATA_LOCATOR: DrugBank/full_database.xml.gz
     CCDC_MAPPING_LOCATOR: chem_comp_models/ccdc_pdb_mapping.json
     #
-    NCBI_TAXONOMY_PATH: NCBI
-    ENZYME_CLASSIFICATION_DATA_PATH: ec
-     SIFTS_SUMMARY_PATH: sifts-summary
+    NCBI_TAXONOMY_CACHE_PATH: NCBI
+    ENZYME_CLASSIFICATION_CACHE_PATH: ec
+     SIFTS_SUMMARY_CACHE_PATH: sifts-summary
 
     #
-    SCHEMA_DEF_LOCATOR_PATH: schema
-    JSON_SCHEMA_LOCATOR_PATH: json-schema
+    SCHEMA_DEFINITION_CACHE_PATH: schema
+    JSON_SCHEMA_DEFINITION_CACHE_PATH: json-schema
     INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH: data_type_info
     #
-    STRUCT_DOMAIN_CLASSIFICATION_DATA_PATH: domains_struct
+    STRUCT_DOMAIN_CLASSIFICATION_CACHE_PATH: domains_struct
     #
     MONGO_DB_HOST: localhost
     MONGO_DB_PORT: '27017'
@@ -555,31 +555,31 @@ site_info:
 #
 # Inventory of current databases and collections -
 #
-schema_catalog_info:
+database_catalog_configuration:
   # All defined schema -
-  SCHEMA_NAMES_ALL: pdbx,pdbx_core,chem_comp,chem_comp_core,bird,bird_family,bird_chem_comp,bird_chem_comp_core,repository_holdings,entity_sequence_clusters,data_exchange,drugbank_core,ihm_dev
+  DATABASE_NAMES_ALL: pdbx,pdbx_core,chem_comp,chem_comp_core,bird,bird_family,bird_chem_comp,bird_chem_comp_core,repository_holdings,entity_sequence_clusters,data_exchange,drugbank_core,ihm_dev
   DATATYPING_ALL: ANY,SQL
-  SCHEMA_TYPES_ALL: rcsb,json,bson
-  SCHEMA_LEVELS_ALL: min,full
+  ENCODING_TYPES_ALL: rcsb,json,bson
+  VALIDATION_LEVELS_ALL: min,full
   #
   #  Schema in active use -
   #
-  SCHEMA_NAMES_DEPLOYED: pdbx_core,chem_comp_core,bird_chem_comp_core,repository_holdings,entity_sequence_clusters,data_exchange,drugbank_core,ihm_dev
+  DATABASE_NAMES_DEPLOYED: pdbx_core,chem_comp_core,bird_chem_comp_core,repository_holdings,entity_sequence_clusters,data_exchange,drugbank_core,ihm_dev
   DATATYPING_DEPLOYED: ANY,SQL
-  SCHEMA_TYPES_DEPLOYED: rcsb,json,bson
-  SCHEMA_LEVELS_DEPLOYED: min,full
+  ENCODING_TYPES_DEPLOYED: rcsb,json,bson
+  VALIDATION_LEVELS_DEPLOYED: min,full
   #
   # Schema subset used for CI testing -
   #
-  SCHEMA_NAMES_TEST: pdbx,pdbx_core,chem_comp_core,bird_chem_comp_core
+  DATABASE_NAMES_TEST: pdbx,pdbx_core,chem_comp_core,bird_chem_comp_core
   DATATYPING_TEST: ANY,SQL
-  SCHEMA_TYPES_TEST: rcsb,json,bson
-  SCHEMA_LEVELS_TEST: min,full
+  ENCODING_TYPES_TEST: rcsb,json,bson
+  VALIDATION_LEVELS_TEST: min,full
   #
-  #SCHEMA_NAMES_TEST: pdbx_core,chem_comp_core,bird_chem_comp_core,repository_holdings,entity_sequence_clusters,data_exchange,drugbank_core
+  #DATABASE_NAMES_TEST: pdbx_core,chem_comp_core,bird_chem_comp_core,repository_holdings,entity_sequence_clusters,data_exchange,drugbank_core
   #DATATYPING_TEST: ANY,SQL
   #SCHEMA_FORMATS_TEST: rcsb,json,bson
-  #SCHEMA_LEVELS_TEST: min,full#
+  #VALIDATION_LEVELS_TEST: min,full#
 #
 # Some schema details for integrated collections -
 #
@@ -1898,7 +1898,7 @@ schemadef_helper:
 #
 document_helper:
     #
-    schema_collection_names:
+    document_collection_names:
         ihm_dev:
             - NAME: ihm_dev
               VERSION: 1.1.0

@@ -23,8 +23,8 @@ import unittest
 
 from jsonschema import Draft4Validator, FormatChecker
 from rcsb.db.processors.ClusterDataPrep import ClusterDataPrep
-from rcsb.db.utils.ProvenanceUtil import ProvenanceUtil
-from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
+from rcsb.db.utils.ProvenanceProvider import ProvenanceProvider
+from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
@@ -40,13 +40,13 @@ class ClusterDataPrepValidateTests(unittest.TestCase):
         self.__verbose = True
         #
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        self.__pathConfig = os.path.join(self.__mockTopPath, "config", "dbload-setup-example.yml")
-        self.__workPath = os.path.join(HERE, "test-output")
+        self.__pathConfig = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
+        self.__cachePath = os.path.join(TOPDIR, "CACHE")
         self.__updateId = "2018_25"
         #
-        configName = "site_info"
+        configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
-        self.__sdu = SchemaDefUtil(cfgOb=self.__cfgOb)
+        self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=True)
         #
         self.__sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=configName)
         #
@@ -64,21 +64,21 @@ class ClusterDataPrepValidateTests(unittest.TestCase):
 
     def testValidateOptsStrict(self):
         updateId = self.__updateId
-        schemaLevel = "full"
-        eCount = self.__testValidateOpts(updateId, schemaLevel=schemaLevel)
-        logger.info("Total validation errors schema level %s : %d", schemaLevel, eCount)
+        validationLevel = "full"
+        eCount = self.__testValidateOpts(updateId, validationLevel=validationLevel)
+        logger.info("Total validation errors validation level %s : %d", validationLevel, eCount)
         self.assertTrue(eCount <= 1)
 
-    def __testValidateOpts(self, updateId, schemaLevel="full"):
+    def __testValidateOpts(self, updateId, validationLevel="full"):
         _ = updateId
-        schemaNames = ["entity_sequence_clusters"]
-        collectionNames = {"entity_sequence_clusters": ["cluster_provenance", "cluster_members", "entity_members"]}
+        databaseNames = ["sequence_clusters"]
+        collectionNames = {"sequence_clusters": ["cluster_provenance", "cluster_members", "entity_members"]}
         #
         eCount = 0
-        for schemaName in schemaNames:
-            for collectionName in collectionNames[schemaName]:
-                _ = self.__sdu.makeSchemaDef(schemaName, dataTyping="ANY", saveSchema=True, altDirPath=self.__workPath)
-                cD = self.__sdu.makeSchema(schemaName, collectionName, schemaType="JSON", level=schemaLevel, saveSchema=True, altDirPath=self.__workPath)
+        for databaseName in databaseNames:
+            for collectionName in collectionNames[databaseName]:
+                _ = self.__schP.makeSchemaDef(databaseName, dataTyping="ANY", saveSchema=True)
+                cD = self.__schP.makeSchema(databaseName, collectionName, encodingType="JSON", level=validationLevel, saveSchema=True)
                 #
                 dL = self.__getSequenceClusterData(collectionName, levels=self.__levels, dataSetId=self.__dataSetId, dataLocator=self.__pathClusterData)
                 # Raises exceptions for schema compliance.
@@ -90,12 +90,12 @@ class ClusterDataPrepValidateTests(unittest.TestCase):
                     try:
                         cCount = 0
                         for error in sorted(valInfo.iter_errors(dD), key=str):
-                            logger.info("schema %s collection %s path %s error: %s", schemaName, collectionName, error.path, error.message)
+                            logger.info("schema %s collection %s path %s error: %s", databaseName, collectionName, error.path, error.message)
                             logger.info(">>> failing object is %r", dD)
                             eCount += 1
                             cCount += 1
                         #
-                        logger.debug("schema %s collection %s count %d", schemaName, collectionName, cCount)
+                        logger.debug("schema %s collection %s count %d", databaseName, collectionName, cCount)
                     except Exception as e:
                         logger.exception("Validation error %s", str(e))
 
@@ -106,8 +106,8 @@ class ClusterDataPrepValidateTests(unittest.TestCase):
         """
         try:
             provKeyName = "rcsb_entity_sequence_cluster_prov"
-            provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
-            pD = provU.fetch(cfgSectionName="site_info")
+            provU = ProvenanceProvider(self.__cfgOb, self.__cachePath, useCache=True)
+            pD = provU.fetch()
             return pD[provKeyName] if provKeyName in pD else {}
         except Exception as e:
             logger.exception("Failing with %s", str(e))
@@ -123,7 +123,7 @@ class ClusterDataPrepValidateTests(unittest.TestCase):
             #
             entitySchemaName = "rcsb_entity_sequence_cluster_list"
             clusterSchemaName = "rcsb_entity_sequence_cluster_identifer_list"
-            cdp = ClusterDataPrep(workPath=self.__workPath, entitySchemaName=entitySchemaName, clusterSchemaName=clusterSchemaName)
+            cdp = ClusterDataPrep(workPath=self.__cachePath, entitySchemaName=entitySchemaName, clusterSchemaName=clusterSchemaName)
             cifD, docBySequenceD, docByClusterD = cdp.extract(dataSetId, clusterSetLocator=dataLocator, levels=levels, clusterType="entity")
             self.assertEqual(len(cifD), 1)
             self.assertEqual(len(docBySequenceD), 1)

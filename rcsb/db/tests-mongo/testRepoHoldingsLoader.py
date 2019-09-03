@@ -44,8 +44,8 @@ class RepoHoldingsLoaderTests(unittest.TestCase):
         #
         #
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
-        configName = "site_info"
+        configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
+        configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         # self.__cfgOb.dump()
         self.__resourceName = "MONGO_DB"
@@ -55,8 +55,8 @@ class RepoHoldingsLoaderTests(unittest.TestCase):
         self.__documentLimit = 1000
         self.__filterType = "assign-dates"
         #
-        self.__workPath = os.path.join(HERE, "test-output")
-        self.__sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName="site_info")
+        self.__cachePath = os.path.join(TOPDIR, "CACHE")
+        self.__sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=configName)
         # sample data set
         self.__updateId = "2018_23"
         #
@@ -83,11 +83,12 @@ class RepoHoldingsLoaderTests(unittest.TestCase):
 
         """
         try:
-            sectionName = "repository_holdings"
-            rhdp = RepoHoldingsDataPrep(sandboxPath=self.__sandboxPath, workPath=self.__workPath, filterType=self.__filterType)
+            sectionName = "repository_holdings_configuration"
+            rhdp = RepoHoldingsDataPrep(sandboxPath=self.__sandboxPath, cachePath=self.__cachePath, filterType=self.__filterType)
             #
             dl = DocumentLoader(
                 self.__cfgOb,
+                self.__cachePath,
                 self.__resourceName,
                 numProc=self.__numProc,
                 chunkSize=self.__chunkSize,

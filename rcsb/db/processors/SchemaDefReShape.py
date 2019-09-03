@@ -108,7 +108,7 @@ class SchemaDefReShape(object):
         """
         return self.__reshapeSchemaData(schemaDataDictById, styleType=styleType)
 
-    def applySlicedShape(self, schemaDataDictById, styleType="rowwise_by_name", sliceFilter=None):
+    def applySlicedShape(self, schemaDataDictById, styleType="rowwise_by_name", sliceFilter=None, collectionName=None):
         """
         """
         rL = []
@@ -126,13 +126,13 @@ class SchemaDefReShape(object):
             # JDW - This path is better performing -
             if styleType == "rowwise_by_name_with_cardinality" and flagNew:
                 logger.debug("Invoking one-pass slice filter %s", sliceFilter)
-                rL = self.__sliceRowwiseByNameWithCardOnePass(schemaDataDictById, sliceFilter, sliceIndex)
+                rL = self.__sliceRowwiseByNameWithCardOnePass(schemaDataDictById, sliceFilter, sliceIndex, collectionName=collectionName)
                 logger.debug("Completed one-pass slice filter %s", sliceFilter)
             else:
                 # JDW - This path works but is not well performing
                 for ii, sliceValue in enumerate(sliceValues):
                     logger.debug(" %4d filter %s slice value %r", ii, sliceFilter, sliceValue)
-                    rD = self.__reshapeSlicedSchemaData(schemaDataDictById, sliceFilter, sliceValue, sliceIndex, styleType=styleType)
+                    rD = self.__reshapeSlicedSchemaData(schemaDataDictById, sliceFilter, sliceValue, sliceIndex, styleType=styleType, collectionName=collectionName)
                     logger.debug("rD keys %s", rD.keys())
                     rL.append(rD)
         else:
@@ -140,7 +140,7 @@ class SchemaDefReShape(object):
 
         return rL
 
-    def __reshapeSlicedSchemaData(self, schemaDataDictById, sliceFilter, sliceValues, sliceIndex, styleType="rowwise_by_name"):
+    def __reshapeSlicedSchemaData(self, schemaDataDictById, sliceFilter, sliceValues, sliceIndex, styleType="rowwise_by_name", collectionName=None):
         """  Reorganize and rename input table data object according to the input style preference:
 
              Input: schemaDataDictById  (styleType="rowwise_by_id")
@@ -155,11 +155,11 @@ class SchemaDefReShape(object):
         rD = {}
         try:
             if styleType == "rowwise_by_name":
-                rD = self.__sliceRowwiseByName(schemaDataDictById, sliceFilter, sliceValues, sliceIndex)
+                rD = self.__sliceRowwiseByName(schemaDataDictById, sliceFilter, sliceValues, sliceIndex, collectionName=collectionName)
             elif styleType == "rowwise_by_name_with_cardinality":
-                rD = self.__sliceRowwiseByNameWithCard(schemaDataDictById, sliceFilter, sliceValues, sliceIndex)
+                rD = self.__sliceRowwiseByNameWithCard(schemaDataDictById, sliceFilter, sliceValues, sliceIndex, collectionName=collectionName)
             elif styleType == "columnwise_by_name":
-                rD = self.__sliceColumnwise(schemaDataDictById, sliceFilter, sliceValues, sliceIndex)
+                rD = self.__sliceColumnwise(schemaDataDictById, sliceFilter, sliceValues, sliceIndex, collectionName=collectionName)
             elif styleType == "rowwise_no_name":
                 rD = self.__shapeRowwiseNoName(schemaDataDictById)
             elif styleType == "rowwise_by_id":
@@ -203,8 +203,9 @@ class SchemaDefReShape(object):
             ok = False
         return ok
 
-    def __sliceRowwiseByNameWithCard(self, schemaDataDictById, sliceFilter, sliceValues, sliceIndex):
+    def __sliceRowwiseByNameWithCard(self, schemaDataDictById, sliceFilter, sliceValues, sliceIndex, collectionName=None):
         rD = {}
+        attributeExcludeD = self.__sD.getCollectionExcludedAttributes(collectionName, asSchemaIds=True)
         for schemaId in schemaDataDictById:
             schemaObj = self.__sD.getSchemaObject(schemaId)
             lExtra = schemaObj.isSliceExtra(sliceFilter)
@@ -223,6 +224,8 @@ class SchemaDefReShape(object):
                 if lExtra or self.__inSlice(schemaId, sliceIndex, iRowD, sliceValues):
                     oRowD = {}
                     for atId in iRowD:
+                        if (schemaId, atId) in attributeExcludeD:
+                            continue
                         oRowD[schemaObj.getAttributeName(atId)] = iRowD[atId]
                     oRowDList.append(oRowD)
 
@@ -237,8 +240,9 @@ class SchemaDefReShape(object):
 
         return rD
 
-    def __sliceRowwiseByName(self, schemaDataDictById, sliceFilter, sliceValues, sliceIndex):
+    def __sliceRowwiseByName(self, schemaDataDictById, sliceFilter, sliceValues, sliceIndex, collectionName=None):
         rD = {}
+        attributeExcludeD = self.__sD.getCollectionExcludedAttributes(collectionName, asSchemaIds=True)
         for schemaId in schemaDataDictById:
             schemaObj = self.__sD.getSchemaObject(schemaId)
             lExtra = schemaObj.isSliceExtra(sliceFilter)
@@ -256,6 +260,8 @@ class SchemaDefReShape(object):
                 if lExtra or self.__inSlice(schemaId, sliceIndex, iRowD, sliceValues):
                     oRowD = {}
                     for atId in iRowD:
+                        if (schemaId, atId) in attributeExcludeD:
+                            continue
                         oRowD[schemaObj.getAttributeName(atId)] = iRowD[atId]
                     oRowDList.append(oRowD)
             #
@@ -266,8 +272,9 @@ class SchemaDefReShape(object):
 
         return rD
 
-    def __sliceColumnwise(self, schemaDataDictById, sliceFilter, sliceValues, sliceIndex):
+    def __sliceColumnwise(self, schemaDataDictById, sliceFilter, sliceValues, sliceIndex, collectionName=None):
         rD = {}
+        attributeExcludeD = self.__sD.getCollectionExcludedAttributes(collectionName, asSchemaIds=True)
         for schemaId in schemaDataDictById:
             schemaObj = self.__sD.getSchemaObject(schemaId)
             lExtra = schemaObj.isSliceExtra(sliceFilter)
@@ -283,6 +290,8 @@ class SchemaDefReShape(object):
             for iRowD in iRowDList:
                 if lExtra or self.__inSlice(schemaId, sliceIndex, iRowD, sliceValues):
                     for atId in iRowD:
+                        if (schemaId, atId) in attributeExcludeD:
+                            continue
                         atName = schemaObj.getAttributeName(atId)
                         if atName not in colD:
                             colD[atName] = []
@@ -317,7 +326,8 @@ class SchemaDefReShape(object):
                 if lExtra or self.__inSlice(schemaId, sliceIndex, iRowD, sliceValues):
                     oRowL = []
                     for atId in atIdList:
-                        oRowL.append(iRowD[atId])
+                        rVal = iRowD[atId] if atId in iRowD else None
+                        oRowL.append(rVal)
                     oRowList.append(oRowL)
             #
             if not oRowList and not schemaObj.isMandatory():
@@ -428,7 +438,8 @@ class SchemaDefReShape(object):
             for iRowD in iRowDList:
                 oRowL = []
                 for atId in atIdList:
-                    oRowL.append(iRowD[atId])
+                    rVal = iRowD[atId] if atId in iRowD else None
+                    oRowL.append(rVal)
                 oRowList.append(oRowL)
             #
             rD[schemaObjName] = {"attributes": atNameList, "data": oRowList}
@@ -436,9 +447,10 @@ class SchemaDefReShape(object):
 
     # ---------------------- ---------------------- ---------------------- ---------------------- ----------------------
     #
-    def __sliceRowwiseByNameWithCardOnePass(self, schemaDataDictById, sliceFilter, sliceIndex):
+    def __sliceRowwiseByNameWithCardOnePass(self, schemaDataDictById, sliceFilter, sliceIndex, collectionName=None):
         debug = False
         #
+        attributeExcludeD = self.__sD.getCollectionExcludedAttributes(collectionName, asSchemaIds=True)
         schemaIdExtraL = self.__sD.getSliceExtraSchemaIds(sliceFilter)
         # logger.info("Schema Id extras %r" % schemaIdExtraL)
         #
@@ -523,6 +535,9 @@ class SchemaDefReShape(object):
         #
         for schemaId, atL in singleKeyAtD.items():
             #
+            # apply collection exclusion filter
+            # atL = [atId for atId in atFullL if (schemaId, atId) not in attributeExcludeD]
+            #
             schemaObj = self.__sD.getSchemaObject(schemaId)
             # ------
             schemaObjName = self.__sD.getSchemaName(schemaId)
@@ -532,12 +547,13 @@ class SchemaDefReShape(object):
             iRowDList = schemaDataDictById[schemaId]
             rvS = set()
             for iRowD in iRowDList:
-                oRowD = {schemaObj.getAttributeName(atId): iRowD[atId] for atId in iRowD}
+                # Add collection exclusion filter here
+                oRowD = {schemaObj.getAttributeName(atId): iRowD[atId] for atId in iRowD if (schemaId, atId) not in attributeExcludeD}
                 #
                 rvS = set([iRowD[at] if at in iRowD else None for at in atL])
                 for rv in rvS:
-                    # if rv is null or has not parent then the following will fail -
-                    # JDW CHANE - Use a try rather than 'if'   Ignorring error for now
+                    # if rv is null or has no parent then the following will fail -
+                    # JDW CHANGE - Use a try rather than 'if'   Ignorring error for now
                     try:
                         if uFlag:
                             retD[rv][schemaObjName] = oRowD

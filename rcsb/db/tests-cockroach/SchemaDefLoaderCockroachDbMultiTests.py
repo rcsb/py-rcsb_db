@@ -43,7 +43,8 @@ from rcsb.db.cockroach.Connection import Connection
 
 #
 from rcsb.db.sql.SqlGen import SqlGenAdmin
-from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
+from rcsb.db.utils.RepositoryProvider import RepositoryProvider
+from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
 
@@ -76,11 +77,12 @@ class SchemaDefLoaderCockroachDbMultiTests(unittest.TestCase):
         self.__chunkSize = 0
         self.__workPath = os.path.join(HERE, "test-output")
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
-        configName = "site_info"
+        configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
+        configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName)
         self.__resourceName = "COCKROACH_DB"
-        self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
+        self.__schP = SchemaProvider(self.__cfgOb, self.__workPath, useCache=True)
+        self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__workPath)
         #
         self.__tableIdSkipD = {"ATOM_SITE": True, "ATOM_SITE_ANISOTROP": True}
         #
@@ -103,15 +105,15 @@ class SchemaDefLoaderCockroachDbMultiTests(unittest.TestCase):
         """  Create table schema (live) for BIRD, chemical component, and PDBx data.
         """
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="bird")
+            sd, _, _, _ = self.__schP.getSchemaInfo("bird")
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="chem_comp")
+            sd, _, _, _ = self.__schP.getSchemaInfo("chem_comp")
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="pdbx")
+            sd, _, _, _ = self.__schP.getSchemaInfo("pdbx")
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
@@ -123,15 +125,15 @@ class SchemaDefLoaderCockroachDbMultiTests(unittest.TestCase):
         """  Remove table schema (live) for BIRD, chemical component, and PDBx data.
         """
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="bird")
+            sd, _, _, _ = self.__schP.getSchemaInfo("bird")
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="chem_comp")
+            sd, _, _, _ = self.__schP.getSchemaInfo("chem_comp")
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="pdbx")
+            sd, _, _, _ = self.__schP.getSchemaInfo("pdbx")
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
@@ -140,23 +142,23 @@ class SchemaDefLoaderCockroachDbMultiTests(unittest.TestCase):
             self.fail()
 
     def testLoadChemCompMulti(self):
-        self.__testLoadFilesMulti(contentType="chem_comp")
+        self.__testLoadFilesMulti("chem_comp")
 
     def testLoadBirdMulti(self):
-        self.__testLoadFilesMulti(contentType="bird")
+        self.__testLoadFilesMulti("bird")
 
     def testLoadPdbxMulti(self):
-        self.__testLoadFilesMulti(contentType="pdbx")
+        self.__testLoadFilesMulti("pdbx")
 
     def __getPathList(self, fType):
         pathList = []
         if fType == "chem_comp":
-            pathList = self.__schU.getLocatorObjList(contentType="chem_comp")
+            pathList = self.__rpP.getLocatorObjList("chem_comp")
         elif fType == "bird":
-            pathList = self.__schU.getLocatorObjList(contentType="bird")
-            pathList.extend(self.__schU.getLocatorObjList(contentType="bird_family"))
+            pathList = self.__rpP.getLocatorObjList("bird")
+            pathList.extend(self.__rpP.getLocatorObjList("bird_family"))
         elif fType == "pdbx":
-            pathList = self.__schU.getLocatorObjList(contentType="pdbx")
+            pathList = self.__rpP.getLocatorObjList("pdbx")
         return pathList
 
     def loadInsertMany(self, dataList, procName, optionsD, workingDir):
@@ -189,7 +191,7 @@ class SchemaDefLoaderCockroachDbMultiTests(unittest.TestCase):
         chunkSize = self.__chunkSize
         try:
             #
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType=contentType)
+            sd, _, _, _ = self.__schP.getSchemaInfo(contentType)
             if self.__createFlag:
                 self.__schemaCreate(schemaDefObj=sd)
 

@@ -28,7 +28,8 @@ import os
 import time
 import unittest
 
-from rcsb.db.define.DataTypeApplicationInfo import DataTypeApplicationInfo
+from rcsb.db.define.DataTypeApiProvider import DataTypeApiProvider
+from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
@@ -41,15 +42,19 @@ TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 class DataTypeApplicationInfoTests(unittest.TestCase):
     def setUp(self):
-        self.__verbose = True
-        self.maxDiff = None
+        mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
+        self.__cachePath = os.path.join(TOPDIR, "CACHE")
+
+        configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
+        configName = "site_info_configuration"
+        self.__configName = configName
+        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         self.__mU = MarshalUtil()
         #
         self.__pathSaveTypeMap = os.path.join(HERE, "test-output", "app_data_type_mapping.cif")
         self.__pathSaveTypeMapJson = os.path.join(HERE, "test-output", "app_data_type_mapping.json")
-        #
-        self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        self.__pathDataTypeMap = os.path.join(self.__mockTopPath, "data_type_info", "app_data_type_mapping.cif")
+
+        # self.__pathDataTypeMap = os.path.join(self.__mockTopPath, "data_type_info", "app_data_type_mapping.cif")
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
@@ -61,7 +66,8 @@ class DataTypeApplicationInfoTests(unittest.TestCase):
         """ Verify default type assignments and read, write and update operations.
         """
         try:
-            dtInfo = DataTypeApplicationInfo(locator=None, dataTyping="ANY", workPath=None)
+            dta = DataTypeApiProvider(self.__cfgOb, self.__cachePath, useCache=False)
+            dtInfo = dta.getDataTypeApplicationApi("ANY")
             mapD = dtInfo.getDefaultDataTypeMap()
             logger.debug("Default type map length %d", len(mapD))
             ok = self.__mU.doExport(self.__pathSaveTypeMapJson, mapD, fmt="json", indent=3)
@@ -85,7 +91,8 @@ class DataTypeApplicationInfoTests(unittest.TestCase):
         """ Verify stored type mapping assignments.
         """
         try:
-            dtInfo = DataTypeApplicationInfo(locator=self.__pathDataTypeMap, dataTyping="JSON", workPath=None)
+            dta = DataTypeApiProvider(self.__cfgOb, self.__cachePath, useCache=False)
+            dtInfo = dta.getDataTypeApplicationApi("JSON")
             mapD = dtInfo.getDefaultDataTypeMap()
             logger.debug("Default type map length %d", len(mapD))
             self.assertGreaterEqual(len(mapD), 38)

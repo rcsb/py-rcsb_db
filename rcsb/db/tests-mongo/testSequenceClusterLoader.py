@@ -28,7 +28,7 @@ import unittest
 
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.processors.ClusterDataPrep import ClusterDataPrep
-from rcsb.db.utils.ProvenanceUtil import ProvenanceUtil
+from rcsb.db.utils.ProvenanceProvider import ProvenanceProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
@@ -47,8 +47,8 @@ class SequenceClusterLoaderTests(unittest.TestCase):
         #
         #
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
-        configName = "site_info"
+        configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
+        configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         # self.__cfgOb.dump()
         self.__resourceName = "MONGO_DB"
@@ -64,6 +64,7 @@ class SequenceClusterLoaderTests(unittest.TestCase):
         self.__levels = ["100", "95", "90", "70", "50", "30"]
         #
         self.__workPath = os.path.join(HERE, "test-output")
+        self.__cachePath = os.path.join(TOPDIR, "CACHE")
         self.__pathSaveStyleCif = os.path.join(HERE, "test-output", "cluster-data-cif.json")
         self.__pathSaveStyleDocSequence = os.path.join(HERE, "test-output", "cluster-data-doc-sequence.json")
         self.__pathSaveStyleDocCluster = os.path.join(HERE, "test-output", "cluster-data-doc-cluster.json")
@@ -80,12 +81,12 @@ class SequenceClusterLoaderTests(unittest.TestCase):
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    def __fetchProvenance(self, cfgSectionName="site_info"):
+    def __fetchProvenance(self):
         """ Test case for fetching a provenance dictionary content.
         """
         try:
-            provU = ProvenanceUtil(cfgOb=self.__cfgOb, workPath=self.__workPath)
-            pD = provU.fetch(cfgSectionName=cfgSectionName)
+            provU = ProvenanceProvider(self.__cfgOb, self.__cachePath)
+            pD = provU.fetch()
             return pD[self.__provKeyName] if self.__provKeyName in pD else {}
         except Exception as e:
             logger.exception("Failing with %s", str(e))
@@ -111,6 +112,7 @@ class SequenceClusterLoaderTests(unittest.TestCase):
         try:
             dl = DocumentLoader(
                 self.__cfgOb,
+                self.__cachePath,
                 self.__resourceName,
                 numProc=self.__numProc,
                 chunkSize=self.__chunkSize,

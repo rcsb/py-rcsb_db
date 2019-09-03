@@ -30,20 +30,25 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
-
 import logging
 import os
+import pprint
 import time
 import unittest
 
-from mmcif.api.DictMethodRunner import DictMethodRunner
-from rcsb.db.define.DictionaryProvider import DictionaryProvider
+from jsondiff import diff
+
+from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
+from rcsb.db.define.SchemaDefAccess import SchemaDefAccess
 from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.processors.DataTransformFactory import DataTransformFactory
 from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
-from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
+from rcsb.db.utils.RepositoryProvider import RepositoryProvider
+from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
+
+from mmcif.api.DictMethodRunner import DictMethodRunner
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()
@@ -63,28 +68,116 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__numProc = 2
         self.__fileLimit = 100
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        self.__workPath = os.path.join(HERE, "test-output")
-        configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
-        configName = "site_info"
+        self.__cachePath = os.path.join(TOPDIR, "CACHE")
+        self.__outputPath = os.path.join(HERE, "test-output")
+        self.__savedOutputPath = os.path.join(HERE, "test-saved-output")
+
+        configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
+        configName = "site_info_configuration"
         self.__configName = configName
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
-        self.__mU = MarshalUtil(workPath=self.__workPath)
+        self.__mU = MarshalUtil(workPath=self.__cachePath)
 
-        self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, workPath=self.__workPath)
-        self.__birdRepoPath = self.__cfgOb.getPath("BIRD_REPO_PATH", sectionName=configName)
+        self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=True)
+        self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath)
+        #
         #
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
-        self.__chemCompMockLen = 5
+        self.__chemCompMockLen = 12
         self.__birdMockLen = 4
-        self.__pdbxMockLen = 14
-        self.__verbose = True
+        self.__pdbxMockLen = 21
+        # removes timestamped data items to allow diffs.)
+        excludeExtras = ["rcsb_load_status"]
+        # excludeExtras = []
         #
-        self.__pathPdbxDictionaryFile = self.__cfgOb.getPath("PDBX_DICT_LOCATOR", sectionName=configName)
-        self.__pathRcsbDictionaryFile = self.__cfgOb.getPath("RCSB_DICT_LOCATOR", sectionName=configName)
-        self.__pathVrptDictionaryFile = self.__cfgOb.getPath("VRPT_DICT_LOCATOR", sectionName=configName)
+        self.__simpleTestCaseList = [
+            {
+                "contentType": "chem_comp_core",
+                "mockLength": self.__chemCompMockLen,
+                "filterType": self.__fTypeRow,
+                "styleType": "rowwise_by_name",
+                "mergeContentTypes": None,
+                "rejectLength": 2,
+            },
+            {
+                "contentType": "chem_comp_core",
+                "mockLength": self.__chemCompMockLen,
+                "filterType": self.__fTypeRow,
+                "styleType": "rowwise_no_name",
+                "mergeContentTypes": None,
+                "rejectLength": 2,
+            },
+            {
+                "contentType": "chem_comp_core",
+                "mockLength": self.__chemCompMockLen,
+                "filterType": self.__fTypeCol,
+                "styleType": "columnwise_by_name",
+                "mergeContentTypes": None,
+                "rejectLength": 2,
+            },
+            {
+                "contentType": "bird_chem_comp_core",
+                "mockLength": self.__birdMockLen,
+                "filterType": self.__fTypeRow,
+                "styleType": "rowwise_by_name",
+                "mergeContentTypes": None,
+                "rejectLength": 1,
+            },
+            {
+                "contentType": "pdbx_core",
+                "mockLength": self.__pdbxMockLen,
+                "filterType": self.__fTypeRow,
+                "styleType": "rowwise_by_name",
+                "mergeContentTypes": None,
+                "rejectLength": 1,
+            },
+        ]
+        #
+        self.__fullTestCaseList = [
+            {
+                "contentType": "chem_comp_core",
+                "mockLength": self.__chemCompMockLen,
+                "filterType": self.__fTypeRow,
+                "styleType": "rowwise_by_name_with_cardinality",
+                "mergeContentTypes": None,
+                "rejectLength": 2,
+                "excludeExtras": excludeExtras,
+            },
+            {
+                "contentType": "bird_chem_comp_core",
+                "mockLength": self.__birdMockLen,
+                "filterType": self.__fTypeRow,
+                "styleType": "rowwise_by_name_with_cardinality",
+                "mergeContentTypes": None,
+                "rejectLength": 1,
+                "excludeExtras": excludeExtras,
+            },
+            {
+                "contentType": "pdbx_core",
+                "mockLength": self.__pdbxMockLen,
+                "filterType": self.__fTypeRow,
+                "styleType": "rowwise_by_name_with_cardinality",
+                "mergeContentTypes": None,
+                "rejectLength": 1,
+                "excludeExtras": excludeExtras,
+            },
+            {
+                "contentType": "pdbx_core",
+                "mockLength": self.__pdbxMockLen,
+                "filterType": self.__fTypeRow,
+                "styleType": "rowwise_by_name_with_cardinality",
+                "mergeContentTypes": ["vrpt"],
+                "rejectLength": 1,
+                "excludeExtras": excludeExtras,
+            },
+        ]
+        #
+        self.__verbose = True
+        self.__modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=configName)
         #
         self.__exportFlag = False
+        self.__diffFlag = False
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
@@ -96,352 +189,173 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         endTime = time.time()
         logger.info("Completed %s at %s (%.4f seconds)", msg, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    def testPrepChemCompDocumentsFromFiles(self):
-        """Test case -  create loadable chem_comp data from files
+    def testSimpleSchemaDefDataPrep(self):
+        for tcD in self.__simpleTestCaseList:
+            self.__simpleSchemaDataPrep(
+                tcD["contentType"], tcD["filterType"], tcD["styleType"], tcD["mockLength"], rejectLength=tcD["rejectLength"], mergeContentTypes=tcD["mergeContentTypes"]
+            )
+
+    def testFullSchemaDefDataPrep(self):
+        for tcD in self.__fullTestCaseList:
+            self.__fullSchemaDataPrep(
+                tcD["contentType"],
+                tcD["filterType"],
+                tcD["styleType"],
+                tcD["mockLength"],
+                rejectLength=tcD["rejectLength"],
+                mergeContentTypes=tcD["mergeContentTypes"],
+                excludeExtras=tcD["excludeExtras"],
+            )
+
+    def __simpleSchemaDataPrep(self, contentType, filterType, styleType, mockLength, rejectLength=0, dataSelectors=None, mergeContentTypes=None):
+        """ Internal method for preparing file-based data NOT requiring dynamic methods, slicing, or key injection.
+
+        Args:
+            contentType (str): Content type name
+            filterType (str): List of data processing options (separated by '|') (e.g. "drop-empty-attributes|drop-empty-tables|skip-max-width|...)
+            styleType (str): organization of output document (e.g. rowise-by-name)
+            mockLength (int): Expected length of the test data for the input content type
+            rejectLength (int, optional): number of input data sets rejected by the dataselection criteria. Defaults to 0.
+            dataSelectors (list of str, optional): data selection criteria. Defaults to None.
+            mergeContentTypes (list of str, optional): list content types to merge with the input data set. Defaults to None. (e.g. ['vrpt'])
         """
         try:
-            inputPathList = self.__schU.getLocatorObjList(contentType="chem_comp_core")
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="chem_comp_core")
+            dataSelectors = dataSelectors if dataSelectors else ["PUBLIC_RELEASE"]
+            dD = self.__schP.makeSchemaDef(contentType, dataTyping="ANY", saveSchema=True)
+            _ = SchemaDefAccess(dD)
+            inputPathList = self.__rpP.getLocatorObjList(contentType=contentType, mergeContentTypes=mergeContentTypes)
+            sd, _, _, _ = self.__schP.getSchemaInfo(databaseName=contentType, dataTyping="ANY")
+            dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=filterType)
+            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__cachePath, verbose=self.__verbose)
             #
-            dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
-            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
-            #
-            #
-            logger.debug("Length of path list %d\n", len(inputPathList))
-            self.assertGreaterEqual(len(inputPathList), self.__birdMockLen)
+            logger.debug("For %s mock length %d length of path list %d\n", contentType, mockLength, len(inputPathList))
+            self.assertEqual(len(inputPathList), mockLength)
 
-            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_by_name", filterType=self.__fTypeRow)
-            self.assertGreaterEqual(len(tableDataDictList), self.__chemCompMockLen)
-            self.assertGreaterEqual(len(containerNameList), self.__chemCompMockLen)
-            self.assertEqual(len(rejectList), 0)
-            if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "chem-comp-core-file-prep-rowwise-by-name.json"), tableDataDictList, format="json", indent=3)
+            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType=styleType, filterType=filterType, dataSelectors=dataSelectors)
+            self.assertEqual(len(tableDataDictList), mockLength - rejectLength)
+            self.assertEqual(len(containerNameList), mockLength - rejectLength)
 
-            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(
-                inputPathList, styleType="rowwise_by_name_with_cardinality", filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"]
-            )
             if rejectList:
-                logger.info("Rejecting components %r", rejectList)
+                logger.debug("For %s rejecting components %r", contentType, rejectList)
             #
-            self.assertGreaterEqual(len(tableDataDictList), self.__chemCompMockLen)
-            self.assertGreaterEqual(len(containerNameList), self.__chemCompMockLen)
-            self.assertGreaterEqual(len(rejectList), 2)
-
+            self.assertEqual(len(rejectList), rejectLength)
+            fName = "simple-prep-%s-%s.json" % (contentType, styleType)
             if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "chem-comp-core-file-prep-rowwise-by-name-with-cardinality.json"), tableDataDictList, format="json", indent=3)
-
-            dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeCol)
-            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
-            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="columnwise_by_name", filterType=self.__fTypeCol)
-            self.assertGreaterEqual(len(tableDataDictList), self.__chemCompMockLen)
-            self.assertGreaterEqual(len(containerNameList), self.__chemCompMockLen)
-            self.assertEqual(len(rejectList), 0)
-            if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "chem-comp-core-file-prep-columnwise-by-name.json"), tableDataDictList, format="json", indent=3)
-
-            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_no_name", filterType=self.__fTypeCol)
-            self.assertGreaterEqual(len(tableDataDictList), self.__chemCompMockLen)
-            self.assertGreaterEqual(len(containerNameList), self.__chemCompMockLen)
-            self.assertEqual(len(rejectList), 0)
-            if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "chem-comp-core-file-prep-rowwise-no-name.json"), tableDataDictList, format="json", indent=3)
-
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
-
-    def testPrepBirdDocumentsFromFiles(self):
-        """Test case -  create loadable BIRD data from files
-        """
-        try:
-            inputPathList = self.__schU.getLocatorObjList(contentType="bird_chem_comp_core")
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="bird_chem_comp_core")
-            #
-            dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
-            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
-            #
-            #
-            logger.debug("Length of path list %d\n", len(inputPathList))
-            self.assertGreaterEqual(len(inputPathList), self.__birdMockLen)
-
-            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_by_name", filterType=self.__fTypeRow)
-            self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
-            self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
-            self.assertEqual(len(rejectList), 0)
-            if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-chem-comp-core-file-prep-rowwise-by-name.json"), tableDataDictList, format="json", indent=3)
-
-            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(
-                inputPathList, styleType="rowwise_by_name_with_cardinality", filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"]
-            )
-            self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen - 1)
-            self.assertGreaterEqual(len(containerNameList), self.__birdMockLen - 1)
-            self.assertEqual(len(rejectList), 1)
-            if self.__exportFlag:
-                self.__mU.doExport(
-                    os.path.join(HERE, "test-output", "bird-chem-comp-core-file-prep-rowwise-by-name-with-cardinality.json"), tableDataDictList, format="json", indent=3
-                )
-
-            dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeCol)
-            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
-            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="columnwise_by_name", filterType=self.__fTypeCol)
-            self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
-            self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
-            self.assertEqual(len(rejectList), 0)
-            if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-chem-comp-core-file-prep-columnwise-by-name.json"), tableDataDictList, format="json", indent=3)
-
-            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_no_name", filterType=self.__fTypeCol)
-            self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
-            self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
-            self.assertEqual(len(rejectList), 0)
-            if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-chem-comp-core-file-prep-rowwise-no-name.json"), tableDataDictList, format="json", indent=3)
-
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
-
-    def testPrepBirdDocumentsFromContainers(self):
-        """Test case -  create loadable BIRD data from PDBx/mmCIF containers
-        """
-
-        try:
-            inputPathList = self.__schU.getLocatorObjList(contentType="bird_chem_comp_core")
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="bird_chem_comp_core")
-            dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
-            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
-            #
-            containerList = sdp.getContainerList(inputPathList, filterType="none")
-            self.assertGreaterEqual(len(containerList), self.__birdMockLen)
-            #
-            tableDataDictList, containerNameList, rejectList = sdp.processDocuments(containerList, styleType="rowwise_by_name", filterType=self.__fTypeRow)
-            self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
-            self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
-            self.assertEqual(len(rejectList), 0)
-            if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-chem-comp-core-container-prep-rowwise-by-name.json"), tableDataDictList, format="json", indent=3)
-
-            tableDataDictList, containerNameList, rejectList = sdp.processDocuments(
-                containerList, styleType="rowwise_by_name_with_cardinality", filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"]
-            )
-            self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen - 1)
-            self.assertGreaterEqual(len(containerNameList), self.__birdMockLen - 1)
-            self.assertEqual(len(rejectList), 1)
-            if self.__exportFlag:
-                self.__mU.doExport(
-                    os.path.join(HERE, "test-output", "bird-chem-comp-core-container-prep-rowwise-by-name-with-cardinality.json"), tableDataDictList, format="json", indent=3
-                )
-
-            #
-            #
-            dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeCol)
-            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
-            tableDataDictList, containerNameList, rejectList = sdp.processDocuments(containerList, styleType="columnwise_by_name", filterType=self.__fTypeCol)
-            self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
-            self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
-            self.assertEqual(len(rejectList), 0)
-            if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-chem-comp-core-container-prep-columnwise-by-name.json"), tableDataDictList, format="json", indent=3)
-
-            tableDataDictList, containerNameList, rejectList = sdp.processDocuments(containerList, styleType="rowwise_no_name", filterType=self.__fTypeCol)
-            self.assertGreaterEqual(len(tableDataDictList), self.__birdMockLen)
-            self.assertGreaterEqual(len(containerNameList), self.__birdMockLen)
-            self.assertEqual(len(rejectList), 0)
-            if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "bird-chem-comp-core-container-prep-rowwise-no-name.json"), tableDataDictList, format="json", indent=3)
-
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
-
-    def testPrepPdbxDocumentsFromFiles(self):
-        """Test case -  create loadable PDBx data from repository files (pdbx_core)
-        """
-        try:
-            inputPathList = self.__schU.getLocatorObjList(contentType="pdbx_core")
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="pdbx_core")
-            #
-            dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
-            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
-            #
-            logger.debug("Length of path list %d\n", len(inputPathList))
-            self.assertGreaterEqual(len(inputPathList), self.__pdbxMockLen)
-
-            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_by_name", filterType=self.__fTypeRow)
-            self.assertGreaterEqual(len(tableDataDictList), self.__pdbxMockLen)
-            self.assertGreaterEqual(len(containerNameList), self.__pdbxMockLen)
-            self.assertEqual(len(rejectList), 0)
-            if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "pdbx-core-file-prep-rowwise-by-name.json"), tableDataDictList, format="json", indent=3)
-
-            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(
-                inputPathList, styleType="rowwise_by_name_with_cardinality", filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"]
-            )
-            self.assertGreaterEqual(len(tableDataDictList), self.__pdbxMockLen - 1)
-            self.assertGreaterEqual(len(containerNameList), self.__pdbxMockLen - 1)
-            self.assertEqual(len(rejectList), 1)
-            if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "pdbx-core-file-prep-rowwise-by-name-with-cardinality.json"), tableDataDictList, format="json", indent=3)
-
-            # ---------------------  change global filters ----------------------------
-            dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeCol)
-            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
-            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="columnwise_by_name", filterType=self.__fTypeCol)
-            self.assertGreaterEqual(len(tableDataDictList), self.__pdbxMockLen)
-            self.assertGreaterEqual(len(containerNameList), self.__pdbxMockLen)
-            self.assertEqual(len(rejectList), 0)
-            if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "pdbx-core-file-prep-columnwise-by-name.json"), tableDataDictList, format="json", indent=3)
-
-            tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType="rowwise_no_name", filterType=self.__fTypeCol)
-            self.assertGreaterEqual(len(tableDataDictList), self.__pdbxMockLen)
-            self.assertGreaterEqual(len(containerNameList), self.__pdbxMockLen)
-            self.assertEqual(len(rejectList), 0)
-            if self.__exportFlag:
-                self.__mU.doExport(os.path.join(HERE, "test-output", "pdbx-core-file-prep-rowwise-no-name.json"), tableDataDictList, format="json", indent=3)
-
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
-
-    def testPrepPdbxDocumentsFromContainers(self):
-        """Test case -  create and save loadable content for core PDBx collections including dictionary methods and reusing PDBx/mmCIF container data.
-        """
-        try:
-            styleType = "rowwise_by_name_with_cardinality"
-            schemaName = "pdbx_core"
-            inputPathList = self.__schU.getLocatorObjList(contentType=schemaName)
-            sd, _, collectionNameList, _ = self.__schU.getSchemaInfo(contentType=schemaName)
-            #
-            dP = DictionaryProvider()
-            dictApi = dP.getApi(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile])
-            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, workPath=self.__workPath)
-            dmh = DictMethodRunner(dictApi, resourceProvider=rP)
-            #
-            dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
-            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
-            #
-            containerList = sdp.getContainerList(inputPathList)
-            for container in containerList:
-                cName = container.getName()
-                logger.debug("Processing container %s", cName)
-                dmh.apply(container)
-            #
-            self.__timeStep("Completed reads of %d containers" % len(containerList))
-            for collectionName in collectionNameList:
-                logger.debug("inputPathList %r", inputPathList)
-                tableIdExcludeList = sd.getCollectionExcluded(collectionName)
-                tableIdIncludeList = sd.getCollectionSelected(collectionName)
-                sliceFilter = sd.getCollectionSliceFilter(collectionName)
-                sdp.setSchemaIdExcludeList(tableIdExcludeList)
-                sdp.setSchemaIdIncludeList(tableIdIncludeList)
+                fPath = os.path.join(self.__outputPath, fName)
+                self.__mU.doExport(fPath, tableDataDictList, fmt="json", indent=3)
+            if self.__diffFlag:
+                fPath = os.path.join(self.__savedOutputPath, fName)
+                refDocList = self.__mU.doImport(fPath, fmt="json")
+                self.assertEqual(len(refDocList), len(tableDataDictList))
                 #
-                docList, _, _ = sdp.processDocuments(containerList, styleType=styleType, sliceFilter=sliceFilter)
-                docList = sdp.addDocumentPrivateAttributes(docList, collectionName)
-                #
-                docList = sdp.addDocumentSubCategoryAggregates(docList, collectionName)
-                self.__timeStep("Completed document processing collection %s" % collectionName)
-                #
-                if self.__exportFlag:
-                    fp = os.path.join(HERE, "test-output", "sdp-export-%s-%s-rowwise-by-name-with-cardinality.json" % (schemaName, collectionName))
-                    self.__mU.doExport(fp, docList, format="json", indent=3)
-                    logger.debug("Exported %r", fp)
-                    #
-                    self.__timeStep("Completed writing collection data for %s" % collectionName)
-                #
+                jD = diff(refDocList, tableDataDictList, syntax="explicit", marshal=True)
+                if jD:
+                    _, fn = os.path.split(fPath)
+                    bn, _ = os.path.splitext(fn)
+                    fPath = os.path.join(self.__outputPath, bn + "-diff.json")
+                    logger.debug("jsondiff for %s %s = \n%s", contentType, styleType, pprint.pformat(jD, indent=3, width=100))
+                    self.__mU.doExport(fPath, jD, fmt="json", indent=3)
+                self.assertEqual(len(jD), 0)
+
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
 
-    def testPrepPdbxWithMerging(self):
-        """Test case -  create and save loadable content for core PDBx with merged validation report content including dictionary methods and reusing PDBx/mmCIF container data.
+    def __logDocumentOrder(self, docList):
+        for doc in docList:
+            logger.debug("keys %r", list(doc.keys()))
+
+    def __filterDocuments(self, docList, excludeList=None):
+        excludeList = excludeList if excludeList else []
+        for doc in docList:
+            for excl in excludeList:
+                if excl in doc:
+                    del doc[excl]
+
+    def __fullSchemaDataPrep(self, contentType, filterType, styleType, mockLength, rejectLength=0, dataSelectors=None, mergeContentTypes=None, excludeExtras=None):
+        """ Internal method for preparing file-based data requiring dynamic methods, slicing, or key injection.
+
+        Args:
+            contentType (str): Content type name
+            filterType (str): List of data processing options (separated by '|') (e.g. "drop-empty-attributes|drop-empty-tables|skip-max-width|...)
+            styleType (str): organization of output document (e.g. rowise-by-name)
+            mockLength (int): Expected length of the test data for the input content type
+            rejectLength (int, optional): number of input data sets rejected by the dataselection criteria. Defaults to 0.
+            dataSelectors (list of str, optional): data selection criteria. Defaults to None.
+            mergeContentTypes (list of str, optional): list content types to merge with the input data set. Defaults to None. (e.g. ['vrpt'])
         """
         try:
-            styleType = "rowwise_by_name_with_cardinality"
-            schemaName = "pdbx_core"
-            inputPathList = self.__schU.getLocatorObjList(contentType=schemaName, mergeContentTypes=["vrpt"])
-            sd, _, collectionNameList, _ = self.__schU.getSchemaInfo(contentType=schemaName)
+            excludeExtras = excludeExtras if excludeExtras else []
+            _ = mockLength
+            _ = rejectLength
+            dD = self.__schP.makeSchemaDef(contentType, dataTyping="ANY", saveSchema=True)
+            _ = SchemaDefAccess(dD)
+            inputPathList = self.__rpP.getLocatorObjList(contentType=contentType, mergeContentTypes=mergeContentTypes)
+            sd, _, collectionNameList, _ = self.__schP.getSchemaInfo(databaseName=contentType, dataTyping="ANY")
             #
-            dP = DictionaryProvider()
-            dictApi = dP.getApi(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile, self.__pathVrptDictionaryFile])
-            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, workPath=self.__workPath)
-            dmh = DictMethodRunner(dictApi, resourceProvider=rP)
+            dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)
+            dictApi = dP.getApiByName(contentType)
             #
-            dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
-            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
-            containerList = sdp.getContainerList(inputPathList)
+            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
+            dmh = DictMethodRunner(dictApi, modulePathMap=self.__modulePathMap, resourceProvider=rP)
+            #
+            dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=filterType)
+            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__cachePath, verbose=self.__verbose)
+            containerList = self.__rpP.getContainerList(inputPathList)
             for container in containerList:
                 cName = container.getName()
                 logger.debug("Processing container %s", cName)
                 dmh.apply(container)
             #
             for collectionName in collectionNameList:
-                logger.debug("inputPathList %r", inputPathList)
                 tableIdExcludeList = sd.getCollectionExcluded(collectionName)
                 tableIdIncludeList = sd.getCollectionSelected(collectionName)
                 sliceFilter = sd.getCollectionSliceFilter(collectionName)
                 sdp.setSchemaIdExcludeList(tableIdExcludeList)
                 sdp.setSchemaIdIncludeList(tableIdIncludeList)
                 #
-                docList, _, _ = sdp.processDocuments(containerList, styleType=styleType, sliceFilter=sliceFilter)
+                docList, _, _ = sdp.processDocuments(containerList, styleType=styleType, sliceFilter=sliceFilter, filterType=filterType, dataSelectors=dataSelectors)
                 docList = sdp.addDocumentPrivateAttributes(docList, collectionName)
                 docList = sdp.addDocumentSubCategoryAggregates(docList, collectionName)
+
+                # Special exclusions for the test harness. (removes timestamped data items to allow diffs.)
+                self.__filterDocuments(docList, excludeExtras)
+                mergeS = "-".join(mergeContentTypes) if mergeContentTypes else ""
+                fName = "full-prep-%s-%s-%s-%s.json" % (contentType, collectionName, mergeS, styleType)
                 if self.__exportFlag:
-                    fp = os.path.join(HERE, "test-output", "sdp-export-%s-%s-rowwise-by-name-with-cardinality.json" % (schemaName, collectionName))
-                    self.__mU.doExport(fp, docList, format="json", indent=3)
-                    logger.debug("Exported %r", fp)
+                    self.__logDocumentOrder(docList)
+                    fPath = os.path.join(self.__outputPath, fName)
+                    self.__mU.doExport(fPath, docList, fmt="json", indent=3)
+                    logger.debug("Exported %r", fPath)
                 #
-                #
+                if self.__diffFlag:
+                    fPath = os.path.join(self.__savedOutputPath, fName)
+                    refDocList = self.__mU.doImport(fPath, fmt="json")
+                    self.assertEqual(len(refDocList), len(docList))
+                    logger.debug("For %s %s len refDocList %d", contentType, collectionName, len(refDocList))
+                    logger.debug("For %s %s len docList %d", contentType, collectionName, len(docList))
+                    jD = diff(refDocList, docList, syntax="explicit", marshal=True)
+                    if jD:
+                        _, fn = os.path.split(fPath)
+                        bn, _ = os.path.splitext(fn)
+                        fPath = os.path.join(self.__outputPath, bn + "-diff.json")
+                        logger.debug("jsondiff for %s %s = \n%s", contentType, collectionName, pprint.pformat(jD, indent=3, width=100))
+                        self.__mU.doExport(fPath, jD, fmt="json", indent=3)
+                    self.assertEqual(len(jD), 0)
+
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
 
 
-def prepChemCompSuite():
+def prepSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(SchemaDefDataPrepTests("testPrepChemCompDocumentsFromFiles"))
-    return suiteSelect
-
-
-def prepBirdSuite():
-    suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(SchemaDefDataPrepTests("testPrepBirdDocumentsFromFiles"))
-    suiteSelect.addTest(SchemaDefDataPrepTests("testPrepBirdDocumentsFromContainers"))
-    return suiteSelect
-
-
-def prepPdbxSuite():
-    suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(SchemaDefDataPrepTests("testPrepPdbxDocumentsFromFiles"))
-    return suiteSelect
-
-
-def prepPdbxSlicedSuite():
-    suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(SchemaDefDataPrepTests("testPrepPdbxDocumentsFromContainers"))
-    return suiteSelect
-
-
-def prepPdbxMergeSuite():
-    suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(SchemaDefDataPrepTests("testPrepPdbxWithMerging"))
+    suiteSelect.addTest(SchemaDefDataPrepTests("testSimpleSchemaDefDataPrep"))
+    suiteSelect.addTest(SchemaDefDataPrepTests("testFullSchemaDefDataPrep"))
     return suiteSelect
 
 
 if __name__ == "__main__":
 
-    mySuite = prepChemCompSuite()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
-
-    mySuite = prepBirdSuite()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
-
-    mySuite = prepPdbxSuite()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
-
-    mySuite = prepPdbxSlicedSuite()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
-
-    mySuite = prepPdbxMergeSuite()
+    mySuite = prepSuite()
     unittest.TextTestRunner(verbosity=2).run(mySuite)

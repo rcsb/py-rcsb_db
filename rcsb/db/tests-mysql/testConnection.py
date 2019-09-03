@@ -43,8 +43,8 @@ class ConnectionTests(unittest.TestCase):
         self.__verbose = True
         self.__myC = None
 
-        configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
-        configName = "site_info"
+        configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
+        configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName)
         self.__resourceName = "MYSQL_DB"
         self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName, sectionName=configName)
@@ -56,7 +56,7 @@ class ConnectionTests(unittest.TestCase):
         endTime = time.time()
         logger.debug("Completed at %s (%.4f seconds)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    def __assignResource(self, cfgOb, sectionName="site_info", resourceName="MYSQL_DB"):
+    def __assignResource(self, cfgOb, sectionName="site_info_configuration", resourceName="MYSQL_DB"):
         cn = Connection(cfgOb=cfgOb)
         return cn.assignResource(resourceName=resourceName, sectionName=sectionName)
 

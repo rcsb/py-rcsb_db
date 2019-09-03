@@ -42,14 +42,14 @@ import logging
 import os
 import time
 
-from rcsb.db.define.DictionaryProvider import DictionaryProvider
+from mmcif.api.DictMethodRunner import DictMethodRunner
+from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
 from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.mysql.MyDbUtil import MyDbQuery
 from rcsb.db.processors.DataTransformFactory import DataTransformFactory
 from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb.db.sql.SqlGen import SqlGenAdmin
-
-from mmcif.api.DictMethodRunner import DictMethodRunner
+from rcsb.db.utils.RepositoryProvider import RepositoryProvider
 
 logger = logging.getLogger(__name__)
 #
@@ -60,14 +60,17 @@ class SchemaDefLoader(object):
     """ Map PDBx/mmCIF instance data to SQL loadable data using external schema definition.
     """
 
-    def __init__(self, cfgOb, schemaDefObj, cfgSectionName="site_info", dbCon=None, workPath=".", cleanUp=False, warnings="default", verbose=True):
+    def __init__(self, cfgOb, schemaDefObj, cfgSectionName="site_info_configuration", dbCon=None, cachePath=".", workPath=".", cleanUp=False, warnings="default", verbose=True):
         self.__verbose = verbose
         self.__debug = False
         self.__cfgOb = cfgOb
+        sectionName = cfgSectionName
         self.__sD = schemaDefObj
+
         #
         self.__dbCon = dbCon
-        self.__workingPath = workPath
+        self.__cachePath = cachePath
+        self.__workPath = workPath
         self.__pathList = []
         self.__cleanUp = cleanUp
         #
@@ -80,17 +83,15 @@ class SchemaDefLoader(object):
         #
         self.__warningAction = warnings
         dtf = DataTransformFactory(schemaDefAccessObj=self.__sD, filterType=self.__fTypeRow)
-        self.__sdp = SchemaDefDataPrep(schemaDefAccessObj=self.__sD, dtObj=dtf, workPath=self.__workingPath, verbose=self.__verbose)
+        self.__sdp = SchemaDefDataPrep(schemaDefAccessObj=self.__sD, dtObj=dtf, workPath=self.__cachePath, verbose=self.__verbose)
+        self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, cachePath=self.__cachePath)
         #
-        sectionName = cfgSectionName
-        pathPdbxDictionaryFile = self.__cfgOb.getPath("PDBX_DICT_LOCATOR", sectionName=sectionName)
-        pathRcsbDictionaryFile = self.__cfgOb.getPath("RCSB_DICT_LOCATOR", sectionName=sectionName)
-        pathVrptDictionaryFile = self.__cfgOb.getPath("VRPT_DICT_LOCATOR", sectionName=sectionName)
-        #
-        dP = DictionaryProvider()
-        dictApi = dP.getApi(dictLocators=[pathPdbxDictionaryFile, pathRcsbDictionaryFile, pathVrptDictionaryFile])
-        rP = DictMethodResourceProvider(self.__cfgOb, configName=sectionName, workPath=self.__workingPath)
-        self.__dmh = DictMethodRunner(dictApi, resourceProvider=rP)
+        schemaName = self.__sD.getName()
+        modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=sectionName)
+        dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)
+        dictApi = dP.getApiByName(schemaName)
+        rP = DictMethodResourceProvider(self.__cfgOb, cachePath=self.__cachePath)
+        self.__dmh = DictMethodRunner(dictApi, modulePathMap=modulePathMap, resourceProvider=rP)
 
     def setWarning(self, action):
         if action in ["error", "ignore", "default"]:
@@ -135,7 +136,7 @@ class SchemaDefLoader(object):
         """
         tableIdSkipD = tableIdSkipD if tableIdSkipD is not None else {}
         if inputPathList is not None:
-            cL = self.__sdp.getContainerList(inputPathList, filterType=self.__fTypeRow)
+            cL = self.__rpP.getContainerList(inputPathList)
             #
             # Apply dynamic methods here -
             #
@@ -203,7 +204,7 @@ class SchemaDefLoader(object):
             Return the containerNames for the input path list, and path list for load files that are created.
 
         """
-        cL = self.__sdp.getContainerList(inputPathList, filterType=self.__fTypeRow)
+        cL = self.__rpP.getContainerList(inputPathList)
         for cA in cL:
             self.__dmh.apply(cA)
         tableDataDict, containerNameList = self.__sdp.process(cL)
@@ -228,7 +229,7 @@ class SchemaDefLoader(object):
             schemaAttributeIdList = tObj.getAttributeIdList()
             attributeNameList = tObj.getAttributeNameList()
             #
-            fn = os.path.join(self.__workingPath, tableId + "-" + partName + ".csv")
+            fn = os.path.join(self.__workPath, tableId + "-" + partName + ".csv")
             with open(fn, modeOpt, newline="") as ofh:
                 csvWriter = csv.writer(ofh)
                 csvWriter.writerow(attributeNameList)
@@ -247,7 +248,7 @@ class SchemaDefLoader(object):
             schemaAttributeIdList = tObj.getAttributeIdList()
             #
             if rowList:
-                fn = os.path.join(self.__workingPath, tableId + "-" + partName + ".tdd")
+                fn = os.path.join(self.__workPath, tableId + "-" + partName + ".tdd")
                 ofh = open(fn, modeOpt)
                 for rD in rowList:
                     # logger.info("%r" % colSep.join([str(rD[aId]) for aId in schemaAttributeIdList]))

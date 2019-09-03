@@ -12,6 +12,7 @@
 #   25-Jul-2018 jdw  Add large test case to test failure and salvage scenarios
 #   10-Sep-2018 jdw  Update assert conditions for tests
 #   11-Nov-2018 jdw  Add chem_comp_core schema support
+#    6-Aug-2019 jdw  Autogenerate schema during tests.
 #
 ##
 """
@@ -52,22 +53,24 @@ class PdbxLoaderTests(unittest.TestCase):
         #
         #
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
-        configName = "site_info"
+        configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
+        configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
-        # self.__cfgOb.replaceSectionName('site_info', 'site_info_test')
         #
         self.__resourceName = "MONGO_DB"
         self.__failedFilePath = os.path.join(HERE, "test-output", "failed-list.txt")
-        self.__failedCcFilePath = os.path.join(HERE, "test-output", "failed-cc-list.txt")
-        self.__failedBirdFilePath = os.path.join(HERE, "test-output", "failed-bird-list.txt")
-        self.__workPath = os.path.join(HERE, "test-output")
+        self.__cachePath = os.path.join(TOPDIR, "CACHE")
         self.__readBackCheck = True
         self.__numProc = 2
         self.__chunkSize = 10
         self.__fileLimit = None
         self.__documentStyle = "rowwise_by_name_with_cardinality"
-        #
+        self.__ldList = [
+            {"databaseName": "chem_comp_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min"},
+            {"databaseName": "bird_chem_comp_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min"},
+            {"databaseName": "pdbx_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": ["vrpt"], "validationLevel": "min"},
+            {"databaseName": "pdbx_core", "collectionNameList": None, "loadType": "replace", "mergeContentTypes": ["vrpt"], "validationLevel": "min"},
+        ]
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -76,315 +79,45 @@ class PdbxLoaderTests(unittest.TestCase):
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    def testLoadChemCompCoreReference(self):
-        """ Test case -  Load chemical component core reference data
+    def testPdbxLoader(self):
+        #
+        for ld in self.__ldList:
+            self.__pdbxLoaderWrapper(**ld)
+
+    def __pdbxLoaderWrapper(self, **kwargs):
+        """ Wrapper for PDBx loader modue
         """
         try:
+            logger.info("Loading %s", kwargs["databaseName"])
             mw = PdbxLoader(
                 self.__cfgOb,
+                cachePath=self.__cachePath,
                 resourceName=self.__resourceName,
                 numProc=self.__numProc,
                 chunkSize=self.__chunkSize,
-                fileLimit=self.__fileLimit,
+                fileLimit=None,
                 verbose=self.__verbose,
                 readBackCheck=self.__readBackCheck,
-                workPath=self.__workPath,
+                maxStepLength=2000,
+                useSchemaCache=True,
+                rebuildSchemaFlag=False,
             )
             ok = mw.load(
-                "chem_comp_core", loadType="full", inputPathList=None, styleType=self.__documentStyle, dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedCcFilePath
-            )
-            self.assertTrue(ok)
-            ok = self.__loadStatus(mw.getLoadStatus())
-            self.assertTrue(ok)
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
-
-    def testLoadBirdChemCompCoreReference(self):
-        """ Test case -  Load Bird chemical component reference data
-        """
-        try:
-            mw = PdbxLoader(
-                self.__cfgOb,
-                resourceName=self.__resourceName,
-                numProc=self.__numProc,
-                chunkSize=self.__chunkSize,
-                fileLimit=self.__fileLimit,
-                verbose=self.__verbose,
-                readBackCheck=self.__readBackCheck,
-                workPath=self.__workPath,
-            )
-            ok = mw.load(
-                "bird_chem_comp_core",
-                loadType="full",
-                inputPathList=None,
-                styleType=self.__documentStyle,
-                dataSelectors=["PUBLIC_RELEASE"],
-                failedFilePath=self.__failedBirdFilePath,
-            )
-            self.assertTrue(ok)
-            ok = self.__loadStatus(mw.getLoadStatus())
-            self.assertTrue(ok)
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
-
-    def testLoadBirdReference(self):
-        """ Test case -  Load Bird reference data
-        """
-        try:
-            mw = PdbxLoader(
-                self.__cfgOb,
-                resourceName=self.__resourceName,
-                numProc=self.__numProc,
-                chunkSize=self.__chunkSize,
-                fileLimit=self.__fileLimit,
-                verbose=self.__verbose,
-                readBackCheck=self.__readBackCheck,
-                workPath=self.__workPath,
-            )
-            ok = mw.load("bird", loadType="full", inputPathList=None, styleType=self.__documentStyle, dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
-            self.assertTrue(ok)
-            ok = self.__loadStatus(mw.getLoadStatus())
-            self.assertTrue(ok)
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
-
-    def testLoadBirdFamilyReference(self):
-        """ Test case -  Load Bird family reference data
-        """
-        try:
-            mw = PdbxLoader(
-                self.__cfgOb,
-                resourceName=self.__resourceName,
-                numProc=self.__numProc,
-                chunkSize=self.__chunkSize,
-                fileLimit=self.__fileLimit,
-                verbose=self.__verbose,
-                readBackCheck=self.__readBackCheck,
-                workPath=self.__workPath,
-            )
-            ok = mw.load(
-                "bird_family",
-                loadType="full",
-                inputPathList=None,
-                styleType=self.__documentStyle,
-                dataSelectors=["BIRD_FAMILY_PUBLIC_RELEASE"],
-                failedFilePath=self.__failedFilePath,
-            )
-            self.assertTrue(ok)
-            ok = self.__loadStatus(mw.getLoadStatus())
-            self.assertTrue(ok)
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
-
-    def testReLoadChemCompCoreReference(self):
-        """ Test case -  Load and reload chemical component reference data
-        """
-        try:
-            mw = PdbxLoader(
-                self.__cfgOb,
-                resourceName=self.__resourceName,
-                numProc=self.__numProc,
-                chunkSize=self.__chunkSize,
-                fileLimit=self.__fileLimit,
-                verbose=self.__verbose,
-                readBackCheck=self.__readBackCheck,
-                workPath=self.__workPath,
-            )
-            ok = mw.load(
-                "chem_comp_core", loadType="full", inputPathList=None, styleType=self.__documentStyle, dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath
-            )
-            self.assertTrue(ok)
-            ok = mw.load(
-                "chem_comp_core", loadType="replace", inputPathList=None, styleType=self.__documentStyle, dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath
-            )
-            self.assertTrue(ok)
-            ok = self.__loadStatus(mw.getLoadStatus())
-            self.assertTrue(ok)
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
-
-    def testLoadPdbxCoreData(self):
-        """ Test case -  Load PDBx core collections
-        """
-        try:
-            mw = PdbxLoader(
-                self.__cfgOb,
-                resourceName=self.__resourceName,
-                numProc=self.__numProc,
-                chunkSize=self.__chunkSize,
-                fileLimit=self.__fileLimit,
-                verbose=self.__verbose,
-                readBackCheck=self.__readBackCheck,
-                workPath=self.__workPath,
-            )
-            ok = mw.load("pdbx_core", loadType="full", inputPathList=None, styleType=self.__documentStyle, dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
-            self.assertTrue(ok)
-            ok = self.__loadStatus(mw.getLoadStatus())
-            self.assertTrue(ok)
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
-
-    def testLoadPdbxCoreDataWithMerge(self):
-        """ Test case -  Load PDBx core collections with merged content 'vrpt'
-        """
-        try:
-            vrptPath = self.__cfgOb.getPath("VRPT_REPO_PATH")
-            envName = self.__cfgOb.get("VRPT_REPO_PATH_ENV")
-            os.environ[envName] = vrptPath
-            #
-            mw = PdbxLoader(
-                self.__cfgOb,
-                resourceName=self.__resourceName,
-                numProc=self.__numProc,
-                chunkSize=self.__chunkSize,
-                fileLimit=self.__fileLimit,
-                verbose=self.__verbose,
-                readBackCheck=self.__readBackCheck,
-                workPath=self.__workPath,
-            )
-            ok = mw.load(
-                "pdbx_core",
-                loadType="full",
+                kwargs["databaseName"],
+                collectionLoadList=kwargs["collectionNameList"],
+                loadType=kwargs["loadType"],
                 inputPathList=None,
                 styleType=self.__documentStyle,
                 dataSelectors=["PUBLIC_RELEASE"],
                 failedFilePath=self.__failedFilePath,
-                mergeContentTypes=["vrpt"],
+                saveInputFileListPath=None,
+                pruneDocumentSize=None,
+                logSize=False,
+                validationLevel=kwargs["validationLevel"],
+                mergeContentTypes=kwargs["mergeContentTypes"],
+                useNameFlag=False,
             )
             self.assertTrue(ok)
-            ok = self.__loadStatus(mw.getLoadStatus())
-            self.assertTrue(ok)
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
-
-    def testLoadIhmDevData(self):
-        """ Test case -  Load IHM_DEV collections
-        """
-        try:
-            mw = PdbxLoader(
-                self.__cfgOb,
-                resourceName=self.__resourceName,
-                numProc=self.__numProc,
-                chunkSize=self.__chunkSize,
-                fileLimit=self.__fileLimit,
-                verbose=self.__verbose,
-                readBackCheck=self.__readBackCheck,
-                workPath=self.__workPath,
-            )
-            ok = mw.load("ihm_dev", loadType="full", inputPathList=None, styleType=self.__documentStyle, dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
-            self.assertTrue(ok)
-            ok = self.__loadStatus(mw.getLoadStatus())
-            self.assertTrue(ok)
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
-
-    def testReLoadPdbxEntryData(self):
-        """ Test case -  Load PDBx entry data with pdbx schema
-        """
-        try:
-            mw = PdbxLoader(
-                self.__cfgOb,
-                resourceName=self.__resourceName,
-                numProc=self.__numProc,
-                chunkSize=self.__chunkSize,
-                fileLimit=self.__fileLimit,
-                verbose=self.__verbose,
-                readBackCheck=self.__readBackCheck,
-                workPath=self.__workPath,
-            )
-            ok = mw.load("pdbx", loadType="full", inputPathList=None, styleType=self.__documentStyle, dataSelectors=["PUBLIC_RELEASE"], failedFilePath=self.__failedFilePath)
-            self.assertFalse(ok)
-            ok = mw.load(
-                "pdbx",
-                loadType="replace",
-                inputPathList=None,
-                styleType=self.__documentStyle,
-                dataSelectors=["PUBLIC_RELEASE"],
-                failedFilePath=self.__failedFilePath,
-                pruneDocumentSize=14.0,
-            )
-            self.assertTrue(ok)
-            ok = self.__loadStatus(mw.getLoadStatus())
-            self.assertTrue(ok)
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
-
-    def testLoadPdbxEntryDataSizeLimit(self):
-        """ Test case -  Load PDBx entry data with pdbx schema (testing document size handling)
-        """
-        try:
-            mw = PdbxLoader(
-                self.__cfgOb,
-                resourceName=self.__resourceName,
-                numProc=self.__numProc,
-                chunkSize=self.__chunkSize,
-                fileLimit=self.__fileLimit,
-                verbose=self.__verbose,
-                readBackCheck=self.__readBackCheck,
-                workPath=self.__workPath,
-            )
-            ok = mw.load(
-                "pdbx",
-                loadType="full",
-                inputPathList=None,
-                styleType=self.__documentStyle,
-                dataSelectors=["PUBLIC_RELEASE"],
-                failedFilePath=self.__failedFilePath,
-                pruneDocumentSize=14.0,
-            )
-            self.assertTrue(ok)
-            ok = self.__loadStatus(mw.getLoadStatus())
-            self.assertTrue(ok)
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
-
-    def testReLoadPdbxEntryDataSliced(self):
-        """ Test case -  Load PDBx entry data with pdbx_core schema
-        """
-        try:
-            mw = PdbxLoader(
-                self.__cfgOb,
-                resourceName=self.__resourceName,
-                numProc=self.__numProc,
-                chunkSize=self.__chunkSize,
-                fileLimit=self.__fileLimit,
-                verbose=self.__verbose,
-                readBackCheck=self.__readBackCheck,
-                workPath=self.__workPath,
-            )
-            ok = mw.load(
-                "pdbx_core",
-                collectionLoadList=["pdbx_core_entry", "pdbx_core_entity", "pdbx_core_assembly"],
-                loadType="full",
-                inputPathList=None,
-                styleType=self.__documentStyle,
-                dataSelectors=["PUBLIC_RELEASE"],
-                failedFilePath=self.__failedFilePath,
-            )
-            self.assertTrue(ok)
-            #
-            ok = mw.load(
-                "pdbx_core",
-                collectionLoadList=["pdbx_core_entry", "pdbx_core_entity", "pdbx_core_assembly"],
-                loadType="replace",
-                inputPathList=None,
-                styleType=self.__documentStyle,
-                dataSelectors=["PUBLIC_RELEASE"],
-                failedFilePath=self.__failedFilePath,
-                pruneDocumentSize=14.0,
-            )
-            self.assertTrue(ok)
-            #
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
         except Exception as e:
@@ -392,9 +125,10 @@ class PdbxLoaderTests(unittest.TestCase):
             self.fail()
 
     def __loadStatus(self, statusList):
-        sectionName = "data_exchange"
+        sectionName = "data_exchange_configuration"
         dl = DocumentLoader(
             self.__cfgOb,
+            self.__cachePath,
             resourceName=self.__resourceName,
             numProc=self.__numProc,
             chunkSize=self.__chunkSize,
@@ -403,73 +137,18 @@ class PdbxLoaderTests(unittest.TestCase):
             readBackCheck=self.__readBackCheck,
         )
         #
-        # databaseName = self.__cfgOb.get('DATABASE_NAME', sectionName=sectionName) + '_' + self.__cfgOb.get('DATABASE_VERSION_STRING', sectionName=sectionName)
-        # collectionVersion = self.__cfgOb.get('COLLECTION_VERSION_STRING', sectionName=sectionName)
-        # collectionName = self.__cfgOb.get('COLLECTION_UPDATE_STATUS', sectionName=sectionName) + '_' + collectionVersion
-        #
         databaseName = self.__cfgOb.get("DATABASE_NAME", sectionName=sectionName)
         collectionName = self.__cfgOb.get("COLLECTION_UPDATE_STATUS", sectionName=sectionName)
-
         ok = dl.load(databaseName, collectionName, loadType="append", documentList=statusList, indexAttributeList=["update_id", "database_name", "object_name"], keyNames=None)
         return ok
 
 
-def mongoLoadChemRefCoreSuite():
-    suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(PdbxLoaderTests("testLoadChemCompCoreReference"))
-    suiteSelect.addTest(PdbxLoaderTests("testLoadBirdChemCompCoreReference"))
-    # suiteSelect.addTest(PdbxLoaderTests("testLoadBirdReference"))
-    # suiteSelect.addTest(PdbxLoaderTests("testLoadBirdFamilyReference"))
-    return suiteSelect
-
-
 def mongoLoadPdbxSuite():
     suiteSelect = unittest.TestSuite()
-    # suiteSelect.addTest(PdbxLoaderTests("testLoadPdbxCoreData"))
-    suiteSelect.addTest(PdbxLoaderTests("testLoadPdbxCoreDataWithMerge"))
-    return suiteSelect
-
-
-def mongoLoadIhmSuite():
-    suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(PdbxLoaderTests("testLoadIhmDevData"))
-    return suiteSelect
-
-
-def mongoLoadPdbxLimitSizeSuite():
-    suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(PdbxLoaderTests("testLoadPdbxEntryDataSizeLimit"))
-    return suiteSelect
-
-
-def mongoReLoadSuite():
-    suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(PdbxLoaderTests("testReLoadChemCompCoreReference"))
-    suiteSelect.addTest(PdbxLoaderTests("testReLoadPdbxEntryData"))
-    return suiteSelect
-
-
-def mongoReloadSlicedSuite():
-    suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(PdbxLoaderTests("testReLoadPdbxEntryDataSliced"))
+    suiteSelect.addTest(PdbxLoaderTests("testPdbxLoader"))
     return suiteSelect
 
 
 if __name__ == "__main__":
-    mySuite = mongoLoadIhmSuite()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
-
-    mySuite = mongoReLoadSuite()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
-
-    mySuite = mongoLoadPdbxLimitSizeSuite()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
-
-    mySuite = mongoReloadSlicedSuite()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
-
     mySuite = mongoLoadPdbxSuite()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
-
-    mySuite = mongoLoadChemRefCoreSuite()
     unittest.TextTestRunner(verbosity=2).run(mySuite)

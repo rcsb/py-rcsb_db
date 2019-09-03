@@ -7,5 +7,5 @@
 # Test schema update using configuration settings and storing data in the local test directory --
 #
 #
-schema_update_cli  --mock --update_config_test --schema_dirpath ./test-output --config_path ../../mock-data/config/dbload-setup-example.yml --config_name site_info  > ./test-output/LOGUPDCONFIGSCHEMA 2>&1
+schema_update_cli  --mock --update_config_deployed --schema_cache_path ./test-output --config_path ../config/exdb-config-example.yml --config_name site_info_configuration  > ./test-output/LOGUPDCONFIGSCHEMA 2>&1
 #

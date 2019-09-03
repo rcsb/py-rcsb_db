@@ -28,16 +28,18 @@ import os
 import time
 import unittest
 
-from jsonschema import Draft4Validator, FormatChecker
-from rcsb.db.define.DictionaryProvider import DictionaryProvider
+from jsonschema import Draft4Validator
+from jsonschema import FormatChecker
+
+from mmcif.api.DictMethodRunner import DictMethodRunner
+from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
 from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.processors.DataTransformFactory import DataTransformFactory
 from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
-from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
+from rcsb.db.utils.RepositoryProvider import RepositoryProvider
+from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
-
-from mmcif.api.DictMethodRunner import DictMethodRunner
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()
@@ -53,14 +55,16 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         # self.__fileLimit = 200
         self.__fileLimit = None
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        self.__workPath = os.path.join(HERE, "test-output")
-        self.__configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
-        configName = "site_info"
+        self.__cachePath = os.path.join(TOPDIR, "CACHE")
+        self.__configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
+        configName = "site_info_configuration"
         self.__configName = configName
         self.__cfgOb = ConfigUtil(configPath=self.__configPath, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
-        self.__mU = MarshalUtil(workPath=self.__workPath)
+        self.__mU = MarshalUtil(workPath=self.__cachePath)
 
-        self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, workPath=self.__workPath)
+        self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=True, clearPath=False)
+        self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath)
+        #
         self.__birdRepoPath = self.__cfgOb.getPath("BIRD_REPO_PATH", sectionName=configName)
         #
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
@@ -70,26 +74,16 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__pdbxMockLen = 8
         self.__verbose = True
         #
-        self.__pathPdbxDictionaryFile = self.__cfgOb.getPath("PDBX_DICT_LOCATOR", sectionName=configName)
-        self.__pathRcsbDictionaryFile = self.__cfgOb.getPath("RCSB_DICT_LOCATOR", sectionName=configName)
-        self.__drugBankMappingFile = self.__cfgOb.getPath("DRUGBANK_MAPPING_LOCATOR", sectionName=configName)
-        self.__csdModelMappingFile = self.__cfgOb.getPath("CCDC_MAPPING_LOCATOR", sectionName=configName)
-        #
-        # self.__pathTaxonomyMappingFile = self.__cfgOb.getPath('NCBI_TAXONOMY_LOCATOR', sectionName=configName)
-        #
-        self.__pathTaxonomyData = self.__cfgOb.getPath("NCBI_TAXONOMY_PATH", sectionName=configName)
-        self.__pathEnzymeData = self.__cfgOb.getPath("ENZYME_CLASSIFICATION_DATA_PATH", sectionName=configName)
-        self.__structDomainDataPath = self.__cfgOb.getPath("STRUCT_DOMAIN_CLASSIFICATION_DATA_PATH", sectionName=configName)
-        #
+        self.__modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=configName)
         self.__testDirPath = os.path.join(HERE, "test-output", "pdbx-fails")
         self.__testIhmDirPath = os.path.join(HERE, "test-output", "ihm-files")
-        self.__exportJson = True
+        self.__export = False
         #
         self.__extraOpts = None
         # The following for extended parent/child info -
         # self.__extraOpts = 'addParentRefs|addPrimaryKey'
         #
-        self.__allSchemaNameD = {
+        self.__alldatabaseNameD = {
             "ihm_dev": ["ihm_dev"],
             "pdbx": ["pdbx", "pdbx_ext"],
             "pdbx_core": ["pdbx_core_entity_monomer", "pdbx_core_entity", "pdbx_core_entry", "pdbx_core_assembly", "pdbx_core_entity_instance"],
@@ -101,7 +95,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             "bird_chem_comp_core": ["bird_chem_comp_core"],
         }
 
-        self.__schemaNameD = {
+        self.__databaseNameD = {
             "pdbx_core": [
                 "pdbx_core_entity",
                 "pdbx_core_entry",
@@ -109,10 +103,15 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                 "pdbx_core_entity_instance",
                 "pdbx_core_entity_monomer",
                 "pdbx_core_entity_instance_validation",
-            ]
+            ],
+            "chem_comp_core": ["chem_comp_core"],
+            "bird_chem_comp_core": ["bird_chem_comp_core"],
         }
-        # self.__schemaNameD = {"ihm_dev_full": ["ihm_dev_full"]}
-        # self.__schemaNameD = {'pdbx_core': ['pdbx_core_entity_instance_validation']}
+        self.__mergeContentTypeD = {"pdbx_core": ["vrpt"]}
+        # self.__databaseNameD = {"chem_comp_core": ["chem_comp_core"], "bird_chem_comp_core": ["bird_chem_comp_core"]}
+        # self.__databaseNameD = {"ihm_dev_full": ["ihm_dev_full"]}
+        # self.__databaseNameD = {"pdbx_core": ["pdbx_core_entity_instance_validation"]}
+        self.__databaseNameD = {"pdbx_core": ["pdbx_core_entity_monomer"]}
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -122,100 +121,110 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testValidateOptsRepo(self):
-        schemaLevel = "min"
+        # schemaLevel = "min"
+
+        schemaLevel = "full"
         inputPathList = None
-        eCount = self.__testValidateOpts(schemaNameD=self.__schemaNameD, inputPathList=inputPathList, schemaLevel=schemaLevel, mergeContentTypes=["vrpt"])
+        eCount = self.__testValidateOpts(databaseNameD=self.__databaseNameD, inputPathList=inputPathList, schemaLevel=schemaLevel, mergeContentTypeD=self.__mergeContentTypeD)
         logger.info("Total validation errors schema level %s : %d", schemaLevel, eCount)
         self.assertLessEqual(eCount, 1)
 
     @unittest.skip("Disable troubleshooting test")
     def testValidateOptsList(self):
         schemaLevel = "min"
+
         inputPathList = glob.glob(self.__testDirPath + "/*.cif")
         if not inputPathList:
             return True
-        schemaNameD = {"pdbx_core": ["pdbx_core_entity", "pdbx_core_entry"]}
-        eCount = self.__testValidateOpts(schemaNameD=schemaNameD, inputPathList=inputPathList, schemaLevel=schemaLevel, mergeContentTypes=["vrpt"])
+        databaseNameD = {"pdbx_core": ["pdbx_core_entity", "pdbx_core_entry"]}
+        eCount = self.__testValidateOpts(databaseNameD=databaseNameD, inputPathList=inputPathList, schemaLevel=schemaLevel, mergeContentTypeD=self.__mergeContentTypeD)
         logger.info("Total validation errors schema level %s : %d", schemaLevel, eCount)
         # self.assertGreaterEqual(eCount, 20)
 
-    @unittest.skip("Disable troubleshooting test")
+    @unittest.skip("Disable IHM troubleshooting test")
     def testValidateOptsIhmRepo(self):
-        schemaLevel = "full"
+        schemaLevel = "min"
         inputPathList = None
-        schemaNameD = {"ihm_dev_full": ["ihm_dev_full"]}
-        schemaNameD = {"ihm_dev": ["ihm_dev"]}
-        eCount = self.__testValidateOpts(schemaNameD=schemaNameD, inputPathList=inputPathList, schemaLevel=schemaLevel, mergeContentTypes=None)
+
+        databaseNameD = {"ihm_dev_full": ["ihm_dev_full"]}
+        databaseNameD = {"ihm_dev": ["ihm_dev"]}
+        eCount = self.__testValidateOpts(databaseNameD=databaseNameD, inputPathList=inputPathList, schemaLevel=schemaLevel, mergeContentTypeD=self.__mergeContentTypeD)
         logger.info("Total validation errors schema level %s : %d", schemaLevel, eCount)
         # self.assertGreaterEqual(eCount, 20)
         #
 
-    @unittest.skip("Disable troubleshooting test")
+    @unittest.skip("Disable IHM troubleshooting test")
     def testValidateOptsIhmList(self):
         schemaLevel = "full"
+
         inputPathList = glob.glob(self.__testIhmDirPath + "/*.cif")
         if not inputPathList:
             return True
-        schemaNameD = {"ihm_dev_full": ["ihm_dev_full"]}
-        eCount = self.__testValidateOpts(schemaNameD=schemaNameD, inputPathList=inputPathList, schemaLevel=schemaLevel, mergeContentTypes=None)
+        databaseNameD = {"ihm_dev_full": ["ihm_dev_full"]}
+        eCount = self.__testValidateOpts(databaseNameD=databaseNameD, inputPathList=inputPathList, schemaLevel=schemaLevel, mergeContentTypeD=self.__mergeContentTypeD)
         logger.info("Total validation errors schema level %s : %d", schemaLevel, eCount)
         # self.assertGreaterEqual(eCount, 20)
         #
 
-    def __testValidateOpts(self, schemaNameD, inputPathList=None, schemaLevel="full", mergeContentTypes=None):
+    def __testValidateOpts(self, databaseNameD, inputPathList=None, schemaLevel="full", mergeContentTypeD=None):
         #
         eCount = 0
-        for schemaName in schemaNameD:
-            _ = self.__schU.makeSchemaDef(schemaName, dataTyping="ANY", saveSchema=True, altDirPath=self.__workPath)
-            pthList = inputPathList if inputPathList else self.__schU.getLocatorObjList(contentType=schemaName, mergeContentTypes=mergeContentTypes)
-            for collectionName in schemaNameD[schemaName]:
-                cD = self.__schU.makeSchema(
-                    schemaName, collectionName, schemaType="JSON", level=schemaLevel, saveSchema=True, altDirPath=self.__workPath, extraOpts=self.__extraOpts
-                )
+        for databaseName in databaseNameD:
+            mergeContentTypes = mergeContentTypeD[databaseName] if databaseName in mergeContentTypeD else None
+            _ = self.__schP.makeSchemaDef(databaseName, dataTyping="ANY", saveSchema=True)
+            pthList = inputPathList if inputPathList else self.__rpP.getLocatorObjList(databaseName, mergeContentTypes=mergeContentTypes)
+            for collectionName in databaseNameD[databaseName]:
+                cD = self.__schP.makeSchema(databaseName, collectionName, encodingType="JSON", level=schemaLevel, saveSchema=True, extraOpts=self.__extraOpts)
                 #
-                dL, cnL = self.__testPrepDocumentsFromContainers(pthList, schemaName, collectionName, styleType="rowwise_by_name_with_cardinality")
+                dL, cnL = self.__testPrepDocumentsFromContainers(
+                    pthList, databaseName, collectionName, styleType="rowwise_by_name_with_cardinality", mergeContentTypes=mergeContentTypes
+                )
                 # Raises exceptions for schema compliance.
                 try:
                     Draft4Validator.check_schema(cD)
                 except Exception as e:
-                    logger.error("%s %s schema validation fails with %s", schemaName, collectionName, str(e))
+                    logger.error("%s %s schema validation fails with %s", databaseName, collectionName, str(e))
                 #
                 valInfo = Draft4Validator(cD, format_checker=FormatChecker())
+                logger.info("Validating %d documents from %s %s", len(dL), databaseName, collectionName)
                 for ii, dD in enumerate(dL):
-                    logger.debug("Schema %s collection %s document %d", schemaName, collectionName, ii)
+                    logger.debug("Schema %s collection %s document %d", databaseName, collectionName, ii)
                     try:
                         cCount = 0
                         for error in sorted(valInfo.iter_errors(dD), key=str):
-                            logger.info("schema %s collection %s (%s) path %s error: %s", schemaName, collectionName, cnL[ii], error.path, error.message)
+                            logger.info("schema %s collection %s (%s) path %s error: %s", databaseName, collectionName, cnL[ii], error.path, error.message)
                             logger.debug("Failing document %d : %r", ii, list(dD.items()))
                             eCount += 1
                             cCount += 1
                         if cCount > 0:
-                            logger.info("schema %s collection %s container %s error count %d", schemaName, collectionName, cnL[ii], cCount)
+                            logger.info("schema %s collection %s container %s error count %d", databaseName, collectionName, cnL[ii], cCount)
                     except Exception as e:
                         logger.exception("Validation processing error %s", str(e))
 
         return eCount
 
-    def __testPrepDocumentsFromContainers(self, inputPathList, schemaName, collectionName, styleType="rowwise_by_name_with_cardinality"):
+    def __testPrepDocumentsFromContainers(self, inputPathList, databaseName, collectionName, styleType="rowwise_by_name_with_cardinality", mergeContentTypes=None):
         """Test case -  create loadable PDBx data from repository files
         """
         try:
 
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType=schemaName, altDirPath=self.__workPath)
+            sd, _, _, _ = self.__schP.getSchemaInfo(databaseName)
             #
-            dP = DictionaryProvider()
-            dictApi = dP.getApi(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile])
-            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, workPath=self.__workPath)
-            dmh = DictMethodRunner(dictApi, resourceProvider=rP)
+            dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)
+            dictApi = dP.getApiByName(databaseName)
+            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
+            dmh = DictMethodRunner(dictApi, modulePathMap=self.__modulePathMap, resourceProvider=rP)
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
-            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__workPath, verbose=self.__verbose)
-            containerList = sdp.getContainerList(inputPathList)
+            sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__cachePath, verbose=self.__verbose)
+            containerList = self.__rpP.getContainerList(inputPathList)
             for container in containerList:
                 cName = container.getName()
                 logger.debug("Processing container %s", cName)
                 dmh.apply(container)
+                if self.__export:
+                    savePath = os.path.join(HERE, "test-output", cName + "-with-method.cif")
+                    self.__mU.doExport(savePath, [container], fmt="mmcif")
             #
             tableIdExcludeList = sd.getCollectionExcluded(collectionName)
             tableIdIncludeList = sd.getCollectionSelected(collectionName)
@@ -230,12 +239,14 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             docList = sdp.addDocumentPrivateAttributes(docList, collectionName)
             docList = sdp.addDocumentSubCategoryAggregates(docList, collectionName)
             #
-            if self.__exportJson:
-                for ii, doc in enumerate(docList):
+            mergeS = "-".join(mergeContentTypes) if mergeContentTypes else ""
+            if self.__export and docList:
+                for ii, doc in enumerate(docList[:1]):
                     cn = containerNameList[ii]
-                    fp = os.path.join(HERE, "test-output", "%s-%s-%s-prep-rowwise-by-name-with-cardinality.json" % (cn, schemaName, collectionName))
+                    fp = os.path.join(HERE, "test-output", "prep-%s-%s-%s-%s.json" % (cn, databaseName, collectionName, mergeS))
                     self.__mU.doExport(fp, [doc], fmt="json", indent=3)
                     logger.debug("Exported %r", fp)
+            #
             return docList, containerNameList
 
         except Exception as e:

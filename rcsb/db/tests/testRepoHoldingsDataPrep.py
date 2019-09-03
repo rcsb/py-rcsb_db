@@ -39,11 +39,11 @@ class RepoHoldingsDataPrepTests(unittest.TestCase):
         self.__verbose = True
         #
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        self.__pathConfig = os.path.join(self.__mockTopPath, "config", "dbload-setup-example.yml")
-        self.__workPath = os.path.join(HERE, "test-output")
+        self.__pathConfig = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
+        self.__cachePath = os.path.join(TOPDIR, "CACHE")
         self.__updateId = "2018_25"
         #
-        configName = "site_info"
+        configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
         self.__sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=configName)
         #
@@ -58,7 +58,7 @@ class RepoHoldingsDataPrepTests(unittest.TestCase):
         """ Test loading and processing operations for legacy holdings and status echange data.
         """
         try:
-            rhdp = RepoHoldingsDataPrep(sandboxPath=self.__sandboxPath, workPath=self.__workPath)
+            rhdp = RepoHoldingsDataPrep(sandboxPath=self.__sandboxPath, cachePath=self.__cachePath)
             rL = rhdp.getHoldingsUpdate(updateId=self.__updateId)
             self.assertGreaterEqual(len(rL), 10)
             logger.debug("update data length %r", len(rL))

@@ -2,6 +2,10 @@
 # Date: 8-Jul-2019 jdw split out from original pipeline
 # Supports: fixtures=mysql,mongodb (linux)
 #
+# Updates:
+#  6-Aug-2019  jdw build source and binary wheels by default.
+# 13-Aug-2019  jdw export config support token prior to launching tox runner
+#
 ##
 parameters:
   tox: ""
@@ -11,11 +15,15 @@ parameters:
 
 jobs:
 - job: ${{ format('build_test_{0}_{1}', parameters.tox, parameters.os) }}
+  timeoutInMinutes: 0
   pool:
     ${{ if eq(parameters.os, 'macos') }}:
       vmImage: 'macOS-10.14'
     ${{ if eq(parameters.os, 'linux') }}:
       vmImage: 'ubuntu-latest'
+
+  variables:
+    - group: py-shared-variables
 
   steps:
     #
@@ -59,7 +67,7 @@ jobs:
         displayName: 'Install flex'
       - script: sudo apt-get install bison
         displayName: 'Install bison'
-    #
+  #
     - ${{ if and(contains(parameters.fixtures, 'mysql'), startsWith(parameters.os, 'linux')) }}:
       - bash: |
           sudo apt-get install libmysqlclient-dev python-mysqldb
@@ -119,16 +127,24 @@ jobs:
       displayName: 'Install dependencies'
     #
     - ${{ if startsWith(parameters.tox, 'py') }}:
-      - script: ${{ format('python -m tox -e {0}', parameters.tox) }}
+      - script: |
+          export CONFIG_SUPPORT_TOKEN_ENV=$(VAR_CONFIG_SUPPORT_TOKEN_ENV)
+          ${{ format('python -m tox -e {0}', parameters.tox) }}
         displayName: 'Running tox task'
     - ${{ if and(not(startsWith(parameters.tox, 'py')), startsWith(parameters.python, '3.8')) }}:
-      - script: ${{ format('python -m tox -e {0}-py38', parameters.tox) }}
+      - script: |
+          export CONFIG_SUPPORT_TOKEN_ENV=$(VAR_CONFIG_SUPPORT_TOKEN_ENV)
+          ${{ format('python -m tox -e {0}-py38', parameters.tox) }}
         displayName: 'Running tox task'
     - ${{ if and(not(startsWith(parameters.tox, 'py')), startsWith(parameters.python, '3.7')) }}:
-      - script: ${{ format('python -m tox -e {0}-py37', parameters.tox) }}
+      - script: |
+          export CONFIG_SUPPORT_TOKEN_ENV=$(VAR_CONFIG_SUPPORT_TOKEN_ENV)
+          ${{ format('python -m tox -e {0}-py37', parameters.tox) }}
         displayName: 'Running tox task'
     - ${{ if and(not(startsWith(parameters.tox, 'py')), startsWith(parameters.python, '2.7')) }}:
-      - script: ${{ format('python -m tox -e {0}-py27', parameters.tox) }}
+      - script: |
+          export CONFIG_SUPPORT_TOKEN_ENV=$(VAR_CONFIG_SUPPORT_TOKEN_ENV)
+          ${{ format('python -m tox -e {0}-py27', parameters.tox) }}
         displayName: 'Runing tox task'
     #
     #  Build artifacts if this is a test target (i.e. labeled as py##)
@@ -140,10 +156,17 @@ jobs:
         displayName: "Build source dist"
       - script: python setup.py  bdist_wheel --dist-dir "$(System.DefaultWorkingDirectory)/dist"
         displayName: "Build wheel"
+    #
+      - script: python setup.py  sdist --dist-dir "$(System.DefaultWorkingDirectory)/udist"
+        displayName: "Build source dist"
       #
       # Check the install artifacts
-      - script: ls -lR "$(System.DefaultWorkingDirectory)/dist"
+      - script: ls -lR "$(System.DefaultWorkingDirectory)/dist" "$(System.DefaultWorkingDirectory)/udist"
         displayName: "Listing of installed software"
       #
       - publish: $(System.DefaultWorkingDirectory)/dist
         artifact: ${{ format('sw_{0}_{1}', parameters.tox, parameters.os) }}
+      #
+      - publish: $(System.DefaultWorkingDirectory)/udist
+        artifact: ${{ format('sw_u_{0}_{1}', parameters.tox, parameters.os) }}
+      #

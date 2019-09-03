@@ -62,7 +62,6 @@ class SchemaDefDataPrep(object):
 
     def __init__(self, schemaDefAccessObj, dtObj=None, workPath=None, verbose=True):
         self.__verbose = verbose
-        self.__workPath = workPath
         self.__debug = False
         self.__sD = schemaDefAccessObj
         self.__mU = MarshalUtil(workPath=workPath)
@@ -182,7 +181,7 @@ class SchemaDefDataPrep(object):
             logger.exception("Failing with %s", str(e))
         return []
 
-    def fetch(self, locatorObjList, styleType="rowwise_by_id", filterType="none", dataSelectors=None):
+    def fetch(self, locatorObjList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, useNameFlag=True):
         """ Return a dictionary of loadable data for each table defined in the current schema
             definition object.   Data are extracted from all files in the input file list,
             and this is added in single schema instance such that data from multiple files are appended to a
@@ -201,11 +200,11 @@ class SchemaDefDataPrep(object):
                 filterTypes: "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
 
         """
-        schemaDataDictById, containerNameList, _ = self.__fetch(locatorObjList, filterType, dataSelectors=dataSelectors)
+        schemaDataDictById, containerNameList, _ = self.__fetch(locatorObjList, filterType, dataSelectors=dataSelectors, useNameFlag=useNameFlag)
         schemaDataDict = self.__reShape.applyShape(schemaDataDictById, styleType=styleType)
         return schemaDataDict, containerNameList
 
-    def fetchDocuments(self, locatorObjList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, sliceFilter=None):
+    def fetchDocuments(self, locatorObjList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, sliceFilter=None, useNameFlag=True):
         """ Return a list of dictionaries of loadable data for each table defined in the current schema
             definition object.   Data are extracted from the each input file, and each data
             set is stored in a separate schema instance (document).  The organization
@@ -228,7 +227,7 @@ class SchemaDefDataPrep(object):
         containerNameList = []
         rejectLocatorObjList = []
         for locator in locatorObjList:
-            schemaDataDictById, cnList, rL = self.__fetch([locator], filterType, dataSelectors=dataSelectors)
+            schemaDataDictById, cnList, rL = self.__fetch([locator], filterType, dataSelectors=dataSelectors, useNameFlag=useNameFlag)
             rejectLocatorObjList.extend(rL)
             if not schemaDataDictById:
                 continue
@@ -238,7 +237,7 @@ class SchemaDefDataPrep(object):
         #
         return schemaDataDictList, containerNameList, rejectLocatorObjList
 
-    def process(self, containerList, styleType="rowwise_by_id", filterType="none", dataSelectors=None):
+    def process(self, containerList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, useNameFlag=True):
         """ Return a dictionary of loadable data for each table defined in the current schema
             definition object.   Data are extracted from all files in the input container list,
             and this is added in single schema instance such that data from multiple files are appended to a
@@ -257,12 +256,12 @@ class SchemaDefDataPrep(object):
 
 
         """
-        schemaDataDictById, containerNameList, _ = self.__process(containerList, filterType, dataSelectors=dataSelectors)
+        schemaDataDictById, containerNameList, _ = self.__process(containerList, filterType, dataSelectors=dataSelectors, useNameFlag=useNameFlag)
         schemaDataDict = self.__reShape.applyShape(schemaDataDictById, styleType=styleType)
 
         return schemaDataDict, containerNameList
 
-    def processDocuments(self, containerList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, sliceFilter=None):
+    def processDocuments(self, containerList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, sliceFilter=None, useNameFlag=True):
         """ Return a list of dictionaries of loadable data for each table defined in the current schema
             definition object.   Data are extracted from the each input container, and each data
             set is stored in a separate schema instance (document).  The organization of the loadable
@@ -282,11 +281,11 @@ class SchemaDefDataPrep(object):
             sliceFilter: name of slice filter
         """
         schemaDataDictList = []
-        containerNameList = []
-        rejectPathList = []
+        containerIdList = []
+        rejectIdList = []
         for container in containerList:
-            schemaDataDictById, _, rL = self.__process([container], filterType, dataSelectors=dataSelectors)
-            rejectPathList.extend(rL)
+            schemaDataDictById, _, rL = self.__process([container], filterType, dataSelectors=dataSelectors, useNameFlag=useNameFlag)
+            rejectIdList.extend(rL)
             if not schemaDataDictById:
                 continue
             #
@@ -298,13 +297,16 @@ class SchemaDefDataPrep(object):
                 schemaDataDictList.extend(sddL)
                 #
                 # Match the container name to the generated reshaped objects
-                cName = container.getName()
-                cnList = [cName for i in range(len(sddL))]
-                containerNameList.extend(cnList)
+                try:
+                    cId = container.getProp("uid")
+                except Exception:
+                    cId = container.getName()
+                cIdList = [cId for i in range(len(sddL))]
+                containerIdList.extend(cIdList)
 
-        rejectPathList = list(set(rejectPathList))
+        rejectIdList = list(set(rejectIdList))
         #
-        return schemaDataDictList, containerNameList, rejectPathList
+        return schemaDataDictList, containerIdList, rejectIdList
 
     def addDocumentPrivateAttributes(self, docList, collectionName, styleType="rowwise_by_name"):
         """ For the input collection, add private document attributes to the input document list.
@@ -364,44 +366,72 @@ class SchemaDefDataPrep(object):
                 for doc in docList:
                     for scAg, scD in scAgD.items():
                         for sName in scD:
+                            # logger.info("sName %s scAg %r scD %r", sName, scAg, scD)
                             if sName not in doc:
                                 continue
                             #
                             hasUnitCard = self.__sD.getSubCategoryAggregatesUnitCardinality(collectionName, scAg)
-                            logger.debug("%s agg %s unit cardinalioty %r obj %s type %r", collectionName, hasUnitCard, scAg, sName, type(doc[sName]))
-                            atNameL = scD[sName]
+                            atNameAllL = scD[sName]
+                            logger.debug("\n -- %s %s agg %s unit cardinality %r obj %s type %r", sName, collectionName, hasUnitCard, scAg, sName, type(doc[sName]))
+                            # logger.info("\n -- %s %s type %r", sName, collectionName, type(doc[sName]))
+                            # logger.info("\n -- %s %s atNameAllL %r", sName, collectionName, atNameAllL)
                             if isinstance(doc[sName], list):
                                 for rowD in doc[sName]:
-                                    if set(atNameL).issubset(set(rowD.keys())):
-                                        atLenL = [len(rowD[atName]) for atName in atNameL]
+                                    atNameL = list(set(atNameAllL).intersection(set(rowD.keys())))
+                                    # logger.info(" - QQQ - sName %s atNameAllL %r rowD.keys()(set) %r atNameL %r", sName, set(atNameAllL), set(rowD.keys()), atNameL)
+                                    if atNameL and set(atNameL).issubset(set(rowD.keys())):
+                                        # logger.info(" - TTT - sName %s (%r) %r", sName, hasUnitCard, [type(rowD[atName]) for atName in atNameL])
+                                        if hasUnitCard:
+                                            # all members of the the subcategory must be simple types -
+                                            dD = {}
+                                            for atName in atNameL:
+                                                cAtName = atName.replace(scAg + "_", "") if removeSubCategoryPrefix else atName
+                                                dD[cAtName] = rowD[atName]
+                                            rowD[scAg] = dD
+                                        else:
+                                            # all members of the the subcategory must be list type -
+                                            atLenL = [len(rowD[atName]) for atName in atNameL]
+                                            atLen = min(atLenL)
+                                            # logger.info("%s %s %r Candidate list row is %r", scAg, sName, atNameL, rowD)
+                                            # copy all of the data to the new aggregate object
+                                            rL = []
+                                            for ii in range(atLen):
+                                                dD = {}
+                                                for atName in atNameL:
+                                                    cAtName = atName.replace(scAg + "_", "") if removeSubCategoryPrefix else atName
+                                                    dD[cAtName] = rowD[atName][ii]
+                                                rL.append(dD)
+                                            rowD[scAg] = rL
+                                        #
+                                        for atName in atNameL:
+                                            del rowD[atName]
+                                        logger.debug("Processed list row is %r", rowD)
+                            elif isinstance(doc[sName], dict):
+                                atNameL = list(set(atNameAllL).intersection(set(doc[sName].keys())))
+                                if atNameL and set(atNameL).issubset(set(doc[sName].keys())):
+                                    # logger.info("Candidate dict row is %r", doc[sName])
+                                    if hasUnitCard:
+                                        # all members of the the subcategory must be simple types -
+                                        dD = {}
+                                        dD = {}
+                                        for atName in atNameL:
+                                            cAtName = atName.replace(scAg + "_", "") if removeSubCategoryPrefix else atName
+                                            dD[cAtName] = doc[sName][atName][ii]
+                                        doc[sName][scAg] = dD
+                                    else:
+                                        # all members of the the subcategory must be list type -
+                                        atLenL = [len(doc[sName][atName]) for atName in atNameL]
                                         atLen = min(atLenL)
-                                        logger.debug("%s %s %r Candidate list row is %r", scAg, sName, atNameL, rowD)
                                         # copy all of the data to the new aggregate object
                                         rL = []
                                         for ii in range(atLen):
                                             dD = {}
                                             for atName in atNameL:
                                                 cAtName = atName.replace(scAg + "_", "") if removeSubCategoryPrefix else atName
-                                                dD[cAtName] = rowD[atName][ii]
+                                                dD[cAtName] = doc[sName][atName][ii]
                                             rL.append(dD)
-                                        rowD[scAg] = rL
-                                        for atName in atNameL:
-                                            del rowD[atName]
-                                        logger.debug("Processed list row is %r", rowD)
-                            elif isinstance(doc[sName], dict):
-                                if set(atNameL).issubset(set(doc[sName].keys())):
-                                    logger.debug("Candidate dict row is %r", doc[sName])
-                                    atLenL = [len(doc[sName][atName]) for atName in atNameL]
-                                    atLen = min(atLenL)
-                                    # copy all of the data to the new aggregate object
-                                    rL = []
-                                    for ii in range(atLen):
-                                        dD = {}
-                                        for atName in atNameL:
-                                            cAtName = atName.replace(scAg + "_", "") if removeSubCategoryPrefix else atName
-                                            dD[cAtName] = doc[sName][atName][ii]
-                                        rL.append(dD)
-                                    doc[sName][scAg] = rL
+                                        doc[sName][scAg] = rL
+                                    #
                                     for atName in atNameL:
                                         del doc[sName][atName]
                                     logger.debug("Processed dict row is %r", doc[sName])
@@ -413,7 +443,7 @@ class SchemaDefDataPrep(object):
         #
         return docList
 
-    def __fetch(self, locatorObjList, filterType, dataSelectors=None):
+    def __fetch(self, locatorObjList, filterType, dataSelectors=None, useNameFlag=True):
         """ Internal method to create loadable data corresponding to the table schema definition
             from the input list of data files.
 
@@ -425,7 +455,7 @@ class SchemaDefDataPrep(object):
         startTime = time.time()
         #
         rejectLocatorObjList = []
-        containerNameList = []
+        containerIdList = []
         schemaDataDict = {}
         for locatorObj in locatorObjList:
             # myContainerList = self.__mU.doImport(locatorObj, fmt="mmcif")
@@ -434,11 +464,13 @@ class SchemaDefDataPrep(object):
             for cA in myContainerList:
                 if self.__testdataSelectors(cA, dataSelectors):
                     cL.append(cA)
-                    # self.__loadInfo[c.getName()] = {'load_date': self.__getTimeStamp(), 'locator': locatorObj}
+                    if useNameFlag:
+                        containerIdList.append(cA.getName())
+                    else:
+                        containerIdList.append(cA.getProp("uid"))
                 else:
                     rejectLocatorObjList.append(locatorObj)
             self.__mapData(cL, schemaDataDict, filterType)
-            containerNameList.extend([myC.getName() for myC in myContainerList])
         #
         schemaDataDictF = {}
         if "drop-empty-tables" in filterType:
@@ -455,38 +487,38 @@ class SchemaDefDataPrep(object):
         endTime = time.time()
         logger.debug("completed at %s (%.3f seconds)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
 
-        return schemaDataDictF, containerNameList, rejectLocatorObjList
+        return schemaDataDictF, containerIdList, rejectLocatorObjList
 
-    def __process(self, containerList, filterType, dataSelectors=None):
+    def __process(self, containerList, filterType, dataSelectors=None, useNameFlag=True):
         """ Internal method to create loadable data corresponding to the table schema definition
             from the input container list.
 
-            Returns: dicitonary d[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
+            Returns: dictionary d[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
                                 and
-                     processed container name list. []
-                     list of paths or names of rejected containers. []
+                     suceessfully processed container id list. []
+                     list of rejected containers ids. []
 
         """
         startTime = time.time()
         #
-        rejectPathList = []
-        containerNameList = []
+        rejectIdList = []
+        containerIdList = []
         schemaDataDict = {}
         cL = []
         for cA in containerList:
             if self.__testdataSelectors(cA, dataSelectors):
                 cL.append(cA)
+                if useNameFlag:
+                    containerIdList.append(cA.getName())
+                else:
+                    containerIdList.append(cA.getProp("uid"))
             else:
-                try:
-                    # rejectList.append(self.__loadInfo[c.getName()]['locator'])
-                    rejectPathList.append(cA.getProp["locator"])
-                except Exception:
-                    rejectPathList.append(cA.getName())
+                if useNameFlag:
+                    rejectIdList.append(cA.getName())
+                else:
+                    rejectIdList.append(cA.getProp("uid"))
         #
         self.__mapData(cL, schemaDataDict, filterType)
-        containerNameList.extend([myC.getName() for myC in containerList])
-        #
-        #
         schemaDataDictF = {}
         if "drop-empty-tables" in filterType:
             for k, v in schemaDataDict.items():
@@ -499,7 +531,7 @@ class SchemaDefDataPrep(object):
         endTime = time.time()
         logger.debug("completed at %s (%.3f seconds)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
 
-        return schemaDataDictF, containerNameList, rejectPathList
+        return schemaDataDictF, containerIdList, rejectIdList
 
     def __testdataSelectors(self, container, dataSelectors):
         """ Test the if the input container satisfies the input content/data selectors.
@@ -508,10 +540,10 @@ class SchemaDefDataPrep(object):
 
             Return:  True fo sucess or False otherwise
         """
-        logger.debug("Applying selectors: %r", dataSelectors)
         if not dataSelectors:
             return True
         try:
+            logger.debug("On container %s applying selectors: %r", container.getName(), dataSelectors)
             for cs in dataSelectors:
                 csDL = self.__sD.getDataSelectors(cs)
                 for csD in csDL:

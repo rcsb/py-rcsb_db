@@ -6,7 +6,9 @@
 #
 #
 # Updates:
-#
+#  17-Jul-2019 jdw add resource for common utilities and dictionary api
+#   7-Aug-2019 jdw use dictionary locator map
+#  13-Aug-2019 jdw return class instances in all cases. Add cache management support.
 ##
 """
 Resource provider for DictMethodHelper tools.
@@ -18,13 +20,17 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 import logging
+import os
 
-from rcsb.db.utils.SingletonClass import SingletonClass
-from rcsb.utils.ec.EnzymeDatabaseUtils import EnzymeDatabaseUtils
-from rcsb.utils.io.MarshalUtil import MarshalUtil
-from rcsb.utils.struct.CathClassificationUtils import CathClassificationUtils
-from rcsb.utils.struct.ScopClassificationUtils import ScopClassificationUtils
-from rcsb.utils.taxonomy.TaxonomyUtils import TaxonomyUtils
+from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
+from rcsb.db.helpers.DictMethodCommonUtils import DictMethodCommonUtils
+from rcsb.utils.chemref.ChemCompModelProvider import ChemCompModelProvider
+from rcsb.utils.chemref.DrugBankProvider import DrugBankProvider
+from rcsb.utils.ec.EnzymeDatabaseProvider import EnzymeDatabaseProvider
+from rcsb.utils.io.SingletonClass import SingletonClass
+from rcsb.utils.struct.CathClassificationProvider import CathClassificationProvider
+from rcsb.utils.struct.ScopClassificationProvider import ScopClassificationProvider
+from rcsb.utils.taxonomy.TaxonomyProvider import TaxonomyProvider
 
 logger = logging.getLogger(__name__)
 
@@ -34,50 +40,6 @@ class DictMethodResourceProvider(SingletonClass):
 
     """
 
-    # Dictionary of current standard monomers -
-    monDict3 = {
-        "ALA": "A",
-        "ARG": "R",
-        "ASN": "N",
-        "ASP": "D",
-        "ASX": "B",
-        "CYS": "C",
-        "GLN": "Q",
-        "GLU": "E",
-        "GLX": "Z",
-        "GLY": "G",
-        "HIS": "H",
-        "ILE": "I",
-        "LEU": "L",
-        "LYS": "K",
-        "MET": "M",
-        "PHE": "F",
-        "PRO": "P",
-        "SER": "S",
-        "THR": "T",
-        "TRP": "W",
-        "TYR": "Y",
-        "VAL": "V",
-        "PYL": "O",
-        "SEC": "U",
-        "DA": "A",
-        "DC": "C",
-        "DG": "G",
-        "DT": "T",
-        "DU": "U",
-        "DI": "I",
-        "A": "A",
-        "C": "C",
-        "G": "G",
-        "I": "I",
-        "N": "N",
-        "T": "T",
-        "U": "U",
-        # "UNK": "X",
-        # "MSE":"M",
-        # ".": "."
-    }
-
     def __init__(self, cfgOb, **kwargs):
         """ Resource provider for dictionary method runner.
 
@@ -86,19 +48,13 @@ class DictMethodResourceProvider(SingletonClass):
 
         Keyword agruments:
             configName {string} -- configuration section name (default: default section name)
-            workPath {str} -- path used for temporary file management (default: '.')
+            cachePath {str} -- path used for temporary file management (default: '.')
 
         """
         self.__cfgOb = cfgOb
-        self.__cfgOb.getDefaultSectionName()
+
         self.__configName = kwargs.get("configName", self.__cfgOb.getDefaultSectionName())
-        self.__workPath = kwargs.get("workPath", ".")
-        #
-        # self.__pathPdbxDictionaryFile = self.__cfgOb.getPath("PDBX_DICT_LOCATOR", sectionName=configName)
-        # self.__pathRcsbDictionaryFile = self.__cfgOb.getPath("RCSB_DICT_LOCATOR", sectionName=configName)
-        #
-        # self.__siftsMappingFilePath = self.__cfgOb.getPath("SIFTS_SUMMARY_PATH", sectionName=configName)
-        # self.__siftsMappingDict = {}
+        self.__cachePath = kwargs.get("cachePath", ".")
         #
         self.__drugBankMappingDict = {}
         self.__csdModelMappingDict = {}
@@ -106,21 +62,37 @@ class DictMethodResourceProvider(SingletonClass):
         self.__ecU = None
         self.__scopU = None
         self.__cathU = None
+        self.__dbU = None
+        self.__ccmU = None
+        self.__commonU = None
+        self.__dApiW = None
+        #
         #
         # self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
         # self.__re_non_digit = re.compile(r"[^\d]+")
         #
-        logger.info("Dictionary resource provider init completed")
+        self.__resourcesD = {
+            "Dictionary API instance (pdbx_core)": self.__fetchDictionaryApi,
+            "TaxonomyProvider instance": self.__fetchTaxonomyProvider,
+            "ScopProvider instance": self.__fetchScopProvider,
+            "CathProvider instance": self.__fetchCathProvider,
+            "EnzymeProvider instance": self.__fetchEnzymeProvider,
+            "DrugBankProvider instance": self.__fetchDrugBankProvider,
+            "ChemCompModelProvider instance": self.__fetchChemCompModelProvider,
+            "DictMethodCommonUtils instance": self.__fetchCommonUtils,
+        }
+        logger.debug("Dictionary resource provider init completed")
         #
 
     def echo(self, msg):
         logger.info(msg)
 
-    def getResource(self, resourceName, default=None, **kwargs):
+    def getResource(self, resourceName, default=None, useCache=True, **kwargs):
         """ Return the named input resource or the default value.
 
         Arguments:
             resourceName {str} -- resource name
+            useCache (bool, optional): use current cace. Defaults to True.
 
         Keyword Arguments:
             default {obj} -- default return value for missing resources (default: {None})
@@ -128,78 +100,89 @@ class DictMethodResourceProvider(SingletonClass):
         Returns:
             [obj] -- resource object
         """
-        resourcesD = {
-            "TaxonomyUtils instance": self.__fetchTaxonomyUtils,
-            "ScopUtils instance": self.__fetchScopUtils,
-            "CathUtils instance": self.__fetchCathUtils,
-            "EnzymeUtils instance": self.__fetchEnzymeUtils,
-            "DrugBank accession mapping": self.__fetchDrugBankMapping,
-            "CCDC accession mapping": self.__fetchCsdModelMapping,
-            "monomer one-letter code mapping": self.__fetchMonomerCodes,
-        }
-        if resourceName in resourcesD:
-            return resourcesD[resourceName](self.__cfgOb, self.__configName, self.__workPath, **kwargs)
+        logger.debug("Requesting resource %r", resourceName)
+        if resourceName in self.__resourcesD:
+            return self.__resourcesD[resourceName](self.__cfgOb, self.__configName, self.__cachePath, useCache=useCache, **kwargs)
         else:
             logger.error("Request for unsupported resource %r returning %r", resourceName, default)
         #
         return default
 
-    def __fetchMonomerCodes(self, cfgOb, configName, workPath, **kwargs):
-        logger.debug("Default %r configName %s workPath %s kwargs %r", cfgOb.getDefaultSectionName(), configName, workPath, kwargs)
-        return DictMethodResourceProvider.monDict3
+    def cacheResources(self, useCache=False, **kwargs):
+        """Update and optionally clear all resource caches.
 
-    def __fetchTaxonomyUtils(self, cfgOb, configName, workPath, **kwargs):
-        logger.debug("configName %s workPath %s kwargs %r", configName, workPath, kwargs)
+        Args:
+            useCache (bool, optional): use current cace. Defaults to False.
+
+        Returns:
+            bool: True for success or False otherwise
+        """
+        ret = True
+        for resourceName in self.__resourcesD:
+            logger.info("Caching resources for %r", resourceName)
+            tU = self.__resourcesD[resourceName](self.__cfgOb, self.__configName, self.__cachePath, useCache=useCache, **kwargs)
+            ok = tU.testCache()
+            ret = ret and ok
+            logger.info("After %r status %r of %r", resourceName, ok, ret)
+        return ret
+
+    def __fetchTaxonomyProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
         if not self.__taxU:
-            taxonomyDataPath = cfgOb.getPath("NCBI_TAXONOMY_PATH", sectionName=configName)
-            self.__taxU = TaxonomyUtils(taxDirPath=taxonomyDataPath)
+            taxonomyDataPath = os.path.join(cachePath, cfgOb.get("NCBI_TAXONOMY_CACHE_DIR", sectionName=configName))
+            self.__taxU = TaxonomyProvider(taxDirPath=taxonomyDataPath, useCache=useCache, **kwargs)
         return self.__taxU
 
-    def __fetchScopUtils(self, cfgOb, configName, workPath, **kwargs):
-        logger.debug("configName %s workPath %s kwargs %r", configName, workPath, kwargs)
+    def __fetchScopProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
         if not self.__scopU:
-            structDomainDataPath = cfgOb.getPath("STRUCT_DOMAIN_CLASSIFICATION_DATA_PATH", sectionName=configName)
-            self.__scopU = ScopClassificationUtils(scopDirPath=structDomainDataPath, useCache=True)
+            structDomainDataPath = os.path.join(cachePath, cfgOb.get("STRUCT_DOMAIN_CLASSIFICATION_CACHE_DIR", sectionName=configName))
+            self.__scopU = ScopClassificationProvider(scopDirPath=structDomainDataPath, useCache=useCache, **kwargs)
         return self.__scopU
 
-    def __fetchCathUtils(self, cfgOb, configName, workPath, **kwargs):
-        logger.debug("configName %s workPath %s kwargs %r", configName, workPath, kwargs)
+    def __fetchCathProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
         if not self.__cathU:
-            structDomainDataPath = cfgOb.getPath("STRUCT_DOMAIN_CLASSIFICATION_DATA_PATH", sectionName=configName)
-            self.__cathU = CathClassificationUtils(cathDirPath=structDomainDataPath, useCache=True)
+            structDomainDataPath = os.path.join(cachePath, cfgOb.get("STRUCT_DOMAIN_CLASSIFICATION_CACHE_DIR", sectionName=configName))
+            self.__cathU = CathClassificationProvider(cathDirPath=structDomainDataPath, useCache=useCache, **kwargs)
         return self.__cathU
 
-    def __fetchEnzymeUtils(self, cfgOb, configName, workPath, **kwargs):
-        logger.debug("configName %s workPath %s kwargs %r", configName, workPath, kwargs)
+    def __fetchEnzymeProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
         if not self.__ecU:
-            enzymeDataPath = cfgOb.getPath("ENZYME_CLASSIFICATION_DATA_PATH", sectionName=configName)
-            self.__ecU = EnzymeDatabaseUtils(enzymeDirPath=enzymeDataPath, useCache=True, clearCache=False)
+            enzymeDataPath = os.path.join(cachePath, cfgOb.get("ENZYME_CLASSIFICATION_CACHE_DIR", sectionName=configName))
+            self.__ecU = EnzymeDatabaseProvider(enzymeDirPath=enzymeDataPath, useCache=useCache, **kwargs)
         return self.__ecU
 
     #
-    def __fetchDrugBankMapping(self, cfgOb, configName, workPath, **kwargs):
-        logger.debug("configName %s workPath %s kwargs %r", configName, workPath, kwargs)
-        if not self.__drugBankMappingDict:
-            try:
-                drugBankMappingFile = cfgOb.getPath("DRUGBANK_MAPPING_LOCATOR", sectionName=configName)
-                mU = MarshalUtil(workPath=workPath)
-                self.__drugBankMappingDict = mU.doImport(drugBankMappingFile, fmt="json")
-                logger.debug("Fetching DrugBank mapping length %d", len(self.__drugBankMappingDict))
-            except Exception as e:
-                logger.exception("For %s failing with %s", drugBankMappingFile, str(e))
-        return self.__drugBankMappingDict
+    def __fetchDrugBankProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
+        if not self.__dbU:
+            dbDataPath = os.path.join(cachePath, cfgOb.get("DRUGBANK_CACHE_DIR", sectionName=configName))
+            un = cfgOb.get("_DRUGBANK_AUTH_USERNAME", sectionName=configName)
+            pw = cfgOb.get("_DRUGBANK_AUTH_PASSWORD", sectionName=configName)
+            self.__dbU = DrugBankProvider(dirPath=dbDataPath, useCache=useCache, username=un, password=pw, **kwargs)
+        return self.__dbU
 
-    def __fetchCsdModelMapping(self, cfgOb, configName, workPath, **kwargs):
-        """
-        """
-        logger.debug("configName %s workPath %s kwargs %r", configName, workPath, kwargs)
-        if not self.__csdModelMappingDict:
-            try:
-                csdModelMappingFile = cfgOb.getPath("CCDC_MAPPING_LOCATOR", sectionName=configName)
-                mU = MarshalUtil(workPath=workPath)
-                self.__csdModelMappingDict = mU.doImport(csdModelMappingFile, fmt="json")
-                logger.debug("Fetching CSD model length %d", len(self.__csdModelMappingDict))
-            except Exception as e:
-                logger.exception("For %s failing with %s", csdModelMappingFile, str(e))
+    def __fetchChemCompModelProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
+        if not self.__ccmU:
+            dirPath = os.path.join(cachePath, cfgOb.get("CHEM_COMP_MODEL_CACHE_DIR", sectionName=configName))
+            self.__ccmU = ChemCompModelProvider(dirPath=dirPath, useCache=useCache, **kwargs)
+        return self.__ccmU
 
-        return self.__csdModelMappingDict
+    def __fetchCommonUtils(self, cfgOb, configName, cachePath, useCache=None, **kwargs):
+        logger.debug("configName %s cachePath %r kwargs %r", configName, cachePath, kwargs)
+        _ = cfgOb
+        _ = useCache
+        if not self.__commonU:
+            self.__commonU = DictMethodCommonUtils(**kwargs)
+        return self.__commonU
+
+    def __fetchDictionaryApi(self, cfgOb, configName, cachePath, useCache=None, **kwargs):
+        logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
+        schemaName = kwargs.get("schemaName", "pdbx_core")
+        self.__dApiW = DictionaryApiProviderWrapper(cfgOb, cachePath, useCache=useCache)
+        dictApi = self.__dApiW.getApiByName(schemaName)
+        # numRev = dictApi.getDictionaryRevisionCount()
+        return dictApi

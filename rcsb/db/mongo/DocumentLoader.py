@@ -24,14 +24,26 @@ import time
 
 from rcsb.db.mongo.Connection import Connection
 from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
-from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
+from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
 
 logger = logging.getLogger(__name__)
 
 
 class DocumentLoader(object):
-    def __init__(self, cfgOb, resourceName="MONGO_DB", numProc=4, chunkSize=15, documentLimit=None, verbose=False, readBackCheck=False, maxStepLength=2000):
+    def __init__(
+        self,
+        cfgOb,
+        cachePath,
+        resourceName="MONGO_DB",
+        numProc=4,
+        chunkSize=15,
+        documentLimit=None,
+        verbose=False,
+        readBackCheck=False,
+        maxStepLength=2000,
+        schemaRebuildFlag=False,
+    ):
         self.__verbose = verbose
         #
         # Limit the load length of each file type for testing  -  Set to None to remove -
@@ -45,7 +57,8 @@ class DocumentLoader(object):
         self.__cfgOb = cfgOb
         self.__resourceName = resourceName
         #
-        self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__documentLimit)
+        self.__cachePath = cachePath if cachePath else "."
+        self.__schP = SchemaProvider(cfgOb, cachePath, useCache=True, rebuildFlag=schemaRebuildFlag)
         #
         self.__readBackCheck = readBackCheck
         self.__mpFormat = "[%(levelname)s] %(asctime)s %(processName)s-%(module)s.%(funcName)s: %(message)s"
@@ -89,8 +102,8 @@ class DocumentLoader(object):
             indAtList = indexAttributeList if indexAttributeList else []
             bsonSchema = None
             if schemaLevel and schemaLevel in ["min", "full"]:
-                bsonSchema = self.__schU.getJsonSchema(collectionName, schemaType="BSON", level=schemaLevel)
-                logger.debug("Using schema validation for %r %r", collectionName, schemaLevel)
+                bsonSchema = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="BSON", level=schemaLevel)
+                logger.debug("Using schema validation for %r %r %r", databaseName, collectionName, schemaLevel)
 
             if loadType == "full":
                 self.__removeCollection(databaseName, collectionName)

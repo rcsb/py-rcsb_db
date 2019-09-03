@@ -43,7 +43,8 @@ from rcsb.db.cockroach.Connection import Connection
 
 #
 from rcsb.db.sql.SqlGen import SqlGenAdmin
-from rcsb.db.utils.SchemaDefUtil import SchemaDefUtil
+from rcsb.db.utils.RepositoryProvider import RepositoryProvider
+from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
@@ -75,11 +76,12 @@ class CockroachDbLoaderCockroachDbTests(unittest.TestCase):
         self.__fileLimit = 100
         self.__workPath = os.path.join(HERE, "test-output")
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
-        configPath = os.path.join(TOPDIR, "rcsb", "mock-data", "config", "dbload-setup-example.yml")
-        configName = "site_info"
+        configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
+        configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName)
         self.__resourceName = "COCKROACH_DB"
-        self.__schU = SchemaDefUtil(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, mockTopPath=self.__mockTopPath)
+        self.__schP = SchemaProvider(self.__cfgOb, self.__workPath, useCache=True)
+        self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__workPath)
         #
         self.__tableIdSkipD = {"ATOM_SITE": True, "ATOM_SITE_ANISOTROP": True}
         self.__ioObj = IoAdapter(verbose=self.__verbose)
@@ -103,15 +105,15 @@ class CockroachDbLoaderCockroachDbTests(unittest.TestCase):
         """  Create table schema (live) for BIRD, chemical component, and PDBx data.
         """
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="bird")
+            sd, _, _, _ = self.__schP.getSchemaInfo("bird")
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="chem_comp")
+            sd, _, _, _ = self.__schP.getSchemaInfo("chem_comp")
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="pdbx")
+            sd, _, _, _ = self.__schP.getSchemaInfo("pdbx")
             ret = self.__schemaCreate(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
@@ -123,15 +125,15 @@ class CockroachDbLoaderCockroachDbTests(unittest.TestCase):
         """  Remove table schema (live) for BIRD, chemical component, and PDBx data.
         """
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="bird")
+            sd, _, _, _ = self.__schP.getSchemaInfo("bird")
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="chem_comp")
+            sd, _, _, _ = self.__schP.getSchemaInfo("chem_comp")
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="pdbx")
+            sd, _, _, _ = self.__schP.getSchemaInfo("pdbx")
             ret = self.__schemaRemove(schemaDefObj=sd)
             self.assertEqual(ret, True)
             #
@@ -143,11 +145,11 @@ class CockroachDbLoaderCockroachDbTests(unittest.TestCase):
 
         try:
 
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="bird")
+            sd, _, _, _ = self.__schP.getSchemaInfo("bird")
             if self.__createFlag:
                 self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getLocatorObjList(contentType="bird")
-            inputPathList.extend(self.__schU.getLocatorObjList(contentType="bird_family"))
+            inputPathList = self.__rpP.getLocatorObjList("bird")
+            inputPathList.extend(self.__rpP.getLocatorObjList("bird_family"))
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = CockroachDbLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=self.__workPath, cleanUp=False, warnings="default", verbose=self.__verbose)
                 ret = sdl.load(inputPathList=inputPathList, loadType="cockroach-insert", deleteOpt="selected")
@@ -158,11 +160,11 @@ class CockroachDbLoaderCockroachDbTests(unittest.TestCase):
 
     def testLoadInsertManyBirdReference(self):
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="bird")
+            sd, _, _, _ = self.__schP.getSchemaInfo("bird")
             if self.__createFlag:
                 self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getLocatorObjList(contentType="bird")
-            inputPathList.extend(self.__schU.getLocatorObjList(contentType="bird_family"))
+            inputPathList = self.__rpP.getLocatorObjList("bird")
+            inputPathList.extend(self.__rpP.getLocatorObjList("bird_family"))
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = CockroachDbLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=self.__workPath, cleanUp=False, warnings="default", verbose=self.__verbose)
                 ret = sdl.load(inputPathList=inputPathList, loadType="cockroach-insert-many", deleteOpt="selected")
@@ -174,10 +176,10 @@ class CockroachDbLoaderCockroachDbTests(unittest.TestCase):
     def testLoadInsertChemCompReference(self):
 
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="chem_comp")
+            sd, _, _, _ = self.__schP.getSchemaInfo("chem_comp")
             if self.__createFlag:
                 self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getLocatorObjList(contentType="chem_comp")
+            inputPathList = self.__rpP.getLocatorObjList("chem_comp")
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = CockroachDbLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=self.__workPath, cleanUp=False, warnings="default", verbose=self.__verbose)
                 ret = sdl.load(inputPathList=inputPathList, loadType="cockroach-insert", deleteOpt="selected")
@@ -189,10 +191,10 @@ class CockroachDbLoaderCockroachDbTests(unittest.TestCase):
     def testLoadInsertManyChemCompReference(self):
 
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="chem_comp")
+            sd, _, _, _ = self.__schP.getSchemaInfo("chem_comp")
             if self.__createFlag:
                 self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getLocatorObjList(contentType="chem_comp")
+            inputPathList = self.__rpP.getLocatorObjList("chem_comp")
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = CockroachDbLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=self.__workPath, cleanUp=False, warnings="default", verbose=self.__verbose)
                 ret = sdl.load(inputPathList=inputPathList, loadType="cockroach-insert-many", deleteOpt="selected")
@@ -203,10 +205,10 @@ class CockroachDbLoaderCockroachDbTests(unittest.TestCase):
 
     def testLoadInsertPdbxExampleFiles(self):
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="pdbx")
+            sd, _, _, _ = self.__schP.getSchemaInfo("pdbx")
             if self.__createFlag:
                 self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getLocatorObjList(contentType="pdbx")
+            inputPathList = self.__rpP.getLocatorObjList("pdbx")
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = CockroachDbLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=self.__workPath, cleanUp=False, warnings="default", verbose=self.__verbose)
                 ret = sdl.load(inputPathList=inputPathList, loadType="cockroach-insert", deleteOpt="selected", tableIdSkipD=self.__tableIdSkipD)
@@ -217,10 +219,10 @@ class CockroachDbLoaderCockroachDbTests(unittest.TestCase):
 
     def testLoadInsertManyPdbxExampleFiles(self):
         try:
-            sd, _, _, _ = self.__schU.getSchemaInfo(contentType="pdbx")
+            sd, _, _, _ = self.__schP.getSchemaInfo("pdbx")
             if self.__createFlag:
                 self.__schemaCreate(schemaDefObj=sd)
-            inputPathList = self.__schU.getLocatorObjList(contentType="pdbx")
+            inputPathList = self.__rpP.getLocatorObjList("pdbx")
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = CockroachDbLoader(schemaDefObj=sd, ioObj=self.__ioObj, dbCon=client, workPath=self.__workPath, cleanUp=False, warnings="default", verbose=self.__verbose)
                 ret = sdl.load(inputPathList=inputPathList, loadType="cockroach-insert-many", deleteOpt="selected", tableIdSkipD=self.__tableIdSkipD)

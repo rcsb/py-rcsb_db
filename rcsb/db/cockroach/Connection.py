@@ -36,7 +36,7 @@ class Connection(object):
     """ Class to encapsulate connection semantics for PostgresSQL DBI connection for CockroachDB.
     """
 
-    def __init__(self, cfgOb=None, infoD=None, resourceName=None, sectionName="site_info", verbose=False):
+    def __init__(self, cfgOb=None, infoD=None, resourceName=None, sectionName="site_info_configuration", verbose=False):
         self.__verbose = verbose
 
         self.__dbcon = None
