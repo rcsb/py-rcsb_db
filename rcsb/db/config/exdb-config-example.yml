@@ -1,4 +1,4 @@
-# File: dbload-setup-example.yml
+# File: exdb-config-example.yml
 # Date: 26-Oct-2018 jdw
 #
 # Updates:
@@ -58,14 +58,15 @@
 # 15-Aug-2019 jdw Add EM_DIFFRACTION, EM_DIFFRACTION_SHELL, EM_DIFFRACTION_STATS to entry core
 # 22-Aug-2019 jdw Make configuration sections uniformly *_configuration.
 # 26-Aug-2019 jdw Further standardization of option terminology
+#  2-Sep-2019 jdw added parallel site_info_remote_configuration section
 #
 # ExDB configuration file example
 ---
 DEFAULT: {}
-#
-# Site specific path and server configuration options -
-#
+##
 site_info_configuration:
+    # Site specific path and server configuration options -
+    #
     CONFIG_SUPPORT_TOKEN: CONFIG_SUPPORT_TOKEN_ENV
     #
     # Database server connection details
@@ -99,6 +100,9 @@ site_info_configuration:
     VRPT_REPO_PATH_ENV: VRPT_REPO_PATH_ALT
     #
     RCSB_SEQUENCE_CLUSTER_DATA_PATH: cluster_data/mmseqs-20180608
+    SIFTS_SUMMARY_PATH: sifts-summary
+    # -------------------------------------------------------------------------------------------
+    #   -- Below are common across current deployments -
     #
     # Supporting and integrated resource data cache directory names
     #
@@ -134,10 +138,90 @@ site_info_configuration:
 
     CONTENT_DEF_HELPER_MODULE: rcsb.db.helpers.ContentDefinitionHelper
     DOCUMENT_DEF_HELPER_MODULE: rcsb.db.helpers.DocumentDefinitionHelper
-#
-# Inventory of current schema defintions and derivative collection types.
-#
+##
+site_info_remote_configuration:
+    CONFIG_SUPPORT_TOKEN: CONFIG_SUPPORT_TOKEN_ENV
+    #
+    # Database server connection details
+    #
+    MONGO_DB_HOST: 128.6.244.57
+    # MONGO_DB_HOST: 132.249.213.189
+    # MONGO_DB_HOST: localhost
+    MONGO_DB_PORT: '27017'
+    MONGO_DB_USER: VT07dR5TeajhsXUNzAZnhAHc/qaCZkbwlfwMKVmd+OHwvYMACcrB+25jY1IOClrZ
+    MONGO_DB_PASSWORD: Mr3LslVzCkbErV3+5a3snm2RBaTrZo/Xi219hjSnwBxxHHHG6V36a6igSJSrmFTd0yQ=
+    MONGO_DB_ADMIN_DB_NAME: admin
+    #
+    MYSQL_DB_HOST_NAME: localhost
+    MYSQL_DB_PORT_NUMBER: '3306'
+    _MYSQL_DB_USER_NAME: wrIzBGtCsQmkjc7tbEPQ3oEaOnpvivXaKcQsvXD6kn4KHMvA7LCL4O9GlAI=
+    _MYSQL_DB_PASSWORD: qXPp32Z6DhNVMwo9fQIK5+KB13c1Jd43E3Bn6LmJcSyXc0NAt4H/hwo/xglYpmELV5Vqaw==
+    MYSQL_DB_DATABASE_NAME: mysql
+    #
+    CRATE_DB_HOST: localhost
+    CRATE_DB_PORT: '4200'
+    COCKROACH_DB_HOST: localhost
+    COCKROACH_DB_PORT: '26257'
+    COCKROACH_DB_NAME: system
+    _COCKROACH_DB_USER_NAME: HR2ez8iLbEpvN+hXKIQS3qa6/QpiFRpf/WvrfHiwfjcL09E+iWTQJhsxTsw=
+    #
+    # Primary repository data and related computed repository data paths
+    #
+    BIRD_REPO_PATH: /net/data/components/prd-v3
+    BIRD_FAMILY_REPO_PATH: /net/data/components/family-v3
+    BIRD_CHEM_COMP_REPO_PATH: /data/components/prdcc-v3
+    CHEM_COMP_REPO_PATH: /net/data/components/ligand-dict-v3
+    PDBX_REPO_PATH: /net/beta_data/mmcif-pdbx-load-v5.0
+    RCSB_EXCHANGE_SANDBOX_PATH: /net/sandbox_v5/ftp-v5.0-support
+    IHM_DEV_REPO_PATH: ../py-rcsb_db/rcsb/mock-data/MOCK_IHM_REPOMOCK_IHM_REPO
+    VRPT_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/validation_reports
+    VRPT_REPO_PATH_ENV: VRPT_REPO_PATH_ALT
+    #
+    RCSB_SEQUENCE_CLUSTER_DATA_PATH: /net/users/update/Data/sequence-clusters/current-mmseqs
+    SIFTS_SUMMARY_PATH: /net/data-remote/ebi/sifts/flatfiles/csv
+    # -------------------------------------------------------------------------------------------
+    #   -- Options below in this section are common across current deployments -
+    #
+    # Supporting and integrated resource data cache directory names
+    #
+    DRUGBANK_CACHE_DIR: DrugBank
+    _DRUGBANK_AUTH_USERNAME: 0qrpNd4OhGuVsJqEpcsAVEovZ0hl6QkgxmbTy3bPssd06Z9tuM6bJqgsWwmFCd0JnjIMIEWyKPMmF1pI5g==
+    _DRUGBANK_AUTH_PASSWORD: lA/K132i8DOtLdMHfm3gpNqprZ6ABKjsCRxfcXIMnxpKQzBv/B6dmC7x1vRO86JhqdT0b84=
+    #
+    CHEM_COMP_MODEL_CACHE_DIR: chem_comp_models
+    NCBI_TAXONOMY_CACHE_DIR: NCBI
+    ENZYME_CLASSIFICATION_CACHE_DIR: ec
+    STRUCT_DOMAIN_CLASSIFICATION_CACHE_DIR: domains_struct
+    SIFTS_SUMMARY_CACHE_DIR: sifts_summary
+    DICTIONARY_CACHE_DIR: dictionaries
+    DATA_TYPE_INFO_CACHE_DIR: data_type_and_coverage
+    REPO_UTIL_CACHE_DIR: repo_util
+    #
+    PROVENANCE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/provenance/rcsb_extend_provenance_info.json
+    PROVENANCE_INFO_CACHE_DIR:  provenance
+    #
+    SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/schema_definitions
+    SCHEMA_DEFINITION_CACHE_DIR: schema_definitions
+    JSON_SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/json_schema_definitions
+    JSON_SCHEMA_DEFINITION_CACHE_DIR: json_schema_definitions
+    #
+    # Helper class binding and mappings
+    #
+    DICT_METHOD_HELPER_MODULE_PATH_MAP:
+      rcsb.db.helpers.DictMethodEntryHelper: rcsb.db.helpers.DictMethodEntryHelper
+      rcsb.db.helpers.DictMethodChemRefHelper: rcsb.db.helpers.DictMethodChemRefHelper
+      rcsb.db.helpers.DictMethodEntityHelper: rcsb.db.helpers.DictMethodEntityHelper
+      rcsb.db.helpers.DictMethodAssemblyHelper: rcsb.db.helpers.DictMethodAssemblyHelper
+      rcsb.db.helpers.DictMethodEntityInstanceHelper: rcsb.db.helpers.DictMethodEntityInstanceHelper
+
+    CONTENT_DEF_HELPER_MODULE: rcsb.db.helpers.ContentDefinitionHelper
+    DOCUMENT_DEF_HELPER_MODULE: rcsb.db.helpers.DocumentDefinitionHelper
+
+##
 database_catalog_configuration:
+  #
+  # Inventory of current schema defintions and derivative collection types.
+  #
   # All defined database definitions -
   DATABASE_NAMES_ALL: pdbx,pdbx_core,chem_comp,chem_comp_core,bird,bird_family,bird_chem_comp,bird_chem_comp_core,repository_holdings,sequence_clusters,data_exchange,drugbank_core,ihm_dev
   DATATYPING_ALL: ANY,SQL
