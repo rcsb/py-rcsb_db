@@ -35,10 +35,11 @@ TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 class DictMethodResourceProviderFixture(unittest.TestCase):
     def setUp(self):
         self.__cachePath = os.path.join(TOPDIR, "CACHE")
+        self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
         configName = "site_info_configuration"
         self.__configName = configName
-        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=self.__cachePath)
+        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
 
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -52,7 +53,7 @@ class DictMethodResourceProviderFixture(unittest.TestCase):
         """
         try:
             rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
-            ret = rp.cacheResources()
+            ret = rp.cacheResources(useCache=False)
             self.assertTrue(ret)
         except Exception as e:
             logger.exception("Failing with %s", str(e))

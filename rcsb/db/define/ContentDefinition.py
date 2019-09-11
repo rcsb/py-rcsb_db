@@ -14,6 +14,7 @@
 #  31-Mar-2019 jdw include parent details in __getAttributeFeatures()
 #   6-Jun-2019 jdw take dictionary API as an argument.
 #  22-Aug-2019 jdw unify naming conventions dictSubset->databaseName and *ForSubset() -> *ForDatabase()
+#   5-Sep-2019 jdw add extended DDL metadata.
 #
 #
 ##
@@ -378,6 +379,37 @@ class ContentDefinition(object):
         else:
             return enumList
 
+    def __assignEnumTupTypes(self, enumTupList, pT):
+        rL = []
+        if enumTupList:
+            if pT != "numb":
+                return enumTupList
+            else:
+                isFloat = False
+                for enum, _ in enumTupList:
+                    if "." in enum:
+                        isFloat = True
+                        break
+                if isFloat:
+                    for enum, detail in enumTupList:
+                        try:
+                            if isFloat:
+                                rL.append((float(enum), detail))
+                            else:
+                                rL.append((int(enum), detail))
+                        except Exception:
+                            pass
+                return rL
+        else:
+            return enumTupList
+
+    def __hasEnumDetails(self, enumTupList):
+        dCount = 0
+        for _, detail in enumTupList:
+            if detail:
+                dCount += 1
+        return dCount > 0
+
     def __itemNameToDictList(self, itemNameList):
         rL = []
         for itemName in list(OrderedDict.fromkeys(itemNameList)):
@@ -401,6 +433,7 @@ class ContentDefinition(object):
              cL = self.getCategoryContextList(catName)
         """
         aD = {}
+
         #
         # keyAtNames = [CifName.attributePart(kyItem) for kyItem in self.__dApi.getCategoryKeyList(catName)]
         keyAtNames = [CifName.attributePart(kyItem) for kyItem in self.__getCategoryKeysWithReplacement(catName)]
@@ -418,17 +451,29 @@ class ContentDefinition(object):
                 "ROOT_PARENT": None,
                 "PARENT": None,
                 "DESCRIPTION": None,
+                "DESCRIPTION_ANNOTATED": [],
                 "IS_KEY": False,
                 "ITERABLE_DELIMITER": None,
                 "FILTER_TYPES": [],
                 "IS_CHAR_TYPE": False,
                 "METHODS": [],
                 "CONTENT_CLASSES": [],
+                "UNITS": None,
+                "ENUMS": None,
+                "ENUMS_ANNOTATED": None,
+                "SEARCH_CONTEXTS": None,
             }
             fD["TYPE_CODE"] = self.__dApi.getTypeCode(catName, atName)
             fD["TYPE_CODE_ALT"] = self.__dApi.getTypeCodeAlt(catName, atName)
             fD["IS_MANDATORY"] = True if str(self.__dApi.getMandatoryCode(catName, atName)).lower() in ["y", "yes"] else False
-            fD["DESCRIPTION"] = textwrap.dedent(self.__dApi.getDescription(catName, atName))
+            fD["DESCRIPTION"] = textwrap.dedent(self.__dApi.getDescription(catName, atName)).lstrip()
+            fD["DESCRIPTION_ANNOTATED"] = [{"text": fD["DESCRIPTION"], "context": "dictionary"}]
+            tS = self.__dApi.getDescriptionPdbx(catName, atName)
+            if tS:
+                fD["DESCRIPTION_ANNOTATED"].append({"text": textwrap.dedent(tS).lstrip(), "context": "deposition"})
+            #
+            fD["UNITS"] = self.__dApi.getUnits(catName, atName)
+
             #
             fD["CHILD_ITEMS"] = self.__dApi.getFullChildList(catName, atName)
             fD["CHILDREN"] = self.__itemNameToDictList(self.__dApi.getFullChildList(catName, atName))
@@ -460,7 +505,18 @@ class ContentDefinition(object):
             fD["METHODS"] = methodD[(catName, atName)] if (catName, atName) in methodD else []
             fD["CONTENT_CLASSES"] = self.__getContentClasses(catName, atName)
             fD["ENUMS"] = sorted(self.__assignEnumTypes(self.__dApi.getEnumList(catName, atName), pType))
-            fD["EXAMPLES"] = self.__dApi.getExampleList(catName, atName)
+            enumTupList = self.__dApi.getEnumListAltWithDetail(catName, atName)
+            if self.__hasEnumDetails(enumTupList):
+                fD["ENUMS_ANNOTATED"] = []
+                for eTup in self.__assignEnumTupTypes(enumTupList, pType):
+                    if eTup[1]:
+                        fD["ENUMS_ANNOTATED"].append({"value": eTup[0], "detail": eTup[1]})
+                    else:
+                        fD["ENUMS_ANNOTATED"].append({"value": eTup[0]})
+            #
+            fD["EXAMPLES"] = self.__dApi.getExampleListPdbx(catName, atName)
+            fD["EXAMPLES"].extend(self.__dApi.getExampleList(catName, atName))
+            #
             scL = []
             for scTup in self.__dApi.getItemSubCategoryList(catName, atName):
                 if scTup[1] is not None:

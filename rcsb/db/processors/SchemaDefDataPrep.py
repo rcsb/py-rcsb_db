@@ -298,7 +298,10 @@ class SchemaDefDataPrep(object):
                 #
                 # Match the container name to the generated reshaped objects
                 try:
-                    cId = container.getProp("uid")
+                    if useNameFlag:
+                        cId = container.getName()
+                    else:
+                        cId = container.getProp("uid")
                 except Exception:
                     cId = container.getName()
                 cIdList = [cId for i in range(len(sddL))]
@@ -464,6 +467,7 @@ class SchemaDefDataPrep(object):
             for cA in myContainerList:
                 if self.__testdataSelectors(cA, dataSelectors):
                     cL.append(cA)
+
                     if useNameFlag:
                         containerIdList.append(cA.getName())
                     else:
@@ -507,6 +511,7 @@ class SchemaDefDataPrep(object):
         cL = []
         for cA in containerList:
             if self.__testdataSelectors(cA, dataSelectors):
+                logger.debug("useNameFlag %r name %r uid %r", useNameFlag, cA.getName(), cA.getProp("uid"))
                 cL.append(cA)
                 if useNameFlag:
                     containerIdList.append(cA.getName())

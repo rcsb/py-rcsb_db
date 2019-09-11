@@ -13,6 +13,7 @@
 #  16-Jan-2019 jdw add method getDocumentReplaceAttributeNames()
 #  11-Mar-2019 jdw add methods getSubCategoryAggregateFeatures() and  getSubCategoryAggregateUnitCardinality()
 #  13-Mar-2019 jdw add getCollectionVersion() and getCollectionInfo() and remove getCollections().
+#   6-Sep-2019 jdw incorporate search type and brief descriptions
 #
 ##
 """
@@ -46,6 +47,8 @@ class DocumentDefinitionHelper(object):
         self.__cfgOb = kwargs.get("cfgOb", None)
         sectionName = kwargs.get("config_section", "document_helper_configuration")
         self.__cfgD = self.__cfgOb.exportConfig(sectionName=sectionName)
+        self.__searchTypeD = {}
+        self.__attributeDescriptionD = {}
         #
         # ----
 
@@ -223,3 +226,93 @@ class DocumentDefinitionHelper(object):
             logger.debug("Collection %s failing with %s", collectionName, str(e))
 
         return rL
+
+    def __prepareAttributeSearchContexts(self):
+        """
+        Example:
+
+        collection_attribute_search_contexts:
+            pdbx_core_entity_instance:
+                - SEARCH_TYPE: faceted
+                  ATTRIBUTE_NAMES:
+                  - rcsb_polymer_instance_feature.name
+                - SEARCH_TYPE: attribute
+                  ATTRIBUTE_NAMES:
+                  - rcsb_entity_instance_domain_scop.domain_class_lineage.name
+                  - rcsb_entity_instance_domain_scop.domain_class_lineage.id
+                  - rcsb_entity_instance_domain_cath.domain_class_lineage.name
+                  - rcsb_entity_instance_domain_cath.domain_class_lineage.id
+
+        returns:
+            dict : {collectionName: {(category, attribute): [search type, ...], }, }
+
+        """
+        cD = {}
+        # preprocess data --
+        for collectionName, tDL in self.__cfgD["collection_attribute_search_contexts"].items():
+            aD = {}
+            for tD in tDL:
+                for atName in tD["ATTRIBUTE_NAMES"]:
+                    ff = atName.split(".")
+                    if len(ff) != 2:
+                        logger.error("Bad attribute name for search type %r", atName)
+                        continue
+                    aD.setdefault((ff[0], ff[1]), []).append(tD["SEARCH_TYPE"])
+                #
+            cD[collectionName] = {tup: sorted(list(set(sL))) for tup, sL in aD.items()}
+
+        return cD
+
+    def getAttributeSearchContexts(self, collectionName, categoryName, attributeName):
+        """ Return the list of search types assigned to the input collection/item.
+
+        returns:
+            list : [search type, ...]
+
+        """
+        rL = []
+        try:
+            self.__searchTypeD = self.__prepareAttributeSearchContexts() if not self.__searchTypeD else self.__searchTypeD
+            rL = self.__searchTypeD[collectionName][(categoryName, attributeName)]
+        except Exception as e:
+            logger.debug("Collection %sr categoryName %r attributeName %r failing with %s", collectionName, categoryName, attributeName, str(e))
+
+        return rL
+
+    def isTextSearchType(self, categoryName, attributeName):
+        _ = categoryName
+        _ = attributeName
+        return False
+
+    def __prepareAttributeDescriptions(self):
+        """
+        Example:
+
+            attribute_descriptions:
+                - ATTRIBUTE_NAME: rcsb_entry_container_identifiers.entry_id
+                  TYPE: brief
+                  TEXT: PDB ID(s)
+                - ATTRIBUTE_NAME: pdbx_deposit_group.group_id
+                  TYPE: brief
+                  TEXT: Deposit Group ID(s)
+        """
+        aD = {}
+        # preprocess description data --
+        for tD in self.__cfgD["attribute_descriptions"]:
+            atName = tD["ATTRIBUTE_NAME"]
+            dType = tD["TYPE"]
+            ff = atName.split(".")
+            if len(ff) != 2:
+                logger.error("Bad attribute name for text description %r", atName)
+                continue
+            aD[(ff[0], ff[1], dType)] = tD["TEXT"]
+        return aD
+
+    def getAttributeDescription(self, categoryName, attributeName, contextType="brief"):
+        ret = None
+        try:
+            self.__attributeDescriptionD = self.__prepareAttributeDescriptions() if not self.__attributeDescriptionD else self.__attributeDescriptionD
+            ret = self.__attributeDescriptionD[(categoryName, attributeName, contextType)]
+        except Exception as e:
+            logger.debug("CategoryName %r attributeName %r failing  %s", categoryName, attributeName, str(e))
+        return ret

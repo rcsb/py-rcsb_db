@@ -48,10 +48,10 @@ class MongoDbUtilTests(unittest.TestCase):
         self.__collectionName = "test_collection"
         #
         configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
-        configName = "site_info_configuration"
+        configName = "site_info_remote_configuration"
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName)
         self.__resourceName = "MONGO_DB"
-        self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName, sectionName="site_info")
+        self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName, sectionName=configName)
         # self.__cObj = self.__open(self.__connectD)
         #
         self.__mongoSchema = {

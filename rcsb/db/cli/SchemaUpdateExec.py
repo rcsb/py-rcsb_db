@@ -57,7 +57,7 @@ def main():
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
     parser.add_argument("--config_name", default=defaultConfigName, help="Configuration section name")
     #
-    parser.add_argument("--schema_cache_path", default=None, help="Schema cache directory path")
+    parser.add_argument("--cache_path", default=None, help="Schema cache directory path")
     parser.add_argument("--schema_types", default=None, help="Schema encoding (rcsb|json|bson) (comma separated)")
     parser.add_argument("--schema_levels", default=None, help="Schema validation level (full|min) (comma separated)")
     #
@@ -73,7 +73,7 @@ def main():
     #                                       Configuration Details
     configPath = args.config_path
     configName = args.config_name
-    schemaCachePath = args.schema_cache_path
+    cachePath = args.cache_path
     #
     schemaTypes = args.schema_types.split(",") if args.schema_types else []
     schemaLevels = args.schema_levels.split(",") if args.schema_levels else []
@@ -160,7 +160,7 @@ def main():
     logger.debug("Collections %s", list(scnD.items()))
     logger.debug("schemaNameList %s", schemaNameList)
 
-    schP = SchemaProvider(cfgOb, schemaCachePath, useCache=False)
+    schP = SchemaProvider(cfgOb, cachePath, useCache=False)
     for schemaName in schemaNameList:
         for schemaType in schemaTypes:
             if schemaType == "rcsb":

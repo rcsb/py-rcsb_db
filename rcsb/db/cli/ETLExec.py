@@ -177,17 +177,6 @@ def main():
             ok = rhw.load(dataSetId, loadType=loadType)
             okS = loadStatus(rhw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
-        # if args.etl_chemref:
-        #    crw = ChemRefEtlWorker(cfgOb, cachePath=cachePath, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck)
-        #    ok = crw.load(dataSetId, extResource="DrugBank", loadType=loadType)
-        #    okS = loadStatus(crw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
-
-        # f args.etl_tree_node_lists:
-        #    rhw = TreeNodeListWorker(
-        #        cfgOb, cachePath, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck, useCache=useCache
-        #    )
-        #    ok = rhw.load(dataSetId, loadType=loadType)
-        #    okS = loadStatus(rhw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
         logger.info("Operation completed with status %r " % ok and okS)
 
 

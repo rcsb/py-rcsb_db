@@ -84,12 +84,18 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         #
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
-        self.__chemCompMockLen = 12
+        self.__chemCompMockLen = 13
         self.__birdMockLen = 4
         self.__pdbxMockLen = 21
         # removes timestamped data items to allow diffs.)
         excludeExtras = ["rcsb_load_status"]
         # excludeExtras = []
+        #
+        self.__verbose = True
+        self.__modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=configName)
+        #
+        self.__exportFlag = True
+        self.__diffFlag = False
         #
         self.__simpleTestCaseList = [
             {
@@ -173,11 +179,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             },
         ]
         #
-        self.__verbose = True
-        self.__modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=configName)
-        #
-        self.__exportFlag = False
-        self.__diffFlag = False
+
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 

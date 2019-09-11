@@ -58,7 +58,7 @@ class SchemaDefBuildTests(unittest.TestCase):
         self.__databaseNameList = self.__cfgOb.getList("DATABASE_NAMES_TEST", sectionName="database_catalog_configuration")
         self.__dataTypingList = self.__cfgOb.getList("DATATYPING_TEST", sectionName="database_catalog_configuration")
         self.__saveSchema = True
-        self.__compareSchema = True
+        self.__compareSchema = False
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -106,7 +106,7 @@ class SchemaDefBuildTests(unittest.TestCase):
         numDif, difD = self.__schP.schemaCompare(sOld, sNew)
         logger.debug("numDiffs %d", numDif)
         self.assertGreaterEqual(numDif, 141)
-        self.assertEqual(len(difD["changed"]), 1)
+        self.assertGreaterEqual(len(difD["changed"]), 160)
         logger.debug("difD %r", difD)
 
     def testCompareSchemaCategories(self):

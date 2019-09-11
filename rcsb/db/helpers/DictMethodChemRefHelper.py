@@ -69,12 +69,15 @@ class DictMethodChemRefHelper(object):
             rP = kwargs.get("resourceProvider")
             #  ------------ ----------------------- ----------------------- ----------------------- -----------
             dbProvider = rP.getResource("DrugBankProvider instance") if rP else None
+            atcP = rP.getResource("AtcProvider instance") if rP else None
             dbD = dbProvider.getMapping()
             if dbD:
                 ccId = dataContainer.getName()
                 #
                 dbMapD = dbD["id_map"]
                 inKeyD = dbD["inchikey_map"]
+                atcD = dbD["db_atc_map"]
+                logger.debug("atcD length is %d", len(atcD))
                 logger.debug("inKeyD length is %d", len(inKeyD))
                 dbId = None
                 mType = None
@@ -88,12 +91,12 @@ class DictMethodChemRefHelper(object):
                         if inky in inKeyD:
                             logger.debug("Matching inchikey for %s", ccId)
                             dbId = inKeyD[inky][0]["drugbank_id"]
-                            mType = "matching InChIKey"
+                            mType = "matching InChIKey in DrugBank"
                 #
 
                 if not dbId and dbMapD and dataContainer.getName() in dbMapD:
                     dbId = dbMapD[ccId]["drugbank_id"]
-                    mType = "assigned by resource"
+                    mType = "assigned by DrugBank resource"
                     logger.debug("Matching db assignment for %s", ccId)
 
                 if dbId:
@@ -103,13 +106,32 @@ class DictMethodChemRefHelper(object):
                         if not tObj.hasAttribute("drugbank_id"):
                             tObj.appendAttribute("drugbank_id")
                         tObj.setValue(dbId, "drugbank_id", 0)
+                        if atcD and dbId in atcD:
+                            if not tObj.hasAttribute("atc_codes"):
+                                tObj.appendAttribute("atc_codes")
+                            tObj.setValue(",".join(atcD[dbId]), "atc_codes", 0)
 
                     #
                     if not dataContainer.exists(catName):
-                        dataContainer.append(DataCategory(catName, attributeNameList=["comp_id", "ordinal", "resource_name", "resource_accession_code", "related_mapping_method"]))
+                        dataContainer.append(
+                            DataCategory(
+                                catName,
+                                attributeNameList=[
+                                    "comp_id",
+                                    "ordinal",
+                                    "resource_name",
+                                    "resource_accession_code",
+                                    "related_mapping_method",
+                                    "resource_lineage_name",
+                                    "resource_lineage_id",
+                                    "resource_lineage_depth",
+                                ],
+                            )
+                        )
                     wObj = dataContainer.getObj(catName)
                     logger.debug("Using DrugBank mapping length %d", len(dbMapD))
                     rL = wObj.selectIndices("DrugBank", "resource_name")
+                    ok = False
                     if rL:
                         ok = wObj.removeRows(rL)
                         if not ok:
@@ -120,6 +142,27 @@ class DictMethodChemRefHelper(object):
                     wObj.setValue("DrugBank", "resource_name", iRow)
                     wObj.setValue(dbId, "resource_accession_code", iRow)
                     wObj.setValue(mType, "related_mapping_method", iRow)
+                    #
+                    if atcD and dbId in atcD:
+                        rL = wObj.selectIndices("ATC", "resource_name")
+                        if rL:
+                            ok = wObj.removeRows(rL)
+                            if not ok:
+                                logger.debug("Error removing rows in %r %r", catName, rL)
+                        iRow = wObj.getRowCount()
+                        for atcId in atcD[dbId]:
+                            iRow = wObj.getRowCount()
+                            wObj.setValue(ccId, "comp_id", iRow)
+                            wObj.setValue(iRow + 1, "ordinal", iRow)
+                            wObj.setValue("ATC", "resource_name", iRow)
+                            wObj.setValue(atcId, "resource_accession_code", iRow)
+                            wObj.setValue(mType, "related_mapping_method", iRow)
+                            #
+                            wObj.setValue(";".join(atcP.getNameLineage(atcId)), "resource_lineage_name", iRow)
+                            idLinL = atcP.getIdLineage(atcId)
+                            logger.debug("dbId %r atcId %r lineage %r", dbId, atcId, idLinL)
+                            wObj.setValue(";".join(idLinL), "resource_lineage_id", iRow)
+                            wObj.setValue(";".join([str(jj) for jj in range(1, len(idLinL) + 1)]), "resource_lineage_depth", iRow)
             #
             #  ------------ ----------------------- ----------------------- ----------------------- -----------
             ccmProvider = rP.getResource("ChemCompModelProvider instance") if rP else None

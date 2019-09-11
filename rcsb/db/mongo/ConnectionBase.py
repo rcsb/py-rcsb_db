@@ -123,14 +123,14 @@ class ConnectionBase(object):
             self.__dbClient = MongoClient(uri, **kw)
         except Exception as e:
             logger.error("Connection to resource %s failing with %s", self.__resourceName, str(e))
-
+        dD = {}
         try:
             # The ismaster command is cheap and does not require auth.
             dD = self.__dbClient.admin.command("ismaster")
-            logger.debug("Server status: %r", dD)
+            # logger.debug("Server status: %r", dD)
             return True
         except ConnectionFailure:
-            logger.exception("Connection failing to resource %s", self.__resourceName)
+            logger.exception("Connection %r failing to resource %s", dD, self.__resourceName)
 
         self.__dbClient = None
 

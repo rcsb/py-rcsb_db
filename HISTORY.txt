@@ -156,3 +156,4 @@
                     dependencies on mock schemas and add explicit schema differencing to better
                     schema evolution. Add new helper methods for sites and connections and revise helper
                     methods for all entity and instance features.
+ 10-Sep-2019  V0.67 Adding extended metadata types, AtcProvider() and SiftsSummaryProvider().

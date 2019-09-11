@@ -62,7 +62,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__cfgOb = ConfigUtil(configPath=self.__configPath, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
         self.__mU = MarshalUtil(workPath=self.__cachePath)
 
-        self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=True, clearPath=False)
+        self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=True)
         self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath)
         #
         self.__birdRepoPath = self.__cfgOb.getPath("BIRD_REPO_PATH", sectionName=configName)
@@ -111,7 +111,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         # self.__databaseNameD = {"chem_comp_core": ["chem_comp_core"], "bird_chem_comp_core": ["bird_chem_comp_core"]}
         # self.__databaseNameD = {"ihm_dev_full": ["ihm_dev_full"]}
         # self.__databaseNameD = {"pdbx_core": ["pdbx_core_entity_instance_validation"]}
-        self.__databaseNameD = {"pdbx_core": ["pdbx_core_entity_monomer"]}
+        # self.__databaseNameD = {"pdbx_core": ["pdbx_core_entity_monomer"]}
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -241,7 +241,8 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             #
             mergeS = "-".join(mergeContentTypes) if mergeContentTypes else ""
             if self.__export and docList:
-                for ii, doc in enumerate(docList[:1]):
+                # for ii, doc in enumerate(docList[:1]):
+                for ii, doc in enumerate(docList):
                     cn = containerNameList[ii]
                     fp = os.path.join(HERE, "test-output", "prep-%s-%s-%s-%s.json" % (cn, databaseName, collectionName, mergeS))
                     self.__mU.doExport(fp, [doc], fmt="json", indent=3)

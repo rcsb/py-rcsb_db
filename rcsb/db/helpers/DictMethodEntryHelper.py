@@ -392,6 +392,8 @@ class DictMethodEntryHelper(object):
             cObj.setValue(entryId, "entry_id", 0)
             cObj.setValue(statusCode, "status_code", 0)
             cObj.setValue(depositDate, "deposit_date", 0)
+            cObj.setValue(depositDate[:4], "deposit_year", 0)
+
             #
             tObj = dataContainer.getObj("pdbx_audit_revision_history")
             nRows = tObj.getRowCount()
@@ -401,6 +403,7 @@ class DictMethodEntryHelper(object):
             majorRevision = tObj.getValue("major_revision", nRows - 1)
             revisionDate = tObj.getValue("revision_date", nRows - 1)
             cObj.setValue(releaseDate, "initial_release_date", 0)
+            cObj.setValue(releaseDate[:4], "initial_release_year", 0)
             cObj.setValue(minorRevision, "minor_revision", 0)
             cObj.setValue(majorRevision, "major_revision", 0)
             cObj.setValue(revisionDate, "revision_date", 0)

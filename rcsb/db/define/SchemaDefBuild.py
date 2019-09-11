@@ -356,6 +356,7 @@ class SchemaDefBuild(object):
                 fD = aD[atName]
                 if not dtInstInfo.exists(catName, atName) and not self.__testContentClasses(contentClasses, fD["CONTENT_CLASSES"]):
                     continue
+
                 if not fD["IS_KEY"]:
                     appType = dtAppInfo.getAppTypeName(fD["TYPE_CODE"])
                     if not appType:
@@ -512,6 +513,18 @@ class SchemaDefBuild(object):
         return name
 
     # -------------------------- ------------- ------------- ------------- ------------- ------------- -------------
+    def __getAmmendedAttributeFeatures(self, collectionName, catName, documentDefHelper):
+        #
+        aD = self.__contentInfo.getAttributeFeatures(catName)
+        for atName, fD in aD.items():
+            ascL = documentDefHelper.getAttributeSearchContexts(collectionName, catName, atName)
+            fD["SEARCH_CONTEXTS"] = ascL
+            tS = documentDefHelper.getAttributeDescription(catName, atName, contextType="brief")
+            if tS:
+                fD["DESCRIPTION_ANNOTATED"].append({"text": tS, "context": "brief"})
+        #
+        return aD
+        #
 
     def __createJsonLikeSchema(
         self,
@@ -544,6 +557,8 @@ class SchemaDefBuild(object):
 
 
         """
+        logger.debug("QQQQ COLLECTION %s", collectionName)
+        addRcsbExtensions = "rcsb" in enforceOpts
         addBlockAttribute = True
         addPrimaryKey = "addPrimaryKey" in enforceOpts
         suppressSingleton = not documentDefHelper.getRetainSingletonObjects(collectionName)
@@ -638,7 +653,8 @@ class SchemaDefBuild(object):
             #        Done with category filtering/selections
             # -------- ---------- ------------ -------- ---------- ------------ -------- ---------- ------------
             #
-            aD = self.__contentInfo.getAttributeFeatures(catName)
+            # aD = self.__contentInfo.getAttributeFeatures(catName)
+            aD = self.__getAmmendedAttributeFeatures(collectionName, catName, documentDefHelper)
             #
             if cfD["IS_MANDATORY"]:
                 mandatoryCategoryL.append(catName)
@@ -689,9 +705,7 @@ class SchemaDefBuild(object):
                     scHasUnitCard = documentDefHelper.getSubCategoryAggregateUnitCardinality(collectionName, subCategory)
                     for atName in sorted(atNameList):
                         fD = aD[atName]
-                        # Exclude primary data attributes with no instance coverage except if in a protected content class
-                        # if not dtInstInfo.exists(catName, atName) and not self.__testContentClasses(contentClasses, fD['CONTENT_CLASSES']):
-                        #    continue
+                        #
                         if subCategory not in [qtD["id"] for qtD in fD["SUB_CATEGORIES"]]:
                             continue
                         #
@@ -703,7 +717,7 @@ class SchemaDefBuild(object):
                         if isRequired:
                             reqL.append(schemaAttributeName)
                         #
-                        atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, jsonSpecDraft, enforceOpts, suppressRelations)
+                        atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, dtInstInfo, jsonSpecDraft, enforceOpts, suppressRelations, addRcsbExtensions)
                         scD["properties"][schemaAttributeName] = atPropD
                     if reqL:
                         scD["required"] = reqL
@@ -728,7 +742,7 @@ class SchemaDefBuild(object):
                 if isRequired:
                     pD["required"].append(schemaAttributeName)
                 #
-                atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, jsonSpecDraft, enforceOpts, suppressRelations)
+                atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, dtInstInfo, jsonSpecDraft, enforceOpts, suppressRelations, addRcsbExtensions)
 
                 delimiter = fD["ITERABLE_DELIMITER"]
                 if delimiter:
@@ -751,9 +765,11 @@ class SchemaDefBuild(object):
         privMandatoryD = {}
         if privDocKeyL:
             for pdk in privDocKeyL:
-                aD = self.__contentInfo.getAttributeFeatures(convertNameF(pdk["CATEGORY_NAME"]))
-                fD = aD[convertNameF(pdk["ATTRIBUTE_NAME"])]
-                atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, jsonSpecDraft, enforceOpts, suppressRelations)
+                catNameK = convertNameF(pdk["CATEGORY_NAME"])
+                aD = self.__contentInfo.getAttributeFeatures(catNameK)
+                atNameK = convertNameF(pdk["ATTRIBUTE_NAME"])
+                fD = aD[atNameK]
+                atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, dtInstInfo, jsonSpecDraft, enforceOpts, suppressRelations, addRcsbExtensions)
                 privKeyD[pdk["PRIVATE_DOCUMENT_NAME"]] = atPropD
                 privMandatoryD[pdk["PRIVATE_DOCUMENT_NAME"]] = pdk["MANDATORY"]
         #
@@ -835,12 +851,16 @@ class SchemaDefBuild(object):
 
         return ret
 
-    def __getJsonAttributeProperties(self, fD, dataTypingU, dtAppInfo, jsonSpecDraft, enforceOpts, suppressRelations):
+    def __getJsonAttributeProperties(self, fD, dataTypingU, dtAppInfo, dtInstInfo, jsonSpecDraft, enforceOpts, suppressRelations, addRcsbExtensions):
         #
         atPropD = {}
         addPrimaryKey = "addPrimaryKey" in enforceOpts
         addParentRefs = "addParentRefs" in enforceOpts
         try:
+            catName = fD["CATEGORY_NAME"]
+            atName = fD["ATTRIBUTE_NAME"]
+            precMin = dtInstInfo.getMinPrecision(catName, atName)
+            precMax = dtInstInfo.getMaxPrecision(catName, atName)
             # Adding a parent reference -
             if addParentRefs and fD["PARENT"] is not None and not self.__testSuppressRelation(fD, suppressRelations):
                 convertNameF = self.__getConvertNameMethod(dataTypingU)
@@ -861,6 +881,7 @@ class SchemaDefBuild(object):
             if appType in ["string"]:
                 # atPropD = {typeKey: appType, 'maxWidth': instWidth}
                 atPropD = {typeKey: appType}
+                logger.debug("QQQQ - %s.%s", catName, atName)
             elif appType in ["date", "datetime"] and dataTypingU == "JSON":
                 fmt = "date" if appType == "date" else "date-time"
                 atPropD = {typeKey: "string", "format": fmt}
@@ -868,6 +889,8 @@ class SchemaDefBuild(object):
                 atPropD = {typeKey: "date"}
             elif appType in ["number", "integer", "int", "double"]:
                 atPropD = {typeKey: appType}
+                #
+
                 #
                 if "bounds" in enforceOpts:
                     if jsonSpecDraft in ["3", "4"]:
@@ -892,9 +915,10 @@ class SchemaDefBuild(object):
                             atPropD["exclusiveMaximum"] = fD["MAX_VALUE_EXCLUSIVE"]
             else:
                 atPropD = {typeKey: appType}
-            #
+
             if "enums" in enforceOpts and fD["ENUMS"]:
                 atPropD["enum"] = sorted(fD["ENUMS"])
+            #
             if dataTypingU not in ["BSON"]:
                 try:
                     if fD["EXAMPLES"]:
@@ -908,6 +932,23 @@ class SchemaDefBuild(object):
                 atPropD["_primary_key"] = True
             if addParentRefs and fD["SUB_CATEGORIES"] and fD["SUB_CATEGORIES"]:
                 atPropD["_attribute_groups"] = fD["SUB_CATEGORIES"]
+            #
+            if addRcsbExtensions and dataTypingU not in ["BSON"]:
+                #
+                if appType in ["double"] and precMin and precMax:
+                    # need median here -
+                    # atPropD["rcsb_precision_digits"] = precMin
+                    pass
+
+                if fD["SEARCH_CONTEXTS"]:
+                    atPropD["rcsb_search_context"] = fD["SEARCH_CONTEXTS"]
+                if fD["UNITS"]:
+                    atPropD["rcsb_units"] = fD["UNITS"]
+                #
+                if fD["ENUMS_ANNOTATED"]:
+                    atPropD["rcsb_enum_annotated"] = fD["ENUMS_ANNOTATED"]
+                if fD["DESCRIPTION_ANNOTATED"]:
+                    atPropD["rcsb_description"] = fD["DESCRIPTION_ANNOTATED"]
             #
         except Exception as e:
             logger.exception("Failing with %s", str(e))

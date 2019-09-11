@@ -6,6 +6,7 @@
 #
 # Updates:
 #    26-Aug-2019 jdw  add database name to json schema name, add schema rebuild option.
+#     6-Sep-2019 jdw  add rcsb extensions to the the json schema full options
 #
 ##
 """
@@ -76,7 +77,7 @@ class SchemaProvider(SingletonClass):
     def getSchemaOptions(self, schemaLevel, extraOpts=None):
         opts = extraOpts + "|" if extraOpts else ""
         if schemaLevel == "full":
-            return opts + "mandatoryKeys|mandatoryAttributes|bounds|enums"
+            return opts + "mandatoryKeys|mandatoryAttributes|bounds|enums|rcsb"
         elif schemaLevel in ["min", "minimum"]:
             return opts + "mandatoryKeys|enums"
         else:

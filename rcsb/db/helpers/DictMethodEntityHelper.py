@@ -51,6 +51,7 @@ class DictMethodEntityHelper(object):
         rP = kwargs.get("resourceProvider")
         self.__commonU = rP.getResource("DictMethodCommonUtils instance") if rP else None
         self.__dApi = rP.getResource("Dictionary API instance (pdbx_core)") if rP else None
+        self.__ssP = rP.getResource("SiftsSummaryProvider instance") if rP else None
         #
         logger.debug("Dictionary entity method helper init")
 
@@ -110,6 +111,17 @@ class DictMethodEntityHelper(object):
                     asymIdL = psObj.selectValuesWhere("asym_id", entityId, "entity_id")
                     authAsymIdL = psObj.selectValuesWhere("pdb_strand_id", entityId, "entity_id")
                     ccMonomerL = psObj.selectValuesWhere("mon_id", entityId, "entity_id")
+                    #
+                    if self.__ssP:
+                        unpIdL = []
+                        pfamIdL = []
+                        iproIdL = []
+                        goIdL = []
+                        for authAsymId in authAsymIdL:
+                            unpIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="UNPID"))
+                            pfamIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="PFAMID"))
+                            iproIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="IPROID"))
+                            #  goIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="GOID"))
                 elif npsObj:
                     asymIdL = npsObj.selectValuesWhere("asym_id", entityId, "entity_id")
                     authAsymIdL = npsObj.selectValuesWhere("pdb_strand_id", entityId, "entity_id")
@@ -128,7 +140,14 @@ class DictMethodEntityHelper(object):
                     cObj.setValue(",".join(sorted(set(ccLigandL))).strip(), "nonpolymer_comp_id", ii)
                 else:
                     cObj.setValue("?", "nonpolymer_comp_id", ii)
-
+                if unpIdL:
+                    cObj.setValue(",".join(sorted(set(unpIdL))).strip(), "sifts_uniprot_ids", ii)
+                if pfamIdL:
+                    cObj.setValue(",".join(sorted(set(pfamIdL))).strip(), "sifts_pfam_ids", ii)
+                if goIdL:
+                    cObj.setValue(",".join(sorted(set(goIdL))).strip(), "sifts_go_ids", ii)
+                if iproIdL:
+                    cObj.setValue(",".join(sorted(set(iproIdL))).strip(), "sifts_interpro_ids", ii)
             #
             return True
         except Exception as e:

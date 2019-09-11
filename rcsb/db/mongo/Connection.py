@@ -6,6 +6,7 @@
 #   1-Apr-2018 jdw add context methods
 #  23-Oct-2018 jdw add section name config access methods and make this a constructor argument
 #   5-Dec-2018 jdw pass on exceptions from the context manager __exit__() method
+#   3-Sep-2019 jdw make all user/pw combinations secure - always use default config section
 ##
 """
 Derived class for managing database connection which handles application specific authentication.
@@ -25,11 +26,11 @@ logger = logging.getLogger(__name__)
 
 
 class Connection(ConnectionBase):
-    def __init__(self, cfgOb=None, infoD=None, resourceName=None, sectionName="site_info_configuration", verbose=False):
+    def __init__(self, cfgOb=None, infoD=None, resourceName=None, verbose=False):
         super(Connection, self).__init__(verbose=verbose)
         #
         self.__cfgOb = cfgOb
-
+        sectionName = self.__cfgOb.getDefaultSectionName()
         #
         if infoD:
             self.setPreferences(infoD)
@@ -54,8 +55,8 @@ class Connection(ConnectionBase):
             infoD["DB_HOST"] = self.__cfgOb.get("EXCHANGE_DB_HOST", sectionName=sectionName)
             infoD["DB_SOCKET"] = self.__cfgOb.get("EXCHANGE_DB_SOCKET", default=None, sectionName=sectionName)
             infoD["DB_PORT"] = int(str(self.__cfgOb.get("EXCHANGE_DB_PORT", default=defaultPort, sectionName=sectionName)))
-            infoD["DB_USER"] = self.__cfgOb.get("EXCHANGE_DB_USER_NAME", sectionName=sectionName)
-            infoD["DB_PW"] = self.__cfgOb.get("EXCHANGE_DB_PASSWORD", sectionName=sectionName)
+            infoD["DB_USER"] = self.__cfgOb.get("_EXCHANGE_DB_USER_NAME", sectionName=sectionName)
+            infoD["DB_PW"] = self.__cfgOb.get("_EXCHANGE_DB_PASSWORD", sectionName=sectionName)
             infoD["DB_ADMIN_DB_NAME"] = self.__cfgOb.get("EXCHANGE_DB_ADMIN_DB_NAME", default="admin", sectionName=sectionName)
             infoD["DB_WRITE_CONCERN"] = self.__cfgOb.get("EXCHANGE_DB_WRITE_CONCERN", default="majority", sectionName=sectionName)
             infoD["DB_READ_CONCERN"] = self.__cfgOb.get("EXCHANGE_DB_READ_CONCERN", default="majority", sectionName=sectionName)
@@ -66,8 +67,8 @@ class Connection(ConnectionBase):
             infoD["DB_HOST"] = self.__cfgOb.get("MONGO_DB_HOST", default=defaultHost, sectionName=sectionName)
             infoD["DB_SOCKET"] = self.__cfgOb.get("MONGO_DB_SOCKET", default=None, sectionName=sectionName)
             infoD["DB_PORT"] = int(str(self.__cfgOb.get("MONGO_DB_PORT", default=defaultPort, sectionName=sectionName)))
-            infoD["DB_USER"] = self.__cfgOb.get("MONGO_DB_USER_NAME", sectionName=sectionName)
-            infoD["DB_PW"] = self.__cfgOb.get("MONGO_DB_PASSWORD", sectionName=sectionName)
+            infoD["DB_USER"] = self.__cfgOb.get("_MONGO_DB_USER_NAME", sectionName=sectionName)
+            infoD["DB_PW"] = self.__cfgOb.get("_MONGO_DB_PASSWORD", sectionName=sectionName)
             infoD["DB_ADMIN_DB_NAME"] = self.__cfgOb.get("MONGO_DB_ADMIN_DB_NAME", default="admin", sectionName=sectionName)
             infoD["DB_WRITE_CONCERN"] = self.__cfgOb.get("MONGO_DB_WRITE_CONCERN", default="majority", sectionName=sectionName)
             infoD["DB_READ_CONCERN"] = self.__cfgOb.get("MONGO_DB_READ_CONCERN", default="majority", sectionName=sectionName)
@@ -78,8 +79,8 @@ class Connection(ConnectionBase):
             infoD["DB_HOST"] = self.__cfgOb.get("DB_HOST", default=defaultHost, sectionName=sectionName)
             infoD["DB_SOCKET"] = self.__cfgOb.get("DB_SOCKET", default=None, sectionName=sectionName)
             infoD["DB_PORT"] = int(str(self.__cfgOb.get("DB_PORT", default=defaultPort, sectionName=sectionName)))
-            infoD["DB_USER"] = self.__cfgOb.get("DB_USER_NAME", sectionName=sectionName)
-            infoD["DB_PW"] = self.__cfgOb.get("DB_PASSWORD", sectionName=sectionName)
+            infoD["DB_USER"] = self.__cfgOb.get("_DB_USER_NAME", sectionName=sectionName)
+            infoD["DB_PW"] = self.__cfgOb.get("_DB_PASSWORD", sectionName=sectionName)
             infoD["DB_ADMIN_DB_NAME"] = self.__cfgOb.get("DB_ADMIN_DB_NAME", default="admin", sectionName=sectionName)
             infoD["DB_WRITE_CONCERN"] = self.__cfgOb.get("DB_WRITE_CONCERN", default="majority", sectionName=sectionName)
             infoD["DB_READ_CONCERN"] = self.__cfgOb.get("DB_READ_CONCERN", default="majority", sectionName=sectionName)

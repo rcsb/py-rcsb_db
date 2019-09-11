@@ -9,6 +9,7 @@
 #  17-Jul-2019 jdw add resource for common utilities and dictionary api
 #   7-Aug-2019 jdw use dictionary locator map
 #  13-Aug-2019 jdw return class instances in all cases. Add cache management support.
+#   9-Sep-2019 jdw add AtcProvider() and SiftsSummaryProvider()
 ##
 """
 Resource provider for DictMethodHelper tools.
@@ -24,10 +25,12 @@ import os
 
 from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
 from rcsb.db.helpers.DictMethodCommonUtils import DictMethodCommonUtils
+from rcsb.utils.chemref.AtcProvider import AtcProvider
 from rcsb.utils.chemref.ChemCompModelProvider import ChemCompModelProvider
 from rcsb.utils.chemref.DrugBankProvider import DrugBankProvider
 from rcsb.utils.ec.EnzymeDatabaseProvider import EnzymeDatabaseProvider
 from rcsb.utils.io.SingletonClass import SingletonClass
+from rcsb.utils.seq.SiftsSummaryProvider import SiftsSummaryProvider
 from rcsb.utils.struct.CathClassificationProvider import CathClassificationProvider
 from rcsb.utils.struct.ScopClassificationProvider import ScopClassificationProvider
 from rcsb.utils.taxonomy.TaxonomyProvider import TaxonomyProvider
@@ -66,12 +69,15 @@ class DictMethodResourceProvider(SingletonClass):
         self.__ccmU = None
         self.__commonU = None
         self.__dApiW = None
+        self.__atcP = None
+        self.__ssP = None
         #
         #
         # self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
         # self.__re_non_digit = re.compile(r"[^\d]+")
         #
         self.__resourcesD = {
+            "SiftsSummaryProvider instance": self.__fetchSiftsSummaryProvider,
             "Dictionary API instance (pdbx_core)": self.__fetchDictionaryApi,
             "TaxonomyProvider instance": self.__fetchTaxonomyProvider,
             "ScopProvider instance": self.__fetchScopProvider,
@@ -79,6 +85,7 @@ class DictMethodResourceProvider(SingletonClass):
             "EnzymeProvider instance": self.__fetchEnzymeProvider,
             "DrugBankProvider instance": self.__fetchDrugBankProvider,
             "ChemCompModelProvider instance": self.__fetchChemCompModelProvider,
+            "AtcProvider instance": self.__fetchAtcProvider,
             "DictMethodCommonUtils instance": self.__fetchCommonUtils,
         }
         logger.debug("Dictionary resource provider init completed")
@@ -170,6 +177,23 @@ class DictMethodResourceProvider(SingletonClass):
             dirPath = os.path.join(cachePath, cfgOb.get("CHEM_COMP_MODEL_CACHE_DIR", sectionName=configName))
             self.__ccmU = ChemCompModelProvider(dirPath=dirPath, useCache=useCache, **kwargs)
         return self.__ccmU
+
+    def __fetchAtcProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
+        if not self.__atcP:
+            dirPath = os.path.join(cachePath, cfgOb.get("ATC_CACHE_DIR", sectionName=configName))
+            self.__atcP = AtcProvider(dirPath=dirPath, useCache=useCache, **kwargs)
+        return self.__atcP
+
+    def __fetchSiftsSummaryProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
+        if not self.__ssP:
+            srcDirPath = os.path.join(cachePath, cfgOb.getPath("SIFTS_SUMMARY_DATA_PATH", sectionName=configName))
+            cacheDirPath = os.path.join(cachePath, cfgOb.get("SIFTS_SUMMARY_CACHE_DIR", sectionName=configName))
+            logger.debug("ssP %r %r", srcDirPath, cacheDirPath)
+            self.__ssP = SiftsSummaryProvider(srcDirPath=srcDirPath, cacheDirPath=cacheDirPath, useCache=useCache, abbreviated=True, **kwargs)
+            logger.debug("ssP entry count %d", self.__ssP.getEntryCount())
+        return self.__ssP
 
     def __fetchCommonUtils(self, cfgOb, configName, cachePath, useCache=None, **kwargs):
         logger.debug("configName %s cachePath %r kwargs %r", configName, cachePath, kwargs)
