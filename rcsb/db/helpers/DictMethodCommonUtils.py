@@ -7,6 +7,7 @@
 # Updates:
 # 26-Jul-2019 jdw Include struct_mon_prot_cis with secondary structure features
 #                 Add general processing of intermolecular and other connections.
+# 19-Sep-2019 jdw Add method getEntityReferenceAlignments()
 ##
 """
 Helper class implements common utility external method references supporting the RCSB dictionary extension.
@@ -90,7 +91,6 @@ class DictMethodCommonUtils(object):
         self.__reNonDigit = re.compile(r"[^\d]+")
         #
         cacheSize = 5
-
         self.__entityAndInstanceMapCache = CacheUtils(size=cacheSize, label="instance mapping")
         self.__atomInfoCache = CacheUtils(size=cacheSize, label="atom site counts and mapping")
         self.__protSSCache = CacheUtils(size=cacheSize, label="protein secondary structure")
@@ -1546,6 +1546,36 @@ class DictMethodCommonUtils(object):
         wD = self.__fetchSequenceFeatures(dataContainer)
         return wD["seqRangeFeatureD"] if "seqRangeFeatureD" in wD else {}
 
+    def getEntityReferenceAlignments(self, dataContainer):
+        """Return a dictionary of reference sequence alignments for each entity.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            dict: {entityId: {'dbName': , 'dbAccession': , 'authAsymId': , 'entitySeqIdBeg':, 'dbSeqIdBeg':, ... },  .. }
+
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchSequenceFeatures(dataContainer)
+        return wD["seqEntityAlignmentD"] if "seqEntityAlignmentD" in wD else {}
+
+    def getEntitySequenceReferenceCodes(self, dataContainer):
+        """Return a dictionary of reference database accession codes.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            dict: {entityId: {'dbName': , 'dbAccession': },  ... }
+
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchSequenceFeatures(dataContainer)
+        return wD["seqEntityRefDbD"] if "seqEntityRefDbD" in wD else {}
+
     def __fetchSequenceFeatures(self, dataContainer):
         wD = self.__entitySequenceFeatureCache.get(dataContainer.getName())
         if not wD:
@@ -1560,8 +1590,11 @@ class DictMethodCommonUtils(object):
             dataContainer (object): mmif.api.DataContainer object instance
 
         Returns:
-            dict : {"seqDifCountsD" = {entityId: {"mutation": #, "conflict": # ... }, }
-                    "seqDifD": {(entityId, seqId, compId, filteredFeature): set(feature,...), ...}
+            dict : {"seqFeatureCountsD": {entityId: {"mutation": #, "conflict": # ... }, }
+                    "seqMonomerFeatureD": {(entityId, seqId, compId, filteredFeature): set(feature,...), ...}
+                    "seqRangeFeatureD" : {(entityId, str(beg), str(end), "artifact"): set(details)}
+                    "seqEntityAlignmentD" : {entityId: [{'dbName': 'UNP' , 'dbAccession': 'P000000', ... }]}
+                    "seqEntityRefDbD":  {entityId: [{'dbName': 'UNP' , 'dbAccession': 'P000000'),  }]},
                     }
 
         Example source content:
@@ -1692,10 +1725,10 @@ class DictMethodCommonUtils(object):
         """
         logger.debug("Starting with %r", dataContainer.getName())
         #
-        rD = {"seqFeatureCountsD": {}, "seqMonomerFeatureD": {}, "seqRangeFeatureD": {}}
+        rD = {"seqFeatureCountsD": {}, "seqMonomerFeatureD": {}, "seqRangeFeatureD": {}, "seqEntityAlignmentD": {}, "seqEntityRefDbD": {}}
         try:
             # Exit if source categories are missing
-            if not (dataContainer.exists("struct_ref_seq_dif") and dataContainer.exists("struct_ref_seq") and dataContainer.exists("struct_ref")):
+            if not (dataContainer.exists("struct_ref_seq") and dataContainer.exists("struct_ref")):
                 return rD
             # ------- --------- ------- --------- ------- --------- ------- --------- ------- ---------
             srObj = None
@@ -1711,16 +1744,45 @@ class DictMethodCommonUtils(object):
                 srsdObj = dataContainer.getObj("struct_ref_seq_dif")
 
             # Map alignId -> entityId
-            alignD = {}
+            seqEntityRefDbD = {}
+            alignEntityMapD = {}
+            # entity alignment details
+            seqEntityAlignmentD = {}
             for ii in range(srObj.getRowCount()):
                 entityId = srObj.getValue("entity_id", ii)
                 refId = srObj.getValue("id", ii)
+                dbName = srObj.getValue("db_name", ii)
+                dbAccession = srObj.getValue("pdbx_db_accession", ii)
+                seqEntityRefDbD.setdefault(entityId, []).append((dbName, dbAccession))
                 #
                 # Get indices for the target refId.
                 iRowL = srsObj.selectIndices(refId, "ref_id")
+                logger.debug("entryId %r entityId %r refId %r rowList %r", dataContainer.getName(), entityId, refId, iRowL)
                 for iRow in iRowL:
                     alignId = srsObj.getValue("align_id", iRow)
-                    alignD[alignId] = entityId
+                    alignEntityMapD[alignId] = entityId
+                    #
+                    authAsymId = srsObj.getValue("pdbx_strand_id", iRow)
+                    entitySeqIdBeg = srsObj.getValue("seq_align_beg", iRow)
+                    entitySeqIdEnd = srsObj.getValue("seq_align_end", iRow)
+                    dbSeqIdBeg = srsObj.getValue("db_align_beg", iRow)
+                    dbSeqIdEnd = srsObj.getValue("db_align_end", iRow)
+                    entityAlignLength = int(entitySeqIdEnd) - int(entitySeqIdBeg) + 1
+                    seqEntityAlignmentD.setdefault(entityId, []).append(
+                        {
+                            "authAsymId": authAsymId,
+                            "entitySeqIdBeg": entitySeqIdBeg,
+                            "entitySeqIdEnd": entitySeqIdEnd,
+                            "dbSeqIdBeg": dbSeqIdBeg,
+                            "dbSeqIdEnd": dbSeqIdEnd,
+                            "dbName": dbName,
+                            "dbAccession": dbAccession,
+                            "entityAlignLength": entityAlignLength,
+                        }
+                    )
+
+            for entityId in seqEntityRefDbD:
+                seqEntityRefDbD[entityId] = sorted(set(seqEntityRefDbD[entityId]))
             # ------- --------- ------- --------- ------- --------- ------- --------- ------- ---------
             #   (entityId, seqId, compId, filteredFeature) -> set{details, ...}
             #
@@ -1733,7 +1795,7 @@ class DictMethodCommonUtils(object):
                 for ii in range(srsdObj.getRowCount()):
                     # authAsymId = srsdObj.getValue("pdbx_pdb_strand_id", ii)
                     alignId = srsdObj.getValue("align_id", ii)
-                    entityId = alignD[alignId]
+                    entityId = alignEntityMapD[alignId]
                     seqId = srsdObj.getValue("seq_num", ii)
                     compId = srsdObj.getValue("mon_id", ii)
                     #
@@ -1767,7 +1829,13 @@ class DictMethodCommonUtils(object):
                         seqFeatureCountsD[entityId] = {"mutation": 0, "artifact": 0, "insertion": 0, "deletion": 0, "conflict": 0}
                     seqFeatureCountsD[entityId][fDetails] += 1
 
-            return {"seqFeatureCountsD": seqFeatureCountsD, "seqMonomerFeatureD": seqMonomerFeatureD, "seqRangeFeatureD": seqRangeFeatureD}
+            return {
+                "seqFeatureCountsD": seqFeatureCountsD,
+                "seqMonomerFeatureD": seqMonomerFeatureD,
+                "seqRangeFeatureD": seqRangeFeatureD,
+                "seqEntityAlignmentD": seqEntityAlignmentD,
+                "seqEntityRefDb": seqEntityRefDbD,
+            }
         except Exception as e:
             logger.exception("%s failing with %s", dataContainer.getName(), str(e))
         return rD

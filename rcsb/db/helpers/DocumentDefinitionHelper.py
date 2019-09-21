@@ -49,6 +49,8 @@ class DocumentDefinitionHelper(object):
         self.__cfgD = self.__cfgOb.exportConfig(sectionName=sectionName)
         self.__searchTypeD = {}
         self.__attributeDescriptionD = {}
+        self.__categoryNested = {}
+        self.__attributeSeachPriority = {}
         #
         # ----
 
@@ -233,10 +235,10 @@ class DocumentDefinitionHelper(object):
 
         collection_attribute_search_contexts:
             pdbx_core_entity_instance:
-                - SEARCH_TYPE: faceted
+                - SEARCH_TYPE: exact-match
                   ATTRIBUTE_NAMES:
                   - rcsb_polymer_instance_feature.name
-                - SEARCH_TYPE: attribute
+                - SEARCH_TYPE: default-match
                   ATTRIBUTE_NAMES:
                   - rcsb_entity_instance_domain_scop.domain_class_lineage.name
                   - rcsb_entity_instance_domain_scop.domain_class_lineage.id
@@ -248,7 +250,7 @@ class DocumentDefinitionHelper(object):
 
         """
         cD = {}
-        # preprocess data --
+        # preprocess search context data --
         for collectionName, tDL in self.__cfgD["collection_attribute_search_contexts"].items():
             aD = {}
             for tD in tDL:
@@ -258,6 +260,8 @@ class DocumentDefinitionHelper(object):
                         logger.error("Bad attribute name for search type %r", atName)
                         continue
                     aD.setdefault((ff[0], ff[1]), []).append(tD["SEARCH_TYPE"])
+                    if tD["SEARCH_TYPE"] in ["exact-match", "suggest"]:
+                        aD.setdefault((ff[0], ff[1]), []).append("full-text")
                 #
             cD[collectionName] = {tup: sorted(list(set(sL))) for tup, sL in aD.items()}
 
@@ -316,3 +320,90 @@ class DocumentDefinitionHelper(object):
         except Exception as e:
             logger.debug("CategoryName %r attributeName %r failing  %s", categoryName, attributeName, str(e))
         return ret
+
+    def __prepareCategoryNested(self):
+        """
+        Example:
+
+            collection_category_nested:
+                pdbx_core_entry:
+                    - citation
+                pdbx_core_entity:
+                    - rcsb_polymer_entity_feature
+                pdbx_core_entity_instance:
+                    - rcsb_polymer_instance_feature
+
+        """
+        cD = {}
+        # preprocess the nesting data --
+        for collectionName, catNameL in self.__cfgD["collection_category_nested"].items():
+            catD = {catName: True for catName in catNameL}
+            cD[collectionName] = catD
+        return cD
+
+    def isCategoryNested(self, collectionName, categoryName):
+        """Return is the input category in this collection is nested.
+
+        Args:
+            collectionName (str): collection name
+            categoryName (str): category name
+
+        Returns:
+            (bool): True if nested or False otherwise
+
+        """
+        ret = False
+        try:
+            self.__categoryNested = self.__prepareCategoryNested() if not self.__categoryNested else self.__categoryNested
+            ret = categoryName in self.__categoryNested[collectionName]
+        except Exception:
+            pass
+        return ret
+
+    def __prepareAttributeSearchPriorities(self):
+        """
+        Example:
+
+            collection_attribute_search_priority:
+                pdbx_core_entry:
+                    - ATTRIBUTE_NAME: rcsb_entry_container_identifiers.entry_id
+                    PRIORITY_VALUE: 20
+                    - ATTRIBUTE_NAME: entity.rcsb_macromolecular_names_combined
+                    PRIORITY_VALUE: 20
+
+        """
+        pD = {}
+        try:
+            # preprocess priority data --
+            for collectionName, tDL in self.__cfgD["collection_attribute_search_priority"].items():
+                aD = {}
+                for tD in tDL:
+                    ff = str(tD["ATTRIBUTE_NAME"]).split(".")
+                    pValue = tD["PRIORITY_VALUE"]
+                    aD[(ff[0], ff[1])] = pValue
+                pD[collectionName] = aD
+            return pD
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return pD
+
+    def getAttributeTextSearchPriority(self, collectionName, categoryName, attributeName):
+        try:
+            self.__attributeSeachPriority = self.__prepareAttributeSearchPriorities() if not self.__attributeSeachPriority else self.__attributeSeachPriority
+            try:
+                # return a config priority first
+                return self.__attributeSeachPriority[collectionName](categoryName, attributeName)
+            except Exception:
+                pass
+            # return an elevated priority based on search context -
+            #
+            scL = self.getAttributeSearchContexts(collectionName, categoryName, attributeName)
+            if "suggest" in scL:
+                return 20
+            if "exact-match" in scL:
+                return 10
+            if "full-text" in scL:
+                return 1
+        except Exception:
+            pass
+        return None

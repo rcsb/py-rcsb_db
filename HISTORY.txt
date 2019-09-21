@@ -157,3 +157,5 @@
                     schema evolution. Add new helper methods for sites and connections and revise helper
                     methods for all entity and instance features.
  10-Sep-2019  V0.67 Adding extended metadata types, AtcProvider() and SiftsSummaryProvider().
+ 19-Sep-2019  V0.68 Eliminate private keys, revise/extend interenal schema metadata, purge schema,
+                    add polymer alignment methods.

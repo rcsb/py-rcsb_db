@@ -62,7 +62,6 @@
 #  3-Sep-2019 jdw standardized database access options and add cache dir for exdb
 #  6-Sep-2019 jdw incorporate metadata for search type and brief description
 #  9-Sep-2019 jdw add COLLECTION_ATC: tree_atc_node_list
-# 17-Sep-2019 jdw category rcsb_polymer_entity_align
 #
 # ExDB configuration file example
 ---
@@ -231,21 +230,21 @@ database_catalog_configuration:
   # Inventory of current schema defintions and derivative collection types.
   #
   # All defined database definitions -
-  DATABASE_NAMES_ALL: pdbx,pdbx_core,chem_comp,bird,bird_family,bird_chem_comp,bird_chem_comp_core,repository_holdings,sequence_clusters,data_exchange,drugbank_core,ihm_dev
+  DATABASE_NAMES_ALL: pdbx,pdbx_core,chem_comp,chem_comp_core,bird,bird_family,bird_chem_comp,bird_chem_comp_core,repository_holdings,sequence_clusters,data_exchange,drugbank_core,ihm_dev
   DATATYPING_ALL: ANY,SQL
   ENCODING_TYPES_ALL: rcsb,json,bson
   VALIDATION_LEVELS_ALL: min,full
   #
   #  Databases in active use -
   #
-  DATABASE_NAMES_DEPLOYED: pdbx_core,bird_chem_comp_core,repository_holdings,sequence_clusters,data_exchange,drugbank_core,ihm_dev
+  DATABASE_NAMES_DEPLOYED: pdbx_core,chem_comp_core,bird_chem_comp_core,repository_holdings,sequence_clusters,data_exchange,drugbank_core,ihm_dev
   DATATYPING_DEPLOYED: ANY,SQL
   ENCODING_TYPES_DEPLOYED: rcsb,json,bson
   VALIDATION_LEVELS_DEPLOYED: min,full
   #
   # Database subset used for CI testing -
   #
-  DATABASE_NAMES_TEST: bird_chem_comp_core,pdbx_core
+  DATABASE_NAMES_TEST: chem_comp_core,bird_chem_comp_core,pdbx_core
   DATATYPING_TEST: ANY,SQL
   ENCODING_TYPES_TEST: rcsb,json,bson
   VALIDATION_LEVELS_TEST: min,full
@@ -325,6 +324,9 @@ content_info_helper_configuration:
         chem_comp:
             VERSION: 5.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
+        chem_comp_core:
+            VERSION: 5.1.0
+            INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
         bird_chem_comp:
             VERSION: 5.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
@@ -372,10 +374,10 @@ content_info_helper_configuration:
       chem_comp:
         - PDBX_DICT_LOCATOR
         - RCSB_DICT_LOCATOR
-      chem_comp_core:
+      bird_chem_comp:
         - PDBX_DICT_LOCATOR
         - RCSB_DICT_LOCATOR
-      bird_chem_comp:
+      chem_comp_core:
         - PDBX_DICT_LOCATOR
         - RCSB_DICT_LOCATOR
       bird_chem_comp_core:
@@ -446,6 +448,9 @@ content_info_helper_configuration:
         chem_comp:
             CATEGORY_NAME: chem_comp
             ATTRIBUTE_NAME: id
+        chem_comp_core:
+            CATEGORY_NAME: chem_comp
+            ATTRIBUTE_NAME: id
         bird_chem_comp:
             CATEGORY_NAME: chem_comp
             ATTRIBUTE_NAME: id
@@ -485,12 +490,12 @@ content_info_helper_configuration:
                       - REL
                       - REF_ONLY
         ?       - PUBLIC_RELEASE
-                - bird_chem_comp_core
-        :       - CATEGORY_NAME: rcsb_chem_comp_info
-                  ATTRIBUTE_NAME: release_status
+                - chem_comp_core
+        :       - CATEGORY_NAME: chem_comp
+                  ATTRIBUTE_NAME: pdbx_release_status
                   VALUES:
                       - REL
-                      # - REF_ONLY
+                      - REF_ONLY
                       # - OBS
         ?       - PUBLIC_RELEASE
                 - bird_chem_comp
@@ -499,6 +504,12 @@ content_info_helper_configuration:
                   VALUES:
                       - REL
                       - REF_ONLY
+        ?       - PUBLIC_RELEASE
+                - bird_chem_comp_core
+        :       - CATEGORY_NAME: pdbx_reference_molecule
+                  ATTRIBUTE_NAME: release_status
+                  VALUES:
+                      - REL
         ?       - PUBLIC_RELEASE
                 - bird
         :       - CATEGORY_NAME: pdbx_reference_molecule
@@ -799,7 +810,6 @@ content_info_helper_configuration:
                 - CATEGORY_NAME: rcsb_polymer_instance_feature_summary
                 - CATEGORY_NAME: rcsb_polymer_entity_feature
                 - CATEGORY_NAME: rcsb_polymer_entity_feature_summary
-                - CATEGORY_NAME: rcsb_polymer_entity_align
                 - CATEGORY_NAME: rcsb_struct_conn
                 # - CATEGORY_NAME: pdbx_distant_solvent_atoms
                 #
@@ -892,6 +902,51 @@ content_info_helper_configuration:
                   ATTRIBUTE_NAME_LIST:
                       - ordinal
         ?       - GENERATED_CONTENT
+                - chem_comp_core
+        :       - CATEGORY_NAME: rcsb_load_status
+                  ATTRIBUTE_NAME_LIST:
+                      - datablock_name
+                      - load_date
+                      - locator
+                - CATEGORY_NAME: rcsb_chem_comp_synonyms
+                  ATTRIBUTE_NAME_LIST:
+                      - comp_id
+                      - ordinal
+                      - name
+                      - provenance_source
+                - CATEGORY_NAME: rcsb_chem_comp_info
+                  ATTRIBUTE_NAME_LIST:
+                      - comp_id
+                      - atom_count
+                      - atom_count_chiral
+                      - bond_count
+                      - bond_count_aromatic
+                      - atom_count_heavy
+                - CATEGORY_NAME: rcsb_chem_comp_descriptor
+                  ATTRIBUTE_NAME_LIST:
+                      - comp_id
+                      - SMILES
+                      - SMILES_stereo
+                      - InChI
+                      - InChIKey
+                - CATEGORY_NAME: rcsb_chem_comp_related
+                - CATEGORY_NAME: rcsb_chem_comp_target
+                  ATTRIBUTE_NAME_LIST:
+                      - comp_id
+                      - ordinal
+                      - name
+                      - interaction_type
+                      - target_actions
+                      - organism_common_name
+                      - reference_database_name
+                      - reference_database_accession_code
+                      - provenance_source
+                - CATEGORY_NAME: pdbx_chem_comp_audit
+                  ATTRIBUTE_NAME_LIST:
+                      - ordinal
+                - CATEGORY_NAME: rcsb_chem_comp_container_identifiers
+                - CATEGORY_NAME: rcsb_schema_container_identifiers
+        ?       - GENERATED_CONTENT
                 - bird_chem_comp
         :       - CATEGORY_NAME: rcsb_load_status
                   ATTRIBUTE_NAME_LIST:
@@ -912,16 +967,43 @@ content_info_helper_configuration:
                   ATTRIBUTE_NAME_LIST:
                       - rcsb_authors
                 - CATEGORY_NAME: rcsb_chem_comp_synonyms
+                  ATTRIBUTE_NAME_LIST:
+                      - comp_id
+                      - ordinal
+                      - name
+                      - provenance_source
                 - CATEGORY_NAME: rcsb_chem_comp_info
+                  ATTRIBUTE_NAME_LIST:
+                      - comp_id
+                      - atom_count
+                      - atom_count_chiral
+                      - bond_count
+                      - bond_count_aromatic
+                      - atom_count_heavy
                 - CATEGORY_NAME: rcsb_chem_comp_descriptor
+                  ATTRIBUTE_NAME_LIST:
+                      - comp_id
+                      - SMILES
+                      - SMILES_stereo
+                      - InChI
+                      - InChIKey
                 - CATEGORY_NAME: rcsb_chem_comp_related
                 - CATEGORY_NAME: rcsb_chem_comp_target
+                  ATTRIBUTE_NAME_LIST:
+                      - comp_id
+                      - ordinal
+                      - name
+                      - interaction_type
+                      - target_actions
+                      - organism_common_name
+                      - reference_database_name
+                      - reference_database_accession_code
+                      - provenance_source
                 - CATEGORY_NAME: pdbx_chem_comp_audit
                   ATTRIBUTE_NAME_LIST:
                       - ordinal
                 - CATEGORY_NAME: rcsb_chem_comp_container_identifiers
                 - CATEGORY_NAME: rcsb_schema_container_identifiers
-                #
         ?       - GENERATED_CONTENT
                 - bird
         :       - CATEGORY_NAME: rcsb_load_status
@@ -1441,6 +1523,25 @@ content_info_helper_configuration:
               ATTRIBUTE_NAME: reciprocal_angle_beta
             - CATEGORY_NAME: cell
               ATTRIBUTE_NAME: reciprocal_angle_gamma
+        chem_comp_core:
+            - CATEGORY_NAME: chem_comp
+              ATTRIBUTE_NAME: pdbx_model_coordinates_details
+            - CATEGORY_NAME: chem_comp
+              ATTRIBUTE_NAME: pdbx_model_coordinates_missing_flag
+            - CATEGORY_NAME: chem_comp
+              ATTRIBUTE_NAME: pdbx_ideal_coordinates_details
+            - CATEGORY_NAME: chem_comp
+              ATTRIBUTE_NAME: pdbx_ideal_coordinates_missing_flag
+            - CATEGORY_NAME: chem_comp
+              ATTRIBUTE_NAME: pdbx_model_coordinates_db_code
+            - CATEGORY_NAME: chem_comp
+              ATTRIBUTE_NAME: pdbx_synonyms
+            - CATEGORY_NAME: chem_comp
+              ATTRIBUTE_NAME: pdbx_type
+            - CATEGORY_NAME: pdbx_chem_comp_audit
+              ATTRIBUTE_NAME: processing_site
+            - CATEGORY_NAME: pdbx_chem_comp_audit
+              ATTRIBUTE_NAME: annotator
         bird_chem_comp_core:
             - CATEGORY_NAME: chem_comp
               ATTRIBUTE_NAME: pdbx_model_coordinates_details
@@ -1497,6 +1598,9 @@ document_helper_configuration:
         chem_comp:
             - NAME: chem_comp
               VERSION: 5.1.0
+        chem_comp_core:
+            - NAME: chem_comp_core
+              VERSION: 5.1.0
         bird_chem_comp:
             - NAME: bird_chem_comp
               VERSION: 5.1.0
@@ -1546,6 +1650,11 @@ document_helper_configuration:
             INCLUDE: []
             EXCLUDE:
                 - ATOM_SITE
+        chem_comp_core:
+            INCLUDE: []
+            EXCLUDE:
+                - CHEM_COMP_ATOM
+                - CHEM_COMP_BOND
         bird_chem_comp_core:
             INCLUDE: []
             EXCLUDE:
@@ -1953,6 +2062,20 @@ document_helper_configuration:
                 - reciprocal_angle_alpha
                 - reciprocal_angle_beta
                 - reciprocal_angle_gamma
+        chem_comp_core:
+            - CATEGORY_NAME: chem_comp
+              ATTRIBUTE_NAME_LIST:
+                - pdbx_model_coordinates_details
+                - pdbx_model_coordinates_missing_flag
+                - pdbx_ideal_coordinates_details
+                - pdbx_ideal_coordinates_missing_flag
+                - pdbx_model_coordinates_db_code
+                - pdbx_synonyms
+                - pdbx_type
+            - CATEGORY_NAME: pdbx_chem_comp_audit
+              ATTRIBUTE_NAME_LIST:
+                - processing_site
+                - annotator
         bird_chem_comp_core:
             - CATEGORY_NAME: chem_comp
               ATTRIBUTE_NAME_LIST:
@@ -1968,7 +2091,7 @@ document_helper_configuration:
                 - processing_site
                 - annotator
     #
-    collection_private_keys_deprecated:
+    collection_private_keys:
         ihm_dev:
             - NAME: entry.id
               CATEGORY_NAME: entry
@@ -2161,6 +2284,19 @@ document_helper_configuration:
               CATEGORY_NAME: rcsb_entry_container_identifiers
               ATTRIBUTE_NAME: entry_id
               PRIVATE_DOCUMENT_NAME: _entry_id
+              MANDATORY: True
+              UPDATE_ON_LOAD: False
+            - NAME: rcsb_schema_container_identifiers.collection_schema_version
+              CATEGORY_NAME: rcsb_schema_container_identifiers
+              ATTRIBUTE_NAME: collection_schema_version
+              PRIVATE_DOCUMENT_NAME: _schema_version
+              MANDATORY: False
+              UPDATE_ON_LOAD: True
+        chem_comp_core:
+            - NAME: chem_comp.id
+              CATEGORY_NAME: rcsb_chem_comp_container_identifiers
+              ATTRIBUTE_NAME: comp_id
+              PRIVATE_DOCUMENT_NAME: _comp_id
               MANDATORY: True
               UPDATE_ON_LOAD: False
             - NAME: rcsb_schema_container_identifiers.collection_schema_version
@@ -2490,6 +2626,10 @@ document_helper_configuration:
             - INDEX_NAME: primary
               ATTRIBUTE_NAMES:
               - chem_comp.component_id
+        chem_comp_core:
+            - INDEX_NAME: primary
+              ATTRIBUTE_NAMES:
+              - chem_comp.id
         bird_chem_comp:
             - INDEX_NAME: primary
               ATTRIBUTE_NAMES:
@@ -2557,6 +2697,9 @@ document_helper_configuration:
               ATTRIBUTE_NAMES:
               - drugbank_info.drugbank_id
     collection_subcategory_aggregates:
+        chem_comp_core:
+            - NAME: resource_lineage
+              HAS_UNIT_CARDINALITY: False
         bird_chem_comp_core:
             - NAME: resource_lineage
               HAS_UNIT_CARDINALITY: False
@@ -2965,7 +3108,6 @@ document_helper_configuration:
             - citation
         pdbx_core_entity:
             - rcsb_polymer_entity_feature
-            - rcsb_polymer_entity_align
         pdbx_core_entity_instance:
             - rcsb_polymer_instance_feature
 
@@ -3261,7 +3403,7 @@ document_helper_configuration:
           - pdbx_struct_assembly.oligomeric_details
           - pdbx_struct_assembly.rcsb_details
     #
-    bird_chem_comp_core:
+    chem_comp_core:
         - SEARCH_TYPE: exact-match
           ATTRIBUTE_NAMES:
           - rcsb_chem_comp_container_identifiers.comp_id
@@ -3282,13 +3424,12 @@ document_helper_configuration:
           - pdbx_reference_molecule_related_structures.db_code
           - pdbx_reference_molecule_synonyms.name
           - pdbx_reference_molecule.class
+          - pdbx_reference_molecule.class
           - pdbx_reference_molecule.description
           - pdbx_reference_molecule.name
+          - pdbx_reference_molecule.name
           - pdbx_reference_molecule.type
-          - rcsb_chem_comp_container_identifiers.drugbank_id
           - rcsb_chem_comp_descriptor.InChI
-          - rcsb_chem_comp_descriptor.InChIKey
-          - rcsb_chem_comp_related.resource_accession_code
           - rcsb_chem_comp_synonyms.name
           - rcsb_chem_comp_target.name
     #
@@ -3315,3 +3456,24 @@ document_helper_configuration:
           - drugbank_target.organism_common_name
           - drugbank_target.seq_one_letter_code
           - drugbank_target.target_actions
+    #
+    bird_chem_comp_core:
+       - SEARCH_TYPE: exact-match
+         ATTRIBUTE_NAMES:
+          - rcsb_chem_comp_container_identifiers.comp_id
+       - SEARCH_TYPE: full-text
+         ATTRIBUTE_NAMES:
+          - rcsb_chem_comp_container_identifiers.drugbank_id
+          - rcsb_chem_comp_descriptor.InChI
+          - rcsb_chem_comp_descriptor.InChIKey
+          - rcsb_chem_comp_related.resource_accession_code
+          - rcsb_chem_comp_synonyms.name
+          - rcsb_chem_comp_target.name
+          - pdbx_reference_molecule.class
+          - pdbx_reference_molecule.description
+          - pdbx_reference_molecule.name
+          - pdbx_reference_molecule.type
+          - pdbx_reference_molecule_family.name
+          - pdbx_reference_molecule_related_structures.db_code
+          - pdbx_reference_molecule_synonyms.name
+    #

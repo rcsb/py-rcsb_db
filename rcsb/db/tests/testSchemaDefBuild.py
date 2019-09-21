@@ -55,8 +55,8 @@ class SchemaDefBuildTests(unittest.TestCase):
         self.__validationLevels = self.__cfgOb.getList("VALIDATION_LEVELS_TEST", sectionName="database_catalog_configuration")
         self.__encodingTypes = self.__cfgOb.getList("ENCODING_TYPES_TEST", sectionName="database_catalog_configuration")
         #
-        self.__databaseNameList = self.__cfgOb.getList("DATABASE_NAMES_TEST", sectionName="database_catalog_configuration")
-        self.__dataTypingList = self.__cfgOb.getList("DATATYPING_TEST", sectionName="database_catalog_configuration")
+        self.__databaseNameList = self.__cfgOb.getList("DATABASE_NAMES_DEPLOYED", sectionName="database_catalog_configuration")
+        self.__dataTypingList = self.__cfgOb.getList("DATATYPING_DEPLOYED", sectionName="database_catalog_configuration")
         self.__saveSchema = True
         self.__compareSchema = False
         #
@@ -109,6 +109,7 @@ class SchemaDefBuildTests(unittest.TestCase):
         self.assertGreaterEqual(len(difD["changed"]), 160)
         logger.debug("difD %r", difD)
 
+    @unittest.skip("Deprecated test")
     def testCompareSchemaCategories(self):
         """ Compare common categories across schema definitions.
         """

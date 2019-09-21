@@ -296,8 +296,27 @@ class DictMethodChemRefHelper(object):
             logger.exception("For %s failing with %s", catName, str(e))
         return False
 
+    def __getAuditDates(self, dataContainer, catName):
+        createDate = None
+        releaseDate = None
+        reviseDate = None
+        try:
+            if dataContainer.exists(catName):
+                cObj = dataContainer.getObj(catName)
+                for iRow in range(cObj.getRowCount()):
+                    aType = cObj.getValueOrDefault("action_type", iRow, defaultValue=None)
+                    dateVal = cObj.getValueOrDefault("date", iRow, defaultValue=None)
+                    if aType in ["Create component"]:
+                        createDate = dateVal
+                    elif aType in ["Initial release"]:
+                        releaseDate = dateVal
+                reviseDate = cObj.getValueOrDefault("date", cObj.getRowCount() - 1, defaultValue=None)
+        except Exception as e:
+            logger.exception("Faling with %s", str(e))
+        return createDate, releaseDate, reviseDate
+
     def addChemCompInfo(self, dataContainer, catName, **kwargs):
-        """ Add category rcsb_chem_comp_info.
+        """ Add category rcsb_chem_comp_info and rcsb_chem_comp_container_identifiers.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -323,19 +342,56 @@ class DictMethodChemRefHelper(object):
             if not ccObj.hasAttribute("pdbx_release_status"):
                 return False
             ccId = ccObj.getValue("id", 0)
+            ccReleaseStatus = ccObj.getValue("pdbx_release_status", 0)
+            subComponentIds = ccObj.getValueOrDefault("pdbx_subcomponent_list", 0, defaultValue=None)
             #
+            #
+            prdId = prdReleaseStatus = representAs = None
+            if dataContainer.exists("pdbx_reference_molecule"):
+                prdObj = dataContainer.getObj("pdbx_reference_molecule")
+                prdId = prdObj.getValueOrDefault("prd_id", 0, defaultValue=None)
+                prdReleaseStatus = prdObj.getValueOrDefault("release_status", 0, defaultValue=None)
+                representAs = prdObj.getValueOrDefault("represent_as", 0, defaultValue=None)
+            #
+            # ------- add the canonical identifiers --------
+            cN = "rcsb_chem_comp_container_identifiers"
+            if not dataContainer.exists(cN):
+                dataContainer.append(DataCategory(cN, attributeNameList=["comp_id", "prd_id", "subcomponent_ids"]))
+            idObj = dataContainer.getObj(cN)
+            idObj.setValue(ccId, "comp_id", 0)
+            if prdId:
+                idObj.setValue(prdId, "prd_id", 0)
+            if subComponentIds:
+                tL = [tV.strip() for tV in subComponentIds.split()]
+                idObj.setValue(",".join(tL), "subcomponent_ids", 0)
+            #
+            # Get audit info -
+            if representAs and representAs.lower() in ["polymer"]:
+                _, releaseDate, revisionDate = self.__getAuditDates(dataContainer, "pdbx_prd_audit")
+            else:
+                _, releaseDate, revisionDate = self.__getAuditDates(dataContainer, "pdbx_chem_comp_audit")
+            #
+            #  --------- --------- --------- ---------
             # Create the new target category
             #
             if not dataContainer.exists(catName):
                 dataContainer.append(
-                    DataCategory(catName, attributeNameList=["comp_id", "atom_count", "atom_count_heavy", "atom_count_chiral", "bond_count", "bond_count_aromatic"])
+                    DataCategory(
+                        catName,
+                        attributeNameList=[
+                            "comp_id",
+                            "release_status",
+                            "initial_release_date",
+                            "revision_date",
+                            "atom_count",
+                            "atom_count_heavy",
+                            "atom_count_chiral",
+                            "bond_count",
+                            "bond_count_aromatic",
+                        ],
+                    )
                 )
-            # -------
-            cN = "rcsb_chem_comp_container_identifiers"
-            if not dataContainer.exists(cN):
-                dataContainer.append(DataCategory(cN, attributeNameList=["comp_id"]))
-            idObj = dataContainer.getObj(cN)
-            idObj.setValue(ccId, "comp_id", 0)
+
             #
             # -------
             wObj = dataContainer.getObj(catName)
@@ -362,6 +418,14 @@ class DictMethodChemRefHelper(object):
                 numAtomsChiral = 0
             #
             wObj.setValue(ccId, "comp_id", 0)
+            if prdReleaseStatus:
+                wObj.setValue(prdReleaseStatus, "release_status", 0)
+            else:
+                wObj.setValue(ccReleaseStatus, "release_status", 0)
+            #
+            wObj.setValue(releaseDate, "initial_release_date", 0)
+            wObj.setValue(revisionDate, "revision_date", 0)
+            #
             wObj.setValue(numAtoms, "atom_count", 0)
             wObj.setValue(numAtomsChiral, "atom_count_chiral", 0)
             wObj.setValue(numAtomsHeavy, "atom_count_heavy", 0)

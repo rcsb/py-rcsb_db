@@ -519,6 +519,8 @@ class SchemaDefBuild(object):
         for atName, fD in aD.items():
             ascL = documentDefHelper.getAttributeSearchContexts(collectionName, catName, atName)
             fD["SEARCH_CONTEXTS"] = ascL
+            fD["IS_NESTED"] = documentDefHelper.isCategoryNested(collectionName, catName)
+            fD["SEARCH_PRIORITY"] = documentDefHelper.getAttributeTextSearchPriority(collectionName, catName, atName)
             tS = documentDefHelper.getAttributeDescription(catName, atName, contextType="brief")
             if tS:
                 fD["DESCRIPTION_ANNOTATED"].append({"text": tS, "context": "brief"})
@@ -665,6 +667,7 @@ class SchemaDefBuild(object):
             #
             pD = {typeKey: "object", "properties": {}, "required": [], "additionalProperties": False}
             #
+
             if isUnitCard:
                 catPropD = pD
             else:
@@ -674,7 +677,9 @@ class SchemaDefBuild(object):
                 else:
                     # JDW Adjusted minItems=1
                     catPropD = {typeKey: "array", "items": pD, "minItems": 1, "uniqueItems": True}
-            #
+                if dataTypingU == "JSON" and addRcsbExtensions:
+                    isNested = documentDefHelper.isCategoryNested(collectionName, catName)
+                    catPropD["rcsb_nested_indexing"] = isNested
             if addBlockAttribute and blockAttributeName:
                 schemaAttributeName = convertNameF(blockAttributeName)
                 pD["required"].append(schemaAttributeName)
@@ -942,6 +947,8 @@ class SchemaDefBuild(object):
 
                 if fD["SEARCH_CONTEXTS"]:
                     atPropD["rcsb_search_context"] = fD["SEARCH_CONTEXTS"]
+                if "SEARCH_PRIORITY" in fD and fD["SEARCH_PRIORITY"]:
+                    atPropD["rcsb_full_text_priority"] = int(fD["SEARCH_PRIORITY"])
                 if fD["UNITS"]:
                     atPropD["rcsb_units"] = fD["UNITS"]
                 #

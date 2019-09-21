@@ -69,9 +69,6 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         #
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
-        self.__chemCompMockLen = 8
-        self.__birdMockLen = 4
-        self.__pdbxMockLen = 8
         self.__verbose = True
         #
         self.__modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=configName)
@@ -90,7 +87,6 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             "bird": ["bird"],
             "bird_family": ["family"],
             "chem_comp": ["chem_comp"],
-            "chem_comp_core": ["chem_comp_core"],
             "bird_chem_comp": ["bird_chem_comp"],
             "bird_chem_comp_core": ["bird_chem_comp_core"],
         }
@@ -104,7 +100,6 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                 "pdbx_core_entity_monomer",
                 "pdbx_core_entity_instance_validation",
             ],
-            "chem_comp_core": ["chem_comp_core"],
             "bird_chem_comp_core": ["bird_chem_comp_core"],
         }
         self.__mergeContentTypeD = {"pdbx_core": ["vrpt"]}

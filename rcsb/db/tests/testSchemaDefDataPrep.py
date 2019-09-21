@@ -84,8 +84,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         #
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
-        self.__chemCompMockLen = 13
-        self.__birdMockLen = 4
+        self.__chemCompMockLen = 15
         self.__pdbxMockLen = 21
         # removes timestamped data items to allow diffs.)
         excludeExtras = ["rcsb_load_status"]
@@ -99,7 +98,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         #
         self.__simpleTestCaseList = [
             {
-                "contentType": "chem_comp_core",
+                "contentType": "chem_comp",
                 "mockLength": self.__chemCompMockLen,
                 "filterType": self.__fTypeRow,
                 "styleType": "rowwise_by_name",
@@ -107,7 +106,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "rejectLength": 2,
             },
             {
-                "contentType": "chem_comp_core",
+                "contentType": "chem_comp",
                 "mockLength": self.__chemCompMockLen,
                 "filterType": self.__fTypeRow,
                 "styleType": "rowwise_no_name",
@@ -115,7 +114,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "rejectLength": 2,
             },
             {
-                "contentType": "chem_comp_core",
+                "contentType": "chem_comp",
                 "mockLength": self.__chemCompMockLen,
                 "filterType": self.__fTypeCol,
                 "styleType": "columnwise_by_name",
@@ -123,12 +122,12 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "rejectLength": 2,
             },
             {
-                "contentType": "bird_chem_comp_core",
-                "mockLength": self.__birdMockLen,
+                "contentType": "chem_comp",
+                "mockLength": self.__chemCompMockLen,
                 "filterType": self.__fTypeRow,
                 "styleType": "rowwise_by_name",
                 "mergeContentTypes": None,
-                "rejectLength": 1,
+                "rejectLength": 2,
             },
             {
                 "contentType": "pdbx_core",
@@ -142,7 +141,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         #
         self.__fullTestCaseList = [
             {
-                "contentType": "chem_comp_core",
+                "contentType": "bird_chem_comp_core",
                 "mockLength": self.__chemCompMockLen,
                 "filterType": self.__fTypeRow,
                 "styleType": "rowwise_by_name_with_cardinality",
@@ -152,7 +151,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             },
             {
                 "contentType": "bird_chem_comp_core",
-                "mockLength": self.__birdMockLen,
+                "mockLength": self.__chemCompMockLen,
                 "filterType": self.__fTypeRow,
                 "styleType": "rowwise_by_name_with_cardinality",
                 "mergeContentTypes": None,
@@ -232,8 +231,8 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             #
             logger.debug("For %s mock length %d length of path list %d\n", contentType, mockLength, len(inputPathList))
             self.assertEqual(len(inputPathList), mockLength)
-
             tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType=styleType, filterType=filterType, dataSelectors=dataSelectors)
+
             self.assertEqual(len(tableDataDictList), mockLength - rejectLength)
             self.assertEqual(len(containerNameList), mockLength - rejectLength)
 
