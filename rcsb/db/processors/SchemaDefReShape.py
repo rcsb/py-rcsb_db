@@ -103,10 +103,10 @@ class SchemaDefReShape(object):
         self.__sD = schemaDefAccessObj
         #
 
-    def applyShape(self, schemaDataDictById, styleType="rowwise_by_name"):
+    def applyShape(self, schemaDataDictById, styleType="rowwise_by_name", collectionName=None):
         """
         """
-        return self.__reshapeSchemaData(schemaDataDictById, styleType=styleType)
+        return self.__reshapeSchemaData(schemaDataDictById, styleType=styleType, collectionName=collectionName)
 
     def applySlicedShape(self, schemaDataDictById, styleType="rowwise_by_name", sliceFilter=None, collectionName=None):
         """
@@ -136,7 +136,7 @@ class SchemaDefReShape(object):
                     logger.debug("rD keys %s", rD.keys())
                     rL.append(rD)
         else:
-            return [self.__reshapeSchemaData(schemaDataDictById, styleType=styleType)]
+            return [self.__reshapeSchemaData(schemaDataDictById, styleType=styleType, collectionName=collectionName)]
 
         return rL
 
@@ -337,7 +337,8 @@ class SchemaDefReShape(object):
 
         return rD
 
-    def __reshapeSchemaData(self, schemaDataDictById, styleType="rowwise_by_name"):
+    #
+    def __reshapeSchemaData(self, schemaDataDictById, styleType="rowwise_by_name", collectionName=None):
         """  Reorganize and rename input table data object according to the input style preference:
 
              Input: schemaDataDictById  (styleType="rowwise_by_id")
@@ -352,11 +353,11 @@ class SchemaDefReShape(object):
         rD = {}
         try:
             if styleType == "rowwise_by_name":
-                rD = self.__shapeRowwiseByName(schemaDataDictById)
+                rD = self.__shapeRowwiseByName(schemaDataDictById, collectionName=collectionName)
             elif styleType == "rowwise_by_name_with_cardinality":
-                rD = self.__shapeRowwiseByNameWithCard(schemaDataDictById)
+                rD = self.__shapeRowwiseByNameWithCard(schemaDataDictById, collectionName=collectionName)
             elif styleType == "columnwise_by_name":
-                rD = self.__shapeColumnwise(schemaDataDictById)
+                rD = self.__shapeColumnwise(schemaDataDictById, collectionName=collectionName)
             elif styleType == "rowwise_no_name":
                 rD = self.__shapeRowwiseNoName(schemaDataDictById)
             elif styleType == "rowwise_by_id":
@@ -370,8 +371,9 @@ class SchemaDefReShape(object):
 
         return rD
 
-    def __shapeRowwiseByName(self, schemaDataDictById):
+    def __shapeRowwiseByName(self, schemaDataDictById, collectionName=None):
         rD = {}
+        attributeExcludeD = self.__sD.getCollectionExcludedAttributes(collectionName, asSchemaIds=True)
         for schemaId in schemaDataDictById:
             schemaObj = self.__sD.getSchemaObject(schemaId)
             schemaObjName = self.__sD.getSchemaName(schemaId)
@@ -380,13 +382,16 @@ class SchemaDefReShape(object):
             for iRowD in iRowDList:
                 oRowD = {}
                 for atId in iRowD:
+                    if (schemaId, atId) in attributeExcludeD:
+                        continue
                     oRowD[schemaObj.getAttributeName(atId)] = iRowD[atId]
                 oRowDList.append(oRowD)
             rD[schemaObjName] = oRowDList
         return rD
 
-    def __shapeRowwiseByNameWithCard(self, schemaDataDictById):
+    def __shapeRowwiseByNameWithCard(self, schemaDataDictById, collectionName=None):
         rD = {}
+        attributeExcludeD = self.__sD.getCollectionExcludedAttributes(collectionName, asSchemaIds=True)
         for schemaId in schemaDataDictById:
             schemaObj = self.__sD.getSchemaObject(schemaId)
             schemaObjName = self.__sD.getSchemaName(schemaId)
@@ -397,6 +402,8 @@ class SchemaDefReShape(object):
                 iRowD = iRowDList[0]
                 oRowD = {}
                 for atId in iRowD:
+                    if (schemaId, atId) in attributeExcludeD:
+                        continue
                     oRowD[schemaObj.getAttributeName(atId)] = iRowD[atId]
                 rD[schemaObjName] = oRowD
             else:
@@ -404,13 +411,16 @@ class SchemaDefReShape(object):
                 for iRowD in iRowDList:
                     oRowD = {}
                     for atId in iRowD:
+                        if (schemaId, atId) in attributeExcludeD:
+                            continue
                         oRowD[schemaObj.getAttributeName(atId)] = iRowD[atId]
                     oRowDList.append(oRowD)
                 rD[schemaObjName] = oRowDList
         return rD
 
-    def __shapeColumnwise(self, schemaDataDictById):
+    def __shapeColumnwise(self, schemaDataDictById, collectionName=None):
         rD = {}
+        attributeExcludeD = self.__sD.getCollectionExcludedAttributes(collectionName, asSchemaIds=True)
         for schemaId in schemaDataDictById:
             schemaObj = self.__sD.getSchemaObject(schemaId)
             schemaObjName = self.__sD.getSchemaName(schemaId)
@@ -418,6 +428,8 @@ class SchemaDefReShape(object):
             colD = {}
             for iRowD in iRowDList:
                 for atId in iRowD:
+                    if (schemaId, atId) in attributeExcludeD:
+                        continue
                     atName = schemaObj.getAttributeName(atId)
                     if atName not in colD:
                         colD[atName] = []
@@ -546,6 +558,7 @@ class SchemaDefReShape(object):
             #
             iRowDList = schemaDataDictById[schemaId]
             rvS = set()
+            # logger.info("collectionName %s attributeExcludeD %r", collectionName, attributeExcludeD)
             for iRowD in iRowDList:
                 # Add collection exclusion filter here
                 oRowD = {schemaObj.getAttributeName(atId): iRowD[atId] for atId in iRowD if (schemaId, atId) not in attributeExcludeD}

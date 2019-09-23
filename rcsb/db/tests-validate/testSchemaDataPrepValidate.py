@@ -228,7 +228,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             sdp.setSchemaIdIncludeList(tableIdIncludeList)
             #
             docList, containerNameList, _ = sdp.processDocuments(
-                containerList, styleType=styleType, filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"], sliceFilter=sliceFilter
+                containerList, styleType=styleType, filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"], sliceFilter=sliceFilter, collectionName=collectionName
             )
 
             docList = sdp.addDocumentPrivateAttributes(docList, collectionName)

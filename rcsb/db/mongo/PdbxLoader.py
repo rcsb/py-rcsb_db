@@ -302,6 +302,7 @@ class PdbxLoader(object):
             # -------------------------------------------
             # -- Create map of  cIdD{ container identifier} =  locatorObj
             #
+            collectionName = None
             cIdD = {}
             containerList = []
             for locatorObj in dataList:
@@ -332,12 +333,18 @@ class PdbxLoader(object):
                 sdp.setSchemaIdExcludeList(tableIdExcludeList)
                 sdp.setSchemaIdIncludeList(tableIdIncludeList)
                 #
-                logger.debug("%s databaseName %s collectionName %s slice filter %s", procName, databaseName, collectionName, sliceFilter)
+                logger.info("%s databaseName %s collectionName %s slice filter %s", procName, databaseName, collectionName, sliceFilter)
                 logger.debug("%s databaseName %s include list %r", procName, databaseName, tableIdIncludeList)
                 logger.debug("%s databaseName %s exclude list %r", procName, databaseName, tableIdExcludeList)
                 #
                 dList, containerIdList, rejectIdList = sdp.processDocuments(
-                    containerList, styleType=styleType, filterType=filterType, dataSelectors=dataSelectors, sliceFilter=sliceFilter, useNameFlag=useNameFlag
+                    containerList,
+                    styleType=styleType,
+                    filterType=filterType,
+                    dataSelectors=dataSelectors,
+                    sliceFilter=sliceFilter,
+                    useNameFlag=useNameFlag,
+                    collectionName=collectionName,
                 )
                 #
                 # ------

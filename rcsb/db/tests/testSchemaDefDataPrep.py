@@ -315,7 +315,10 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 sdp.setSchemaIdExcludeList(tableIdExcludeList)
                 sdp.setSchemaIdIncludeList(tableIdIncludeList)
                 #
-                docList, _, _ = sdp.processDocuments(containerList, styleType=styleType, sliceFilter=sliceFilter, filterType=filterType, dataSelectors=dataSelectors)
+                #
+                docList, _, _ = sdp.processDocuments(
+                    containerList, styleType=styleType, sliceFilter=sliceFilter, filterType=filterType, dataSelectors=dataSelectors, collectionName=collectionName
+                )
                 docList = sdp.addDocumentPrivateAttributes(docList, collectionName)
                 docList = sdp.addDocumentSubCategoryAggregates(docList, collectionName)
 
