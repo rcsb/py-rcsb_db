@@ -159,13 +159,8 @@ class DictMethodEntityHelper(object):
             logger.debug("siftsEntityAlignD %d", len(siftsEntityAlignD))
             #
             pdbEntityAlignD = self.__processPdbAlignments(dataContainer)
+            pdbEntityAlignD.update(siftsEntityAlignD)
             #
-            # tObj = dataContainer.getObj("entry")
-            # entryId = tObj.getValue("id", 0)
-            # asymIdD = self.__commonU.getInstanceEntityMap(dataContainer)
-            # asymAuthIdD = self.__commonU.getAsymAuthIdMap(dataContainer)
-            # instTypeD = self.__commonU.getInstanceTypes(dataContainer)
-            # entityTypeD = self.__commonU.getEntityTypes(dataContainer)
             # ---
 
             iRow = cObj.getRowCount()
@@ -250,36 +245,51 @@ class DictMethodEntityHelper(object):
                 authAsymIdL = []
                 ccMonomerL = []
                 ccLigandL = []
+                #
+                refSeqIdD = {"dbName": [], "dbAccession": [], "provSource": []}
+                relatedAnnIdD = {"dbName": [], "dbAccession": [], "provSource": []}
+
                 if eType == "polymer" and psObj:
                     asymIdL = psObj.selectValuesWhere("asym_id", entityId, "entity_id")
                     authAsymIdL = psObj.selectValuesWhere("pdb_strand_id", entityId, "entity_id")
                     ccMonomerL = psObj.selectValuesWhere("mon_id", entityId, "entity_id")
                     #
                     if self.__ssP:
-                        unpIdL = []
-                        pfamIdL = []
-                        iproIdL = []
-                        goIdL = []
+                        dbIdL = []
                         for authAsymId in authAsymIdL:
-                            unpIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="UNPID"))
-                            pfamIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="PFAMID"))
-                            iproIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="IPROID"))
-                            #  goIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="GOID"))
+                            dbIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="UNPID"))
+                        for dbId in sorted(set(dbIdL)):
+                            refSeqIdD["dbName"].append("UniProt")
+                            refSeqIdD["provSource"].append("SIFTS")
+                            refSeqIdD["dbAccession"].append(dbId)
+                        dbIdL = []
+                        for authAsymId in authAsymIdL:
+                            dbIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="PFAMID"))
+                        for dbId in sorted(set(dbIdL)):
+                            relatedAnnIdD["dbName"].append("Pfam")
+                            relatedAnnIdD["provSource"].append("SIFTS")
+                            relatedAnnIdD["dbAccession"].append(dbId)
+                        dbIdL = []
+                        for authAsymId in authAsymIdL:
+                            dbIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="IPROID"))
+                        for dbId in sorted(set(dbIdL)):
+                            relatedAnnIdD["dbName"].append("InterPro")
+                            relatedAnnIdD["provSource"].append("SIFTS")
+                            relatedAnnIdD["dbAccession"].append(dbId)
+                        #  goIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="GOID"))
                 elif npsObj:
                     asymIdL = npsObj.selectValuesWhere("asym_id", entityId, "entity_id")
                     authAsymIdL = npsObj.selectValuesWhere("pdb_strand_id", entityId, "entity_id")
                     ccLigandL = npsObj.selectValuesWhere("mon_id", entityId, "entity_id")
                     # logger.debug("entityId %r ligands %r", entityId, set(ccLigandL))
                 #
-                pdbUnpIdL = []
-                pdbGbIdL = []
                 if eType == "polymer" and entityId in seqEntityRefDbD:
-                    for dbDL in seqEntityRefDbD[entityId]:
-                        for dbD in dbDL:
-                            if dbD["dbName"] == "UNP":
-                                pdbUnpIdL.append(dbD["dbAccession"])
-                            elif dbD["dbName"] == "GB":
-                                pdbGbIdL.append(dbD["dbAccession"])
+                    for dbD in seqEntityRefDbD[entityId]:
+                        refSeqIdD["dbName"].append(dbD["dbName"])
+                        refSeqIdD["provSource"].append("PDB")
+                        refSeqIdD["dbAccession"].append(dbD["dbAccession"])
+                # logger.info("refSeqIdD %r %r %r", entryId, entityId, refSeqIdD)
+
                 if asymIdL:
                     cObj.setValue(",".join(sorted(set(asymIdL))).strip(), "asym_ids", ii)
                 if authAsymIdL:
@@ -292,19 +302,17 @@ class DictMethodEntityHelper(object):
                     cObj.setValue(",".join(sorted(set(ccLigandL))).strip(), "nonpolymer_comp_id", ii)
                 else:
                     cObj.setValue("?", "nonpolymer_comp_id", ii)
-                if pdbUnpIdL:
-                    cObj.setValue(",".join(sorted(set(pdbUnpIdL))).strip(), "pdb_assigned_uniprot_ids", ii)
-                if pdbGbIdL:
-                    cObj.setValue(",".join(sorted(set(pdbGbIdL))).strip(), "pdb_assigned_genbank_ids", ii)
-                if unpIdL:
-                    cObj.setValue(",".join(sorted(set(unpIdL))).strip(), "sifts_assigned_uniprot_ids", ii)
-                if pfamIdL:
-                    cObj.setValue(",".join(sorted(set(pfamIdL))).strip(), "sifts_assigned_pfam_ids", ii)
-                if goIdL:
-                    cObj.setValue(",".join(sorted(set(goIdL))).strip(), "sifts_assigned_go_ids", ii)
-                if iproIdL:
-                    cObj.setValue(",".join(sorted(set(iproIdL))).strip(), "sifts_assigned_interpro_ids", ii)
-            #
+                #
+                if refSeqIdD["dbName"]:
+                    cObj.setValue(",".join(refSeqIdD["dbName"]).strip(), "reference_sequence_identifiers_database_name", ii)
+                    cObj.setValue(",".join(refSeqIdD["dbAccession"]).strip(), "reference_sequence_identifiers_database_accession", ii)
+                    cObj.setValue(",".join(refSeqIdD["provSource"]).strip(), "reference_sequence_identifiers_provenance_source", ii)
+                #
+                if relatedAnnIdD["dbName"]:
+                    cObj.setValue(",".join(relatedAnnIdD["dbName"]).strip(), "related_annotation_identifiers_database_name", ii)
+                    cObj.setValue(",".join(relatedAnnIdD["dbAccession"]).strip(), "related_annotation_identifiers_database_identifier", ii)
+                    cObj.setValue(",".join(relatedAnnIdD["provSource"]).strip(), "related_annotation_identifiers_provenance_source", ii)
+                #
             return True
         except Exception as e:
             logger.exception("For %s failing with %s", catName, str(e))

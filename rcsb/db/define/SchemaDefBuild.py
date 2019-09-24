@@ -777,7 +777,8 @@ class SchemaDefBuild(object):
                 logger.debug("Category %s cfD %r", catName, cfD.items())
                 del catPropD["required"]
             #
-            schemaPropD[sName] = copy.deepcopy(catPropD)
+            if pD["properties"]:
+                schemaPropD[sName] = copy.deepcopy(catPropD)
         #
         # Add any private keys to the object schema - Fetch the metadata for the private keys
         #

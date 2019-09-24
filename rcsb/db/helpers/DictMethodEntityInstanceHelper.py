@@ -461,6 +461,31 @@ class DictMethodEntityInstanceHelper(object):
                     #
                     ii += 1
             #
+            # ------------------
+            # Unassigned SS features
+            unassignedRangeD = self.__commonU.getProtUnassignedSecStructFeatures(dataContainer)
+            for asymId, rTupL in unassignedRangeD.items():
+                entityId = asymIdD[asymId]
+                authAsymId = asymAuthIdD[asymId]
+                cObj.setValue(ii + 1, "ordinal", ii)
+                cObj.setValue(entryId, "entry_id", ii)
+                cObj.setValue(entityId, "entity_id", ii)
+                cObj.setValue(asymId, "asym_id", ii)
+                cObj.setValue(authAsymId, "auth_asym_id", ii)
+                cObj.setValue("UNASSIGNED_SEC_STRUCT", "type", ii)
+                #
+                cObj.setValue(str(1), "feature_id", ii)
+                cObj.setValue("unassigned secondary structure", "name", ii)
+                #
+                cObj.setValue(",".join([str(rTup[0]) for rTup in rTupL]), "feature_ranges_beg_seq_id", ii)
+                cObj.setValue(",".join([str(rTup[1]) for rTup in rTupL]), "feature_ranges_end_seq_id", ii)
+                #
+                cObj.setValue("PDB entity", "reference_scheme", ii)
+                cObj.setValue("PROMOTIF", "provenance_code", ii)
+                cObj.setValue("V1.0", "assignment_version", ii)
+                #
+                ii += 1
+            #
             cisPeptideD = self.__commonU.getCisPeptides(dataContainer)
             for cId, cL in cisPeptideD.items():
                 for (asymId, begSeqId, endSeqId, modelId, omegaAngle) in cL:
@@ -514,6 +539,71 @@ class DictMethodEntityInstanceHelper(object):
                         cObj.setValue(ligandSiteD[tId]["description"], "description", ii)
                     #
                     ii += 1
+            #
+            unObsPolyResRngD = self.__commonU.getUnobservedPolymerResidueInfo(dataContainer)
+            for (modelId, asymId, zeroOccFlag), rTupL in unObsPolyResRngD.items():
+                entityId = asymIdD[asymId]
+                authAsymId = asymAuthIdD[asymId]
+                cObj.setValue(ii + 1, "ordinal", ii)
+                cObj.setValue(entryId, "entry_id", ii)
+                cObj.setValue(entityId, "entity_id", ii)
+                cObj.setValue(asymId, "asym_id", ii)
+                cObj.setValue(authAsymId, "auth_asym_id", ii)
+                #
+                if zeroOccFlag:
+                    cObj.setValue("ZERO_OCCUPANCY_RESIDUE_XYZ", "type", ii)
+                    tS = "residue coordinates reported with zero-occupancy in model %s" % modelId
+                    cObj.setValue(tS, "description", ii)
+                    cObj.setValue("residue coordinates with zero occupancy", "name", ii)
+                else:
+                    cObj.setValue("UNOBSERVED_RESIDUE_XYZ", "type", ii)
+                    tS = "residue coordinates unobserved in model %s" % modelId
+                    cObj.setValue(tS, "description", ii)
+                    cObj.setValue("residue coordinates unobserved", "name", ii)
+                #
+                cObj.setValue(str(1), "feature_id", ii)
+                #
+                cObj.setValue(",".join([str(rTup[0]) for rTup in rTupL]), "feature_ranges_beg_seq_id", ii)
+                cObj.setValue(",".join([str(rTup[1]) for rTup in rTupL]), "feature_ranges_end_seq_id", ii)
+                #
+                cObj.setValue("PDB entity", "reference_scheme", ii)
+                cObj.setValue("PDB", "provenance_code", ii)
+                cObj.setValue("V1.0", "assignment_version", ii)
+                #
+                ii += 1
+
+            unObsPolyAtomRngD = self.__commonU.getUnobservedPolymerAtomInfo(dataContainer)
+            for (modelId, asymId, zeroOccFlag), rTupL in unObsPolyAtomRngD.items():
+                entityId = asymIdD[asymId]
+                authAsymId = asymAuthIdD[asymId]
+                cObj.setValue(ii + 1, "ordinal", ii)
+                cObj.setValue(entryId, "entry_id", ii)
+                cObj.setValue(entityId, "entity_id", ii)
+                cObj.setValue(asymId, "asym_id", ii)
+                cObj.setValue(authAsymId, "auth_asym_id", ii)
+                #
+                if zeroOccFlag:
+                    cObj.setValue("ZERO_OCCUPANCY_ATOM_XYZ", "type", ii)
+                    tS = "residue coordinates reported with zero-occupancy in model %s" % modelId
+                    cObj.setValue(tS, "description", ii)
+                    cObj.setValue("atom coordinates with zero occupancy", "name", ii)
+                else:
+                    cObj.setValue("UNOBSERVED_ATOM_XYZ", "type", ii)
+                    tS = "atom coordinates unobserved in model %s" % modelId
+                    cObj.setValue(tS, "description", ii)
+                    cObj.setValue("atom coordinates unobserved", "name", ii)
+                #
+                cObj.setValue(str(1), "feature_id", ii)
+                #
+                cObj.setValue(",".join([str(rTup[0]) for rTup in rTupL]), "feature_ranges_beg_seq_id", ii)
+                cObj.setValue(",".join([str(rTup[1]) for rTup in rTupL]), "feature_ranges_end_seq_id", ii)
+                #
+                cObj.setValue("PDB entity", "reference_scheme", ii)
+                cObj.setValue("PDB", "provenance_code", ii)
+                cObj.setValue("V1.0", "assignment_version", ii)
+                #
+                ii += 1
+
             return True
         except Exception as e:
             logger.exception("%s %s failing with %s", dataContainer.getName(), catName, str(e))
@@ -646,3 +736,130 @@ class DictMethodEntityInstanceHelper(object):
         if val is None:
             return val
         return self.__wsPattern.sub("", val)
+
+    def buildPolymerInstanceValFeatures(self, dataContainer, catName, **kwargs):
+        """ Build category rcsb_polymer_instance_validation_feature ...
+
+        Example:
+            loop_
+            _rcsb_polymer_instance_validation_feature.ordinal
+            _rcsb_polymer_instance_validation_feature.entry_id
+            _rcsb_polymer_instance_validation_feature.entity_id
+            _rcsb_polymer_instance_validation_feature.asym_id
+            _rcsb_polymer_instance_validation_feature.auth_asym_id
+            _rcsb_polymer_instance_validation_feature.feature_id
+            _rcsb_polymer_instance_validation_feature.type
+            _rcsb_polymer_instance_validation_feature.name
+            _rcsb_polymer_instance_validation_feature.description
+            _rcsb_polymer_instance_validation_feature.feature_class_lineage_id
+            _rcsb_polymer_instance_validation_feature.feature_class_lineage_name
+            _rcsb_polymer_instance_validation_feature.feature_class_lineage_depth
+            _rcsb_polymer_instance_validation_feature.reference_scheme
+            _rcsb_polymer_instance_validation_feature.provenance_code
+            _rcsb_polymer_instance_validation_feature.assignment_version
+            _rcsb_polymer_instance_validation_feature.feature_ranges_beg_seq_id
+            _rcsb_polymer_instance_validation_feature.feature_ranges_end_seq_id
+            _rcsb_polymer_instance_validation_feature.feature_positions_comp_id
+            _rcsb_polymer_instance_validation_feature.feature_positions_seq_id
+
+        """
+        logger.debug("Starting with %r %r %r", dataContainer.getName(), catName, kwargs)
+        try:
+            if catName != "rcsb_polymer_instance_validation_feature":
+                return False
+            # Exit if source categories are missing
+            if not dataContainer.exists("entry"):
+                return False
+            #
+            # Create the new target category
+            if not dataContainer.exists(catName):
+                dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
+            cObj = dataContainer.getObj(catName)
+            _ = cObj.getRowCount()
+            #
+            return True
+        except Exception as e:
+            logger.exception("For %s %r failing with %s", dataContainer.getName(), catName, str(e))
+        return False
+
+    def buildPolymerInstanceValFeatureSummary(self, dataContainer, catName, **kwargs):
+        """ Build category rcsb_polymer_instance_validation_feature_summary
+
+        Example:
+
+            loop_
+            _rcsb_polymer_instance_validation_feature_summary.ordinal
+            _rcsb_polymer_instance_validation_feature_summary.entry_id
+            _rcsb_polymer_instance_validation_feature_summary.entity_id
+            _rcsb_polymer_instance_validation_feature_summary.asym_id
+            _rcsb_polymer_instance_validation_feature_summary.auth_asym_id
+            #validation_
+            _rcsb_polymer_instance_validation_feature_summary.type
+            _rcsb_polymer_instance_validation_feature_summary.count
+            _rcsb_polymer_instance_validation_feature_summary.coverage
+            # ...
+        """
+        logger.debug("Starting with %r %r %r", dataContainer.getName(), catName, kwargs)
+        try:
+            if catName != "rcsb_polymer_instance_validation_feature_summary":
+                return False
+            if not dataContainer.exists("rcsb_polymer_instance_validation_feature") and not dataContainer.exists("entry"):
+                return False
+
+            if not dataContainer.exists(catName):
+                dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
+            #
+            eObj = dataContainer.getObj("entry")
+            entryId = eObj.getValue("id", 0)
+            #
+            sObj = dataContainer.getObj(catName)
+            fObj = dataContainer.getObj("rcsb_polymer_instance_validation_feature")
+            #
+            instEntityD = self.__commonU.getInstanceEntityMap(dataContainer)
+            entityPolymerLengthD = self.__commonU.getPolymerEntityLengthsEnumerated(dataContainer)
+            asymAuthD = self.__commonU.getAsymAuthIdMap(dataContainer)
+
+            fCountD = OrderedDict()
+            fMonomerCountD = OrderedDict()
+            for ii in range(fObj.getRowCount()):
+                asymId = fObj.getValue("asym_id", ii)
+                fType = fObj.getValue("type", ii)
+                fId = fObj.getValue("feature_id", ii)
+                fCountD.setdefault(asymId, {}).setdefault(fType, set()).add(fId)
+                #
+                tS = fObj.getValueOrDefault("feature_ranges_beg_seq_id", ii, defaultValue=None)
+                if fObj.hasAttribute("feature_ranges_beg_seq_id") and tS is not None:
+                    begSeqIdL = str(fObj.getValue("feature_ranges_beg_seq_id", ii)).split(",")
+                    endSeqIdL = str(fObj.getValue("feature_ranges_end_seq_id", ii)).split(",")
+                    monCount = 0
+                    for begSeqId, endSeqId in zip(begSeqIdL, endSeqIdL):
+                        monCount += abs(int(endSeqId) - int(begSeqId) + 1)
+                    fMonomerCountD.setdefault(asymId, {}).setdefault(fType, []).append(monCount)
+
+                tS = fObj.getValueOrDefault("feature_positions_seq_id", ii, defaultValue=None)
+                if fObj.hasAttribute("feature_positions_seq_id") and tS is not None:
+                    seqIdL = str(fObj.getValue("feature_positions_seq_id", ii)).split(",")
+                    fMonomerCountD.setdefault(asymId, {}).setdefault(fType, []).append(len(seqIdL))
+            #
+            # logger.debug("%s fCountD %r", entryId, fCountD)
+            #
+            ii = 0
+            for asymId, fTypeD in fCountD.items():
+                entityId = instEntityD[asymId]
+                authAsymId = asymAuthD[asymId]
+                for fType, fS in fTypeD.items():
+                    sObj.setValue(ii + 1, "ordinal", ii)
+                    sObj.setValue(entryId, "entry_id", ii)
+                    sObj.setValue(entityId, "entity_id", ii)
+                    sObj.setValue(asymId, "asym_id", ii)
+                    sObj.setValue(authAsymId, "auth_asym_id", ii)
+                    sObj.setValue(fType, "type", ii)
+                    sObj.setValue(len(fS), "count", ii)
+                    fracC = 0.0
+                    if asymId in fMonomerCountD and fType in fMonomerCountD[asymId] and entityId in entityPolymerLengthD:
+                        fracC = float(sum(fMonomerCountD[asymId][fType])) / float(entityPolymerLengthD[entityId])
+                    sObj.setValue(round(fracC, 5), "coverage", ii)
+                    ii += 1
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return True

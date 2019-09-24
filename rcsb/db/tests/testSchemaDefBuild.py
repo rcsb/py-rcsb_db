@@ -77,7 +77,7 @@ class SchemaDefBuildTests(unittest.TestCase):
         try:
             for databaseName in self.__databaseNameList:
                 for dataTyping in self.__dataTypingList:
-                    logger.info("Building schema %s with types %s", databaseName, dataTyping)
+                    logger.debug("Building schema %s with types %s", databaseName, dataTyping)
                     self.__schP.makeSchemaDef(databaseName, dataTyping=dataTyping, saveSchema=self.__saveSchema)
                     if self.__compareSchema:
                         self.__schP.schemaDefCompare(databaseName, dataTyping)
@@ -149,9 +149,7 @@ class SchemaDefBuildTests(unittest.TestCase):
                     if schemaType.lower() == "rcsb":
                         continue
                     for level in self.__validationLevels:
-                        self.__schP.makeSchema(
-                            databaseName, collectionName, encodingType=schemaType, level=level, saveSchema=self.__saveSchema, extraOpts="addParentRefs|addPrimaryKey"
-                        )
+                        self.__schP.makeSchema(databaseName, collectionName, encodingType=schemaType, level=level, saveSchema=True, extraOpts="addParentRefs|addPrimaryKey")
 
 
 def schemaBuildSuite():

@@ -83,7 +83,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__alldatabaseNameD = {
             "ihm_dev": ["ihm_dev"],
             "pdbx": ["pdbx", "pdbx_ext"],
-            "pdbx_core": ["pdbx_core_entity_monomer", "pdbx_core_entity", "pdbx_core_entry", "pdbx_core_assembly", "pdbx_core_entity_instance"],
+            "pdbx_core": ["pdbx_core_entity", "pdbx_core_entry", "pdbx_core_assembly", "pdbx_core_entity_instance", "pdbx_core_entity_instance_validation"],
             "bird": ["bird"],
             "bird_family": ["family"],
             "chem_comp": ["chem_comp"],
@@ -92,14 +92,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         }
 
         self.__databaseNameD = {
-            "pdbx_core": [
-                "pdbx_core_entity",
-                "pdbx_core_entry",
-                "pdbx_core_assembly",
-                "pdbx_core_entity_instance",
-                "pdbx_core_entity_monomer",
-                "pdbx_core_entity_instance_validation",
-            ],
+            "pdbx_core": ["pdbx_core_entity", "pdbx_core_entry", "pdbx_core_assembly", "pdbx_core_entity_instance", "pdbx_core_entity_instance_validation"],
             "bird_chem_comp_core": ["bird_chem_comp_core"],
         }
         self.__mergeContentTypeD = {"pdbx_core": ["vrpt"]}
@@ -107,7 +100,6 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         # self.__databaseNameD = {"ihm_dev_full": ["ihm_dev_full"]}
         # self.__databaseNameD = {"pdbx_core": ["pdbx_core_entity_instance_validation"]}
         # self.__databaseNameD = {"pdbx_core": ["pdbx_core_entity_monomer"]}
-        #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 

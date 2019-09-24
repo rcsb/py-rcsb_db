@@ -159,3 +159,4 @@
  10-Sep-2019  V0.67 Adding extended metadata types, AtcProvider() and SiftsSummaryProvider().
  19-Sep-2019  V0.68 Eliminate private keys, revise/extend interenal schema metadata, purge schema,
                     add polymer alignment methods.
+ 24-Sep-2019  V0.69 Add additional polymer_instance features and new polymer_instance_validations methods.

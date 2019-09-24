@@ -97,6 +97,7 @@ class DictMethodCommonUtils(object):
         self.__instanceConnectionCache = CacheUtils(size=cacheSize, label="instance connections")
         self.__entitySequenceFeatureCache = CacheUtils(size=cacheSize, label="entity sequence features")
         self.__instanceSiteInfoCache = CacheUtils(size=cacheSize, label="instance site details")
+        self.__instanceUnobservedCache = CacheUtils(size=cacheSize, label="instance unobserved details")
         #
         logger.debug("Dictionary common utilities init")
 
@@ -851,6 +852,20 @@ class DictMethodCommonUtils(object):
             return {}
         wD = self.__fetchProtSecStructFeatures(dataContainer)
         return wD["helixRangeD"] if "helixRangeD" in wD else {}
+
+    def getProtUnassignedSecStructFeatures(self, dataContainer):
+        """Return a dictionary protein regions lacking SS feature assignments (entity/label sequence coordinates).
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            dict: {<id>: (asymId, begSeqId, endSeqId), ...}
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchProtSecStructFeatures(dataContainer)
+        return wD["unassignedRangeD"] if "unassignedRangeD" in wD else {}
 
     def getProtSheetFeatures(self, dataContainer):
         """Return a dictionary protein beta strand features (entity/label sequence coordinates).
@@ -1745,6 +1760,7 @@ class DictMethodCommonUtils(object):
 
             # Map alignId -> entityId
             seqEntityRefDbD = {}
+            tupSeqEntityRefDbD = {}
             alignEntityMapD = {}
             # entity alignment details
             seqEntityAlignmentD = {}
@@ -1753,7 +1769,7 @@ class DictMethodCommonUtils(object):
                 refId = srObj.getValue("id", ii)
                 dbName = srObj.getValue("db_name", ii)
                 dbAccession = srObj.getValue("pdbx_db_accession", ii)
-                seqEntityRefDbD.setdefault(entityId, []).append((dbName, dbAccession))
+                tupSeqEntityRefDbD.setdefault(entityId, []).append((dbName, dbAccession))
                 #
                 # Get indices for the target refId.
                 iRowL = srsObj.selectIndices(refId, "ref_id")
@@ -1780,9 +1796,14 @@ class DictMethodCommonUtils(object):
                             "entityAlignLength": entityAlignLength,
                         }
                     )
-
-            for entityId in seqEntityRefDbD:
-                seqEntityRefDbD[entityId] = sorted(set(seqEntityRefDbD[entityId]))
+            # uniquify
+            dbMapD = {"UNP": "UniProt", "GB": "GenBank", "PDB": "PDB"}
+            for entityId in tupSeqEntityRefDbD:
+                tupSeqEntityRefDbD[entityId] = sorted(set(tupSeqEntityRefDbD[entityId]))
+                for tup in tupSeqEntityRefDbD[entityId]:
+                    tS = dbMapD[tup[0]] if tup[0] in dbMapD else tup[0]
+                    seqEntityRefDbD.setdefault(entityId, []).append({"dbName": tS, "dbAccession": tup[1]})
+            #
             # ------- --------- ------- --------- ------- --------- ------- --------- ------- ---------
             #   (entityId, seqId, compId, filteredFeature) -> set{details, ...}
             #
@@ -1834,7 +1855,7 @@ class DictMethodCommonUtils(object):
                 "seqMonomerFeatureD": seqMonomerFeatureD,
                 "seqRangeFeatureD": seqRangeFeatureD,
                 "seqEntityAlignmentD": seqEntityAlignmentD,
-                "seqEntityRefDb": seqEntityRefDbD,
+                "seqEntityRefDbD": seqEntityRefDbD,
             }
         except Exception as e:
             logger.exception("%s failing with %s", dataContainer.getName(), str(e))
@@ -2524,3 +2545,145 @@ class DictMethodCommonUtils(object):
             return retL
         except Exception as e:
             logger.exception("Failing with %s for %r", str(e), ssDetails)
+
+    def getUnobservedPolymerResidueInfo(self, dataContainer):
+        """Return a dictionary of unobserved regions of polymer instances.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            dict: {(modelId, asymId, occFlag): [seqId range list], ...}
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchUnobservedInfo(dataContainer)
+        return wD["polyResRng"] if "polyResRng" in wD else {}
+
+    def getUnobservedPolymerAtomInfo(self, dataContainer):
+        """Return a dictionary of polymer regions containing unobserved atoms.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            dict: {(modelId, asymId, occFlag): [seqId range list], ...}
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchUnobservedInfo(dataContainer)
+        return wD["polyAtomRng"] if "polyAtomRng" in wD else {}
+
+    def __fetchUnobservedInfo(self, dataContainer):
+        wD = self.__instanceUnobservedCache.get(dataContainer.getName())
+        if not wD:
+            wD = self.__getUnobserved(dataContainer)
+            self.__instanceUnobservedCache.set(dataContainer.getName(), wD)
+        return wD
+
+    def __getUnobserved(self, dataContainer):
+        """ Internal method to extrace unobserved and zero occupancy features.
+
+        Args:
+            dataContainer ([type]): [description]
+
+        Returns:
+            {"polyResRng":  {(modelId, asymId, occFlag): [seqId range list], ...},
+             "polyAtomRng": {(modelId, asymId, occFlag): [seqId range list], ...},
+             }
+
+            occFlag = 0 - zero occupancy
+        Example:
+
+        loop_
+                _pdbx_unobs_or_zero_occ_atoms.id
+                _pdbx_unobs_or_zero_occ_atoms.PDB_model_num
+                _pdbx_unobs_or_zero_occ_atoms.polymer_flag
+                _pdbx_unobs_or_zero_occ_atoms.occupancy_flag
+                _pdbx_unobs_or_zero_occ_atoms.auth_asym_id
+                _pdbx_unobs_or_zero_occ_atoms.auth_comp_id
+                _pdbx_unobs_or_zero_occ_atoms.auth_seq_id
+                _pdbx_unobs_or_zero_occ_atoms.PDB_ins_code
+                _pdbx_unobs_or_zero_occ_atoms.auth_atom_id
+                _pdbx_unobs_or_zero_occ_atoms.label_alt_id
+                _pdbx_unobs_or_zero_occ_atoms.label_asym_id
+                _pdbx_unobs_or_zero_occ_atoms.label_comp_id
+                _pdbx_unobs_or_zero_occ_atoms.label_seq_id
+                _pdbx_unobs_or_zero_occ_atoms.label_atom_id
+                1  1 Y 1 B ARG 17  ? NE    ? B ARG 17 NE
+                2  1 Y 1 B ARG 17  ? CZ    ? B ARG 17 CZ
+                3  1 Y 1 B ARG 17  ? NH1   ? B ARG 17 NH1
+
+                #
+                loop_
+                _pdbx_unobs_or_zero_occ_residues.id
+                _pdbx_unobs_or_zero_occ_residues.PDB_model_num
+                _pdbx_unobs_or_zero_occ_residues.polymer_flag
+                _pdbx_unobs_or_zero_occ_residues.occupancy_flag
+                _pdbx_unobs_or_zero_occ_residues.auth_asym_id
+                _pdbx_unobs_or_zero_occ_residues.auth_comp_id
+                _pdbx_unobs_or_zero_occ_residues.auth_seq_id
+                _pdbx_unobs_or_zero_occ_residues.PDB_ins_code
+                _pdbx_unobs_or_zero_occ_residues.label_asym_id
+                _pdbx_unobs_or_zero_occ_residues.label_comp_id
+                _pdbx_unobs_or_zero_occ_residues.label_seq_id
+                1  1 Y 1 A MET 1 ? A MET 1
+                2  1 Y 1 A ALA 2 ? A ALA 2
+                3  1 Y 1 A LYS 3 ? A LYS 3
+        """
+        logger.debug("Starting with %r", dataContainer.getName())
+        #
+        rD = {}
+        try:
+            # Exit if source categories are missing
+            if not (dataContainer.exists("pdbx_unobs_or_zero_occ_residues") or dataContainer.exists("pdbx_unobs_or_zero_occ_atoms")):
+                return rD
+            # ------- --------- ------- --------- ------- --------- ------- --------- ------- ---------
+            resObj = None
+            if dataContainer.exists("pdbx_unobs_or_zero_occ_residues"):
+                resObj = dataContainer.getObj("pdbx_unobs_or_zero_occ_residues")
+            #
+            atomObj = None
+            if dataContainer.exists("pdbx_unobs_or_zero_occ_atoms"):
+                atomObj = dataContainer.getObj("pdbx_unobs_or_zero_occ_atoms")
+            #
+            polyResRngD = {}
+            if resObj:
+                for ii in range(resObj.getRowCount()):
+                    modelId = resObj.getValueOrDefault("PDB_model_num", ii, defaultValue=None)
+                    pFlag = resObj.getValueOrDefault("polymer_flag", ii, defaultValue=None)
+                    if pFlag == "Y":
+                        occFlag = resObj.getValueOrDefault("occupancy_flag", ii, defaultValue=None)
+                        zeroOccFlag = int(occFlag) == 0
+                        asymId = resObj.getValueOrDefault("label_asym_id", ii, defaultValue=None)
+                        # authAsymId = resObj.getValueOrDefault("auth_asym_id", ii, defaultValue=None)
+                        seqId = resObj.getValueOrDefault("label_seq_id", ii, defaultValue=None)
+                        if seqId:
+                            polyResRngD.setdefault((modelId, asymId, zeroOccFlag), []).append(int(seqId))
+                #
+                for tup in polyResRngD:
+                    polyResRngD[tup] = list(self.__toRangeList(polyResRngD[tup]))
+                logger.debug("polyResRngD %r", polyResRngD)
+            #
+            polyAtomRngD = {}
+            if atomObj:
+                for ii in range(atomObj.getRowCount()):
+                    modelId = atomObj.getValueOrDefault("PDB_model_num", ii, defaultValue=None)
+                    pFlag = atomObj.getValueOrDefault("polymer_flag", ii, defaultValue=None)
+                    if pFlag == "Y":
+                        occFlag = atomObj.getValueOrDefault("occupancy_flag", ii, defaultValue=None)
+                        zeroOccFlag = occFlag and int(occFlag) == 0
+                        asymId = atomObj.getValueOrDefault("label_asym_id", ii, defaultValue=None)
+                        # authAsymId = resObj.getValueOrDefault("auth_asym_id", ii, defaultValue=None)
+                        seqId = atomObj.getValueOrDefault("label_seq_id", ii, defaultValue=None)
+                        if seqId:
+                            polyAtomRngD.setdefault((modelId, asymId, zeroOccFlag), []).append(int(seqId))
+                #
+                for tup in polyAtomRngD:
+                    polyAtomRngD[tup] = list(self.__toRangeList(polyAtomRngD[tup]))
+                logger.debug("polyAtomRngD %r", polyAtomRngD)
+            #
+            rD = {"polyResRng": polyResRngD, "polyAtomRng": polyAtomRngD}
+        except Exception as e:
+            logger.exception("%s failing with %s", dataContainer.getName(), str(e))
+        return rD
