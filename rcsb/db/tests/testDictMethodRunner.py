@@ -52,9 +52,9 @@ class DictMethodRunnerTests(unittest.TestCase):
         self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath)
         #
         self.__testCaseList = [
-            # {"contentType": "chem_comp_core", "mockLength": 5},
-            {"contentType": "bird_chem_comp_core", "mockLength": 17},
-            {"contentType": "pdbx_core", "mockLength": 14},
+            # {"contentType": "chem_comp_core", "mockLength": 5, 'mergeContent': None},
+            {"contentType": "bird_chem_comp_core", "mockLength": 17, "mergeContent": None},
+            {"contentType": "pdbx_core", "mockLength": 14, "mergeContent": ["vrpt"]},
         ]
         #
         self.__modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=configName)
@@ -66,7 +66,7 @@ class DictMethodRunnerTests(unittest.TestCase):
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    def __runContentType(self, contentType, mockLength):
+    def __runContentType(self, contentType, mockLength, mergeContent):
         """ Read and process test fixture data files from the input content type.
         """
         try:
@@ -74,7 +74,7 @@ class DictMethodRunnerTests(unittest.TestCase):
             dictApi = dP.getApiByName(contentType)
             rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
             dmh = DictMethodRunner(dictApi, modulePathMap=self.__modulePathMap, resourceProvider=rP)
-            locatorObjList = self.__rpP.getLocatorObjList(contentType=contentType)
+            locatorObjList = self.__rpP.getLocatorObjList(contentType=contentType, mergeContentTypes=mergeContent)
             containerList = self.__rpP.getContainerList(locatorObjList)
             #
             logger.debug("Length of locator list %d\n", len(locatorObjList))
@@ -96,7 +96,7 @@ class DictMethodRunnerTests(unittest.TestCase):
         """Test method runner for multiple content types.
         """
         for tD in self.__testCaseList:
-            self.__runContentType(tD["contentType"], tD["mockLength"])
+            self.__runContentType(tD["contentType"], tD["mockLength"], tD["mergeContent"])
 
     def testMethodRunnerSetup(self):
         """ Test the setup methods for method runner class

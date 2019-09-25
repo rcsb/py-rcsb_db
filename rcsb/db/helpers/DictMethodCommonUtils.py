@@ -98,6 +98,7 @@ class DictMethodCommonUtils(object):
         self.__entitySequenceFeatureCache = CacheUtils(size=cacheSize, label="entity sequence features")
         self.__instanceSiteInfoCache = CacheUtils(size=cacheSize, label="instance site details")
         self.__instanceUnobservedCache = CacheUtils(size=cacheSize, label="instance unobserved details")
+        self.__modelOutliersCache = CacheUtils(size=cacheSize, label="model outlier details")
         #
         logger.debug("Dictionary common utilities init")
 
@@ -2582,7 +2583,7 @@ class DictMethodCommonUtils(object):
         return wD
 
     def __getUnobserved(self, dataContainer):
-        """ Internal method to extrace unobserved and zero occupancy features.
+        """ Internal method to extract unobserved and zero occupancy features.
 
         Args:
             dataContainer ([type]): [description]
@@ -2595,7 +2596,7 @@ class DictMethodCommonUtils(object):
             occFlag = 0 - zero occupancy
         Example:
 
-        loop_
+                loop_
                 _pdbx_unobs_or_zero_occ_atoms.id
                 _pdbx_unobs_or_zero_occ_atoms.PDB_model_num
                 _pdbx_unobs_or_zero_occ_atoms.polymer_flag
@@ -2684,6 +2685,171 @@ class DictMethodCommonUtils(object):
                 logger.debug("polyAtomRngD %r", polyAtomRngD)
             #
             rD = {"polyResRng": polyResRngD, "polyAtomRng": polyAtomRngD}
+        except Exception as e:
+            logger.exception("%s failing with %s", dataContainer.getName(), str(e))
+        return rD
+
+    def getPolymerModelOutlierInfo(self, dataContainer):
+        """Return a dictionary of polymer model outliers.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            dict: {(modelId, asymId): (seqId,compId), ...}
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchPolymerModelOutliers(dataContainer)
+        return wD["polymerModelOutlierD"] if "polymerModelOutlierD" in wD else {}
+
+    def __fetchPolymerModelOutliers(self, dataContainer):
+        wD = self.__modelOutliersCache.get(dataContainer.getName())
+        if not wD:
+            wD = self.__getPolymerModelOutliers(dataContainer)
+            self.__modelOutliersCache.set(dataContainer.getName(), wD)
+        return wD
+
+    def __getPolymerModelOutliers(self, dataContainer):
+        """ Internal method to assemble model outliers details.
+
+        Args:
+            dataContainer ([type]): [description]
+
+        Returns:
+            {"polymerModelOutlierD": {(modelId, asymId): [(compId, seqId, "BOND_OUTLIER", optional_description), ...}}
+
+        """
+        logger.debug("Starting with %r", dataContainer.getName())
+        #
+        rD = {}
+        try:
+            # Exit if no source categories are present
+            if not (
+                dataContainer.exists("pdbx_vrpt_instance_results")
+                or dataContainer.exists("pdbx_vrpt_bond_outliers")
+                or dataContainer.exists("pdbx_vrpt_angle_outliers")
+                or dataContainer.exists("pdbx_vrpt_mogul_bond_outliers")
+                or dataContainer.exists("pdbx_vrpt_mogul_angle_outliers")
+            ):
+                return rD
+            # ------- --------- ------- --------- ------- --------- ------- --------- ------- ---------
+            #
+            polymerModelOutlierD = {}
+            vObj = None
+            if dataContainer.exists("pdbx_vrpt_bond_outliers"):
+                vObj = dataContainer.getObj("pdbx_vrpt_bond_outliers")
+            if vObj:
+                for ii in range(vObj.getRowCount()):
+                    seqId = vObj.getValueOrDefault("label_seq_id", ii, defaultValue=None)
+                    if seqId:
+                        modelId = vObj.getValueOrDefault("PDB_model_num", ii, defaultValue=None)
+                        asymId = vObj.getValueOrDefault("label_asym_id", ii, defaultValue=None)
+                        compId = vObj.getValueOrDefault("label_comp_id", ii, defaultValue=None)
+                        #
+                        atomI = vObj.getValueOrDefault("atom0", ii, defaultValue=None)
+                        atomJ = vObj.getValueOrDefault("atom1", ii, defaultValue=None)
+                        obsDist = vObj.getValueOrDefault("obs", ii, defaultValue=None)
+                        zVal = vObj.getValueOrDefault("Z", ii, defaultValue=None)
+                        tS = "%s-%s dist=%s Z=%s" % (atomI, atomJ, obsDist, zVal)
+                        #
+                        polymerModelOutlierD.setdefault((modelId, asymId), []).append((compId, int(seqId), "BOND_OUTLIER", tS))
+                #
+                logger.debug("length polymerModelOutlierD %d", len(polymerModelOutlierD))
+            # ----
+            vObj = None
+            if dataContainer.exists("pdbx_vrpt_angle_outliers"):
+                vObj = dataContainer.getObj("pdbx_vrpt_angle_outliers")
+            if vObj:
+                for ii in range(vObj.getRowCount()):
+                    seqId = vObj.getValueOrDefault("label_seq_id", ii, defaultValue=None)
+                    if seqId:
+                        modelId = vObj.getValueOrDefault("PDB_model_num", ii, defaultValue=None)
+                        asymId = vObj.getValueOrDefault("label_asym_id", ii, defaultValue=None)
+                        compId = vObj.getValueOrDefault("label_comp_id", ii, defaultValue=None)
+                        #
+                        atomI = vObj.getValueOrDefault("atom0", ii, defaultValue=None)
+                        atomJ = vObj.getValueOrDefault("atom1", ii, defaultValue=None)
+                        atomK = vObj.getValueOrDefault("atom2", ii, defaultValue=None)
+                        obsDist = vObj.getValueOrDefault("obs", ii, defaultValue=None)
+                        zVal = vObj.getValueOrDefault("Z", ii, defaultValue=None)
+                        tS = "%s-%s-%s angle=%s Z=%s" % (atomI, atomJ, atomK, obsDist, zVal)
+                        #
+                        polymerModelOutlierD.setdefault((modelId, asymId), []).append((compId, int(seqId), "ANGLE_OUTLIER", tS))
+                #
+                logger.debug("length polymerModelOutlierD %d", len(polymerModelOutlierD))
+            # ----
+            vObj = None
+            if dataContainer.exists("pdbx_vrpt_mogul_bond_outliers"):
+                vObj = dataContainer.getObj("pdbx_vrpt_mogul_bond_outliers")
+            if vObj:
+                for ii in range(vObj.getRowCount()):
+                    seqId = vObj.getValueOrDefault("label_seq_id", ii, defaultValue=None)
+                    if seqId:
+                        modelId = vObj.getValueOrDefault("PDB_model_num", ii, defaultValue=None)
+                        asymId = vObj.getValueOrDefault("label_asym_id", ii, defaultValue=None)
+                        compId = vObj.getValueOrDefault("label_comp_id", ii, defaultValue=None)
+                        #
+                        atoms = vObj.getValueOrDefault("atoms", ii, defaultValue=None)
+                        obsDist = vObj.getValueOrDefault("obsval", ii, defaultValue=None)
+                        zVal = vObj.getValueOrDefault("Zscore", ii, defaultValue=None)
+                        tS = "%s angle=%s Z=%s" % (atoms, obsDist, zVal)
+                        #
+                        polymerModelOutlierD.setdefault((modelId, asymId), []).append((compId, int(seqId), "MOGUL_BOND_OUTLIER", tS))
+                #
+                logger.debug("length polymerModelOutlierD %d", len(polymerModelOutlierD))
+
+            vObj = None
+            if dataContainer.exists("pdbx_vrpt_mogul_angle_outliers"):
+                vObj = dataContainer.getObj("pdbx_vrpt_mogul_angle_outliers")
+            if vObj:
+                for ii in range(vObj.getRowCount()):
+                    seqId = vObj.getValueOrDefault("label_seq_id", ii, defaultValue=None)
+                    if seqId:
+                        modelId = vObj.getValueOrDefault("PDB_model_num", ii, defaultValue=None)
+                        asymId = vObj.getValueOrDefault("label_asym_id", ii, defaultValue=None)
+                        compId = vObj.getValueOrDefault("label_comp_id", ii, defaultValue=None)
+                        #
+                        atoms = vObj.getValueOrDefault("atoms", ii, defaultValue=None)
+                        obsDist = vObj.getValueOrDefault("obsval", ii, defaultValue=None)
+                        zVal = vObj.getValueOrDefault("Zscore", ii, defaultValue=None)
+                        tS = "%s angle=%s Z=%s" % (atoms, obsDist, zVal)
+                        #
+                        polymerModelOutlierD.setdefault((modelId, asymId), []).append((compId, int(seqId), "MOGUL_ANGLE_OUTLIER", tS))
+                logger.debug("length polymerModelOutlierD %d", len(polymerModelOutlierD))
+                #
+                #
+            vObj = None
+            if dataContainer.exists("pdbx_vrpt_instance_results"):
+                vObj = dataContainer.getObj("pdbx_vrpt_instance_results")
+
+            if vObj:
+                logger.debug("Row count for %s: %d", vObj.getName(), vObj.getRowCount())
+                for ii in range(vObj.getRowCount()):
+                    seqId = vObj.getValueOrDefault("label_seq_id", ii, defaultValue=None)
+                    if seqId:
+                        modelId = vObj.getValueOrDefault("PDB_model_num", ii, defaultValue=None)
+                        asymId = vObj.getValueOrDefault("label_asym_id", ii, defaultValue=None)
+                        compId = vObj.getValueOrDefault("label_comp_id", ii, defaultValue=None)
+                        #
+                        rotamerClass = vObj.getValueOrDefault("rotamer_class", ii, defaultValue=None)
+                        ramaClass = vObj.getValueOrDefault("ramachandran_class", ii, defaultValue=None)
+                        rsrZ = vObj.getValueOrDefault("RSRZ", ii, defaultValue=None)
+                        rsrCc = vObj.getValueOrDefault("RSRCC", ii, defaultValue=None)
+                        #
+                        if rotamerClass and rotamerClass.upper() == "OUTLIER":
+                            polymerModelOutlierD.setdefault((modelId, asymId), []).append((compId, int(seqId), "ROTAMER_OUTLIER", None))
+                        if ramaClass and ramaClass.upper() == "OUTLIER":
+                            polymerModelOutlierD.setdefault((modelId, asymId), []).append((compId, int(seqId), "RAMACHANDRAN_OUTLIER", None))
+                        if rsrZ and float(rsrZ) > 2.0:
+                            tS = "%s > 2.0" % rsrZ
+                            polymerModelOutlierD.setdefault((modelId, asymId), []).append((compId, int(seqId), "RSRZ_OUTLIER", tS))
+                        if rsrCc and float(rsrCc) < 0.650:
+                            tS = "rsrCc < 0.65"
+                            polymerModelOutlierD.setdefault((modelId, asymId), []).append((compId, int(seqId), "RSRCC_OUTLIER", tS))
+                #
+            logger.debug("polymerModelOutlierD %r", polymerModelOutlierD)
+            rD = {"polymerModelOutlierD": polymerModelOutlierD}
         except Exception as e:
             logger.exception("%s failing with %s", dataContainer.getName(), str(e))
         return rD

@@ -562,7 +562,7 @@ class SchemaDefReShape(object):
             for iRowD in iRowDList:
                 # Add collection exclusion filter here
                 oRowD = {schemaObj.getAttributeName(atId): iRowD[atId] for atId in iRowD if (schemaId, atId) not in attributeExcludeD}
-                # JDW skip empty rows - 
+                # JDW skip empty rows -
                 if not oRowD:
                     continue
                 rvS = set([iRowD[at] if at in iRowD else None for at in atL])

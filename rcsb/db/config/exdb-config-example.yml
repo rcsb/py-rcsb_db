@@ -314,7 +314,7 @@ content_info_helper_configuration:
             VERSION: 5.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-pdbx-type-map.json
         pdbx_core:
-            VERSION: 5.2.0
+            VERSION: 6.0.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-pdbx-type-map.json
         bird:
             VERSION: 5.1.0
@@ -329,7 +329,7 @@ content_info_helper_configuration:
             VERSION: 5.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
         bird_chem_comp_core:
-            VERSION: 5.1.0
+            VERSION: 6.0.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
         pdb_distro:
             VERSION: 1.1.0
@@ -1458,15 +1458,15 @@ document_helper_configuration:
               VERSION: 5.1.0
         pdbx_core:
             - NAME: pdbx_core_entity
-              VERSION: 5.3.0
+              VERSION: 6.1.0
             - NAME: pdbx_core_entry
-              VERSION: 5.3.0
+              VERSION: 6.1.0
             - NAME: pdbx_core_assembly
-              VERSION: 5.2.0
+              VERSION: 6.1.0
             - NAME: pdbx_core_entity_instance
-              VERSION: 6.0.1
+              VERSION: 6.1.0
             - NAME: pdbx_core_entity_instance_validation
-              VERSION: 5.1.0
+              VERSION: 6.1.0
             #- NAME: pdbx_core_entity_monomer
             #  VERSION: 5.1.0
         bird:
@@ -1483,7 +1483,7 @@ document_helper_configuration:
               VERSION: 5.1.0
         bird_chem_comp_core:
             - NAME: bird_chem_comp_core
-              VERSION: 5.1.0
+              VERSION: 6.0.0
         pdb_distro: []
         repository_holdings:
             - NAME: repository_holdings_update
@@ -1812,45 +1812,47 @@ document_helper_configuration:
         pdbx_core_entity_instance_validation:
             INCLUDE:
                 - struct_asym
-                #- rcsb_load_status
                 - pdbx_vrpt_entity_instance_results
                 - rcsb_entity_instance_validation_container_identifiers
-                - pdbx_vrpt_model_list
-                - pdbx_vrpt_cyrange_domain
-                - pdbx_vrpt_instance_results
-                - pdbx_vrpt_chemical_shift_list
-                - pdbx_vrpt_unmapped_chemical_shift
-                - pdbx_vrpt_unparsed_chemical_shift
-                - pdbx_vrpt_missing_nmrstar_tags
-                - pdbx_vrpt_random_coil_index
-                - pdbx_vrpt_chemical_shift_outlier
-                - pdbx_vrpt_referencing_offset
-                - pdbx_vrpt_assign_compl_well_defined
-                - pdbx_vrpt_assign_compl_full_length
-                - pdbx_vrpt_software
-                - pdbx_vrpt_bond_outliers
-                - pdbx_vrpt_angle_outliers
-                - pdbx_vrpt_stereo_outliers
-                - pdbx_vrpt_plane_outliers
-                - pdbx_vrpt_clashes
-                - pdbx_vrpt_symmetry_clashes
-                - pdbx_vrpt_mogul_bond_outliers
-                - pdbx_vrpt_mogul_angle_outliers
-                - pdbx_vrpt_mogul_torsion_outliers
-                - pdbx_vrpt_mogul_ring_outliers
-                - pdbx_validate_chiral
-                - pdbx_validate_close_contact
-                - pdbx_validate_main_chain_plane
-                - pdbx_validate_peptide_omega
-                - pdbx_validate_planes
-                - pdbx_validate_planes_atom
-                - pdbx_validate_polymer_linkage
-                - pdbx_validate_rmsd_angle
-                - pdbx_validate_rmsd_bond
-                - pdbx_validate_symm_contact
-                - pdbx_validate_torsion
-                - PDBX_UNOBS_OR_ZERO_OCC_ATOMS
-                - PDBX_UNOBS_OR_ZERO_OCC_RESIDUES
+                - rcsb_polymer_instance_validation_feature
+                - rcsb_polymer_instance_validation_feature_summary
+                #
+                # - pdbx_vrpt_model_list
+                # - pdbx_vrpt_cyrange_domain
+                # - pdbx_vrpt_instance_results
+                # - pdbx_vrpt_chemical_shift_list
+                # - pdbx_vrpt_unmapped_chemical_shift
+                # - pdbx_vrpt_unparsed_chemical_shift
+                # - pdbx_vrpt_missing_nmrstar_tags
+                # - pdbx_vrpt_random_coil_index
+                # - pdbx_vrpt_chemical_shift_outlier
+                # - pdbx_vrpt_referencing_offset
+                # - pdbx_vrpt_assign_compl_well_defined
+                # - pdbx_vrpt_assign_compl_full_length
+                # - pdbx_vrpt_software
+                # - pdbx_vrpt_bond_outliers
+                # - pdbx_vrpt_angle_outliers
+                # - pdbx_vrpt_stereo_outliers
+                # - pdbx_vrpt_plane_outliers
+                # - pdbx_vrpt_clashes
+                # - pdbx_vrpt_symmetry_clashes
+                # - pdbx_vrpt_mogul_bond_outliers
+                # - pdbx_vrpt_mogul_angle_outliers
+                # - pdbx_vrpt_mogul_torsion_outliers
+                # - pdbx_vrpt_mogul_ring_outliers
+                # - pdbx_validate_chiral
+                # - pdbx_validate_close_contact
+                # - pdbx_validate_main_chain_plane
+                # - pdbx_validate_peptide_omega
+                # - pdbx_validate_planes
+                # - pdbx_validate_planes_atom
+                # - pdbx_validate_polymer_linkage
+                # - pdbx_validate_rmsd_angle
+                # - pdbx_validate_rmsd_bond
+                # - pdbx_validate_symm_contact
+                # - pdbx_validate_torsion
+                # - PDBX_UNOBS_OR_ZERO_OCC_ATOMS
+                # - PDBX_UNOBS_OR_ZERO_OCC_RESIDUES
             EXCLUDE: []
             SLICE: ENTITY_INSTANCE_VALIDATION
         repository_holdings_update:
@@ -2183,6 +2185,12 @@ document_helper_configuration:
               HAS_UNIT_CARDINALITY: True
         pdbx_core_entity_instance_validation:
             - NAME: domain_class_lineage
+              HAS_UNIT_CARDINALITY: False
+            - NAME: feature_class_lineage
+              HAS_UNIT_CARDINALITY: False
+            - NAME: feature_ranges
+              HAS_UNIT_CARDINALITY: False
+            - NAME: feature_positions
               HAS_UNIT_CARDINALITY: False
     collection_retain_singleton:
         pdbx_core_entity_monomer: True

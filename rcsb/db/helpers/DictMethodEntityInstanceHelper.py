@@ -224,7 +224,7 @@ class DictMethodEntityInstanceHelper(object):
                     seqIdL = str(fObj.getValue("feature_positions_seq_id", ii)).split(",")
                     fMonomerCountD.setdefault(asymId, {}).setdefault(fType, []).append(len(seqIdL))
             #
-            # logger.debug("%s fCountD %r", entryId, fCountD)
+            logger.debug("%s fCountD %r", entryId, fCountD)
             #
             ii = 0
             for asymId, fTypeD in fCountD.items():
@@ -237,7 +237,11 @@ class DictMethodEntityInstanceHelper(object):
                     sObj.setValue(asymId, "asym_id", ii)
                     sObj.setValue(authAsymId, "auth_asym_id", ii)
                     sObj.setValue(fType, "type", ii)
-                    sObj.setValue(len(fS), "count", ii)
+                    if fType.startswith("UNOBSERVED") and asymId in fMonomerCountD and fType in fMonomerCountD[asymId]:
+                        fCount = sum(fMonomerCountD[asymId][fType])
+                    else:
+                        fCount = len(fS)
+                    sObj.setValue(fCount, "count", ii)
                     fracC = 0.0
                     if asymId in fMonomerCountD and fType in fMonomerCountD[asymId] and entityId in entityPolymerLengthD:
                         fracC = float(sum(fMonomerCountD[asymId][fType])) / float(entityPolymerLengthD[entityId])
@@ -764,6 +768,16 @@ class DictMethodEntityInstanceHelper(object):
 
         """
         logger.debug("Starting with %r %r %r", dataContainer.getName(), catName, kwargs)
+        typeMapD = {
+            "ROTAMER_OUTLIER": "Molprobity rotamer outlier",
+            "RAMACHANDRAN_OUTLIER": "Molprobity Ramachandran outlier",
+            "RSRZ_OUTLIER": "Real space R-value Z score > 2",
+            "RSRCC_OUTLIER": "Real space density correlation value < 0.65",
+            "MOGUL_BOND_OUTLIER": "Mogul bond distance outlier",
+            "MOGUL_ANGLE_OUTLIER": "Mogul bond angle outlier",
+            "BOND_OUTLIER": "Molprobity bond distance outlier",
+            "ANGLE_OUTLIER": "Molprobity bond angle outlier",
+        }
         try:
             if catName != "rcsb_polymer_instance_validation_feature":
                 return False
@@ -771,12 +785,50 @@ class DictMethodEntityInstanceHelper(object):
             if not dataContainer.exists("entry"):
                 return False
             #
+            eObj = dataContainer.getObj("entry")
+            entryId = eObj.getValue("id", 0)
+            #
             # Create the new target category
             if not dataContainer.exists(catName):
                 dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
             cObj = dataContainer.getObj(catName)
-            _ = cObj.getRowCount()
+            ii = cObj.getRowCount()
             #
+            asymIdD = self.__commonU.getInstanceEntityMap(dataContainer)
+            asymAuthIdD = self.__commonU.getAsymAuthIdMap(dataContainer)
+            #
+            polymerModelOutlierD = self.__commonU.getPolymerModelOutlierInfo(dataContainer)
+            #
+            logger.debug("Length polymerModelOutlierD %d", len(polymerModelOutlierD))
+            # (modelId, asymId), []).append((compId, int(seqId), "RSRCC_OUTLIER", tS)
+            for (modelId, asymId), pTupL in polymerModelOutlierD.items():
+                fTypeL = sorted(set([pTup[2] for pTup in pTupL]))
+                for fType in fTypeL:
+                    entityId = asymIdD[asymId]
+                    authAsymId = asymAuthIdD[asymId]
+                    cObj.setValue(ii + 1, "ordinal", ii)
+                    cObj.setValue(entryId, "entry_id", ii)
+                    cObj.setValue(entityId, "entity_id", ii)
+                    cObj.setValue(asymId, "asym_id", ii)
+                    cObj.setValue(authAsymId, "auth_asym_id", ii)
+                    cObj.setValue(str(ii + 1), "feature_id", ii)
+                    #
+                    cObj.setValue(fType, "type", ii)
+                    tN = typeMapD[fType] if fType in typeMapD else fType
+                    cObj.setValue(tN, "name", ii)
+                    #
+                    cObj.setValue(",".join([pTup[0] for pTup in pTupL if pTup[2] == fType]), "feature_positions_comp_id", ii)
+                    cObj.setValue(",".join([str(pTup[1]) for pTup in pTupL if pTup[2] == fType]), "feature_positions_seq_id", ii)
+                    #
+                    cObj.setValue("PDB entity", "reference_scheme", ii)
+                    cObj.setValue("PDB", "provenance_code", ii)
+                    cObj.setValue("V1.0", "assignment_version", ii)
+                    tS = tN + " in polymer instance %s model %s" % (asymId, modelId)
+                    cObj.setValue(tS, "description", ii)
+                    #
+                    ii += 1
+            #
+            ##
             return True
         except Exception as e:
             logger.exception("For %s %r failing with %s", dataContainer.getName(), catName, str(e))
@@ -854,7 +906,11 @@ class DictMethodEntityInstanceHelper(object):
                     sObj.setValue(asymId, "asym_id", ii)
                     sObj.setValue(authAsymId, "auth_asym_id", ii)
                     sObj.setValue(fType, "type", ii)
-                    sObj.setValue(len(fS), "count", ii)
+                    if asymId in fMonomerCountD and fType in fMonomerCountD[asymId]:
+                        fCount = sum(fMonomerCountD[asymId][fType])
+                    else:
+                        fCount = len(fS)
+                    sObj.setValue(fCount, "count", ii)
                     fracC = 0.0
                     if asymId in fMonomerCountD and fType in fMonomerCountD[asymId] and entityId in entityPolymerLengthD:
                         fracC = float(sum(fMonomerCountD[asymId][fType])) / float(entityPolymerLengthD[entityId])
