@@ -1,0 +1,1766 @@
+  bird_chem_comp_core:
+ - CATEGORY_NAME: chem_comp
+   ATTRIBUTE_NAME_LIST:
+   - mon_nstd_parent_comp_id
+ - CATEGORY_NAME: citation
+   ATTRIBUTE_NAME_LIST:
+   - book_id_ISBN
+   - journal_id_ASTM
+   - journal_id_CSD
+   - journal_id_ISSN
+   - pdbx_database_id_DOI
+   - pdbx_database_id_PubMed
+ - CATEGORY_NAME: pdbx_chem_comp_audit
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+ - CATEGORY_NAME: pdbx_chem_comp_descriptor
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+ - CATEGORY_NAME: pdbx_chem_comp_feature
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+ - CATEGORY_NAME: pdbx_chem_comp_identifier
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+ - CATEGORY_NAME: pdbx_family_prd_audit
+   ATTRIBUTE_NAME_LIST:
+   - family_prd_id
+ - CATEGORY_NAME: pdbx_prd_audit
+   ATTRIBUTE_NAME_LIST:
+   - prd_id
+ - CATEGORY_NAME: pdbx_reference_entity_list
+   ATTRIBUTE_NAME_LIST:
+   - component_id
+   - prd_id
+   - ref_entity_id
+ - CATEGORY_NAME: pdbx_reference_entity_poly
+   ATTRIBUTE_NAME_LIST:
+   - prd_id
+   - ref_entity_id
+ - CATEGORY_NAME: pdbx_reference_entity_poly_link
+   ATTRIBUTE_NAME_LIST:
+   - atom_id_1
+   - atom_id_2
+   - comp_id_1
+   - comp_id_2
+   - component_id
+   - link_id
+   - prd_id
+   - ref_entity_id
+ - CATEGORY_NAME: pdbx_reference_entity_poly_seq
+   ATTRIBUTE_NAME_LIST:
+   - mon_id
+   - parent_mon_id
+   - prd_id
+   - ref_entity_id
+ - CATEGORY_NAME: pdbx_reference_entity_sequence
+   ATTRIBUTE_NAME_LIST:
+   - prd_id
+   - ref_entity_id
+ - CATEGORY_NAME: pdbx_reference_entity_src_nat
+   ATTRIBUTE_NAME_LIST:
+   - prd_id
+   - ref_entity_id
+   - source_id
+ - CATEGORY_NAME: pdbx_reference_molecule
+   ATTRIBUTE_NAME_LIST:
+   - chem_comp_id
+   - prd_id
+   - representative_PDB_id_code
+ - CATEGORY_NAME: pdbx_reference_molecule_annotation
+   ATTRIBUTE_NAME_LIST:
+   - family_prd_id
+   - prd_id
+ - CATEGORY_NAME: pdbx_reference_molecule_details
+   ATTRIBUTE_NAME_LIST:
+   - family_prd_id
+   - source_id
+ - CATEGORY_NAME: pdbx_reference_molecule_family
+   ATTRIBUTE_NAME_LIST:
+   - family_prd_id
+ - CATEGORY_NAME: pdbx_reference_molecule_features
+   ATTRIBUTE_NAME_LIST:
+   - family_prd_id
+   - prd_id
+ - CATEGORY_NAME: pdbx_reference_molecule_list
+   ATTRIBUTE_NAME_LIST:
+   - family_prd_id
+   - prd_id
+ - CATEGORY_NAME: pdbx_reference_molecule_related_structures
+   ATTRIBUTE_NAME_LIST:
+   - citation_id
+   - family_prd_id
+ - CATEGORY_NAME: pdbx_reference_molecule_synonyms
+   ATTRIBUTE_NAME_LIST:
+   - family_prd_id
+   - prd_id
+ - CATEGORY_NAME: rcsb_chem_comp_container_identifiers
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+   - drugbank_id
+   - prd_id
+ - CATEGORY_NAME: rcsb_chem_comp_descriptor
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+ - CATEGORY_NAME: rcsb_chem_comp_info
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+   - subcomponent_ids
+ - CATEGORY_NAME: rcsb_chem_comp_related
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+ - CATEGORY_NAME: rcsb_chem_comp_synonyms
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+ - CATEGORY_NAME: rcsb_chem_comp_target
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+ - CATEGORY_NAME: rcsb_load_status
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: rcsb_schema_container_identifiers
+   ATTRIBUTE_NAME_LIST:
+  bird_chem_comp_core:
+ - CATEGORY_NAME: chem_comp
+   ATTRIBUTE_NAME_LIST:
+   - mon_nstd_parent_comp_id
+ - CATEGORY_NAME: citation
+   ATTRIBUTE_NAME_LIST:
+   - book_id_ISBN
+   - journal_id_ASTM
+   - journal_id_CSD
+   - journal_id_ISSN
+   - pdbx_database_id_DOI
+   - pdbx_database_id_PubMed
+ - CATEGORY_NAME: pdbx_chem_comp_audit
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+ - CATEGORY_NAME: pdbx_chem_comp_descriptor
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+ - CATEGORY_NAME: pdbx_chem_comp_feature
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+ - CATEGORY_NAME: pdbx_chem_comp_identifier
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+ - CATEGORY_NAME: pdbx_family_prd_audit
+   ATTRIBUTE_NAME_LIST:
+   - family_prd_id
+ - CATEGORY_NAME: pdbx_prd_audit
+   ATTRIBUTE_NAME_LIST:
+   - prd_id
+ - CATEGORY_NAME: pdbx_reference_entity_list
+   ATTRIBUTE_NAME_LIST:
+   - component_id
+   - prd_id
+   - ref_entity_id
+ - CATEGORY_NAME: pdbx_reference_entity_poly
+   ATTRIBUTE_NAME_LIST:
+   - prd_id
+   - ref_entity_id
+ - CATEGORY_NAME: pdbx_reference_entity_poly_link
+   ATTRIBUTE_NAME_LIST:
+   - atom_id_1
+   - atom_id_2
+   - comp_id_1
+   - comp_id_2
+   - component_id
+   - link_id
+   - prd_id
+   - ref_entity_id
+ - CATEGORY_NAME: pdbx_reference_entity_poly_seq
+   ATTRIBUTE_NAME_LIST:
+   - mon_id
+   - parent_mon_id
+   - prd_id
+   - ref_entity_id
+ - CATEGORY_NAME: pdbx_reference_entity_sequence
+   ATTRIBUTE_NAME_LIST:
+   - prd_id
+   - ref_entity_id
+ - CATEGORY_NAME: pdbx_reference_entity_src_nat
+   ATTRIBUTE_NAME_LIST:
+   - prd_id
+   - ref_entity_id
+   - source_id
+ - CATEGORY_NAME: pdbx_reference_molecule
+   ATTRIBUTE_NAME_LIST:
+   - chem_comp_id
+   - prd_id
+   - representative_PDB_id_code
+ - CATEGORY_NAME: pdbx_reference_molecule_annotation
+   ATTRIBUTE_NAME_LIST:
+   - family_prd_id
+   - prd_id
+ - CATEGORY_NAME: pdbx_reference_molecule_details
+   ATTRIBUTE_NAME_LIST:
+   - family_prd_id
+   - source_id
+ - CATEGORY_NAME: pdbx_reference_molecule_family
+   ATTRIBUTE_NAME_LIST:
+   - family_prd_id
+ - CATEGORY_NAME: pdbx_reference_molecule_features
+   ATTRIBUTE_NAME_LIST:
+   - family_prd_id
+   - prd_id
+ - CATEGORY_NAME: pdbx_reference_molecule_list
+   ATTRIBUTE_NAME_LIST:
+   - family_prd_id
+   - prd_id
+ - CATEGORY_NAME: pdbx_reference_molecule_related_structures
+   ATTRIBUTE_NAME_LIST:
+   - citation_id
+   - family_prd_id
+ - CATEGORY_NAME: pdbx_reference_molecule_synonyms
+   ATTRIBUTE_NAME_LIST:
+   - family_prd_id
+   - prd_id
+ - CATEGORY_NAME: rcsb_chem_comp_container_identifiers
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+   - drugbank_id
+   - prd_id
+ - CATEGORY_NAME: rcsb_chem_comp_descriptor
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+ - CATEGORY_NAME: rcsb_chem_comp_info
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+   - subcomponent_ids
+ - CATEGORY_NAME: rcsb_chem_comp_related
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+ - CATEGORY_NAME: rcsb_chem_comp_synonyms
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+ - CATEGORY_NAME: rcsb_chem_comp_target
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+ - CATEGORY_NAME: rcsb_load_status
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: rcsb_schema_container_identifiers
+   ATTRIBUTE_NAME_LIST:
+  pdbx_core_entity:
+ - CATEGORY_NAME: entity
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: entity_keywords
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+ - CATEGORY_NAME: entity_name_com
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+ - CATEGORY_NAME: entity_name_sys
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+ - CATEGORY_NAME: entity_poly
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+   - pdbx_strand_id
+   - pdbx_target_identifier
+   - rcsb_prd_id
+ - CATEGORY_NAME: entity_src_gen
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+   - expression_system_id
+   - pdbx_gene_src_ncbi_taxonomy_id
+   - pdbx_host_org_ncbi_taxonomy_id
+   - pdbx_src_id
+ - CATEGORY_NAME: entity_src_nat
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+   - pdbx_ncbi_taxonomy_id
+   - pdbx_src_id
+ - CATEGORY_NAME: pdbx_entity_nonpoly
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+   - entity_id
+   - rcsb_prd_id
+ - CATEGORY_NAME: pdbx_entity_src_syn
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+   - ncbi_taxonomy_id
+   - pdbx_src_id
+ - CATEGORY_NAME: pdbx_molecule
+   ATTRIBUTE_NAME_LIST:
+   - asym_id
+   - instance_id
+   - prd_id
+   - rcsb_comp_id
+   - rcsb_entity_id
+ - CATEGORY_NAME: pdbx_struct_entity_inst
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+ - CATEGORY_NAME: rcsb_entity_container_identifiers
+   ATTRIBUTE_NAME_LIST:
+   - asym_ids
+   - auth_asym_ids
+   - entity_id
+   - entry_id
+   - nonpolymer_comp_id
+   - pdb_assigned_genbank_ids
+   - pdb_assigned_uniprot_ids
+   - prd_id
+   - sifts_assigned_go_ids
+   - sifts_assigned_interpro_ids
+   - sifts_assigned_pfam_ids
+   - sifts_assigned_uniprot_ids
+ - CATEGORY_NAME: rcsb_entity_host_organism
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+   - ncbi_taxonomy_id
+   - pdbx_src_id
+ - CATEGORY_NAME: rcsb_entity_poly_info
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+   - entity_id
+   - entry_id
+   - ordinal_id
+ - CATEGORY_NAME: rcsb_entity_source_organism
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+   - ncbi_taxonomy_id
+   - pdbx_src_id
+ - CATEGORY_NAME: rcsb_load_status
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: rcsb_polymer_entity_align
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+   - entry_id
+ - CATEGORY_NAME: rcsb_polymer_entity_feature
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+   - entry_id
+   - feature_class_lineage_id
+   - feature_id
+ - CATEGORY_NAME: rcsb_polymer_entity_feature_summary
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+   - entry_id
+ - CATEGORY_NAME: struct_ref
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+ - CATEGORY_NAME: struct_ref_seq
+   ATTRIBUTE_NAME_LIST:
+   - align_id
+   - pdbx_PDB_id_code
+   - pdbx_strand_id
+   - rcsb_entity_id
+   - ref_id
+  pdbx_core_entity:
+ - CATEGORY_NAME: entity
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: entity_keywords
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+ - CATEGORY_NAME: entity_name_com
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+ - CATEGORY_NAME: entity_name_sys
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+ - CATEGORY_NAME: entity_poly
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+   - pdbx_strand_id
+   - pdbx_target_identifier
+   - rcsb_prd_id
+ - CATEGORY_NAME: entity_src_gen
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+   - expression_system_id
+   - pdbx_gene_src_ncbi_taxonomy_id
+   - pdbx_host_org_ncbi_taxonomy_id
+   - pdbx_src_id
+ - CATEGORY_NAME: entity_src_nat
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+   - pdbx_ncbi_taxonomy_id
+   - pdbx_src_id
+ - CATEGORY_NAME: pdbx_entity_nonpoly
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+   - entity_id
+   - rcsb_prd_id
+ - CATEGORY_NAME: pdbx_entity_src_syn
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+   - ncbi_taxonomy_id
+   - pdbx_src_id
+ - CATEGORY_NAME: pdbx_molecule
+   ATTRIBUTE_NAME_LIST:
+   - asym_id
+   - instance_id
+   - prd_id
+   - rcsb_comp_id
+   - rcsb_entity_id
+ - CATEGORY_NAME: pdbx_struct_entity_inst
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+ - CATEGORY_NAME: rcsb_entity_container_identifiers
+   ATTRIBUTE_NAME_LIST:
+   - asym_ids
+   - auth_asym_ids
+   - entity_id
+   - entry_id
+   - nonpolymer_comp_id
+   - pdb_assigned_genbank_ids
+   - pdb_assigned_uniprot_ids
+   - prd_id
+   - sifts_assigned_go_ids
+   - sifts_assigned_interpro_ids
+   - sifts_assigned_pfam_ids
+   - sifts_assigned_uniprot_ids
+ - CATEGORY_NAME: rcsb_entity_host_organism
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+   - ncbi_taxonomy_id
+   - pdbx_src_id
+ - CATEGORY_NAME: rcsb_entity_poly_info
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+   - entity_id
+   - entry_id
+   - ordinal_id
+ - CATEGORY_NAME: rcsb_entity_source_organism
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+   - ncbi_taxonomy_id
+   - pdbx_src_id
+ - CATEGORY_NAME: rcsb_load_status
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: rcsb_polymer_entity_align
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+   - entry_id
+ - CATEGORY_NAME: rcsb_polymer_entity_feature
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+   - entry_id
+   - feature_class_lineage_id
+   - feature_id
+ - CATEGORY_NAME: rcsb_polymer_entity_feature_summary
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+   - entry_id
+ - CATEGORY_NAME: struct_ref
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+ - CATEGORY_NAME: struct_ref_seq
+   ATTRIBUTE_NAME_LIST:
+   - align_id
+   - pdbx_PDB_id_code
+   - pdbx_strand_id
+   - rcsb_entity_id
+   - ref_id
+  pdbx_core_entry:
+ - CATEGORY_NAME: audit_author
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: cell
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: citation
+   ATTRIBUTE_NAME_LIST:
+   - book_id_ISBN
+   - journal_id_ASTM
+   - journal_id_CSD
+   - journal_id_ISSN
+   - pdbx_database_id_DOI
+   - pdbx_database_id_PubMed
+ - CATEGORY_NAME: citation_author
+   ATTRIBUTE_NAME_LIST:
+   - citation_id
+ - CATEGORY_NAME: diffrn
+   ATTRIBUTE_NAME_LIST:
+   - crystal_id
+ - CATEGORY_NAME: diffrn_detector
+   ATTRIBUTE_NAME_LIST:
+   - diffrn_id
+ - CATEGORY_NAME: diffrn_radiation
+   ATTRIBUTE_NAME_LIST:
+   - diffrn_id
+   - wavelength_id
+ - CATEGORY_NAME: diffrn_source
+   ATTRIBUTE_NAME_LIST:
+   - diffrn_id
+ - CATEGORY_NAME: em_2d_crystal_entity
+   ATTRIBUTE_NAME_LIST:
+   - image_processing_id
+ - CATEGORY_NAME: em_3d_crystal_entity
+   ATTRIBUTE_NAME_LIST:
+   - image_processing_id
+ - CATEGORY_NAME: em_3d_fitting
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: em_3d_fitting_list
+   ATTRIBUTE_NAME_LIST:
+   - 3d_fitting_id
+   - pdb_chain_id
+   - pdb_entry_id
+ - CATEGORY_NAME: em_3d_reconstruction
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+   - image_processing_id
+ - CATEGORY_NAME: em_ctf_correction
+   ATTRIBUTE_NAME_LIST:
+   - em_image_processing_id
+ - CATEGORY_NAME: em_diffraction
+   ATTRIBUTE_NAME_LIST:
+   - imaging_id
+ - CATEGORY_NAME: em_diffraction_shell
+   ATTRIBUTE_NAME_LIST:
+   - em_diffraction_stats_id
+ - CATEGORY_NAME: em_diffraction_stats
+   ATTRIBUTE_NAME_LIST:
+   - image_processing_id
+ - CATEGORY_NAME: em_embedding
+   ATTRIBUTE_NAME_LIST:
+   - specimen_id
+ - CATEGORY_NAME: em_entity_assembly
+   ATTRIBUTE_NAME_LIST:
+   - entity_id_list
+   - parent_id
+ - CATEGORY_NAME: em_experiment
+   ATTRIBUTE_NAME_LIST:
+   - entity_assembly_id
+   - entry_id
+ - CATEGORY_NAME: em_helical_entity
+   ATTRIBUTE_NAME_LIST:
+   - image_processing_id
+ - CATEGORY_NAME: em_image_recording
+   ATTRIBUTE_NAME_LIST:
+   - imaging_id
+ - CATEGORY_NAME: em_imaging
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+   - specimen_id
+ - CATEGORY_NAME: em_particle_selection
+   ATTRIBUTE_NAME_LIST:
+   - image_processing_id
+ - CATEGORY_NAME: em_single_particle_entity
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+   - image_processing_id
+ - CATEGORY_NAME: em_software
+   ATTRIBUTE_NAME_LIST:
+   - fitting_id
+   - image_processing_id
+   - imaging_id
+ - CATEGORY_NAME: em_specimen
+   ATTRIBUTE_NAME_LIST:
+   - experiment_id
+ - CATEGORY_NAME: em_staining
+   ATTRIBUTE_NAME_LIST:
+   - specimen_id
+ - CATEGORY_NAME: em_vitrification
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+   - specimen_id
+ - CATEGORY_NAME: entry
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: exptl
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: exptl_crystal
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: exptl_crystal_grow
+   ATTRIBUTE_NAME_LIST:
+   - crystal_id
+ - CATEGORY_NAME: pdbx_SG_project
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: pdbx_audit_revision_category
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: pdbx_audit_revision_details
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: pdbx_audit_revision_group
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: pdbx_audit_revision_history
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: pdbx_audit_revision_item
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: pdbx_audit_support
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: pdbx_database_PDB_obs_spr
+   ATTRIBUTE_NAME_LIST:
+   - pdb_id
+   - replace_pdb_id
+ - CATEGORY_NAME: pdbx_database_related
+   ATTRIBUTE_NAME_LIST:
+   - db_id
+ - CATEGORY_NAME: pdbx_database_status
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: pdbx_deposit_group
+   ATTRIBUTE_NAME_LIST:
+   - group_id
+ - CATEGORY_NAME: pdbx_molecule
+   ATTRIBUTE_NAME_LIST:
+   - asym_id
+   - instance_id
+   - prd_id
+   - rcsb_comp_id
+   - rcsb_entity_id
+ - CATEGORY_NAME: pdbx_molecule_features
+   ATTRIBUTE_NAME_LIST:
+   - prd_id
+ - CATEGORY_NAME: pdbx_nmr_details
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: pdbx_nmr_ensemble
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: pdbx_nmr_exptl
+   ATTRIBUTE_NAME_LIST:
+   - conditions_id
+   - experiment_id
+   - solution_id
+   - spectrometer_id
+ - CATEGORY_NAME: pdbx_nmr_exptl_sample_conditions
+   ATTRIBUTE_NAME_LIST:
+   - conditions_id
+ - CATEGORY_NAME: pdbx_nmr_refine
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: pdbx_nmr_representative
+   ATTRIBUTE_NAME_LIST:
+   - conformer_id
+   - entry_id
+ - CATEGORY_NAME: pdbx_nmr_sample_details
+   ATTRIBUTE_NAME_LIST:
+   - solution_id
+ - CATEGORY_NAME: pdbx_nmr_software
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: pdbx_nmr_spectrometer
+   ATTRIBUTE_NAME_LIST:
+   - spectrometer_id
+ - CATEGORY_NAME: pdbx_serial_crystallography_data_reduction
+   ATTRIBUTE_NAME_LIST:
+   - diffrn_id
+ - CATEGORY_NAME: pdbx_serial_crystallography_measurement
+   ATTRIBUTE_NAME_LIST:
+   - diffrn_id
+ - CATEGORY_NAME: pdbx_serial_crystallography_sample_delivery
+   ATTRIBUTE_NAME_LIST:
+   - diffrn_id
+ - CATEGORY_NAME: pdbx_serial_crystallography_sample_delivery_fixed_target
+   ATTRIBUTE_NAME_LIST:
+   - diffrn_id
+ - CATEGORY_NAME: pdbx_serial_crystallography_sample_delivery_injection
+   ATTRIBUTE_NAME_LIST:
+   - diffrn_id
+ - CATEGORY_NAME: pdbx_soln_scatter
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: pdbx_soln_scatter_model
+   ATTRIBUTE_NAME_LIST:
+   - scatter_id
+ - CATEGORY_NAME: pdbx_vrpt_summary
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: rcsb_accession_info
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: rcsb_entry_container_identifiers
+   ATTRIBUTE_NAME_LIST:
+   - assembly_ids
+   - entity_ids
+   - entry_id
+   - non-polymer_entity_ids
+   - polymer_entity_ids
+ - CATEGORY_NAME: rcsb_entry_info
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: rcsb_load_status
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: refine
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+   - pdbx_diffrn_id
+   - pdbx_refine_id
+ - CATEGORY_NAME: refine_analyze
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+   - pdbx_refine_id
+ - CATEGORY_NAME: refine_hist
+   ATTRIBUTE_NAME_LIST:
+   - cycle_id
+   - pdbx_refine_id
+ - CATEGORY_NAME: refine_ls_restr
+   ATTRIBUTE_NAME_LIST:
+   - dev_ideal
+   - dev_ideal_target
+   - pdbx_refine_id
+ - CATEGORY_NAME: reflns
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+   - pdbx_diffrn_id
+ - CATEGORY_NAME: reflns_shell
+   ATTRIBUTE_NAME_LIST:
+   - pdbx_diffrn_id
+ - CATEGORY_NAME: software
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: struct
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: struct_keywords
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: symmetry
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+  pdbx_core_entry:
+ - CATEGORY_NAME: audit_author
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: cell
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: citation
+   ATTRIBUTE_NAME_LIST:
+   - book_id_ISBN
+   - journal_id_ASTM
+   - journal_id_CSD
+   - journal_id_ISSN
+   - pdbx_database_id_DOI
+   - pdbx_database_id_PubMed
+ - CATEGORY_NAME: citation_author
+   ATTRIBUTE_NAME_LIST:
+   - citation_id
+ - CATEGORY_NAME: diffrn
+   ATTRIBUTE_NAME_LIST:
+   - crystal_id
+ - CATEGORY_NAME: diffrn_detector
+   ATTRIBUTE_NAME_LIST:
+   - diffrn_id
+ - CATEGORY_NAME: diffrn_radiation
+   ATTRIBUTE_NAME_LIST:
+   - diffrn_id
+   - wavelength_id
+ - CATEGORY_NAME: diffrn_source
+   ATTRIBUTE_NAME_LIST:
+   - diffrn_id
+ - CATEGORY_NAME: em_2d_crystal_entity
+   ATTRIBUTE_NAME_LIST:
+   - image_processing_id
+ - CATEGORY_NAME: em_3d_crystal_entity
+   ATTRIBUTE_NAME_LIST:
+   - image_processing_id
+ - CATEGORY_NAME: em_3d_fitting
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: em_3d_fitting_list
+   ATTRIBUTE_NAME_LIST:
+   - 3d_fitting_id
+   - pdb_chain_id
+   - pdb_entry_id
+ - CATEGORY_NAME: em_3d_reconstruction
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+   - image_processing_id
+ - CATEGORY_NAME: em_ctf_correction
+   ATTRIBUTE_NAME_LIST:
+   - em_image_processing_id
+ - CATEGORY_NAME: em_diffraction
+   ATTRIBUTE_NAME_LIST:
+   - imaging_id
+ - CATEGORY_NAME: em_diffraction_shell
+   ATTRIBUTE_NAME_LIST:
+   - em_diffraction_stats_id
+ - CATEGORY_NAME: em_diffraction_stats
+   ATTRIBUTE_NAME_LIST:
+   - image_processing_id
+ - CATEGORY_NAME: em_embedding
+   ATTRIBUTE_NAME_LIST:
+   - specimen_id
+ - CATEGORY_NAME: em_entity_assembly
+   ATTRIBUTE_NAME_LIST:
+   - entity_id_list
+   - parent_id
+ - CATEGORY_NAME: em_experiment
+   ATTRIBUTE_NAME_LIST:
+   - entity_assembly_id
+   - entry_id
+ - CATEGORY_NAME: em_helical_entity
+   ATTRIBUTE_NAME_LIST:
+   - image_processing_id
+ - CATEGORY_NAME: em_image_recording
+   ATTRIBUTE_NAME_LIST:
+   - imaging_id
+ - CATEGORY_NAME: em_imaging
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+   - specimen_id
+ - CATEGORY_NAME: em_particle_selection
+   ATTRIBUTE_NAME_LIST:
+   - image_processing_id
+ - CATEGORY_NAME: em_single_particle_entity
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+   - image_processing_id
+ - CATEGORY_NAME: em_software
+   ATTRIBUTE_NAME_LIST:
+   - fitting_id
+   - image_processing_id
+   - imaging_id
+ - CATEGORY_NAME: em_specimen
+   ATTRIBUTE_NAME_LIST:
+   - experiment_id
+ - CATEGORY_NAME: em_staining
+   ATTRIBUTE_NAME_LIST:
+   - specimen_id
+ - CATEGORY_NAME: em_vitrification
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+   - specimen_id
+ - CATEGORY_NAME: entry
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: exptl
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: exptl_crystal
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: exptl_crystal_grow
+   ATTRIBUTE_NAME_LIST:
+   - crystal_id
+ - CATEGORY_NAME: pdbx_SG_project
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: pdbx_audit_revision_category
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: pdbx_audit_revision_details
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: pdbx_audit_revision_group
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: pdbx_audit_revision_history
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: pdbx_audit_revision_item
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: pdbx_audit_support
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: pdbx_database_PDB_obs_spr
+   ATTRIBUTE_NAME_LIST:
+   - pdb_id
+   - replace_pdb_id
+ - CATEGORY_NAME: pdbx_database_related
+   ATTRIBUTE_NAME_LIST:
+   - db_id
+ - CATEGORY_NAME: pdbx_database_status
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: pdbx_deposit_group
+   ATTRIBUTE_NAME_LIST:
+   - group_id
+ - CATEGORY_NAME: pdbx_molecule
+   ATTRIBUTE_NAME_LIST:
+   - asym_id
+   - instance_id
+   - prd_id
+   - rcsb_comp_id
+   - rcsb_entity_id
+ - CATEGORY_NAME: pdbx_molecule_features
+   ATTRIBUTE_NAME_LIST:
+   - prd_id
+ - CATEGORY_NAME: pdbx_nmr_details
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: pdbx_nmr_ensemble
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: pdbx_nmr_exptl
+   ATTRIBUTE_NAME_LIST:
+   - conditions_id
+   - experiment_id
+   - solution_id
+   - spectrometer_id
+ - CATEGORY_NAME: pdbx_nmr_exptl_sample_conditions
+   ATTRIBUTE_NAME_LIST:
+   - conditions_id
+ - CATEGORY_NAME: pdbx_nmr_refine
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: pdbx_nmr_representative
+   ATTRIBUTE_NAME_LIST:
+   - conformer_id
+   - entry_id
+ - CATEGORY_NAME: pdbx_nmr_sample_details
+   ATTRIBUTE_NAME_LIST:
+   - solution_id
+ - CATEGORY_NAME: pdbx_nmr_software
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: pdbx_nmr_spectrometer
+   ATTRIBUTE_NAME_LIST:
+   - spectrometer_id
+ - CATEGORY_NAME: pdbx_serial_crystallography_data_reduction
+   ATTRIBUTE_NAME_LIST:
+   - diffrn_id
+ - CATEGORY_NAME: pdbx_serial_crystallography_measurement
+   ATTRIBUTE_NAME_LIST:
+   - diffrn_id
+ - CATEGORY_NAME: pdbx_serial_crystallography_sample_delivery
+   ATTRIBUTE_NAME_LIST:
+   - diffrn_id
+ - CATEGORY_NAME: pdbx_serial_crystallography_sample_delivery_fixed_target
+   ATTRIBUTE_NAME_LIST:
+   - diffrn_id
+ - CATEGORY_NAME: pdbx_serial_crystallography_sample_delivery_injection
+   ATTRIBUTE_NAME_LIST:
+   - diffrn_id
+ - CATEGORY_NAME: pdbx_soln_scatter
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: pdbx_soln_scatter_model
+   ATTRIBUTE_NAME_LIST:
+   - scatter_id
+ - CATEGORY_NAME: pdbx_vrpt_summary
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: rcsb_accession_info
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: rcsb_entry_container_identifiers
+   ATTRIBUTE_NAME_LIST:
+   - assembly_ids
+   - entity_ids
+   - entry_id
+   - non-polymer_entity_ids
+   - polymer_entity_ids
+ - CATEGORY_NAME: rcsb_entry_info
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: rcsb_load_status
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: refine
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+   - pdbx_diffrn_id
+   - pdbx_refine_id
+ - CATEGORY_NAME: refine_analyze
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+   - pdbx_refine_id
+ - CATEGORY_NAME: refine_hist
+   ATTRIBUTE_NAME_LIST:
+   - cycle_id
+   - pdbx_refine_id
+ - CATEGORY_NAME: refine_ls_restr
+   ATTRIBUTE_NAME_LIST:
+   - dev_ideal
+   - dev_ideal_target
+   - pdbx_refine_id
+ - CATEGORY_NAME: reflns
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+   - pdbx_diffrn_id
+ - CATEGORY_NAME: reflns_shell
+   ATTRIBUTE_NAME_LIST:
+   - pdbx_diffrn_id
+ - CATEGORY_NAME: software
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: struct
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: struct_keywords
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: symmetry
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+  pdbx_core_assembly:
+ - CATEGORY_NAME: pdbx_struct_assembly
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: pdbx_struct_assembly_auth_evidence
+   ATTRIBUTE_NAME_LIST:
+   - assembly_id
+ - CATEGORY_NAME: pdbx_struct_assembly_gen
+   ATTRIBUTE_NAME_LIST:
+   - assembly_id
+   - asym_id_list
+ - CATEGORY_NAME: pdbx_struct_assembly_prop
+   ATTRIBUTE_NAME_LIST:
+   - biol_id
+ - CATEGORY_NAME: pdbx_struct_oper_list
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: rcsb_assembly_container_identifiers
+   ATTRIBUTE_NAME_LIST:
+   - assembly_id
+   - entry_id
+ - CATEGORY_NAME: rcsb_assembly_info
+   ATTRIBUTE_NAME_LIST:
+   - assembly_id
+   - entry_id
+ - CATEGORY_NAME: rcsb_load_status
+   ATTRIBUTE_NAME_LIST:
+  pdbx_core_assembly:
+ - CATEGORY_NAME: pdbx_struct_assembly
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: pdbx_struct_assembly_auth_evidence
+   ATTRIBUTE_NAME_LIST:
+   - assembly_id
+ - CATEGORY_NAME: pdbx_struct_assembly_gen
+   ATTRIBUTE_NAME_LIST:
+   - assembly_id
+   - asym_id_list
+ - CATEGORY_NAME: pdbx_struct_assembly_prop
+   ATTRIBUTE_NAME_LIST:
+   - biol_id
+ - CATEGORY_NAME: pdbx_struct_oper_list
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: rcsb_assembly_container_identifiers
+   ATTRIBUTE_NAME_LIST:
+   - assembly_id
+   - entry_id
+ - CATEGORY_NAME: rcsb_assembly_info
+   ATTRIBUTE_NAME_LIST:
+   - assembly_id
+   - entry_id
+ - CATEGORY_NAME: rcsb_load_status
+   ATTRIBUTE_NAME_LIST:
+  pdbx_core_entity_monomer:
+ - CATEGORY_NAME: rcsb_entity_monomer_container_identifiers
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+   - entity_id
+   - entry_id
+   - ordinal_id
+ - CATEGORY_NAME: rcsb_entity_poly_info
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+   - entity_id
+   - entry_id
+   - ordinal_id
+ - CATEGORY_NAME: rcsb_load_status
+   ATTRIBUTE_NAME_LIST:
+  pdbx_core_entity_monomer:
+ - CATEGORY_NAME: rcsb_entity_monomer_container_identifiers
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+   - entity_id
+   - entry_id
+   - ordinal_id
+ - CATEGORY_NAME: rcsb_entity_poly_info
+   ATTRIBUTE_NAME_LIST:
+   - comp_id
+   - entity_id
+   - entry_id
+   - ordinal_id
+ - CATEGORY_NAME: rcsb_load_status
+   ATTRIBUTE_NAME_LIST:
+  pdbx_core_entity_instance:
+ - CATEGORY_NAME: ndb_struct_na_base_pair
+   ATTRIBUTE_NAME_LIST:
+   - i_auth_asym_id
+   - i_auth_seq_id
+   - i_label_asym_id
+   - i_label_comp_id
+   - i_label_seq_id
+   - j_auth_asym_id
+   - j_auth_seq_id
+   - j_label_asym_id
+   - j_label_comp_id
+   - j_label_seq_id
+ - CATEGORY_NAME: ndb_struct_na_base_pair_step
+   ATTRIBUTE_NAME_LIST:
+   - i_auth_asym_id_1
+   - i_auth_asym_id_2
+   - i_auth_seq_id_1
+   - i_auth_seq_id_2
+   - i_label_asym_id_1
+   - i_label_asym_id_2
+   - i_label_comp_id_1
+   - i_label_comp_id_2
+   - i_label_seq_id_1
+   - i_label_seq_id_2
+   - j_auth_asym_id_1
+   - j_auth_asym_id_2
+   - j_auth_seq_id_1
+   - j_auth_seq_id_2
+   - j_label_asym_id_1
+   - j_label_asym_id_2
+   - j_label_comp_id_1
+   - j_label_comp_id_2
+   - j_label_seq_id_1
+   - j_label_seq_id_2
+ - CATEGORY_NAME: pdbx_coordinate_model
+   ATTRIBUTE_NAME_LIST:
+   - asym_id
+ - CATEGORY_NAME: pdbx_struct_special_symmetry
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_comp_id
+   - auth_seq_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_entity_instance_results
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - entity_id
+   - label_asym_id
+ - CATEGORY_NAME: rcsb_entity_instance_container_identifiers
+   ATTRIBUTE_NAME_LIST:
+   - asym_id
+   - auth_asym_id
+   - auth_seq_id
+   - comp_id
+   - entity_id
+   - entry_id
+ - CATEGORY_NAME: rcsb_load_status
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: rcsb_polymer_instance_feature
+   ATTRIBUTE_NAME_LIST:
+   - asym_id
+   - auth_asym_id
+   - entity_id
+   - entry_id
+   - feature_id
+ - CATEGORY_NAME: rcsb_polymer_instance_feature_summary
+   ATTRIBUTE_NAME_LIST:
+   - asym_id
+   - auth_asym_id
+   - entity_id
+   - entry_id
+ - CATEGORY_NAME: rcsb_struct_conn
+   ATTRIBUTE_NAME_LIST:
+   - asym_id
+   - auth_asym_id
+   - entity_id
+   - entry_id
+   - ordinal_id
+ - CATEGORY_NAME: struct_asym
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+ - CATEGORY_NAME: struct_mon_prot_cis
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_comp_id
+   - auth_seq_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+   - pdbx_auth_asym_id_2
+   - pdbx_auth_comp_id_2
+   - pdbx_auth_seq_id_2
+   - pdbx_id
+   - pdbx_label_asym_id_2
+   - pdbx_label_comp_id_2
+   - pdbx_label_seq_id_2
+  pdbx_core_entity_instance:
+ - CATEGORY_NAME: ndb_struct_na_base_pair
+   ATTRIBUTE_NAME_LIST:
+   - i_auth_asym_id
+   - i_auth_seq_id
+   - i_label_asym_id
+   - i_label_comp_id
+   - i_label_seq_id
+   - j_auth_asym_id
+   - j_auth_seq_id
+   - j_label_asym_id
+   - j_label_comp_id
+   - j_label_seq_id
+ - CATEGORY_NAME: ndb_struct_na_base_pair_step
+   ATTRIBUTE_NAME_LIST:
+   - i_auth_asym_id_1
+   - i_auth_asym_id_2
+   - i_auth_seq_id_1
+   - i_auth_seq_id_2
+   - i_label_asym_id_1
+   - i_label_asym_id_2
+   - i_label_comp_id_1
+   - i_label_comp_id_2
+   - i_label_seq_id_1
+   - i_label_seq_id_2
+   - j_auth_asym_id_1
+   - j_auth_asym_id_2
+   - j_auth_seq_id_1
+   - j_auth_seq_id_2
+   - j_label_asym_id_1
+   - j_label_asym_id_2
+   - j_label_comp_id_1
+   - j_label_comp_id_2
+   - j_label_seq_id_1
+   - j_label_seq_id_2
+ - CATEGORY_NAME: pdbx_coordinate_model
+   ATTRIBUTE_NAME_LIST:
+   - asym_id
+ - CATEGORY_NAME: pdbx_struct_special_symmetry
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_comp_id
+   - auth_seq_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_entity_instance_results
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - entity_id
+   - label_asym_id
+ - CATEGORY_NAME: rcsb_entity_instance_container_identifiers
+   ATTRIBUTE_NAME_LIST:
+   - asym_id
+   - auth_asym_id
+   - auth_seq_id
+   - comp_id
+   - entity_id
+   - entry_id
+ - CATEGORY_NAME: rcsb_load_status
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: rcsb_polymer_instance_feature
+   ATTRIBUTE_NAME_LIST:
+   - asym_id
+   - auth_asym_id
+   - entity_id
+   - entry_id
+   - feature_id
+ - CATEGORY_NAME: rcsb_polymer_instance_feature_summary
+   ATTRIBUTE_NAME_LIST:
+   - asym_id
+   - auth_asym_id
+   - entity_id
+   - entry_id
+ - CATEGORY_NAME: rcsb_struct_conn
+   ATTRIBUTE_NAME_LIST:
+   - asym_id
+   - auth_asym_id
+   - entity_id
+   - entry_id
+   - ordinal_id
+ - CATEGORY_NAME: struct_asym
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+ - CATEGORY_NAME: struct_mon_prot_cis
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_comp_id
+   - auth_seq_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+   - pdbx_auth_asym_id_2
+   - pdbx_auth_comp_id_2
+   - pdbx_auth_seq_id_2
+   - pdbx_id
+   - pdbx_label_asym_id_2
+   - pdbx_label_comp_id_2
+   - pdbx_label_seq_id_2
+  pdbx_core_entity_instance_validation:
+ - CATEGORY_NAME: pdbx_unobs_or_zero_occ_atoms
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_atom_id
+   - auth_comp_id
+   - auth_seq_id
+   - label_alt_id
+   - label_asym_id
+   - label_atom_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_unobs_or_zero_occ_residues
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_comp_id
+   - auth_seq_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_validate_chiral
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_atom_id
+   - auth_comp_id
+   - auth_seq_id
+   - label_alt_id
+   - rcsb_label_asym_id
+ - CATEGORY_NAME: pdbx_validate_close_contact
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id_1
+   - auth_asym_id_2
+   - auth_atom_id_1
+   - auth_atom_id_2
+   - auth_comp_id_1
+   - auth_comp_id_2
+   - auth_seq_id_1
+   - auth_seq_id_2
+   - label_alt_id_1
+   - label_alt_id_2
+   - rcsb_label_asym_id_1
+   - rcsb_label_asym_id_2
+ - CATEGORY_NAME: pdbx_validate_main_chain_plane
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_comp_id
+   - auth_seq_id
+   - label_alt_id
+   - rcsb_label_asym_id
+ - CATEGORY_NAME: pdbx_validate_peptide_omega
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id_1
+   - auth_asym_id_2
+   - auth_comp_id_1
+   - auth_comp_id_2
+   - auth_seq_id_1
+   - auth_seq_id_2
+   - label_alt_id_1
+   - label_alt_id_2
+   - rcsb_label_asym_id_1
+   - rcsb_label_asym_id_2
+ - CATEGORY_NAME: pdbx_validate_planes
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_comp_id
+   - auth_seq_id
+   - label_alt_id
+   - rcsb_label_asym_id
+ - CATEGORY_NAME: pdbx_validate_planes_atom
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_atom_id
+   - auth_comp_id
+   - auth_seq_id
+   - plane_id
+   - rcsb_label_asym_id
+ - CATEGORY_NAME: pdbx_validate_polymer_linkage
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id_1
+   - auth_asym_id_2
+   - auth_atom_id_1
+   - auth_atom_id_2
+   - auth_comp_id_1
+   - auth_comp_id_2
+   - auth_seq_id_1
+   - auth_seq_id_2
+   - label_alt_id_1
+   - label_alt_id_2
+   - rcsb_label_asym_id_1
+   - rcsb_label_asym_id_2
+ - CATEGORY_NAME: pdbx_validate_rmsd_angle
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id_1
+   - auth_asym_id_2
+   - auth_asym_id_3
+   - auth_atom_id_1
+   - auth_atom_id_2
+   - auth_atom_id_3
+   - auth_comp_id_1
+   - auth_comp_id_2
+   - auth_comp_id_3
+   - auth_seq_id_1
+   - auth_seq_id_2
+   - auth_seq_id_3
+   - label_alt_id_1
+   - label_alt_id_2
+   - label_alt_id_3
+   - rcsb_label_asym_id_1
+   - rcsb_label_asym_id_2
+   - rcsb_label_asym_id_3
+ - CATEGORY_NAME: pdbx_validate_rmsd_bond
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id_1
+   - auth_asym_id_2
+   - auth_atom_id_1
+   - auth_atom_id_2
+   - auth_comp_id_1
+   - auth_comp_id_2
+   - auth_seq_id_1
+   - auth_seq_id_2
+   - label_alt_id_1
+   - label_alt_id_2
+   - rcsb_label_asym_id_1
+   - rcsb_label_asym_id_2
+ - CATEGORY_NAME: pdbx_validate_symm_contact
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id_1
+   - auth_asym_id_2
+   - auth_atom_id_1
+   - auth_atom_id_2
+   - auth_comp_id_1
+   - auth_comp_id_2
+   - auth_seq_id_1
+   - auth_seq_id_2
+   - label_alt_id_1
+   - label_alt_id_2
+   - rcsb_label_asym_id_1
+   - rcsb_label_asym_id_2
+ - CATEGORY_NAME: pdbx_validate_torsion
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_comp_id
+   - auth_seq_id
+   - label_alt_id
+   - rcsb_label_asym_id
+ - CATEGORY_NAME: pdbx_vrpt_angle_outliers
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_bond_outliers
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_clashes
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_atom_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_instance_results
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - cyrange_domain_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+   - lig_RSRZ_nbr_id
+ - CATEGORY_NAME: pdbx_vrpt_mogul_angle_outliers
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_mogul_bond_outliers
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_mogul_ring_outliers
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_mogul_torsion_outliers
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_plane_outliers
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_stereo_outliers
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_atom_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_symmetry_clashes
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_atom_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: rcsb_entity_instance_validation_container_identifiers
+   ATTRIBUTE_NAME_LIST:
+   - asym_id
+   - auth_asym_id
+   - auth_seq_id
+   - comp_id
+   - entity_id
+   - entry_id
+ - CATEGORY_NAME: rcsb_load_status
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: struct_asym
+   ATTRIBUTE_NAME_LIST:
+   - entity_id
+  pdbx_core_entity_instance_validation:
+ - CATEGORY_NAME: pdbx_unobs_or_zero_occ_atoms
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_atom_id
+   - auth_comp_id
+   - auth_seq_id
+   - label_alt_id
+   - label_asym_id
+   - label_atom_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_unobs_or_zero_occ_residues
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_comp_id
+   - auth_seq_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_validate_chiral
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_atom_id
+   - auth_comp_id
+   - auth_seq_id
+   - label_alt_id
+   - rcsb_label_asym_id
+ - CATEGORY_NAME: pdbx_validate_close_contact
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id_1
+   - auth_asym_id_2
+   - auth_atom_id_1
+   - auth_atom_id_2
+   - auth_comp_id_1
+   - auth_comp_id_2
+   - auth_seq_id_1
+   - auth_seq_id_2
+   - label_alt_id_1
+   - label_alt_id_2
+   - rcsb_label_asym_id_1
+   - rcsb_label_asym_id_2
+ - CATEGORY_NAME: pdbx_validate_main_chain_plane
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_comp_id
+   - auth_seq_id
+   - label_alt_id
+   - rcsb_label_asym_id
+ - CATEGORY_NAME: pdbx_validate_peptide_omega
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id_1
+   - auth_asym_id_2
+   - auth_comp_id_1
+   - auth_comp_id_2
+   - auth_seq_id_1
+   - auth_seq_id_2
+   - label_alt_id_1
+   - label_alt_id_2
+   - rcsb_label_asym_id_1
+   - rcsb_label_asym_id_2
+ - CATEGORY_NAME: pdbx_validate_planes
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_comp_id
+   - auth_seq_id
+   - label_alt_id
+   - rcsb_label_asym_id
+ - CATEGORY_NAME: pdbx_validate_planes_atom
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_atom_id
+   - auth_comp_id
+   - auth_seq_id
+   - plane_id
+   - rcsb_label_asym_id
+ - CATEGORY_NAME: pdbx_validate_polymer_linkage
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id_1
+   - auth_asym_id_2
+   - auth_atom_id_1
+   - auth_atom_id_2
+   - auth_comp_id_1
+   - auth_comp_id_2
+   - auth_seq_id_1
+   - auth_seq_id_2
+   - label_alt_id_1
+   - label_alt_id_2
+   - rcsb_label_asym_id_1
+   - rcsb_label_asym_id_2
+ - CATEGORY_NAME: pdbx_validate_rmsd_angle
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id_1
+   - auth_asym_id_2
+   - auth_asym_id_3
+   - auth_atom_id_1
+   - auth_atom_id_2
+   - auth_atom_id_3
+   - auth_comp_id_1
+   - auth_comp_id_2
+   - auth_comp_id_3
+   - auth_seq_id_1
+   - auth_seq_id_2
+   - auth_seq_id_3
+   - label_alt_id_1
+   - label_alt_id_2
+   - label_alt_id_3
+   - rcsb_label_asym_id_1
+   - rcsb_label_asym_id_2
+   - rcsb_label_asym_id_3
+ - CATEGORY_NAME: pdbx_validate_rmsd_bond
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id_1
+   - auth_asym_id_2
+   - auth_atom_id_1
+   - auth_atom_id_2
+   - auth_comp_id_1
+   - auth_comp_id_2
+   - auth_seq_id_1
+   - auth_seq_id_2
+   - label_alt_id_1
+   - label_alt_id_2
+   - rcsb_label_asym_id_1
+   - rcsb_label_asym_id_2
+ - CATEGORY_NAME: pdbx_validate_symm_contact
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id_1
+   - auth_asym_id_2
+   - auth_atom_id_1
+   - auth_atom_id_2
+   - auth_comp_id_1
+   - auth_comp_id_2
+   - auth_seq_id_1
+   - auth_seq_id_2
+   - label_alt_id_1
+   - label_alt_id_2
+   - rcsb_label_asym_id_1
+   - rcsb_label_asym_id_2
+ - CATEGORY_NAME: pdbx_validate_torsion
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_comp_id
+   - auth_seq_id
+   - label_alt_id
+   - rcsb_label_asym_id
+ - CATEGORY_NAME: pdbx_vrpt_angle_outliers
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_bond_outliers
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_clashes
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_atom_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_instance_results
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - cyrange_domain_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+   - lig_RSRZ_nbr_id
+ - CATEGORY_NAME: pdbx_vrpt_mogul_angle_outliers
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_mogul_bond_outliers
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_mogul_ring_outliers
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_mogul_torsion_outliers
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_plane_outliers
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_stereo_outliers
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_atom_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: pdbx_vrpt_symmetry_clashes
+   ATTRIBUTE_NAME_LIST:
+   - auth_asym_id
+   - auth_seq_id
+   - entity_id
+   - label_alt_id
+   - label_asym_id
+   - label_atom_id
+   - label_comp_id
+   - label_seq_id
+ - CATEGORY_NAME: rcsb_entity_instance_validation_container_identifiers
+   ATTRIBUTE_NAME_LIST:
+   - asym_id
+   - auth_asym_id
+   - auth_seq_id
+   - comp_id
+   - entity_id
+   - entry_id
+ - CATEGORY_NAME: rcsb_load_status
+   ATTRIBUTE_NAME_LIST:
+ - CATEGORY_NAME: struct_asym
+   ATTRIBUTE_NAME_LIST:
+   - entity_id

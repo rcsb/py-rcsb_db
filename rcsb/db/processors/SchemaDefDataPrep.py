@@ -30,6 +30,7 @@
 #      10-Jan-2019  jdw pass down container name to processRecord() to allow for better diagnostics.
 #       5-Feb-2019  jdw generalize locatorList to locatorObjList and associated dependent changes,
 #                       and add __mergeContainers() -
+#      22-Sep-2019  jdw use sorted order of table objects within documents
 #
 #
 ##
@@ -181,7 +182,7 @@ class SchemaDefDataPrep(object):
             logger.exception("Failing with %s", str(e))
         return []
 
-    def fetch(self, locatorObjList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, useNameFlag=True):
+    def fetch(self, locatorObjList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, useNameFlag=True, collectionName=None):
         """ Return a dictionary of loadable data for each table defined in the current schema
             definition object.   Data are extracted from all files in the input file list,
             and this is added in single schema instance such that data from multiple files are appended to a
@@ -201,10 +202,10 @@ class SchemaDefDataPrep(object):
 
         """
         schemaDataDictById, containerNameList, _ = self.__fetch(locatorObjList, filterType, dataSelectors=dataSelectors, useNameFlag=useNameFlag)
-        schemaDataDict = self.__reShape.applyShape(schemaDataDictById, styleType=styleType)
+        schemaDataDict = self.__reShape.applyShape(schemaDataDictById, styleType=styleType, collectionName=collectionName)
         return schemaDataDict, containerNameList
 
-    def fetchDocuments(self, locatorObjList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, sliceFilter=None, useNameFlag=True):
+    def fetchDocuments(self, locatorObjList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, sliceFilter=None, useNameFlag=True, collectionName=None):
         """ Return a list of dictionaries of loadable data for each table defined in the current schema
             definition object.   Data are extracted from the each input file, and each data
             set is stored in a separate schema instance (document).  The organization
@@ -220,8 +221,9 @@ class SchemaDefDataPrep(object):
                      columnwise_by_name: dict[<tableName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
 
                  filterTypes: "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
-
                  sliceFilter: name of slice filter
+                 useNameFlag: use container name rather than container UID as a unique identifier
+                 collectionName:  name target collection for the processed documents
         """
         schemaDataDictList = []
         containerNameList = []
@@ -231,13 +233,13 @@ class SchemaDefDataPrep(object):
             rejectLocatorObjList.extend(rL)
             if not schemaDataDictById:
                 continue
-            sddL = self.__reShape.applySlicedShape(schemaDataDictById, styleType=styleType, sliceFilter=sliceFilter)
+            sddL = self.__reShape.applySlicedShape(schemaDataDictById, styleType=styleType, sliceFilter=sliceFilter, collectionName=collectionName)
             schemaDataDictList.extend(sddL)
             containerNameList.extend(cnList)
         #
         return schemaDataDictList, containerNameList, rejectLocatorObjList
 
-    def process(self, containerList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, useNameFlag=True):
+    def process(self, containerList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, useNameFlag=True, collectionName=None):
         """ Return a dictionary of loadable data for each table defined in the current schema
             definition object.   Data are extracted from all files in the input container list,
             and this is added in single schema instance such that data from multiple files are appended to a
@@ -257,11 +259,11 @@ class SchemaDefDataPrep(object):
 
         """
         schemaDataDictById, containerNameList, _ = self.__process(containerList, filterType, dataSelectors=dataSelectors, useNameFlag=useNameFlag)
-        schemaDataDict = self.__reShape.applyShape(schemaDataDictById, styleType=styleType)
+        schemaDataDict = self.__reShape.applyShape(schemaDataDictById, styleType=styleType, collectionName=collectionName)
 
         return schemaDataDict, containerNameList
 
-    def processDocuments(self, containerList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, sliceFilter=None, useNameFlag=True):
+    def processDocuments(self, containerList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, sliceFilter=None, useNameFlag=True, collectionName=None):
         """ Return a list of dictionaries of loadable data for each table defined in the current schema
             definition object.   Data are extracted from the each input container, and each data
             set is stored in a separate schema instance (document).  The organization of the loadable
@@ -277,8 +279,9 @@ class SchemaDefDataPrep(object):
                      columnwise_by_name: dict[<tableName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
 
             filterTypes:  "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
-
             sliceFilter: name of slice filter
+            useNameFlag: use container name rather than container UID as a unique identifier
+            collectionName:  name target collection for the processed documents
         """
         schemaDataDictList = []
         containerIdList = []
@@ -290,7 +293,7 @@ class SchemaDefDataPrep(object):
                 continue
             #
             logger.debug("Reshape container %s using %s", container.getName(), sliceFilter)
-            sddL = self.__reShape.applySlicedShape(schemaDataDictById, styleType=styleType, sliceFilter=sliceFilter)
+            sddL = self.__reShape.applySlicedShape(schemaDataDictById, styleType=styleType, sliceFilter=sliceFilter, collectionName=collectionName)
             if not sddL:
                 logger.info("No result on reshaping container %s using %s", container.getName(), sliceFilter)
             else:
@@ -636,7 +639,7 @@ class SchemaDefDataPrep(object):
             selectedTableIdList = self.__sD.getSchemaIdList()
         #
         for myContainer in containerList:
-            for tableId in selectedTableIdList:
+            for tableId in sorted(selectedTableIdList):
                 if not self.__sD.hasSchemaObject(tableId):
                     # logger.debug("Skipping undefined table %s" % tableId)
                     continue

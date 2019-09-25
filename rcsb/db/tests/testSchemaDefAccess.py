@@ -53,7 +53,7 @@ class SchemaDefAccessTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testAccess(self):
-        databaseNames = ["pdbx_core", "chem_comp_core", "bird_chem_comp_core"]
+        databaseNames = ["pdbx_core", "bird_chem_comp_core"]
         dataTypingList = ["ANY", "SQL"]
         for databaseName in databaseNames:
             for dataTyping in dataTypingList:

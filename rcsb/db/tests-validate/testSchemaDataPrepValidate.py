@@ -69,9 +69,6 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         #
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
-        self.__chemCompMockLen = 8
-        self.__birdMockLen = 4
-        self.__pdbxMockLen = 8
         self.__verbose = True
         #
         self.__modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=configName)
@@ -86,25 +83,16 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__alldatabaseNameD = {
             "ihm_dev": ["ihm_dev"],
             "pdbx": ["pdbx", "pdbx_ext"],
-            "pdbx_core": ["pdbx_core_entity_monomer", "pdbx_core_entity", "pdbx_core_entry", "pdbx_core_assembly", "pdbx_core_entity_instance"],
+            "pdbx_core": ["pdbx_core_entity", "pdbx_core_entry", "pdbx_core_assembly", "pdbx_core_entity_instance", "pdbx_core_entity_instance_validation"],
             "bird": ["bird"],
             "bird_family": ["family"],
             "chem_comp": ["chem_comp"],
-            "chem_comp_core": ["chem_comp_core"],
             "bird_chem_comp": ["bird_chem_comp"],
             "bird_chem_comp_core": ["bird_chem_comp_core"],
         }
 
         self.__databaseNameD = {
-            "pdbx_core": [
-                "pdbx_core_entity",
-                "pdbx_core_entry",
-                "pdbx_core_assembly",
-                "pdbx_core_entity_instance",
-                "pdbx_core_entity_monomer",
-                "pdbx_core_entity_instance_validation",
-            ],
-            "chem_comp_core": ["chem_comp_core"],
+            "pdbx_core": ["pdbx_core_entity", "pdbx_core_entry", "pdbx_core_assembly", "pdbx_core_entity_instance", "pdbx_core_entity_instance_validation"],
             "bird_chem_comp_core": ["bird_chem_comp_core"],
         }
         self.__mergeContentTypeD = {"pdbx_core": ["vrpt"]}
@@ -112,7 +100,6 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         # self.__databaseNameD = {"ihm_dev_full": ["ihm_dev_full"]}
         # self.__databaseNameD = {"pdbx_core": ["pdbx_core_entity_instance_validation"]}
         # self.__databaseNameD = {"pdbx_core": ["pdbx_core_entity_monomer"]}
-        #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
@@ -233,7 +220,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             sdp.setSchemaIdIncludeList(tableIdIncludeList)
             #
             docList, containerNameList, _ = sdp.processDocuments(
-                containerList, styleType=styleType, filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"], sliceFilter=sliceFilter
+                containerList, styleType=styleType, filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"], sliceFilter=sliceFilter, collectionName=collectionName
             )
 
             docList = sdp.addDocumentPrivateAttributes(docList, collectionName)

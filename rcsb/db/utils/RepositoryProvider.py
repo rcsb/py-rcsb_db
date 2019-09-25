@@ -18,6 +18,7 @@
 #                    consolidate deliver of path configuration details in __getRepoTopPath().
 #   14-Mar-2019  jdw add VRPT_REPO_PATH_ENV as an override for the validation report repo path.
 #   27-Aug-2019  jdw filter missing validation reports
+#   16-Sep-2019  jdw consolidate chem_comp_core with bird_chem_comp_core
 #
 #
 ##
@@ -67,6 +68,7 @@ class RepositoryProvider(object):
         #
         self.__mU = MarshalUtil(workPath=self.__cachePath)
         #
+        self.__ccPathD = None
         #
         self.__mpFormat = "[%(levelname)s] %(asctime)s %(processName)s-%(module)s.%(funcName)s: %(message)s"
 
@@ -200,14 +202,14 @@ class RepositoryProvider(object):
                 outputPathList = inputPathList if inputPathList else self.getBirdPathList()
             elif contentType == "bird_family":
                 outputPathList = inputPathList if inputPathList else self.getBirdFamilyPathList()
-            elif contentType in ["chem_comp", "chem_comp_core"]:
+            elif contentType in ["chem_comp"]:
                 outputPathList = inputPathList if inputPathList else self.getChemCompPathList()
             elif contentType in ["bird_chem_comp"]:
                 outputPathList = inputPathList if inputPathList else self.getBirdChemCompPathList()
             elif contentType in ["pdbx", "pdbx_core"]:
                 outputPathList = inputPathList if inputPathList else self.getEntryPathList()
-            elif contentType in ["bird_consolidated", "bird_chem_comp_core"]:
-                outputPathList = inputPathList if inputPathList else self.mergeBirdRefData()
+            elif contentType in ["chem_comp_core", "bird_consolidated", "bird_chem_comp_core"]:
+                outputPathList = inputPathList if inputPathList else self.mergeBirdAndChemCompRefData()
             elif contentType in ["ihm_dev", "ihm_dev_core", "ihm_dev_full"]:
                 outputPathList = inputPathList if inputPathList else self.getIhmDevPathList()
             elif contentType in ["pdb_distro", "da_internal", "status_history"]:
@@ -484,7 +486,6 @@ class RepositoryProvider(object):
         """
         prdD = {}
         try:
-
             pthL = self.__getLocatorList("bird_family")
             for pth in pthL:
                 containerL = self.__mU.doImport(pth, fmt="mmcif")
@@ -503,10 +504,60 @@ class RepositoryProvider(object):
 
         return prdD
 
-    #
+    def __buildBirdCcIndex(self):
+        """ Using information from the PRD pdbx_reference_molecule category to
+        index the BIRDs corresponding small molecule correspondences
 
-    def mergeBirdRefData(self):
+        """
+        prdD = {}
+        ccPathD = {}
+        try:
+            ccPathL = self.__getLocatorList("chem_comp")
+            ccPathD = {}
+            for ccPath in ccPathL:
+                _, fn = os.path.split(ccPath)
+                ccId, _ = os.path.splitext(fn)
+                ccPathD[ccId] = ccPath
+            logger.debug("ccPathD length %d", len(ccPathD))
+            pthL = self.__getLocatorList("bird")
+            for pth in pthL:
+                containerL = self.__mU.doImport(pth, fmt="mmcif")
+                for container in containerL:
+                    catName = "pdbx_reference_molecule"
+                    if container.exists(catName):
+                        catObj = container.getObj(catName)
+                        ii = 0
+                        prdRepType = catObj.getValue(attributeName="represent_as", rowIndex=ii)
+                        logger.debug("represent as %r", prdRepType)
+                        if prdRepType in ["single molecule"]:
+                            ccId = catObj.getValueOrDefault(attributeName="chem_comp_id", rowIndex=ii, defaultValue=None)
+                            prdId = catObj.getValue(attributeName="prd_id", rowIndex=ii)
+                            logger.debug("mapping prdId %r ccId %r", prdId, ccId)
+                            if ccId and ccId in ccPathD:
+                                prdD[prdId] = {"ccId": ccId, "ccPath": ccPathD[ccId]}
+                                ccPathD[ccPathD[ccId]] = {"ccId": ccId, "prdId": prdId}
+                            else:
+                                logger.error("Bad ccId %r for BIRD %r", ccId, prdId)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+
+        return prdD, ccPathD
+
+    # -
+    def mergeBirdAndChemCompRefData(self):
+        prdSmallMolCcD, ccPathD = self.__buildBirdCcIndex()
+        logger.info("PRD to CCD index length %d CCD map path length %d", len(prdSmallMolCcD), len(ccPathD))
+        outputPathList = self.mergeBirdRefData(prdSmallMolCcD)
+        ccOutputPathList = [pth for pth in self.getChemCompPathList() if pth not in ccPathD]
+        outputPathList.extend(ccOutputPathList)
+        return outputPathList
+
+    def mergeBirdRefData(self, prdSmallMolCcD):
         """ Consolidate all of the bird reference data in a single container.
+
+            If the BIRD is a 'small molecule' type then also merge with the associated CC definition.
+
+            Store the merged data in the REPO_UTIL cache path and ...
 
             Return a path list for the consolidated data files -
 
@@ -535,37 +586,47 @@ class RepositoryProvider(object):
             fD = self.__buildFamilyIndex()
             logger.debug("Family index length %d", len(fD))
             logger.debug("Family index keys %r", list(fD.keys()))
-            #
+            logger.debug("PRD to CCD small mol index length %d", len(prdSmallMolCcD))
             #
             for prdId in birdPathD:
                 fp = os.path.join(self.__cachePath, prdId + ".cif")
-                logger.debug("Export path is %r", fp)
-                #
+                logger.debug("Export cache path is %r", fp)
+
                 if prdId in birdPathD:
                     pth2 = birdPathD[prdId]
-                    c2L = self.__mU.doImport(pth2, fmt="mmcif")
-                    cFull = c2L[0]
-                    logger.debug("Got cBird %r", cFull.getName())
+                    cL = self.__mU.doImport(pth2, fmt="mmcif")
+                    cFull = cL[0]
+                    logger.debug("Got Bird %r", cFull.getName())
+                #
                 #
                 ccBird = None
-                if prdId in birdCcPathD:
+                ccD = None
+                if prdId in prdSmallMolCcD:
+                    pthCc = prdSmallMolCcD[prdId]["ccPath"]
+                    cL = self.__mU.doImport(pthCc, fmt="mmcif")
+                    ccD = cL[0]
+                    logger.debug("Got corresponding CCD %r", ccD.getName())
+                elif prdId in birdCcPathD:
                     pth1 = birdCcPathD[prdId]
                     c1L = self.__mU.doImport(pth1, fmt="mmcif")
                     ccBird = c1L[0]
-                    logger.debug("Got cFull %r", ccBird.getName())
+                    logger.debug("Got ccBird %r", ccBird.getName())
                     #
                 cFam = None
                 if prdId in fD:
                     cFam = fD[prdId]["c"]
                     logger.debug("Got cFam %r", cFam.getName())
                 #
-                if cFam:
-                    for catName in cFam.getObjNameList():
-                        cFull.append(cFam.getObj(catName))
+                if ccD:
+                    for catName in ccD.getObjNameList():
+                        cFull.append(ccD.getObj(catName))
                 #
                 if ccBird:
                     for catName in ccBird.getObjNameList():
                         cFull.append(ccBird.getObj(catName))
+                if cFam:
+                    for catName in cFam.getObjNameList():
+                        cFull.append(cFam.getObj(catName))
                 #
                 self.__mU.doExport(fp, [cFull], fmt="mmcif")
                 outPathList.append(fp)

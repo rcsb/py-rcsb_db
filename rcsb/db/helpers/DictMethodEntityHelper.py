@@ -24,6 +24,7 @@ import re
 from collections import OrderedDict
 
 from mmcif.api.DataCategory import DataCategory
+from rcsb.utils.seq.SeqAlign import SeqAlign, splitSeqAlignObjList
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +55,142 @@ class DictMethodEntityHelper(object):
         self.__ssP = rP.getResource("SiftsSummaryProvider instance") if rP else None
         #
         logger.debug("Dictionary entity method helper init")
+
+    def __processSiftsAlignments(self, dataContainer):
+        #
+        tObj = dataContainer.getObj("entry")
+        entryId = tObj.getValue("id", 0)
+        #
+        asymIdD = self.__commonU.getInstanceEntityMap(dataContainer)
+        asymAuthIdD = self.__commonU.getAsymAuthIdMap(dataContainer)
+        instTypeD = self.__commonU.getInstanceTypes(dataContainer)
+        siftsEntityAlignD = {}
+        #
+        # Process sifts alignments -
+        siftsAlignD = {}
+        for asymId, authAsymId in asymAuthIdD.items():
+            if instTypeD[asymId] not in ["polymer", "branched"]:
+                continue
+            entityId = asymIdD[asymId]
+            # accumulate the sifts alignments by entity.
+            siftsAlignD.setdefault((entryId, entityId), []).extend([SeqAlign("SIFTS", **sa) for sa in self.__ssP.getIdentifiers(entryId, authAsymId, idType="UNPAL")])
+
+        for (entryId, entityId), seqAlignObjL in siftsAlignD.items():
+            if seqAlignObjL:
+                # re-group alignments by common accession
+                alRefD = {}
+                for seqAlignObj in seqAlignObjL:
+                    alRefD.setdefault((seqAlignObj.getDbName(), seqAlignObj.getDbAccession()), []).append(seqAlignObj)
+                #
+                # Get the longest overlapping entity region of each ref alignment -
+                for (dbName, dbAcc), aL in alRefD.items():
+                    alGrpD = splitSeqAlignObjList(aL)
+                    logger.debug("SIFTS -> entryId %s entityId %s dbName %r dbAcc %r alGrpD %r", entryId, entityId, dbName, dbAcc, alGrpD)
+                    for _, grpAlignL in alGrpD.items():
+
+                        lenL = [seqAlignObj.getEntityAlignLength() for seqAlignObj in grpAlignL]
+                        idxMax = lenL.index(max(lenL))
+                        siftsEntityAlignD.setdefault((entryId, entityId, "SIFTS"), {}).setdefault((dbName, dbAcc), []).append(grpAlignL[idxMax])
+        #
+        logger.debug("PROCESSED SIFTS ->  %r", siftsEntityAlignD)
+        return siftsEntityAlignD
+
+    def __processPdbAlignments(self, dataContainer):
+        #
+        tObj = dataContainer.getObj("entry")
+        entryId = tObj.getValue("id", 0)
+        #
+        entityRefAlignmentD = self.__commonU.getEntityReferenceAlignments(dataContainer)
+        pdbEntityAlignD = {}
+        # --- PDB alignments -
+        for entityId, entityAlignL in entityRefAlignmentD.items():
+            seqAlignObjL = [SeqAlign("PDB", **sa) for sa in entityAlignL]
+            if seqAlignObjL:
+                alRefD = {}
+                for seqAlignObj in seqAlignObjL:
+                    alRefD.setdefault((seqAlignObj.getDbName(), seqAlignObj.getDbAccession()), []).append(seqAlignObj)
+                for (dbName, dbAcc), aL in alRefD.items():
+                    alGrpD = splitSeqAlignObjList(aL)
+                    logger.debug("PDB -> entryId %s entityId %s dbName %r dbAcc %r alGrpD %r", entryId, entityId, dbName, dbAcc, alGrpD)
+                    for _, grpAlignL in alGrpD.items():
+                        # get the longest overlapping entity region of each ref seq -
+                        lenL = [seqAlignObj.getEntityAlignLength() for seqAlignObj in grpAlignL]
+                        idxMax = lenL.index(max(lenL))
+                        pdbEntityAlignD.setdefault((entryId, entityId, "PDB"), {}).setdefault((dbName, dbAcc), []).append(grpAlignL[idxMax])
+        #
+        logger.debug("PROCESSED PDB   ->  %r", pdbEntityAlignD)
+        return pdbEntityAlignD
+
+    def addPolymerEntityReferenceAlignments(self, dataContainer, catName, **kwargs):
+        """[summary]
+
+        Args:
+            dataContainer ([type]): [description]
+            catName ([type]): [description]
+
+        Returns:
+            [type]: [description]
+
+        Example:
+            _rcsb_polymer_entity_align.ordinal
+            _rcsb_polymer_entity_align.entry_id
+            _rcsb_polymer_entity_align.entity_id
+            #
+            _rcsb_polymer_entity_align.reference_database_name
+            _rcsb_polymer_entity_align.reference_database_accession
+            _rcsb_polymer_entity_align.provenance_code
+            #
+            _rcsb_polymer_entity_align.aligned_regions_ref_beg_seq_id
+            _rcsb_polymer_entity_align.aligned_regions_entity_beg_seq_id
+            _rcsb_polymer_entity_align.aligned_regions_length
+            #
+        """
+        dbNameMapD = {"UNP": "UniProt", "GB": "GenBank", "PDB": "PDB"}
+        logger.debug("Starting %s catName %s  kwargs %r", dataContainer.getName(), catName, kwargs)
+        try:
+            if not (dataContainer.exists("entry") and dataContainer.exists("entity")):
+                return False
+            if not dataContainer.exists(catName):
+                dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
+            #
+            cObj = dataContainer.getObj(catName)
+            #
+            siftsEntityAlignD = self.__processSiftsAlignments(dataContainer)
+            logger.debug("siftsEntityAlignD %d", len(siftsEntityAlignD))
+            #
+            pdbEntityAlignD = self.__processPdbAlignments(dataContainer)
+            pdbEntityAlignD.update(siftsEntityAlignD)
+            #
+            # ---
+
+            iRow = cObj.getRowCount()
+            for (entryId, entityId, provCode), refD in pdbEntityAlignD.items():
+                #
+                for (dbName, dbAcc), saoL in refD.items():
+                    #
+                    if dbName not in dbNameMapD:
+                        logger.error("Unsupported reference database %r for entry %s entity %s", dbName, entryId, entityId)
+                    #
+                    cObj.setValue(iRow + 1, "ordinal", iRow)
+                    cObj.setValue(entryId, "entry_id", iRow)
+                    cObj.setValue(entityId, "entity_id", iRow)
+                    #
+                    dispDbName = dbNameMapD[dbName]
+                    cObj.setValue(dispDbName, "reference_database_name", iRow)
+                    cObj.setValue(dbAcc, "reference_database_accession", iRow)
+                    cObj.setValue(provCode, "provenance_code", iRow)
+                    #
+                    cObj.setValue(",".join([str(sao.getDbSeqIdBeg()) for sao in saoL]), "aligned_regions_ref_beg_seq_id", iRow)
+                    cObj.setValue(",".join([str(sao.getEntitySeqIdBeg()) for sao in saoL]), "aligned_regions_entity_beg_seq_id", iRow)
+                    cObj.setValue(",".join([str(sao.getEntityAlignLength()) for sao in saoL]), "aligned_regions_length", iRow)
+                    iRow += 1
+
+            return True
+        except Exception as e:
+            logger.exception("For %s  %s failing with %s", dataContainer.getName(), catName, str(e))
+        return False
+
+        #
 
     def buildContainerEntityIds(self, dataContainer, catName, **kwargs):
         """Load the input category with rcsb_entity_container_identifiers content.
@@ -98,6 +235,7 @@ class DictMethodEntityHelper(object):
             #
             tObj = dataContainer.getObj("entity")
             entityIdL = tObj.getAttributeValueList("id")
+            seqEntityRefDbD = self.__commonU.getEntitySequenceReferenceCodes(dataContainer)
             #
             for ii, entityId in enumerate(entityIdL):
                 cObj.setValue(entryId, "entry_id", ii)
@@ -107,27 +245,51 @@ class DictMethodEntityHelper(object):
                 authAsymIdL = []
                 ccMonomerL = []
                 ccLigandL = []
+                #
+                refSeqIdD = {"dbName": [], "dbAccession": [], "provSource": []}
+                relatedAnnIdD = {"dbName": [], "dbAccession": [], "provSource": []}
+
                 if eType == "polymer" and psObj:
                     asymIdL = psObj.selectValuesWhere("asym_id", entityId, "entity_id")
                     authAsymIdL = psObj.selectValuesWhere("pdb_strand_id", entityId, "entity_id")
                     ccMonomerL = psObj.selectValuesWhere("mon_id", entityId, "entity_id")
                     #
                     if self.__ssP:
-                        unpIdL = []
-                        pfamIdL = []
-                        iproIdL = []
-                        goIdL = []
+                        dbIdL = []
                         for authAsymId in authAsymIdL:
-                            unpIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="UNPID"))
-                            pfamIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="PFAMID"))
-                            iproIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="IPROID"))
-                            #  goIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="GOID"))
+                            dbIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="UNPID"))
+                        for dbId in sorted(set(dbIdL)):
+                            refSeqIdD["dbName"].append("UniProt")
+                            refSeqIdD["provSource"].append("SIFTS")
+                            refSeqIdD["dbAccession"].append(dbId)
+                        dbIdL = []
+                        for authAsymId in authAsymIdL:
+                            dbIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="PFAMID"))
+                        for dbId in sorted(set(dbIdL)):
+                            relatedAnnIdD["dbName"].append("Pfam")
+                            relatedAnnIdD["provSource"].append("SIFTS")
+                            relatedAnnIdD["dbAccession"].append(dbId)
+                        dbIdL = []
+                        for authAsymId in authAsymIdL:
+                            dbIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="IPROID"))
+                        for dbId in sorted(set(dbIdL)):
+                            relatedAnnIdD["dbName"].append("InterPro")
+                            relatedAnnIdD["provSource"].append("SIFTS")
+                            relatedAnnIdD["dbAccession"].append(dbId)
+                        #  goIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="GOID"))
                 elif npsObj:
                     asymIdL = npsObj.selectValuesWhere("asym_id", entityId, "entity_id")
                     authAsymIdL = npsObj.selectValuesWhere("pdb_strand_id", entityId, "entity_id")
                     ccLigandL = npsObj.selectValuesWhere("mon_id", entityId, "entity_id")
                     # logger.debug("entityId %r ligands %r", entityId, set(ccLigandL))
                 #
+                if eType == "polymer" and entityId in seqEntityRefDbD:
+                    for dbD in seqEntityRefDbD[entityId]:
+                        refSeqIdD["dbName"].append(dbD["dbName"])
+                        refSeqIdD["provSource"].append("PDB")
+                        refSeqIdD["dbAccession"].append(dbD["dbAccession"])
+                # logger.info("refSeqIdD %r %r %r", entryId, entityId, refSeqIdD)
+
                 if asymIdL:
                     cObj.setValue(",".join(sorted(set(asymIdL))).strip(), "asym_ids", ii)
                 if authAsymIdL:
@@ -140,15 +302,17 @@ class DictMethodEntityHelper(object):
                     cObj.setValue(",".join(sorted(set(ccLigandL))).strip(), "nonpolymer_comp_id", ii)
                 else:
                     cObj.setValue("?", "nonpolymer_comp_id", ii)
-                if unpIdL:
-                    cObj.setValue(",".join(sorted(set(unpIdL))).strip(), "sifts_uniprot_ids", ii)
-                if pfamIdL:
-                    cObj.setValue(",".join(sorted(set(pfamIdL))).strip(), "sifts_pfam_ids", ii)
-                if goIdL:
-                    cObj.setValue(",".join(sorted(set(goIdL))).strip(), "sifts_go_ids", ii)
-                if iproIdL:
-                    cObj.setValue(",".join(sorted(set(iproIdL))).strip(), "sifts_interpro_ids", ii)
-            #
+                #
+                if refSeqIdD["dbName"]:
+                    cObj.setValue(",".join(refSeqIdD["dbName"]).strip(), "reference_sequence_identifiers_database_name", ii)
+                    cObj.setValue(",".join(refSeqIdD["dbAccession"]).strip(), "reference_sequence_identifiers_database_accession", ii)
+                    cObj.setValue(",".join(refSeqIdD["provSource"]).strip(), "reference_sequence_identifiers_provenance_source", ii)
+                #
+                if relatedAnnIdD["dbName"]:
+                    cObj.setValue(",".join(relatedAnnIdD["dbName"]).strip(), "related_annotation_identifiers_database_name", ii)
+                    cObj.setValue(",".join(relatedAnnIdD["dbAccession"]).strip(), "related_annotation_identifiers_database_identifier", ii)
+                    cObj.setValue(",".join(relatedAnnIdD["provSource"]).strip(), "related_annotation_identifiers_provenance_source", ii)
+                #
             return True
         except Exception as e:
             logger.exception("For %s failing with %s", catName, str(e))

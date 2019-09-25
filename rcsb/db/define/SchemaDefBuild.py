@@ -519,6 +519,8 @@ class SchemaDefBuild(object):
         for atName, fD in aD.items():
             ascL = documentDefHelper.getAttributeSearchContexts(collectionName, catName, atName)
             fD["SEARCH_CONTEXTS"] = ascL
+            fD["IS_NESTED"] = documentDefHelper.isCategoryNested(collectionName, catName)
+            fD["SEARCH_PRIORITY"] = documentDefHelper.getAttributeTextSearchPriority(collectionName, catName, atName)
             tS = documentDefHelper.getAttributeDescription(catName, atName, contextType="brief")
             if tS:
                 fD["DESCRIPTION_ANNOTATED"].append({"text": tS, "context": "brief"})
@@ -557,7 +559,7 @@ class SchemaDefBuild(object):
 
 
         """
-        logger.debug("QQQQ COLLECTION %s", collectionName)
+
         addRcsbExtensions = "rcsb" in enforceOpts
         addBlockAttribute = True
         addPrimaryKey = "addPrimaryKey" in enforceOpts
@@ -576,6 +578,10 @@ class SchemaDefBuild(object):
         #
         contentClasses = includeContentClasses if includeContentClasses else []
         logger.debug("Including additional category classes %r", contentClasses)
+        exportConfig = dataTypingU == "JSON" and False
+        logger.debug("QQQQ COLLECTION %s", collectionName)
+        if exportConfig:
+            logger.info("CONFIG  %s:", collectionName)
         #
         dtInstInfo = self.__dtP.getDataTypeInstanceApi(databaseName)
         dtAppInfo = self.__dtP.getDataTypeApplicationApi(dataTypingU)
@@ -619,6 +625,9 @@ class SchemaDefBuild(object):
         mandatoryCategoryL = []
         for catName, fullAtNameList in dictSchema.items():
             atNameList = [at for at in fullAtNameList if (catName, at) not in excludeAttributesD]
+            #
+
+            #
             cfD = self.__contentInfo.getCategoryFeatures(catName)
             # logger.debug("catName %s contentClasses %r cfD %r" % (catName, contentClasses, cfD))
 
@@ -663,8 +672,9 @@ class SchemaDefBuild(object):
             if sliceFilter and sliceFilter in sliceCardD:
                 isUnitCard = catName in sliceCardD[sliceFilter]
             #
-            pD = {typeKey: "object", "properties": {}, "required": [], "additionalProperties": False}
+            pD = {typeKey: "object", "properties": {}, "additionalProperties": False}
             #
+
             if isUnitCard:
                 catPropD = pD
             else:
@@ -674,10 +684,12 @@ class SchemaDefBuild(object):
                 else:
                     # JDW Adjusted minItems=1
                     catPropD = {typeKey: "array", "items": pD, "minItems": 1, "uniqueItems": True}
-            #
+                if dataTypingU == "JSON" and addRcsbExtensions:
+                    isNested = documentDefHelper.isCategoryNested(collectionName, catName)
+                    catPropD["rcsb_nested_indexing"] = isNested
             if addBlockAttribute and blockAttributeName:
                 schemaAttributeName = convertNameF(blockAttributeName)
-                pD["required"].append(schemaAttributeName)
+                pD.setdefault("required", []).append(schemaAttributeName)
                 #
                 if blockRefPathList:
                     atPropD = self.__getJsonRef(blockRefPathList)
@@ -729,6 +741,9 @@ class SchemaDefBuild(object):
             if subCatPropD:
                 logger.debug("%s %s %s processing subcategory properties %r", databaseName, collectionName, catName, subCatPropD.items())
             #
+            if exportConfig:
+                logger.info("CONFIG - CATEGORY_NAME: %s", catName)
+                logger.info("CONFIG   ATTRIBUTE_NAME_LIST:")
             for atName in sorted(atNameList):
                 fD = aD[atName]
                 # Exclude primary data attributes with no instance coverage except if in a protected content class
@@ -737,10 +752,14 @@ class SchemaDefBuild(object):
                 if subCategoryAggregates and self.__subCategoryTest(subCategoryAggregates, [d["id"] for d in fD["SUB_CATEGORIES"]]):
                     continue
                 #
+                if exportConfig and "_id" in atName:
+                    logger.info("CONFIG   - %s", atName)
+                #
                 schemaAttributeName = convertNameF(atName)
                 isRequired = ("mandatoryKeys" in enforceOpts and fD["IS_KEY"]) or ("mandatoryAttributes" in enforceOpts and fD["IS_MANDATORY"])
-                if isRequired:
-                    pD["required"].append(schemaAttributeName)
+                # subject to exclusion
+                if isRequired and (catName, atName) not in excludeAttributesD:
+                    pD.setdefault("required", []).append(schemaAttributeName)
                 #
                 atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, dtInstInfo, jsonSpecDraft, enforceOpts, suppressRelations, addRcsbExtensions)
 
@@ -755,9 +774,11 @@ class SchemaDefBuild(object):
             # pD['required'].extend(list(subCatPropD.keys()))
             #
             if "required" in catPropD and not catPropD["required"]:
-                logger.info("Category %s cfD %r", catName, cfD.items())
+                logger.debug("Category %s cfD %r", catName, cfD.items())
+                del catPropD["required"]
             #
-            schemaPropD[sName] = copy.deepcopy(catPropD)
+            if pD["properties"]:
+                schemaPropD[sName] = copy.deepcopy(catPropD)
         #
         # Add any private keys to the object schema - Fetch the metadata for the private keys
         #
@@ -782,7 +803,7 @@ class SchemaDefBuild(object):
                 pD["properties"][k] = v
                 # pD['required'] = k
                 if privMandatoryD[k]:
-                    pD["required"].append(k)
+                    pD.setdefault("required", []).append(k)
             rD = copy.deepcopy(pD)
             # if "additionalProperties" in rD:
             #    rD["additionalProperties"] = True
@@ -942,6 +963,8 @@ class SchemaDefBuild(object):
 
                 if fD["SEARCH_CONTEXTS"]:
                     atPropD["rcsb_search_context"] = fD["SEARCH_CONTEXTS"]
+                if "SEARCH_PRIORITY" in fD and fD["SEARCH_PRIORITY"]:
+                    atPropD["rcsb_full_text_priority"] = int(fD["SEARCH_PRIORITY"])
                 if fD["UNITS"]:
                     atPropD["rcsb_units"] = fD["UNITS"]
                 #

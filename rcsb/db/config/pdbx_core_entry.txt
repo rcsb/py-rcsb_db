@@ -1,0 +1,70 @@
+pdbx_core_entry:
+ - CATEGORY_NAME: cell
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: em_3d_fitting
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: em_3d_reconstruction
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: em_experiment
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: em_imaging
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: em_single_particle_entity
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: em_vitrification
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: exptl
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: pdbx_database_status
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: pdbx_nmr_details
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: pdbx_nmr_ensemble
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: pdbx_nmr_refine
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: pdbx_nmr_representative
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: pdbx_soln_scatter
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: pdbx_vrpt_summary
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: rcsb_accession_info
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: rcsb_entry_info
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: refine
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: refine_analyze
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: reflns
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: struct
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: struct_keywords
+   ATTRIBUTE_NAME_LIST:
+   - entry_id
+ - CATEGORY_NAME: symmetry
+   ATTRIBUTE_NAME_LIST:
+   - entry_id

@@ -59,7 +59,7 @@ class ScanRepoUtilTests(unittest.TestCase):
     def testRepoUtils(self):
         """ Test case - repository locator path utilities
         """
-        for contentType in ["chem_comp_core", "bird_chem_comp_core", "bird_family", "pdbx_core", "ihm_dev"]:
+        for contentType in ["bird_chem_comp_core", "pdbx_core", "ihm_dev"]:
             mergeContentTypes = None
             if contentType in ["pdbx_core"]:
                 mergeContentTypes = ["vrpt"]
@@ -67,6 +67,7 @@ class ScanRepoUtilTests(unittest.TestCase):
             locatorObjList = self.__rpP.getLocatorObjList(contentType=contentType, mergeContentTypes=mergeContentTypes)
             pathList = self.__rpP.getLocatorPaths(locatorObjList)
             locatorObjList2 = self.__rpP.getLocatorsFromPaths(locatorObjList, pathList)
+            logger.debug("pathList %r", pathList)
             self.assertEqual(len(locatorObjList), len(pathList))
             self.assertEqual(len(locatorObjList), len(locatorObjList2))
 

@@ -152,7 +152,8 @@ class SchemaDefAccess(object):
         try:
             eD = {}
             for catName, atNameL in self.__documentDefDict["COLLECTION_CONTENT"][collectionName]["EXCLUDED_ATTRIBUTES"].items():
-                eD = {(catName, atName): collectionName for atName in atNameL}
+                for atName in atNameL:
+                    eD[(catName, atName)] = collectionName
             if asSchemaIds:
                 # convert to internal schema identifiers if asSchemaIds is set.
                 rD = {}
@@ -163,6 +164,8 @@ class SchemaDefAccess(object):
             #
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
+        #
+        logger.debug("collectionName %s excluded attributes %r", collectionName, eD)
         return eD
 
     def getDataSelectors(self, selectorName):
