@@ -152,7 +152,7 @@ site_info_remote_configuration:
     #
     MONGO_DB_HOST: 128.6.244.57
     # MONGO_DB_HOST: 132.249.213.189
-    # MONGO_DB_HOST: localhost
+    # MONGO_DB_HOST: localhostls
     MONGO_DB_PORT: '27017'
     _MONGO_DB_USER_NAME: VT07dR5TeajhsXUNzAZnhAHc/qaCZkbwlfwMKVmd+OHwvYMACcrB+25jY1IOClrZ
     _MONGO_DB_PASSWORD: Mr3LslVzCkbErV3+5a3snm2RBaTrZo/Xi219hjSnwBxxHHHG6V36a6igSJSrmFTd0yQ=

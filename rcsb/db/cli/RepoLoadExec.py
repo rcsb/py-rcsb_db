@@ -180,6 +180,7 @@ def main():
 
     # ----------------------- - ----------------------- - ----------------------- - ----------------------- - ----------------------- -
     #  Rebuild or check resource cache
+    okS = True
     ok = buildResourceCache(cfgOb, configName, cachePath, rebuildCache=rebuildCache)
     if not ok:
         logger.error("Cache rebuild or check failure (rebuild %r) %r", rebuildCache, cachePath)
