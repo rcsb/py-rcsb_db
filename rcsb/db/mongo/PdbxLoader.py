@@ -333,7 +333,7 @@ class PdbxLoader(object):
                 sdp.setSchemaIdExcludeList(tableIdExcludeList)
                 sdp.setSchemaIdIncludeList(tableIdIncludeList)
                 #
-                logger.info("%s databaseName %s collectionName %s slice filter %s", procName, databaseName, collectionName, sliceFilter)
+                logger.debug("%s databaseName %s collectionName %s slice filter %s", procName, databaseName, collectionName, sliceFilter)
                 logger.debug("%s databaseName %s include list %r", procName, databaseName, tableIdIncludeList)
                 logger.debug("%s databaseName %s exclude list %r", procName, databaseName, tableIdExcludeList)
                 #

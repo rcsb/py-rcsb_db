@@ -316,18 +316,23 @@ class DictMethodEntityInstanceHelper(object):
                     begSeqId = pAuthAsymD[(authAsymId, authSeqBeg, None)]["seq_id"] if (authAsymId, authSeqBeg, None) in pAuthAsymD else None
                     endSeqId = pAuthAsymD[(authAsymId, authSeqEnd, None)]["seq_id"] if (authAsymId, authSeqEnd, None) in pAuthAsymD else None
                     if not (begSeqId and endSeqId):
-                        logger.info(
-                            "%s unmapped CATH cathId %r domId %r tId %r asymId %r authAsymId %r authSeqBeg %r authSeqEnd %r",
-                            entryId,
-                            cathId,
-                            domId,
-                            tId,
-                            asymId,
-                            authAsymId,
-                            authSeqBeg,
-                            authSeqEnd,
-                        )
-                        continue
+                        # take the full chain
+                        begSeqId = asymIdRangesD[asymId]["begSeqId"] if asymId in asymIdRangesD else None
+                        endSeqId = asymIdRangesD[asymId]["endSeqId"] if asymId in asymIdRangesD else None
+                        if not (begSeqId and endSeqId):
+                            logger.info(
+                                "%s CATH cathId %r domId %r tId %r asymId %r authAsymId %r authSeqBeg %r authSeqEnd %r",
+                                entryId,
+                                cathId,
+                                domId,
+                                tId,
+                                asymId,
+                                authAsymId,
+                                authSeqBeg,
+                                authSeqEnd,
+                            )
+                            continue
+
                     cObj.setValue(ii + 1, "ordinal", ii)
                     cObj.setValue(entryId, "entry_id", ii)
                     cObj.setValue(entityId, "entity_id", ii)

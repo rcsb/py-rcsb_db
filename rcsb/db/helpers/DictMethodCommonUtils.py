@@ -1123,8 +1123,11 @@ class DictMethodCommonUtils(object):
                         hId = tObj.getValue("id", ii)
                         begAsymId = tObj.getValue("beg_label_asym_id", ii)
                         endAsymId = tObj.getValue("end_label_asym_id", ii)
-                        begSeqId = int(tObj.getValue("beg_label_seq_id", ii))
-                        endSeqId = int(tObj.getValue("end_label_seq_id", ii))
+                        try:
+                            begSeqId = int(tObj.getValue("beg_label_seq_id", ii))
+                            endSeqId = int(tObj.getValue("end_label_seq_id", ii))
+                        except Exception:
+                            continue
                         if (begAsymId == endAsymId) and (begSeqId <= endSeqId):
                             helixRangeD.setdefault(hId, []).append((begAsymId, begSeqId, endSeqId))
                         else:
@@ -1843,14 +1846,14 @@ class DictMethodCommonUtils(object):
                 # Tabulate sequence monomer features by entity for the filtered cases -
                 for (entityId, _, _, fDetails), _ in seqMonomerFeatureD.items():
                     if entityId not in seqFeatureCountsD:
-                        seqFeatureCountsD[entityId] = {"mutation": 0, "artifact": 0, "insertion": 0, "deletion": 0, "conflict": 0}
+                        seqFeatureCountsD[entityId] = {"mutation": 0, "artifact": 0, "insertion": 0, "deletion": 0, "conflict": 0, "other": 0}
                     seqFeatureCountsD[entityId][fDetails] += 1
                 #
                 #
                 # Tabulate sequence range features by entity for the filtered cases -
                 for (entityId, _, _, fDetails), _ in seqRangeFeatureD.items():
                     if entityId not in seqFeatureCountsD:
-                        seqFeatureCountsD[entityId] = {"mutation": 0, "artifact": 0, "insertion": 0, "deletion": 0, "conflict": 0}
+                        seqFeatureCountsD[entityId] = {"mutation": 0, "artifact": 0, "insertion": 0, "deletion": 0, "conflict": 0, "other": 0}
                     seqFeatureCountsD[entityId][fDetails] += 1
 
             return {
@@ -1866,7 +1869,7 @@ class DictMethodCommonUtils(object):
 
     def filterRefSequenceDif(self, details):
         filteredDetails = details
-        if details.upper() in ["ACETYLATION", "CHROMOPHORE", "VARIANT", "MODIFIED RESIDUE", "MODIFIED", "ENGINEERED", "ENGINEERED MUTATION"]:
+        if details.upper() in ["ACETYLATION", "CHROMOPHORE", "VARIANT", "MODIFIED RESIDUE", "MODIFIED", "ENGINEERED", "ENGINEERED MUTATION", "AMIDATION"]:
             filteredDetails = "mutation"
         elif details.upper() in ["LEADER SEQUENCE", "INITIATING METHIONINE", "LINKER", "EXPRESSION TAG", "CLONING", "CLONING ARTIFACT"]:
             filteredDetails = "artifact"
@@ -1876,6 +1879,11 @@ class DictMethodCommonUtils(object):
             filteredDetails = "deletion"
         elif details.upper() in ["CONFLICT"]:
             filteredDetails = "conflict"
+        elif "SEE REMARK" in details.upper():
+            filteredDetails = "other"
+        else:
+            logger.info("Unanticipated sequence difference details %r", details)
+            filteredDetails = "other"
         #
         return filteredDetails
 

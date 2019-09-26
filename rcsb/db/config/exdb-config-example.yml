@@ -3165,7 +3165,6 @@ document_helper_configuration:
           - PDB_ins_code
           - auth_asym_id
           - auth_comp_id
-          - id
           - label_seq_id
         - CATEGORY_NAME: rcsb_polymer_instance_feature
           ATTRIBUTE_NAME_LIST:
