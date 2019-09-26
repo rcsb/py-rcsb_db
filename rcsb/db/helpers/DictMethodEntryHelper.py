@@ -284,6 +284,7 @@ class DictMethodEntryHelper(object):
         _rcsb_entry_container_identifiers.polymer_entity_ids_polymer
         _rcsb_entry_container_identifiers.non-polymer_entity_ids
         _rcsb_entry_container_identifiers.assembly_ids
+        _rcsb_entry_container_identifiers.rcsb_id
         ...
 
         """
@@ -292,13 +293,15 @@ class DictMethodEntryHelper(object):
             if not dataContainer.exists("entry"):
                 return False
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=["entry_id", "entity_ids", "polymer_entity_ids", "non-polymer_entity_ids", "assembly_ids"]))
+                dataContainer.append(DataCategory(catName, attributeNameList=["entry_id", "entity_ids", "polymer_entity_ids", "non-polymer_entity_ids", "assembly_ids", "rcsb_id"]))
             #
             cObj = dataContainer.getObj(catName)
 
             tObj = dataContainer.getObj("entry")
             entryId = tObj.getValue("id", 0)
             cObj.setValue(entryId, "entry_id", 0)
+            cObj.setValue(entryId, "rcsb_id", 0)
+
             #
             tObj = dataContainer.getObj("entity")
             entityIdL = tObj.getAttributeValueList("id")
