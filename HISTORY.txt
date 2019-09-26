@@ -160,3 +160,4 @@
  19-Sep-2019  V0.68 Eliminate private keys, revise/extend interenal schema metadata, purge schema,
                     add polymer alignment methods.
  24-Sep-2019  V0.69 Add additional polymer_instance features and new polymer_instance_validations methods.
+ 25-Sep-2019  V0.70 Incorporate RCSB extensions in 'min' schemas add single collection specific identifiers core collections

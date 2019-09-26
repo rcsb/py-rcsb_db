@@ -760,6 +760,7 @@ class DictMethodCommonUtils(object):
                         "entity_type": entityTypeD[entityId],
                         "asym_id": asymId,
                         "auth_asym_id": authAsymId,
+                        "rcsb_id": entryId + "." + asymId,
                         "comp_id": "?",
                         "auth_seq_id": "?",
                     }
@@ -811,6 +812,7 @@ class DictMethodCommonUtils(object):
                             "entity_type": entityTypeD[entityId],
                             "asym_id": asymId,
                             "auth_asym_id": authAsymId,
+                            "rcsb_id": entryId + "." + asymId,
                             "comp_id": monId,
                             "auth_seq_id": "?",
                         }

@@ -229,7 +229,7 @@ class DictMethodAssemblyHelper(object):
             if not (dataContainer.exists("entry") and dataContainer.exists("pdbx_struct_assembly")):
                 return False
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=["entry_id", "assembly_id"]))
+                dataContainer.append(DataCategory(catName, attributeNameList=["entry_id", "assembly_id", "rcsb_id"]))
             #
             cObj = dataContainer.getObj(catName)
 
@@ -242,6 +242,7 @@ class DictMethodAssemblyHelper(object):
             for ii, assemblyId in enumerate(assemblyIdL):
                 cObj.setValue(entryId, "entry_id", ii)
                 cObj.setValue(assemblyId, "assembly_id", ii)
+                cObj.setValue(entryId + "-" + assemblyId, "rcsb_id", ii)
 
             #
             return True

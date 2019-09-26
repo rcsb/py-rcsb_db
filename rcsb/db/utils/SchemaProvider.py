@@ -79,7 +79,7 @@ class SchemaProvider(SingletonClass):
         if schemaLevel == "full":
             return opts + "mandatoryKeys|mandatoryAttributes|bounds|enums|rcsb"
         elif schemaLevel in ["min", "minimum"]:
-            return opts + "mandatoryKeys|enums"
+            return opts + "mandatoryKeys|enums|rcsb"
         else:
             return opts
 

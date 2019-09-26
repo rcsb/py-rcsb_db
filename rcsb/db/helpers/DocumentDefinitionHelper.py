@@ -256,7 +256,7 @@ class DocumentDefinitionHelper(object):
             for tD in tDL:
                 for atName in tD["ATTRIBUTE_NAMES"]:
                     ff = atName.split(".")
-                    if len(ff) != 2:
+                    if len(ff) > 2:
                         logger.error("Bad attribute name for search type %r", atName)
                         continue
                     aD.setdefault((ff[0], ff[1]), []).append(tD["SEARCH_TYPE"])

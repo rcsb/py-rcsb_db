@@ -240,6 +240,7 @@ class DictMethodEntityHelper(object):
             for ii, entityId in enumerate(entityIdL):
                 cObj.setValue(entryId, "entry_id", ii)
                 cObj.setValue(entityId, "entity_id", ii)
+                cObj.setValue(entryId + "_" + entityId, "rcsb_id", ii)
                 eType = tObj.getValue("type", ii)
                 asymIdL = []
                 authAsymIdL = []

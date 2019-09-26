@@ -356,11 +356,12 @@ class DictMethodChemRefHelper(object):
             # ------- add the canonical identifiers --------
             cN = "rcsb_chem_comp_container_identifiers"
             if not dataContainer.exists(cN):
-                dataContainer.append(DataCategory(cN, attributeNameList=["comp_id", "prd_id", "subcomponent_ids"]))
+                dataContainer.append(DataCategory(cN, attributeNameList=["comp_id", "prd_id", "subcomponent_ids", "rcsb_id"]))
             idObj = dataContainer.getObj(cN)
             idObj.setValue(ccId, "comp_id", 0)
             if prdId:
                 idObj.setValue(prdId, "prd_id", 0)
+            idObj.setValue(ccId, "rcsb_id", 0)
             if subComponentIds:
                 tL = [tV.strip() for tV in subComponentIds.split()]
                 idObj.setValue(",".join(tL), "subcomponent_ids", 0)
