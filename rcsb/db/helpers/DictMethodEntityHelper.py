@@ -145,7 +145,7 @@ class DictMethodEntityHelper(object):
             _rcsb_polymer_entity_align.aligned_regions_length
             #
         """
-        dbNameMapD = {"UNP": "UniProt", "GB": "GenBank", "PDB": "PDB"}
+        dbNameMapD = self.__commonU.getDatabaseNameMap()
         logger.debug("Starting %s catName %s  kwargs %r", dataContainer.getName(), catName, kwargs)
         try:
             if not (dataContainer.exists("entry") and dataContainer.exists("entity")):
@@ -169,7 +169,8 @@ class DictMethodEntityHelper(object):
                 for (dbName, dbAcc), saoL in refD.items():
                     #
                     if dbName not in dbNameMapD:
-                        logger.error("Unsupported reference database %r for entry %s entity %s", dbName, entryId, entityId)
+                        logger.error("Skipping unsupported reference database %r for entry %s entity %s", dbName, entryId, entityId)
+                        continue
                     #
                     cObj.setValue(iRow + 1, "ordinal", iRow)
                     cObj.setValue(entryId, "entry_id", iRow)
@@ -533,9 +534,9 @@ class DictMethodEntityHelper(object):
                             # Add lineage -
                             linL = taxU.getLineageWithNames(taxId)
                             if linL is not None:
-                                cObj.setValue(";".join([str(tup[0]) for tup in linL]), "taxonomy_lineage_depth", iRow)
-                                cObj.setValue(";".join([str(tup[1]) for tup in linL]), "taxonomy_lineage_id", iRow)
-                                cObj.setValue(";".join([str(tup[2]) for tup in linL]), "taxonomy_lineage_name", iRow)
+                                cObj.setValue(";".join([str(tup[0]) for tup in OrderedDict.fromkeys(linL)]), "taxonomy_lineage_depth", iRow)
+                                cObj.setValue(";".join([str(tup[1]) for tup in OrderedDict.fromkeys(linL)]), "taxonomy_lineage_id", iRow)
+                                cObj.setValue(";".join([str(tup[2]) for tup in OrderedDict.fromkeys(linL)]), "taxonomy_lineage_name", iRow)
                             else:
                                 logger.warning("%s taxId %r lineage %r", dataContainer.getName(), taxId, linL)
 
@@ -576,9 +577,9 @@ class DictMethodEntityHelper(object):
                             # Add lineage -
                             linL = taxU.getLineageWithNames(taxId)
                             if linL is not None:
-                                hObj.setValue(";".join([str(tup[0]) for tup in linL]), "taxonomy_lineage_depth", iRow)
-                                hObj.setValue(";".join([str(tup[1]) for tup in linL]), "taxonomy_lineage_id", iRow)
-                                hObj.setValue(";".join([str(tup[2]) for tup in linL]), "taxonomy_lineage_name", iRow)
+                                hObj.setValue(";".join([str(tup[0]) for tup in OrderedDict.fromkeys(linL)]), "taxonomy_lineage_depth", iRow)
+                                hObj.setValue(";".join([str(tup[1]) for tup in OrderedDict.fromkeys(linL)]), "taxonomy_lineage_id", iRow)
+                                hObj.setValue(";".join([str(tup[2]) for tup in OrderedDict.fromkeys(linL)]), "taxonomy_lineage_name", iRow)
                             else:
                                 logger.warning("%s taxId %r lineage %r", dataContainer.getName(), taxId, linL)
                     logger.debug("%r entity %r - UPDATED %r %r", sType, entityId, atL, v)

@@ -3013,9 +3013,9 @@ document_helper_configuration:
           - processing_site
           - annotator
       pdbx_core_entry:
-        - CATEGORY_NAME: audit_author
-          ATTRIBUTE_NAME_LIST:
-          - pdbx_ordinal
+        #- CATEGORY_NAME: audit_author
+        #  ATTRIBUTE_NAME_LIST:
+        #  - pdbx_ordinal
         - CATEGORY_NAME: cell
           ATTRIBUTE_NAME_LIST:
           - length_a_esd
@@ -3113,7 +3113,7 @@ document_helper_configuration:
         - CATEGORY_NAME: entity_src_gen
           ATTRIBUTE_NAME_LIST:
           - entity_id
-          - pdbx_src_id
+          # - pdbx_src_id
         - CATEGORY_NAME: entity_src_nat
           ATTRIBUTE_NAME_LIST:
           - entity_id
@@ -3123,14 +3123,14 @@ document_helper_configuration:
         - CATEGORY_NAME: pdbx_entity_src_syn
           ATTRIBUTE_NAME_LIST:
           - entity_id
-          - pdbx_src_id
+          # - pdbx_src_id
         - CATEGORY_NAME: pdbx_struct_entity_inst
           ATTRIBUTE_NAME_LIST:
           - entity_id
         - CATEGORY_NAME: rcsb_entity_host_organism
           ATTRIBUTE_NAME_LIST:
           - entity_id
-          - pdbx_src_id
+          #- pdbx_src_id
         - CATEGORY_NAME: rcsb_entity_poly_info
           ATTRIBUTE_NAME_LIST:
           - entity_id
@@ -3139,7 +3139,7 @@ document_helper_configuration:
         - CATEGORY_NAME: rcsb_entity_source_organism
           ATTRIBUTE_NAME_LIST:
           - entity_id
-          - pdbx_src_id
+          #- pdbx_src_id
         - CATEGORY_NAME: rcsb_polymer_entity_align
           ATTRIBUTE_NAME_LIST:
           - entity_id
@@ -3172,7 +3172,7 @@ document_helper_configuration:
           - auth_asym_id
           - entity_id
           - entry_id
-          - ordinal
+          #- ordinal
         - CATEGORY_NAME: rcsb_polymer_instance_feature_summary
           ATTRIBUTE_NAME_LIST:
           - asym_id
@@ -3186,7 +3186,7 @@ document_helper_configuration:
           - auth_asym_id
           - entity_id
           - entry_id
-          - ordinal_id
+          #- ordinal_id
         - CATEGORY_NAME: struct_asym
           ATTRIBUTE_NAME_LIST:
           - entity_id
@@ -3201,7 +3201,7 @@ document_helper_configuration:
           - auth_asym_id
           - entity_id
           - entry_id
-          - ordinal
+          #- ordinal
         - CATEGORY_NAME: rcsb_polymer_instance_validation_feature_summary
           ATTRIBUTE_NAME_LIST:
           - asym_id

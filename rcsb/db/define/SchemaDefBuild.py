@@ -679,11 +679,11 @@ class SchemaDefBuild(object):
                 catPropD = pD
             else:
                 if cfD["IS_MANDATORY"]:
-                    # catPropD = {typeKey: "array", 'items': [pD], 'minItems': 1, 'uniqueItems': True}
                     catPropD = {typeKey: "array", "items": pD, "minItems": 1, "uniqueItems": True}
                 else:
                     # JDW Adjusted minItems=1
                     catPropD = {typeKey: "array", "items": pD, "minItems": 1, "uniqueItems": True}
+                #
                 if dataTypingU == "JSON" and addRcsbExtensions:
                     isNested = documentDefHelper.isCategoryNested(collectionName, catName)
                     catPropD["rcsb_nested_indexing"] = isNested

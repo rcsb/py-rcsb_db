@@ -49,6 +49,10 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
+def chunkList(seq, size):
+    return (seq[i::size] for i in range(size))
+
+
 class SchemaDataPrepValidateTests(unittest.TestCase):
     def setUp(self):
         self.__numProc = 2
@@ -119,13 +123,16 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
     @unittest.skip("Disable troubleshooting test")
     def testValidateOptsList(self):
         schemaLevel = "min"
-
-        inputPathList = glob.glob(self.__testDirPath + "/*.cif")
+        inputPathList = self.__mU.doImport(os.path.join(HERE, "test-output", "failed-path.list"), "list")
+        # inputPathList = glob.glob(self.__testDirPath + "/*.cif")
         if not inputPathList:
             return True
-        databaseNameD = {"pdbx_core": ["pdbx_core_entity", "pdbx_core_entry"]}
-        eCount = self.__testValidateOpts(databaseNameD=databaseNameD, inputPathList=inputPathList, schemaLevel=schemaLevel, mergeContentTypeD=self.__mergeContentTypeD)
-        logger.info("Total validation errors schema level %s : %d", schemaLevel, eCount)
+        databaseNameD = {"pdbx_core": ["pdbx_core_entity", "pdbx_core_entry", "pdbx_core_entity_instance", "pdbx_core_entity_instance_validation"]}
+        for ii, subList in enumerate(chunkList(inputPathList[::-1], 40)):
+            if ii < 5:
+                continue
+            eCount = self.__testValidateOpts(databaseNameD=databaseNameD, inputPathList=subList, schemaLevel=schemaLevel, mergeContentTypeD=self.__mergeContentTypeD)
+            logger.info("Chunk %d total validation errors schema level %s : %d", ii, schemaLevel, eCount)
         # self.assertGreaterEqual(eCount, 20)
 
     @unittest.skip("Disable IHM troubleshooting test")

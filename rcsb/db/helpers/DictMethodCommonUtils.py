@@ -1263,8 +1263,8 @@ class DictMethodCommonUtils(object):
                 sheetS = set(sheetCoverageD[asymId])
                 commonS = helixS & sheetS
                 if commonS:
-                    logger.warning("%s asymId %s overlapping secondary structure assignments for monomers %r", dataContainer.getName(), asymId, commonS)
-                    continue
+                    logger.debug("%s asymId %s overlapping secondary structure assignments for monomers %r", dataContainer.getName(), asymId, commonS)
+                    # continue
 
                 hLen = len(helixS) if asymId in helixCoverageD else 0
                 sLen = len(sheetS) if asymId in sheetCoverageD else 0
@@ -1273,9 +1273,9 @@ class DictMethodCommonUtils(object):
                 unassignedS = unassignedS - sheetS if sLen else unassignedS
                 tLen = len(unassignedS)
                 #
-                if eLen != hLen + sLen + tLen:
-                    logger.warning("%s overlapping secondary structure assignments for asymId %s", dataContainer.getName(), asymId)
-                    continue
+                # if eLen != hLen + sLen + tLen:
+                #    logger.warning("%s overlapping secondary structure assignments for asymId %s", dataContainer.getName(), asymId)
+                #    continue
                 #
                 unassignedCoverageD[asymId] = list(unassignedS)
                 helixFracD[asymId] = float(hLen) / float(eLen)
@@ -1604,6 +1604,23 @@ class DictMethodCommonUtils(object):
             self.__entitySequenceFeatureCache.set(dataContainer.getName(), wD)
         return wD
 
+    def getDatabaseNameMap(self):
+        dbNameMapD = {
+            "UNP": "UniProt",
+            "GB": "GenBank",
+            "PDB": "PDB",
+            "EMBL": "EMBL",
+            "GENP": "GenBank",
+            "NDB": "NDB",
+            "NOR": "NORINE",
+            "PIR": "PIR",
+            "PRF": "PRF",
+            "REF": "RefSeq",
+            "TPG": "GenBank",
+            "TREMBL": "UniProt",
+        }
+        return dbNameMapD
+
     def __getSequenceFeatures(self, dataContainer):
         """ Get point sequence features.
 
@@ -1773,7 +1790,7 @@ class DictMethodCommonUtils(object):
             for ii in range(srObj.getRowCount()):
                 entityId = srObj.getValue("entity_id", ii)
                 refId = srObj.getValue("id", ii)
-                dbName = srObj.getValue("db_name", ii)
+                dbName = str(srObj.getValue("db_name", ii)).strip().upper()
                 dbAccession = srObj.getValue("pdbx_db_accession", ii)
                 tupSeqEntityRefDbD.setdefault(entityId, []).append((dbName, dbAccession))
                 #
@@ -1803,7 +1820,7 @@ class DictMethodCommonUtils(object):
                         }
                     )
             # uniquify
-            dbMapD = {"UNP": "UniProt", "GB": "GenBank", "PDB": "PDB"}
+            dbMapD = self.getDatabaseNameMap()
             for entityId in tupSeqEntityRefDbD:
                 tupSeqEntityRefDbD[entityId] = sorted(set(tupSeqEntityRefDbD[entityId]))
                 for tup in tupSeqEntityRefDbD[entityId]:
@@ -1869,9 +1886,9 @@ class DictMethodCommonUtils(object):
 
     def filterRefSequenceDif(self, details):
         filteredDetails = details
-        if details.upper() in ["ACETYLATION", "CHROMOPHORE", "VARIANT", "MODIFIED RESIDUE", "MODIFIED", "ENGINEERED", "ENGINEERED MUTATION", "AMIDATION"]:
+        if details.upper() in ["ACETYLATION", "CHROMOPHORE", "VARIANT", "MODIFIED RESIDUE", "MODIFIED", "ENGINEERED", "ENGINEERED MUTATION", "AMIDATION", "FORMYLATION"]:
             filteredDetails = "mutation"
-        elif details.upper() in ["LEADER SEQUENCE", "INITIATING METHIONINE", "LINKER", "EXPRESSION TAG", "CLONING", "CLONING ARTIFACT"]:
+        elif details.upper() in ["LEADER SEQUENCE", "INITIATING METHIONINE", "INITIATOR METHIONINE", "LINKER", "EXPRESSION TAG", "CLONING", "CLONING ARTIFACT"]:
             filteredDetails = "artifact"
         elif details.upper() in ["INSERTION"]:
             filteredDetails = "insertion"
@@ -2350,8 +2367,8 @@ class DictMethodCommonUtils(object):
             elif not authSeqId:
                 # An unqualified authAsymId -
                 asymId = authAsymD[authAsymId] if authAsymId in authAsymD else None
-                entityId = instEntityD[asymId]
-                if asymId and asymId in iTypeD and iTypeD[asymId] == "polymer" and asymId in asymIdPolymerRangesD:
+                entityId = instEntityD[asymId] if asymId in instEntityD else None
+                if entityId and asymId and asymId in iTypeD and iTypeD[asymId] == "polymer" and asymId in asymIdPolymerRangesD:
                     # insert the full residue range -
                     rD["entityType"] = iTypeD[asymId]
                     begSeqId = asymIdPolymerRangesD[asymId]["begSeqId"]
@@ -2377,7 +2394,7 @@ class DictMethodCommonUtils(object):
                 rD["description"] = "Binding site for entity %s instance %s (%s)" % (entityId, asymId, seqId)
                 rD["polymerLigand"] = tD
             else:
-                logger.info("%s untranslated single ligand details %r", dataContainer.getName(), ligL)
+                logger.debug("%s untranslated single ligand details %r", dataContainer.getName(), ligL)
                 logger.debug("npAuthAsymD %r", npAuthAsymD)
                 rD["description"] = ssDetails
                 rD["isRaw"] = True
@@ -2412,10 +2429,11 @@ class DictMethodCommonUtils(object):
                 begSeqId = pAuthAsymD[(authAsymIdA, authSeqIdA, None)]["seq_id"]
                 endSeqId = pAuthAsymD[(authAsymIdB, authSeqIdB, None)]["seq_id"]
                 tD = {"asymId": asymIdA, "entityId": instEntityD[asymIdA], "begSeqId": begSeqId, "endSeqId": endSeqId}
-                rD["description"] = "Binding site for entity %s instance %s (%s-%s)" % (entityId, asymId, begSeqId, endSeqId)
+                rD["entityType"] = iTypeD[asymIdA]
+                rD["description"] = "Binding site for ligands entity %s instance %s and entity %s instance %s" % (entityIdA, asymIdA, entityIdB, asymIdB)
                 rD["polymerLigand"] = tD
             else:
-                logger.info("%s untranslated ligand details %r", dataContainer.getName(), ligL)
+                logger.debug("%s untranslated ligand details %r", dataContainer.getName(), ligL)
                 rD["description"] = ssDetailsA
                 rD["isRaw"] = True
         else:
@@ -2515,7 +2533,6 @@ class DictMethodCommonUtils(object):
 
                     retL.append((authAsymIdA, compIdA, authSeqIdA, ssDetails))
                     retL.append((authAsymIdB, compIdB, authSeqIdB, ssDetails))
-                    logger.info("%s %r", ssDetails, retL)
                     return retL
             #
             # BINDING SITE FOR LINKED RESIDUES A 1519 A 1520 A 1521 A 1522 A 1523 A 1524 A 1525
