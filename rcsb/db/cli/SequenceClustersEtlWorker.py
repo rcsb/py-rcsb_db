@@ -69,7 +69,7 @@ class SequenceClustersEtlWorker(object):
         self.__entityMemberCollection = self.__cfgOb.get("COLLECTION_ENTITY_MEMBERS", sectionName=self.__sectionCluster, default="entity_members")
         self.__clusterMembersCollection = self.__cfgOb.get("COLLECTION_CLUSTER_MEMBERS", sectionName=self.__sectionCluster, default="cluster_members")
         self.__clusterProvenanceCollection = self.__cfgOb.get("COLLECTION_CLUSTER_PROVENANCE", sectionName=self.__sectionCluster, default="cluster_provenance")
-        self.__collectionVersion = self.__cfgOb.get("COLLECTION_VERSION_STRING", sectionName=self.__sectionCluster, default="v0_1")
+        # self.__collectionVersion = self.__cfgOb.get("COLLECTION_VERSION_STRING", sectionName=self.__sectionCluster, default="v0_1")
         #
         self.__entitySchemaName = self.__cfgOb.get("ENTITY_SCHEMA_NAME", sectionName=self.__sectionCluster, default="rcsb_entity_sequence_cluster_entity_list")
         self.__clusterSchemaName = self.__cfgOb.get("CLUSTER_SCHEMA_NAME", sectionName=self.__sectionCluster, default="rcsb_entity_sequence_cluster_identifer_list")

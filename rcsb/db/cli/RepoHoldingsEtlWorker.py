@@ -95,7 +95,7 @@ class RepoHoldingsEtlWorker(object):
             )
             #
             databaseName = self.__cfgOb.get("DATABASE_NAME", sectionName=sectionName)
-            collectionVersion = self.__cfgOb.get("COLLECTION_VERSION_STRING", sectionName=sectionName)
+            # collectionVersion = self.__cfgOb.get("COLLECTION_VERSION_STRING", sectionName=sectionName)
             # addValues = {"_schema_version": collectionVersion}
             addValues = None
             #
