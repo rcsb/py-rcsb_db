@@ -85,7 +85,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__chemCompMockLen = 15
-        self.__pdbxMockLen = 21
+        self.__pdbxMockLen = 28
         # removes timestamped data items to allow diffs.)
         excludeExtras = ["rcsb_load_status"]
         # excludeExtras = []
@@ -135,7 +135,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "filterType": self.__fTypeRow,
                 "styleType": "rowwise_by_name",
                 "mergeContentTypes": None,
-                "rejectLength": 1,
+                "rejectLength": 3,
             },
         ]
         #
@@ -164,7 +164,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "filterType": self.__fTypeRow,
                 "styleType": "rowwise_by_name_with_cardinality",
                 "mergeContentTypes": None,
-                "rejectLength": 1,
+                "rejectLength": 3,
                 "excludeExtras": excludeExtras,
             },
             {
@@ -173,7 +173,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "filterType": self.__fTypeRow,
                 "styleType": "rowwise_by_name_with_cardinality",
                 "mergeContentTypes": ["vrpt"],
-                "rejectLength": 1,
+                "rejectLength": 3,
                 "excludeExtras": excludeExtras,
             },
         ]
