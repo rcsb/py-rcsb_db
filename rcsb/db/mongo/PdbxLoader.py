@@ -392,9 +392,9 @@ class PdbxLoader(object):
                 failPathList = list(set(failPathList))
                 #
                 if failPathList:
-                    logger.info("%s %s/%s worker load failures %r", procName, databaseName, collectionName, [os.path.basename(pth) for pth in failPathList if pth is not None])
+                    logger.debug("%s %s/%s worker load failures %r", procName, databaseName, collectionName, [os.path.basename(pth) for pth in failPathList if pth is not None])
                 if rejectPathList:
-                    logger.info("%s %s/%s worker load rejected %r", procName, databaseName, collectionName, [os.path.basename(pth) for pth in rejectPathList])
+                    logger.debug("%s %s/%s worker load rejected %r", procName, databaseName, collectionName, [os.path.basename(pth) for pth in rejectPathList])
             #
             # -------------------------
             #  failContainerIdS = set()
@@ -403,7 +403,7 @@ class PdbxLoader(object):
             #  cIdD[cId] = locatorObj
             # ----
             retList = [locatorObj for cId, locatorObj in cIdD.items() if cId not in failContainerIdS]
-            logger.info("%s %s load worker returns  successes %d rejects %d failures %d", procName, databaseName, len(retList), len(rejectContainerIdS), len(failContainerIdS))
+            logger.debug("%s %s load worker returns  successes %d rejects %d failures %d", procName, databaseName, len(retList), len(rejectContainerIdS), len(failContainerIdS))
 
             ok = len(failContainerIdS) == 0
             self.__end(startTime, procName + " with status " + str(ok))

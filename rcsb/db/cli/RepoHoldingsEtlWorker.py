@@ -96,7 +96,8 @@ class RepoHoldingsEtlWorker(object):
             #
             databaseName = self.__cfgOb.get("DATABASE_NAME", sectionName=sectionName)
             collectionVersion = self.__cfgOb.get("COLLECTION_VERSION_STRING", sectionName=sectionName)
-            addValues = {"_schema_version": collectionVersion}
+            # addValues = {"_schema_version": collectionVersion}
+            addValues = None
             #
             dList = rhdp.getHoldingsUpdate(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UPDATE", sectionName=sectionName)

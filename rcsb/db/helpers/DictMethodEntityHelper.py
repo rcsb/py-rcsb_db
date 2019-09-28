@@ -238,7 +238,8 @@ class DictMethodEntityHelper(object):
             entityIdL = tObj.getAttributeValueList("id")
             seqEntityRefDbD = self.__commonU.getEntitySequenceReferenceCodes(dataContainer)
             #
-            for ii, entityId in enumerate(entityIdL):
+            ii = 0
+            for entityId in entityIdL:
                 cObj.setValue(entryId, "entry_id", ii)
                 cObj.setValue(entityId, "entity_id", ii)
                 cObj.setValue(entryId + "_" + entityId, "rcsb_id", ii)
@@ -284,6 +285,8 @@ class DictMethodEntityHelper(object):
                     authAsymIdL = npsObj.selectValuesWhere("pdb_strand_id", entityId, "entity_id")
                     ccLigandL = npsObj.selectValuesWhere("mon_id", entityId, "entity_id")
                     # logger.debug("entityId %r ligands %r", entityId, set(ccLigandL))
+                    if not asymIdL:
+                        logger.error("%s inconsistent molecular system (no instances) for non-polymer entity %s", entryId, entityId)
                 #
                 if eType == "polymer" and entityId in seqEntityRefDbD:
                     for dbD in seqEntityRefDbD[entityId]:
@@ -315,6 +318,7 @@ class DictMethodEntityHelper(object):
                     cObj.setValue(",".join(relatedAnnIdD["dbAccession"]).strip(), "related_annotation_identifiers_database_identifier", ii)
                     cObj.setValue(",".join(relatedAnnIdD["provSource"]).strip(), "related_annotation_identifiers_provenance_source", ii)
                 #
+                ii += 1
             return True
         except Exception as e:
             logger.exception("For %s failing with %s", catName, str(e))

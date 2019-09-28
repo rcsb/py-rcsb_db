@@ -1124,8 +1124,10 @@ class DictMethodCommonUtils(object):
                         begAsymId = tObj.getValue("beg_label_asym_id", ii)
                         endAsymId = tObj.getValue("end_label_asym_id", ii)
                         try:
-                            begSeqId = int(tObj.getValue("beg_label_seq_id", ii))
-                            endSeqId = int(tObj.getValue("end_label_seq_id", ii))
+                            tbegSeqId = int(tObj.getValue("beg_label_seq_id", ii))
+                            tendSeqId = int(tObj.getValue("end_label_seq_id", ii))
+                            begSeqId = min(tbegSeqId, tendSeqId)
+                            endSeqId = max(tbegSeqId, tendSeqId)
                         except Exception:
                             continue
                         if (begAsymId == endAsymId) and (begSeqId <= endSeqId):
@@ -1142,8 +1144,14 @@ class DictMethodCommonUtils(object):
                     sId = tObj.getValue("sheet_id", ii)
                     begAsymId = tObj.getValue("beg_label_asym_id", ii)
                     endAsymId = tObj.getValue("end_label_asym_id", ii)
-                    begSeqId = int(tObj.getValue("beg_label_seq_id", ii))
-                    endSeqId = int(tObj.getValue("end_label_seq_id", ii))
+                    # Most obsolete entries do no define this
+                    try:
+                        tbegSeqId = int(tObj.getValue("beg_label_seq_id", ii))
+                        tendSeqId = int(tObj.getValue("end_label_seq_id", ii))
+                        begSeqId = min(tbegSeqId, tendSeqId)
+                        endSeqId = max(tbegSeqId, tendSeqId)
+                    except Exception:
+                        continue
                     if (begAsymId == endAsymId) and (begSeqId <= endSeqId):
                         sheetRangeD.setdefault(sId, []).append((begAsymId, begSeqId, endSeqId))
                     else:
@@ -1886,20 +1894,128 @@ class DictMethodCommonUtils(object):
 
     def filterRefSequenceDif(self, details):
         filteredDetails = details
-        if details.upper() in ["ACETYLATION", "CHROMOPHORE", "VARIANT", "MODIFIED RESIDUE", "MODIFIED", "ENGINEERED", "ENGINEERED MUTATION", "AMIDATION", "FORMYLATION"]:
+        if details.upper() in [
+            "ACETYLATION",
+            "CHROMOPHORE",
+            "VARIANT",
+            "MODIFIED RESIDUE",
+            "MODIFIED",
+            "ENGINEERED",
+            "ENGINEERED MUTATION",
+            "AMIDATION",
+            "FORMYLATION",
+            "ALLELIC VARIANT",
+            "AUTOPHOSPHORYLATION",
+            "BENZOYLATION",
+            "CHEMICAL MODIFICATION",
+            "CHEMICALLY MODIFIED",
+            "CHROMOPHOR, REM 999",
+            "CHROMOPHORE, REM 999",
+            "D-CONFIGURATION",
+            "ENGINEERED AND OXIDIZED CYS",
+            "ENGINEERED MUTANT",
+            "ENGINERED MUTATION",
+            "HYDROXYLATION",
+            "METHYLATED ASN",
+            "METHYLATION",
+            "MICROHETEROGENEITY",
+            "MODEIFED RESIDUE",
+            "MODIFICATION",
+            "MODIFIED AMINO ACID",
+            "MODIFIED CHROMOPHORE",
+            "MODIFIED GLN",
+            "MODIFIED RESIDUES",
+            "MUTATION",
+            "MYC EPITOPE",
+            "MYRISTOYLATED",
+            "MYRISTOYLATION",
+            "NATURAL VARIANT",
+            "NATURAL VARIANTS",
+            "OXIDIZED CY",
+            "OXIDIZED CYS",
+            "PHOSPHORYLATION",
+            "POLYMORPHIC VARIANT",
+            "PROPIONATION",
+            "SOMATIC VARIANT",
+            "SUBSTITUTION",
+            "TRNA EDITING",
+            "TRNA MODIFICATION",
+            "TRNA",
+            "VARIANT STRAIN",
+            "VARIANTS",
+        ]:
             filteredDetails = "mutation"
-        elif details.upper() in ["LEADER SEQUENCE", "INITIATING METHIONINE", "INITIATOR METHIONINE", "LINKER", "EXPRESSION TAG", "CLONING", "CLONING ARTIFACT"]:
+        elif details.upper() in [
+            "LEADER SEQUENCE",
+            "INITIATING METHIONINE",
+            "INITIATOR METHIONINE",
+            "LINKER",
+            "EXPRESSION TAG",
+            "CLONING",
+            "CLONING ARTIFACT",
+            "C-TERM CLONING ARTIFA",
+            "C-TERMINAL HIS TAG",
+            "C-TERMINLA HIS-TAG",
+            "CLONING AETIFACT",
+            "CLONING ARATIFACT",
+            "CLONING ARTEFACT",
+            "CLONING ARTFIACT",
+            "CLONING ARTIACT",
+            "CLONING ARTIFACTS",
+            "CLONING ARTUFACT",
+            "CLONING ATIFACT",
+            "CLONING MUTATION",
+            "CLONING REMNANT",
+            "CLONING SITE RESIDUE",
+            "CLONNG ARTIFACT",
+            "CLONONG ARTIFACT",
+            "DETECTION TAG",
+            "ENGINEERED LINKER",
+            "EXPRESSION ARTIFACT",
+            "EXPRESSIOPN TAG",
+            "EXPRSSION TAG",
+            "FLAG TAG",
+            "GCN4 TAG",
+            "GPGS TAG",
+            "GST TAG",
+            "HIA TAG",
+            "HIS TAG",
+            "HIS-TAG",
+            "INITIAL METHIONINE",
+            "INITIATING MET",
+            "INITIATING METHIONIE",
+            "INITIATING MSE",
+            "INITIATING RESIDUE",
+            "INITIATOR N-FORMYL-MET",
+            "INTIATING METHIONINE",
+            "INTRACHAIN HIS TAG",
+            "LINKER INSERTION",
+            "LINKER PEPTIDE",
+            "LINKER RESIDUE",
+            "LINKER SEQUENCE",
+            "LYS TAG",
+            "MOD. RESIDUE/CLONING ARTIFACT",
+            "MYC TAG",
+            "N-TERMINAL EXTENSION",
+            "N-TERMINAL HIS TAG",
+            "PURIFICATION TAG",
+            "RANDOM MUTAGENESIS",
+            "RECOMBINANT HIS TAG",
+            "RESIDUAL LINKER",
+            "STREP-TAGII",
+            "T7 EPITOPE TAG",
+            "T7-TAG",
+            "TAG",
+        ]:
             filteredDetails = "artifact"
-        elif details.upper() in ["INSERTION"]:
+        elif details.upper() in ["INSERTION", "ENGINEERED INSERTION", "INSERTED", "INSERTION AT N-TERMINUS"]:
             filteredDetails = "insertion"
-        elif details.upper() in ["DELETION"]:
+        elif details.upper() in ["DELETION", "CONFLICT/DELETION", "ENGINEERED DELETION"]:
             filteredDetails = "deletion"
-        elif details.upper() in ["CONFLICT"]:
+        elif details.upper() in ["CONFLICT", "SEQUENCE CONFLICT", "SEQUENCE CONFLICT8"]:
             filteredDetails = "conflict"
-        elif "SEE REMARK" in details.upper():
-            filteredDetails = "other"
         else:
-            logger.info("Unanticipated sequence difference details %r", details)
+            logger.debug("Unanticipated sequence difference details %r", details)
             filteredDetails = "other"
         #
         return filteredDetails

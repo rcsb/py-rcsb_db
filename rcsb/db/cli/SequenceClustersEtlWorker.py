@@ -146,7 +146,8 @@ class SequenceClustersEtlWorker(object):
             )
             #
             databaseName = self.__databaseName
-            addValues = {"_schema_version": self.__collectionVersion}
+            # addValues = {"_schema_version": self.__collectionVersion}
+            addValues = None
             #
             collectionName = self.__entityMemberCollection
             dList = docBySequenceD[self.__entitySchemaName]

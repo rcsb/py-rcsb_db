@@ -1458,15 +1458,15 @@ document_helper_configuration:
               VERSION: 5.1.0
         pdbx_core:
             - NAME: pdbx_core_entity
-              VERSION: 6.1.0
+              VERSION: 6.2.0
             - NAME: pdbx_core_entry
-              VERSION: 6.1.0
+              VERSION: 6.2.0
             - NAME: pdbx_core_assembly
-              VERSION: 6.1.0
+              VERSION: 6.2.0
             - NAME: pdbx_core_entity_instance
-              VERSION: 6.1.0
+              VERSION: 6.2.0
             - NAME: pdbx_core_entity_instance_validation
-              VERSION: 6.1.0
+              VERSION: 6.2.0
             #- NAME: pdbx_core_entity_monomer
             #  VERSION: 5.1.0
         bird:
