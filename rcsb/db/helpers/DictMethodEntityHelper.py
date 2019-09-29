@@ -116,8 +116,15 @@ class DictMethodEntityHelper(object):
                         # get the longest overlapping entity region of each ref seq -
                         lenL = [seqAlignObj.getEntityAlignLength() for seqAlignObj in grpAlignL]
                         idxMax = lenL.index(max(lenL))
-                        pdbEntityAlignD.setdefault((entryId, entityId, "PDB"), {}).setdefault((dbName, dbAcc), []).append(grpAlignL[idxMax])
-        #
+                        try:
+                            tLen = grpAlignL[idxMax].getEntityAlignLength()
+                            if tLen and tLen > 0:
+                                pdbEntityAlignD.setdefault((entryId, entityId, "PDB"), {}).setdefault((dbName, dbAcc), []).append(grpAlignL[idxMax])
+                            else:
+                                logger.warning("Skipping %s inconsistent alignment for entity %r %r", entryId, entityId, entityAlignL)
+                        except Exception:
+                            pass
+            #
         logger.debug("PROCESSED PDB   ->  %r", pdbEntityAlignD)
         return pdbEntityAlignD
 
@@ -286,7 +293,7 @@ class DictMethodEntityHelper(object):
                     ccLigandL = npsObj.selectValuesWhere("mon_id", entityId, "entity_id")
                     # logger.debug("entityId %r ligands %r", entityId, set(ccLigandL))
                     if not asymIdL:
-                        logger.error("%s inconsistent molecular system (no instances) for non-polymer entity %s", entryId, entityId)
+                        logger.warning("%s inconsistent molecular system (no instances) for non-polymer entity %s", entryId, entityId)
                 #
                 if eType == "polymer" and entityId in seqEntityRefDbD:
                     for dbD in seqEntityRefDbD[entityId]:

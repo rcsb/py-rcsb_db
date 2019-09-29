@@ -1626,6 +1626,8 @@ class DictMethodCommonUtils(object):
             "REF": "RefSeq",
             "TPG": "GenBank",
             "TREMBL": "UniProt",
+            "SWS": "UniProt",
+            "SWALL": "UniProt",
         }
         return dbNameMapD
 
@@ -2658,6 +2660,15 @@ class DictMethodCommonUtils(object):
                 tup = ssDetails.partition(prefix)
                 if tup[1] == prefix:
                     ff = tup[2].split(" ")
+                    if len(ff) == 2:
+                        # BINDING SITE FOR LINKED RESIDUES A 502-507
+                        try:
+                            tff = ff[1].split("-")
+                            authAsymIdA = ff[0]
+                            authSeqIdA = tff[0]
+                            authSeqIdB = tff[1]
+                        except Exception:
+                            continue
                     if len(ff) == 4 and ff[2].lower() == "to":
                         authAsymIdA = ff[0]
                         authSeqIdA = ff[1]
@@ -2670,6 +2681,8 @@ class DictMethodCommonUtils(object):
                         authAsymIdA = ff[0]
                         authSeqIdA = ff[1]
                         authSeqIdB = ff[-1]
+                    else:
+                        continue
                     retL.append((authAsymIdA, None, authSeqIdA, ssDetails))
                     retL.append((authAsymIdA, None, authSeqIdB, ssDetails))
                     return retL
@@ -2689,6 +2702,7 @@ class DictMethodCommonUtils(object):
             return retL
         except Exception as e:
             logger.exception("Failing with %s for %r", str(e), ssDetails)
+        return [(None, None, None, ssDetails)]
 
     def getUnobservedPolymerResidueInfo(self, dataContainer):
         """Return a dictionary of unobserved regions of polymer instances.

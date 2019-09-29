@@ -141,26 +141,34 @@ class DictMethodEntityInstanceHelper(object):
             cObj = dataContainer.getObj(catName)
             for ii in range(cObj.getRowCount()):
                 for mTup in mTupL:
-                    if cObj.hasAttribute(mTup[0]) and cObj.hasAttribute(mTup[1]):
+                    try:
                         authVal = cObj.getValue(mTup[0], ii)
+                    except Exception:
+                        authVal = "?"
+                    try:
                         authSeqId = cObj.getValue(mTup[1], ii)
-                        #
-                        # logger.debug("%s %4d authAsymId %r authSeqId %r" % (catName, ii, authVal, authSeqId))
-                        #
-                        if (authVal, authSeqId) in authAsymD:
-                            if not cObj.hasAttribute(mTup[2]):
-                                cObj.appendAttribute(mTup[2])
-                            cObj.setValue(authAsymD[(authVal, authSeqId)], mTup[2], ii)
-                        elif (authVal, "?") in authAsymD:
-                            if not cObj.hasAttribute(mTup[2]):
-                                cObj.appendAttribute(mTup[2])
-                            cObj.setValue(authAsymD[(authVal, "?")], mTup[2], ii)
+                    except Exception:
+                        authSeqId = "?"
 
-                        else:
-                            if authVal not in ["."]:
-                                logger.error("%s %s missing mapping auth asymId %s", dataContainer.getName(), catName, authVal)
+                    # authVal = cObj.getValue(mTup[0], ii)
+                    # authSeqId = cObj.getValue(mTup[1], ii)
+                    #
+                    # logger.debug("%s %4d authAsymId %r authSeqId %r" % (catName, ii, authVal, authSeqId))
+                    #
+                    if (authVal, authSeqId) in authAsymD:
+                        if not cObj.hasAttribute(mTup[2]):
+                            cObj.appendAttribute(mTup[2])
+                        cObj.setValue(authAsymD[(authVal, authSeqId)], mTup[2], ii)
+                    elif (authVal, "?") in authAsymD:
+                        if not cObj.hasAttribute(mTup[2]):
+                            cObj.appendAttribute(mTup[2])
+                        cObj.setValue(authAsymD[(authVal, "?")], mTup[2], ii)
                     else:
-                        logger.error("%s %s missing required attributes %s %s", dataContainer.getName(), catName, mTup[0], mTup[1])
+                        if authVal not in ["."]:
+                            logger.error("%s %s missing mapping auth asymId %s", dataContainer.getName(), catName, authVal)
+                        if not cObj.hasAttribute(mTup[2]):
+                            cObj.appendAttribute(mTup[2])
+                        cObj.setValue("?", mTup[2], ii)
 
         return True
 
@@ -211,16 +219,19 @@ class DictMethodEntityInstanceHelper(object):
                 fCountD.setdefault(asymId, {}).setdefault(fType, set()).add(fId)
                 #
                 tS = fObj.getValueOrDefault("feature_ranges_beg_seq_id", ii, defaultValue=None)
-                if fObj.hasAttribute("feature_ranges_beg_seq_id") and tS is not None:
+                if fObj.hasAttribute("feature_ranges_beg_seq_id") and tS:
                     begSeqIdL = str(fObj.getValue("feature_ranges_beg_seq_id", ii)).split(",")
                     endSeqIdL = str(fObj.getValue("feature_ranges_end_seq_id", ii)).split(",")
                     monCount = 0
                     for begSeqId, endSeqId in zip(begSeqIdL, endSeqIdL):
-                        monCount += abs(int(endSeqId) - int(begSeqId) + 1)
+                        if begSeqId and endSeqId:
+                            monCount += abs(int(endSeqId) - int(begSeqId) + 1)
+                        else:
+                            logger.error("In %s fType %r fId %r bad sequence range %r", dataContainer.getName(), fType, fId, tS)
                     fMonomerCountD.setdefault(asymId, {}).setdefault(fType, []).append(monCount)
 
                 tS = fObj.getValueOrDefault("feature_positions_seq_id", ii, defaultValue=None)
-                if fObj.hasAttribute("feature_positions_seq_id") and tS is not None:
+                if fObj.hasAttribute("feature_positions_seq_id") and tS:
                     seqIdL = str(fObj.getValue("feature_positions_seq_id", ii)).split(",")
                     fMonomerCountD.setdefault(asymId, {}).setdefault(fType, []).append(len(seqIdL))
             #
@@ -248,7 +259,7 @@ class DictMethodEntityInstanceHelper(object):
                     sObj.setValue(round(fracC, 5), "coverage", ii)
                     ii += 1
         except Exception as e:
-            logger.exception("Failing with %s", str(e))
+            logger.exception("Failing for %s with %s", dataContainer.getName(), str(e))
         return True
 
     def buildPolymerInstanceFeatures(self, dataContainer, catName, **kwargs):

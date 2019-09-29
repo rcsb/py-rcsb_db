@@ -163,3 +163,4 @@
  25-Sep-2019  V0.70 Incorporate RCSB extensions in 'min' schemas add single collection specific identifiers core collections
                     Add missing required entry identifiers.
  25-Sep-2019  V0.71 Adjustments for edge cases and enums after full-load tests
+ 29-Sep-2019  V0.72 Further adjustments for edge cases and enums after full-load tests
