@@ -164,3 +164,4 @@
                     Add missing required entry identifiers.
  25-Sep-2019  V0.71 Adjustments for edge cases and enums after full-load tests
  29-Sep-2019  V0.72 Further adjustments for edge cases and enums after full-load tests
+ 29-Sep-2019  V0.73 Parallelize merging content types in RepositoryProvider()

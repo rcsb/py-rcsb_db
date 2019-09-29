@@ -86,14 +86,37 @@ class RepositoryProvider(object):
 
         """
         inputPathList = inputPathList if inputPathList else []
+        if inputPathList:
+            return self.getLocatorObjListWithInput(contentType, inputPathList=inputPathList, mergeContentTypes=mergeContentTypes)
+        #
+        if mergeContentTypes and "vrpt" in mergeContentTypes and contentType in ["pdbx", "pdbx_core"]:
+            dictPath = os.path.join(self.__cachePath, self.__cfgOb.get("DICTIONARY_CACHE_DIR", sectionName=self.__cfgOb.getDefaultSectionName()))
+            os.environ["_RP_DICT_PATH_"] = os.path.join(dictPath, "vprt")
+            locatorList = self.getEntryLocatorObjList(mergeContentTypes=mergeContentTypes)
+        else:
+            locatorList = self.__getLocatorList(contentType, inputPathList=inputPathList)
+        return locatorList
+
+    def getLocatorObjListWithInput(self, contentType, inputPathList=None, mergeContentTypes=None):
+        """Convenience method to get the data path list for the input repository content type.
+
+        Args:
+            contentType (str): Repository content type (e.g. pdbx, chem_comp, bird, ...)
+            inputPathList (list, optional): path list that will be returned if provided.
+            mergeContentTypes (list, optional): repository content types to combined with the
+                                primary content type.
+
+        Returns:
+            Obj list: data file paths or tuple of file paths
+
+        """
+        inputPathList = inputPathList if inputPathList else []
         locatorList = self.__getLocatorList(contentType, inputPathList=inputPathList)
         # JDW move the following to config
         if mergeContentTypes and "vrpt" in mergeContentTypes and contentType in ["pdbx", "pdbx_core"]:
             dictPath = os.path.join(self.__cachePath, self.__cfgOb.get("DICTIONARY_CACHE_DIR", sectionName=self.__cfgOb.getDefaultSectionName()))
             os.environ["_RP_DICT_PATH_"] = os.path.join(dictPath, "vprt")
             #
-            # vpr = ValidationReportProvider(dirPath=os.path.join(dictPath, "vprt"), useCache=True, cleaCache=False)
-            # vrd = vpr.getReader()
             locObjL = []
             for locator in locatorList:
                 if isinstance(locator, str):
@@ -329,6 +352,69 @@ class RepositoryProvider(object):
             pathList = retLists[0]
             endTime0 = time.time()
             logger.debug("Path list length %d  in %.4f seconds", len(pathList), endTime0 - startTime)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return self.__applyFileLimit(pathList)
+
+    def _entryLocatorObjWithMergeWorker(self, dataList, procName, optionsD, workingDir):
+        """ Return the list of entry locator objects including merge content in the current repository.
+        """
+        _ = procName
+        _ = workingDir
+        topRepoPath = optionsD["topRepoPath"]
+        mergeContentTypes = optionsD["mergeContentTypes"]
+        locatorObjList = []
+        for subdir in dataList:
+            dd = os.path.join(topRepoPath, subdir)
+            for root, _, files in walk(dd, topdown=False):
+                if "REMOVE" in root:
+                    continue
+                for fn in files:
+                    if (fn.endswith(".cif.gz") and len(fn) == 11) or (fn.endswith(".cif") and len(fn) == 8):
+                        locator = os.path.join(root, fn)
+                        kwD = HashableDict({})
+                        oL = [HashableDict({"locator": locator, "fmt": "mmcif", "kwargs": kwD})]
+                        for mergeContentType in mergeContentTypes:
+                            idCode = fn[:4] if fn and len(fn) >= 8 else None
+                            mergeLocator = self.__getLocator(mergeContentType, idCode, checkExists=True) if idCode else None
+                            if mergeLocator:
+                                kwD = HashableDict({"marshalHelper": toCifWrapper})
+                                oL.append(HashableDict({"locator": mergeLocator, "fmt": "xml", "kwargs": kwD}))
+                        lObj = tuple(oL)
+                        locatorObjList.append(lObj)
+        return dataList, locatorObjList, []
+
+    def getEntryLocatorObjList(self, mergeContentTypes=None):
+        return self.__getEntryLocatorObjList(self.__getRepoTopPath("pdbx"), numProc=self.__numProc, mergeContentTypes=mergeContentTypes)
+
+    def __getEntryLocatorObjList(self, topRepoPath, numProc=8, mergeContentTypes=None):
+        """Get the path list for structure entries in the input repository
+        """
+        ts = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
+        logger.debug("Starting at %s", ts)
+        startTime = time.time()
+        pathList = []
+        try:
+            dataList = []
+            anL = "abcdefghijklmnopqrstuvwxyz0123456789"
+            for a1 in anL:
+                for a2 in anL:
+                    hc = a1 + a2
+                    dataList.append(hc)
+                    hc = a2 + a1
+                    dataList.append(hc)
+            dataList = list(set(dataList))
+            #
+            optD = {}
+            optD["topRepoPath"] = topRepoPath
+            optD["mergeContentTypes"] = mergeContentTypes
+            mpu = MultiProcUtil(verbose=self.__verbose)
+            mpu.setOptions(optionsD=optD)
+            mpu.set(workerObj=self, workerMethod="_entryLocatorObjWithMergeWorker")
+            _, _, retLists, _ = mpu.runMulti(dataList=dataList, numProc=numProc, numResults=1)
+            pathList = retLists[0]
+            endTime0 = time.time()
+            logger.debug("Locator object list length %d  in %.4f seconds", len(pathList), endTime0 - startTime)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return self.__applyFileLimit(pathList)

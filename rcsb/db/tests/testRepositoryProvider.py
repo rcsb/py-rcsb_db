@@ -45,7 +45,7 @@ class ScanRepoUtilTests(unittest.TestCase):
 
         self.__numProc = 2
         self.__chunkSize = 20
-        self.__fileLimit = 20
+        self.__fileLimit = None
         #
         self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath)
         #
@@ -67,7 +67,7 @@ class ScanRepoUtilTests(unittest.TestCase):
             locatorObjList = self.__rpP.getLocatorObjList(contentType=contentType, mergeContentTypes=mergeContentTypes)
             pathList = self.__rpP.getLocatorPaths(locatorObjList)
             locatorObjList2 = self.__rpP.getLocatorsFromPaths(locatorObjList, pathList)
-            logger.debug("pathList %r", pathList)
+            logger.info("%s pathList length %d", contentType, len(pathList))
             self.assertEqual(len(locatorObjList), len(pathList))
             self.assertEqual(len(locatorObjList), len(locatorObjList2))
 
