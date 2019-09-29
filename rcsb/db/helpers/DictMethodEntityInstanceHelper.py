@@ -165,7 +165,7 @@ class DictMethodEntityInstanceHelper(object):
                         cObj.setValue(authAsymD[(authVal, "?")], mTup[2], ii)
                     else:
                         if authVal not in ["."]:
-                            logger.error("%s %s missing mapping auth asymId %s", dataContainer.getName(), catName, authVal)
+                            logger.warning("%s %s missing mapping auth asymId %s", dataContainer.getName(), catName, authVal)
                         if not cObj.hasAttribute(mTup[2]):
                             cObj.appendAttribute(mTup[2])
                         cObj.setValue("?", mTup[2], ii)
@@ -224,10 +224,10 @@ class DictMethodEntityInstanceHelper(object):
                     endSeqIdL = str(fObj.getValue("feature_ranges_end_seq_id", ii)).split(",")
                     monCount = 0
                     for begSeqId, endSeqId in zip(begSeqIdL, endSeqIdL):
-                        if begSeqId and endSeqId:
+                        try:
                             monCount += abs(int(endSeqId) - int(begSeqId) + 1)
-                        else:
-                            logger.error("In %s fType %r fId %r bad sequence range %r", dataContainer.getName(), fType, fId, tS)
+                        except Exception:
+                            logger.warning("In %s fType %r fId %r bad sequence range begSeqId %r endSeqId %r tS %r", dataContainer.getName(), fType, fId, begSeqId, endSeqId, tS)
                     fMonomerCountD.setdefault(asymId, {}).setdefault(fType, []).append(monCount)
 
                 tS = fObj.getValueOrDefault("feature_positions_seq_id", ii, defaultValue=None)
@@ -411,7 +411,7 @@ class DictMethodEntityInstanceHelper(object):
                     cObj.setValue(";".join([str(t) for t in idLinL]), "feature_class_lineage_id", ii)
                     cObj.setValue(";".join([str(jj) for jj in range(1, len(idLinL) + 1)]), "feature_class_lineage_depth", ii)
                     #
-                    if begSeqId is not None:
+                    if begSeqId is not None and endSeqId is not None:
                         cObj.setValue(begSeqId, "feature_ranges_beg_seq_id", ii)
                         cObj.setValue(endSeqId, "feature_ranges_end_seq_id", ii)
                     else:

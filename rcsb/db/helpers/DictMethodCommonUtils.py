@@ -1816,7 +1816,10 @@ class DictMethodCommonUtils(object):
                     entitySeqIdEnd = srsObj.getValue("seq_align_end", iRow)
                     dbSeqIdBeg = srsObj.getValue("db_align_beg", iRow)
                     dbSeqIdEnd = srsObj.getValue("db_align_end", iRow)
-                    entityAlignLength = int(entitySeqIdEnd) - int(entitySeqIdBeg) + 1
+                    try:
+                        entityAlignLength = int(entitySeqIdEnd) - int(entitySeqIdBeg) + 1
+                    except Exception:
+                        entityAlignLength = 0
                     seqEntityAlignmentD.setdefault(entityId, []).append(
                         {
                             "authAsymId": authAsymId,

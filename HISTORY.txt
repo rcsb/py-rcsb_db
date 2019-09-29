@@ -165,3 +165,4 @@
  25-Sep-2019  V0.71 Adjustments for edge cases and enums after full-load tests
  29-Sep-2019  V0.72 Further adjustments for edge cases and enums after full-load tests
  29-Sep-2019  V0.73 Parallelize merging content types in RepositoryProvider()
+ 29-Sep-2019  V0.74 Cleaning up more edge cases with missing or misorganized data
