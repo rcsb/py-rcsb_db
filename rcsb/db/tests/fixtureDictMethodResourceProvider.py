@@ -52,7 +52,7 @@ class DictMethodResourceProviderFixture(unittest.TestCase):
         """Fixture - generate and check resource caches
         """
         try:
-            rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
+            rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, siftsAbbreviated="TEST")
             ret = rp.cacheResources(useCache=False)
             self.assertTrue(ret)
         except Exception as e:

@@ -286,7 +286,13 @@ class DictMethodEntityHelper(object):
                             relatedAnnIdD["dbName"].append("InterPro")
                             relatedAnnIdD["provSource"].append("SIFTS")
                             relatedAnnIdD["dbAccession"].append(dbId)
-                        #  goIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="GOID"))
+                        dbIdL = []
+                        for authAsymId in authAsymIdL:
+                            dbIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="GOID"))
+                        for dbId in sorted(set(dbIdL)):
+                            relatedAnnIdD["dbName"].append("GO")
+                            relatedAnnIdD["provSource"].append("SIFTS")
+                            relatedAnnIdD["dbAccession"].append(dbId)
                 elif npsObj:
                     asymIdL = npsObj.selectValuesWhere("asym_id", entityId, "entity_id")
                     authAsymIdL = npsObj.selectValuesWhere("pdb_strand_id", entityId, "entity_id")
@@ -1185,8 +1191,10 @@ class DictMethodEntityHelper(object):
             _rcsb_polymer_entity_feature.assignment_version
             _rcsb_polymer_entity_feature.feature_ranges_beg_seq_id
             _rcsb_polymer_entity_feature.feature_ranges_end_seq_id
+            _rcsb_polymer_entity_feature.feature_ranges_value
             _rcsb_polymer_entity_feature.feature_positions_comp_id
             _rcsb_polymer_entity_feature.feature_positions_seq_id
+            _rcsb_polymer_entity_feature.feature_positions_value
 
         """
         logger.debug("Starting with %r %r %r", dataContainer.getName(), catName, kwargs)

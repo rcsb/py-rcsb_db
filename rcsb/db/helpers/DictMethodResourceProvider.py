@@ -70,6 +70,7 @@ class DictMethodResourceProvider(SingletonClass):
         self.__commonU = None
         self.__dApiW = None
         self.__atcP = None
+        self.__siftsAbbreviated = kwargs.get("siftsAbbreviated", "PROD")
         self.__ssP = None
         #
         #
@@ -191,7 +192,7 @@ class DictMethodResourceProvider(SingletonClass):
             srcDirPath = os.path.join(cachePath, cfgOb.getPath("SIFTS_SUMMARY_DATA_PATH", sectionName=configName))
             cacheDirPath = os.path.join(cachePath, cfgOb.get("SIFTS_SUMMARY_CACHE_DIR", sectionName=configName))
             logger.debug("ssP %r %r", srcDirPath, cacheDirPath)
-            self.__ssP = SiftsSummaryProvider(srcDirPath=srcDirPath, cacheDirPath=cacheDirPath, useCache=useCache, abbreviated=True, **kwargs)
+            self.__ssP = SiftsSummaryProvider(srcDirPath=srcDirPath, cacheDirPath=cacheDirPath, useCache=useCache, abbreviated=self.__siftsAbbreviated, **kwargs)
             logger.debug("ssP entry count %d", self.__ssP.getEntryCount())
         return self.__ssP
 

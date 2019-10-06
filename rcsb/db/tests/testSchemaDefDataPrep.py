@@ -85,7 +85,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__chemCompMockLen = 15
-        self.__pdbxMockLen = 32
+        self.__pdbxMockLen = 33
         # removes timestamped data items to allow diffs.)
         excludeExtras = ["rcsb_load_status"]
         # excludeExtras = []
@@ -297,7 +297,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)
             dictApi = dP.getApiByName(contentType)
             #
-            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
+            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, siftsAbbreviated="TEST")
             dmh = DictMethodRunner(dictApi, modulePathMap=self.__modulePathMap, resourceProvider=rP)
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=filterType)

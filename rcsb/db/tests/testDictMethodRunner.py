@@ -72,7 +72,7 @@ class DictMethodRunnerTests(unittest.TestCase):
         try:
             dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)
             dictApi = dP.getApiByName(contentType)
-            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
+            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, siftsAbbreviated="TEST")
             dmh = DictMethodRunner(dictApi, modulePathMap=self.__modulePathMap, resourceProvider=rP)
             locatorObjList = self.__rpP.getLocatorObjList(contentType=contentType, mergeContentTypes=mergeContent)
             containerList = self.__rpP.getContainerList(locatorObjList)
@@ -105,7 +105,7 @@ class DictMethodRunnerTests(unittest.TestCase):
         try:
             dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)
             dictApi = dP.getApiByName("pdbx")
-            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
+            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, siftsAbbreviated="TEST")
             dmh = DictMethodRunner(dictApi, modulePathMap=self.__modulePathMap, resourceProvider=rP)
             ok = dmh is not None
             self.assertTrue(ok)

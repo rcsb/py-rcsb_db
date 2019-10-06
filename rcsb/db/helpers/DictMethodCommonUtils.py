@@ -1801,12 +1801,14 @@ class DictMethodCommonUtils(object):
                 entityId = srObj.getValue("entity_id", ii)
                 refId = srObj.getValue("id", ii)
                 dbName = str(srObj.getValue("db_name", ii)).strip().upper()
-                dbAccession = srObj.getValue("pdbx_db_accession", ii)
-                tupSeqEntityRefDbD.setdefault(entityId, []).append((dbName, dbAccession))
+                #
+                tS = srObj.getValue("pdbx_db_accession", ii)
+                dbAccession = tS if tS and tS not in [".", "?"] else None
                 #
                 # Get indices for the target refId.
                 iRowL = srsObj.selectIndices(refId, "ref_id")
                 logger.debug("entryId %r entityId %r refId %r rowList %r", dataContainer.getName(), entityId, refId, iRowL)
+                dbAccessionAlignS = set()
                 for iRow in iRowL:
                     alignId = srsObj.getValue("align_id", iRow)
                     alignEntityMapD[alignId] = entityId
@@ -1816,6 +1818,11 @@ class DictMethodCommonUtils(object):
                     entitySeqIdEnd = srsObj.getValue("seq_align_end", iRow)
                     dbSeqIdBeg = srsObj.getValue("db_align_beg", iRow)
                     dbSeqIdEnd = srsObj.getValue("db_align_end", iRow)
+                    #
+                    tS = srsObj.getValue("pdbx_db_accession", iRow)
+                    dbAccessionAlign = tS if tS and tS not in [".", "?"] else None
+                    dbAccessionAlignS.add(dbAccessionAlign)
+                    #
                     try:
                         entityAlignLength = int(entitySeqIdEnd) - int(entitySeqIdBeg) + 1
                     except Exception:
@@ -1828,10 +1835,23 @@ class DictMethodCommonUtils(object):
                             "dbSeqIdBeg": dbSeqIdBeg,
                             "dbSeqIdEnd": dbSeqIdEnd,
                             "dbName": dbName,
-                            "dbAccession": dbAccession,
+                            "dbAccession": dbAccessionAlign,
                             "entityAlignLength": entityAlignLength,
                         }
                     )
+                # Check consistency
+                try:
+                    if len(dbAccessionAlignS) == 1 and list(dbAccessionAlignS)[0] == dbAccession:
+                        tupSeqEntityRefDbD.setdefault(entityId, []).append((dbName, dbAccession))
+                    elif len(dbAccessionAlignS) == 1 and list(dbAccessionAlignS)[0]:
+                        tupSeqEntityRefDbD.setdefault(entityId, []).append((dbName, list(dbAccessionAlignS)[0]))
+                    elif dbAccession:
+                        tupSeqEntityRefDbD.setdefault(entityId, []).append((dbName, dbAccession))
+                    else:
+                        logger.warning("%s entityId %r inconsistent reference sequence %r %r", dataContainer.getName(), entityId, dbAccession, dbAccessionAlignS)
+                except Exception:
+                    logger.warning("%s entityId %r inconsistent reference sequence %r %r", dataContainer.getName(), entityId, dbAccession, dbAccessionAlignS)
+
             # uniquify
             dbMapD = self.getDatabaseNameMap()
             for entityId in tupSeqEntityRefDbD:

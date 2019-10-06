@@ -284,8 +284,10 @@ class DictMethodEntityInstanceHelper(object):
             _rcsb_polymer_instance_feature.assignment_version
             _rcsb_polymer_instance_feature.feature_ranges_beg_seq_id
             _rcsb_polymer_instance_feature.feature_ranges_end_seq_id
+            _rcsb_polymer_instance_feature.feature_ranges_value
             _rcsb_polymer_instance_feature.feature_positions_comp_id
             _rcsb_polymer_instance_feature.feature_positions_seq_id
+            _rcsb_polymer_instance_feature.feature_positions_value
 
         """
         logger.debug("Starting with %r %r %r", dataContainer.getName(), catName, kwargs)

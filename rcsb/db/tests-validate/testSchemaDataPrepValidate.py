@@ -206,7 +206,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             #
             dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)
             dictApi = dP.getApiByName(databaseName)
-            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
+            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, siftsAbbreviated="TEST")
             dmh = DictMethodRunner(dictApi, modulePathMap=self.__modulePathMap, resourceProvider=rP)
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)
