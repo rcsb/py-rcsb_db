@@ -1810,12 +1810,21 @@ class DictMethodCommonUtils(object):
                 logger.debug("entryId %r entityId %r refId %r rowList %r", dataContainer.getName(), entityId, refId, iRowL)
                 dbAccessionAlignS = set()
                 for iRow in iRowL:
+                    try:
+                        entitySeqIdBeg = srsObj.getValue("seq_align_beg", iRow)
+                        entitySeqIdEnd = srsObj.getValue("seq_align_end", iRow)
+                        entityAlignLength = int(entitySeqIdEnd) - int(entitySeqIdBeg) + 1
+                    except Exception:
+                        entityAlignLength = 0
+                    #
+                    if entityAlignLength <= 0:
+                        logger.warning("%s entity %r skipping bad alignment seqBeg %r seqEnd %r", dataContainer.getName(), entityId, entitySeqIdBeg, entitySeqIdEnd)
+                        continue
+
                     alignId = srsObj.getValue("align_id", iRow)
                     alignEntityMapD[alignId] = entityId
                     #
                     authAsymId = srsObj.getValue("pdbx_strand_id", iRow)
-                    entitySeqIdBeg = srsObj.getValue("seq_align_beg", iRow)
-                    entitySeqIdEnd = srsObj.getValue("seq_align_end", iRow)
                     dbSeqIdBeg = srsObj.getValue("db_align_beg", iRow)
                     dbSeqIdEnd = srsObj.getValue("db_align_end", iRow)
                     #
@@ -1823,10 +1832,6 @@ class DictMethodCommonUtils(object):
                     dbAccessionAlign = tS if tS and tS not in [".", "?"] else None
                     dbAccessionAlignS.add(dbAccessionAlign)
                     #
-                    try:
-                        entityAlignLength = int(entitySeqIdEnd) - int(entitySeqIdBeg) + 1
-                    except Exception:
-                        entityAlignLength = 0
                     seqEntityAlignmentD.setdefault(entityId, []).append(
                         {
                             "authAsymId": authAsymId,
@@ -1850,7 +1855,7 @@ class DictMethodCommonUtils(object):
                     else:
                         logger.warning("%s entityId %r inconsistent reference sequence %r %r", dataContainer.getName(), entityId, dbAccession, dbAccessionAlignS)
                 except Exception:
-                    logger.warning("%s entityId %r inconsistent reference sequence %r %r", dataContainer.getName(), entityId, dbAccession, dbAccessionAlignS)
+                    logger.exception("%s entityId %r inconsistent reference sequence %r %r", dataContainer.getName(), entityId, dbAccession, dbAccessionAlignS)
 
             # uniquify
             dbMapD = self.getDatabaseNameMap()
@@ -1858,7 +1863,10 @@ class DictMethodCommonUtils(object):
                 tupSeqEntityRefDbD[entityId] = sorted(set(tupSeqEntityRefDbD[entityId]))
                 for tup in tupSeqEntityRefDbD[entityId]:
                     tS = dbMapD[tup[0]] if tup[0] in dbMapD else tup[0]
-                    seqEntityRefDbD.setdefault(entityId, []).append({"dbName": tS, "dbAccession": tup[1]})
+                    if tup[1]:
+                        seqEntityRefDbD.setdefault(entityId, []).append({"dbName": tS, "dbAccession": tup[1]})
+                    else:
+                        logger.warning("%s %s skipping incomplete sequence reference %r", dataContainer.getName(), entityId, tup)
             #
             # ------- --------- ------- --------- ------- --------- ------- --------- ------- ---------
             #   (entityId, seqId, compId, filteredFeature) -> set{details, ...}
@@ -1872,6 +1880,9 @@ class DictMethodCommonUtils(object):
                 for ii in range(srsdObj.getRowCount()):
                     # authAsymId = srsdObj.getValue("pdbx_pdb_strand_id", ii)
                     alignId = srsdObj.getValue("align_id", ii)
+                    if alignId not in alignEntityMapD:
+                        logger.warning("%s bad alignment ID %r in difference record %d", dataContainer.getName(), alignId, ii + 1)
+                        continue
                     entityId = alignEntityMapD[alignId]
                     seqId = srsdObj.getValue("seq_num", ii)
                     compId = srsdObj.getValue("mon_id", ii)
@@ -2252,7 +2263,7 @@ class DictMethodCommonUtils(object):
                 expMethod = "X-ray"
             elif mS in ["SOLUTION NMR", "SOLID-STATE NMR"]:
                 expMethod = "NMR"
-            elif mS in ["ELECTRON MICROSCOPY", "ELECTRON CRYSTALLOGRAPHY"]:
+            elif mS in ["ELECTRON MICROSCOPY", "ELECTRON CRYSTALLOGRAPHY", "ELECTRON DIFFRACTION", "CRYO-ELECTRON MICROSCOPY", "ELECTRON TOMOGRAPHY"]:
                 expMethod = "EM"
             elif mS in ["NEUTRON DIFFRACTION"]:
                 expMethod = "Neutron"

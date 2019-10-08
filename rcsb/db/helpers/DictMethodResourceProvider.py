@@ -34,6 +34,7 @@ from rcsb.utils.seq.SiftsSummaryProvider import SiftsSummaryProvider
 from rcsb.utils.struct.CathClassificationProvider import CathClassificationProvider
 from rcsb.utils.struct.ScopClassificationProvider import ScopClassificationProvider
 from rcsb.utils.taxonomy.TaxonomyProvider import TaxonomyProvider
+from rcsb.utils.validation.ValidationReportProvider import ValidationReportProvider
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +73,7 @@ class DictMethodResourceProvider(SingletonClass):
         self.__atcP = None
         self.__siftsAbbreviated = kwargs.get("siftsAbbreviated", "PROD")
         self.__ssP = None
+        self.__vrptP = None
         #
         #
         # self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
@@ -88,6 +90,7 @@ class DictMethodResourceProvider(SingletonClass):
             "ChemCompModelProvider instance": self.__fetchChemCompModelProvider,
             "AtcProvider instance": self.__fetchAtcProvider,
             "DictMethodCommonUtils instance": self.__fetchCommonUtils,
+            "ValidationProvider instance": self.__fetchValidationProvider,
         }
         logger.debug("Dictionary resource provider init completed")
         #
@@ -195,6 +198,14 @@ class DictMethodResourceProvider(SingletonClass):
             self.__ssP = SiftsSummaryProvider(srcDirPath=srcDirPath, cacheDirPath=cacheDirPath, useCache=useCache, abbreviated=self.__siftsAbbreviated, **kwargs)
             logger.debug("ssP entry count %d", self.__ssP.getEntryCount())
         return self.__ssP
+
+    def __fetchValidationProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
+        if not self.__vrptP:
+            dirPath = os.path.join(cachePath, cfgOb.get("DICTIONARY_CACHE_DIR", sectionName=configName))
+            self.__vrptP = ValidationReportProvider(dirPath=dirPath, useCache=useCache)
+        #
+        return self.__vrptP
 
     def __fetchCommonUtils(self, cfgOb, configName, cachePath, useCache=None, **kwargs):
         logger.debug("configName %s cachePath %r kwargs %r", configName, cachePath, kwargs)

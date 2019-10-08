@@ -167,6 +167,7 @@ def main():
         saveInputFileListPath = args.save_file_list_path
         pruneDocumentSize = float(args.prune_document_size) if args.prune_document_size else None
         cachePath = args.cache_path if args.cache_path else "."
+        cachePath = os.path.abspath(cachePath)
         rebuildCache = args.rebuild_cache if args.rebuild_cache else False
         rebuildSchemaFlag = args.rebuild_schema if args.rebuild_schema else False
         if args.document_style not in ["rowwise_by_name", "rowwise_by_name_with_cardinality", "columnwise_by_name", "rowwise_by_id", "rowwise_no_name"]:

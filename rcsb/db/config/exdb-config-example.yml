@@ -2642,6 +2642,7 @@ document_helper_configuration:
         - SEARCH_TYPE: exact-match
           ATTRIBUTE_NAMES:
           - audit_author.identifier_ORCID
+          - citation.id
           - citation_author.identifier_ORCID
           - citation.journal_abbrev
           - citation.journal_id_ASTM
@@ -3226,6 +3227,13 @@ document_helper_configuration:
         pdbx_core_entry:
             - NAME: entry.id
               CATEGORY_NAME: rcsb_entry_container_identifiers
+              ATTRIBUTE_NAME: rcsb_id
+              PRIVATE_DOCUMENT_NAME: rcsb_id
+              MANDATORY: True
+              UPDATE_ON_LOAD: False
+        pdbx_core_assembly:
+            - NAME: assembly.id
+              CATEGORY_NAME: rcsb_assembly_container_identifiers
               ATTRIBUTE_NAME: rcsb_id
               PRIVATE_DOCUMENT_NAME: rcsb_id
               MANDATORY: True

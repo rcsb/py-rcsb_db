@@ -306,6 +306,7 @@ class PdbxLoader(object):
             cIdD = {}
             containerList = []
             for locatorObj in dataList:
+                # JDW
                 cL = self.__rpP.getContainerList([locatorObj])
                 if cL:
                     cId = cL[0].getName() if useNameFlag else cL[0].getProp("uid")

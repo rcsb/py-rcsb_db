@@ -36,6 +36,9 @@ class DictMethodChemRefHelper(object):
         """
         #
         self._raiseExceptions = kwargs.get("raiseExceptions", False)
+        #
+        rP = kwargs.get("resourceProvider")
+        self.__dApi = rP.getResource("Dictionary API instance (pdbx_core)") if rP else None
         logger.debug("Dictionary method helper init")
 
     def echo(self, msg):
@@ -356,7 +359,7 @@ class DictMethodChemRefHelper(object):
             # ------- add the canonical identifiers --------
             cN = "rcsb_chem_comp_container_identifiers"
             if not dataContainer.exists(cN):
-                dataContainer.append(DataCategory(cN, attributeNameList=["comp_id", "prd_id", "subcomponent_ids", "rcsb_id"]))
+                dataContainer.append(DataCategory(cN, attributeNameList=self.__dApi.getAttributeNameList(cN)))
             idObj = dataContainer.getObj(cN)
             idObj.setValue(ccId, "comp_id", 0)
             if prdId:
@@ -376,23 +379,7 @@ class DictMethodChemRefHelper(object):
             # Create the new target category
             #
             if not dataContainer.exists(catName):
-                dataContainer.append(
-                    DataCategory(
-                        catName,
-                        attributeNameList=[
-                            "comp_id",
-                            "release_status",
-                            "initial_release_date",
-                            "revision_date",
-                            "atom_count",
-                            "atom_count_heavy",
-                            "atom_count_chiral",
-                            "bond_count",
-                            "bond_count_aromatic",
-                        ],
-                    )
-                )
-
+                dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
             #
             # -------
             wObj = dataContainer.getObj(catName)

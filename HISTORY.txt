@@ -167,3 +167,4 @@
  29-Sep-2019  V0.73 Parallelize merging content types in RepositoryProvider()
  29-Sep-2019  V0.74 Cleaning up more edge cases with missing or misorganized data
   6-Oct-2019  V0.75 Reorganize feature value within feature range and position subcategories
+  7-Oct-2019  V0.76 Tweak sequence reference processing to better cope with inconsistencies and missing data.

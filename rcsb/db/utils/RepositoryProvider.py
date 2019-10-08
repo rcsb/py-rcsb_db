@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 
 def toCifWrapper(xrt):
     dirPath = os.environ.get("_RP_DICT_PATH_")
-    vpr = ValidationReportProvider(dirPath=dirPath, useCache=True, cleaCache=False)
+    vpr = ValidationReportProvider(dirPath=dirPath, useCache=True)
     vrd = vpr.getReader()
     return vrd.toCif(xrt)
 
@@ -63,8 +63,8 @@ class RepositoryProvider(object):
         self.__verbose = verbose
         self.__cfgOb = cfgOb
         self.__configName = self.__cfgOb.getDefaultSectionName()
-        cpth = cachePath if cachePath else "."
-        self.__cachePath = os.path.join(cpth, self.__cfgOb.get("REPO_UTIL_CACHE_DIR", sectionName=self.__configName))
+        self.__topCachePath = cachePath if cachePath else "."
+        self.__cachePath = os.path.join(self.__topCachePath, self.__cfgOb.get("REPO_UTIL_CACHE_DIR", sectionName=self.__configName))
         #
         self.__mU = MarshalUtil(workPath=self.__cachePath)
         #
@@ -90,8 +90,8 @@ class RepositoryProvider(object):
             return self.getLocatorObjListWithInput(contentType, inputPathList=inputPathList, mergeContentTypes=mergeContentTypes)
         #
         if mergeContentTypes and "vrpt" in mergeContentTypes and contentType in ["pdbx", "pdbx_core"]:
-            dictPath = os.path.join(self.__cachePath, self.__cfgOb.get("DICTIONARY_CACHE_DIR", sectionName=self.__cfgOb.getDefaultSectionName()))
-            os.environ["_RP_DICT_PATH_"] = os.path.join(dictPath, "vprt")
+            dictPath = os.path.join(self.__topCachePath, self.__cfgOb.get("DICTIONARY_CACHE_DIR", sectionName=self.__cfgOb.getDefaultSectionName()))
+            os.environ["_RP_DICT_PATH_"] = dictPath
             locatorList = self.getEntryLocatorObjList(mergeContentTypes=mergeContentTypes)
         else:
             locatorList = self.__getLocatorList(contentType, inputPathList=inputPathList)
@@ -114,8 +114,8 @@ class RepositoryProvider(object):
         locatorList = self.__getLocatorList(contentType, inputPathList=inputPathList)
         # JDW move the following to config
         if mergeContentTypes and "vrpt" in mergeContentTypes and contentType in ["pdbx", "pdbx_core"]:
-            dictPath = os.path.join(self.__cachePath, self.__cfgOb.get("DICTIONARY_CACHE_DIR", sectionName=self.__cfgOb.getDefaultSectionName()))
-            os.environ["_RP_DICT_PATH_"] = os.path.join(dictPath, "vprt")
+            dictPath = os.path.join(self.__topCachePath, self.__cfgOb.get("DICTIONARY_CACHE_DIR", sectionName=self.__cfgOb.getDefaultSectionName()))
+            os.environ["_RP_DICT_PATH_"] = dictPath
             #
             locObjL = []
             for locator in locatorList:
@@ -613,6 +613,9 @@ class RepositoryProvider(object):
                     if container.exists(catName):
                         catObj = container.getObj(catName)
                         ii = 0
+                        relStatus = catObj.getValue(attributeName="release_status", rowIndex=ii)
+                        if relStatus != "REL":
+                            continue
                         prdRepType = catObj.getValue(attributeName="represent_as", rowIndex=ii)
                         logger.debug("represent as %r", prdRepType)
                         if prdRepType in ["single molecule"]:

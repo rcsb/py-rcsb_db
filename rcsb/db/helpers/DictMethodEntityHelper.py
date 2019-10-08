@@ -334,7 +334,7 @@ class DictMethodEntityHelper(object):
                 ii += 1
             return True
         except Exception as e:
-            logger.exception("For %s failing with %s", catName, str(e))
+            logger.exception("For %s  %s failing with %s", dataContainer.getName(), catName, str(e))
         return False
 
     def filterSourceOrganismDetails(self, dataContainer, catName, **kwargs):
@@ -760,15 +760,17 @@ class DictMethodEntityHelper(object):
             atName = "rcsb_entity_id"
             srsObj = dataContainer.getObj(catName)
             if not srsObj.hasAttribute(atName):
-                srsObj.appendAttribute(atName)
+                # srsObj.appendAttribute(atName)
+                srsObj.appendAttributeExtendRows(atName, defaultValue="?")
             #
             srObj = dataContainer.getObj("struct_ref")
             #
             srsdObj = None
             if dataContainer.exists("struct_ref_seq_dif"):
                 srsdObj = dataContainer.getObj("struct_ref_seq_dif")
-                if not srsdObj.hasAttribute("rcsb_entity_id"):
-                    srsdObj.appendAttribute("rcsb_entity_id")
+                if not srsdObj.hasAttribute(atName):
+                    # srsdObj.appendAttribute(atName)
+                    srsdObj.appendAttributeExtendRows(atName, defaultValue="?")
 
             for ii in range(srObj.getRowCount()):
                 entityId = srObj.getValue("entity_id", ii)
