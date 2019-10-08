@@ -63,6 +63,7 @@
 #  6-Sep-2019 jdw incorporate metadata for search type and brief description
 #  9-Sep-2019 jdw add COLLECTION_ATC: tree_atc_node_list
 # 17-Sep-2019 jdw category rcsb_polymer_entity_align
+#  8-Oct-2019 jdw upversion schema
 #
 # ExDB configuration file example
 ---
@@ -314,7 +315,7 @@ content_info_helper_configuration:
             VERSION: 5.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-pdbx-type-map.json
         pdbx_core:
-            VERSION: 6.0.0
+            VERSION: 6.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-pdbx-type-map.json
         bird:
             VERSION: 5.1.0
@@ -329,7 +330,7 @@ content_info_helper_configuration:
             VERSION: 5.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
         bird_chem_comp_core:
-            VERSION: 6.0.0
+            VERSION: 6.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
         pdb_distro:
             VERSION: 1.1.0
@@ -1458,15 +1459,15 @@ document_helper_configuration:
               VERSION: 5.1.0
         pdbx_core:
             - NAME: pdbx_core_entity
-              VERSION: 6.2.0
+              VERSION: 6.3.0
             - NAME: pdbx_core_entry
-              VERSION: 6.2.0
+              VERSION: 6.3.0
             - NAME: pdbx_core_assembly
-              VERSION: 6.2.0
+              VERSION: 6.3.0
             - NAME: pdbx_core_entity_instance
-              VERSION: 6.2.0
+              VERSION: 6.3.0
             - NAME: pdbx_core_entity_instance_validation
-              VERSION: 6.2.0
+              VERSION: 6.3.0
             #- NAME: pdbx_core_entity_monomer
             #  VERSION: 5.1.0
         bird:
@@ -1483,7 +1484,7 @@ document_helper_configuration:
               VERSION: 5.1.0
         bird_chem_comp_core:
             - NAME: bird_chem_comp_core
-              VERSION: 6.0.0
+              VERSION: 6.1.0
         pdb_distro: []
         repository_holdings:
             - NAME: repository_holdings_update
