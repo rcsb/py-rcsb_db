@@ -1461,7 +1461,7 @@ document_helper_configuration:
             - NAME: pdbx_core_entity
               VERSION: 6.4.0
             - NAME: pdbx_core_entry
-              VERSION: 6.4.0
+              VERSION: 6.4.1
             - NAME: pdbx_core_assembly
               VERSION: 6.4.0
             - NAME: pdbx_core_entity_instance
@@ -2491,7 +2491,7 @@ document_helper_configuration:
         - ATTRIBUTE_NAME: rcsb_entry_info.software_programs_combined
           TYPE: brief
           TEXT: Software
-        - ATTRIBUTE_NAME: symmetry.space_group_name_H_M
+        - ATTRIBUTE_NAME: symmetry.space_group_name_H-M
           TYPE: brief
           TEXT: Space Group
         - ATTRIBUTE_NAME: em_experiment.aggregation_state

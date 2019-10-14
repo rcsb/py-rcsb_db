@@ -1892,9 +1892,9 @@ class DictMethodCommonUtils(object):
 
             # -----
             dbMapD = self.getDatabaseNameMap()
-            for entityId in tupSeqEntityRefDbD:
-                tupSeqEntityRefDbD[entityId] = sorted(set(tupSeqEntityRefDbD[entityId]))
-                for tup in tupSeqEntityRefDbD[entityId]:
+            for entityId, tupL in tupSeqEntityRefDbD.items():
+                uTupL = list(OrderedDict({tup: True for tup in tupL}).keys())
+                for tup in uTupL:
                     tS = dbMapD[tup[0]] if tup[0] in dbMapD else tup[0]
                     if tup[1]:
                         seqEntityRefDbD.setdefault(entityId, []).append({"dbName": tS, "dbAccession": tup[1], "dbIsoform": tup[2]})
@@ -1923,8 +1923,11 @@ class DictMethodCommonUtils(object):
                     details = srsdObj.getValue("details", ii)
                     filteredDetails = self.filterRefSequenceDif(details)
                     if filteredDetails == "artifact":
-                        entityArtifactD.setdefault(entityId, []).append(int(seqId))
-                        seqIdDetailsD[int(seqId)] = details.lower()
+                        try:
+                            entityArtifactD.setdefault(entityId, []).append(int(seqId))
+                            seqIdDetailsD[int(seqId)] = details.lower()
+                        except Exception as e:
+                            logger.warning("Incomplete sequence difference for %r %r %r %r", dataContainer.getName(), entityId, seqId, details)
                     else:
                         seqMonomerFeatureD.setdefault((entityId, seqId, compId, filteredDetails), set()).add(details.lower())
                 #
