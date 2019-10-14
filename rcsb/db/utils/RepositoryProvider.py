@@ -597,6 +597,7 @@ class RepositoryProvider(object):
         """
         prdD = {}
         ccPathD = {}
+        prdStatusD = {}
         try:
             ccPathL = self.__getLocatorList("chem_comp")
             ccPathD = {}
@@ -613,14 +614,16 @@ class RepositoryProvider(object):
                     if container.exists(catName):
                         catObj = container.getObj(catName)
                         ii = 0
+                        prdId = catObj.getValue(attributeName="prd_id", rowIndex=ii)
                         relStatus = catObj.getValue(attributeName="release_status", rowIndex=ii)
+                        prdStatusD[prdId] = relStatus
                         if relStatus != "REL":
                             continue
                         prdRepType = catObj.getValue(attributeName="represent_as", rowIndex=ii)
                         logger.debug("represent as %r", prdRepType)
                         if prdRepType in ["single molecule"]:
                             ccId = catObj.getValueOrDefault(attributeName="chem_comp_id", rowIndex=ii, defaultValue=None)
-                            prdId = catObj.getValue(attributeName="prd_id", rowIndex=ii)
+                            # prdId = catObj.getValue(attributeName="prd_id", rowIndex=ii)
                             logger.debug("mapping prdId %r ccId %r", prdId, ccId)
                             if ccId and ccId in ccPathD:
                                 prdD[prdId] = {"ccId": ccId, "ccPath": ccPathD[ccId]}
@@ -630,18 +633,18 @@ class RepositoryProvider(object):
         except Exception as e:
             logger.exception("Failing with %s", str(e))
 
-        return prdD, ccPathD
+        return prdD, ccPathD, prdStatusD
 
     # -
     def mergeBirdAndChemCompRefData(self):
-        prdSmallMolCcD, ccPathD = self.__buildBirdCcIndex()
+        prdSmallMolCcD, ccPathD, prdStatusD = self.__buildBirdCcIndex()
         logger.info("PRD to CCD index length %d CCD map path length %d", len(prdSmallMolCcD), len(ccPathD))
-        outputPathList = self.mergeBirdRefData(prdSmallMolCcD)
+        outputPathList = self.mergeBirdRefData(prdSmallMolCcD, prdStatusD)
         ccOutputPathList = [pth for pth in self.getChemCompPathList() if pth not in ccPathD]
         outputPathList.extend(ccOutputPathList)
         return outputPathList
 
-    def mergeBirdRefData(self, prdSmallMolCcD):
+    def mergeBirdRefData(self, prdSmallMolCcD, prdStatusD):
         """ Consolidate all of the bird reference data in a single container.
 
             If the BIRD is a 'small molecule' type then also merge with the associated CC definition.
@@ -678,14 +681,15 @@ class RepositoryProvider(object):
             logger.debug("PRD to CCD small mol index length %d", len(prdSmallMolCcD))
             #
             for prdId in birdPathD:
+                if prdId in prdStatusD and prdStatusD[prdId] != "REL":
+                    continue
                 fp = os.path.join(self.__cachePath, prdId + ".cif")
                 logger.debug("Export cache path is %r", fp)
-
-                if prdId in birdPathD:
-                    pth2 = birdPathD[prdId]
-                    cL = self.__mU.doImport(pth2, fmt="mmcif")
-                    cFull = cL[0]
-                    logger.debug("Got Bird %r", cFull.getName())
+                #
+                pth2 = birdPathD[prdId]
+                cL = self.__mU.doImport(pth2, fmt="mmcif")
+                cFull = cL[0]
+                logger.debug("Got Bird %r", cFull.getName())
                 #
                 #
                 ccBird = None

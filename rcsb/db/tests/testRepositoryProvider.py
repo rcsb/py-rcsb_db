@@ -33,7 +33,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
-class ScanRepoUtilTests(unittest.TestCase):
+class RepositoryProviderTests(unittest.TestCase):
     def setUp(self):
         #
         #
@@ -74,7 +74,7 @@ class ScanRepoUtilTests(unittest.TestCase):
 
 def repoSuite():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(ScanRepoUtilTests("testRepoUtils"))
+    suiteSelect.addTest(RepositoryProviderTests("testRepoUtils"))
     return suiteSelect
 
 

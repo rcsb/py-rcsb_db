@@ -38,6 +38,7 @@ import unittest
 
 from jsondiff import diff
 
+from mmcif.api.DictMethodRunner import DictMethodRunner
 from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
 from rcsb.db.define.SchemaDefAccess import SchemaDefAccess
 from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
@@ -47,8 +48,6 @@ from rcsb.db.utils.RepositoryProvider import RepositoryProvider
 from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
-
-from mmcif.api.DictMethodRunner import DictMethodRunner
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()
@@ -85,7 +84,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__chemCompMockLen = 16
-        self.__pdbxMockLen = 36
+        self.__pdbxMockLen = 37
         # removes timestamped data items to allow diffs.)
         excludeExtras = ["rcsb_load_status"]
         # excludeExtras = []
@@ -147,15 +146,6 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "styleType": "rowwise_by_name_with_cardinality",
                 "mergeContentTypes": None,
                 "rejectLength": 2,
-                "excludeExtras": excludeExtras,
-            },
-            {
-                "contentType": "bird_chem_comp_core",
-                "mockLength": self.__chemCompMockLen,
-                "filterType": self.__fTypeRow,
-                "styleType": "rowwise_by_name_with_cardinality",
-                "mergeContentTypes": None,
-                "rejectLength": 1,
                 "excludeExtras": excludeExtras,
             },
             {

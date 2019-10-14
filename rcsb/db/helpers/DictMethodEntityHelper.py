@@ -53,6 +53,7 @@ class DictMethodEntityHelper(object):
         self.__commonU = rP.getResource("DictMethodCommonUtils instance") if rP else None
         self.__dApi = rP.getResource("Dictionary API instance (pdbx_core)") if rP else None
         self.__ssP = rP.getResource("SiftsSummaryProvider instance") if rP else None
+        self.__useSiftsAlign = False
         #
         logger.debug("Dictionary entity method helper init")
 
@@ -80,17 +81,17 @@ class DictMethodEntityHelper(object):
                 # re-group alignments by common accession
                 alRefD = {}
                 for seqAlignObj in seqAlignObjL:
-                    alRefD.setdefault((seqAlignObj.getDbName(), seqAlignObj.getDbAccession()), []).append(seqAlignObj)
+                    alRefD.setdefault((seqAlignObj.getDbName(), seqAlignObj.getDbAccession(), seqAlignObj.getDbIsoform()), []).append(seqAlignObj)
                 #
                 # Get the longest overlapping entity region of each ref alignment -
-                for (dbName, dbAcc), aL in alRefD.items():
+                for (dbName, dbAcc, dbIsoform), aL in alRefD.items():
                     alGrpD = splitSeqAlignObjList(aL)
-                    logger.debug("SIFTS -> entryId %s entityId %s dbName %r dbAcc %r alGrpD %r", entryId, entityId, dbName, dbAcc, alGrpD)
+                    logger.debug("SIFTS -> entryId %s entityId %s dbName %r dbAcc %r dbIsoform %r alGrpD %r", entryId, entityId, dbName, dbAcc, dbIsoform, alGrpD)
                     for _, grpAlignL in alGrpD.items():
 
                         lenL = [seqAlignObj.getEntityAlignLength() for seqAlignObj in grpAlignL]
                         idxMax = lenL.index(max(lenL))
-                        siftsEntityAlignD.setdefault((entryId, entityId, "SIFTS"), {}).setdefault((dbName, dbAcc), []).append(grpAlignL[idxMax])
+                        siftsEntityAlignD.setdefault((entryId, entityId, "SIFTS"), {}).setdefault((dbName, dbAcc, dbIsoform), []).append(grpAlignL[idxMax])
         #
         logger.debug("PROCESSED SIFTS ->  %r", siftsEntityAlignD)
         return siftsEntityAlignD
@@ -108,10 +109,10 @@ class DictMethodEntityHelper(object):
             if seqAlignObjL:
                 alRefD = {}
                 for seqAlignObj in seqAlignObjL:
-                    alRefD.setdefault((seqAlignObj.getDbName(), seqAlignObj.getDbAccession()), []).append(seqAlignObj)
-                for (dbName, dbAcc), aL in alRefD.items():
+                    alRefD.setdefault((seqAlignObj.getDbName(), seqAlignObj.getDbAccession(), seqAlignObj.getDbIsoform()), []).append(seqAlignObj)
+                for (dbName, dbAcc, dbIsoform), aL in alRefD.items():
                     alGrpD = splitSeqAlignObjList(aL)
-                    logger.debug("PDB -> entryId %s entityId %s dbName %r dbAcc %r alGrpD %r", entryId, entityId, dbName, dbAcc, alGrpD)
+                    logger.debug("PDB -> entryId %s entityId %s dbName %r dbAcc %r dbIsoform %r alGrpD %r", entryId, entityId, dbName, dbAcc, dbIsoform, alGrpD)
                     for _, grpAlignL in alGrpD.items():
                         # get the longest overlapping entity region of each ref seq -
                         lenL = [seqAlignObj.getEntityAlignLength() for seqAlignObj in grpAlignL]
@@ -119,7 +120,7 @@ class DictMethodEntityHelper(object):
                         try:
                             tLen = grpAlignL[idxMax].getEntityAlignLength()
                             if tLen and tLen > 0:
-                                pdbEntityAlignD.setdefault((entryId, entityId, "PDB"), {}).setdefault((dbName, dbAcc), []).append(grpAlignL[idxMax])
+                                pdbEntityAlignD.setdefault((entryId, entityId, "PDB"), {}).setdefault((dbName, dbAcc, dbIsoform), []).append(grpAlignL[idxMax])
                             else:
                                 logger.warning("Skipping %s inconsistent alignment for entity %r %r", entryId, entityId, entityAlignL)
                         except Exception:
@@ -162,18 +163,18 @@ class DictMethodEntityHelper(object):
             #
             cObj = dataContainer.getObj(catName)
             #
-            siftsEntityAlignD = self.__processSiftsAlignments(dataContainer)
-            logger.debug("siftsEntityAlignD %d", len(siftsEntityAlignD))
-            #
             pdbEntityAlignD = self.__processPdbAlignments(dataContainer)
-            pdbEntityAlignD.update(siftsEntityAlignD)
+            if self.__useSiftsAlign:
+                siftsEntityAlignD = self.__processSiftsAlignments(dataContainer)
+                logger.debug("siftsEntityAlignD %d", len(siftsEntityAlignD))
+                pdbEntityAlignD.update(siftsEntityAlignD)
             #
             # ---
 
             iRow = cObj.getRowCount()
             for (entryId, entityId, provCode), refD in pdbEntityAlignD.items():
                 #
-                for (dbName, dbAcc), saoL in refD.items():
+                for (dbName, dbAcc, dbIsoform), saoL in refD.items():
                     #
                     if dbName not in dbNameMapD:
                         logger.error("Skipping unsupported reference database %r for entry %s entity %s", dbName, entryId, entityId)
@@ -186,6 +187,8 @@ class DictMethodEntityHelper(object):
                     dispDbName = dbNameMapD[dbName]
                     cObj.setValue(dispDbName, "reference_database_name", iRow)
                     cObj.setValue(dbAcc, "reference_database_accession", iRow)
+                    if dbIsoform:
+                        cObj.setValue(dbIsoform, "reference_database_isoform", iRow)
                     cObj.setValue(provCode, "provenance_code", iRow)
                     #
                     cObj.setValue(",".join([str(sao.getDbSeqIdBeg()) for sao in saoL]), "aligned_regions_ref_beg_seq_id", iRow)
@@ -256,7 +259,7 @@ class DictMethodEntityHelper(object):
                 ccMonomerL = []
                 ccLigandL = []
                 #
-                refSeqIdD = {"dbName": [], "dbAccession": [], "provSource": []}
+                refSeqIdD = {"dbName": [], "dbAccession": [], "provSource": [], "dbIsoform": []}
                 relatedAnnIdD = {"dbName": [], "dbAccession": [], "provSource": []}
 
                 if eType == "polymer" and psObj:
@@ -265,13 +268,15 @@ class DictMethodEntityHelper(object):
                     ccMonomerL = psObj.selectValuesWhere("mon_id", entityId, "entity_id")
                     #
                     if self.__ssP:
-                        dbIdL = []
-                        for authAsymId in authAsymIdL:
-                            dbIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="UNPID"))
-                        for dbId in sorted(set(dbIdL)):
-                            refSeqIdD["dbName"].append("UniProt")
-                            refSeqIdD["provSource"].append("SIFTS")
-                            refSeqIdD["dbAccession"].append(dbId)
+                        if self.__useSiftsAlign:
+                            dbIdL = []
+                            for authAsymId in authAsymIdL:
+                                dbIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="UNPID"))
+                            for dbId in sorted(set(dbIdL)):
+                                refSeqIdD["dbName"].append("UniProt")
+                                refSeqIdD["provSource"].append("SIFTS")
+                                refSeqIdD["dbAccession"].append(dbId)
+                                refSeqIdD["dbIsoform"].append("?")
                         dbIdL = []
                         for authAsymId in authAsymIdL:
                             dbIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="PFAMID"))
@@ -306,6 +311,12 @@ class DictMethodEntityHelper(object):
                         refSeqIdD["dbName"].append(dbD["dbName"])
                         refSeqIdD["provSource"].append("PDB")
                         refSeqIdD["dbAccession"].append(dbD["dbAccession"])
+                        #
+                        if dbD["dbIsoform"]:
+                            refSeqIdD["dbIsoform"].append(dbD["dbIsoform"])
+                        else:
+                            refSeqIdD["dbIsoform"].append("?")
+                #
                 # logger.info("refSeqIdD %r %r %r", entryId, entityId, refSeqIdD)
 
                 if asymIdL:
@@ -325,6 +336,7 @@ class DictMethodEntityHelper(object):
                     cObj.setValue(",".join(refSeqIdD["dbName"]).strip(), "reference_sequence_identifiers_database_name", ii)
                     cObj.setValue(",".join(refSeqIdD["dbAccession"]).strip(), "reference_sequence_identifiers_database_accession", ii)
                     cObj.setValue(",".join(refSeqIdD["provSource"]).strip(), "reference_sequence_identifiers_provenance_source", ii)
+                    cObj.setValue(",".join(refSeqIdD["dbIsoform"]).strip(), "reference_sequence_identifiers_database_isoform", ii)
                 #
                 if relatedAnnIdD["dbName"]:
                     cObj.setValue(",".join(relatedAnnIdD["dbName"]).strip(), "related_annotation_identifiers_database_name", ii)

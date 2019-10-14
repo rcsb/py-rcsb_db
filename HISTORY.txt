@@ -169,3 +169,5 @@
   6-Oct-2019  V0.75 Reorganize feature value within feature range and position subcategories
   7-Oct-2019  V0.76 Tweak sequence reference processing to better cope with inconsistencies and missing data.
   8-Oct-2019  V0.77 Upversion schema after successful build
+ 14-Oct-2019  V0.78 Add support for sequence isoforms, entry molecular weight, turn off SIFTS for
+                    references and alignments,  and various schema adjusts.

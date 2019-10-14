@@ -8,6 +8,7 @@
 # 26-Jul-2019 jdw Include struct_mon_prot_cis with secondary structure features
 #                 Add general processing of intermolecular and other connections.
 # 19-Sep-2019 jdw Add method getEntityReferenceAlignments()
+# 13-Oct-2019 jdw add isoform support
 ##
 """
 Helper class implements common utility external method references supporting the RCSB dictionary extension.
@@ -121,6 +122,20 @@ class DictMethodCommonUtils(object):
             wD = self.__getEntityAndInstanceTypes(dataContainer)
             self.__entityAndInstanceMapCache.set(dataContainer.getName(), wD)
         return wD
+
+    def getFormulaWeightNonSolvent(self, dataContainer):
+        """Return a formula weight of the non-solvent entities in the deposited entry.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            float: formula weight (kilodaltons)
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchEntityAndInstanceTypes(dataContainer)
+        return wD["fwNonSolvent"] if "fwNonSolvent" in wD else {}
 
     def getInstancePolymerTypes(self, dataContainer):
         """Return a dictionary of polymer types for each polymer instance.
@@ -307,7 +322,7 @@ class DictMethodCommonUtils(object):
             #
             if not dataContainer.exists("entity") or not dataContainer.exists("struct_asym"):
                 return {}
-
+            eFwD = {}
             instanceTypeD = {}
             instancePolymerTypeD = {}
             instanceTypeCountD = {}
@@ -319,6 +334,8 @@ class DictMethodCommonUtils(object):
                 entityId = eObj.getValue("id", ii)
                 eType = eObj.getValue("type", ii)
                 eTypeD[entityId] = eType
+                fw = eObj.getValue("formula_weight", ii)
+                eFwD[entityId] = float(fw) if fw and fw not in [".", "?"] else 0.0
             #
             epTypeD = {}
             epLengthD = {}
@@ -383,6 +400,15 @@ class DictMethodCommonUtils(object):
             instanceTypeCountD = {k: 0 for k in ["polymer", "non-polymer", "branched", "macrolide", "water"]}
             for asymId, eType in instanceTypeD.items():
                 instanceTypeCountD[eType] += 1
+            #
+            # Compute the total weight of polymer and non-polymer instances (full entities) - (kilodaltons)
+            #
+            fwNonSolvent = 0.0
+            for asymId, eType in instanceTypeD.items():
+                if eType not in ["water"]:
+                    entityId = instEntityD[asymId]
+                    fwNonSolvent += eFwD[entityId]
+            fwNonSolvent = fwNonSolvent / 1000.0
 
             rD = {
                 "instanceTypeD": instanceTypeD,
@@ -396,6 +422,7 @@ class DictMethodCommonUtils(object):
                 "entityMonomerCountD": entityMonomerCountD,
                 "entityPolymerLengthD": entityPolymerLengthD,
                 "entityModifiedMonomers": entityModifiedMonomers,
+                "fwNonSolvent": fwNonSolvent,
             }
             logger.debug("%s length struct_asym %d (%d) instanceTypeD %r", dataContainer.getName(), sObj.getRowCount(), len(instanceTypeD), instanceTypeD)
         #
@@ -1805,6 +1832,11 @@ class DictMethodCommonUtils(object):
                 tS = srObj.getValue("pdbx_db_accession", ii)
                 dbAccession = tS if tS and tS not in [".", "?"] else None
                 #
+                tS = srObj.getValue("pdbx_db_isoform", ii)
+                dbIsoform = tS if tS and tS not in [".", "?"] else None
+                if dbIsoform and dbAccession not in dbIsoform:
+                    logger.warning("entryId %r entityId %r accession %r isoform %r inconsistency", dataContainer.getName(), entityId, dbAccession, dbIsoform)
+                #
                 # Get indices for the target refId.
                 iRowL = srsObj.selectIndices(refId, "ref_id")
                 logger.debug("entryId %r entityId %r refId %r rowList %r", dataContainer.getName(), entityId, refId, iRowL)
@@ -1841,30 +1873,31 @@ class DictMethodCommonUtils(object):
                             "dbSeqIdEnd": dbSeqIdEnd,
                             "dbName": dbName,
                             "dbAccession": dbAccessionAlign,
+                            "dbIsoform": dbIsoform,
                             "entityAlignLength": entityAlignLength,
                         }
                     )
                 # Check consistency
                 try:
                     if len(dbAccessionAlignS) == 1 and list(dbAccessionAlignS)[0] == dbAccession:
-                        tupSeqEntityRefDbD.setdefault(entityId, []).append((dbName, dbAccession))
+                        tupSeqEntityRefDbD.setdefault(entityId, []).append((dbName, dbAccession, dbIsoform))
                     elif len(dbAccessionAlignS) == 1 and list(dbAccessionAlignS)[0]:
-                        tupSeqEntityRefDbD.setdefault(entityId, []).append((dbName, list(dbAccessionAlignS)[0]))
+                        tupSeqEntityRefDbD.setdefault(entityId, []).append((dbName, list(dbAccessionAlignS)[0], None))
                     elif dbAccession:
-                        tupSeqEntityRefDbD.setdefault(entityId, []).append((dbName, dbAccession))
+                        tupSeqEntityRefDbD.setdefault(entityId, []).append((dbName, dbAccession, dbIsoform))
                     else:
                         logger.warning("%s entityId %r inconsistent reference sequence %r %r", dataContainer.getName(), entityId, dbAccession, dbAccessionAlignS)
                 except Exception:
                     logger.exception("%s entityId %r inconsistent reference sequence %r %r", dataContainer.getName(), entityId, dbAccession, dbAccessionAlignS)
 
-            # uniquify
+            # -----
             dbMapD = self.getDatabaseNameMap()
             for entityId in tupSeqEntityRefDbD:
                 tupSeqEntityRefDbD[entityId] = sorted(set(tupSeqEntityRefDbD[entityId]))
                 for tup in tupSeqEntityRefDbD[entityId]:
                     tS = dbMapD[tup[0]] if tup[0] in dbMapD else tup[0]
                     if tup[1]:
-                        seqEntityRefDbD.setdefault(entityId, []).append({"dbName": tS, "dbAccession": tup[1]})
+                        seqEntityRefDbD.setdefault(entityId, []).append({"dbName": tS, "dbAccession": tup[1], "dbIsoform": tup[2]})
                     else:
                         logger.warning("%s %s skipping incomplete sequence reference %r", dataContainer.getName(), entityId, tup)
             #
@@ -1881,7 +1914,7 @@ class DictMethodCommonUtils(object):
                     # authAsymId = srsdObj.getValue("pdbx_pdb_strand_id", ii)
                     alignId = srsdObj.getValue("align_id", ii)
                     if alignId not in alignEntityMapD:
-                        logger.warning("%s bad alignment ID %r in difference record %d", dataContainer.getName(), alignId, ii + 1)
+                        logger.warning("%s inconsistent alignment ID %r in difference record %d", dataContainer.getName(), alignId, ii + 1)
                         continue
                     entityId = alignEntityMapD[alignId]
                     seqId = srsdObj.getValue("seq_num", ii)

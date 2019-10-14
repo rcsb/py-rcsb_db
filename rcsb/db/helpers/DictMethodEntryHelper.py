@@ -611,8 +611,11 @@ class DictMethodEntryHelper(object):
             cisPeptideD = self.__commonU.getCisPeptides(dataContainer)
             cObj.setValue(len(cisPeptideD), "cis_peptide_count", 0)
             #
-            # This is reset in  mehtod - filterSourceOrganismDetails()
+            # This is reset in anothor method - filterSourceOrganismDetails()
             cObj.setValue(None, "polymer_entity_taxonomy_count", 0)
+            #
+            fw = self.__commonU.getFormulaWeightNonSolvent(dataContainer)
+            cObj.setValue(str(round(fw, 2)), "molecular_weight", 0)
             #
             return True
         except Exception as e:

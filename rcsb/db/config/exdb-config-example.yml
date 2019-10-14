@@ -1459,15 +1459,15 @@ document_helper_configuration:
               VERSION: 5.1.0
         pdbx_core:
             - NAME: pdbx_core_entity
-              VERSION: 6.3.0
+              VERSION: 6.4.0
             - NAME: pdbx_core_entry
-              VERSION: 6.3.0
+              VERSION: 6.4.0
             - NAME: pdbx_core_assembly
-              VERSION: 6.3.0
+              VERSION: 6.4.0
             - NAME: pdbx_core_entity_instance
-              VERSION: 6.3.0
+              VERSION: 6.4.0
             - NAME: pdbx_core_entity_instance_validation
-              VERSION: 6.3.0
+              VERSION: 6.4.0
             #- NAME: pdbx_core_entity_monomer
             #  VERSION: 5.1.0
         bird:
@@ -1484,7 +1484,7 @@ document_helper_configuration:
               VERSION: 5.1.0
         bird_chem_comp_core:
             - NAME: bird_chem_comp_core
-              VERSION: 6.1.0
+              VERSION: 6.2.0
         pdb_distro: []
         repository_holdings:
             - NAME: repository_holdings_update
@@ -2806,11 +2806,13 @@ document_helper_configuration:
           - pdbx_soln_scatter.source_beamline_instrument
           - pdbx_soln_scatter.source_class
           - pdbx_soln_scatter.source_type
+          #
           - rcsb_entry_info.experimental_method
           - rcsb_entry_info.polymer_composition
           - rcsb_entry_info.selected_polymer_entity_types
           - rcsb_entry_info.software_programs_combined
           - rcsb_entry_info.software_programs_combined
+          #
           - refine.details
           - refine.pdbx_method_to_determine_struct
           - reflns.data_reduction_details
@@ -2827,8 +2829,7 @@ document_helper_configuration:
         - SEARCH_TYPE: suggest
           ATTRIBUTE_NAMES:
           - rcsb_entity_container_identifiers.entry_id
-          - rcsb_entity_container_identifiers.pfam_ids
-          - rcsb_entity_container_identifiers.uniprot_ids
+          - rcsb_entity_container_identifiers.reference_sequence_identifiers_database_accession
           - entity.rcsb_macromolecular_names_combined
           - entity.pdbx_description
           - rcsb_entity_source_organism.ncbi_scientific_name
@@ -2837,10 +2838,13 @@ document_helper_configuration:
           - entity_poly.rcsb_entity_polymer_type
           - entity.rcsb_ec_lineage_id
           - entity.rcsb_ec_lineage_name
+          #
           - rcsb_entity_container_identifiers.entry_id
           - rcsb_entity_container_identifiers.rcsb_id
-          - rcsb_entity_container_identifiers.pfam_ids
-          - rcsb_entity_container_identifiers.uniprot_ids
+          - rcsb_entity_container_identifiers.reference_sequence_identifiers_database_accession
+          - rcsb_entity_container_identifiers.reference_sequence_identifiers_database_name
+          - rcsb_entity_container_identifiers.reference_sequence_identifiers_database_isoform
+          #
           - rcsb_entity_host_organism.common_name
           - rcsb_entity_host_organism.ncbi_common_names
           - rcsb_entity_host_organism.ncbi_parent_scientific_name
@@ -2859,11 +2863,17 @@ document_helper_configuration:
           - rcsb_polymer_entity_feature.feature_class_lineage_id
           - rcsb_polymer_entity_feature.feature_class_lineage_name
           - rcsb_polymer_entity_feature.name
+          - rcsb_polymer_entity_feature.feature_id
+          - rcsb_polymer_entity_feature.type
+          - rcsb_polymer_entity_feature_summary.type
           #
         - SEARCH_TYPE: default-match
           ATTRIBUTE_NAMES:
           - entity.formula_weight
-          - rcsb_polymer_entity_feature.value
+          - rcsb_polymer_entity_feature.feature_ranges_value
+          - rcsb_polymer_entity_feature.feature_positions_value
+          - rcsb_polymer_entity_feature_summary.count
+          - rcsb_polymer_entity_feature_summary.coverage
         - SEARCH_TYPE: full-text
           ATTRIBUTE_NAMES:
           - entity_keywords.text
@@ -2911,9 +2921,15 @@ document_helper_configuration:
           - rcsb_polymer_instance_feature.feature_class_lineage_name
           - rcsb_polymer_instance_feature.name
           - rcsb_entity_instance_container_identifiers.rcsb_id
+          - rcsb_polymer_instance_feature.feature_id
+          - rcsb_polymer_instance_feature.type
+          - rcsb_polymer_instance_feature_summary.type
         - SEARCH_TYPE: default-match
           ATTRIBUTE_NAMES:
-          - rcsb_polymer_instance_feature.value
+          - rcsb_polymer_instance_feature.feature_ranges_value
+          - rcsb_polymer_instance_feature.feature_positions_value
+          - rcsb_polymer_instance_feature_summary.count
+          - rcsb_polymer_instance_feature_summary.coverage
         - SEARCH_TYPE: full-text
           ATTRIBUTE_NAMES:
           - rcsb_polymer_instance_feature.description
@@ -2925,9 +2941,15 @@ document_helper_configuration:
           - rcsb_polymer_instance_validation_feature.feature_class_lineage_name
           - rcsb_polymer_instance_validation_feature.name
           - rcsb_entity_instance_validation_container_identifiers.rcsb_id
+          - rcsb_entity_instance_validation_container_identifiers.feature_id
+          - rcsb_entity_instance_validation_container_identifiers.type
+          - rcsb_polymer_instance_validation_feature_summary.type
         - SEARCH_TYPE: default-match
           ATTRIBUTE_NAMES:
-          - rcsb_polymer_instance_validation_feature.value
+          - rcsb_polymer_instance_validation_feature.feature_ranges_value
+          - rcsb_polymer_instance_validation_feature.feature_positions_value
+          - rcsb_polymer_instance_validation_feature_summary.count
+          - rcsb_polymer_instance_validation_feature_summary.coverage
         - SEARCH_TYPE: full-text
           ATTRIBUTE_NAMES:
           - rcsb_polymer_instance_validation_feature.description
@@ -2940,7 +2962,7 @@ document_helper_configuration:
           - pdbx_struct_assembly.rcsb_details
         - SEARCH_TYPE: exact-match
           ATTRIBUTE_NAMES:
-          - rcsb_entity_assembly_container_identifiers.rcsb_id
+          - rcsb_assembly_container_identifiers.rcsb_id
       #
       bird_chem_comp_core:
         - SEARCH_TYPE: exact-match

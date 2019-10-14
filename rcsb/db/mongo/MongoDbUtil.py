@@ -246,6 +246,36 @@ class MongoDbUtil(object):
             logger.exception("Failing with %s", str(e))
         return None
 
+    def update(self, databaseName, collectionName, dObj, selectD):
+        """ Update documents satisfying the selection details with the content of dObj.
+
+        Args:
+            databaseName (str): Target database name
+            collectionName (str): Target collection name
+            dObj (dict): document data (dotted notation for sub-objects applied with '$set')
+            selectD (dict): dictionary of key/values for the selction/filter query
+
+        Returns:
+            int: update document count
+
+            update_many(filter, update, upsert=False, array_filters=None)
+        """
+        try:
+            numModified = 0
+            clt = self.__mgObj[databaseName].get_collection(collectionName)
+            rV = clt.update_many(selectD, {"$set": dObj}, upsert=False, array_filters=None)
+            try:
+                numMatched = rV.matched_count
+                numModified = rV.modified_count
+                logger.debug("Replacement matched %d modified %d", numMatched, numModified)
+                return numModified
+            except Exception as e:
+                logger.error("Failing update %s and %s selectD %r with %s", databaseName, collectionName, selectD, str(e))
+                return None
+        except Exception as e:
+            logger.exception("Failing update %s and %s selectD %r with %s", databaseName, collectionName, selectD, str(e))
+        return numModified
+
     def replace(self, databaseName, collectionName, dObj, selectD, upsertFlag=True):
         """Replace the input document based on a selection query in the input selection dictionary (k,v).
 
@@ -377,7 +407,7 @@ class MongoDbUtil(object):
             logger.exception("Failing %s and %s with %s", databaseName, collectionName, str(e))
         return False
 
-    def fetch(self, databaseName, collectionName, selectL, queryD=None):
+    def fetch(self, databaseName, collectionName, selectL, queryD=None, suppressId=False):
         """ Fetch selections (selectL) from documents satisfying input
             query constraints.
         """
@@ -386,8 +416,13 @@ class MongoDbUtil(object):
             qD = queryD if queryD is not None else None
             if selectL:
                 sD = {k: 1 for k in selectL}
+                if suppressId:
+                    sD["_id"] = 0
             else:
-                sD = None
+                if suppressId:
+                    sD["_id"] = 0
+                else:
+                    sD = None
             clt = self.__mgObj[databaseName].get_collection(collectionName)
             # logger.debug("Got collection object %r" % c)
             for dD in clt.find(filter=qD, projection=sD):

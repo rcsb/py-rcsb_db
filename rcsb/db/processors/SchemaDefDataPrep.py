@@ -342,7 +342,7 @@ class SchemaDefDataPrep(object):
                                 doc[pName] = doc[catName][atName]
                             else:
                                 if isMandatory:
-                                    logger.info("Skipping private key for %s %s %r %r", catName, atName, pdk, list(doc.items())[:5])
+                                    logger.info("Skipping private key for %s %s %s %r %r", collectionName, catName, atName, pdk, list(doc.items())[:5])
         except Exception as e:
             logger.exception("Failing with %s : %r", str(e), list(doc.items())[:5])
         #
