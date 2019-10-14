@@ -1459,7 +1459,7 @@ document_helper_configuration:
               VERSION: 5.1.0
         pdbx_core:
             - NAME: pdbx_core_entity
-              VERSION: 6.4.0
+              VERSION: 6.4.1
             - NAME: pdbx_core_entry
               VERSION: 6.4.1
             - NAME: pdbx_core_assembly
@@ -2593,6 +2593,13 @@ document_helper_configuration:
         - ATTRIBUTE_NAME: citation_author.name
           TYPE: brief
           TEXT: Citation Author
+        - ATTRIBUTE_NAME: entity.rcsb_ec_lineage_id
+          TYPE: brief
+          TEXT: Enzyme Classification Number
+        - ATTRIBUTE_NAME: entity.rcsb_ec_lineage_name
+          TYPE: brief
+          TEXT: Enzyme Classification Name
+
     ##
     ##
     collection_attribute_search_priority:

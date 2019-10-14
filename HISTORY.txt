@@ -172,3 +172,4 @@
  14-Oct-2019  V0.78 Add support for sequence isoforms, entry molecular weight, turn off SIFTS for
                     references and alignments,  and various schema adjusts.
  14-Oct-2019  V0.79 Add test cases and fix exceptions for missing sequence difference details.
+ 14-Oct-2019  V0.80 Fix linting issue and update documentation in configuration example file -

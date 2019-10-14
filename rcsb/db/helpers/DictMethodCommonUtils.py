@@ -1926,7 +1926,7 @@ class DictMethodCommonUtils(object):
                         try:
                             entityArtifactD.setdefault(entityId, []).append(int(seqId))
                             seqIdDetailsD[int(seqId)] = details.lower()
-                        except Exception as e:
+                        except Exception:
                             logger.warning("Incomplete sequence difference for %r %r %r %r", dataContainer.getName(), entityId, seqId, details)
                     else:
                         seqMonomerFeatureD.setdefault((entityId, seqId, compId, filteredDetails), set()).add(details.lower())
