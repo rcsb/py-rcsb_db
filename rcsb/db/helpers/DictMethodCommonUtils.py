@@ -1800,6 +1800,8 @@ class DictMethodCommonUtils(object):
         """
         logger.debug("Starting with %r", dataContainer.getName())
         #
+        #  To exclude self references -
+        excludeRefDbList = ["PDB"]
         rD = {"seqFeatureCountsD": {}, "seqMonomerFeatureD": {}, "seqRangeFeatureD": {}, "seqEntityAlignmentD": {}, "seqEntityRefDbD": {}}
         try:
             # Exit if source categories are missing
@@ -1828,6 +1830,9 @@ class DictMethodCommonUtils(object):
                 entityId = srObj.getValue("entity_id", ii)
                 refId = srObj.getValue("id", ii)
                 dbName = str(srObj.getValue("db_name", ii)).strip().upper()
+                #
+                if dbName in excludeRefDbList:
+                    continue
                 #
                 tS = srObj.getValue("pdbx_db_accession", ii)
                 dbAccession = tS if tS and tS not in [".", "?"] else None
