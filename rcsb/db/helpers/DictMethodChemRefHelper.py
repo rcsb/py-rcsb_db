@@ -165,7 +165,7 @@ class DictMethodChemRefHelper(object):
                             idLinL = atcP.getIdLineage(atcId)
                             logger.debug("dbId %r atcId %r lineage %r", dbId, atcId, idLinL)
                             wObj.setValue(";".join(idLinL), "resource_lineage_id", iRow)
-                            wObj.setValue(";".join([str(jj) for jj in range(1, len(idLinL) + 1)]), "resource_lineage_depth", iRow)
+                            wObj.setValue(";".join([str(jj) for jj in range(0, len(idLinL) + 1)]), "resource_lineage_depth", iRow)
             #
             #  ------------ ----------------------- ----------------------- ----------------------- -----------
             ccmProvider = rP.getResource("ChemCompModelProvider instance") if rP else None

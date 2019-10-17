@@ -1918,9 +1918,12 @@ class DictMethodCommonUtils(object):
                 for ii in range(srsdObj.getRowCount()):
                     # authAsymId = srsdObj.getValue("pdbx_pdb_strand_id", ii)
                     alignId = srsdObj.getValue("align_id", ii)
-                    if alignId not in alignEntityMapD:
+                    dbName = srsdObj.getValue("pdbx_seq_db_name", ii)
+                    # Keep difference records for self-referenced entity sequences.
+                    if alignId not in alignEntityMapD and dbName not in excludeRefDbList:
                         logger.warning("%s inconsistent alignment ID %r in difference record %d", dataContainer.getName(), alignId, ii + 1)
                         continue
+                    #
                     entityId = alignEntityMapD[alignId]
                     seqId = srsdObj.getValue("seq_num", ii)
                     compId = srsdObj.getValue("mon_id", ii)

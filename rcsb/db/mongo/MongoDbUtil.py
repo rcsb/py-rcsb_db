@@ -298,8 +298,8 @@ class MongoDbUtil(object):
                 rId = rV.upserted_id
                 numMatched = rV.matched_count
                 numModified = rV.modified_count
-                logger.debug("Replacement mathed %d modified %d with _id %s", numMatched, numModified, rId)
-                return rId
+                logger.debug("Replacement matched %d modified %d or upserted with _id %s", numMatched, numModified, rId)
+                return numMatched or numModified
             except Exception as e:
                 logger.error("Failing %s and %s selectD %r with %s", databaseName, collectionName, selectD, str(e))
                 return None

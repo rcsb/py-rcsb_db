@@ -10,7 +10,7 @@ pymongo >= 3.7.0
 mmcif >= 0.47
 rcsb.utils.config >= 0.24
 rcsb.utils.io >= 0.41
-rcsb.utils.multiproc >= 0.13
+rcsb.utils.multiproc >= 0.14
 rcsb.utils.chemref >= 0.25
 rcsb.utils.validation >= 0.18
 scandir; python_version < "3.0"
