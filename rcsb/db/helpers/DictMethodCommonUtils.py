@@ -1827,6 +1827,7 @@ class DictMethodCommonUtils(object):
             # entity alignment details
             seqEntityAlignmentD = {}
             for ii in range(srObj.getRowCount()):
+                dbAccessionAlignS = set()
                 entityId = srObj.getValue("entity_id", ii)
                 refId = srObj.getValue("id", ii)
                 dbName = str(srObj.getValue("db_name", ii)).strip().upper()
@@ -1845,7 +1846,7 @@ class DictMethodCommonUtils(object):
                 # Get indices for the target refId.
                 iRowL = srsObj.selectIndices(refId, "ref_id")
                 logger.debug("entryId %r entityId %r refId %r rowList %r", dataContainer.getName(), entityId, refId, iRowL)
-                dbAccessionAlignS = set()
+
                 for iRow in iRowL:
                     try:
                         entitySeqIdBeg = srsObj.getValue("seq_align_beg", iRow)
@@ -1866,7 +1867,8 @@ class DictMethodCommonUtils(object):
                     dbSeqIdEnd = srsObj.getValue("db_align_end", iRow)
                     #
                     tS = srsObj.getValue("pdbx_db_accession", iRow)
-                    dbAccessionAlign = tS if tS and tS not in [".", "?"] else None
+                    # use the parent pdbx_accession
+                    dbAccessionAlign = tS if tS and tS not in [".", "?"] else dbAccession
                     dbAccessionAlignS.add(dbAccessionAlign)
                     #
                     seqEntityAlignmentD.setdefault(entityId, []).append(

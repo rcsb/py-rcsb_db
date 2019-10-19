@@ -392,6 +392,10 @@ class SchemaDefDataPrep(object):
                                             dD = {}
                                             for atName in atNameL:
                                                 cAtName = atName.replace(scAg + "_", "") if removeSubCategoryPrefix else atName
+                                                # dD[cAtName] = rowD[atName]
+                                                # JDW filter missing values -
+                                                if not rowD[atName] or rowD[atName] in [".", "?"]:
+                                                    continue
                                                 dD[cAtName] = rowD[atName]
                                             rowD[scAg] = dD
                                         else:
@@ -405,6 +409,9 @@ class SchemaDefDataPrep(object):
                                                 dD = {}
                                                 for atName in atNameL:
                                                     cAtName = atName.replace(scAg + "_", "") if removeSubCategoryPrefix else atName
+                                                    # JDW filter missing values
+                                                    if not rowD[atName][ii] or rowD[atName][ii] in [".", "?"]:
+                                                        continue
                                                     dD[cAtName] = rowD[atName][ii]
                                                 rL.append(dD)
                                             rowD[scAg] = rL
@@ -422,6 +429,9 @@ class SchemaDefDataPrep(object):
                                         dD = {}
                                         for atName in atNameL:
                                             cAtName = atName.replace(scAg + "_", "") if removeSubCategoryPrefix else atName
+                                            # JDW filter missing values
+                                            if not doc[sName][atName][ii] or doc[sName][atName][ii] in [".", "?"]:
+                                                continue
                                             dD[cAtName] = doc[sName][atName][ii]
                                         doc[sName][scAg] = dD
                                     else:
@@ -434,6 +444,9 @@ class SchemaDefDataPrep(object):
                                             dD = {}
                                             for atName in atNameL:
                                                 cAtName = atName.replace(scAg + "_", "") if removeSubCategoryPrefix else atName
+                                                # JDW filter missing values
+                                                if not doc[sName][atName][ii] or doc[sName][atName][ii] in [".", "?"]:
+                                                    continue
                                                 dD[cAtName] = doc[sName][atName][ii]
                                             rL.append(dD)
                                         doc[sName][scAg] = rL
