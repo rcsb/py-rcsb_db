@@ -176,4 +176,4 @@
  16-Oct-2019  V0.81 Filter reference sequence assignments marked as self-reference - added tests for GO Id consistency
  17-Oct-2019  V0.82 Preserve annotations on self-referenced sequences for now/shift ATC depth
  19-Oct-2019  V0.83 Strip missing/empty values from subcategory aggregates/handle missing accession codes on struct_ref_seq records
- 19-Oct-2019  V0.84 Abandon reliance on ref_id/align_id consistency in struct_ref_* categories
+ 19-Oct-2019  V0.84 Abandon reliance on ref_id/align_id consistency in struct_ref_* categories.
