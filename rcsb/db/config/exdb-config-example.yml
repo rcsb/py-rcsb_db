@@ -580,6 +580,12 @@ content_info_helper_configuration:
                 - CATEGORY_NAME: ihm_localization_density_files
                 - CATEGORY_NAME: ihm_predicted_contact_restraint
                 - CATEGORY_NAME: ihm_hydroxyl_radical_fp_restraint
+                - CATEGORY_NAME: ihm_chemical_component_descriptor
+                - CATEGORY_NAME: ihm_probe_list
+                - CATEGORY_NAME: ihm_poly_probe_position
+                - CATEGORY_NAME: ihm_poly_probe_conjugate
+                - CATEGORY_NAME: ihm_ligand_probe
+                - CATEGORY_NAME: ihm_epr_restraint
                 - CATEGORY_NAME: ihm_cross_link_list
                 - CATEGORY_NAME: ihm_cross_link_restraint
                 - CATEGORY_NAME: ihm_cross_link_result
@@ -609,7 +615,6 @@ content_info_helper_configuration:
                 - CATEGORY_NAME: ihm_geometric_object_axis
                 - CATEGORY_NAME: ihm_geometric_object_plane
                 - CATEGORY_NAME: ihm_geometric_object_distance_restraint
-                # rcsb_load_status
         ?       - GENERATED_CONTENT
                 - ihm_dev
         :       - CATEGORY_NAME: chem_comp_atom
@@ -646,6 +651,12 @@ content_info_helper_configuration:
                 - CATEGORY_NAME: ihm_localization_density_files
                 - CATEGORY_NAME: ihm_predicted_contact_restraint
                 - CATEGORY_NAME: ihm_hydroxyl_radical_fp_restraint
+                - CATEGORY_NAME: ihm_chemical_component_descriptor
+                - CATEGORY_NAME: ihm_probe_list
+                - CATEGORY_NAME: ihm_poly_probe_position
+                - CATEGORY_NAME: ihm_poly_probe_conjugate
+                - CATEGORY_NAME: ihm_ligand_probe
+                - CATEGORY_NAME: ihm_epr_restraint
                 - CATEGORY_NAME: ihm_cross_link_list
                 - CATEGORY_NAME: ihm_cross_link_restraint
                 - CATEGORY_NAME: ihm_cross_link_result
@@ -675,7 +686,6 @@ content_info_helper_configuration:
                 - CATEGORY_NAME: ihm_geometric_object_axis
                 - CATEGORY_NAME: ihm_geometric_object_plane
                 - CATEGORY_NAME: ihm_geometric_object_distance_restraint
-                # - CATEGORY_NAME: rcsb_load_status
         #
         ?       - GENERATED_CONTENT
                 - pdbx

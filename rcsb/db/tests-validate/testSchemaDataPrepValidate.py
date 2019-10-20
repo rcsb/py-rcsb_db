@@ -139,6 +139,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
     def testValidateOptsIhmRepo(self):
         schemaLevel = "min"
         inputPathList = None
+        self.__export = True
 
         databaseNameD = {"ihm_dev_full": ["ihm_dev_full"]}
         databaseNameD = {"ihm_dev": ["ihm_dev"]}
