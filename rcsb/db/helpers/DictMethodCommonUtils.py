@@ -1799,6 +1799,7 @@ class DictMethodCommonUtils(object):
             #
         """
         logger.debug("Starting with %r", dataContainer.getName())
+        self.__addStructRefSeqEntityIds(dataContainer)
         #
         #  To exclude self references -
         excludeRefDbList = ["PDB"]
@@ -1921,12 +1922,16 @@ class DictMethodCommonUtils(object):
                     # authAsymId = srsdObj.getValue("pdbx_pdb_strand_id", ii)
                     alignId = srsdObj.getValue("align_id", ii)
                     dbName = srsdObj.getValue("pdbx_seq_db_name", ii)
-                    # Keep difference records for self-referenced entity sequences.
-                    if alignId not in alignEntityMapD and dbName not in excludeRefDbList:
-                        logger.warning("%s inconsistent alignment ID %r in difference record %d", dataContainer.getName(), alignId, ii + 1)
-                        continue
                     #
-                    entityId = alignEntityMapD[alignId]
+                    # Can't rely on alignId
+                    # Keep difference records for self-referenced entity sequences.
+                    # if alignId not in alignEntityMapD and dbName not in excludeRefDbList:
+                    #    logger.warning("%s inconsistent alignment ID %r in difference record %d", dataContainer.getName(), alignId, ii + 1)
+                    #    continue
+                    # JDW
+                    # entityId = alignEntityMapD[alignId]
+                    entityId = srsdObj.getValue("rcsb_entity_id", ii)
+                    #
                     seqId = srsdObj.getValue("seq_num", ii)
                     compId = srsdObj.getValue("mon_id", ii)
                     #
@@ -1947,8 +1952,8 @@ class DictMethodCommonUtils(object):
                     srL = self.__toRangeList(sL)
                     for sr in srL:
                         seqRangeFeatureD.setdefault((entityId, str(sr[0]), str(sr[1]), "artifact"), set()).update([seqIdDetailsD[sr[0]], seqIdDetailsD[sr[1]]])
-                #
-                logger.debug("seqMonomerFeatureD %r ", seqMonomerFeatureD)
+                # JDW
+                # logger.info("%s seqMonomerFeatureD %r ", dataContainer.getName(), seqMonomerFeatureD)
                 #
                 # Tabulate sequence monomer features by entity for the filtered cases -
                 for (entityId, _, _, fDetails), _ in seqMonomerFeatureD.items():
@@ -1973,6 +1978,61 @@ class DictMethodCommonUtils(object):
         except Exception as e:
             logger.exception("%s failing with %s", dataContainer.getName(), str(e))
         return rD
+
+    def __addStructRefSeqEntityIds(self, dataContainer):
+        """ Add entity ids in categories struct_ref_seq and struct_ref_seq_dir instances.
+
+        Args:
+            dataContainer (object): mmif.api.DataContainer object instance
+            catName (str): Category name
+            atName (str): Attribute name
+
+        Returns:
+            bool: True for success or False otherwise
+
+        """
+        try:
+            catName = "struct_ref_seq"
+            logger.debug("Starting with %r %r", dataContainer.getName(), catName)
+
+            #
+            if not (dataContainer.exists(catName) and dataContainer.exists("struct_ref")):
+                return False
+            #
+            atName = "rcsb_entity_id"
+            srsObj = dataContainer.getObj(catName)
+            if not srsObj.hasAttribute(atName):
+                # srsObj.appendAttribute(atName)
+                srsObj.appendAttributeExtendRows(atName, defaultValue="?")
+            #
+            srObj = dataContainer.getObj("struct_ref")
+            #
+            srsdObj = None
+            if dataContainer.exists("struct_ref_seq_dif"):
+                srsdObj = dataContainer.getObj("struct_ref_seq_dif")
+                if not srsdObj.hasAttribute(atName):
+                    # srsdObj.appendAttribute(atName)
+                    srsdObj.appendAttributeExtendRows(atName, defaultValue="?")
+
+            for ii in range(srObj.getRowCount()):
+                entityId = srObj.getValue("entity_id", ii)
+                refId = srObj.getValue("id", ii)
+                #
+                # Get indices for the target refId.
+                iRowL = srsObj.selectIndices(refId, "ref_id")
+                for iRow in iRowL:
+                    srsObj.setValue(entityId, "rcsb_entity_id", iRow)
+                    alignId = srsObj.getValue("align_id", iRow)
+                    #
+                    if srsdObj:
+                        jRowL = srsdObj.selectIndices(alignId, "align_id")
+                        for jRow in jRowL:
+                            srsdObj.setValue(entityId, "rcsb_entity_id", jRow)
+
+            return True
+        except Exception as e:
+            logger.exception("%s %s failing with %s", dataContainer.getName(), catName, str(e))
+        return False
 
     def filterRefSequenceDif(self, details):
         filteredDetails = details
