@@ -178,3 +178,5 @@
  19-Oct-2019  V0.83 Strip missing/empty values from subcategory aggregates/handle missing accession codes on struct_ref_seq records
  19-Oct-2019  V0.84 Abandon reliance on ref_id/align_id consistency in struct_ref_* categories.
  20-Oct-2019  V0.85 Update type, coverage and configuration for latest IHM dictioanry update
+ 23-Oct-2019  V0.86 Add nesting property to objects with unit cardinality,
+                    don't propagate exact-match/suggest search contexts to full-text

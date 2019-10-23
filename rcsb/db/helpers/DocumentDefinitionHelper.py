@@ -260,8 +260,8 @@ class DocumentDefinitionHelper(object):
                         logger.error("Bad attribute name for search type %r", atName)
                         continue
                     aD.setdefault((ff[0], ff[1]), []).append(tD["SEARCH_TYPE"])
-                    if tD["SEARCH_TYPE"] in ["exact-match", "suggest"]:
-                        aD.setdefault((ff[0], ff[1]), []).append("full-text")
+                    # if tD["SEARCH_TYPE"] in ["exact-match", "suggest"]:
+                    #    aD.setdefault((ff[0], ff[1]), []).append("full-text")
                 #
             cD[collectionName] = {tup: sorted(list(set(sL))) for tup, sL in aD.items()}
 

@@ -677,6 +677,9 @@ class SchemaDefBuild(object):
 
             if isUnitCard:
                 catPropD = pD
+                if dataTypingU == "JSON" and addRcsbExtensions:
+                    isNested = documentDefHelper.isCategoryNested(collectionName, catName)
+                    pD["rcsb_nested_indexing"] = isNested
             else:
                 if cfD["IS_MANDATORY"]:
                     catPropD = {typeKey: "array", "items": pD, "minItems": 1, "uniqueItems": True}
