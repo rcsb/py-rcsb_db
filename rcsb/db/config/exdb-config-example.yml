@@ -1469,13 +1469,13 @@ document_helper_configuration:
               VERSION: 5.1.0
         pdbx_core:
             - NAME: pdbx_core_entity
-              VERSION: 6.4.4
+              VERSION: 6.4.5
             - NAME: pdbx_core_entry
-              VERSION: 6.4.3
+              VERSION: 6.4.4
             - NAME: pdbx_core_assembly
               VERSION: 6.4.1
             - NAME: pdbx_core_entity_instance
-              VERSION: 6.4.2
+              VERSION: 6.4.3
             - NAME: pdbx_core_entity_instance_validation
               VERSION: 6.4.2
             #- NAME: pdbx_core_entity_monomer
@@ -1494,7 +1494,7 @@ document_helper_configuration:
               VERSION: 5.1.0
         bird_chem_comp_core:
             - NAME: bird_chem_comp_core
-              VERSION: 6.2.0
+              VERSION: 6.2.1
         pdb_distro: []
         repository_holdings:
             - NAME: repository_holdings_update
@@ -2622,23 +2622,28 @@ document_helper_configuration:
           PRIORITY_VALUE: 20
         - ATTRIBUTE_NAME: rcsb_entity_source_organism.ncbi_scientific_name
           PRIORITY_VALUE: 20
-
+    #
     collection_category_nested:
         pdbx_core_entry:
             - citation
         pdbx_core_entity:
-            - entity
-            - rcsb_entity_host_organism
-            - rcsb_entity_source_organism
             - rcsb_polymer_entity_feature
-            #- rcsb_polymer_entity_align
-            - rcsb_entity_container_identifiers
         pdbx_core_entity_instance:
             - rcsb_polymer_instance_feature
             - rcsb_polymer_instance_feature_summary
         pdbx_core_entity_instance_validation:
-            #- rcsb_polymer_instance_validation_feature
             - rcsb_polymer_instance_validation_feature_summary
+    #
+    collection_subcategory_nested:
+        bird_chem_comp_core:
+            - resource_lineage
+        pdbx_core_entity:
+            - taxonomy_lineage
+            - rcsb_ec_lineage
+            - related_annotation_identifiers
+            - reference_sequence_identifiers
+        pdbx_core_entity_instance:
+            - feature_class_lineage
     #
     collection_attribute_search_contexts:
       # one of: "default-match", "full-text", "exact-match", "suggest"

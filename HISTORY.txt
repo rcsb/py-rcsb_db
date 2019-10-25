@@ -180,3 +180,4 @@
  20-Oct-2019  V0.85 Update type, coverage and configuration for latest IHM dictioanry update
  23-Oct-2019  V0.86 Add nesting property to objects with unit cardinality,
                     don't propagate exact-match/suggest search contexts to full-text
+ 25-Oct-2019  V0.87 Address a couple of anomalous sequence accession code issues

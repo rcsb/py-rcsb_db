@@ -14,6 +14,7 @@
 #  11-Mar-2019 jdw add methods getSubCategoryAggregateFeatures() and  getSubCategoryAggregateUnitCardinality()
 #  13-Mar-2019 jdw add getCollectionVersion() and getCollectionInfo() and remove getCollections().
 #   6-Sep-2019 jdw incorporate search type and brief descriptions
+#  23-Oct-2019 jdw add collection subcategory nested property support
 #
 ##
 """
@@ -50,6 +51,7 @@ class DocumentDefinitionHelper(object):
         self.__searchTypeD = {}
         self.__attributeDescriptionD = {}
         self.__categoryNested = {}
+        self.__subCategoryNested = {}
         self.__attributeSeachPriority = {}
         #
         # ----
@@ -356,6 +358,41 @@ class DocumentDefinitionHelper(object):
         try:
             self.__categoryNested = self.__prepareCategoryNested() if not self.__categoryNested else self.__categoryNested
             ret = categoryName in self.__categoryNested[collectionName]
+        except Exception:
+            pass
+        return ret
+
+    def __prepareSubCategoryNested(self):
+        """
+        Example:
+
+            collection_subcategory_nested:
+                pdbx_core_entity:
+                    - ec_lineage
+                    - taxonomy_lineage
+        """
+        cD = {}
+        # preprocess the nesting data --
+        for collectionName, subCatNameL in self.__cfgD["collection_subcategory_nested"].items():
+            subCatD = {subCatName: True for subCatName in subCatNameL}
+            cD[collectionName] = subCatD
+        return cD
+
+    def isSubCategoryNested(self, collectionName, subCategoryName):
+        """Return is the input subcategory in this collection is nested.
+
+        Args:
+            collectionName (str): collection name
+            subCategoryName (str): subcategory name
+
+        Returns:
+            (bool): True if nested or False otherwise
+
+        """
+        ret = False
+        try:
+            self.__subCategoryNested = self.__prepareSubCategoryNested() if not self.__subCategoryNested else self.__subCategoryNested
+            ret = subCategoryName in self.__subCategoryNested[collectionName]
         except Exception:
             pass
         return ret

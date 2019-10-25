@@ -677,9 +677,6 @@ class SchemaDefBuild(object):
 
             if isUnitCard:
                 catPropD = pD
-                if dataTypingU == "JSON" and addRcsbExtensions:
-                    isNested = documentDefHelper.isCategoryNested(collectionName, catName)
-                    pD["rcsb_nested_indexing"] = isNested
             else:
                 if cfD["IS_MANDATORY"]:
                     catPropD = {typeKey: "array", "items": pD, "minItems": 1, "uniqueItems": True}
@@ -740,6 +737,9 @@ class SchemaDefBuild(object):
                         subCatPropD[subCategory] = scD
                     else:
                         subCatPropD[subCategory] = {typeKey: "array", "items": scD, "uniqueItems": False}
+                        if dataTypingU == "JSON" and addRcsbExtensions:
+                            isNested = documentDefHelper.isSubCategoryNested(collectionName, subCategory)
+                            subCatPropD[subCategory]["rcsb_nested_indexing"] = isNested
             #
             if subCatPropD:
                 logger.debug("%s %s %s processing subcategory properties %r", databaseName, collectionName, catName, subCatPropD.items())

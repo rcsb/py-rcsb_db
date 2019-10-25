@@ -1821,6 +1821,7 @@ class DictMethodCommonUtils(object):
             if dataContainer.exists("struct_ref_seq_dif"):
                 srsdObj = dataContainer.getObj("struct_ref_seq_dif")
 
+            polymerEntityTypeD = self.getPolymerEntityFilteredTypes(dataContainer)
             # Map alignId -> entityId
             seqEntityRefDbD = {}
             tupSeqEntityRefDbD = {}
@@ -1836,14 +1837,26 @@ class DictMethodCommonUtils(object):
                 if dbName in excludeRefDbList:
                     continue
                 #
+                if dbName in ["UNP"] and polymerEntityTypeD[entityId] != "Protein":
+                    logger.warning("%s skipping inconsistent reference assignment for %s polymer type %s", dataContainer.getName(), dbName, polymerEntityTypeD[entityId])
+                    continue
+                #
                 tS = srObj.getValue("pdbx_db_accession", ii)
                 dbAccession = tS if tS and tS not in [".", "?"] else None
                 #
                 tS = srObj.getValue("pdbx_db_isoform", ii)
                 dbIsoform = tS if tS and tS not in [".", "?"] else None
+                # Look for a stray isoform
+                if dbName in ["UNP"] and dbAccession and "-" in dbAccession:
+                    if not dbIsoform:
+                        dbIsoform = dbAccession
+                    ff = dbAccession.split("-")
+                    dbAccession = ff[0]
+
+                #
                 if dbIsoform and dbAccession not in dbIsoform:
                     logger.warning("entryId %r entityId %r accession %r isoform %r inconsistency", dataContainer.getName(), entityId, dbAccession, dbIsoform)
-                #
+                # ---
                 # Get indices for the target refId.
                 iRowL = srsObj.selectIndices(refId, "ref_id")
                 logger.debug("entryId %r entityId %r refId %r rowList %r", dataContainer.getName(), entityId, refId, iRowL)
@@ -1870,6 +1883,13 @@ class DictMethodCommonUtils(object):
                     tS = srsObj.getValue("pdbx_db_accession", iRow)
                     # use the parent pdbx_accession
                     dbAccessionAlign = tS if tS and tS not in [".", "?"] else dbAccession
+                    # Look for a stray isoform
+                    if dbName in ["UNP"] and dbAccessionAlign and "-" in dbAccessionAlign:
+                        if not dbIsoform:
+                            dbIsoform = dbAccessionAlign
+                        ff = dbAccessionAlign.split("-")
+                        dbAccessionAlign = ff[0]
+
                     dbAccessionAlignS.add(dbAccessionAlign)
                     #
                     seqEntityAlignmentD.setdefault(entityId, []).append(
