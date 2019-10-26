@@ -1837,6 +1837,10 @@ class DictMethodCommonUtils(object):
                 if dbName in excludeRefDbList:
                     continue
                 #
+                if entityId not in polymerEntityTypeD:
+                    logger.warning("%s skipping non-polymer entity %r sequence reference", dataContainer.getName(), entityId)
+                    continue
+
                 if dbName in ["UNP"] and polymerEntityTypeD[entityId] != "Protein":
                     logger.warning("%s skipping inconsistent reference assignment for %s polymer type %s", dataContainer.getName(), dbName, polymerEntityTypeD[entityId])
                     continue
