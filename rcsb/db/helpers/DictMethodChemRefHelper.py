@@ -509,6 +509,33 @@ class DictMethodChemRefHelper(object):
             logger.exception("For %s failing with %s", catName, str(e))
         return False
 
+    def renameCitationCategory(self, dataContainer, catName, **kwargs):
+        """Rename citation and citation author categories.
+
+        Args:
+            dataContainer (object): mmif.api.DataContainer object instance
+            catName (str): Category name
+
+        Returns:
+            bool: True for success or False otherwise
+        """
+        try:
+            _ = kwargs
+            logger.debug("Starting with  %r %r", dataContainer.getName(), catName)
+            if not (dataContainer.exists("chem_comp") and dataContainer.exists("pdbx_chem_comp_identifier")):
+                return False
+            #
+            # Rename target categories
+            if dataContainer.exists("citation"):
+                dataContainer.rename("citation", "rcsb_bird_citation")
+            if dataContainer.exists("citation_author"):
+                dataContainer.rename("citation_author", "rcsb_bird_citation_author")
+            return True
+        except Exception as e:
+            logger.exception("For %s failing with %s", catName, str(e))
+
+        return False
+
     def addChemCompSynonyms(self, dataContainer, catName, **kwargs):
         """Add category rcsb_chem_comp_synonyms including PDB and DrugBank annotations.
 

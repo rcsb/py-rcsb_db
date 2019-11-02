@@ -64,6 +64,7 @@
 #  9-Sep-2019 jdw add COLLECTION_ATC: tree_atc_node_list
 # 17-Sep-2019 jdw category rcsb_polymer_entity_align
 #  8-Oct-2019 jdw upversion schema
+#  1-Nov-2019 jdw exclude category pdbx_molecule from core_entry and rename citation in bird_chem_comp_core
 #
 # ExDB configuration file example
 ---
@@ -900,11 +901,7 @@ content_info_helper_configuration:
                 #- CATEGORY_NAME: rcsb_load_status
         ?       - GENERATED_CONTENT
                 - bird_chem_comp_core
-        :       - CATEGORY_NAME: citation
-                  ATTRIBUTE_NAME_LIST:
-                      - rcsb_authors
-                #- CATEGORY_NAME: rcsb_load_status
-                - CATEGORY_NAME: rcsb_chem_comp_synonyms
+        :       - CATEGORY_NAME: rcsb_chem_comp_synonyms
                 - CATEGORY_NAME: rcsb_chem_comp_info
                 - CATEGORY_NAME: rcsb_chem_comp_descriptor
                 - CATEGORY_NAME: rcsb_chem_comp_related
@@ -914,6 +911,7 @@ content_info_helper_configuration:
                       - ordinal
                 - CATEGORY_NAME: rcsb_chem_comp_container_identifiers
                 - CATEGORY_NAME: rcsb_schema_container_identifiers
+                - CATEGORY_NAME: rcsb_bird_citation
                 #
         #?       - GENERATED_CONTENT
         #        - bird
@@ -1167,35 +1165,6 @@ content_info_helper_configuration:
                        - source
                        - source_id
                        - text
-                - CATEGORY_NAME: citation
-                  ATTRIBUTE_NAME_LIST:
-                       - id
-                       - book_id_ISBN
-                       - book_publisher
-                       - book_publisher_city
-                       - book_title
-                       - coordinate_linkage
-                       - country
-                       - journal_abbrev
-                       - journal_id_ASTM
-                       - journal_id_CSD
-                       - journal_id_ISSN
-                       - journal_issue
-                       - journal_volume
-                       - language
-                       - page_first
-                       - page_last
-                       - pdbx_database_id_DOI
-                       - pdbx_database_id_PubMed
-                       - rcsb_authors
-                       - title
-                       - unpublished_flag
-                       - year
-                - CATEGORY_NAME: citation_author
-                  ATTRIBUTE_NAME_LIST:
-                       - citation_id
-                       - ordinal
-                       - name
                 - CATEGORY_NAME: pdbx_family_prd_audit
                   ATTRIBUTE_NAME_LIST:
                        - family_prd_id
@@ -1469,9 +1438,9 @@ document_helper_configuration:
               VERSION: 5.1.0
         pdbx_core:
             - NAME: pdbx_core_entity
-              VERSION: 6.4.5
+              VERSION: 6.4.6
             - NAME: pdbx_core_entry
-              VERSION: 6.4.4
+              VERSION: 6.4.5
             - NAME: pdbx_core_assembly
               VERSION: 6.4.1
             - NAME: pdbx_core_entity_instance
@@ -1494,7 +1463,7 @@ document_helper_configuration:
               VERSION: 5.1.0
         bird_chem_comp_core:
             - NAME: bird_chem_comp_core
-              VERSION: 6.2.1
+              VERSION: 6.3.1
         pdb_distro: []
         repository_holdings:
             - NAME: repository_holdings_update
@@ -1544,6 +1513,7 @@ document_helper_configuration:
                 - CHEM_COMP_ATOM
                 - CHEM_COMP_BOND
                 - CITATION_AUTHOR
+                - RCSB_BIRD_CITATION_AUTHOR
         pdbx:
             INCLUDE: []
             EXCLUDE:
@@ -1703,7 +1673,7 @@ document_helper_configuration:
                 - PDBX_DATABASE_RELATED
                 - PDBX_DATABASE_STATUS
                 - PDBX_DEPOSIT_GROUP
-                - PDBX_MOLECULE
+                # - PDBX_MOLECULE
                 - PDBX_MOLECULE_FEATURES
                 - PDBX_NMR_DETAILS
                 - PDBX_NMR_ENSEMBLE

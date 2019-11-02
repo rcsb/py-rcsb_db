@@ -182,3 +182,4 @@
                     don't propagate exact-match/suggest search contexts to full-text
  25-Oct-2019  V0.87 Address a couple of anomalous sequence accession code issues and sync up mock repos
  26-Oct-2019  V0.88 Address anomalous non-polymer reference sequence records.
+  2-Nov-2019  V0.89 Add bird specific citation handling methods.
