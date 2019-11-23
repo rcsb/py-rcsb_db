@@ -65,8 +65,10 @@ jobs:
       - script: apt-cache policy | grep http | awk '{print $2 $3}' | sort -u
         displayName: 'Checking for repos'
       #
-      - script: sudo apt-get upgrade ; update
-        displayName: 'upgrade/update apt'
+      - script: sudo apt-get upgrade
+        displayName: 'upgrade apt'
+      - script: sudo apt-get update –fix-missing
+        displayName: 'update apt'
       - script: sudo apt-get install flex
         displayName: 'Install flex'
       - script: sudo apt-get install bison
