@@ -67,7 +67,7 @@ jobs:
       #
       - script: sudo apt-get upgrade
         displayName: 'upgrade apt'
-      - script: sudo apt-get update –fix-missing
+      - script: sudo apt-get update
         displayName: 'update apt'
       - script: sudo apt-get install flex
         displayName: 'Install flex'
