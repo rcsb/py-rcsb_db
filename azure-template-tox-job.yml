@@ -70,7 +70,7 @@ jobs:
   #
     - ${{ if and(contains(parameters.fixtures, 'mysql'), startsWith(parameters.os, 'linux')) }}:
       - bash: |
-          sudo apt-get install libmysqlclient-dev python-mysqldb
+          sudo apt-get install python3.8-dev mysql-server libmysqlclient-dev python-mysqldb
           sudo apt list --installed | grep -i mysql
         displayName: 'Install mysql development libraries'
       - bash: |
