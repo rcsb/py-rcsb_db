@@ -72,8 +72,9 @@ jobs:
   #
     - ${{ if and(contains(parameters.fixtures, 'mysql'), startsWith(parameters.os, 'linux')) }}:
       - bash: |
+          sudo apt-get upgrade ; update
           sudo apt-get install python3-dev mysql-server
-          sudo apt-get install libmysqlclient-dev
+          sudo apt-get install default-libmysqlclient-dev
           sudo apt-get install python-mysqldb
           sudo apt list --installed | grep -i mysql
         displayName: 'Install mysql development libraries'
