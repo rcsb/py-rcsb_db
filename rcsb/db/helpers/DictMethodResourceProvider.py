@@ -10,6 +10,7 @@
 #   7-Aug-2019 jdw use dictionary locator map
 #  13-Aug-2019 jdw return class instances in all cases. Add cache management support.
 #   9-Sep-2019 jdw add AtcProvider() and SiftsSummaryProvider()
+#  25-Nov-2019 jdw add CitationReferenceProvider(), ChemCompProvider() and  JournalTitleAbbreviationProvider()'s
 ##
 """
 Resource provider for DictMethodHelper tools.
@@ -27,7 +28,10 @@ from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWra
 from rcsb.db.helpers.DictMethodCommonUtils import DictMethodCommonUtils
 from rcsb.utils.chemref.AtcProvider import AtcProvider
 from rcsb.utils.chemref.ChemCompModelProvider import ChemCompModelProvider
+from rcsb.utils.chemref.ChemCompProvider import ChemCompProvider
 from rcsb.utils.chemref.DrugBankProvider import DrugBankProvider
+from rcsb.utils.citation.CitationReferenceProvider import CitationReferenceProvider
+from rcsb.utils.citation.JournalTitleAbbreviationProvider import JournalTitleAbbreviationProvider
 from rcsb.utils.ec.EnzymeDatabaseProvider import EnzymeDatabaseProvider
 from rcsb.utils.io.SingletonClass import SingletonClass
 from rcsb.utils.seq.SiftsSummaryProvider import SiftsSummaryProvider
@@ -67,6 +71,7 @@ class DictMethodResourceProvider(SingletonClass):
         self.__scopU = None
         self.__cathU = None
         self.__dbU = None
+        self.__ccU = None
         self.__ccmU = None
         self.__commonU = None
         self.__dApiW = None
@@ -74,6 +79,8 @@ class DictMethodResourceProvider(SingletonClass):
         self.__siftsAbbreviated = kwargs.get("siftsAbbreviated", "PROD")
         self.__ssP = None
         self.__vrptP = None
+        self.__crP = None
+        self.__jtaP = None
         #
         #
         # self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
@@ -88,9 +95,12 @@ class DictMethodResourceProvider(SingletonClass):
             "EnzymeProvider instance": self.__fetchEnzymeProvider,
             "DrugBankProvider instance": self.__fetchDrugBankProvider,
             "ChemCompModelProvider instance": self.__fetchChemCompModelProvider,
+            "ChemCompProvider instance": self.__fetchChemCompProvider,
             "AtcProvider instance": self.__fetchAtcProvider,
             "DictMethodCommonUtils instance": self.__fetchCommonUtils,
             "ValidationProvider instance": self.__fetchValidationProvider,
+            "CitationReferenceProvider instance": self.__fetchCitationReferenceProvider,
+            "JournalTitleAbbreviationProvider instance": self.__fetchJournalTitleAbbreviationProvider,
         }
         logger.debug("Dictionary resource provider init completed")
         #
@@ -137,6 +147,20 @@ class DictMethodResourceProvider(SingletonClass):
             logger.info("After %r status %r of %r", resourceName, ok, ret)
         return ret
 
+    def __fetchCitationReferenceProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
+        if not self.__crP:
+            cachePath = os.path.join(cachePath, cfgOb.get("CITATION_REFERENCE_CACHE_DIR", sectionName=configName))
+            self.__crP = CitationReferenceProvider(cachePath=cachePath, useCache=useCache, **kwargs)
+        return self.__crP
+
+    def __fetchJournalTitleAbbreviationProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
+        if not self.__jtaP:
+            cachePath = os.path.join(cachePath, cfgOb.get("CITATION_REFERENCE_CACHE_DIR", sectionName=configName))
+            self.__jtaP = JournalTitleAbbreviationProvider(cachePath=cachePath, useCache=useCache, **kwargs)
+        return self.__jtaP
+
     def __fetchTaxonomyProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
         logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
         if not self.__taxU:
@@ -178,9 +202,16 @@ class DictMethodResourceProvider(SingletonClass):
     def __fetchChemCompModelProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
         logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
         if not self.__ccmU:
-            dirPath = os.path.join(cachePath, cfgOb.get("CHEM_COMP_MODEL_CACHE_DIR", sectionName=configName))
+            dirPath = os.path.join(cachePath, cfgOb.get("CHEM_COMP_CACHE_DIR", sectionName=configName))
             self.__ccmU = ChemCompModelProvider(dirPath=dirPath, useCache=useCache, **kwargs)
         return self.__ccmU
+
+    def __fetchChemCompProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
+        if not self.__ccU:
+            dirPath = os.path.join(cachePath, cfgOb.get("CHEM_COMP_CACHE_DIR", sectionName=configName))
+            self.__ccU = ChemCompProvider(dirPath=dirPath, useCache=useCache, **kwargs)
+        return self.__ccU
 
     def __fetchAtcProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
         logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)

@@ -240,7 +240,7 @@ class DataTransformFactory(object):
                     dD[dT["atNameD"][atName]] = vT.value
         except Exception as e:
             logger.error("Failing for %r table %s atName %s with %s", containerName, tableId, atName, str(e))
-            # logger.exception("Failing for %r table %s atName %s with %s", containerName, tableId, atName, str(e))
+            # logger.exception("Failing for %r table %r atName %r with %s", containerName, tableId, atName, str(e))
 
         return dD
 
@@ -334,7 +334,8 @@ class DataTransform(object):
             return trfTup
         if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == ""):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
-        vL = [int(v.strip()) for v in str(trfTup.value).split(self.__tObj.getIterableSeparator(trfTup.atId))]
+        # vL = [int(v.strip()) for v in str(trfTup.value).split(self.__tObj.getIterableSeparator(trfTup.atId))]
+        vL = [int(v.strip()) if v.strip() not in [".", "?"] else None for v in str(trfTup.value).split(self.__tObj.getIterableSeparator(trfTup.atId))]
         return TrfValue(vL, trfTup.atId, trfTup.origLength, False)
 
     def castFloat(self, trfTup):
@@ -351,11 +352,13 @@ class DataTransform(object):
         """
             Return:  TrfValue tuple
         """
+        # logger.info(">> atId %r value %r delimiter %r", trfTup.atId, trfTup.value, self.__tObj.getIterableSeparator(trfTup.atId))
         if trfTup.isNull:
             return trfTup
         if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == ""):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
-        vL = [float(v.strip()) for v in str(trfTup.value).split(self.__tObj.getIterableSeparator(trfTup.atId))]
+        # vL = [float(v.strip()) for v in str(trfTup.value).split(self.__tObj.getIterableSeparator(trfTup.atId))]
+        vL = [float(v.strip()) if v.strip() not in [".", "?"] else None for v in str(trfTup.value).split(self.__tObj.getIterableSeparator(trfTup.atId))]
         return TrfValue(vL, trfTup.atId, trfTup.origLength, False)
 
     def castDateToObj(self, trfTup):

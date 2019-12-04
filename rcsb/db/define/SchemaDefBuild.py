@@ -731,15 +731,16 @@ class SchemaDefBuild(object):
                         #
                         atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, dtInstInfo, jsonSpecDraft, enforceOpts, suppressRelations, addRcsbExtensions)
                         scD["properties"][schemaAttributeName] = atPropD
-                    if reqL:
-                        scD["required"] = reqL
-                    if scHasUnitCard:
-                        subCatPropD[subCategory] = scD
-                    else:
-                        subCatPropD[subCategory] = {typeKey: "array", "items": scD, "uniqueItems": False}
-                        if dataTypingU == "JSON" and addRcsbExtensions:
-                            isNested = documentDefHelper.isSubCategoryNested(collectionName, subCategory)
-                            subCatPropD[subCategory]["rcsb_nested_indexing"] = isNested
+                    if scD["properties"]:
+                        if reqL:
+                            scD["required"] = reqL
+                        if scHasUnitCard:
+                            subCatPropD[subCategory] = scD
+                        else:
+                            subCatPropD[subCategory] = {typeKey: "array", "items": scD, "uniqueItems": False}
+                            if dataTypingU == "JSON" and addRcsbExtensions:
+                                isNested = documentDefHelper.isSubCategoryNested(collectionName, subCategory)
+                                subCatPropD[subCategory]["rcsb_nested_indexing"] = isNested
             #
             if subCatPropD:
                 logger.debug("%s %s %s processing subcategory properties %r", databaseName, collectionName, catName, subCatPropD.items())
