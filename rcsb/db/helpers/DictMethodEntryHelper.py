@@ -50,6 +50,7 @@
 # 15-May-2019 jdw add _rcsb_entry_info.na_polymer_entity_types update enumerations for _rcsb_entry_info.selected_polymer_entity_types
 # 19-May-2019 jdw add method __getStructConfInfo()
 # 21-May-2019 jdw handle odd ordering of records in struct_ref_seq_dif.
+# 25-Nov-2019 jdw add method normalizeCitiationJournalAbbrev() and dependencies
 #
 ##
 """
@@ -65,6 +66,7 @@ __license__ = "Apache 2.0"
 
 
 import logging
+from string import capwords
 
 from mmcif.api.DataCategory import DataCategory
 
@@ -94,6 +96,9 @@ class DictMethodEntryHelper(object):
         self.__commonU = rP.getResource("DictMethodCommonUtils instance") if rP else None
         self.__dApi = rP.getResource("Dictionary API instance (pdbx_core)") if rP else None
         #
+        self.__crP = rP.getResource("CitationReferenceProvider instance") if rP else None
+        self.__jtaP = rP.getResource("JournalTitleAbbreviationProvider instance") if rP else None
+        #
         # logger.debug("Dictionary entry method helper init")
 
     def echo(self, msg):
@@ -102,13 +107,15 @@ class DictMethodEntryHelper(object):
     def deferredItemMethod(self, dataContainer, catName, atName, **kwargs):
         """ Placeholder for an item method.
         """
-        logger.debug("Called deferred item method for %r %r %r %r", dataContainer.getName(), catName, atName, kwargs)
+        _ = kwargs
+        logger.debug("Called deferred item method %r %r for %r", catName, atName, dataContainer.getName())
         return True
 
     def deferredCategoryMethod(self, dataContainer, catName, **kwargs):
         """ Placeholder for a category method.
         """
-        logger.debug("Called deferred category method for %r %r %r", dataContainer.getName(), catName, kwargs)
+        _ = kwargs
+        logger.debug("Called deferred category method %r for %r", catName, dataContainer.getName())
         return True
 
     def setDatablockId(self, dataContainer, catName, atName, **kwargs):
@@ -238,6 +245,7 @@ class DictMethodEntryHelper(object):
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
             catName (str): Category name
+            atName (str): Attribute name
 
         Returns:
             bool: True for success or False otherwise
@@ -263,8 +271,129 @@ class DictMethodEntryHelper(object):
                 cObj.setValue("|".join(tD[citId]), atName, ii)
             return True
         except Exception as e:
-            logger.exception("Failing with %s", str(e))
+            logger.exception("Failing for %r with %s", dataContainer.getName(), str(e))
         return False
+
+    def normalizeCitationJournalAbbrev(self, dataContainer, catName, atName, **kwargs):
+        """Normalize citation journal abbrev.
+
+        Args:
+            dataContainer (object): mmif.api.DataContainer object instance
+            catName (str): Category name
+            atName (str): Attribute name
+
+        Returns:
+            bool: True for success or False otherwise
+        """
+        logger.debug("Starting catName %s atName %s kwargs %r", catName, atName, kwargs)
+        try:
+            if not dataContainer.exists(catName):
+                return False
+            #
+            cObj = dataContainer.getObj(catName)
+            if not cObj.hasAttribute("journal_abbrev") or not cObj.hasAttribute("id") or not cObj.hasAttribute("journal_id_ISSN"):
+                return False
+            #
+            if not cObj.hasAttribute(atName):
+                cObj.appendAttribute(atName)
+            #
+            rcsbId = dataContainer.getName()
+            for ii in range(cObj.getRowCount()):
+                # citId = cObj.getValue("id", ii)
+                issn = cObj.getValueOrDefault("journal_id_ISSN", ii, defaultValue=None)
+                curAbbrev = cObj.getValueOrDefault("journal_abbrev", ii, defaultValue=None)
+                if curAbbrev:
+                    revAbbrev = self.__updateJournalAbbreviation(rcsbId, issn, curAbbrev)
+                revAbbrev = revAbbrev if revAbbrev else curAbbrev
+                #
+                logger.debug("%s journal abbreviation issn %r current %r normalized %r", rcsbId, issn, curAbbrev, revAbbrev)
+                cObj.setValue(revAbbrev, atName, ii)
+            return True
+        except Exception as e:
+            logger.exception("Failing for %r with %s", dataContainer.getName(), str(e))
+        return False
+
+    def __updateJournalAbbreviation(self, rcsbId, issn, curAbbrev):
+        try:
+            revAbbrev = None
+            if issn:
+                medlineAbbrev = self.__crP.getMedlineJournalAbbreviation(issn)
+                # medlineIsoAbbrev = self.__crP.getMedlineJournalIsoAbbreviation(issn)
+                crIssn = issn.replace("-", "")
+                crTitle = self.__crP.getCrossRefJournalTitle(crIssn)
+                #
+                revAbbrev = medlineAbbrev
+                if not medlineAbbrev and not crTitle:
+                    logger.debug("%s: missing information for issn %r curAbbrev %r", rcsbId, issn, curAbbrev)
+                    revAbbrev = capwords(curAbbrev.replace(".", " "))
+                elif not medlineAbbrev:
+                    revAbbrev = self.__jtaP.getJournalAbbreviation(crTitle, usePunctuation=False)
+            else:
+                if curAbbrev.upper() in ["TO BE PUBLISHED", "IN PREPARATION"]:
+                    revAbbrev = "To be published"
+                elif curAbbrev.upper().startswith("THESIS"):
+                    revAbbrev = "Thesis"
+                else:
+                    revAbbrev = capwords(curAbbrev.replace(".", " "))
+                    logger.debug("%r: missing issn and non-standard abbrev for %r", rcsbId, curAbbrev)
+
+                if not curAbbrev:
+                    logger.info("%r: missing issn and journal abbrev", rcsbId)
+                #
+            logger.debug("%s: revised: %r current: %r", rcsbId, revAbbrev, curAbbrev)
+        except Exception as e:
+            logger.exception("Failing on %r %r %r with %r", rcsbId, issn, curAbbrev, str(e))
+
+        return revAbbrev
+
+    def __getEmdbIdentifiers(self, dataContainer):
+        """[summary]
+
+        Args:
+            dataContainer ([type]): [description]
+
+        Returns:
+            [type]: [description]
+
+            #
+            loop_
+            _database_2.database_id
+            _database_2.database_code
+            PDB   6QUY
+            WWPDB D_1292100913
+            EMDB  EMD-4644
+            #
+            loop_
+            _pdbx_database_related.db_name
+            _pdbx_database_related.details
+            _pdbx_database_related.db_id
+            _pdbx_database_related.content_type
+            EMDB 'HsCKK (human CAMSAP1) decorated 13pf taxol-GDP microtubule (asymmetric unit)' EMD-4643 'other EM volume'
+            PDB  'HsCKK (human CAMSAP1) decorated 13pf taxol-GDP microtubule (asymmetric unit)' 6QUS     unspecified
+            EMDB 'NgCKK (N.Gruberi CKK) decorated 13pf taxol-GDP microtubule'                   EMD-4644 'associated EM volume'
+            #
+        """
+        emdbIdD = {}
+        emdbIdAltD = {}
+        if dataContainer.exists("database_2"):
+            dbObj = dataContainer.getObj("database_2")
+            for ii in range(dbObj.getRowCount()):
+                dbId = dbObj.getValue("database_id", ii)
+                dbCode = dbObj.getValue("database_code", ii)
+                if dbId.upper() == "EMDB":
+                    emdbIdD[dbCode] = "associated EM volume"
+
+        if dataContainer.exists("pdbx_database_related"):
+            drObj = dataContainer.getObj("pdbx_database_related")
+            for ii in range(drObj.getRowCount()):
+                dbCode = drObj.getValue("db_id", ii)
+                dbName = drObj.getValue("db_name", ii)
+                contentType = drObj.getValue("content_type", ii)
+                if dbName.upper() == "EMDB" and contentType.upper() == "ASSOCIATED EM VOLUME" and dbCode not in emdbIdD:
+                    emdbIdD[dbCode] = "associated EM volume"
+                elif dbName.upper() == "EMDB" and contentType.upper() != "ASSOCIATED EM VOLUME" and dbCode not in emdbIdAltD:
+                    emdbIdAltD[dbCode] = contentType
+        return emdbIdD, emdbIdAltD
 
     def buildContainerEntryIds(self, dataContainer, catName, **kwargs):
         """Load the input category with rcsb_entry_container_identifiers content.
@@ -293,7 +422,7 @@ class DictMethodEntryHelper(object):
             if not dataContainer.exists("entry"):
                 return False
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=["entry_id", "entity_ids", "polymer_entity_ids", "non-polymer_entity_ids", "assembly_ids", "rcsb_id"]))
+                dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
             #
             cObj = dataContainer.getObj(catName)
 
@@ -308,18 +437,33 @@ class DictMethodEntryHelper(object):
             cObj.setValue(",".join(entityIdL), "entity_ids", 0)
             #
             #
-            pIdL = tObj.selectValuesWhere("id", "polymer", "type")
-            tV = ",".join(pIdL) if pIdL else "?"
+            tIdL = tObj.selectValuesWhere("id", "polymer", "type")
+            tV = ",".join(tIdL) if tIdL else "?"
             cObj.setValue(tV, "polymer_entity_ids", 0)
 
-            npIdL = tObj.selectValuesWhere("id", "non-polymer", "type")
-            tV = ",".join(npIdL) if npIdL else "?"
+            tIdL = tObj.selectValuesWhere("id", "non-polymer", "type")
+            tV = ",".join(tIdL) if tIdL else "?"
             cObj.setValue(tV, "non-polymer_entity_ids", 0)
+            #
+            tIdL = tObj.selectValuesWhere("id", "branched", "type")
+            tV = ",".join(tIdL) if tIdL else "?"
+            cObj.setValue(tV, "branched_entity_ids", 0)
+            #
+            # tIdL = tObj.selectValuesWhere("id", "water", "type")
+            # tV = ",".join(tIdL) if tIdL else "?"
+            # cObj.setValue(tV, "water_entity_ids", 0)
             #
             tObj = dataContainer.getObj("pdbx_struct_assembly")
             assemblyIdL = tObj.getAttributeValueList("id") if tObj else []
             tV = ",".join(assemblyIdL) if assemblyIdL else "?"
             cObj.setValue(tV, "assembly_ids", 0)
+            #
+            #
+            emdbIdD, emdbIdAltD = self.__getEmdbIdentifiers(dataContainer)
+            tV = ",".join([tId for tId in emdbIdD]) if emdbIdD else "?"
+            cObj.setValue(tV, "emdb_ids", 0)
+            tV = ",".join([tId for tId in emdbIdAltD]) if emdbIdAltD else "?"
+            cObj.setValue(tV, "related_emdb_ids", 0)
 
             return True
         except Exception as e:
@@ -616,6 +760,38 @@ class DictMethodEntryHelper(object):
             #
             fw = self.__commonU.getFormulaWeightNonSolvent(dataContainer)
             cObj.setValue(str(round(fw, 2)), "molecular_weight", 0)
+            #
+            # nonpolymer_bound_components
+            #
+            bcL = self.__commonU.getBoundNonpolymersComponentIds(dataContainer)
+            if bcL:
+                cObj.setValue(";".join(bcL), "nonpolymer_bound_components", 0)
+            #
+            # polymer_molecular_weight_minimum
+            # polymer_molecular_weight_maximum
+            # nonpolymer_molecular_weight_minimum
+            # nonpolymer_molecular_weight_maximum
+            # branched_molecular_weight_minimum
+            # branched_molecular_weight_maximum
+            #
+            fwBoundD = self.__commonU.getEntityFormulaWeightBounds(dataContainer)
+            if "polymer" in fwBoundD and fwBoundD["polymer"]["min"] and fwBoundD["polymer"]["max"]:
+                cObj.setValue(str(round(fwBoundD["polymer"]["min"], 2)), "polymer_molecular_weight_minimum", 0)
+                cObj.setValue(str(round(fwBoundD["polymer"]["max"], 2)), "polymer_molecular_weight_maximum", 0)
+            if "non-polymer" in fwBoundD and fwBoundD["non-polymer"]["min"] and fwBoundD["non-polymer"]["max"]:
+                cObj.setValue(str(round(fwBoundD["non-polymer"]["min"], 2)), "nonpolymer_molecular_weight_minimum", 0)
+                cObj.setValue(str(round(fwBoundD["non-polymer"]["max"], 2)), "nonpolymer_molecular_weight_maximum", 0)
+            if "branched" in fwBoundD and fwBoundD["branched"]["min"] and fwBoundD["branched"]["max"]:
+                cObj.setValue(str(round(fwBoundD["branched"]["min"], 2)), "branched_molecular_weight_minimum", 0)
+                cObj.setValue(str(round(fwBoundD["branched"]["max"], 2)), "branched_molecular_weight_maximum", 0)
+            #
+            # polymer_monomer_count_maximum
+            # polymer_monomer_count_minimum
+            #
+            polymerLengthBounds = self.__commonU.getEntityPolymerLengthBounds(dataContainer)
+            if polymerLengthBounds:
+                cObj.setValue(str(polymerLengthBounds[0]), "polymer_monomer_count_minimum", 0)
+                cObj.setValue(str(polymerLengthBounds[1]), "polymer_monomer_count_maximum", 0)
             #
             return True
         except Exception as e:

@@ -32,6 +32,10 @@ class SliceValues(object):
         self.__sD = schemaDefObj
         spiL = self.__sD.getSliceParentItems(sliceFilter)
         spfL = self.__sD.getSliceParentFilters(sliceFilter)
+        for sp in spiL:
+            catId = sp["CATEGORY"]
+            if catId not in schemaDataDictById:
+                logger.warning("slicefilter %s category missing %s keys %r", sliceFilter, catId, list(schemaDataDictById.keys()))
         vD = {}
         for sp in spiL:
             catId = sp["CATEGORY"]
@@ -44,14 +48,14 @@ class SliceValues(object):
             vD[(catId, atId)] = vals
         #
         self.index = 0
-        logger.debug("Parent value dict %r", vD.items())
+        logger.debug("Filter %r parent value dict %r", sliceFilter, vD.items())
         # Make a list of lists and then get the product
         #
         valueL = []
         for _, vL in vD.items():
             valueL.append(vL)
         self.data = list(itertools.product(*valueL))
-        logger.debug("Parent value product list %r", self.data)
+        logger.debug("Filter %r parent value product list %r", sliceFilter, self.data)
 
     def isEmpty(self):
         return len(self.data) < 1

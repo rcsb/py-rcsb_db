@@ -45,14 +45,14 @@ def scanRepo(
     dataCoverageFilePath=None,
     dataTypeFilePath=None,
     failedFilePath=None,
-    workPath=None,
+    cachePath=None,
 ):
     """ Utility method to scan the data repository of the input content type and store type and coverage details.
     """
     try:
         #
         # configName = cfgOb.getDefaultSectionName()
-        dP = DictionaryApiProviderWrapper(cfgOb, workPath, useCache=True)
+        dP = DictionaryApiProviderWrapper(cfgOb, cachePath, useCache=True)
         dictApi = dP.getApiByName(contentType)
         ###
         categoryList = sorted(dictApi.getCategoryList())
@@ -65,7 +65,7 @@ def scanRepo(
             attributeDataTypeD[catName] = aD
         ###
         #
-        sr = ScanRepoUtil(cfgOb, attributeDataTypeD=attributeDataTypeD, numProc=numProc, chunkSize=chunkSize, fileLimit=fileLimit, workPath=workPath)
+        sr = ScanRepoUtil(cfgOb, attributeDataTypeD=attributeDataTypeD, numProc=numProc, chunkSize=chunkSize, fileLimit=fileLimit, workPath=cachePath)
         ok = sr.scanContentType(
             contentType, scanType=scanType, inputPathList=inputPathList, scanDataFilePath=scanDataFilePath, failedFilePath=failedFilePath, saveInputFileListPath=pathListFilePath
         )
@@ -110,7 +110,7 @@ def main():
     parser.add_argument("--file_limit", default=None, help="Load file limit for testing")
     parser.add_argument("--debug", default=False, action="store_true", help="Turn on verbose logging")
     parser.add_argument("--mock", default=False, action="store_true", help="Use MOCK repository configuration for testing")
-    parser.add_argument("--working_path", default=None, help="Working path for temporary files")
+    parser.add_argument("--cache_path", default=None, help="Cache path and working direcory for temporary files")
     args = parser.parse_args()
     #
     debugFlag = args.debug
@@ -152,7 +152,7 @@ def main():
         scanDataFilePath = args.scan_data_file_path
         dataCoverageFilePath = args.coverage_file_path
         dataTypeFilePath = args.type_map_file_path
-        workPath = args.working_path if args.working_path else "."
+        cachePath = args.cache_path if args.cache_path else "."
     except Exception as e:
         logger.exception("Argument processing problem %s", str(e))
         parser.print_help(sys.stderr)
@@ -163,7 +163,7 @@ def main():
     #
     inputPathList = None
     if inputFileListPath:
-        mu = MarshalUtil(workPath=workPath)
+        mu = MarshalUtil(workPath=cachePath)
         inputPathList = mu.doImport(inputFileListPath, fmt="list")
     #
     ##
@@ -205,7 +205,7 @@ def main():
         dataCoverageFilePath=dataCoverageFilePath,
         dataTypeFilePath=dataTypeFilePath,
         failedFilePath=failedFilePath,
-        workPath=workPath,
+        cachePath=cachePath,
     )
 
     logger.info("Operation completed with status %r", ok)

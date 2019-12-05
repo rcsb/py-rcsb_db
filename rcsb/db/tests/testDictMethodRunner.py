@@ -52,9 +52,8 @@ class DictMethodRunnerTests(unittest.TestCase):
         self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath)
         #
         self.__testCaseList = [
-            # {"contentType": "chem_comp_core", "mockLength": 5, 'mergeContent': None},
-            {"contentType": "bird_chem_comp_core", "mockLength": 17, "mergeContent": None},
             {"contentType": "pdbx_core", "mockLength": 14, "mergeContent": ["vrpt"]},
+            {"contentType": "bird_chem_comp_core", "mockLength": 17, "mergeContent": None},
         ]
         #
         self.__modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=configName)
@@ -82,9 +81,12 @@ class DictMethodRunnerTests(unittest.TestCase):
             for container in containerList:
                 cName = container.getName()
                 logger.debug("Processing container %s", cName)
+                # JDW
+                # if cName not in ["5EU8", "5TA4"]:
+                #    continue
+                # JDW
                 #
                 dmh.apply(container)
-                #
                 savePath = os.path.join(HERE, "test-output", cName + "-with-method.cif")
                 self.__mU.doExport(savePath, [container], fmt="mmcif")
 
@@ -100,7 +102,6 @@ class DictMethodRunnerTests(unittest.TestCase):
 
     def testMethodRunnerSetup(self):
         """ Test the setup methods for method runner class
-
         """
         try:
             dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)

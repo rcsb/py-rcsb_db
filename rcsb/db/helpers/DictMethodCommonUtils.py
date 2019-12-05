@@ -25,11 +25,21 @@ import datetime
 import itertools
 import logging
 import re
-from collections import OrderedDict
+import sys
+from collections import OrderedDict, namedtuple
 
 from rcsb.utils.io.CacheUtils import CacheUtils
 
 logger = logging.getLogger(__name__)
+
+OutlierValueFields = ("compId", "seqId", "outlierType", "description", "reported", "reference", "uncertaintyValue", "uncertaintyType")
+OutlierValue = namedtuple("OutlierValue", OutlierValueFields, defaults=(None,) * len(OutlierValueFields))
+
+BoundEntityFields = ("targetCompId", "connectType", "partnerCompId", "partnerEntityId", "partnerEntityType")
+NonpolymerBoundEntity = namedtuple("NonpolymerBoundEntity", BoundEntityFields, defaults=(None,) * len(BoundEntityFields))
+
+BoundInstanceFields = ("targetCompId", "connectType", "partnerCompId", "partnerAsymId", "partnerEntityType", "bondDistance", "bondOrder")
+NonpolymerBoundInstance = namedtuple("NonpolymerBoundInstance", BoundInstanceFields, defaults=(None,) * len(BoundInstanceFields))
 
 
 class DictMethodCommonUtils(object):
@@ -275,7 +285,7 @@ class DictMethodCommonUtils(object):
         if not dataContainer or not dataContainer.getName():
             return {}
         wD = self.__fetchEntityAndInstanceTypes(dataContainer)
-        return wD["entityMonomerCountD"] if "entityMonomerCountD" in wD else {}
+        return wD["entityPolymerMonomerCountD"] if "entityPolymerMonomerCountD" in wD else {}
 
     def getPolymerEntityModifiedMonomers(self, dataContainer):
         """Return a dictionary of nonstandard monomers for each polymer entity.
@@ -289,7 +299,64 @@ class DictMethodCommonUtils(object):
         if not dataContainer or not dataContainer.getName():
             return {}
         wD = self.__fetchEntityAndInstanceTypes(dataContainer)
-        return wD["entityModifiedMonomers"] if "entityModifiedMonomers" in wD else {}
+        return wD["entityPolymerModifiedMonomers"] if "entityPolymerModifiedMonomers" in wD else {}
+
+    def getPolymerModifiedMonomerFeatures(self, dataContainer):
+        """Return a dictionary of nonstandard monomer features.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            dict: [(entityId, seqId, compId, 'modified_monomer')] = set(compId)
+
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchEntityAndInstanceTypes(dataContainer)
+        return wD["seqModMonomerFeatureD"] if "seqModMonomerFeatureD" in wD else {}
+
+    def getEntityPolymerLengthBounds(self, dataContainer):
+        """Return a dictionary of polymer lenght bounds by entity type.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            tuple: (minLen, maxLen)
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchEntityAndInstanceTypes(dataContainer)
+        return wD["entityPolymerLenghtBounds"] if "entityPolymerLenghtBounds" in wD else {}
+
+    def getEntityFormulaWeightBounds(self, dataContainer):
+        """Return a dictionary of formula weight bounds by entity type.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            dict: [entityType] = (minFw, maxFw)
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchEntityAndInstanceTypes(dataContainer)
+        return wD["fwTypeBoundD"] if "fwTypeBoundD" in wD else {}
+
+    def getTargetComponents(self, dataContainer):
+        """ Return a components targets.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            list: [compId, compId,...]
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchEntityAndInstanceTypes(dataContainer)
+        return wD["ccTargets"] if "ccTargets" in wD else {}
 
     def __getEntityAndInstanceTypes(self, dataContainer):
         """ Internal method to collect and return entity/instance type, size and mapping information.
@@ -312,10 +379,14 @@ class DictMethodCommonUtils(object):
               epTypeFilteredD[entityId] = <dictionary polymer type>
               epLengthD[entityId] = polymer monomer length (from one-letter-code)
               entityPolymerLengthD[entityId] = polymer monomer length (from enumerated sequence)
-              entityMonomerCountD[entityId][compId] = mononer count
-              entityModifiedMonomers[entity]=[mod compId, mod compId]
+              entityPolymerMonomerCountD[entityId][compId] = mononer count
+              entityPolymerModifiedMonomers[entity]=[mod compId, mod compId]
+              seqModMonomerFeatureD[(entityId, seqId, compId, 'modified_monomer')] = set(compId)
+              fwNonSolvent = float value (kilodaltons)
+              fwTypeBoundD[entityType] = (minFw, maxFw)
+              entityPolymerLenghtBounds = (minL, maxL)
+              ccTargets = [compId, compId]
         """
-
         rD = {}
         #
         try:
@@ -351,8 +422,9 @@ class DictMethodCommonUtils(object):
                         sampleSeq = self.__stripWhiteSpace(epObj.getValue("pdbx_seq_one_letter_code_can", ii))
                         epLengthD[entityId] = len(sampleSeq) if sampleSeq and sampleSeq not in ["?", "."] else None
 
-            #
-            entityMonomerCountD = {}
+            # seqModMonomerFeatureD.setdefault((entityId, seqId, compId, 'modified_monomer'), set()).add('parent %%%%%')
+            seqModMonomerFeatureD = {}
+            entityPolymerMonomerCountD = {}
             entityPolymerLengthD = {}
             if dataContainer.exists("entity_poly_seq"):
                 epsObj = dataContainer.getObj("entity_poly_seq")
@@ -361,24 +433,26 @@ class DictMethodCommonUtils(object):
                     entityId = epsObj.getValue("entity_id", ii)
                     seqNum = epsObj.getValue("num", ii)
                     compId = epsObj.getValue("mon_id", ii)
+                    if compId not in DictMethodCommonUtils.monDict3:
+                        seqModMonomerFeatureD.setdefault((entityId, seqNum, compId, "modified_monomer"), set()).add(compId)
                     # handle heterogeneity with the entityId,seqNum tuple
                     tSeqD.setdefault(entityId, set()).add((entityId, seqNum))
-                    if entityId not in entityMonomerCountD:
-                        entityMonomerCountD[entityId] = {}
-                    entityMonomerCountD[entityId][compId] = entityMonomerCountD[entityId][compId] + 1 if compId in entityMonomerCountD[entityId] else 1
+                    if entityId not in entityPolymerMonomerCountD:
+                        entityPolymerMonomerCountD[entityId] = {}
+                    entityPolymerMonomerCountD[entityId][compId] = entityPolymerMonomerCountD[entityId][compId] + 1 if compId in entityPolymerMonomerCountD[entityId] else 1
                 #
                 entityPolymerLengthD = {entityId: len(tSet) for entityId, tSet in tSeqD.items()}
             #
-            entityModifiedMonomers = {}
-            for entityId, cD in entityMonomerCountD.items():
+            entityPolymerModifiedMonomers = {}
+            for entityId, cD in entityPolymerMonomerCountD.items():
                 tL = []
                 for compId, _ in cD.items():
                     modFlag = "N" if compId in DictMethodCommonUtils.monDict3 else "Y"
                     if modFlag == "Y":
                         tL.append(compId)
-                entityModifiedMonomers[entityId] = sorted(set(tL))
+                entityPolymerModifiedMonomers[entityId] = sorted(set(tL))
             #
-            logger.debug("%s entityModifiedMonomers %r", dataContainer.getName(), entityModifiedMonomers)
+            logger.debug("%s entityPolymerModifiedMonomers %r", dataContainer.getName(), entityPolymerModifiedMonomers)
             #  Add branched here
             #
             instEntityD = {}
@@ -409,6 +483,39 @@ class DictMethodCommonUtils(object):
                     entityId = instEntityD[asymId]
                     fwNonSolvent += eFwD[entityId]
             fwNonSolvent = fwNonSolvent / 1000.0
+            #
+            # Get ligand of interest.
+            #
+            ccTargets = []
+            if dataContainer.exists("pdbx_entity_instance_feature"):
+                ifObj = dataContainer.getObj("pdbx_entity_instance_feature")
+                for ii in range(ifObj.getRowCount()):
+                    compId = ifObj.getValue("comp_id", ii)
+                    ft = ifObj.getValue("feature_type", ii)
+                    if ft.upper() in ["SUBJECT OF INVESTIGATION"]:
+                        ccTargets.append(compId)
+            #
+            #
+            fwTypeBoundD = {}
+            tBoundD = {et: {"min": float("inf"), "max": -1.0} for eId, et in eTypeD.items()}
+            for entityId, fw in eFwD.items():
+                fw = fw / 1000.0
+                eType = eTypeD[entityId]
+                tBoundD[eType]["min"] = fw if fw < tBoundD[eType]["min"] else tBoundD[eType]["min"]
+                tBoundD[eType]["max"] = fw if fw > tBoundD[eType]["max"] else tBoundD[eType]["max"]
+            for eType in tBoundD:
+                if tBoundD[eType]["min"] > 0.00000001:
+                    fwTypeBoundD[eType] = tBoundD[eType]
+            #
+
+            entityPolymerLenghtBounds = None
+            maxL = -1
+            minL = sys.maxsize
+            for entityId, pLen in epLengthD.items():
+                minL = pLen if pLen < minL else minL
+                maxL = pLen if pLen > maxL else maxL
+            entityPolymerLenghtBounds = (minL, maxL)
+            #
 
             rD = {
                 "instanceTypeD": instanceTypeD,
@@ -419,10 +526,14 @@ class DictMethodCommonUtils(object):
                 "epLengthD": epLengthD,
                 "epTypeD": epTypeD,
                 "epTypeFilteredD": epTypeFilteredD,
-                "entityMonomerCountD": entityMonomerCountD,
+                "entityPolymerMonomerCountD": entityPolymerMonomerCountD,
                 "entityPolymerLengthD": entityPolymerLengthD,
-                "entityModifiedMonomers": entityModifiedMonomers,
+                "entityPolymerModifiedMonomers": entityPolymerModifiedMonomers,
+                "seqModMonomerFeatureD": seqModMonomerFeatureD,
                 "fwNonSolvent": fwNonSolvent,
+                "fwTypeBoundD": fwTypeBoundD,
+                "entityPolymerLenghtBounds": entityPolymerLenghtBounds,
+                "ccTargets": ccTargets,
             }
             logger.debug("%s length struct_asym %d (%d) instanceTypeD %r", dataContainer.getName(), sObj.getRowCount(), len(instanceTypeD), instanceTypeD)
         #
@@ -507,7 +618,7 @@ class DictMethodCommonUtils(object):
         return wD["instanceUnmodeledMonomerCountD"] if "instanceUnmodeledMonomerCountD" in wD else {}
 
     def getDepositedMonomerCounts(self, dataContainer, modelId="1"):
-        """Return deposited modeled and unmodeled monomer counts for the input modelid.
+        """Return deposited modeled and unmodeled polymer monomer counts for the input modelid.
 
         Args:
             dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
@@ -519,8 +630,8 @@ class DictMethodCommonUtils(object):
         if not dataContainer or not dataContainer.getName():
             return {}
         wD = self.__fetchAtomSiteInfo(dataContainer, modelId=modelId)
-        modeledCount = sum(wD["instanceModeledMonomerCountD"].values())
-        unModeledCount = sum(wD["instanceUnmodeledMonomerCountD"].values())
+        modeledCount = sum(wD["instancePolymerModeledMonomerCountD"].values())
+        unModeledCount = sum(wD["instancePolymerUnmodeledMonomerCountD"].values())
         return modeledCount, unModeledCount
 
     def getDepositedAtomCounts(self, dataContainer, modelId="1"):
@@ -625,6 +736,46 @@ class DictMethodCommonUtils(object):
         wD = self.__fetchAtomSiteInfo(dataContainer)
         return wD["pAuthAsymIdMapD"] if "pAuthAsymIdMapD" in wD else {}
 
+    def getBranchedIdMap(self, dataContainer):
+        """Return a dictionary of cardinal identifiers for each branched entity instance.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            dict:  {(authAsymId, authSeqNum): {
+                        "entry_id": entryId,
+                        "entity_id": entityId,
+                        "entity_type": entityTypeD[entityId],
+                        "asym_id": asymId,
+                        "auth_asym_id": authAsymId,
+                        "comp_id": monId,
+                        "auth_seq_id": authSeqNum,
+                        "seq_num": seqNum,
+                    }, ...}
+
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchAtomSiteInfo(dataContainer)
+        return wD["brAuthAsymIdMapD"] if "brAuthAsymIdMapD" in wD else {}
+
+    def getEntityTypeUniqueIds(self, dataContainer):
+        """Return a nested dictionary of selected unique identifiers for entity types.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            dict:  [<entity_type>][<entity_id>] = {'asymIds': [...],'authAsymIds': [...], 'ccIds': [...]}
+
+
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchAtomSiteInfo(dataContainer)
+        return wD["entityTypeUniqueIds"] if "entityTypeUniqueIds" in wD else {}
+
     def __fetchAtomSiteInfo(self, dataContainer, modelId="1"):
         wD = self.__atomInfoCache.get((dataContainer.getName(), modelId))
         if not wD:
@@ -650,8 +801,8 @@ class DictMethodCommonUtils(object):
                 numAtomsModel:  number of deposited atoms in input model_id
                 modelId: modelId
 
-                instanceModeledMonomerCountD[asymId]: number modeled monomers in deposited coordinates
-                instanceUnmodeledMonomerCountD[asymId]: number of unmodeled monomers in deposited coordinates
+                instancePolymerModeledMonomerCountD[asymId]: number modeled polymer monomers in deposited coordinates
+                instancePolymerUnmodeledMonomerCountD[asymId]: number of polymer unmodeled monomers in deposited coordinates
 
                 numModels: total number of deposited models
                 numAtomsAll: total number of deposited atoms
@@ -673,33 +824,53 @@ class DictMethodCommonUtils(object):
                                             "auth_asym_id": authAsymId,
                                             "comp_id": monId,
                                             "auth_seq_id": "?",}, ...}
-                npAuthAsymIdMapD[(authAsymId, resNum)] = {"entry_id": entryId,
-                                                    "entity_id": entityId,
-                                                    "entity_type": entityTypeD[entityId],
-                                                    "asym_id": asymId,
-                                                    "auth_asym_id": authAsymId,
-                                                    "comp_id": monId,
-                                                    "auth_seq_id": resNum,
-                                                              }, ...}
-                pAuthAsymIdMapD[(authAsymId, authSeqId, insCode)] = {
+
+                 pAuthAsymIdMapD[(authAsymId, authSeqId, insCode)] = {
                         "entry_id": entryId,
                         "entity_id": entityId,
                         "entity_type": entityTypeD[entityId],
                         "asym_id": asymId,
                         "comp_id": compId,
+                        "seq_id": seqId,
                     }
+
+                npAuthAsymIdMapD[(authAsymId, resNum)] = {
+                        "entry_id": entryId,
+                        "entity_id": entityId,
+                        "entity_type": entityTypeD[entityId],
+                        "asym_id": asymId,
+                        "auth_asym_id": authAsymId,
+                        "comp_id": monId,
+                        "auth_seq_id": resNum,
+                    }
+
+                brAuthAsymIdMapD[(authAsymId, authSeqNum)] = {
+                        "entry_id": entryId,
+                        "entity_id": entityId,
+                        "entity_type": entityTypeD[entityId],
+                        "asym_id": asymId,
+                        "auth_asym_id": authAsymId,
+                        "comp_id": monId,
+                        "auth_seq_id": authSeqNum,
+                        "seq_num": seqNum,
+                    }
+                entityTypeUniqueIds[<entity_type>][<entity_id>] = {'asymIds': [...],'authAsymIds': [...], 'ccIds': [...]}
+
         """
         #
         numAtomsAll = 0
         numAtomsModel = 0
         typeCountD = {}
         instanceAtomCountD = {}
-        instanceModeledMonomerCountD = {}
-        instanceUnmodeledMonomerCountD = {}
+        instancePolymerModeledMonomerCountD = {}
+        instancePolymerUnmodeledMonomerCountD = {}
         modelIdL = []
         asymAuthIdD = {}
         instanceTypeD = self.getInstanceTypes(dataContainer)
         entityTypeD = self.getEntityTypes(dataContainer)
+        #
+        eObj = dataContainer.getObj("entity")
+        entityIdL = eObj.getAttributeValueList("id")
         #
         try:
             if dataContainer.exists("atom_site"):
@@ -732,13 +903,14 @@ class DictMethodCommonUtils(object):
                 "numAtomsModel": numAtomsModel,
                 "numModels": len(modelIdL),
                 "modelId": modelId,
-                "instanceModeledMonomerCountD": {},
-                "instanceUnmodeledMonomerCountD": {},
+                "instancePolymerModeledMonomerCountD": {},
+                "instancePolymerUnmodeledMonomerCountD": {},
             }
         except Exception as e:
             logger.exception("Failing with %r with %r", dataContainer.getName(), str(e))
 
         #
+        entityTypeUniqueIds = {}
         tAsymIdD = {}
         seqIdObsMapD = {}
         epLengthD = self.getPolymerEntityLengths(dataContainer)
@@ -746,12 +918,21 @@ class DictMethodCommonUtils(object):
         instanceIdMapD = {}
         npAuthAsymIdMapD = {}
         pAuthAsymIdMapD = {}
+        brAuthAsymIdMapD = {}
         try:
             eObj = dataContainer.getObj("entry")
             entryId = eObj.getValue("id", 0)
             #
             psObj = dataContainer.getObj("pdbx_poly_seq_scheme")
             if psObj is not None:
+                # --
+                for eId in entityIdL:
+                    if entityTypeD[eId] in ["polymer"]:
+                        tAsymIdL = psObj.selectValuesWhere("asym_id", eId, "entity_id")
+                        tAuthAsymIdL = psObj.selectValuesWhere("pdb_strand_id", eId, "entity_id")
+                        tCcIdL = psObj.selectValuesWhere("mon_id", eId, "entity_id")
+                        entityTypeUniqueIds.setdefault(entityTypeD[eId], {}).setdefault(eId, {"asymIds": tAsymIdL, "authAsymIds": tAuthAsymIdL, "ccIds": tCcIdL})
+                # ---
                 aSeqD = {}
                 for ii in range(psObj.getRowCount()):
                     asymId = psObj.getValue("asym_id", ii)
@@ -796,8 +977,8 @@ class DictMethodCommonUtils(object):
                 #
                 #  Get the modeled and unmodeled monomer counts by asymId
                 for asymId, sL in aSeqD.items():
-                    instanceModeledMonomerCountD[asymId] = len([t for t in sL if t not in ["?", "."]])
-                    instanceUnmodeledMonomerCountD[asymId] = len([t for t in sL if t in ["?", "."]])
+                    instancePolymerModeledMonomerCountD[asymId] = len([t for t in sL if t not in ["?", "."]])
+                    instancePolymerUnmodeledMonomerCountD[asymId] = len([t for t in sL if t in ["?", "."]])
                 #  Get polymer range details for each polymer instance
                 for asymId, entityId in tAsymIdD.items():
                     sampleSeqLen = epLengthD[entityId] if entityId in epLengthD else None
@@ -816,15 +997,32 @@ class DictMethodCommonUtils(object):
                         "begInsCode": begAuthInsCode,
                         "endInsCode": endAuthInsCode,
                     }
-            atomSiteInfoD["instanceModeledMonomerCountD"] = instanceModeledMonomerCountD
-            atomSiteInfoD["instanceUnmodeledMonomerCountD"] = instanceUnmodeledMonomerCountD
+            atomSiteInfoD["instancePolymerModeledMonomerCountD"] = instancePolymerModeledMonomerCountD
+            atomSiteInfoD["instancePolymerUnmodeledMonomerCountD"] = instancePolymerUnmodeledMonomerCountD
             atomSiteInfoD["asymAuthIdD"] = asymAuthIdD
             atomSiteInfoD["asymIdPolymerRangesD"] = asymIdPolymerRangesD
             # --------------
+            logger.debug(
+                "%s instancePolymerModeledMonomerCountD(%d) %r",
+                dataContainer.getName(),
+                sum(atomSiteInfoD["instancePolymerModeledMonomerCountD"].values()),
+                atomSiteInfoD["instancePolymerModeledMonomerCountD"],
+            )
+            logger.debug("%s instancePolymerUnmodeledMonomerCountD %r", dataContainer.getName(), atomSiteInfoD["instancePolymerUnmodeledMonomerCountD"])
+            #
+            # -------------- -------------- -------------- -------------- -------------- -------------- -------------- --------------
             #  Add nonpolymer instance mapping
             #
             npsObj = dataContainer.getObj("pdbx_nonpoly_scheme")
             if npsObj is not None:
+                # --
+                for eId in entityIdL:
+                    if entityTypeD[eId] in ["non-polymer", "water"]:
+                        tAsymIdL = npsObj.selectValuesWhere("asym_id", eId, "entity_id")
+                        tAuthAsymIdL = npsObj.selectValuesWhere("pdb_strand_id", eId, "entity_id")
+                        tCcIdL = npsObj.selectValuesWhere("mon_id", eId, "entity_id")
+                        entityTypeUniqueIds.setdefault(entityTypeD[eId], {}).setdefault(eId, {"asymIds": tAsymIdL, "authAsymIds": tAuthAsymIdL, "ccIds": tCcIdL})
+                # ---
                 for ii in range(npsObj.getRowCount()):
                     asymId = npsObj.getValue("asym_id", ii)
                     entityId = npsObj.getValue("entity_id", ii)
@@ -841,7 +1039,7 @@ class DictMethodCommonUtils(object):
                             "auth_asym_id": authAsymId,
                             "rcsb_id": entryId + "." + asymId,
                             "comp_id": monId,
-                            "auth_seq_id": "?",
+                            "auth_seq_id": resNum,
                         }
                     npAuthAsymIdMapD[(authAsymId, resNum)] = {
                         "entry_id": entryId,
@@ -852,17 +1050,55 @@ class DictMethodCommonUtils(object):
                         "comp_id": monId,
                         "auth_seq_id": resNum,
                     }
+
+            # ---------
+            brsObj = dataContainer.getObj("pdbx_branch_scheme")
+            if brsObj is not None:
+                # --
+                for eId in entityIdL:
+                    if entityTypeD[eId] in ["branched"]:
+                        tAsymIdL = brsObj.selectValuesWhere("asym_id", eId, "entity_id")
+                        tAuthAsymIdL = brsObj.selectValuesWhere("auth_asym_id", eId, "entity_id")
+                        tCcIdL = brsObj.selectValuesWhere("mon_id", eId, "entity_id")
+                        entityTypeUniqueIds.setdefault(entityTypeD[eId], {}).setdefault(eId, {"asymIds": tAsymIdL, "authAsymIds": tAuthAsymIdL, "ccIds": tCcIdL})
+                # ---
+                for ii in range(brsObj.getRowCount()):
+                    asymId = brsObj.getValue("asym_id", ii)
+                    entityId = brsObj.getValue("entity_id", ii)
+                    authAsymId = brsObj.getValue("auth_asym_id", ii)
+                    authSeqNum = brsObj.getValue("auth_seq_num", ii)
+                    monId = brsObj.getValue("mon_id", ii)
+                    seqNum = brsObj.getValue("num", ii)
+                    asymAuthIdD[asymId] = authAsymId
+                    if asymId not in instanceIdMapD:
+                        instanceIdMapD[asymId] = {
+                            "entry_id": entryId,
+                            "entity_id": entityId,
+                            "entity_type": entityTypeD[entityId],
+                            "asym_id": asymId,
+                            "auth_asym_id": authAsymId,
+                            "rcsb_id": entryId + "." + asymId,
+                            "comp_id": monId,
+                            "auth_seq_id": "?",
+                        }
+                    brAuthAsymIdMapD[(authAsymId, authSeqNum)] = {
+                        "entry_id": entryId,
+                        "entity_id": entityId,
+                        "entity_type": entityTypeD[entityId],
+                        "asym_id": asymId,
+                        "auth_asym_id": authAsymId,
+                        "comp_id": monId,
+                        "auth_seq_id": authSeqNum,
+                        "seq_num": seqNum,
+                    }
+
+            #
             atomSiteInfoD["instanceIdMapD"] = instanceIdMapD
             atomSiteInfoD["npAuthAsymIdMapD"] = npAuthAsymIdMapD
             atomSiteInfoD["pAuthAsymIdMapD"] = pAuthAsymIdMapD
-            # --------------
-            logger.debug(
-                "%s instanceModeledMonomerCountD(%d) %r",
-                dataContainer.getName(),
-                sum(atomSiteInfoD["instanceModeledMonomerCountD"].values()),
-                atomSiteInfoD["instanceModeledMonomerCountD"],
-            )
-            logger.debug("%s instanceUnmodeledMonomerCountD %r", dataContainer.getName(), atomSiteInfoD["instanceUnmodeledMonomerCountD"])
+            atomSiteInfoD["brAuthAsymIdMapD"] = brAuthAsymIdMapD
+            atomSiteInfoD["entityTypeUniqueIds"] = entityTypeUniqueIds
+
         except Exception as e:
             logger.exception("Failing for %s with %s", dataContainer.getName(), str(e))
 
@@ -1405,6 +1641,49 @@ class DictMethodCommonUtils(object):
         wD = self.__fetchInstanceConnections(dataContainer)
         return wD["instConnectL"] if "instConnectL" in wD else {}
 
+    def getBoundNonpolymersComponentIds(self, dataContainer):
+        """Return a list of bound non-polymers in the entry.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            dict: {<entityId>: NonpolymerBoundEntity("targetCompId", "connectType", "partnerCompId", "partnerEntityId", "partnerEntityType"), }
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchInstanceConnections(dataContainer)
+        return wD["boundNonpolymerComponentIdL"] if "boundNonpolymerComponentIdL" in wD else {}
+
+    def getBoundNonpolymersByEntity(self, dataContainer):
+        """Return a dictonary of bound non-polymers by entity.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            dict: {<entityId>: NonpolymerBoundEntity("targetCompId", "connectType", "partnerCompId", "partnerEntityId", "partnerEntityType"), }
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchInstanceConnections(dataContainer)
+        return wD["boundNonpolymerEntityD"] if "boundNonpolymerEntityD" in wD else {}
+
+    def getBoundNonpolymersByInstance(self, dataContainer):
+        """Return a dictonary of bound non-polymers by instance.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            dict: {<asymId>: NonpolymerBoundInstance("targetCompId", "connectType", "partnerCompId", "partnerAsymId", "partnerEntityType", "bondDistance", "bondOrder"), }
+
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchInstanceConnections(dataContainer)
+        return wD["boundNonpolymerInstanceD"] if "boundNonpolymerInstanceD" in wD else {}
+
     def __fetchInstanceConnections(self, dataContainer):
         wD = self.__instanceConnectionCache.get(dataContainer.getName())
         if not wD:
@@ -1534,6 +1813,9 @@ class DictMethodCommonUtils(object):
         #
         instConnectL = []
         instConnectCountD = {ky: 0 for ky in typeMapD}
+        boundNonpolymerEntityD = {}
+        boundNonpolymerInstanceD = {}
+        boundNonpolymerComponentIdL = []
         #
         if dataContainer.exists("struct_conn"):
             tObj = dataContainer.getObj("struct_conn")
@@ -1555,7 +1837,64 @@ class DictMethodCommonUtils(object):
                     val = tObj.getValue(atName, ii) if atName != "conn_type_id" else typeMapD[tObj.getValue(atName, ii).lower()]
                     tD[ky] = val
                 instConnectL.append(tD)
-        return {"instConnectL": instConnectL, "instConnectCountD": instConnectCountD}
+
+            boundNonpolymerEntityD, boundNonpolymerInstanceD, boundNonpolymerComponentIdL = self.__getBoundNonpolymers(dataContainer, instConnectL)
+
+        return {
+            "instConnectL": instConnectL,
+            "instConnectCountD": instConnectCountD,
+            "boundNonpolymerEntityD": boundNonpolymerEntityD,
+            "boundNonpolymerInstanceD": boundNonpolymerInstanceD,
+            "boundNonpolymerComponentIdL": boundNonpolymerComponentIdL,
+        }
+
+    def __getBoundNonpolymers(self, dataContainer, instConnectL):
+        """ Get nonpolymer bound
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            bool: True for success or False otherwise
+
+        Example:
+        """
+        logger.debug("Starting with %r", dataContainer.getName())
+        #
+        boundNonpolymerEntityD = {}
+        boundNonpolymerInstanceD = {}
+        boundNonpolymerComponentIdL = []
+        try:
+            cDL = instConnectL
+            asymIdD = self.getInstanceEntityMap(dataContainer)
+            # asymAuthIdD = self.getAsymAuthIdMap(dataContainer)
+            eTypeD = self.getEntityTypes(dataContainer)
+            #
+            ts = set()
+            for cD in cDL:
+                tAsymId = cD["connect_target_label_asym_id"]
+                tEntityId = asymIdD[tAsymId]
+                if eTypeD[tEntityId] == "non-polymer" and cD["connect_type"] in ["covale", "covalent bond", "metalc", "metal coordination"]:
+                    pAsymId = cD["connect_partner_label_asym_id"]
+                    pEntityId = asymIdD[pAsymId]
+                    pCompId = cD["connect_partner_label_comp_id"]
+                    tCompId = cD["connect_target_label_comp_id"]
+                    bondOrder = cD["value_order"]
+                    bondDist = cD["dist_value"]
+                    pType = eTypeD[pEntityId]
+                    #
+                    ts.add(tCompId)
+                    boundNonpolymerInstanceD.setdefault(tAsymId, []).append(NonpolymerBoundInstance(tCompId, cD["connect_type"], pCompId, pAsymId, pType, bondDist, bondOrder))
+                    boundNonpolymerEntityD.setdefault(tEntityId, []).append(NonpolymerBoundEntity(tCompId, cD["connect_type"], pCompId, pEntityId, pType))
+            #
+            for asymId in boundNonpolymerInstanceD:
+                boundNonpolymerInstanceD[asymId] = sorted(set(boundNonpolymerInstanceD[asymId]))
+            for entityId in boundNonpolymerEntityD:
+                boundNonpolymerEntityD[entityId] = sorted(set(boundNonpolymerEntityD[entityId]))
+            boundNonpolymerComponentIdL = sorted(ts)
+        except Exception as e:
+            logger.exception("%s failing with %s", dataContainer.getName(), str(e))
+        return boundNonpolymerEntityD, boundNonpolymerInstanceD, boundNonpolymerComponentIdL
 
     def getEntitySequenceFeatureCounts(self, dataContainer):
         """Return a dictionary of sequence feature counts.
@@ -1943,8 +2282,14 @@ class DictMethodCommonUtils(object):
             seqIdDetailsD = {}
             if srsdObj:
                 for ii in range(srsdObj.getRowCount()):
-                    # authAsymId = srsdObj.getValue("pdbx_pdb_strand_id", ii)
                     alignId = srsdObj.getValue("align_id", ii)
+                    #
+                    # entityId = alignEntityMapD[alignId]
+                    entityId = srsdObj.getValueOrDefault("rcsb_entity_id", ii, defaultValue=None)
+                    if not entityId:
+                        continue
+                    #
+                    # authAsymId = srsdObj.getValue("pdbx_pdb_strand_id", ii)
                     dbName = srsdObj.getValue("pdbx_seq_db_name", ii)
                     #
                     # Can't rely on alignId
@@ -1952,9 +2297,6 @@ class DictMethodCommonUtils(object):
                     # if alignId not in alignEntityMapD and dbName not in excludeRefDbList:
                     #    logger.warning("%s inconsistent alignment ID %r in difference record %d", dataContainer.getName(), alignId, ii + 1)
                     #    continue
-                    # JDW
-                    # entityId = alignEntityMapD[alignId]
-                    entityId = srsdObj.getValue("rcsb_entity_id", ii)
                     #
                     seqId = srsdObj.getValue("seq_num", ii)
                     compId = srsdObj.getValue("mon_id", ii)
@@ -3010,7 +3352,7 @@ class DictMethodCommonUtils(object):
             logger.exception("%s failing with %s", dataContainer.getName(), str(e))
         return rD
 
-    def getPolymerModelOutlierInfo(self, dataContainer):
+    def getInstanceModelOutlierInfo(self, dataContainer):
         """Return a dictionary of polymer model outliers.
 
         Args:
@@ -3021,24 +3363,24 @@ class DictMethodCommonUtils(object):
         """
         if not dataContainer or not dataContainer.getName():
             return {}
-        wD = self.__fetchPolymerModelOutliers(dataContainer)
-        return wD["polymerModelOutlierD"] if "polymerModelOutlierD" in wD else {}
+        wD = self.__fetchInstanceModelOutliers(dataContainer)
+        return wD["instanceModelOutlierD"] if "instanceModelOutlierD" in wD else {}
 
-    def __fetchPolymerModelOutliers(self, dataContainer):
+    def __fetchInstanceModelOutliers(self, dataContainer):
         wD = self.__modelOutliersCache.get(dataContainer.getName())
         if not wD:
-            wD = self.__getPolymerModelOutliers(dataContainer)
+            wD = self.__getInstanceModelOutliers(dataContainer)
             self.__modelOutliersCache.set(dataContainer.getName(), wD)
         return wD
 
-    def __getPolymerModelOutliers(self, dataContainer):
+    def __getInstanceModelOutliers(self, dataContainer):
         """ Internal method to assemble model outliers details.
 
         Args:
             dataContainer ([type]): [description]
 
         Returns:
-            {"polymerModelOutlierD": {(modelId, asymId): [(compId, seqId, "BOND_OUTLIER", optional_description), ...}}
+            {"instanceModelOutlierD": {(modelId, asymId): [(compId, seqId, "BOND_OUTLIER", optional_description), ...}}
 
         """
         logger.debug("Starting with %r", dataContainer.getName())
@@ -3056,7 +3398,7 @@ class DictMethodCommonUtils(object):
                 return rD
             # ------- --------- ------- --------- ------- --------- ------- --------- ------- ---------
             #
-            polymerModelOutlierD = {}
+            instanceModelOutlierD = {}
             vObj = None
             if dataContainer.exists("pdbx_vrpt_bond_outliers"):
                 vObj = dataContainer.getObj("pdbx_vrpt_bond_outliers")
@@ -3074,9 +3416,9 @@ class DictMethodCommonUtils(object):
                         zVal = vObj.getValueOrDefault("Z", ii, defaultValue=None)
                         tS = "%s-%s dist=%s Z=%s" % (atomI, atomJ, obsDist, zVal)
                         #
-                        polymerModelOutlierD.setdefault((modelId, asymId), []).append((compId, int(seqId), "BOND_OUTLIER", tS))
+                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "BOND_OUTLIER", tS,))
                 #
-                logger.debug("length polymerModelOutlierD %d", len(polymerModelOutlierD))
+                logger.debug("length instanceModelOutlierD %d", len(instanceModelOutlierD))
             # ----
             vObj = None
             if dataContainer.exists("pdbx_vrpt_angle_outliers"):
@@ -3096,9 +3438,9 @@ class DictMethodCommonUtils(object):
                         zVal = vObj.getValueOrDefault("Z", ii, defaultValue=None)
                         tS = "%s-%s-%s angle=%s Z=%s" % (atomI, atomJ, atomK, obsDist, zVal)
                         #
-                        polymerModelOutlierD.setdefault((modelId, asymId), []).append((compId, int(seqId), "ANGLE_OUTLIER", tS))
+                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "ANGLE_OUTLIER", tS,))
                 #
-                logger.debug("length polymerModelOutlierD %d", len(polymerModelOutlierD))
+                logger.debug("length instanceModelOutlierD %d", len(instanceModelOutlierD))
             # ----
             vObj = None
             if dataContainer.exists("pdbx_vrpt_mogul_bond_outliers"):
@@ -3106,19 +3448,25 @@ class DictMethodCommonUtils(object):
             if vObj:
                 for ii in range(vObj.getRowCount()):
                     seqId = vObj.getValueOrDefault("label_seq_id", ii, defaultValue=None)
+
+                    modelId = vObj.getValueOrDefault("PDB_model_num", ii, defaultValue=None)
+                    asymId = vObj.getValueOrDefault("label_asym_id", ii, defaultValue=None)
+                    compId = vObj.getValueOrDefault("label_comp_id", ii, defaultValue=None)
+                    #
+                    atoms = vObj.getValueOrDefault("atoms", ii, defaultValue=None)
+                    obsDist = vObj.getValueOrDefault("obsval", ii, defaultValue=None)
+                    meanValue = vObj.getValueOrDefault("mean", ii, defaultValue=None)
+                    zVal = vObj.getValueOrDefault("Zscore", ii, defaultValue=None)
+                    tS = "%s angle=%s Z=%s" % (atoms, obsDist, zVal)
+                    # OutlierValue = collections.namedtuple("OutlierValue", "compId, seqId, outlierType, description, reported, reference, uncertaintyValue, uncertaintyType")
                     if seqId:
-                        modelId = vObj.getValueOrDefault("PDB_model_num", ii, defaultValue=None)
-                        asymId = vObj.getValueOrDefault("label_asym_id", ii, defaultValue=None)
-                        compId = vObj.getValueOrDefault("label_comp_id", ii, defaultValue=None)
-                        #
-                        atoms = vObj.getValueOrDefault("atoms", ii, defaultValue=None)
-                        obsDist = vObj.getValueOrDefault("obsval", ii, defaultValue=None)
-                        zVal = vObj.getValueOrDefault("Zscore", ii, defaultValue=None)
-                        tS = "%s angle=%s Z=%s" % (atoms, obsDist, zVal)
-                        #
-                        polymerModelOutlierD.setdefault((modelId, asymId), []).append((compId, int(seqId), "MOGUL_BOND_OUTLIER", tS))
+                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "MOGUL_BOND_OUTLIER", tS,))
+                    else:
+                        instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(
+                            OutlierValue(compId, None, "MOGUL_BOND_OUTLIER", tS, obsDist, meanValue, zVal, "Z-Score")
+                        )
                 #
-                logger.debug("length polymerModelOutlierD %d", len(polymerModelOutlierD))
+                logger.debug("length instanceModelOutlierD %d", len(instanceModelOutlierD))
 
             vObj = None
             if dataContainer.exists("pdbx_vrpt_mogul_angle_outliers"):
@@ -3126,18 +3474,23 @@ class DictMethodCommonUtils(object):
             if vObj:
                 for ii in range(vObj.getRowCount()):
                     seqId = vObj.getValueOrDefault("label_seq_id", ii, defaultValue=None)
+
+                    modelId = vObj.getValueOrDefault("PDB_model_num", ii, defaultValue=None)
+                    asymId = vObj.getValueOrDefault("label_asym_id", ii, defaultValue=None)
+                    compId = vObj.getValueOrDefault("label_comp_id", ii, defaultValue=None)
+                    #
+                    atoms = vObj.getValueOrDefault("atoms", ii, defaultValue=None)
+                    obsDist = vObj.getValueOrDefault("obsval", ii, defaultValue=None)
+                    meanValue = vObj.getValueOrDefault("mean", ii, defaultValue=None)
+                    zVal = vObj.getValueOrDefault("Zscore", ii, defaultValue=None)
+                    tS = "%s angle=%s Z=%s" % (atoms, obsDist, zVal)
                     if seqId:
-                        modelId = vObj.getValueOrDefault("PDB_model_num", ii, defaultValue=None)
-                        asymId = vObj.getValueOrDefault("label_asym_id", ii, defaultValue=None)
-                        compId = vObj.getValueOrDefault("label_comp_id", ii, defaultValue=None)
-                        #
-                        atoms = vObj.getValueOrDefault("atoms", ii, defaultValue=None)
-                        obsDist = vObj.getValueOrDefault("obsval", ii, defaultValue=None)
-                        zVal = vObj.getValueOrDefault("Zscore", ii, defaultValue=None)
-                        tS = "%s angle=%s Z=%s" % (atoms, obsDist, zVal)
-                        #
-                        polymerModelOutlierD.setdefault((modelId, asymId), []).append((compId, int(seqId), "MOGUL_ANGLE_OUTLIER", tS))
-                logger.debug("length polymerModelOutlierD %d", len(polymerModelOutlierD))
+                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "MOGUL_ANGLE_OUTLIER", tS,))
+                    else:
+                        instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(
+                            OutlierValue(compId, None, "MOGUL_ANGLE_OUTLIER", tS, obsDist, meanValue, zVal, "Z-Score")
+                        )
+                logger.debug("length instanceModelOutlierD %d", len(instanceModelOutlierD))
                 #
                 #
             vObj = None
@@ -3148,29 +3501,37 @@ class DictMethodCommonUtils(object):
                 logger.debug("Row count for %s: %d", vObj.getName(), vObj.getRowCount())
                 for ii in range(vObj.getRowCount()):
                     seqId = vObj.getValueOrDefault("label_seq_id", ii, defaultValue=None)
+                    modelId = vObj.getValueOrDefault("PDB_model_num", ii, defaultValue=None)
+                    asymId = vObj.getValueOrDefault("label_asym_id", ii, defaultValue=None)
+                    compId = vObj.getValueOrDefault("label_comp_id", ii, defaultValue=None)
+                    #
+                    rotamerClass = vObj.getValueOrDefault("rotamer_class", ii, defaultValue=None)
+                    ramaClass = vObj.getValueOrDefault("ramachandran_class", ii, defaultValue=None)
+                    rsr = vObj.getValueOrDefault("RSR", ii, defaultValue=None)
+                    rsrZ = vObj.getValueOrDefault("RSRZ", ii, defaultValue=None)
+                    rsrCc = vObj.getValueOrDefault("RSRCC", ii, defaultValue=None)
+                    #
                     if seqId:
-                        modelId = vObj.getValueOrDefault("PDB_model_num", ii, defaultValue=None)
-                        asymId = vObj.getValueOrDefault("label_asym_id", ii, defaultValue=None)
-                        compId = vObj.getValueOrDefault("label_comp_id", ii, defaultValue=None)
-                        #
-                        rotamerClass = vObj.getValueOrDefault("rotamer_class", ii, defaultValue=None)
-                        ramaClass = vObj.getValueOrDefault("ramachandran_class", ii, defaultValue=None)
-                        rsrZ = vObj.getValueOrDefault("RSRZ", ii, defaultValue=None)
-                        rsrCc = vObj.getValueOrDefault("RSRCC", ii, defaultValue=None)
-                        #
                         if rotamerClass and rotamerClass.upper() == "OUTLIER":
-                            polymerModelOutlierD.setdefault((modelId, asymId), []).append((compId, int(seqId), "ROTAMER_OUTLIER", None))
+                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "ROTAMER_OUTLIER", None,))
                         if ramaClass and ramaClass.upper() == "OUTLIER":
-                            polymerModelOutlierD.setdefault((modelId, asymId), []).append((compId, int(seqId), "RAMACHANDRAN_OUTLIER", None))
+                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "RAMACHANDRAN_OUTLIER", None,))
                         if rsrZ and float(rsrZ) > 2.0:
                             tS = "%s > 2.0" % rsrZ
-                            polymerModelOutlierD.setdefault((modelId, asymId), []).append((compId, int(seqId), "RSRZ_OUTLIER", tS))
+                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "RSRZ_OUTLIER", tS,))
                         if rsrCc and float(rsrCc) < 0.650:
-                            tS = "rsrCc < 0.65"
-                            polymerModelOutlierD.setdefault((modelId, asymId), []).append((compId, int(seqId), "RSRCC_OUTLIER", tS))
+                            tS = "RSRCC < 0.65"
+                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "RSRCC_OUTLIER", tS,))
+                    else:
+                        if rsrZ and float(rsrZ) > 2.0:
+                            tS = "%s > 2.0" % rsrZ
+                            instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(OutlierValue(compId, None, "RSRZ_OUTLIER", tS, rsr, None, rsrZ, "Z-Score"))
+                        if rsrCc and float(rsrCc) < 0.650:
+                            tS = "RSRCC < 0.65"
+                            instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(OutlierValue(compId, None, "RSRCC_OUTLIER", tS, rsrCc))
                 #
-            logger.debug("polymerModelOutlierD %r", polymerModelOutlierD)
-            rD = {"polymerModelOutlierD": polymerModelOutlierD}
+            logger.debug("instanceModelOutlierD %r", instanceModelOutlierD)
+            rD = {"instanceModelOutlierD": instanceModelOutlierD}
         except Exception as e:
             logger.exception("%s failing with %s", dataContainer.getName(), str(e))
         return rD

@@ -84,7 +84,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__chemCompMockLen = 16
-        self.__pdbxMockLen = 51
+        self.__pdbxMockLen = 62
         # removes timestamped data items to allow diffs.)
         excludeExtras = ["rcsb_load_status"]
         # excludeExtras = []
@@ -140,12 +140,12 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         #
         self.__fullTestCaseList = [
             {
-                "contentType": "bird_chem_comp_core",
-                "mockLength": self.__chemCompMockLen,
+                "contentType": "pdbx_core",
+                "mockLength": self.__pdbxMockLen,
                 "filterType": self.__fTypeRow,
                 "styleType": "rowwise_by_name_with_cardinality",
-                "mergeContentTypes": None,
-                "rejectLength": 2,
+                "mergeContentTypes": ["vrpt"],
+                "rejectLength": 4,
                 "excludeExtras": excludeExtras,
             },
             {
@@ -157,6 +157,18 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "rejectLength": 4,
                 "excludeExtras": excludeExtras,
             },
+            {
+                "contentType": "bird_chem_comp_core",
+                "mockLength": self.__chemCompMockLen,
+                "filterType": self.__fTypeRow,
+                "styleType": "rowwise_by_name_with_cardinality",
+                "mergeContentTypes": None,
+                "rejectLength": 2,
+                "excludeExtras": excludeExtras,
+            },
+        ]
+        #
+        self.__fullTestCaseListA = [
             {
                 "contentType": "pdbx_core",
                 "mockLength": self.__pdbxMockLen,
@@ -168,7 +180,6 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             },
         ]
         #
-
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
@@ -305,10 +316,10 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 sdp.setSchemaIdExcludeList(tableIdExcludeList)
                 sdp.setSchemaIdIncludeList(tableIdIncludeList)
                 #
-                #
                 docList, _, _ = sdp.processDocuments(
                     containerList, styleType=styleType, sliceFilter=sliceFilter, filterType=filterType, dataSelectors=dataSelectors, collectionName=collectionName
                 )
+
                 docList = sdp.addDocumentPrivateAttributes(docList, collectionName)
                 docList = sdp.addDocumentSubCategoryAggregates(docList, collectionName)
 

@@ -292,10 +292,10 @@ class SchemaDefDataPrep(object):
             if not schemaDataDictById:
                 continue
             #
-            logger.debug("Reshape container %s using %s", container.getName(), sliceFilter)
+            logger.debug("Reshape container %s for collection %s using slice filter %s", container.getName(), collectionName, sliceFilter)
             sddL = self.__reShape.applySlicedShape(schemaDataDictById, styleType=styleType, sliceFilter=sliceFilter, collectionName=collectionName)
             if not sddL:
-                logger.info("No result on reshaping container %s using %s", container.getName(), sliceFilter)
+                logger.debug("No result on reshaping container %s collection %s slice filter %s", container.getName(), collectionName, sliceFilter)
             else:
                 schemaDataDictList.extend(sddL)
                 #
@@ -311,6 +311,7 @@ class SchemaDefDataPrep(object):
                 containerIdList.extend(cIdList)
 
         rejectIdList = list(set(rejectIdList))
+        logger.debug("containerIdList %r schemaDataDictList %r", containerIdList, schemaDataDictList)
         #
         return schemaDataDictList, containerIdList, rejectIdList
 
