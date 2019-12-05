@@ -252,21 +252,25 @@ class DocumentDefinitionHelper(object):
 
         """
         cD = {}
-        # preprocess search context data --
-        for collectionName, tDL in self.__cfgD["collection_attribute_search_contexts"].items():
-            aD = {}
-            for tD in tDL:
-                for atName in tD["ATTRIBUTE_NAMES"]:
-                    ff = atName.split(".")
-                    if len(ff) > 2:
-                        logger.error("Bad attribute name for search type %r", atName)
-                        continue
-                    aD.setdefault((ff[0], ff[1]), []).append(tD["SEARCH_TYPE"])
-                    # if tD["SEARCH_TYPE"] in ["exact-match", "suggest"]:
-                    #    aD.setdefault((ff[0], ff[1]), []).append("full-text")
-                #
-            cD[collectionName] = {tup: sorted(list(set(sL))) for tup, sL in aD.items()}
-
+        try:
+            # preprocess search context data --
+            for collectionName, tDL in self.__cfgD["collection_attribute_search_contexts"].items():
+                aD = {}
+                # logger.info("collectionName %r len tDL %d", collectionName, len(tDL))
+                for tD in tDL:
+                    for atName in tD["ATTRIBUTE_NAMES"]:
+                        ff = atName.split(".")
+                        if len(ff) > 2:
+                            logger.error("Bad attribute name for search type %r", atName)
+                            continue
+                        aD.setdefault((ff[0], ff[1]), []).append(tD["SEARCH_TYPE"])
+                        # if tD["SEARCH_TYPE"] in ["exact-match", "suggest"]:
+                        #    aD.setdefault((ff[0], ff[1]), []).append("full-text")
+                    #
+                cD[collectionName] = {tup: sorted(list(set(sL))) for tup, sL in aD.items()}
+            # logger.info("processed search context for %r", cD)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
         return cD
 
     def getAttributeSearchContexts(self, collectionName, categoryName, attributeName):
@@ -278,10 +282,12 @@ class DocumentDefinitionHelper(object):
         """
         rL = []
         try:
-            self.__searchTypeD = self.__prepareAttributeSearchContexts() if not self.__searchTypeD else self.__searchTypeD
+            if not self.__searchTypeD:
+                self.__searchTypeD = self.__prepareAttributeSearchContexts()
             rL = self.__searchTypeD[collectionName][(categoryName, attributeName)]
+            # logger.info("Collection %r categoryName %r attributeName %r failing with %s", collectionName, categoryName, attributeName, rL)
         except Exception as e:
-            logger.debug("Collection %sr categoryName %r attributeName %r failing with %s", collectionName, categoryName, attributeName, str(e))
+            logger.debug(" ---- Collection %sr categoryName %r attributeName %r failing with %s", collectionName, categoryName, attributeName, str(e))
 
         return rL
 

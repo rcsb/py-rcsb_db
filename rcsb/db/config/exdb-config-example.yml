@@ -66,6 +66,7 @@
 #  8-Oct-2019 jdw upversion schema
 #  1-Nov-2019 jdw exclude category pdbx_molecule from core_entry and rename citation in bird_chem_comp_core
 # 25-Nov-2019 jdw add CITATION_REFERENCE_CACHE_DIR and CHEM_COMP_MODEL_CACHE_DIR -> CHEM_COMP_CACHE_DIR
+#  5-Dec-2019 jdw Major revisions for typed entity collections and assocated search contexts.
 #
 # ExDB configuration file example
 ---
@@ -341,7 +342,7 @@ content_info_helper_configuration:
             VERSION: 1.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME:
         repository_holdings:
-            VERSION: 5.1.0
+            VERSION: 6.0.0
             INSTANCE_DATA_TYPE_INFO_FILENAME:
         sequence_clusters:
             VERSION: 5.1.0
@@ -1469,23 +1470,23 @@ document_helper_configuration:
         pdb_distro: []
         repository_holdings:
             - NAME: repository_holdings_update
-              VERSION: 1.1.0
+              VERSION: 2.0.1
             - NAME: repository_holdings_current
-              VERSION: 1.1.0
+              VERSION: 2.0.1
             - NAME: repository_holdings_unreleased
-              VERSION: 1.1.0
+              VERSION: 2.0.1
             - NAME: repository_holdings_prerelease
-              VERSION: 1.1.0
+              VERSION: 2.0.1
             - NAME: repository_holdings_removed
-              VERSION: 1.1.0
+              VERSION: 2.0.1
             - NAME: repository_holdings_removed_audit_authors
-              VERSION: 1.1.0
+              VERSION: 2.0.1
             - NAME: repository_holdings_superseded
-              VERSION: 1.1.0
+              VERSION: 2.0.1
             - NAME: repository_holdings_transferred
-              VERSION: 1.1.0
+              VERSION: 2.0.1
             - NAME: repository_holdings_insilico_models
-              VERSION: 1.1.0
+              VERSION: 2.0.1
         sequence_clusters:
             - NAME: cluster_members
               VERSION: 1.1.0
@@ -1827,6 +1828,7 @@ document_helper_configuration:
                 - rcsb_entity_monomer_container_identifiers
                 - rcsb_load_status
                 - rcsb_entity_poly_info
+                - rcsb_nonpolymer_entity_instance_container_identifiers
                 - rcsb_nonpolymer_instance_feature
                 - rcsb_nonpolymer_instance_feature_summary
                 - rcsb_polymer_entity
@@ -2780,13 +2782,13 @@ document_helper_configuration:
         - ATTRIBUTE_NAME: rcsb_publication.pubmed_id
           TYPE: brief
           TEXT: PubMed ID(s)
-        - ATTRIBUTE_NAME: rcsb_entity_container_identifiers.uniprot_ids
+        - ATTRIBUTE_NAME: rcsb_polymer_entity_container_identifiers.uniprot_ids
           TYPE: brief
           TEXT: UniProtKB Accession Number(s)
         - ATTRIBUTE_NAME: struct_keywords.pdbx_keywords
           TYPE: brief
           TEXT: Classification
-        - ATTRIBUTE_NAME: rcsb_entity_container_identifiers.pfam_ids
+        - ATTRIBUTE_NAME: rcsb_polymer_entity_container_identifiers.pfam_ids
           TYPE: brief
           TEXT: Pfam Accession Number(s)
         - ATTRIBUTE_NAME: rcsb_gene.name_value
@@ -2795,10 +2797,10 @@ document_helper_configuration:
         - ATTRIBUTE_NAME: struct.title
           TYPE: brief
           TEXT: Structure Title
-        - ATTRIBUTE_NAME: entity.pdbx_description
+        - ATTRIBUTE_NAME: rcsb_polymer_entity.pdbx_description
           TYPE: brief
           TEXT: Structure Description
-        - ATTRIBUTE_NAME: entity.rcsb_macromolecular_names_combined_name
+        - ATTRIBUTE_NAME: rcsb_polymer_entity.rcsb_macromolecular_names_combined_name
           TYPE: brief
           TEXT: Macromolecule Name
         - ATTRIBUTE_NAME: rcsb_membrane.lineage_name
@@ -2873,19 +2875,19 @@ document_helper_configuration:
         - ATTRIBUTE_NAME: rcsb_entry_info.molecular_weight
           TYPE: brief
           TEXT: Molecular Weight (Structure)
-        - ATTRIBUTE_NAME: entity.formula_weight
+        - ATTRIBUTE_NAME: rcsb_polymer_entity.formula_weight
           TYPE: brief
           TEXT: Molecular Weight (Entity)
-        - ATTRIBUTE_NAME: rcsb_entity_instance_domain_scop.domain_class_lineage_name
+        - ATTRIBUTE_NAME: rcsb_polymer_entity_instance_domain_scop.domain_class_lineage_name
           TYPE: brief
           TEXT: SCOP Classification Name
-        - ATTRIBUTE_NAME: rcsb_entity_instance_domain_scop.domain_class_lineage_id
+        - ATTRIBUTE_NAME: rcsb_polymer_entity_instance_domain_scop.domain_class_lineage_id
           TYPE: brief
           TEXT: SCOP Classification Number
-        - ATTRIBUTE_NAME: rcsb_entity_instance_domain_cath.domain_class_lineage_name
+        - ATTRIBUTE_NAME: rcsb_polymer_entity_instance_domain_cath.domain_class_lineage_name
           TYPE: brief
           TEXT: CATH Classification Name
-        - ATTRIBUTE_NAME: rcsb_entity_instance_domain_cath.domain_class_lineage_id
+        - ATTRIBUTE_NAME: rcsb_polymer_entity_instance_domain_cath.domain_class_lineage_id
           TYPE: brief
           TEXT: CATH Classification Number
         - ATTRIBUTE_NAME: chem_comp.name
@@ -2921,13 +2923,13 @@ document_helper_configuration:
         - ATTRIBUTE_NAME: pdbx_reference_molecule.class
           TYPE: brief
           TEXT: Class
-        - ATTRIBUTE_NAME: rcsb_entity_source_organism.ncbi_scientific_name
+        - ATTRIBUTE_NAME: rcsb_polymer_entity_source_organism.ncbi_scientific_name
           TYPE: brief
           TEXT: Scientific Name of Source Organism
-        - ATTRIBUTE_NAME: rcsb_entity_source_organism.ncbi_common_names
+        - ATTRIBUTE_NAME: rcsb_polymer_entity_source_organism.ncbi_common_names
           TYPE: brief
           TEXT: Common Name of Source Organism
-        - ATTRIBUTE_NAME: rcsb_entity_host_organism.ncbi_scientific_name
+        - ATTRIBUTE_NAME: rcsb_polymer_entity_host_organism.ncbi_scientific_name
           TYPE: brief
           TEXT: Expression Organism
         - ATTRIBUTE_NAME: rcsb_enzyme.lineage_id
@@ -2942,10 +2944,10 @@ document_helper_configuration:
         - ATTRIBUTE_NAME: rcsb_go.lineage_name
           TYPE: brief
           TEXT: GO Name
-        - ATTRIBUTE_NAME: rcsb_entity_source_organism.taxonomy_lineage_id
+        - ATTRIBUTE_NAME: rcsb_polymer_entity_source_organism.taxonomy_lineage_id
           TYPE: brief
           TEXT: Source Organism Taxonomy ID
-        - ATTRIBUTE_NAME: rcsb_entity_source_organism.taxonomy_lineage_name
+        - ATTRIBUTE_NAME: rcsb_polymer_entity_source_organism.taxonomy_lineage_name
           TYPE: brief
           TEXT: Source Organism Taxonomy Name
         - ATTRIBUTE_NAME: rcsb_entry_info.polymer_entity_taxonomy_count
@@ -3080,7 +3082,7 @@ document_helper_configuration:
         - ATTRIBUTE_NAME: rcsb_publication.abstract_text
           TYPE: brief
           TEXT: PubMed Abstract
-        - ATTRIBUTE_NAME: rcsb_entity_source_organism.ncbi_parent_scientific_name
+        - ATTRIBUTE_NAME: rcsb_polymer_entity_source_organism.ncbi_parent_scientific_name
           TYPE: brief
           TEXT: Taxonomy
         - ATTRIBUTE_NAME: rcsb_enzyme.class_name
@@ -3089,16 +3091,16 @@ document_helper_configuration:
         - ATTRIBUTE_NAME: rcsb_membrane.class_name
           TYPE: brief
           TEXT: Membrane Protein
-        - ATTRIBUTE_NAME: rcsb_entity_container_identifiers.entry_id
+        - ATTRIBUTE_NAME: rcsb_entry_container_identifiers.entry_id
           TYPE: brief
           TEXT: PDB ID(s)
         - ATTRIBUTE_NAME: citation_author.name
           TYPE: brief
           TEXT: Citation Author
-        - ATTRIBUTE_NAME: entity.rcsb_ec_lineage_id
+        - ATTRIBUTE_NAME: rcsb_polymer_entity.rcsb_ec_lineage_id
           TYPE: brief
           TEXT: Enzyme Classification Number
-        - ATTRIBUTE_NAME: entity.rcsb_ec_lineage_name
+        - ATTRIBUTE_NAME: rcsb_polymer_entity.rcsb_ec_lineage_name
           TYPE: brief
           TEXT: Enzyme Classification Name
 
@@ -3108,9 +3110,9 @@ document_helper_configuration:
       pdbx_core_entry:
         - ATTRIBUTE_NAME: rcsb_entry_container_identifiers.entry_id
           PRIORITY_VALUE: 20
-        - ATTRIBUTE_NAME: entity.rcsb_macromolecular_names_combined
+        - ATTRIBUTE_NAME: rcsb_polymer_entity.rcsb_macromolecular_names_combined
           PRIORITY_VALUE: 20
-        - ATTRIBUTE_NAME: entity.pdbx_description
+        - ATTRIBUTE_NAME: rcsb_polymer_entity.pdbx_description
           PRIORITY_VALUE: 20
         - ATTRIBUTE_NAME: rcsb_entity_source_organism.ncbi_scientific_name
           PRIORITY_VALUE: 20
@@ -3226,7 +3228,7 @@ document_helper_configuration:
             - feature_class_lineage
             - connect_target
             - connect_partner
-    #JDWJDW
+    #
     collection_attribute_search_contexts:
       # one of: "default-match", "full-text", "exact-match", "suggest"
       pdbx_core_entry:
@@ -3246,18 +3248,39 @@ document_helper_configuration:
         - SEARCH_TYPE: exact-match
           ATTRIBUTE_NAMES:
           - audit_author.identifier_ORCID
-          - citation.id
           - citation_author.identifier_ORCID
+          - citation.id
           - citation.journal_abbrev
           - citation.journal_id_ASTM
           - citation.journal_id_ISSN
           - citation.pdbx_database_id_DOI
+          - citation.unpublished_flag
           - diffrn_detector.type
           - diffrn_source.pdbx_synchrotron_beamline
           - diffrn_source.pdbx_synchrotron_site
-          - em_2d_crystal_entity.space_group_name_H-M
+          - em_2d_crystal_entity.space_group_name_H_M
           - em_3d_crystal_entity.space_group_name
+          - em_3d_fitting.ref_protocol
+          - em_3d_fitting.ref_space
+          - em_3d_reconstruction.refinement_type
+          - em_3d_reconstruction.symmetry_type
+          - em_entity_assembly.source
           - em_experiment.aggregation_state
+          - em_experiment.reconstruction_method
+          - em_image_recording.detector_mode
+          - em_imaging.alignment_procedure
+          - em_imaging.cryogen
+          - em_imaging.illumination_mode
+          - em_imaging.microscope_model
+          - em_imaging.mode
+          - em_imaging.specimen_holder_model
+          - em_software.category
+          - em_specimen.shadowing_applied
+          - em_specimen.staining_applied
+          - em_specimen.vitrification_applied
+          - em_staining.type
+          - em_vitrification.cryogen_name
+          - em_vitrification.instrument
           - exptl.method
           - pdbx_audit_support.country
           - pdbx_audit_support.funding_organization
@@ -3272,13 +3295,16 @@ document_helper_configuration:
           - pdbx_SG_project.project_name
           - rcsb_entry_container_identifiers.entry_id
           - rcsb_entry_container_identifiers.rcsb_id
-          #
+          - rcsb_entry_container_identifiers.emdb_ids
+          - rcsb_entry_container_identifiers.related_emdb_ids
           - rcsb_entry_info.experimental_method
           - rcsb_entry_info.na_polymer_entity_types
           - rcsb_entry_info.polymer_composition
           - rcsb_entry_info.selected_polymer_entity_types
           - rcsb_entry_info.software_programs_combined
-          #
+          - software.language
+          - software.type
+          - struct.pdbx_CASP_flag
           - symmetry.cell_setting
           - symmetry.pdbx_full_space_group_name_H-M
           - symmetry.space_group_name_H-M
@@ -3293,11 +3319,83 @@ document_helper_configuration:
           - cell.length_b
           - cell.length_c
           - citation.year
+          - diffrn_detector.pdbx_collection_date
+          - diffrn.ambient_pressure
           - diffrn.ambient_temp
+          - diffrn.ambient_temp
+          - em_2d_crystal_entity.angle_gamma
+          - em_2d_crystal_entity.c_sampling_length
+          - em_2d_crystal_entity.length_a
+          - em_2d_crystal_entity.length_b
+          - em_2d_crystal_entity.length_c
+          - em_3d_crystal_entity.angle_alpha
+          - em_3d_crystal_entity.angle_beta
+          - em_3d_crystal_entity.angle_gamma
+          - em_3d_crystal_entity.length_a
+          - em_3d_crystal_entity.length_b
+          - em_3d_crystal_entity.length_c
+          - em_3d_crystal_entity.space_group_num
+          - em_3d_fitting.overall_b_value
+          - em_3d_reconstruction.actual_pixel_size
+          - em_3d_reconstruction.nominal_pixel_size
+          - em_3d_reconstruction.num_class_averages
+          - em_3d_reconstruction.num_particles
+          - em_3d_reconstruction.resolution
+          - em_diffraction_shell.fourier_space_coverage
+          - em_diffraction_shell.high_resolution
+          - em_diffraction_shell.low_resolution
+          - em_diffraction_shell.multiplicity
+          - em_diffraction_shell.num_structure_factors
+          - em_diffraction_shell.phase_residual
+          - em_diffraction_stats.fourier_space_coverage
+          - em_diffraction_stats.high_resolution
+          - em_diffraction_stats.num_intensities_measured
+          - em_diffraction_stats.num_structure_factors
+          - em_diffraction_stats.overall_phase_error
+          - em_diffraction_stats.overall_phase_residual
+          - em_diffraction_stats.r_merge
+          - em_diffraction_stats.r_sym
+          - em_diffraction.camera_length
+          - em_entity_assembly.parent_id
+          - em_helical_entity.angular_rotation_per_subunit
+          - em_helical_entity.axial_rise_per_subunit
+          - em_image_recording.average_exposure_time
+          - em_image_recording.avg_electron_dose_per_image
+          - em_image_recording.num_diffraction_images
+          - em_image_recording.num_grids_imaged
+          - em_image_recording.num_real_images
+          - em_imaging.accelerating_voltage
+          - em_imaging.c2_aperture_diameter
+          - em_imaging.calibrated_defocus_max
+          - em_imaging.calibrated_defocus_min
+          - em_imaging.calibrated_magnification
+          - em_imaging.date
+          - em_imaging.detector_distance
+          - em_imaging.nominal_cs
+          - em_imaging.nominal_defocus_max
+          - em_imaging.nominal_defocus_min
+          - em_imaging.nominal_magnification
+          - em_imaging.recording_temperature_maximum
+          - em_imaging.recording_temperature_minimum
+          - em_imaging.residual_tilt
+          - em_imaging.temperature
+          - em_imaging.tilt_angle_max
+          - em_imaging.tilt_angle_min
+          - em_particle_selection.num_particles_selected
+          - em_specimen.concentration
+          - em_vitrification.chamber_temperature
+          - em_vitrification.humidity
+          - em_vitrification.temp
           - exptl_crystal_grow.pH
           - exptl_crystal_grow.temp
           - exptl_crystal.density_Matthews
+          - exptl_crystal.density_meas
           - exptl_crystal.density_percent_sol
+          - exptl_crystal.density_percent_sol
+          - exptl_crystal.pdbx_mosaicity
+          - exptl_crystal.pdbx_mosaicity_esd
+          - exptl.crystals_number
+          - pdbx_nmr_spectrometer.field_strength
           - rcsb_accession_info.deposit_date
           - rcsb_accession_info.initial_release_date
           - rcsb_accession_info.revision_date
@@ -3439,6 +3537,8 @@ document_helper_configuration:
           - reflns.data_reduction_details
           - reflns.data_reduction_method
           - reflns.R_free_details
+          - software.classification
+          - software.name
           - struct_keywords.pdbx_keywords
           - struct_keywords.text
           - struct.pdbx_descriptor
@@ -3458,9 +3558,6 @@ document_helper_configuration:
         - SEARCH_TYPE: exact-match
           ATTRIBUTE_NAMES:
           - entity_poly.rcsb_entity_polymer_type
-          - rcsb_polymer_entity.rcsb_ec_lineage_id
-          - rcsb_polymer_entity.rcsb_ec_lineage_name
-          - rcsb_polymer_entity.type
           - rcsb_entity_container_identifiers.entry_id
           - rcsb_entity_container_identifiers.rcsb_id
           - rcsb_entity_container_identifiers.reference_sequence_identifiers_database_accession
@@ -3480,13 +3577,15 @@ document_helper_configuration:
           - rcsb_entity_source_organism.scientific_name
           - rcsb_entity_source_organism.taxonomy_lineage_id
           - rcsb_entity_source_organism.taxonomy_lineage_name
-          #
+          - rcsb_polymer_entity_feature_summary.type
           - rcsb_polymer_entity_feature.feature_class_lineage_id
           - rcsb_polymer_entity_feature.feature_class_lineage_name
-          - rcsb_polymer_entity_feature.name
           - rcsb_polymer_entity_feature.feature_id
+          - rcsb_polymer_entity_feature.name
           - rcsb_polymer_entity_feature.type
-          - rcsb_polymer_entity_feature_summary.type
+          - rcsb_polymer_entity.rcsb_ec_lineage_id
+          - rcsb_polymer_entity.rcsb_ec_lineage_name
+          - rcsb_polymer_entity.type
           #
         - SEARCH_TYPE: default-match
           ATTRIBUTE_NAMES:
@@ -3550,22 +3649,84 @@ document_helper_configuration:
           - rcsb_polymer_entity_feature.name
           - rcsb_polymer_entity_feature.type
           - rcsb_polymer_entity_keywords.text
+          - rcsb_polymer_entity_keywords.text
+          - rcsb_polymer_entity_name_com.name
+          - rcsb_polymer_entity_name_sys.name
           - rcsb_polymer_entity.pdbx_description
           - rcsb_polymer_entity.rcsb_ec_lineage_name
           - rcsb_polymer_entity.rcsb_enzyme_class_combined_ec
           - rcsb_polymer_entity.rcsb_macromolecular_names_combined_name
           #
       #
+      pdbx_core_nonpolymer_entity:
+        - SEARCH_TYPE: exact-match
+          ATTRIBUTE_NAMES:
+          - rcsb_nonpolymer_entity_container_identifiers.nonpolymer_comp_id
+          - rcsb_nonpolymer_entity_container_identifiers.prd_id
+          - rcsb_nonpolymer_entity_container_identifiers.reference_chemical_identifiers_database_name
+          - rcsb_nonpolymer_entity_feature.type
+          - rcsb_nonpolymer_entity_feature_summary.type
+        - SEARCH_TYPE: default-match
+          ATTRIBUTE_NAMES:
+          - rcsb_nonpolymer_entity.formula_weight
+          - rcsb_nonpolymer_entity.pdbx_number_of_molecules
+          - rcsb_nonpolymer_entity_feature.value
+          - rcsb_nonpolymer_entity_feature_summary.count
+        - SEARCH_TYPE: full-text
+          ATTRIBUTE_NAMES:
+          - pdbx_entity_nonpoly.name
+          - rcsb_nonpolymer_entity.details
+          - rcsb_nonpolymer_entity.pdbx_description
+          - rcsb_nonpolymer_entity_container_identifiers.reference_chemical_identifiers_database_accession
+          - rcsb_nonpolymer_entity_feature.feature_class_lineage_id
+          - rcsb_nonpolymer_entity_feature.feature_class_lineage_name
+          - rcsb_nonpolymer_entity_feature.assignment_version
+          - rcsb_nonpolymer_entity_feature.description
+          - rcsb_nonpolymer_entity_feature.feature_id
+          - rcsb_nonpolymer_entity_feature.name
+          - rcsb_nonpolymer_entity_keywords.text
+          - rcsb_nonpolymer_entity_name_com.name
+         #
+      pdbx_core_branched_entity:
+        - SEARCH_TYPE: exact-match
+          ATTRIBUTE_NAMES:
+          - rcsb_branched_entity_feature.type
+          - rcsb_branched_entity_feature_summary.type
+        - SEARCH_TYPE: default-match
+          ATTRIBUTE_NAMES:
+          - rcsb_branched_entity.formula_weight
+          - rcsb_branched_entity.pdbx_number_of_molecules
+          - rcsb_branched_entity_feature.feature_positions_value
+          - rcsb_branched_entity_feature_summary.count
+          - rcsb_branched_entity_feature_summary.coverage
+        - SEARCH_TYPE: full-text
+          ATTRIBUTE_NAMES:
+          - rcsb_branched_entity.details
+          - rcsb_branched_entity.pdbx_description
+          - rcsb_branched_entity_container_identifiers.chem_comp_monomers
+          - rcsb_branched_entity_container_identifiers.prd_id
+          - rcsb_branched_entity_feature.feature_class_lineage_id
+          - rcsb_branched_entity_feature.feature_class_lineage_name
+          - rcsb_branched_entity_feature.description
+          - rcsb_branched_entity_feature.feature_id
+          - rcsb_branched_entity_feature.name
+          - rcsb_branched_entity_keywords.text
+          - rcsb_branched_entity_name_com.name
+          - rcsb_branched_entity_name_sys.name
+
       pdbx_core_polymer_entity_instance:
         - SEARCH_TYPE: exact-match
           ATTRIBUTE_NAMES:
           - rcsb_entity_instance_container_identifiers.rcsb_id
-          - rcsb_polymer_instance_feature_summary.type
           - rcsb_polymer_instance_feature.feature_class_lineage_id
           - rcsb_polymer_instance_feature.feature_class_lineage_name
           - rcsb_polymer_instance_feature.feature_id
           - rcsb_polymer_instance_feature.name
           - rcsb_polymer_instance_feature.type
+          - rcsb_polymer_instance_feature_summary.type
+          - rcsb_polymer_struct_conn.connect_type
+          - rcsb_polymer_struct_conn.value_order
+
         - SEARCH_TYPE: default-match
           ATTRIBUTE_NAMES:
           - rcsb_polymer_instance_feature_summary.count
@@ -3577,6 +3738,47 @@ document_helper_configuration:
           - rcsb_polymer_instance_feature.name
           - rcsb_polymer_instance_feature.feature_class_lineage_name
           - rcsb_polymer_instance_feature.description
+      #
+      pdbx_core_nonpolymer_entity_instance:
+        - SEARCH_TYPE: exact-match
+          ATTRIBUTE_NAMES:
+          - rcsb_nonpolymer_instance_feature.type
+          - rcsb_nonpolymer_instance_feature_summary.type
+          - rcsb_nonpolymer_entity_instance_container_identifiers.comp_id
+          - rcsb_nonpolymer_instance_feature.feature_class_lineage_id
+          - rcsb_nonpolymer_instance_feature.feature_class_lineage_name
+        - SEARCH_TYPE: default-match
+          ATTRIBUTE_NAMES:
+          - rcsb_nonpolymer_instance_feature.feature_value_reference
+          - rcsb_nonpolymer_instance_feature.feature_value_reported
+          - rcsb_nonpolymer_instance_feature_summary.count
+        - SEARCH_TYPE: full-text
+          ATTRIBUTE_NAMES:
+          - rcsb_nonpolymer_instance_feature.description
+          - rcsb_nonpolymer_instance_feature.name
+      #
+      pdbx_core_branched_entity_instance:
+        - SEARCH_TYPE: exact-match
+          ATTRIBUTE_NAMES:
+          - rcsb_branched_instance_feature.type
+          - rcsb_branched_instance_feature_summary.type
+          - rcsb_branched_entity_instance_container_identifiers.comp_id
+          #- rcsb_branched_struct_conn.connect_type
+          #- rcsb_branched_struct_conn.value_order
+          - rcsb_branched_instance_feature.feature_class_lineage_id
+          - rcsb_branched_instance_feature.feature_class_lineage_name
+
+        - SEARCH_TYPE: default-match
+          ATTRIBUTE_NAMES:
+          - rcsb_branched_instance_feature.feature_value_reference
+          - rcsb_branched_instance_feature.feature_value_reported
+          - rcsb_branched_instance_feature_summary.count
+          - rcsb_branched_instance_feature_summary.coverage
+          #- rcsb_branched_struct_conn.dist_value
+        - SEARCH_TYPE: full-text
+          ATTRIBUTE_NAMES:
+          - rcsb_branched_instance_feature.description
+          - rcsb_branched_instance_feature.name
       #
       pdbx_core_assembly:
         - SEARCH_TYPE: full-text
@@ -3675,6 +3877,49 @@ document_helper_configuration:
           - drugbank_target.seq_one_letter_code
           - drugbank_target.target_actions
       #
+      repository_holdings_removed:
+        - SEARCH_TYPE: suggest
+          ATTRIBUTE_NAMES:
+          - rcsb_repository_holdings_removed.entry_id
+        - SEARCH_TYPE: exact-match
+          ATTRIBUTE_NAMES:
+          - rcsb_repository_holdings_removed.entry_id
+          - rcsb_repository_holdings_removed.id_codes_replaced_by
+        - SEARCH_TYPE: default-match
+          ATTRIBUTE_NAMES:
+          - rcsb_repository_holdings_removed.deposit_date
+          - rcsb_repository_holdings_removed.release_date
+          - rcsb_repository_holdings_removed.remove_date
+        - SEARCH_TYPE: full-text
+          ATTRIBUTE_NAMES:
+          - rcsb_repository_holdings_removed.audit_authors
+          - rcsb_repository_holdings_removed.details
+          - rcsb_repository_holdings_removed.title
+      #
+      repository_holdings_unreleased:
+        - SEARCH_TYPE: suggest
+          ATTRIBUTE_NAMES:
+          - rcsb_repository_holdings_unreleased.entry_id
+        - SEARCH_TYPE: exact-match
+          ATTRIBUTE_NAMES:
+          - rcsb_repository_holdings_unreleased.entry_id
+          - rcsb_repository_holdings_unreleased.author_prerelease_sequence_status
+          - rcsb_repository_holdings_unreleased.status_code
+        - SEARCH_TYPE: default-match
+          ATTRIBUTE_NAMES:
+          - rcsb_repository_holdings_unreleased.deposit_date
+          - rcsb_repository_holdings_unreleased.deposit_date_coordinates
+          - rcsb_repository_holdings_unreleased.deposit_date_nmr_restraints
+          - rcsb_repository_holdings_unreleased.deposit_date_structure_factors
+          - rcsb_repository_holdings_unreleased.hold_date_coordinates
+          - rcsb_repository_holdings_unreleased.hold_date_nmr_restraints
+          - rcsb_repository_holdings_unreleased.hold_date_structure_factors
+          - rcsb_repository_holdings_unreleased.release_date
+        - SEARCH_TYPE: full-text
+          ATTRIBUTE_NAMES:
+          - rcsb_repository_holdings_unreleased.audit_authors
+          - rcsb_repository_holdings_unreleased.title
+        #
     collection_attribute_content_filters:
       #
       bird_chem_comp_core:

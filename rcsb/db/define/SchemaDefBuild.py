@@ -36,6 +36,8 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
+# pylint: disable=too-many-lines
+
 import copy
 import logging
 from collections import OrderedDict
@@ -519,14 +521,34 @@ class SchemaDefBuild(object):
         for atName, fD in aD.items():
             ascL = documentDefHelper.getAttributeSearchContexts(collectionName, catName, atName)
             fD["SEARCH_CONTEXTS"] = ascL
+            # logger.info("collectionName %r catName %r atName %r context %r", collectionName, catName, atName, ascL)
             fD["IS_NESTED"] = documentDefHelper.isCategoryNested(collectionName, catName)
             fD["SEARCH_PRIORITY"] = documentDefHelper.getAttributeTextSearchPriority(collectionName, catName, atName)
+            # logger.info("collectionName %r catName %r atName %r priority %r", collectionName, catName, atName, fD["SEARCH_PRIORITY"])
             tS = documentDefHelper.getAttributeDescription(catName, atName, contextType="brief")
             if tS:
                 fD["DESCRIPTION_ANNOTATED"].append({"text": tS, "context": "brief"})
         #
         return aD
         #
+
+    def __exportSearchContext(self, collectionName, catName, atName, atPropD):
+        if "bsonType" in atPropD:
+            #
+            sC = None
+            tt = atPropD["bsonType"]
+            if "enum" in atPropD:
+                sC = "exact-match"
+            elif "date" in tt or tt in ["int", "integer", "float", "double"]:
+                sC = "default-match"
+            elif tt in ["string"]:
+                sC = "full-text"
+            else:
+                logger.warning("UNKNOWN type for %s %s %s", catName, atName, tt)
+                return False
+
+            logger.info("--SCONTEXT %s %s - %s.%s", collectionName, sC, catName, atName)
+        return True
 
     def __createJsonLikeSchema(
         self,
@@ -559,7 +581,7 @@ class SchemaDefBuild(object):
 
 
         """
-
+        exportSearchContext = False
         addRcsbExtensions = "rcsb" in enforceOpts
         addBlockAttribute = True
         addPrimaryKey = "addPrimaryKey" in enforceOpts
@@ -569,9 +591,7 @@ class SchemaDefBuild(object):
         subCategoryAggregates = documentDefHelper.getSubCategoryAggregates(collectionName)
         logger.debug("%s %s Sub_category aggregates %r", databaseName, collectionName, subCategoryAggregates)
         privDocKeyL = documentDefHelper.getPrivateDocumentAttributes(collectionName)
-        # enforceOpts = "mandatoryKeys|mandatoryAttributes|bounds|enums"
-        #
-        # dataTyping = 'JSON'
+
         dataTypingU = dataTyping.upper()
         typeKey = "bsonType" if dataTypingU == "BSON" else "type"
         convertNameF = self.__getConvertNameMethod(dataTypingU)
@@ -731,6 +751,9 @@ class SchemaDefBuild(object):
                         #
                         atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, dtInstInfo, jsonSpecDraft, enforceOpts, suppressRelations, addRcsbExtensions)
                         scD["properties"][schemaAttributeName] = atPropD
+                        if exportSearchContext:
+                            self.__exportSearchContext(collectionName, catName, atName, atPropD)
+
                     if scD["properties"]:
                         if reqL:
                             scD["required"] = reqL
@@ -772,6 +795,9 @@ class SchemaDefBuild(object):
                     pD["properties"][schemaAttributeName] = {typeKey: "array", "items": atPropD, "uniqueItems": False}
                 else:
                     pD["properties"][schemaAttributeName] = atPropD
+
+                if exportSearchContext:
+                    self.__exportSearchContext(collectionName, catName, schemaAttributeName, atPropD)
 
             if subCatPropD:
                 pD["properties"].update(copy.copy(subCatPropD))
@@ -906,7 +932,6 @@ class SchemaDefBuild(object):
             if appType in ["string"]:
                 # atPropD = {typeKey: appType, 'maxWidth': instWidth}
                 atPropD = {typeKey: appType}
-                logger.debug("QQQQ - %s.%s", catName, atName)
             elif appType in ["date", "datetime"] and dataTypingU == "JSON":
                 fmt = "date" if appType == "date" else "date-time"
                 atPropD = {typeKey: "string", "format": fmt}
