@@ -47,7 +47,7 @@ class DictMethodCommonUtils(object):
     """
 
     # Dictionary of current standard monomers -
-    monDict3 = {
+    aaDict3 = {
         "ALA": "A",
         "ARG": "R",
         "ASN": "N",
@@ -72,23 +72,13 @@ class DictMethodCommonUtils(object):
         "VAL": "V",
         "PYL": "O",
         "SEC": "U",
-        "DA": "A",
-        "DC": "C",
-        "DG": "G",
-        "DT": "T",
-        "DU": "U",
-        "DI": "I",
-        "A": "A",
-        "C": "C",
-        "G": "G",
-        "I": "I",
-        "N": "N",
-        "T": "T",
-        "U": "U",
-        # "UNK": "X",
-        # "MSE":"M",
-        # ".": "."
     }
+    dnaDict3 = {"DA": "A", "DC": "C", "DG": "G", "DT": "T", "DU": "U", "DI": "I"}
+    rnaDict3 = {"A": "A", "C": "C", "G": "G", "I": "I", "N": "N", "T": "T", "U": "U"}
+    # "UNK": "X",
+    # "MSE":"M",
+    # ".": "."
+    monDict3 = {**aaDict3, **dnaDict3, **rnaDict3}
 
     def __init__(self, **kwargs):
         """
@@ -411,7 +401,9 @@ class DictMethodCommonUtils(object):
             epTypeD = {}
             epLengthD = {}
             epTypeFilteredD = {}
+            hasEntityPoly = False
             if dataContainer.exists("entity_poly"):
+                hasEntityPoly = True
                 epObj = dataContainer.getObj("entity_poly")
                 for ii in range(epObj.getRowCount()):
                     entityId = epObj.getValue("entity_id", ii)
@@ -422,12 +414,14 @@ class DictMethodCommonUtils(object):
                         sampleSeq = self.__stripWhiteSpace(epObj.getValue("pdbx_seq_one_letter_code_can", ii))
                         epLengthD[entityId] = len(sampleSeq) if sampleSeq and sampleSeq not in ["?", "."] else None
 
-            # seqModMonomerFeatureD.setdefault((entityId, seqId, compId, 'modified_monomer'), set()).add('parent %%%%%')
+            #
             seqModMonomerFeatureD = {}
             entityPolymerMonomerCountD = {}
             entityPolymerLengthD = {}
+            hasEntityPolySeq = False
             if dataContainer.exists("entity_poly_seq"):
                 epsObj = dataContainer.getObj("entity_poly_seq")
+                hasEntityPolySeq = True
                 tSeqD = {}
                 for ii in range(epsObj.getRowCount()):
                     entityId = epsObj.getValue("entity_id", ii)
@@ -443,6 +437,15 @@ class DictMethodCommonUtils(object):
                 #
                 entityPolymerLengthD = {entityId: len(tSet) for entityId, tSet in tSeqD.items()}
             #
+            if not hasEntityPoly and hasEntityPolySeq:
+                for entityId, eType in eTypeD.items():
+                    if eType in ["polymer"]:
+                        monomerL = epsObj.selectValuesWhere("mon_id", entityId, "entity_id")
+                        pType, fpType = self.guessEntityPolyTypes(monomerL)
+                        epTypeFilteredD[entityId] = fpType
+                        epTypeD[entityId] = pType
+                        epLengthD[entityId] = len(monomerL)
+
             entityPolymerModifiedMonomers = {}
             for entityId, cD in entityPolymerMonomerCountD.items():
                 tL = []
@@ -2177,7 +2180,7 @@ class DictMethodCommonUtils(object):
                     continue
                 #
                 if entityId not in polymerEntityTypeD:
-                    logger.warning("%s skipping non-polymer entity %r sequence reference", dataContainer.getName(), entityId)
+                    logger.warning("%s skipping non-polymer entity %r in sequence reference", dataContainer.getName(), entityId)
                     continue
 
                 if dbName in ["UNP"] and polymerEntityTypeD[entityId] != "Protein":
@@ -2556,6 +2559,49 @@ class DictMethodCommonUtils(object):
         else:
             rT = "Other"
         return rT
+
+    def guessEntityPolyTypes(self, monomerL):
+        """ Guess the polymer types to from the monomer list.
+
+        Args:
+            monomerL (list): list of monomers (chemical component ids)
+
+        Returns:
+            tuple: polymerType, filtered polymer Type.
+
+        Returns mappings:
+            'Protein'   'polypeptide(D) or polypeptide(L)'
+            'DNA'       'polydeoxyribonucleotide'
+            'RNA'       'polyribonucleotide'
+            'NA-hybrid' 'polydeoxyribonucleotide/polyribonucleotide hybrid'
+            'Other'      'polysaccharide(D), polysaccharide(L), cyclic-pseudo-peptide, peptide nucleic acid, or other'
+        """
+        hasAA = hasDNA = hasRNA = False
+        pType = fpType = None
+        for monomer in monomerL:
+            if monomer in DictMethodCommonUtils.aaDict3:
+                hasAA = True
+            elif monomer in DictMethodCommonUtils.dnaDict3:
+                hasDNA = True
+            elif monomer in DictMethodCommonUtils.rnaDict3:
+                hasRNA = True
+        #
+        if hasAA and not hasDNA and not hasRNA:
+            pType = "polypeptide(d)"
+        elif hasDNA and not hasAA and not hasRNA:
+            pType = "polydeoxyribonucleotide"
+        elif hasRNA and not hasAA and not hasDNA:
+            pType = "polyribonucleotide"
+        elif not hasAA and hasDNA and hasRNA:
+            pType = "polydeoxyribonucleotide/polyribonucleotide hybrid"
+
+        if pType:
+            fpType = self.filterEntityPolyType(pType)
+        else:
+            pType = None
+            fpType = "Other"
+        #
+        return pType, fpType
 
     def getPolymerComposition(self, polymerTypeList):
         """ Map in list of dictionary entity polymer/branched types to a composition string.

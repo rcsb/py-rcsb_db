@@ -711,6 +711,7 @@ content_info_helper_configuration:
         :       - CATEGORY_NAME: citation
                   ATTRIBUTE_NAME_LIST:
                       - rcsb_authors
+                      - rcsb_journal_abbrev
                 #- CATEGORY_NAME: rcsb_load_status
                 - CATEGORY_NAME: citation_author
                   ATTRIBUTE_NAME_LIST:
@@ -1437,7 +1438,7 @@ document_helper_configuration:
               VERSION: 5.1.0
         pdbx_core:
             - NAME: pdbx_core_entry
-              VERSION: 7.0.0
+              VERSION: 7.0.1
             - NAME: pdbx_core_assembly
               VERSION: 7.0.0
             - NAME: pdbx_core_polymer_entity
@@ -1449,7 +1450,7 @@ document_helper_configuration:
             - NAME: pdbx_core_polymer_entity_instance
               VERSION: 7.0.0
             - NAME: pdbx_core_nonpolymer_entity_instance
-              VERSION: 7.0.0
+              VERSION: 7.0.1
             - NAME: pdbx_core_branched_entity_instance
               VERSION: 7.0.0
         bird:
@@ -3251,6 +3252,7 @@ document_helper_configuration:
           - citation_author.identifier_ORCID
           - citation.id
           - citation.journal_abbrev
+          - citation.rcsb_journal_abbrev
           - citation.journal_id_ASTM
           - citation.journal_id_ISSN
           - citation.pdbx_database_id_DOI

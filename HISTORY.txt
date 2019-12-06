@@ -185,4 +185,5 @@
   2-Nov-2019  V0.89 Add bird specific citation handling methods and rerun
  23-Nov-2019  V0.90 Move pipeline to py38
   4-Dec-2019  V0.91 Add type specific entity collections (branch entity-type-division)
-  5-Dec-2019  V0.92 Update search contexts for repository holdings.
+  5-Dec-2019  V0.92A Update search contexts for repository holdings.
+  6-Dec-2019  V0.92B Partially handle odd cases of missing entity_poly category and adjust enumeration for nonpolymer instances features
