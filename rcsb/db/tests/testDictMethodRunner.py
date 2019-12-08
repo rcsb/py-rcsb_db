@@ -52,7 +52,7 @@ class DictMethodRunnerTests(unittest.TestCase):
         self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath)
         #
         self.__testCaseList = [
-            {"contentType": "pdbx_core", "mockLength": 14, "mergeContent": ["vrpt"]},
+            {"contentType": "pdbx_core", "mockLength": 50, "mergeContent": ["vrpt"]},
             {"contentType": "bird_chem_comp_core", "mockLength": 17, "mergeContent": None},
         ]
         #
@@ -81,11 +81,6 @@ class DictMethodRunnerTests(unittest.TestCase):
             for container in containerList:
                 cName = container.getName()
                 logger.debug("Processing container %s", cName)
-                # JDW
-                # if cName not in ["5EU8", "5TA4"]:
-                #    continue
-                # JDW
-                #
                 dmh.apply(container)
                 savePath = os.path.join(HERE, "test-output", cName + "-with-method.cif")
                 self.__mU.doExport(savePath, [container], fmt="mmcif")

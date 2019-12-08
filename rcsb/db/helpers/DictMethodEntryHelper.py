@@ -814,7 +814,7 @@ class DictMethodEntryHelper(object):
             if len(methodL) > 1:
                 isXtal = False
                 for method in methodL:
-                    if method in ["X-RAY DIFFRACTION", "FIBER DIFFRACTION", "POWDER DIFFRACTION", "ELECTRON CRYSTALLOGRAPHY", "NEUTRON DIFFRACTION"]:
+                    if method in ["X-RAY DIFFRACTION", "FIBER DIFFRACTION", "POWDER DIFFRACTION", "ELECTRON CRYSTALLOGRAPHY", "NEUTRON DIFFRACTION", "ELECTRON DIFFRACTION"]:
                         isXtal = True
                         break
                 if not isXtal:
@@ -822,16 +822,16 @@ class DictMethodEntryHelper(object):
             else:
                 #
                 mS = methodL[0].upper()
-                if mS in ["X-RAY DIFFRACTION", "FIBER DIFFRACTION", "POWDER DIFFRACTION", "ELECTRON CRYSTALLOGRAPHY", "NEUTRON DIFFRACTION"]:
+                if mS in ["X-RAY DIFFRACTION", "FIBER DIFFRACTION", "POWDER DIFFRACTION", "ELECTRON CRYSTALLOGRAPHY", "NEUTRON DIFFRACTION", "ELECTRON DIFFRACTION"]:
                     objNameL = []
                 elif mS in ["SOLUTION NMR", "SOLID-STATE NMR"]:
                     objNameL = ["cell", "symmetry", "refine", "refine_hist", "software", "diffrn", "diffrn_radiation"]
-                elif mS in ["ELECTRON MICROSCOPY"]:
+                elif mS in ["ELECTRON MICROSCOPY", "CRYO-ELECTRON MICROSCOPY"]:
                     objNameL = ["cell", "symmetry", "refine", "refine_hist", "software", "diffrn", "diffrn_radiation"]
                 elif mS in ["SOLUTION SCATTERING", "EPR", "THEORETICAL MODEL", "INFRARED SPECTROSCOPY", "FLUORESCENCE TRANSFER"]:
                     objNameL = ["cell", "symmetry", "refine", "refine_hist", "software", "diffrn", "diffrn_radiation"]
                 else:
-                    logger.error("Unexpected method %r", mS)
+                    logger.error("%s Unexpected method %r", dataContainer.getName(), mS)
             #
             for objName in objNameL:
                 dataContainer.remove(objName)

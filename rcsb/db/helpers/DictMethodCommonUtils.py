@@ -1399,7 +1399,7 @@ class DictMethodCommonUtils(object):
                         if (begAsymId == endAsymId) and (begSeqId <= endSeqId):
                             helixRangeD.setdefault(hId, []).append((begAsymId, begSeqId, endSeqId))
                         else:
-                            logger.warning("%s inconsistent struct_sheet_range description id = %s", dataContainer.getName(), hId)
+                            logger.warning("%s inconsistent struct_conf description id = %s", dataContainer.getName(), hId)
 
             logger.debug("%s helixRangeD %r", dataContainer.getName(), helixRangeD.items())
 
@@ -1421,7 +1421,7 @@ class DictMethodCommonUtils(object):
                     if (begAsymId == endAsymId) and (begSeqId <= endSeqId):
                         sheetRangeD.setdefault(sId, []).append((begAsymId, begSeqId, endSeqId))
                     else:
-                        logger.warning("%s inconsistent struct_conf description id = %s", dataContainer.getName(), sId)
+                        logger.warning("%s inconsistent struct_sheet_range description id = %s", dataContainer.getName(), sId)
 
             logger.debug("%s sheetRangeD %r", dataContainer.getName(), sheetRangeD.items())
             #

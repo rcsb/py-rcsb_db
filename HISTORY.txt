@@ -187,3 +187,5 @@
   4-Dec-2019  V0.91 Add type specific entity collections (branch entity-type-division)
   5-Dec-2019  V0.92A Update search contexts for repository holdings.
   6-Dec-2019  V0.92B Partially handle odd cases of missing entity_poly category and adjust enumeration for nonpolymer instances features
+  7-Dec-2019  V0.92C Adjust error reporting in getProtSecStructFeatures()
+              PENDING UPDATE
