@@ -78,7 +78,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=configName)
         self.__testDirPath = os.path.join(HERE, "test-output", "pdbx-fails")
         self.__testIhmDirPath = os.path.join(HERE, "test-output", "ihm-files")
-        self.__export = True
+        self.__export = False
         #
         self.__extraOpts = None
         # The following for extended parent/child info -
@@ -106,7 +106,6 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         }
 
         self.__databaseNameD = {
-            "bird_chem_comp_core": ["bird_chem_comp_core"],
             "pdbx_core": [
                 "pdbx_core_entry",
                 "pdbx_core_assembly",
@@ -117,6 +116,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                 "pdbx_core_nonpolymer_entity_instance",
                 "pdbx_core_branched_entity_instance",
             ],
+            "bird_chem_comp_core": ["bird_chem_comp_core"],
         }
         self.__mergeContentTypeD = {"pdbx_core": ["vrpt"]}
         # self.__databaseNameD = {"chem_comp_core": ["chem_comp_core"], "bird_chem_comp_core": ["bird_chem_comp_core"]}

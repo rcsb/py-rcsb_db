@@ -1438,7 +1438,7 @@ document_helper_configuration:
               VERSION: 5.1.0
         pdbx_core:
             - NAME: pdbx_core_entry
-              VERSION: 7.0.1
+              VERSION: 7.0.2
             - NAME: pdbx_core_assembly
               VERSION: 7.0.0
             - NAME: pdbx_core_polymer_entity

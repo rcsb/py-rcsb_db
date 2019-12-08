@@ -316,9 +316,9 @@ class DictMethodCommonUtils(object):
             tuple: (minLen, maxLen)
         """
         if not dataContainer or not dataContainer.getName():
-            return {}
+            return ()
         wD = self.__fetchEntityAndInstanceTypes(dataContainer)
-        return wD["entityPolymerLenghtBounds"] if "entityPolymerLenghtBounds" in wD else {}
+        return wD["entityPolymerLenghtBounds"] if "entityPolymerLenghtBounds" in wD else ()
 
     def getEntityFormulaWeightBounds(self, dataContainer):
         """Return a dictionary of formula weight bounds by entity type.
@@ -344,9 +344,9 @@ class DictMethodCommonUtils(object):
             list: [compId, compId,...]
         """
         if not dataContainer or not dataContainer.getName():
-            return {}
+            return []
         wD = self.__fetchEntityAndInstanceTypes(dataContainer)
-        return wD["ccTargets"] if "ccTargets" in wD else {}
+        return wD["ccTargets"] if "ccTargets" in wD else []
 
     def __getEntityAndInstanceTypes(self, dataContainer):
         """ Internal method to collect and return entity/instance type, size and mapping information.
@@ -514,10 +514,11 @@ class DictMethodCommonUtils(object):
             entityPolymerLenghtBounds = None
             maxL = -1
             minL = sys.maxsize
-            for entityId, pLen in epLengthD.items():
-                minL = pLen if pLen < minL else minL
-                maxL = pLen if pLen > maxL else maxL
-            entityPolymerLenghtBounds = (minL, maxL)
+            if epLengthD:
+                for entityId, pLen in epLengthD.items():
+                    minL = pLen if pLen < minL else minL
+                    maxL = pLen if pLen > maxL else maxL
+                entityPolymerLenghtBounds = (minL, maxL)
             #
 
             rD = {

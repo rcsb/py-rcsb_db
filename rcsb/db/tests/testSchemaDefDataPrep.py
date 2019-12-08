@@ -84,7 +84,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__chemCompMockLen = 16
-        self.__pdbxMockLen = 64
+        self.__pdbxMockLen = 67
         # removes timestamped data items to allow diffs.)
         excludeExtras = ["rcsb_load_status"]
         # excludeExtras = []
