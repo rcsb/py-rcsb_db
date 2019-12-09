@@ -134,7 +134,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "filterType": self.__fTypeRow,
                 "styleType": "rowwise_by_name",
                 "mergeContentTypes": None,
-                "rejectLength": 4,
+                "rejectLength": 5,
             },
         ]
         #
@@ -145,7 +145,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "filterType": self.__fTypeRow,
                 "styleType": "rowwise_by_name_with_cardinality",
                 "mergeContentTypes": ["vrpt"],
-                "rejectLength": 4,
+                "rejectLength": 5,
                 "excludeExtras": excludeExtras,
             },
             {
@@ -154,7 +154,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "filterType": self.__fTypeRow,
                 "styleType": "rowwise_by_name_with_cardinality",
                 "mergeContentTypes": None,
-                "rejectLength": 4,
+                "rejectLength": 5,
                 "excludeExtras": excludeExtras,
             },
             {
@@ -175,7 +175,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "filterType": self.__fTypeRow,
                 "styleType": "rowwise_by_name_with_cardinality",
                 "mergeContentTypes": ["vrpt"],
-                "rejectLength": 4,
+                "rejectLength": 5,
                 "excludeExtras": excludeExtras,
             },
         ]
@@ -230,10 +230,11 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=filterType)
             sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__cachePath, verbose=self.__verbose)
             #
+
             logger.debug("For %s mock length %d length of path list %d\n", contentType, mockLength, len(inputPathList))
             self.assertEqual(len(inputPathList), mockLength)
             tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType=styleType, filterType=filterType, dataSelectors=dataSelectors)
-
+            logger.debug("For %s mock length %d reject length %d length of tddl list %d\n", contentType, mockLength, rejectLength, len(tableDataDictList))
             self.assertEqual(len(tableDataDictList), mockLength - rejectLength)
             self.assertEqual(len(containerNameList), mockLength - rejectLength)
 
