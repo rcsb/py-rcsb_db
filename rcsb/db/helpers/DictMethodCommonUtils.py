@@ -604,7 +604,7 @@ class DictMethodCommonUtils(object):
         if not dataContainer or not dataContainer.getName():
             return {}
         wD = self.__fetchAtomSiteInfo(dataContainer, modelId=modelId)
-        return wD["instanceModeledMonomerCountD"] if "instanceModeledMonomerCountD" in wD else {}
+        return wD["instancePolymerModeledMonomerCountD"] if "instancePolymerModeledMonomerCountD" in wD else {}
 
     def getInstanceUnModeledMonomerCounts(self, dataContainer, modelId="1"):
         """Return a dictionary of deposited unmodeled monomer counts for each entity instance.
@@ -619,7 +619,7 @@ class DictMethodCommonUtils(object):
         if not dataContainer or not dataContainer.getName():
             return {}
         wD = self.__fetchAtomSiteInfo(dataContainer, modelId=modelId)
-        return wD["instanceUnmodeledMonomerCountD"] if "instanceUnmodeledMonomerCountD" in wD else {}
+        return wD["instancePolymerUnmodeledMonomerCountD"] if "instancePolymerUnmodeledMonomerCountD" in wD else {}
 
     def getDepositedMonomerCounts(self, dataContainer, modelId="1"):
         """Return deposited modeled and unmodeled polymer monomer counts for the input modelid.
@@ -627,6 +627,7 @@ class DictMethodCommonUtils(object):
         Args:
             dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
             modelId (str, optional): model index. Defaults to "1".
+
 
         Returns:
             (int,int):  modeled and unmodeled monomer counts

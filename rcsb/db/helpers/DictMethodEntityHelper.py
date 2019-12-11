@@ -475,6 +475,7 @@ class DictMethodEntityHelper(object):
                 ("pdbx_src_id", "pdbx_src_id"),
                 ("pdbx_beg_seq_num", "beg_seq_num"),
                 ("pdbx_end_seq_num", "end_seq_num"),
+                ("pdbx_gene_src_gene", "rcsb_gene_name_value"),
             ]
             at1SL, at1L = self.__getAttribList(s1Obj, at1TupL)
             #
@@ -570,7 +571,12 @@ class DictMethodEntityHelper(object):
                     cObj.setValue(sType, "source_type", iRow)
                     cObj.setValue(pCode, "provenance_code", iRow)
                     for ii, at in enumerate(atL):
-                        cObj.setValue(v[ii], at, iRow)
+                        if at in ["rcsb_gene_name_value"]:
+                            tgL = v[ii].split(",")
+                            cObj.setValue(";".join(tgL), at, iRow)
+                            cObj.setValue(";".join([pCode for jj in range(len(tgL))]), "rcsb_gene_name_provenance_code", iRow)
+                        else:
+                            cObj.setValue(v[ii], at, iRow)
                         # if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?'] and v[ii].isdigit():
                         if at == "ncbi_taxonomy_id" and v[ii] and v[ii] not in [".", "?"]:
                             taxId = int(self.__reNonDigit.sub("", v[ii]))

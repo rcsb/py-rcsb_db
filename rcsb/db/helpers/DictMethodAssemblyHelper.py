@@ -42,6 +42,7 @@ class DictMethodAssemblyHelper(object):
         #
         rP = kwargs.get("resourceProvider")
         self.__commonU = rP.getResource("DictMethodCommonUtils instance") if rP else None
+        self.__dApi = rP.getResource("Dictionary API instance (pdbx_core)") if rP else None
         #
         logger.debug("Dictionary method helper init")
 
@@ -66,44 +67,7 @@ class DictMethodAssemblyHelper(object):
             logger.debug("%s beginning for %s", dataContainer.getName(), catName)
             # Create the new target category rcsb_assembly_info
             if not dataContainer.exists(catName):
-                dataContainer.append(
-                    DataCategory(
-                        catName,
-                        attributeNameList=[
-                            "entry_id",
-                            "assembly_id",
-                            "polymer_atom_count",
-                            "nonpolymer_atom_count",
-                            "branched_atom_count",
-                            "solvent_atom_count",
-                            "atom_count",
-                            "modeled_polymer_monomer_count",
-                            "unmodeled_polymer_monomer_count",
-                            "polymer_monomer_count",
-                            "polymer_composition",
-                            "selected_polymer_entity_types",
-                            "na_polymer_entity_types",
-                            "polymer_entity_instance_count",
-                            "nonpolymer_entity_instance_count",
-                            "branched_entity_instance_count",
-                            "solvent_entity_instance_count",
-                            "polymer_entity_instance_count_protein",
-                            "polymer_entity_instance_count_nucleic_acid",
-                            "polymer_entity_instance_count_DNA",
-                            "polymer_entity_instance_count_RNA",
-                            "polymer_entity_instance_count_nucleic_acid_hybrid",
-                            "polymer_entity_count",
-                            "nonpolymer_entity_count",
-                            "branched_entity_count",
-                            "solvent_entity_count",
-                            "polymer_entity_count_protein",
-                            "polymer_entity_count_nucleic_acid",
-                            "polymer_entity_count_DNA",
-                            "polymer_entity_count_RNA",
-                            "polymer_entity_count_nucleic_acid_hybrid",
-                        ],
-                    )
-                )
+                dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
             #
             #
             logger.debug("%s beginning for %s", dataContainer.getName(), catName)
@@ -229,7 +193,7 @@ class DictMethodAssemblyHelper(object):
             if not (dataContainer.exists("entry") and dataContainer.exists("pdbx_struct_assembly")):
                 return False
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=["entry_id", "assembly_id", "rcsb_id"]))
+                dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
             #
             cObj = dataContainer.getObj(catName)
 

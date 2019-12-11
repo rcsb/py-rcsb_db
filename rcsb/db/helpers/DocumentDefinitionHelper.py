@@ -165,6 +165,17 @@ class DocumentDefinitionHelper(object):
             logger.exception("Collection %s failing with %s", collectionName, str(e))
         return ret
 
+    def getDocumentIndexAttributes(self, collectionName, indexName):
+        ret = []
+        try:
+            for dD in self.__cfgD["collection_indices"][collectionName]:
+                if dD["INDEX_NAME"] == indexName:
+                    ret = dD["ATTRIBUTE_NAMES"]
+                    break
+        except Exception as e:
+            logger.exception("Collection %s %s failing with %s", collectionName, indexName, str(e))
+        return ret
+
     def getPrivateDocumentAttributes(self, collectionName):
         ret = []
         try:
