@@ -6,6 +6,7 @@
 # Updates:
 #  15-Jul-2018 jdw split out to separate module and add status tracking
 #  26-Nov-2018 jdw add COLLECTION_HOLDINGS_PRERELEASE
+#  14-Dec-2019 jdw reorganize and consolidate repository_holdings collections
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -64,13 +65,10 @@ class RepoHoldingsEtlWorker(object):
         [repository_holdings_configuration]
         DATABASE_NAME=repository_holdings
         DATABASE_VERSION_STRING=v5
-        COLLECTION_HOLDINGS_UPDATE=rcsb_repository_holdings_update
-        COLLECTION_HOLDINGS_CURRENT=rcsb_repository_holdings_current
-        COLLECTION_HOLDINGS_UNRELEASED=rcsb_repository_holdings_unreleased
-        COLLECTION_HOLDINGS_PRERELEASE=rcsb_repository_holdings_prerelease
-        COLLECTION_HOLDINGS_REMOVED=rcsb_repository_holdings_removed
-        COLLECTION_HOLDINGS_REMOVED_AUTHORS=rcsb_repository_holdings_removed_audit_authors
-        COLLECTION_HOLDINGS_SUPERSEDED=rcsb_repository_holdings_superseded
+        COLLECTION_HOLDINGS_UPDATE=rcsb_repository_holdings_update_entry
+        COLLECTION_HOLDINGS_CURRENT=rcsb_repository_holdings_current_entry
+        COLLECTION_HOLDINGS_UNRELEASED=rcsb_repository_holdings_unreleased_entry
+        COLLECTION_HOLDINGS_REMOVED=rcsb_repository_holdings_removed_entry
         COLLECTION_VERSION_STRING=v0_1
 
         """
@@ -99,49 +97,24 @@ class RepoHoldingsEtlWorker(object):
             # addValues = {"_schema_version": collectionVersion}
             addValues = None
             #
-            dList = rhdp.getHoldingsUpdate(updateId=updateId)
+            dList = rhdp.getHoldingsUpdateEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UPDATE", sectionName=sectionName)
-
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             #
-            dList = rhdp.getHoldingsCurrent(updateId=updateId)
+            dList = rhdp.getHoldingsCurrentEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_CURRENT", sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
-            dList = rhdp.getHoldingsUnreleased(updateId=updateId)
+            dList = rhdp.getHoldingsUnreleasedEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UNRELEASED", sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
             #
-            dList = rhdp.getHoldingsPrerelease(updateId=updateId)
-            collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_PRERELEASE", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-            #
-            dList1, dList2, dList3 = rhdp.getHoldingsRemoved(updateId=updateId)
+            dList = rhdp.getHoldingsRemovedEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_REMOVED", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList1, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-
-            collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_REMOVED_AUTHORS", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList2, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-
-            collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_SUPERSEDED", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList3, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-
-            #
-            dList1, dList2 = rhdp.getHoldingsTransferred(updateId=updateId)
-
-            collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_TRANSFERRED", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList1, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-
-            collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_INSILICO_MODELS", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList2, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
 
             return True

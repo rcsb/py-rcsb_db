@@ -189,4 +189,5 @@
   8-Dec-2019  V0.93 Partially handle odd cases of missing entity_poly category and adjust enumeration for nonpolymer instances features
                     Adjust error reporting in getProtSecStructFeatures(), tweak mandatory items for fiber diffraction, handle boundary
                     counts for cases with no macromolecules
- 10-Dec-2019  V0.94 Adding aggregation of gene names, related annotation lineage, fixed miscellaneous counting issues
+ 10-Dec-2019  V0.94  Adding aggregation of gene names, related annotation lineage, fixed miscellaneous counting issues
+ 14-Dec-2019  V0.941 Reorganize repository holdings collections

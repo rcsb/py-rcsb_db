@@ -35,7 +35,6 @@ from rcsb.utils.io.MarshalUtil import MarshalUtil
 logger = logging.getLogger(__name__)
 
 
-# Xpylint: disable=no-member,unsubscriptable-object,unsupported-membership-test
 class RepoHoldingsDataPrep(object):
     """
     Consolidate legacy data describing repository content updates and repository entry status.
@@ -51,7 +50,76 @@ class RepoHoldingsDataPrep(object):
         self.__mU = MarshalUtil(workPath=self.__cachePath)
         #
 
-    def getHoldingsTransferred(self, updateId, dirPath=None, **kwargs):
+    def getHoldingsCurrentEntry(self, updateId, dirPath=None):
+        dList = []
+        retD = self.__getHoldingsCurrent(dirPath=dirPath)
+        for entryId, qD in retD.items():
+            tD = (
+                {"rcsb_id": entryId, "entry_id": entryId, "update_id": updateId, "assembly_ids": qD["assembly_ids"]}
+                if "assembly_ids" in qD
+                else {"rcsb_id": entryId, "entry_id": entryId, "update_id": updateId}
+            )
+            rD = {
+                "rcsb_id": entryId,
+                "rcsb_repository_holdings_current_entry_container_identifiers": tD,
+                "rcsb_repository_holdings_current": {"repository_content_types": qD["repository_content_types"]},
+            }
+            dList.append(rD)
+        return dList
+
+    def getHoldingsUpdateEntry(self, updateId, dirPath=None):
+        dList = []
+        retD = self.__getHoldingsUpdate(dirPath=dirPath)
+        for entryId, qD in retD.items():
+            tD = {"rcsb_id": entryId, "entry_id": entryId, "update_id": updateId}
+            rD = {
+                "rcsb_id": entryId,
+                "rcsb_repository_holdings_update_entry_container_identifiers": tD,
+                "rcsb_repository_holdings_update": qD,
+            }
+            dList.append(rD)
+        return dList
+
+    def getHoldingsUnreleasedEntry(self, updateId, dirPath=None):
+        dList = []
+        retD = self.__getHoldingsUnreleased(dirPath=dirPath)
+        prD = self.__getHoldingsPrerelease(dirPath=dirPath)
+        for entryId, qD in retD.items():
+            rD = {"rcsb_id": entryId}
+            rD["rcsb_repository_holdings_unreleased_entry_container_identifiers"] = {"rcsb_id": entryId, "entry_id": entryId, "update_id": updateId}
+            rD["rcsb_repository_holdings_unreleased"] = qD
+            if entryId in prD:
+                rD["rcsb_repository_holdings_prerelease"] = prD[entryId]
+
+            dList.append(rD)
+        return dList
+
+    def getHoldingsRemovedEntry(self, updateId, dirPath=None):
+        dList = []
+        rmvD, aaD, spsD = self.__getHoldingsRemoved(dirPath=dirPath)
+        trfD, insD = self.__getHoldingsTransferred(dirPath=dirPath)
+        #
+        # Get the list of keys -
+        #
+        entryIdL = sorted(set(list(insD.keys()) + list(rmvD.keys()) + list(spsD.keys())))
+        for entryId in entryIdL:
+            rD = {"rcsb_id": entryId}
+            rD["rcsb_repository_holdings_removed_entry_container_identifiers"] = {"rcsb_id": entryId, "entry_id": entryId, "update_id": updateId}
+            #
+            if entryId in rmvD:
+                rD["rcsb_repository_holdings_removed"] = rmvD[entryId]
+            if entryId in aaD:
+                rD["rcsb_repository_holdings_removed_audit_author"] = aaD[entryId]
+            if entryId in spsD:
+                rD["rcsb_repository_holdings_superseded"] = spsD[entryId]
+            if entryId in trfD:
+                rD["rcsb_repository_holdings_transferred"] = trfD[entryId]
+            if entryId in insD:
+                rD["rcsb_repository_holdings_insilico_models"] = insD[entryId]
+            dList.append(rD)
+        return dList
+
+    def __getHoldingsTransferred(self, dirPath=None):
         """ Parse legacy lists defining the repository contents transferred to alternative repositories
 
         Args:
@@ -60,8 +128,8 @@ class RepoHoldingsDataPrep(object):
             **kwargs: unused
 
         Returns:
-            list: List of dictionaries containing data for rcsb_repository_holdings_transferred
-            list: List of dictionaries containing data for rcsb_repository_holdings_insilico_models
+            (dict): dictionaries containing data for rcsb_repository_holdings_transferred
+            (dict): dictionaries containing data for rcsb_repository_holdings_insilico_models
 
         Example input data:
 
@@ -81,10 +149,10 @@ class RepoHoldingsDataPrep(object):
         1I2J    OBSLTE  2001-01-06      1JA5
 
         """
-        trsfL = []
-        insL = []
+        trsfD = {}
+        insD = {}
         dirPath = dirPath if dirPath else self.__sandboxPath
-        _ = kwargs
+
         try:
             fp = os.path.join(dirPath, "status", "theoretical_model_obsolete.tsv")
             lineL = self.__mU.doImport(fp, "list")  # pylint: disable=no-member
@@ -141,8 +209,6 @@ class RepoHoldingsDataPrep(object):
 
                 #
                 dD = {
-                    "update_id": updateId,
-                    "entry_id": entryId,
                     "status_code": statusCode,
                     "deposit_date": depDate,
                     "repository_content_types": ["coordinates"],
@@ -157,10 +223,10 @@ class RepoHoldingsDataPrep(object):
                     dD["remote_accession_code"] = repId
                     dD["remote_repository_name"] = repName
                 if statusCode == "TRSF":
-                    trsfL.append(dD)
+                    trsfD[entryId] = dD
                 #
                 #
-                dD = {"update_id": updateId, "entry_id": entryId, "status_code": statusCode, "deposit_date": depDate, "title": title, "audit_authors": auditAuthors}
+                dD = {"status_code": statusCode, "deposit_date": depDate, "title": title, "audit_authors": auditAuthors}
                 #
                 if relDate:
                     dD["release_date"] = relDate
@@ -171,14 +237,14 @@ class RepoHoldingsDataPrep(object):
                 if entryId in obsIdD:
                     dD["id_codes_replaced_by"] = [obsIdD[entryId]]
                 #
-                insL.append(dD)
+                insD[entryId] = dD
             #
         except Exception as e:
             logger.exception("Failing with %s", str(e))
 
-        return trsfL, insL
+        return trsfD, insD
 
-    def getHoldingsUpdate(self, updateId, dirPath=None, **kwargs):
+    def __getHoldingsUpdate(self, dirPath=None):
         """ Parse legacy lists defining the contents of the repository update
 
         Args:
@@ -189,9 +255,8 @@ class RepoHoldingsDataPrep(object):
         Returns:
             list: List of dictionaries containing rcsb_repository_holdings_update
         """
-        retL = []
+        retD = {}
         dirPath = dirPath if dirPath else self.__sandboxPath
-        _ = kwargs
         try:
             updateTypeList = ["added", "modified", "obsolete"]
             contentTypeList = ["entries", "mr", "cs", "sf"]
@@ -210,14 +275,14 @@ class RepoHoldingsDataPrep(object):
                         uD[entryId].append(contentNameD[contentType])
                 for entryId in uD:
                     uType = "removed" if updateType == "obsolete" else updateType
-                    retL.append({"update_id": updateId, "entry_id": entryId, "update_type": uType, "repository_content_types": uD[entryId]})
-            return retL
+                    # retD[entryId] = {"update_id": updateId, "entry_id": entryId, "update_type": uType, "repository_content_types": uD[entryId]}
+                    retD[entryId] = {"update_type": uType, "repository_content_types": uD[entryId]}
+            return retD
         except Exception as e:
             logger.exception("Failing with %s", str(e))
+        return retD
 
-        return retL
-
-    def getHoldingsCurrent(self, updateId, dirPath=None, **kwargs):
+    def __getHoldingsCurrent(self, dirPath=None):
         """ Parse legacy lists defining the current contents of the repository update
 
         Args:
@@ -228,9 +293,8 @@ class RepoHoldingsDataPrep(object):
         Returns:
             list: List of dictionaries containing data for rcsb_repository_holdings_current
         """
-        _ = kwargs
         rD = {}
-        retL = []
+        retD = {}
         dirPath = dirPath if dirPath else self.__sandboxPath
         try:
             updateTypeList = ["all"]
@@ -341,16 +405,16 @@ class RepoHoldingsDataPrep(object):
             #
             for entryId in rD:
                 if entryId in assemD:
-                    retL.append({"update_id": updateId, "entry_id": entryId, "assembly_ids": assemD[entryId], "repository_content_types": rD[entryId]})
+                    retD[entryId] = {"assembly_ids": assemD[entryId], "repository_content_types": rD[entryId]}
                 else:
-                    retL.append({"update_id": updateId, "entry_id": entryId, "repository_content_types": rD[entryId]})
-            return retL
+                    retD[entryId] = {"repository_content_types": rD[entryId]}
+            return retD
         except Exception as e:
             logger.exception("Failing with %s", str(e))
 
-        return retL
+        return retD
 
-    def getHoldingsUnreleased(self, updateId, dirPath=None, **kwargs):
+    def __getHoldingsUnreleased(self, dirPath=None):
         """ Parse the legacy exchange status file containing details for unreleased entries:
 
         Args:
@@ -362,8 +426,7 @@ class RepoHoldingsDataPrep(object):
             list: List of dictionaries containing data for rcsb_repository_holdings_unreleased
 
         """
-        _ = kwargs
-        retL = []
+        retD = {}
         fields = []
         dirPath = dirPath if dirPath else self.__sandboxPath
         try:
@@ -376,8 +439,6 @@ class RepoHoldingsDataPrep(object):
                     continue
                 entryId = fields[1]
                 dD = {
-                    "update_id": updateId,
-                    "entry_id": entryId,
                     "status_code": fields[2]
                     # 'sg_project_name': fields[14],
                     # 'sg_project_abbreviation_': fields[15]}
@@ -404,14 +465,14 @@ class RepoHoldingsDataPrep(object):
                     if fields[fN] and len(fields[fN]) >= 4:
                         dD[dTup[0]] = dateutil.parser.parse(fields[fN]) if self.__assignDates else fields[fN]
                 #
-                retL.append({k: v for k, v in dD.items() if v})
+                retD[entryId] = {k: v for k, v in dD.items() if v}
         except Exception as e:
             logger.error("Fields: %r", fields)
             logger.exception("Failing with %s", str(e))
 
-        return retL
+        return retD
 
-    def getHoldingsRemoved(self, updateId, dirPath=None, **kwargs):
+    def __getHoldingsRemoved(self, dirPath=None):
         """ Parse the legacy exchange file containing details of removed entries:
 
             {
@@ -430,18 +491,17 @@ class RepoHoldingsDataPrep(object):
                 ]},
 
         Returns;
-            (list) : list of dictionaries for rcsb_repository_holdings_removed
-            (list) : list of dictionaries for rcsb_repository_holdings_removed_audit_authors
-            (list) : list of dictionaries for rcsb_repository_holdings_superseded
+            (dict) : dictionaries for rcsb_repository_holdings_removed
+            (dict) : dictionaries for rcsb_repository_holdings_removed_audit_authors
+            (dict) : dictionaries for rcsb_repository_holdings_superseded
 
         """
-        _ = kwargs
         # rcsb_repository_holdings_removed
-        rL1 = []
+        rL1D = {}
         # rcsb_repository_holdings_removed_audit_authors
-        rL2 = []
+        rL2D = {}
         # rcsb_repository_holdings_superseded
-        rL3 = []
+        rL3D = {}
         #
         sD = {}
         dirPath = dirPath if dirPath else self.__sandboxPath
@@ -450,7 +510,7 @@ class RepoHoldingsDataPrep(object):
             dD = self.__mU.doImport(fp, "json")
             for dT in dD:
                 rbL = dT["obsoletedBy"] if "obsoletedBy" in dT else []
-                d1 = {"update_id": updateId, "entry_id": dT["entryId"], "title": dT["title"], "details": dT["details"], "audit_authors": dT["depositionAuthors"]}
+                d1 = {"title": dT["title"], "details": dT["details"], "audit_authors": dT["depositionAuthors"]}
                 if rbL:
                     d1["id_codes_replaced_by"] = rbL
 
@@ -460,28 +520,28 @@ class RepoHoldingsDataPrep(object):
                     if dT[fN] and len(dT[fN]) > 4:
                         d1[dTup[0]] = dateutil.parser.parse(dT[fN]) if self.__assignDates else dT[fN]
 
-                rL1.append({k: v for k, v in d1.items() if v})
+                rL1D[dT["entryId"]] = {k: v for k, v in d1.items() if v}
                 #
                 for ii, author in enumerate(dT["depositionAuthors"]):
-                    d2 = {"update_id": updateId, "entry_id": dT["entryId"], "ordinal_id": ii + 1, "audit_author": author}
-                    rL2.append(d2)
+                    d2 = {"ordinal_id": ii + 1, "audit_author": author}
+                    rL2D.setdefault(dT["entryId"], []).append(d2)
                 if "obsoletedBy" in dT:
                     for pdbId in dT["obsoletedBy"]:
                         if pdbId not in sD:
                             sD[pdbId] = []
                         sD[pdbId].append(dT["entryId"])
+            #
             for pdbId in sD:
                 if len(sD[pdbId]) > 1:
-                    rL3.append({"update_id": updateId, "entry_id": pdbId, "id_codes_superseded": sD[pdbId]})
+                    rL3D[pdbId] = {"id_codes_superseded": sD[pdbId]}
 
-            logger.debug("rl3 %r", rL3)
-            logger.debug("Computed data lengths  %d %d %d", len(rL1), len(rL2), len(rL3))
+            logger.debug("Computed data lengths  %d %d %d", len(rL1D), len(rL2D), len(rL3D))
         except Exception as e:
             logger.exception("Failing with %s", str(e))
 
-        return rL1, rL2, rL3
+        return rL1D, rL2D, rL3D
 
-    def getHoldingsPrerelease(self, updateId, dirPath=None, **kwargs):
+    def __getHoldingsPrerelease(self, dirPath=None):
         """ Parse the legacy exchange status file containing prerelease sequence data.
 
         Args:
@@ -493,8 +553,7 @@ class RepoHoldingsDataPrep(object):
             list: List of dictionaries containing data for rcsb_repository_holdings_prerelease
 
         """
-        _ = kwargs
-        retL = []
+        retD = {}
         fields = []
         dirPath = dirPath if dirPath else self.__sandboxPath
         try:
@@ -511,11 +570,11 @@ class RepoHoldingsDataPrep(object):
             logger.debug("Loaded prerelease sequences for %d entries", len(seqD))
             #
             for entryId, seqL in seqD.items():
-                dD = {"update_id": updateId, "entry_id": entryId, "seq_one_letter_code": seqL}
+                dD = {"seq_one_letter_code": seqL}
                 logger.debug("Adding prerelease sequences for %s", entryId)
-                retL.append({k: v for k, v in dD.items() if v})
+                retD[entryId] = {k: v for k, v in dD.items() if v}
         except Exception as e:
             logger.error("Fields: %r", fields)
             logger.exception("Failing with %s", str(e))
 
-        return retL
+        return retD

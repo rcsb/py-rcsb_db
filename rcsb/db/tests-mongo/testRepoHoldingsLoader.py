@@ -52,13 +52,13 @@ class RepoHoldingsLoaderTests(unittest.TestCase):
         self.__readBackCheck = True
         self.__numProc = 2
         self.__chunkSize = 10
-        self.__documentLimit = 1000
+        self.__documentLimit = None
         self.__filterType = "assign-dates"
         #
         self.__cachePath = os.path.join(TOPDIR, "CACHE")
         self.__sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=configName)
         # sample data set
-        self.__updateId = "2018_23"
+        self.__updateId = "2019_23"
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -73,13 +73,10 @@ class RepoHoldingsLoaderTests(unittest.TestCase):
         [repository_holdings]
         DATABASE_NAME=repository_holdings
         DATABASE_VERSION_STRING=v5
-        COLLECTION_HOLDINGS_UPDATE=rcsb_repository_holdings_update
-        COLLECTION_HOLDINGS_CURRENT=rcsb_repository_holdings_current
-        COLLECTION_HOLDINGS_UNRELEASED=rcsb_repository_holdings_unreleased
-        COLLECTION_HOLDINGS_REMOVED=rcsb_repository_holdings_removed
-        COLLECTION_HOLDINGS_REMOVED_AUTHORS=rcsb_repository_holdings_removed_audit_authors
-        COLLECTION_HOLDINGS_SUPERSEDED=rcsb_repository_holdings_superseded
-        COLLECTION_VERSION_STRING=v0_1
+        COLLECTION_HOLDINGS_UPDATE=rcsb_repository_holdings_update_entry
+        COLLECTION_HOLDINGS_CURRENT=rcsb_repository_holdings_current_entry
+        COLLECTION_HOLDINGS_UNRELEASED=rcsb_repository_holdings_unreleased_entry
+        COLLECTION_HOLDINGS_REMOVED=rcsb_repository_holdings_removed_entry
 
         """
         try:
@@ -102,55 +99,29 @@ class RepoHoldingsLoaderTests(unittest.TestCase):
             # addValues = {"_schema_version": collectionVersion}
             addValues = None
             #
-            dList = rhdp.getHoldingsUpdate(updateId=self.__updateId)
+            dList = rhdp.getHoldingsUpdateEntry(updateId=self.__updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UPDATE", sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
             logger.info("Collection %r length %d load status %r", collectionName, len(dList), ok)
             self.assertTrue(ok)
             #
-            dList = rhdp.getHoldingsCurrent(updateId=self.__updateId)
+            dList = rhdp.getHoldingsCurrentEntry(updateId=self.__updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_CURRENT", sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
             logger.info("Collection %r length %d load status %r", collectionName, len(dList), ok)
             self.assertTrue(ok)
 
-            dList = rhdp.getHoldingsUnreleased(updateId=self.__updateId)
+            dList = rhdp.getHoldingsUnreleasedEntry(updateId=self.__updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UNRELEASED", sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
             logger.info("Collection %r length %d load status %r", collectionName, len(dList), ok)
             self.assertTrue(ok)
             #
-            dList = rhdp.getHoldingsPrerelease(updateId=self.__updateId)
-            collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_PRERELEASE", sectionName=sectionName)
+            dList = rhdp.getHoldingsRemovedEntry(updateId=self.__updateId)
+            collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_REMOVED", sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
             logger.info("Collection %r length %d load status %r", collectionName, len(dList), ok)
             self.assertTrue(ok)
-            #
-            dList1, dList2, dList3 = rhdp.getHoldingsRemoved(updateId=self.__updateId)
-            collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_REMOVED", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList1, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            logger.info("Collection %r length %d load status %r", collectionName, len(dList1), ok)
-            self.assertTrue(ok)
-
-            collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_REMOVED_AUTHORS", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList2, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            logger.info("Collection %r length %d load status %r", collectionName, len(dList2), ok)
-            #
-            collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_SUPERSEDED", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList3, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            logger.info("Collection %r length %d load status %r", collectionName, len(dList3), ok)
-            #
-            #
-            dList1, dList2 = rhdp.getHoldingsTransferred(updateId=self.__updateId)
-            collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_TRANSFERRED", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList1, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            logger.info("Collection %r length %d load status %r", collectionName, len(dList1), ok)
-            self.assertTrue(ok)
-
-            collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_INSILICO_MODELS", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList2, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            logger.info("Collection %r length %d load status %r", collectionName, len(dList2), ok)
-
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()

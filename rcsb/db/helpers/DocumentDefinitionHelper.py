@@ -278,11 +278,16 @@ class DocumentDefinitionHelper(object):
                         # if tD["SEARCH_TYPE"] in ["exact-match", "suggest"]:
                         #    aD.setdefault((ff[0], ff[1]), []).append("full-text")
                     #
-                cD[collectionName] = {tup: sorted(list(set(sL))) for tup, sL in aD.items()}
+                cD[collectionName] = {tup: self.__filterSearchContexts(sorted(list(set(sL)))) for tup, sL in aD.items()}
             # logger.info("processed search context for %r", cD)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return cD
+
+    def __filterSearchContexts(self, stL):
+        if "exact-match" in stL and "full-text" in stL:
+            stL.remove("full-text")
+        return stL
 
     def getAttributeSearchContexts(self, collectionName, categoryName, attributeName):
         """ Return the list of search types assigned to the input collection/item.

@@ -365,8 +365,8 @@ class DictMethodEntityHelper(object):
                     cObj.setValue(",".join(refSeqIdD["dbIsoform"]).strip(), "reference_sequence_identifiers_database_isoform", ii)
                 #
                 if relatedAnnIdD["dbName"]:
-                    cObj.setValue(",".join(relatedAnnIdD["dbName"]).strip(), "related_annotation_identifiers_database_name", ii)
-                    cObj.setValue(",".join(relatedAnnIdD["dbAccession"]).strip(), "related_annotation_identifiers_database_identifier", ii)
+                    cObj.setValue(",".join(relatedAnnIdD["dbName"]).strip(), "related_annotation_identifiers_resource_name", ii)
+                    cObj.setValue(",".join(relatedAnnIdD["dbAccession"]).strip(), "related_annotation_identifiers_resource_identifier", ii)
                     cObj.setValue(",".join(relatedAnnIdD["provSource"]).strip(), "related_annotation_identifiers_provenance_source", ii)
                 #
                 ii += 1

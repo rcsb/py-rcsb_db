@@ -41,7 +41,7 @@ class RepoHoldingsDataPrepTests(unittest.TestCase):
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         self.__pathConfig = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
         self.__cachePath = os.path.join(TOPDIR, "CACHE")
-        self.__updateId = "2018_25"
+        self.__updateId = "2019_25"
         #
         configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
@@ -55,43 +55,25 @@ class RepoHoldingsDataPrepTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testProcessLegacyFiles(self):
-        """ Test loading and processing operations for legacy holdings and status echange data.
+        """ Test loading and processing operations for reposotpru holdings and status echange data.
         """
         try:
             rhdp = RepoHoldingsDataPrep(sandboxPath=self.__sandboxPath, cachePath=self.__cachePath)
-            rL = rhdp.getHoldingsUpdate(updateId=self.__updateId)
+            rL = rhdp.getHoldingsUpdateEntry(updateId=self.__updateId)
             self.assertGreaterEqual(len(rL), 10)
             logger.debug("update data length %r", len(rL))
             #
-            rL = rhdp.getHoldingsCurrent(updateId=self.__updateId)
+            rL = rhdp.getHoldingsCurrentEntry(updateId=self.__updateId)
             self.assertGreaterEqual(len(rL), 10)
             logger.debug("holdings data length %r", len(rL))
             #
-            rL = rhdp.getHoldingsUnreleased(updateId=self.__updateId)
+            rL = rhdp.getHoldingsUnreleasedEntry(updateId=self.__updateId)
             self.assertGreaterEqual(len(rL), 10)
             logger.debug("unreleased data length %r", len(rL))
             #
-            rL = rhdp.getHoldingsPrerelease(updateId=self.__updateId)
+            rL = rhdp.getHoldingsRemovedEntry(updateId=self.__updateId)
             self.assertGreaterEqual(len(rL), 10)
-            logger.debug("prerelease data length %r", len(rL))
-            #
-            rL1, rL2 = rhdp.getHoldingsTransferred(updateId=self.__updateId)
-            self.assertGreaterEqual(len(rL1), 10)
-            logger.debug("transferred data length %r", len(rL1))
-            self.assertGreaterEqual(len(rL2), 10)
-            logger.debug("Insilico data length %r", len(rL2))
-
-            rL1, rL2, rL3 = rhdp.getHoldingsRemoved(updateId=self.__updateId)
-            self.assertGreaterEqual(len(rL1), 10)
-            logger.debug("removed data length %r", len(rL1))
-
-            self.assertGreaterEqual(len(rL2), 10)
-            logger.debug("removed author data length %r", len(rL2))
-
-            self.assertGreaterEqual(len(rL3), 10)
-            logger.debug("removed data length %r", len(rL3))
-
-            #
+            logger.debug("unreleased data length %r", len(rL))
             #
         except Exception as e:
             logger.exception("Failing with %s", str(e))
