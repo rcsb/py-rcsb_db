@@ -191,3 +191,4 @@
                     counts for cases with no macromolecules
  10-Dec-2019  V0.94  Adding aggregation of gene names, related annotation lineage, fixed miscellaneous counting issues
  14-Dec-2019  V0.941 Reorganize repository holdings collections
+ 15-Dec-2019  V0.942 Suppress SIFTS with primary data loading

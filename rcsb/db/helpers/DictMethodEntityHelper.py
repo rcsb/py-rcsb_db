@@ -52,9 +52,12 @@ class DictMethodEntityHelper(object):
         rP = kwargs.get("resourceProvider")
         self.__commonU = rP.getResource("DictMethodCommonUtils instance") if rP else None
         self.__dApi = rP.getResource("Dictionary API instance (pdbx_core)") if rP else None
-        self.__ssP = rP.getResource("SiftsSummaryProvider instance") if rP else None
-        self.__ccP = rP.getResource("ChemCompProvider instance") if rP else None
         self.__useSiftsAlign = False
+        self.__ssP = None
+        if self.__useSiftsAlign:
+            self.__ssP = rP.getResource("SiftsSummaryProvider instance") if rP else None
+        self.__ccP = rP.getResource("ChemCompProvider instance") if rP else None
+
         #
         logger.debug("Dictionary entity method helper init")
 
