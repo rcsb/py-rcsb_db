@@ -86,10 +86,16 @@ class DictMethodAssemblyHelper(object):
             #
             #
             for ii, assemblyId in enumerate(assemblyIdL):
+                if assemblyId not in rD["assemblyAtomCountByTypeD"]:
+                    continue
+                if assemblyId not in rD["assemblyAtomCountD"]:
+                    continue
+                dD = rD["assemblyAtomCountByTypeD"][assemblyId]
+                #
                 cObj.setValue(entryId, "entry_id", ii)
                 cObj.setValue(assemblyId, "assembly_id", ii)
                 #
-                dD = rD["assemblyAtomCountByTypeD"][assemblyId]
+
                 num = dD["polymer"] if "polymer" in dD else 0
                 cObj.setValue(num, "polymer_atom_count", ii)
 

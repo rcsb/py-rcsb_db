@@ -1173,19 +1173,35 @@ class DictMethodEntityHelper(object):
         tL = list(OrderedDict.fromkeys(countL))
         if len(tL) == 1 and tL[0] == 1:
             return [colL]
+        #
+        orig = False
         # Report pathological cases ...
-        if (len(tL) > 2) or (tL[0] != 1 and len(tL) == 2):
-            logger.error("%s integrated source data inconsistent %r colL", entryId, colL)
-            return [colL]
+        if orig:
+            if (len(tL) > 2) or (tL[0] != 1 and len(tL) == 2):
+                logger.error("%s integrated source data inconsistent %r colL", entryId, colL)
+                return [colL]
         #
         # Expand the columns with uniform length
         #
-        icL = []
-        maxL = tL[1]
-        for tc in tcL:
-            if len(tc) == 1:
-                tc = tc * maxL
-            icL.append(tc)
+
+        if orig:
+            icL = []
+            maxL = tL[1]
+            for tc in tcL:
+                if len(tc) == 1:
+                    tc = tc * maxL
+                icL.append(tc)
+        else:
+            icL = []
+            maxL = tL[1]
+            for tc in tcL:
+                if len(tc) == 1:
+                    tc = tc * maxL
+                if len(tc) < maxL:
+                    for _ in range(maxL - len(tc)):
+                        tc.append("?")
+                icL.append(tc[:maxL])
+
         #
         logger.debug("%s icL %r", entryId, icL)
         # Convert back to a row list

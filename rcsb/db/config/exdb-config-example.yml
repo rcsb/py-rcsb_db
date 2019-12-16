@@ -69,6 +69,7 @@
 #  5-Dec-2019 jdw Major revisions for typed entity collections and assocated search contexts.
 #  9-Dec-2019 jdw Add placeholders for uniprot_core
 # 14-Dec-2019 jdw Reorganize repository_holdings collections
+# 16-Dec-2019 jdw Include site remote details
 #
 # ExDB configuration file example
 ---
@@ -156,15 +157,23 @@ site_info_configuration:
 site_info_remote_configuration:
     CONFIG_SUPPORT_TOKEN: CONFIG_SUPPORT_TOKEN_ENV
     #
-    # Database server connection details
+    # Database server connection details:
+    #     dev: 128.6.244.78
+    # staging: 128.6.244.222
     #
-    MONGO_DB_HOST: 128.6.244.57
-    # MONGO_DB_HOST: 132.249.213.189
-    # MONGO_DB_HOST: localhostls
+    MONGO_DB_HOST: 128.6.244.78
     MONGO_DB_PORT: '27017'
-    _MONGO_DB_USER_NAME: VT07dR5TeajhsXUNzAZnhAHc/qaCZkbwlfwMKVmd+OHwvYMACcrB+25jY1IOClrZ
-    _MONGO_DB_PASSWORD: Mr3LslVzCkbErV3+5a3snm2RBaTrZo/Xi219hjSnwBxxHHHG6V36a6igSJSrmFTd0yQ=
+    _MONGO_DB_USER_NAME: ''
+    _MONGO_DB_PASSWORD: ''
     MONGO_DB_ADMIN_DB_NAME: admin
+    #
+    #  Old Mongo-v4 clusters
+    # MONGO_DB_HOST: 128.6.244.57
+    # MONGO_DB_HOST: 132.249.213.189
+    # MONGO_DB_PORT: '27017'
+    #_MONGO_DB_USER_NAME: VT07dR5TeajhsXUNzAZnhAHc/qaCZkbwlfwMKVmd+OHwvYMACcrB+25jY1IOClrZ
+    #_MONGO_DB_PASSWORD: Mr3LslVzCkbErV3+5a3snm2RBaTrZo/Xi219hjSnwBxxHHHG6V36a6igSJSrmFTd0yQ=
+    #
     #
     MYSQL_DB_HOST_NAME: localhost
     MYSQL_DB_PORT_NUMBER: '3306'

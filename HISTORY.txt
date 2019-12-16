@@ -192,3 +192,5 @@
  10-Dec-2019  V0.94  Adding aggregation of gene names, related annotation lineage, fixed miscellaneous counting issues
  14-Dec-2019  V0.941 Reorganize repository holdings collections
  15-Dec-2019  V0.942 Suppress SIFTS with primary data loading
+ 16-Dec-2019  V0.943 Extend normalizeCsvToList() to handle more inconsisent cases.
+
