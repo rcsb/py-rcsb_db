@@ -278,15 +278,37 @@ class DocumentDefinitionHelper(object):
                         # if tD["SEARCH_TYPE"] in ["exact-match", "suggest"]:
                         #    aD.setdefault((ff[0], ff[1]), []).append("full-text")
                     #
+                # REMOVE tmp print unique text search
+                # logger.info("%s:", collectionName)
+                # logger.info("- SEARCH_TYPE: text-mode")
+                # logger.info("  ATTRIBUTE_NAMES:")
+                # for tup, sL in aD.items():
+                #     if ("exact-match" in sL and "full-text" in sL) or ("default-match" in sL) or ("suggest" in sL and "exact-match" in sL and "full-text" in sL):
+                #         continue
+                #     if "full-text" in sL:
+                #         logger.info(" - %s.%s", tup[0], tup[1])
+                # #
                 cD[collectionName] = {tup: self.__filterSearchContexts(sorted(list(set(sL)))) for tup, sL in aD.items()}
             # logger.info("processed search context for %r", cD)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return cD
 
-    def __filterSearchContexts(self, stL):
-        if "exact-match" in stL and "full-text" in stL:
-            stL.remove("full-text")
+    def __filterSearchContexts(self, stL, overlapFlag=False):
+        """Automatically filter dependent search contexts.
+
+        Leaving this in for now with a disable flab
+
+        Args:
+            stL (list): list of search context names
+            overlapFlag (bool, optional): disable flag to filter for overlapping search contexts. Defaults to False.
+
+        Returns:
+            [type]: [description]
+        """
+        if overlapFlag:
+            if "exact-match" in stL and "full-text" in stL:
+                stL.remove("full-text")
         return stL
 
     def getAttributeSearchContexts(self, collectionName, categoryName, attributeName):

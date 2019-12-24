@@ -1032,6 +1032,8 @@ class DictMethodEntityHelper(object):
                 "rcsb_macromolecular_names_combined_name",
                 "rcsb_macromolecular_names_combined_provenance_source",
                 "rcsb_macromolecular_names_combined_provenance_code",
+                "rcsb_enzyme_class_combined_ec",
+                "rcsb_enzyme_class_combined_provenance_source",
             ]
             for at in atList:
                 if not eObj.hasAttribute(at):
@@ -1058,6 +1060,8 @@ class DictMethodEntityHelper(object):
                 eObj.setValue("?", "rcsb_macromolecular_names_combined_name", ii)
                 eObj.setValue("?", "rcsb_macromolecular_names_combined_provenance_source", ii)
                 eObj.setValue("?", "rcsb_macromolecular_names_combined_provenance_code", ii)
+                eObj.setValue("?", "rcsb_enzyme_class_combined_ec", ii)
+                eObj.setValue("?", "rcsb_enzyme_class_combined_provenance_source", ii)
                 #
                 if entityType not in ["polymer", "branched"]:
                     continue
@@ -1122,8 +1126,12 @@ class DictMethodEntityHelper(object):
                         eObj.setValue(";".join([tup[2] for tup in linL]), "rcsb_ec_lineage_name", ii)
                     if ecIdUpdL:
                         eObj.setValue(",".join(ecIdUpdL), "pdbx_ec", ii)
+                        eObj.setValue(";".join(ecIdUpdL), "rcsb_enzyme_class_combined_ec", ii)
+                        eObj.setValue(";".join(["PDB Primary Data" for _ in ecIdUpdL]), "rcsb_enzyme_class_combined_provenance_source", ii)
                     else:
                         eObj.setValue("?", "pdbx_ec", ii)
+                        eObj.setValue("?", "rcsb_enzyme_class_combined_ec", ii)
+                        eObj.setValue("?", "rcsb_enzyme_class_combined_provenance_source", ii)
                         if ecIdL:
                             logger.warning("%s non-existent EC class detected %r", dataContainer.getName(), ecV)
             return True

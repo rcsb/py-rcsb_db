@@ -194,4 +194,4 @@
  15-Dec-2019  V0.942 Suppress SIFTS with primary data loading
  16-Dec-2019  V0.943 Extend normalizeCsvToList() to handle more inconsisent cases.
  16-Dec-2019  V0.944 Add workflow module and tests to facilitate Luigi integration.
-
+ 23-Dec-2019  V0.945 Add consolidated EC processing and disable auto search context filters
