@@ -3631,6 +3631,10 @@ document_helper_configuration:
           - rcsb_polymer_entity.rcsb_ec_lineage_depth
         - SEARCH_TYPE: full-text
           ATTRIBUTE_NAMES:
+          - rcsb_entity_host_organism.ncbi_common_names
+          - rcsb_entity_host_organism.ncbi_scientific_name
+          - rcsb_entity_source_organism.ncbi_common_names
+          - rcsb_entity_source_organism.ncbi_scientific_name
           - rcsb_polymer_entity.pdbx_description
           - entity_src_gen.gene_src_tissue
           - entity_src_gen.pdbx_description
