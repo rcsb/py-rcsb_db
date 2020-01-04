@@ -71,6 +71,7 @@
 # 14-Dec-2019 jdw Reorganize repository_holdings collections
 # 16-Dec-2019 jdw Include site remote details
 # 16-Dec-2019 jdw update brief descriptions
+# 04-Jan-2020 jdw update search contexts for entity collections
 #
 # ExDB configuration file example
 ---
@@ -767,8 +768,6 @@ content_info_helper_configuration:
                 - CATEGORY_NAME: rcsb_entity_monomer_container_identifiers
                 - CATEGORY_NAME: rcsb_schema_container_identifiers
                 #
-
-                #
                 - CATEGORY_NAME: rcsb_entity_source_organism
                 - CATEGORY_NAME: rcsb_entity_host_organism
                 - CATEGORY_NAME: entity
@@ -781,9 +780,10 @@ content_info_helper_configuration:
                       - rcsb_ec_lineage_name
                       - rcsb_ec_lineage_id
                       - rcsb_ec_lineage_depth
-                      #- rcsb_enzyme_class_combined_ec
-                      #- rcsb_enzyme_class_combined_provenance_source
-                      #- rcsb_enzyme_class_combined_provenance_code
+                      # JDW JDW Seems required Jan 4
+                      - rcsb_enzyme_class_combined_ec
+                      - rcsb_enzyme_class_combined_provenance_source
+                      - rcsb_enzyme_class_combined_depth
                 - CATEGORY_NAME: rcsb_entry_info
                 - CATEGORY_NAME: rcsb_assembly_info
                 - CATEGORY_NAME: entity_poly
@@ -1508,11 +1508,11 @@ document_helper_configuration:
             - NAME: pdbx_core_assembly
               VERSION: 7.0.1
             - NAME: pdbx_core_polymer_entity
-              VERSION: 7.0.6
+              VERSION: 7.0.7
             - NAME: pdbx_core_nonpolymer_entity
-              VERSION: 7.0.3
+              VERSION: 7.0.4
             - NAME: pdbx_core_branched_entity
-              VERSION: 7.0.3
+              VERSION: 7.0.4
             - NAME: pdbx_core_polymer_entity_instance
               VERSION: 7.0.2
             - NAME: pdbx_core_nonpolymer_entity_instance
@@ -3576,7 +3576,6 @@ document_helper_configuration:
           ATTRIBUTE_NAMES:
           - rcsb_entity_host_organism.ncbi_common_names
           - rcsb_entity_source_organism.ncbi_scientific_name
-          - rcsb_entity_source_organism.ncbi_scientific_name
           - rcsb_entity_source_organism.rcsb_gene_name_value
           - rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers_database_accession
           - rcsb_polymer_entity.pdbx_description
@@ -3609,6 +3608,7 @@ document_helper_configuration:
           - rcsb_polymer_entity_container_identifiers.related_annotation_identifiers_resource_name
           - rcsb_polymer_entity_container_identifiers.related_annotation_lineage_id
           - rcsb_polymer_entity_container_identifiers.related_annotation_lineage_name
+          - rcsb_polymer_entity_container_identifiers.related_annotation_lineage_resource
           - rcsb_polymer_entity_feature_summary.type
           - rcsb_polymer_entity_feature.feature_class_lineage_id
           - rcsb_polymer_entity_feature.feature_class_lineage_name
@@ -3631,7 +3631,6 @@ document_helper_configuration:
           - rcsb_polymer_entity.rcsb_ec_lineage_depth
         - SEARCH_TYPE: full-text
           ATTRIBUTE_NAMES:
-          - rcsb_polymer_entity.pdbx_description
           - entity_src_gen.gene_src_tissue
           - entity_src_gen.pdbx_description
           - entity_src_gen.pdbx_gene_src_atcc
@@ -3663,10 +3662,20 @@ document_helper_configuration:
           - entity_src_nat.pdbx_plasmid_name
           - entity_src_nat.tissue
           - entity_src_nat.tissue_fraction
+          - rcsb_entity_host_organism.common_name
+          - rcsb_entity_host_organism.ncbi_common_names
+          - rcsb_entity_host_organism.ncbi_parent_scientific_name
+          - rcsb_entity_host_organism.ncbi_scientific_name
+          - rcsb_entity_host_organism.scientific_name
+          - rcsb_entity_source_organism.common_name
+          - rcsb_entity_source_organism.ncbi_common_names
+          - rcsb_entity_source_organism.ncbi_parent_scientific_name
+          - rcsb_entity_source_organism.ncbi_scientific_name
           - rcsb_polymer_entity_feature.description
           - rcsb_polymer_entity_keywords.text
           - rcsb_polymer_entity_name_com.name
           - rcsb_polymer_entity_name_sys.name
+          - rcsb_polymer_entity.pdbx_description
           - rcsb_polymer_entity.rcsb_enzyme_class_combined_ec
           - rcsb_polymer_entity.rcsb_macromolecular_names_combined_name
           #
@@ -4144,6 +4153,7 @@ document_helper_configuration:
           - rcsb_enzyme_class_combined_ec
           #- rcsb_enzyme_class_combined_provenance_code
           - rcsb_enzyme_class_combined_provenance_source
+          - rcsb_enzyme_class_combined_depth
           - rcsb_macromolecular_names_combined_name
           - rcsb_macromolecular_names_combined_provenance_code
           - rcsb_macromolecular_names_combined_provenance_source
@@ -4189,9 +4199,10 @@ document_helper_configuration:
           - rcsb_ec_lineage_depth
           - rcsb_ec_lineage_id
           - rcsb_ec_lineage_name
-          #- rcsb_enzyme_class_combined_ec
+          - rcsb_enzyme_class_combined_ec
           #- rcsb_enzyme_class_combined_provenance_code
-          #- rcsb_enzyme_class_combined_provenance_source
+          - rcsb_enzyme_class_combined_provenance_source
+          - rcsb_enzyme_class_combined_depth
           - rcsb_macromolecular_names_combined_name
           - rcsb_macromolecular_names_combined_provenance_code
           - rcsb_macromolecular_names_combined_provenance_source
@@ -4237,9 +4248,10 @@ document_helper_configuration:
           - rcsb_ec_lineage_depth
           - rcsb_ec_lineage_id
           - rcsb_ec_lineage_name
-          #- rcsb_enzyme_class_combined_ec
-          #- rcsb_enzyme_class_combined_provenance_code
-          #- rcsb_enzyme_class_combined_provenance_source
+          - rcsb_enzyme_class_combined_ec
+          - rcsb_enzyme_class_combined_provenance_code
+          - rcsb_enzyme_class_combined_provenance_source
+          - rcsb_enzyme_class_combined_depth
           - rcsb_macromolecular_names_combined_name
           - rcsb_macromolecular_names_combined_provenance_code
           - rcsb_macromolecular_names_combined_provenance_source

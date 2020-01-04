@@ -140,11 +140,11 @@ class DictMethodResourceProvider(SingletonClass):
         """
         ret = True
         for resourceName in self.__resourcesD:
-            logger.info("Caching resources for %r", resourceName)
+            logger.debug("Caching resources for %r", resourceName)
             tU = self.__resourcesD[resourceName](self.__cfgOb, self.__configName, self.__cachePath, useCache=useCache, **kwargs)
             ok = tU.testCache()
             ret = ret and ok
-            logger.info("After %r status %r of %r", resourceName, ok, ret)
+            logger.info("After caching resource %r status %r of %r", resourceName, ok, ret)
         return ret
 
     def __fetchCitationReferenceProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):

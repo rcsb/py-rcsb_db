@@ -553,6 +553,8 @@ class PdbxLoader(object):
             dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)
             dictApi = dP.getApiByName(databaseName)
             dmrP = DictMethodResourceProvider(self.__cfgOb, cachePath=self.__cachePath)
+            # Cache dependencies in serial mode.
+            dmrP.cacheResources(useCache=True)
             self.__dmh = DictMethodRunner(dictApi, modulePathMap=modulePathMap, resourceProvider=dmrP)
 
             locatorObjList = self.__rpP.getLocatorObjList(contentType=databaseName, inputPathList=inputPathList, mergeContentTypes=mergeContentTypes)

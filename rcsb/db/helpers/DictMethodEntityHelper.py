@@ -1034,6 +1034,7 @@ class DictMethodEntityHelper(object):
                 "rcsb_macromolecular_names_combined_provenance_code",
                 "rcsb_enzyme_class_combined_ec",
                 "rcsb_enzyme_class_combined_provenance_source",
+                "rcsb_enzyme_class_combined_depth",
             ]
             for at in atList:
                 if not eObj.hasAttribute(at):
@@ -1062,8 +1063,9 @@ class DictMethodEntityHelper(object):
                 eObj.setValue("?", "rcsb_macromolecular_names_combined_provenance_code", ii)
                 eObj.setValue("?", "rcsb_enzyme_class_combined_ec", ii)
                 eObj.setValue("?", "rcsb_enzyme_class_combined_provenance_source", ii)
+                eObj.setValue("?", "rcsb_enzyme_class_combined_depth", ii)
                 #
-                if entityType not in ["polymer", "branched"]:
+                if entityType not in ["polymer"]:
                     continue
                 #
                 # --------------------------------------------------------------------------
@@ -1105,6 +1107,7 @@ class DictMethodEntityHelper(object):
                 # --------------------------------------------------------------------------
                 linL = []
                 ecIdUpdL = []
+                ecDepthUpdL = []
                 ecV = eObj.getValueOrDefault("pdbx_ec", ii, defaultValue=None)
                 if ecV:
                     ecIdL = ecV.split(",") if ecV else []
@@ -1119,6 +1122,7 @@ class DictMethodEntityHelper(object):
                             if tL:
                                 linL.extend(tL)
                                 ecIdUpdL.append(ecId)
+                                ecDepthUpdL.append(str(ecId.count(".") + 1))
 
                     if linL:
                         eObj.setValue(";".join([str(tup[0]) for tup in linL]), "rcsb_ec_lineage_depth", ii)
@@ -1127,11 +1131,13 @@ class DictMethodEntityHelper(object):
                     if ecIdUpdL:
                         eObj.setValue(",".join(ecIdUpdL), "pdbx_ec", ii)
                         eObj.setValue(";".join(ecIdUpdL), "rcsb_enzyme_class_combined_ec", ii)
+                        eObj.setValue(";".join(ecDepthUpdL), "rcsb_enzyme_class_combined_depth", ii)
                         eObj.setValue(";".join(["PDB Primary Data" for _ in ecIdUpdL]), "rcsb_enzyme_class_combined_provenance_source", ii)
                     else:
                         eObj.setValue("?", "pdbx_ec", ii)
                         eObj.setValue("?", "rcsb_enzyme_class_combined_ec", ii)
                         eObj.setValue("?", "rcsb_enzyme_class_combined_provenance_source", ii)
+                        eObj.setValue("?", "rcsb_enzyme_class_combined_depth", ii)
                         if ecIdL:
                             logger.warning("%s non-existent EC class detected %r", dataContainer.getName(), ecV)
             return True
