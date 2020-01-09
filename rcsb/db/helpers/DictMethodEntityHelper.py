@@ -574,7 +574,8 @@ class DictMethodEntityHelper(object):
                     cObj.setValue(sType, "source_type", iRow)
                     cObj.setValue(pCode, "provenance_code", iRow)
                     for ii, at in enumerate(atL):
-                        if at in ["rcsb_gene_name_value"]:
+                        # add check for missing values here
+                        if at in ["rcsb_gene_name_value"] and v[ii] and v[ii] not in [".", "?"]:
                             tgL = v[ii].split(",")
                             cObj.setValue(";".join(tgL), at, iRow)
                             cObj.setValue(";".join([pCode for jj in range(len(tgL))]), "rcsb_gene_name_provenance_code", iRow)
