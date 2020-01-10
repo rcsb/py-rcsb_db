@@ -197,3 +197,4 @@
  23-Dec-2019  V0.945 Add consolidated EC processing and disable auto search context filters
  04-Jan-2020  V0.946 Add support for rcsb_polymer_entity.rcsb_enzyme_class_combined_depth, set single process cache management on loading
  08-Jan-2020  V0.947 Add checks for missing entity gene names
+ 10-Jan-2020  V0.949 Update dependencides for rcsb.utils.struct
