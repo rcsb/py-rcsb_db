@@ -150,7 +150,7 @@ class DictMethodEntityHelper(object):
             #
             _rcsb_polymer_entity_align.reference_database_name
             _rcsb_polymer_entity_align.reference_database_accession
-            _rcsb_polymer_entity_align.provenance_code
+            _rcsb_polymer_entity_align.provenance_source
             #
             _rcsb_polymer_entity_align.aligned_regions_ref_beg_seq_id
             _rcsb_polymer_entity_align.aligned_regions_entity_beg_seq_id
@@ -176,7 +176,7 @@ class DictMethodEntityHelper(object):
             # ---
 
             iRow = cObj.getRowCount()
-            for (entryId, entityId, provCode), refD in pdbEntityAlignD.items():
+            for (entryId, entityId, provSource), refD in pdbEntityAlignD.items():
                 #
                 for (dbName, dbAcc, dbIsoform), saoL in refD.items():
                     #
@@ -193,7 +193,7 @@ class DictMethodEntityHelper(object):
                     cObj.setValue(dbAcc, "reference_database_accession", iRow)
                     if dbIsoform:
                         cObj.setValue(dbIsoform, "reference_database_isoform", iRow)
-                    cObj.setValue(provCode, "provenance_code", iRow)
+                    cObj.setValue(provSource, "provenance_source", iRow)
                     #
                     cObj.setValue(",".join([str(sao.getDbSeqIdBeg()) for sao in saoL]), "aligned_regions_ref_beg_seq_id", iRow)
                     cObj.setValue(",".join([str(sao.getEntitySeqIdBeg()) for sao in saoL]), "aligned_regions_entity_beg_seq_id", iRow)
@@ -302,6 +302,7 @@ class DictMethodEntityHelper(object):
                         dbIdL = []
                         for authAsymId in authAsymIdL:
                             dbIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="PFAMID"))
+                        # --- NO LONGER USING THIS CODE ---
                         for dbId in sorted(set(dbIdL)):
                             relatedAnnIdD["dbName"].append("Pfam")
                             relatedAnnIdD["provSource"].append("SIFTS")
@@ -367,10 +368,10 @@ class DictMethodEntityHelper(object):
                     cObj.setValue(",".join(refSeqIdD["provSource"]).strip(), "reference_sequence_identifiers_provenance_source", ii)
                     cObj.setValue(",".join(refSeqIdD["dbIsoform"]).strip(), "reference_sequence_identifiers_database_isoform", ii)
                 #
-                if relatedAnnIdD["dbName"]:
-                    cObj.setValue(",".join(relatedAnnIdD["dbName"]).strip(), "related_annotation_identifiers_resource_name", ii)
-                    cObj.setValue(",".join(relatedAnnIdD["dbAccession"]).strip(), "related_annotation_identifiers_resource_identifier", ii)
-                    cObj.setValue(",".join(relatedAnnIdD["provSource"]).strip(), "related_annotation_identifiers_provenance_source", ii)
+                # if relatedAnnIdD["dbName"]:
+                #    cObj.setValue(",".join(relatedAnnIdD["dbName"]).strip(), "related_annotation_identifiers_resource_name", ii)
+                #    cObj.setValue(",".join(relatedAnnIdD["dbAccession"]).strip(), "related_annotation_identifiers_resource_identifier", ii)
+                #    cObj.setValue(",".join(relatedAnnIdD["provSource"]).strip(), "related_annotation_identifiers_provenance_source", ii)
                 #
                 ii += 1
             _ = self.__addEntityCompIds(dataContainer)
@@ -578,7 +579,7 @@ class DictMethodEntityHelper(object):
                         if at in ["rcsb_gene_name_value"] and v[ii] and v[ii] not in [".", "?"]:
                             tgL = v[ii].split(",")
                             cObj.setValue(";".join(tgL), at, iRow)
-                            cObj.setValue(";".join([pCode for jj in range(len(tgL))]), "rcsb_gene_name_provenance_code", iRow)
+                            cObj.setValue(";".join([pCode for jj in range(len(tgL))]), "rcsb_gene_name_provenance_source", iRow)
                         else:
                             cObj.setValue(v[ii], at, iRow)
                         # if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?'] and v[ii].isdigit():
@@ -1331,7 +1332,7 @@ class DictMethodEntityHelper(object):
         return bD
 
     def buildEntityFeatureSummary(self, dataContainer, catName, **kwargs):
-        """ Build category rcsb_entity_feature_summary
+        """ Build category rcsb_entity_feature_summary (UPDATED)
 
         Example:
 
@@ -1370,18 +1371,17 @@ class DictMethodEntityHelper(object):
                 fId = fObj.getValue("feature_id", ii)
                 fCountD.setdefault(entityId, {}).setdefault(fType, set()).add(fId)
                 #
-                tS = fObj.getValueOrDefault("feature_ranges_beg_seq_id", ii, defaultValue=None)
-                if fObj.hasAttribute("feature_ranges_beg_seq_id") and tS is not None:
-                    begSeqIdL = str(fObj.getValue("feature_ranges_beg_seq_id", ii)).split(";")
-                    endSeqIdL = str(fObj.getValue("feature_ranges_end_seq_id", ii)).split(";")
+                tbegS = fObj.getValueOrDefault("feature_positions_beg_seq_id", ii, defaultValue=None)
+                tendS = fObj.getValueOrDefault("feature_positions_end_seq_id", ii, defaultValue=None)
+                if fObj.hasAttribute("feature_positions_beg_seq_id") and tbegS is not None and fObj.hasAttribute("feature_positions_end_seq_id") and tendS is not None:
+                    begSeqIdL = str(fObj.getValue("feature_positions_beg_seq_id", ii)).split(";")
+                    endSeqIdL = str(fObj.getValue("feature_positions_end_seq_id", ii)).split(";")
                     monCount = 0
                     for begSeqId, endSeqId in zip(begSeqIdL, endSeqIdL):
                         monCount += abs(int(endSeqId) - int(begSeqId) + 1)
                     fMonomerCountD.setdefault(entityId, {}).setdefault(fType, []).append(monCount)
-
-                tS = fObj.getValueOrDefault("feature_positions_seq_id", ii, defaultValue=None)
-                if fObj.hasAttribute("feature_positions_seq_id") and tS is not None:
-                    seqIdL = str(fObj.getValue("feature_positions_seq_id", ii)).split(";")
+                elif fObj.hasAttribute("feature_positions_beg_seq_id") and tbegS:
+                    seqIdL = str(fObj.getValue("feature_positions_beg_seq_id", ii)).split(";")
                     fMonomerCountD.setdefault(entityId, {}).setdefault(fType, []).append(len(seqIdL))
             #
             ii = 0
@@ -1413,19 +1413,12 @@ class DictMethodEntityHelper(object):
             _rcsb_entity_feature.type
             _rcsb_entity_feature.name
             _rcsb_entity_feature.description
-            _rcsb_entity_feature.feature_class_lineage_id
-            _rcsb_entity_feature.feature_class_lineage_name
-            _rcsb_entity_feature.feature_class_lineage_depth
             _rcsb_entity_feature.reference_scheme
-            _rcsb_entity_feature.provenance_code
+            _rcsb_entity_feature.provenance_source
             _rcsb_entity_feature.assignment_version
-            _rcsb_entity_feature.feature_ranges_beg_seq_id
-            _rcsb_entity_feature.feature_ranges_end_seq_id
-            _rcsb_entity_feature.feature_ranges_value
-            _rcsb_entity_feature.feature_positions_comp_id
-            _rcsb_entity_feature.feature_positions_seq_id
+            _rcsb_entity_feature.feature_positions_beg_seq_id
+            _rcsb_entity_feature.feature_positions_end_seq_id
             _rcsb_entity_feature.feature_positions_value
-
 
         """
         logger.debug("Starting with %r %r %r", dataContainer.getName(), catName, kwargs)
@@ -1461,7 +1454,7 @@ class DictMethodEntityHelper(object):
                 details = "Ligand targeted in this investigation"
                 cObj.setValue(details, "description", ii)
                 cObj.setValue(compId, "name", ii)
-                cObj.setValue("PDB", "provenance_code", ii)
+                cObj.setValue("PDB", "provenance_source", ii)
                 cObj.setValue("V1.0", "assignment_version", ii)
                 #
                 jj += 1
@@ -1483,13 +1476,12 @@ class DictMethodEntityHelper(object):
                 cObj.setValue(details, "description", ii)
                 #
                 cObj.setValue(fName, "name", ii)
-                cObj.setValue("PDB", "provenance_code", ii)
+                cObj.setValue("PDB", "provenance_source", ii)
                 cObj.setValue("V1.0", "assignment_version", ii)
                 #
                 jj += 1
                 ii += 1
             #
-
             # Monomer modifications
             jj = 1
             modMonomerFeatures = self.__commonU.getPolymerModifiedMonomerFeatures(dataContainer)
@@ -1505,11 +1497,11 @@ class DictMethodEntityHelper(object):
                     details = "Parent monomer %s" % parentCompId
                     cObj.setValue(details, "name", ii)
                 #
-                cObj.setValue(compId, "feature_positions_comp_id", ii)
-                cObj.setValue(seqId, "feature_positions_seq_id", ii)
+                cObj.setValue(compId, "feature_positions_beg_comp_id", ii)
+                cObj.setValue(seqId, "feature_positions_beg_seq_id", ii)
                 #
                 cObj.setValue("PDB entity", "reference_scheme", ii)
-                cObj.setValue("PDB", "provenance_code", ii)
+                cObj.setValue("PDB", "provenance_source", ii)
                 cObj.setValue("V1.0", "assignment_version", ii)
                 #
                 jj += 1
@@ -1527,11 +1519,11 @@ class DictMethodEntityHelper(object):
                 details = ",".join(list(sDetails))
                 cObj.setValue(details, "name", ii)
                 #
-                cObj.setValue(compId, "feature_positions_comp_id", ii)
-                cObj.setValue(seqId, "feature_positions_seq_id", ii)
+                cObj.setValue(compId, "feature_positions_beg_comp_id", ii)
+                cObj.setValue(seqId, "feature_positions_beg_seq_id", ii)
                 #
                 cObj.setValue("PDB entity", "reference_scheme", ii)
-                cObj.setValue("PDB", "provenance_code", ii)
+                cObj.setValue("PDB", "provenance_source", ii)
                 cObj.setValue("V1.0", "assignment_version", ii)
                 #
                 jj += 1
@@ -1550,11 +1542,11 @@ class DictMethodEntityHelper(object):
                 details = ",".join(list(sDetails))
                 cObj.setValue(details, "name", ii)
                 #
-                cObj.setValue(begSeqId, "feature_ranges_beg_seq_id", ii)
-                cObj.setValue(endSeqId, "feature_ranges_end_seq_id", ii)
+                cObj.setValue(begSeqId, "feature_positions_beg_seq_id", ii)
+                cObj.setValue(endSeqId, "feature_positions_end_seq_id", ii)
                 #
                 cObj.setValue("PDB entity", "reference_scheme", ii)
-                cObj.setValue("PDB", "provenance_code", ii)
+                cObj.setValue("PDB", "provenance_source", ii)
                 cObj.setValue("V1.0", "assignment_version", ii)
                 #
                 jj += 1
@@ -1562,101 +1554,6 @@ class DictMethodEntityHelper(object):
             return True
         except Exception as e:
             logger.exception("%s %s failing with %s", dataContainer.getName(), catName, str(e))
-        return False
-
-    def addTypedEntityCategoriesX(self, dataContainer, catName, **kwargs):
-        """ Slice common entity categories into type specific entity categories.
-
-        Args:
-            dataContainer (object): mmif.api.DataContainer object instance
-            catName (str): Category name
-
-        Returns:
-            bool: True for success or False otherwise
-
-        """
-        logger.debug("Starting with %r %r %r", dataContainer.getName(), catName, kwargs)
-        try:
-            if not (dataContainer.exists("entry") and dataContainer.exists("entity")):
-                return False
-            #  .... Do only once!
-            if dataContainer.exists("rcsb_polymer_entity") or dataContainer.exists("rcsb_nonpolymer_entity") or dataContainer.exists("rcsb_branched_entity"):
-                return True
-            # -----
-            eObj = dataContainer.getObj("entity")
-            eCount = eObj.getRowCount()
-            eTypeD = {eObj.getValue("id", ii): eObj.getValue("type", ii) for ii in range(eCount) if eObj.getValue("type", ii)}
-            eTypes = list(set(eTypeD.values()))
-            logger.info("%s entity types %r map %r", dataContainer.getName(), eTypes, eTypeD)
-            catTupD = {
-                "polymer": [
-                    ("entity", "rcsb_polymer_entity", "id"),
-                    ("entity_keywords", "rcsb_polymer_entity_keywords", "entity_id"),
-                    ("entity_name_com", "rcsb_polymer_entity_name_com", "entity_id"),
-                    ("entity_name_sys", "rcsb_polymer_entity_name_sys", "entity_id"),
-                    ("rcsb_entity_container_identifiers", "rcsb_polymer_entity_container_identifiers", "entity_id"),
-                    ("rcsb_entity_feature", "rcsb_polymer_entity_feature", "entity_id"),
-                    ("rcsb_entity_feature_summary", "rcsb_polymer_entity_feature_summary", "entity_id"),
-                ],
-                "non-polymer": [
-                    ("entity", "rcsb_nonpolymer_entity", "id"),
-                    ("entity_keywords", "rcsb_nonpolymer_entity_keywords", "entity_id"),
-                    ("entity_name_com", "rcsb_nonpolymer_entity_name_com", "entity_id"),
-                    ("entity_name_sys", "rcsb_nonpolymer_entity_name_sys", "entity_id"),
-                    ("rcsb_entity_container_identifiers", "rcsb_nonpolymer_entity_container_identifiers", "entity_id"),
-                    ("rcsb_entity_feature", "rcsb_nonpolymer_entity_feature", "entity_id"),
-                    ("rcsb_entity_feature_summary", "rcsb_nonpolymer_entity_feature_summary", "entity_id"),
-                ],
-                "branched": [
-                    ("entity", "rcsb_branched_entity", "id"),
-                    ("entity_keywords", "rcsb_branched_entity_keywords", "entity_id"),
-                    ("entity_name_com", "rcsb_branched_entity_name_com", "entity_id"),
-                    ("entity_name_sys", "rcsb_branched_entity_name_sys", "entity_id"),
-                    ("rcsb_entity_container_identifiers", "rcsb_branched_entity_container_identifiers", "entity_id"),
-                    ("rcsb_entity_feature", "rcsb_branched_entity_feature", "entity_id"),
-                    ("rcsb_entity_feature_summary", "rcsb_branched_entity_feature_summary", "entity_id"),
-                ],
-            }
-            for eType, catTupL in catTupD.items():
-                if eType in eTypes:
-                    # create new categories as needed
-                    for srcCatN, dstCatN, entityIdKey in catTupL:
-                        if dataContainer.exists(srcCatN):
-                            if not dataContainer.exists(dstCatN):
-                                dataContainer.append(DataCategory(dstCatN, attributeNameList=self.__dApi.getAttributeNameList(dstCatN)))
-                            srcObj = dataContainer.getObj(srcCatN)
-                            dstObj = dataContainer.getObj(dstCatN)
-                            jj = dstObj.getRowCount()
-                            for ii in range(srcObj.getRowCount()):
-                                entityId = srcObj.getValue(entityIdKey, ii)
-                                logger.info("%s srcCatN %s row %d key %r entityId %r", dataContainer.getName(), srcCatN, ii, entityIdKey, entityId)
-                                if eTypeD[entityId] != eType:
-                                    continue
-                                for dstAtName in dstObj.getAttributeList():
-                                    srcAtName = entityIdKey if dstAtName == "entity_id" else dstAtName
-                                    logger.debug(
-                                        "%s entityId %r srcCatN %r srcAtName %s dstCatN %s dstAtName %s", dataContainer.getName(), entityId, srcCatN, srcAtName, dstCatN, dstAtName
-                                    )
-                                    if srcObj.hasAttribute(srcAtName):
-                                        tS = srcObj.getValue(srcAtName, ii)
-                                        logger.debug("%s entityId %r srcCatN %r srcAtName %s value %s", dataContainer.getName(), entityId, srcCatN, srcAtName, tS)
-                                        if srcAtName in ["formula_weight"]:
-                                            # dalton to kiloDalton
-                                            try:
-                                                tV = float(tS) / 1000.0
-                                                tS = "%f.3" % tV
-                                            except Exception:
-                                                tS = "?"
-                                        if dstAtName in ["ordinal"]:
-                                            tS = jj + 1
-                                        _ = dstObj.setValue(tS, dstAtName, jj)
-                                    else:
-                                        logger.info("Missing srcCatN %s srcAtName %s", srcCatN, srcAtName)
-                                        _ = dstObj.setValue("?", dstAtName, jj)
-                                jj += 1
-            return True
-        except Exception as e:
-            logger.exception("%s for %s failing with %s", dataContainer.getName(), catName, str(e))
         return False
 
     def addTypedEntityCategories(self, dataContainer, blockName, **kwargs):
@@ -1740,6 +1637,8 @@ class DictMethodEntityHelper(object):
                     ("rcsb_entity_instance_validation_feature", "rcsb_polymer_instance_feature", "entity_id"),
                     ("rcsb_entity_instance_validation_feature_summary", "rcsb_polymer_instance_feature_summary", "entity_id"),
                     ("rcsb_struct_conn", "rcsb_polymer_struct_conn", "entity_id"),
+                    ("rcsb_entity_annotation", "rcsb_polymer_entity_annotation", "entity_id"),
+                    ("rcsb_entity_instance_annotation", "rcsb_polymer_instance_annotation", "entity_id"),
                 ],
                 "non-polymer": [
                     ("rcsb_entity_feature", "rcsb_nonpolymer_entity_feature", "entity_id"),
@@ -1749,6 +1648,8 @@ class DictMethodEntityHelper(object):
                     ("rcsb_entity_instance_validation_feature", "rcsb_nonpolymer_instance_feature", "entity_id"),
                     ("rcsb_entity_instance_validation_feature_summary", "rcsb_nonpolymer_instance_feature_summary", "entity_id"),
                     ("rcsb_struct_conn", "rcsb_nonpolymer_struct_conn", "entity_id"),
+                    ("rcsb_entity_annotation", "rcsb_nonpolymer_entity_annotation", "entity_id"),
+                    ("rcsb_entity_instance_annotation", "rcsb_nonpolymer_instance_annotation", "entity_id"),
                 ],
                 "branched": [
                     ("rcsb_entity_feature", "rcsb_branched_entity_feature", "entity_id"),
@@ -1758,6 +1659,8 @@ class DictMethodEntityHelper(object):
                     ("rcsb_entity_instance_validation_feature", "rcsb_branched_instance_feature", "entity_id"),
                     ("rcsb_entity_instance_validation_feature_summary", "rcsb_branched_instance_feature_summary", "entity_id"),
                     ("rcsb_struct_conn", "rcsb_branched _struct_conn", "entity_id"),
+                    ("rcsb_entity_annotation", "rcsb_branched_entity_annotation", "entity_id"),
+                    ("rcsb_entity_instance_annotation", "rcsb_branched_instance_annotation", "entity_id"),
                 ],
             }
             ok = self.__sliceCategoriesByEntityType(dataContainer, categoryMapD)
@@ -1826,4 +1729,88 @@ class DictMethodEntityHelper(object):
             return True
         except Exception as e:
             logger.exception("%s failing with %s", dataContainer.getName(), str(e))
+        return False
+
+    #
+    def buildEntityAnnotations(self, dataContainer, catName, **kwargs):
+        """ Build category rcsb_entity_annotation ...
+
+        Example:
+            loop_
+            _rcsb_entity_annotation.ordinal
+            _rcsb_entity_annotation.entry_id
+            _rcsb_entity_annotation.entity_id
+            _rcsb_entity_annotation.annotation_id
+            _rcsb_entity_annotation.type
+            _rcsb_entity_annotation.name
+            _rcsb_entity_annotation.description
+            _rcsb_entity_annotation.annotation_lineage_id
+            _rcsb_entity_annotation.annotation_lineage_name
+            _rcsb_entity_annotation.annotation_lineage_depth
+            _rcsb_entity_annotation.provenance_source
+            _rcsb_entity_annotation.assignment_version
+
+        """
+        logger.debug("Starting with %r %r %r", dataContainer.getName(), catName, kwargs)
+        try:
+            if catName != "rcsb_entity_annotation":
+                return False
+            # Exit if source categories are missing
+            if not dataContainer.exists("entry"):
+                return False
+            #
+            # Create the new target category
+            if not dataContainer.exists(catName):
+                dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
+            cObj = dataContainer.getObj(catName)
+            #
+            eObj = dataContainer.getObj("entry")
+            entryId = eObj.getValue("id", 0)
+            #
+            # ---------------
+            ii = cObj.getRowCount()
+            jj = 1
+            #
+            targetFeatureD = self.__getTargetComponentFeatures(dataContainer)
+            #
+            for (entityId, compId, filteredFeature) in targetFeatureD:
+                cObj.setValue(ii + 1, "ordinal", ii)
+                cObj.setValue(entryId, "entry_id", ii)
+                cObj.setValue(entityId, "entity_id", ii)
+                cObj.setValue(compId, "comp_id", ii)
+                cObj.setValue(filteredFeature, "type", ii)
+                cObj.setValue("entity_annotation_%d" % jj, "annotation_id", ii)
+                details = "Ligand targeted in this investigation"
+                cObj.setValue(details, "description", ii)
+                cObj.setValue(compId, "name", ii)
+                cObj.setValue("PDB", "provenance_source", ii)
+                cObj.setValue("V1.0", "assignment_version", ii)
+                #
+                jj += 1
+                ii += 1
+            #
+            # BIRD type and class
+            birdFeatureD = self.__getBirdFeatures(dataContainer)
+            for (entityId, compId, prdId, filteredFeature), fName in birdFeatureD.items():
+                cObj.setValue(ii + 1, "ordinal", ii)
+                cObj.setValue(entryId, "entry_id", ii)
+                cObj.setValue(entityId, "entity_id", ii)
+                cObj.setValue(compId, "comp_id", ii)
+                cObj.setValue(filteredFeature, "type", ii)
+                cObj.setValue("entity_annotation_%d" % jj, "annotation_id", ii)
+                if compId:
+                    details = "Non-polymer BIRD %s chemical component %s" % (prdId, compId)
+                else:
+                    details = "Polymer BIRD %s entity %s" % (prdId, entityId)
+                cObj.setValue(details, "description", ii)
+                #
+                cObj.setValue(fName, "name", ii)
+                cObj.setValue("PDB", "provenance_source", ii)
+                cObj.setValue("V1.0", "assignment_version", ii)
+                #
+                jj += 1
+                ii += 1
+            return True
+        except Exception as e:
+            logger.exception("%s %s failing with %s", dataContainer.getName(), catName, str(e))
         return False

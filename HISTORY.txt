@@ -198,3 +198,4 @@
  04-Jan-2020  V0.946 Add support for rcsb_polymer_entity.rcsb_enzyme_class_combined_depth, set single process cache management on loading
  08-Jan-2020  V0.947 Add checks for missing entity gene names
  10-Jan-2020  V0.949 Update dependencides for rcsb.utils.struct
+ 20-Jan-2020  V0.950 pre-beta-rev-v1 - reorganizing assembly and feature categories

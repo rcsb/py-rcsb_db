@@ -528,6 +528,13 @@ class SchemaDefBuild(object):
             tS = documentDefHelper.getAttributeDescription(catName, atName, contextType="brief")
             if tS:
                 fD["DESCRIPTION_ANNOTATED"].append({"text": tS, "context": "brief"})
+            else:
+                # Use content == deposition or then dictionary for 'brief' by default -
+                for tD in fD["DESCRIPTION_ANNOTATED"]:
+                    if tD["context"] == "deposition":
+                        fD["DESCRIPTION_ANNOTATED"].append({"text": tD["text"], "context": "brief"})
+                    elif tD["context"] == "dictionary":
+                        fD["DESCRIPTION_ANNOTATED"].append({"text": tD["text"], "context": "brief"})
         #
         return aD
         #
@@ -705,8 +712,12 @@ class SchemaDefBuild(object):
                     catPropD = {typeKey: "array", "items": pD, "minItems": 1, "uniqueItems": True}
                 #
                 if dataTypingU == "JSON" and addRcsbExtensions:
-                    isNested = documentDefHelper.isCategoryNested(collectionName, catName)
-                    catPropD["rcsb_nested_indexing"] = isNested
+                    if documentDefHelper.isCategoryNested(collectionName, catName):
+                        tD = documentDefHelper.getCategoryNestedContext(collectionName, catName)
+                        if "CONTEXT_PATHS" in tD:
+                            catPropD["rcsb_nested_indexing"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["CONTEXT_PATHS"]}]
+                        else:
+                            catPropD["rcsb_nested_indexing"] = [{"category_name": tD["CONTEXT_NAME"]}]
             if addBlockAttribute and blockAttributeName:
                 schemaAttributeName = convertNameF(blockAttributeName)
                 pD.setdefault("required", []).append(schemaAttributeName)
@@ -762,8 +773,12 @@ class SchemaDefBuild(object):
                         else:
                             subCatPropD[subCategory] = {typeKey: "array", "items": scD, "uniqueItems": False}
                             if dataTypingU == "JSON" and addRcsbExtensions:
-                                isNested = documentDefHelper.isSubCategoryNested(collectionName, subCategory)
-                                subCatPropD[subCategory]["rcsb_nested_indexing"] = isNested
+                                if documentDefHelper.isSubCategoryNested(collectionName, catName, subCategory):
+                                    tD = documentDefHelper.getSubCategoryNestedContext(collectionName, catName, subCategory)
+                                    if "CONTEXT_PATHS" in tD:
+                                        subCatPropD[subCategory]["rcsb_nested_indexing"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["CONTEXT_PATHS"]}]
+                                    else:
+                                        subCatPropD[subCategory]["rcsb_nested_indexing"] = [{"category_name": tD["CONTEXT_NAME"]}]
             #
             if subCatPropD:
                 logger.debug("%s %s %s processing subcategory properties %r", databaseName, collectionName, catName, subCatPropD.items())

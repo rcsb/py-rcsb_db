@@ -466,11 +466,12 @@ class ContentDefinition(object):
             fD["TYPE_CODE"] = self.__dApi.getTypeCode(catName, atName)
             fD["TYPE_CODE_ALT"] = self.__dApi.getTypeCodeAlt(catName, atName)
             fD["IS_MANDATORY"] = True if str(self.__dApi.getMandatoryCode(catName, atName)).lower() in ["y", "yes"] else False
-            fD["DESCRIPTION"] = textwrap.dedent(self.__dApi.getDescription(catName, atName)).lstrip()
+            fD["DESCRIPTION"] = textwrap.dedent(self.__dApi.getDescription(catName, atName)).lstrip().rstrip()
+            #
             fD["DESCRIPTION_ANNOTATED"] = [{"text": fD["DESCRIPTION"], "context": "dictionary"}]
             tS = self.__dApi.getDescriptionPdbx(catName, atName)
             if tS:
-                fD["DESCRIPTION_ANNOTATED"].append({"text": textwrap.dedent(tS).lstrip(), "context": "deposition"})
+                fD["DESCRIPTION_ANNOTATED"].append({"text": textwrap.dedent(tS).lstrip().rstrip(), "context": "deposition"})
             #
             fD["UNITS"] = self.__dApi.getUnits(catName, atName)
 
