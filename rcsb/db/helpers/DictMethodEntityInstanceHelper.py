@@ -268,6 +268,15 @@ class DictMethodEntityInstanceHelper(object):
                     if asymId in fMonomerCountD and fType in fMonomerCountD[asymId] and entityId in entityPolymerLengthD:
                         fracC = float(sum(fMonomerCountD[asymId][fType])) / float(entityPolymerLengthD[entityId])
                     sObj.setValue(round(fracC, 5), "coverage", ii)
+                    if (
+                        fType in ["CATH", "SCOP", "HELIX_P", "SHEET", "UNASSIGNED_SEC_STRUCT", "UNOBSERVED_RESIDUE_XYZ", "ZERO_OCCUPANCY_RESIDUE_XYZ"]
+                        and asymId in fMonomerCountD
+                        and fType in fMonomerCountD[asymId]
+                    ):
+                        minL = min(fMonomerCountD[asymId][fType])
+                        maxL = max(fMonomerCountD[asymId][fType])
+                        sObj.setValue(minL, "minimum_length", ii)
+                        sObj.setValue(maxL, "maximum_length", ii)
                     ii += 1
         except Exception as e:
             logger.exception("Failing for %s with %s", dataContainer.getName(), str(e))
@@ -495,6 +504,8 @@ class DictMethodEntityInstanceHelper(object):
             # Unassigned SS features
             unassignedRangeD = self.__commonU.getProtUnassignedSecStructFeatures(dataContainer)
             for asymId, rTupL in unassignedRangeD.items():
+                if not rTupL:
+                    continue
                 entityId = asymIdD[asymId]
                 authAsymId = asymAuthIdD[asymId]
                 cObj.setValue(ii + 1, "ordinal", ii)
@@ -1034,6 +1045,8 @@ class DictMethodEntityInstanceHelper(object):
                     #
                     sObj.setValue(fCount, "count", ii)
                     sObj.setValue(round(fracC, 5), "coverage", ii)
+                    #
+
                     ii += 1
         except Exception as e:
             logger.exception("Failing with %s", str(e))

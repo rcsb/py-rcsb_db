@@ -1396,6 +1396,13 @@ class DictMethodEntityHelper(object):
                     if entityId in fMonomerCountD and fType in fMonomerCountD[entityId] and entityId in entityPolymerLengthD:
                         fracC = float(sum(fMonomerCountD[entityId][fType])) / float(entityPolymerLengthD[entityId])
                     sObj.setValue(round(fracC, 5), "coverage", ii)
+                    #
+                    if fType in ["artifact"] and entityId in fMonomerCountD and fType in fMonomerCountD[entityId]:
+                        minL = min(fMonomerCountD[entityId][fType])
+                        maxL = max(fMonomerCountD[entityId][fType])
+                        sObj.setValue(minL, "minimum_length", ii)
+                        sObj.setValue(maxL, "maximum_length", ii)
+
                     ii += 1
         except Exception as e:
             logger.exception("Failing with %s", str(e))
