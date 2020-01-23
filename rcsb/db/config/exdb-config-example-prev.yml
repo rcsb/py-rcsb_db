@@ -780,7 +780,6 @@ content_info_helper_configuration:
                       - rcsb_ec_lineage_name
                       - rcsb_ec_lineage_id
                       - rcsb_ec_lineage_depth
-                      # JDW JDW Seems required Jan 4
                       - rcsb_enzyme_class_combined_ec
                       - rcsb_enzyme_class_combined_provenance_source
                       - rcsb_enzyme_class_combined_depth
@@ -4151,7 +4150,6 @@ document_helper_configuration:
           - rcsb_ec_lineage_id
           - rcsb_ec_lineage_name
           - rcsb_enzyme_class_combined_ec
-          #- rcsb_enzyme_class_combined_provenance_code
           - rcsb_enzyme_class_combined_provenance_source
           - rcsb_enzyme_class_combined_depth
           - rcsb_macromolecular_names_combined_name
@@ -4200,7 +4198,6 @@ document_helper_configuration:
           - rcsb_ec_lineage_id
           - rcsb_ec_lineage_name
           - rcsb_enzyme_class_combined_ec
-          #- rcsb_enzyme_class_combined_provenance_code
           - rcsb_enzyme_class_combined_provenance_source
           - rcsb_enzyme_class_combined_depth
           - rcsb_macromolecular_names_combined_name
@@ -4249,7 +4246,6 @@ document_helper_configuration:
           - rcsb_ec_lineage_id
           - rcsb_ec_lineage_name
           - rcsb_enzyme_class_combined_ec
-          - rcsb_enzyme_class_combined_provenance_code
           - rcsb_enzyme_class_combined_provenance_source
           - rcsb_enzyme_class_combined_depth
           - rcsb_macromolecular_names_combined_name

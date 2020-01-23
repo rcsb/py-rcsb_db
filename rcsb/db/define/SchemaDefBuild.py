@@ -715,9 +715,10 @@ class SchemaDefBuild(object):
                     if documentDefHelper.isCategoryNested(collectionName, catName):
                         tD = documentDefHelper.getCategoryNestedContext(collectionName, catName)
                         if "CONTEXT_PATHS" in tD:
-                            catPropD["rcsb_nested_indexing"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["CONTEXT_PATHS"]}]
+                            catPropD["rcsb_nested_indexing"] = True
+                            catPropD["rcsb_nested_indexing_context"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["CONTEXT_PATHS"]}]
                         else:
-                            catPropD["rcsb_nested_indexing"] = [{"category_name": tD["CONTEXT_NAME"]}]
+                            catPropD["rcsb_nested_indexing"] = True
             if addBlockAttribute and blockAttributeName:
                 schemaAttributeName = convertNameF(blockAttributeName)
                 pD.setdefault("required", []).append(schemaAttributeName)
@@ -776,9 +777,10 @@ class SchemaDefBuild(object):
                                 if documentDefHelper.isSubCategoryNested(collectionName, catName, subCategory):
                                     tD = documentDefHelper.getSubCategoryNestedContext(collectionName, catName, subCategory)
                                     if "CONTEXT_PATHS" in tD:
-                                        subCatPropD[subCategory]["rcsb_nested_indexing"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["CONTEXT_PATHS"]}]
+                                        catPropD["rcsb_nested_indexing"] = True
+                                        subCatPropD[subCategory]["rcsb_nested_indexing_context"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["CONTEXT_PATHS"]}]
                                     else:
-                                        subCatPropD[subCategory]["rcsb_nested_indexing"] = [{"category_name": tD["CONTEXT_NAME"]}]
+                                        subCatPropD[subCategory]["rcsb_nested_indexing"] = True
             #
             if subCatPropD:
                 logger.debug("%s %s %s processing subcategory properties %r", databaseName, collectionName, catName, subCatPropD.items())

@@ -326,49 +326,49 @@ tree_node_lists_configuration:
 content_info_helper_configuration:
     database_names:
         ihm_dev:
-            VERSION: 1.1.1
+            VERSION: 1.1.2
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-ihm_dev-type-map.json
         ihm_dev_full:
-            VERSION: 1.1.1
+            VERSION: 1.1.2
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-ihm_dev-type-map.json
         pdbx:
-            VERSION: 5.1.0
+            VERSION: 6.0.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-pdbx-type-map.json
         pdbx_core:
             VERSION: 8.0.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-pdbx-type-map.json
         bird:
-            VERSION: 5.1.0
+            VERSION: 5.2.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-bird-type-map.json
         bird_family:
-            VERSION: 5.1.0
+            VERSION: 5.2.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-bird_family-type-map.json
         chem_comp:
-            VERSION: 5.1.0
+            VERSION: 5.2.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
         bird_chem_comp:
-            VERSION: 5.1.0
+            VERSION: 5.2.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
         bird_chem_comp_core:
-            VERSION: 6.1.0
+            VERSION: 6.2.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
         pdb_distro:
             VERSION: 1.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME:
         repository_holdings:
-            VERSION: 7.1.0
+            VERSION: 7.2.0
             INSTANCE_DATA_TYPE_INFO_FILENAME:
         sequence_clusters:
-            VERSION: 5.1.0
+            VERSION: 5.2.0
             INSTANCE_DATA_TYPE_INFO_FILENAME:
         data_exchange:
-            VERSION: 5.1.0
+            VERSION: 5.2.0
             INSTANCE_DATA_TYPE_INFO_FILENAME:
         drugbank_core:
-            VERSION: 5.1.0
+            VERSION: 5.2.0
             INSTANCE_DATA_TYPE_INFO_FILENAME:
         uniprot_core:
-            VERSION: 1.0.0
+            VERSION: 1.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME:
     #
     # Source dictionary locators -
@@ -1505,15 +1505,15 @@ document_helper_configuration:
     document_collection_names:
         ihm_dev:
             - NAME: ihm_dev
-              VERSION: 1.1.0
+              VERSION: 1.1.2
         ihm_dev_full:
             - NAME: ihm_dev_full
-              VERSION: 1.2.0
+              VERSION: 1.2.2
         pdbx:
             - NAME: pdbx
-              VERSION: 5.1.0
+              VERSION: 5.2.0
             - NAME: pdbx_ext
-              VERSION: 5.1.0
+              VERSION: 5.2.0
         pdbx_core:
             - NAME: pdbx_core_entry
               VERSION: 8.0.0
@@ -1533,45 +1533,45 @@ document_helper_configuration:
               VERSION: 8.0.0
         bird:
             - NAME: bird
-              VERSION: 5.1.0
+              VERSION: 5.2.0
         bird_family:
             - NAME: family
-              VERSION: 5.1.0
+              VERSION: 5.2.0
         chem_comp:
             - NAME: chem_comp
-              VERSION: 5.1.0
+              VERSION: 5.2.0
         bird_chem_comp:
             - NAME: bird_chem_comp
-              VERSION: 5.1.0
+              VERSION: 5.2.0
         bird_chem_comp_core:
             - NAME: bird_chem_comp_core
-              VERSION: 6.4.3
+              VERSION: 6.5.0
         pdb_distro: []
         repository_holdings:
             - NAME: repository_holdings_update_entry
-              VERSION: 3.1.0
+              VERSION: 3.2.0
             - NAME: repository_holdings_current_entry
-              VERSION: 3.1.0
+              VERSION: 3.2.0
             - NAME: repository_holdings_unreleased_entry
-              VERSION: 3.1.0
+              VERSION: 3.2.0
             - NAME: repository_holdings_removed_entry
-              VERSION: 3.1.0
+              VERSION: 3.2.0
         sequence_clusters:
             - NAME: cluster_members
-              VERSION: 1.1.0
+              VERSION: 1.2.0
             - NAME: cluster_provenance
-              VERSION: 1.1.0
+              VERSION: 1.2.0
             - NAME: entity_members
-              VERSION: 1.1.0
+              VERSION: 1.2.0
         data_exchange:
             - NAME: rcsb_data_exchange_status
-              VERSION: 1.1.0
+              VERSION: 1.2.0
         drugbank_core:
             - NAME: drugbank_core
-              VERSION: 1.1.0
+              VERSION: 1.2.0
         uniprot_core:
             - NAME: uniprot_core
-              VERSION: 1.0.0
+              VERSION: 1.1.0
     #
     document_collection_content_filters:
         ihm_dev:

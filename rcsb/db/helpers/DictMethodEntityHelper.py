@@ -404,7 +404,7 @@ class DictMethodEntityHelper(object):
             _rcsb_entity_source_organism.scientific_name
             _rcsb_entity_source_organism.common_name
             _rcsb_entity_source_organism.ncbi_taxonomy_id
-            _rcsb_entity_source_organism.provenance_code
+            _rcsb_entity_source_organism.provenance_source
             _rcsb_entity_source_organism.beg_seq_num
             _rcsb_entity_source_organism.end_seq_num
             _rcsb_entity_source_organism.taxonomy_lineage_id
@@ -420,7 +420,7 @@ class DictMethodEntityHelper(object):
             _rcsb_entity_host_organism.scientific_name
             _rcsb_entity_host_organism.common_name
             _rcsb_entity_host_organism.ncbi_taxonomy_id
-            _rcsb_entity_host_organism.provenance_code
+            _rcsb_entity_host_organism.provenance_source
             _rcsb_entity_host_organism.beg_seq_num
             _rcsb_entity_host_organism.end_seq_num
             _rcsb_entity_host_organism.taxonomy_lineage_id
@@ -509,7 +509,7 @@ class DictMethodEntityHelper(object):
             #
             eObj = dataContainer.getObj("entity")
             entityIdL = eObj.getAttributeValueList("id")
-            pCode = "PDB Primary Data"
+            provSource = "PDB Primary Data"
             #
             partCountD = {}
             srcL = []
@@ -573,13 +573,13 @@ class DictMethodEntityHelper(object):
                     tvL = [tv]
                 for v in tvL:
                     cObj.setValue(sType, "source_type", iRow)
-                    cObj.setValue(pCode, "provenance_code", iRow)
+                    cObj.setValue(provSource, "provenance_source", iRow)
                     for ii, at in enumerate(atL):
                         # add check for missing values here
                         if at in ["rcsb_gene_name_value"] and v[ii] and v[ii] not in [".", "?"]:
                             tgL = v[ii].split(",")
                             cObj.setValue(";".join(tgL), at, iRow)
-                            cObj.setValue(";".join([pCode for jj in range(len(tgL))]), "rcsb_gene_name_provenance_source", iRow)
+                            cObj.setValue(";".join([provSource for jj in range(len(tgL))]), "rcsb_gene_name_provenance_source", iRow)
                         else:
                             cObj.setValue(v[ii], at, iRow)
                         # if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?'] and v[ii].isdigit():
@@ -624,7 +624,7 @@ class DictMethodEntityHelper(object):
                 else:
                     tvL = [tv]
                 for v in tvL:
-                    hObj.setValue(pCode, "provenance_code", iRow)
+                    hObj.setValue(provSource, "provenance_source", iRow)
                     for ii, at in enumerate(atL):
                         hObj.setValue(v[ii], at, iRow)
                         #  if at == 'ncbi_taxonomy_id' and v[ii] and v[ii] not in ['.', '?'] and v[ii].isdigit():
