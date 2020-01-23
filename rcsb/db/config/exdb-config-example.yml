@@ -733,6 +733,7 @@ content_info_helper_configuration:
                   ATTRIBUTE_NAME_LIST:
                       - rcsb_authors
                       - rcsb_journal_abbrev
+                      - rcsb_is_primary
                 #- CATEGORY_NAME: rcsb_load_status
                 - CATEGORY_NAME: citation_author
                   ATTRIBUTE_NAME_LIST:
@@ -3699,6 +3700,7 @@ document_helper_configuration:
           - citation.pdbx_database_id_DOI
           - citation.rcsb_authors
           - citation.rcsb_journal_abbrev
+          - citation.rcsb_is_primary
           - citation.unpublished_flag
           - diffrn_detector.type
           - diffrn_source.pdbx_synchrotron_beamline

@@ -346,6 +346,37 @@ class DictMethodEntryHelper(object):
 
         return revAbbrev
 
+    def assignPrimaryCitation(self, dataContainer, catName, atName, **kwargs):
+        """Normalize citation journal abbrev.
+
+        Args:
+            dataContainer (object): mmif.api.DataContainer object instance
+            catName (str): Category name
+            atName (str): Attribute name
+
+        Returns:
+            bool: True for success or False otherwise
+        """
+        logger.debug("Starting catName %s atName %s kwargs %r", catName, atName, kwargs)
+        try:
+            if not dataContainer.exists(catName):
+                return False
+            #
+            cObj = dataContainer.getObj(catName)
+            if not cObj.hasAttribute(atName):
+                cObj.appendAttribute(atName)
+            #
+            for ii in range(cObj.getRowCount()):
+                citId = cObj.getValue("id", ii)
+                if citId.upper() == "PRIMARY":
+                    cObj.setValue("Y", atName, ii)
+                else:
+                    cObj.setValue("N", atName, ii)
+            return True
+        except Exception as e:
+            logger.exception("Failing for %r with %s", dataContainer.getName(), str(e))
+        return False
+
     def __getEmdbIdentifiers(self, dataContainer):
         """[summary]
 
