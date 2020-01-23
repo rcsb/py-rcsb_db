@@ -517,6 +517,7 @@ class SchemaDefBuild(object):
     # -------------------------- ------------- ------------- ------------- ------------- ------------- -------------
     def __getAmmendedAttributeFeatures(self, collectionName, catName, documentDefHelper):
         #
+        useDefaultBrief = False
         aD = self.__contentInfo.getAttributeFeatures(catName)
         for atName, fD in aD.items():
             ascL = documentDefHelper.getAttributeSearchContexts(collectionName, catName, atName)
@@ -528,7 +529,7 @@ class SchemaDefBuild(object):
             tS = documentDefHelper.getAttributeDescription(catName, atName, contextType="brief")
             if tS:
                 fD["DESCRIPTION_ANNOTATED"].append({"text": tS, "context": "brief"})
-            else:
+            elif useDefaultBrief:
                 # Use content == deposition or then dictionary for 'brief' by default -
                 for tD in fD["DESCRIPTION_ANNOTATED"]:
                     if tD["context"] == "deposition":

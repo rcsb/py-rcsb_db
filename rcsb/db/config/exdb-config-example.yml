@@ -3640,8 +3640,8 @@ document_helper_configuration:
         bird_chem_comp_core:
             - CATEGORY: rcsb_chem_comp_related
               SUBCATEGORY: resource_lineage
-              CONTEXT_ATTRIBUTE_NAMES:
-              - rcsb_chem_comp_related.resource_lineage_depth
+              #CONTEXT_ATTRIBUTE_NAMES:
+              #- rcsb_chem_comp_related.resource_lineage_depth
         pdbx_core_polymer_entity:
             - CATEGORY: rcsb_polymer_entity
               SUBCATEGORY: rcsb_ec_lineage
