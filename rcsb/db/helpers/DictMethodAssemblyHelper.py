@@ -316,7 +316,7 @@ class DictMethodAssemblyHelper(object):
             logger.exception("For %s failing with %s", catName, str(e))
         return False
 
-    def filterAssemblyDetails(self, dataContainer, catName, atName, **kwargs):
+    def filterAssemblyDetails(self, dataContainer, catName, **kwargs):
         """ Filter _pdbx_struct_assembly.details -> _pdbx_struct_assembly.rcsb_details
             with a more limited vocabulary -
 
@@ -324,7 +324,6 @@ class DictMethodAssemblyHelper(object):
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
             catName (str): Category name
-            atName (str):  Attribute name
 
         Returns:
             bool: True for success or False otherwise
@@ -336,7 +335,7 @@ class DictMethodAssemblyHelper(object):
                 'software_defined_assembly'
 
         """
-        logger.debug("Starting catName %s atName %s kwargs %r", catName, atName, kwargs)
+        logger.debug("Starting catName %s kwargs %r", catName, kwargs)
         mD = {
             "author_and_software_defined_assembly": "author_and_software_defined_assembly",
             "author_defined_assembly": "author_defined_assembly",
@@ -366,6 +365,7 @@ class DictMethodAssemblyHelper(object):
 
             logger.debug("Filter assembly details for %s", dataContainer.getName())
             tObj = dataContainer.getObj("pdbx_struct_assembly")
+            atName = "rcsb_details"
             if not tObj.hasAttribute(atName):
                 tObj.appendAttribute(atName)
             #
@@ -381,19 +381,18 @@ class DictMethodAssemblyHelper(object):
             logger.exception("For %s %s failing with %s", catName, atName, str(e))
         return False
 
-    def assignAssemblyCandidates(self, dataContainer, catName, atName, **kwargs):
+    def assignAssemblyCandidates(self, dataContainer, catName, **kwargs):
         """ Flag candidate biological assemblies as 'author_defined_assembly' ad author_and_software_defined_assembly'
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
             catName (str): Category name
-            atName (str):  Attribute name
 
         Returns:
             bool: True for success or False otherwise
 
         """
-        logger.debug("Starting catName %s atName %s kwargs %r", catName, atName, kwargs)
+        logger.debug("Starting catName %s kwargs %r", catName, kwargs)
         mD = {
             "author_and_software_defined_assembly": "author_and_software_defined_assembly",
             "author_defined_assembly": "author_defined_assembly",
@@ -439,7 +438,7 @@ class DictMethodAssemblyHelper(object):
         try:
             if not dataContainer.exists("pdbx_struct_assembly"):
                 return False
-
+            atName = "rcsb_candidate_assembly"
             tObj = dataContainer.getObj("pdbx_struct_assembly")
             if not tObj.hasAttribute(atName):
                 tObj.appendAttribute(atName)
@@ -453,16 +452,51 @@ class DictMethodAssemblyHelper(object):
                 # logger.debug("Full row is %r", tObj.getRow(iRow))
 
             #
+            return True
+        except Exception as e:
+            logger.exception("For %s %s failing with %s", catName, atName, str(e))
+        return False
+
+    def filterAssemblyCandidates(self, dataContainer, catName, **kwargs):
+        """ Filter assemblies to only candidates and deposited cases
+
+
+        Args:
+            dataContainer (object): mmif.api.DataContainer object instance
+            catName (str): Category name
+
+        Returns:
+            bool: True for success or False otherwise
+
+
+        """
+        logger.debug("Starting catName %s kwargs %r", catName, kwargs)
+        try:
+            if not dataContainer.exists("pdbx_struct_assembly"):
+                return False
+
+            logger.debug("Filter candidate assemblyfor %s", dataContainer.getName())
+            tObj = dataContainer.getObj("pdbx_struct_assembly")
+            #
+            indexList = []
+            for iRow in range(tObj.getRowCount()):
+                isCandidate = tObj.getValue("rcsb_candidate_assembly", iRow) == "Y"
+                isDeposited = tObj.getValue("id", iRow) == "deposited"
+
+                if not (isCandidate or isDeposited):
+                    indexList.append(iRow)
+            tObj.removeRows(indexList)
+            #
+            # ---
             numAssemblies = tObj.getRowCount()
             logger.debug("Assembly count is %d", numAssemblies)
             if dataContainer.exists("rcsb_entry_info"):
                 eiObj = dataContainer.getObj("rcsb_entry_info")
                 eiObj.setValue(numAssemblies, "assembly_count", 0)
             #
-            #
             return True
         except Exception as e:
-            logger.exception("For %s %s failing with %s", catName, atName, str(e))
+            logger.exception("For %s failing with %s", catName, str(e))
         return False
 
     def __expandOperatorList(self, operExpression):

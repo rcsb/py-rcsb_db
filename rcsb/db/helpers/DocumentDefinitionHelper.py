@@ -367,24 +367,31 @@ class DocumentDefinitionHelper(object):
             logger.debug("CategoryName %r attributeName %r failing  %s", categoryName, attributeName, str(e))
         return ret
 
+    #
     def __prepareCategoryNested(self):
         """
         Example:
 
-            collection_category_nested:
-                pdbx_core_entry:
-                    - citation
-                pdbx_core_entity:
-                    - rcsb_polymer_entity_feature
-                pdbx_core_entity_instance:
-                    - rcsb_polymer_instance_feature
-
+        collection_category_nested:
+            pdbx_core_entry:
+              - CATEGORY: citation
+                NAME: citation_primary
+                CONTEXT_ATTRIBUTE_NAMES:
+                - citation.rcsb_is_primary
         """
         cD = {}
-        # preprocess the nesting data --
-        for collectionName, catNameL in self.__cfgD["collection_category_nested"].items():
-            catD = {catName: True for catName in catNameL}
-            cD[collectionName] = catD
+        try:
+            # preprocess the nesting data --
+            for collectionName, nDL in self.__cfgD["collection_category_nested"].items():
+                catD = {}
+                for nD in nDL:
+                    if "CONTEXT_ATTRIBUTE_NAMES" in nD:
+                        catD[nD["CATEGORY"]] = {"CONTEXT_NAME": nD["NAME"], "CONTEXT_PATHS": nD["CONTEXT_ATTRIBUTE_NAMES"]}
+                    else:
+                        catD[nD["CATEGORY"]] = {"CONTEXT_NAME": nD["NAME"]}
+                cD[collectionName] = catD
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
         return cD
 
     def isCategoryNested(self, collectionName, categoryName):
@@ -406,27 +413,60 @@ class DocumentDefinitionHelper(object):
             pass
         return ret
 
+    def getCategoryNestedContext(self, collectionName, categoryName):
+        """Return is the input category in this collection is nested.
+
+        Args:
+            collectionName (str): collection name
+            categoryName (str): category name
+
+        Returns:
+            dict: {"CONTEXT_NAME": <name>, "CONTEXT_PATHS": <full_path_list>}
+
+        """
+        ret = {}
+        try:
+            self.__categoryNested = self.__prepareCategoryNested() if not self.__categoryNested else self.__categoryNested
+            ret = self.__categoryNested[collectionName][categoryName]
+        except Exception:
+            pass
+        return ret
+
     def __prepareSubCategoryNested(self):
         """
         Example:
+        #
+        collection_subcategory_nested:
+            bird_chem_comp_core:
+                - CATEGORY: rcsb_chem_comp_related
+                  SUBCATEGORY: resource_lineage
+                  CONTEXT_ATTRIBUTE_NAMES:
+                  - rcsb_chem_comp_related.resource_lineage_depth
+            pdbx_core_polymer_entity:
+                - CATEGORY: rcsb_polymer_entity
+                  SUBCATEGORY: rcsb_ec_lineage
+                - CATEGORY: rcsb_polymer_entity
+                  SUBCATEGORY: rcsb_enzyme_class_combined
 
-            collection_subcategory_nested:
-                pdbx_core_entity:
-                    - ec_lineage
-                    - taxonomy_lineage
         """
         cD = {}
         # preprocess the nesting data --
-        for collectionName, subCatNameL in self.__cfgD["collection_subcategory_nested"].items():
-            subCatD = {subCatName: True for subCatName in subCatNameL}
+        for collectionName, nDL in self.__cfgD["collection_subcategory_nested"].items():
+            subCatD = {}
+            for nD in nDL:
+                if "CONTEXT_ATTRIBUTE_NAMES" in nD:
+                    subCatD[(nD["CATEGORY"], nD["SUBCATEGORY"])] = {"CONTEXT_NAME": nD["SUBCATEGORY"], "CONTEXT_PATHS": nD["CONTEXT_ATTRIBUTE_NAMES"]}
+                else:
+                    subCatD[(nD["CATEGORY"], nD["SUBCATEGORY"])] = {"CONTEXT_NAME": nD["SUBCATEGORY"]}
             cD[collectionName] = subCatD
         return cD
 
-    def isSubCategoryNested(self, collectionName, subCategoryName):
+    def isSubCategoryNested(self, collectionName, categoryName, subCategoryName):
         """Return is the input subcategory in this collection is nested.
 
         Args:
             collectionName (str): collection name
+            categoryName (str): category name
             subCategoryName (str): subcategory name
 
         Returns:
@@ -436,7 +476,27 @@ class DocumentDefinitionHelper(object):
         ret = False
         try:
             self.__subCategoryNested = self.__prepareSubCategoryNested() if not self.__subCategoryNested else self.__subCategoryNested
-            ret = subCategoryName in self.__subCategoryNested[collectionName]
+            ret = (categoryName, subCategoryName) in self.__subCategoryNested[collectionName]
+        except Exception:
+            pass
+        return ret
+
+    def getSubCategoryNestedContext(self, collectionName, categoryName, subCategoryName):
+        """Return is the input subcategory in this collection is nested.
+
+        Args:
+            collectionName (str): collection name
+            categoryName (str): categoryName
+            subCategoryName (str): subcategory name
+
+        Returns:
+            (dict): {"CONTEXT_NAME": <name>, "CONTEXT_PATHS": <full_path_list>}
+
+        """
+        ret = False
+        try:
+            self.__subCategoryNested = self.__prepareSubCategoryNested() if not self.__subCategoryNested else self.__subCategoryNested
+            ret = self.__subCategoryNested[collectionName][(categoryName, subCategoryName)]
         except Exception:
             pass
         return ret
