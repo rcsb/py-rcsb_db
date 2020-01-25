@@ -385,10 +385,8 @@ class DocumentDefinitionHelper(object):
             for collectionName, nDL in self.__cfgD["collection_category_nested"].items():
                 catD = {}
                 for nD in nDL:
-                    if "CONTEXT_ATTRIBUTE_NAMES" in nD:
-                        catD[nD["CATEGORY"]] = {"CONTEXT_NAME": nD["NAME"], "CONTEXT_PATHS": nD["CONTEXT_ATTRIBUTE_NAMES"]}
-                    else:
-                        catD[nD["CATEGORY"]] = {"CONTEXT_NAME": nD["NAME"]}
+                    if "CONTEXT_ATTRIBUTE_NAMES" in nD and "NAME" in nD:
+                        catD[nD["CATEGORY"]] = {"CONTEXT_NAME": nD["NAME"], "CONTEXT_PATHS": nD["CONTEXT_ATTRIBUTE_NAMES"], "FIRST_CONTEXT_PATH": nD["CONTEXT_ATTRIBUTE_NAMES"][0]}
                 cD[collectionName] = catD
         except Exception as e:
             logger.exception("Failing with %s", str(e))

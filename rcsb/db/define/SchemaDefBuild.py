@@ -715,9 +715,9 @@ class SchemaDefBuild(object):
                 if dataTypingU == "JSON" and addRcsbExtensions:
                     if documentDefHelper.isCategoryNested(collectionName, catName):
                         tD = documentDefHelper.getCategoryNestedContext(collectionName, catName)
-                        if "CONTEXT_PATHS" in tD:
+                        if "FIRST_CONTEXT_PATH" in tD:
                             catPropD["rcsb_nested_indexing"] = True
-                            catPropD["rcsb_nested_indexing_context"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["CONTEXT_PATHS"]}]
+                            catPropD["rcsb_nested_indexing_context"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"]}]
                         else:
                             catPropD["rcsb_nested_indexing"] = True
             if addBlockAttribute and blockAttributeName:
@@ -777,9 +777,11 @@ class SchemaDefBuild(object):
                             if dataTypingU == "JSON" and addRcsbExtensions:
                                 if documentDefHelper.isSubCategoryNested(collectionName, catName, subCategory):
                                     tD = documentDefHelper.getSubCategoryNestedContext(collectionName, catName, subCategory)
-                                    if "CONTEXT_PATHS" in tD:
+                                    if "FIRST_CONTEXT_PATH" in tD:
                                         catPropD["rcsb_nested_indexing"] = True
-                                        subCatPropD[subCategory]["rcsb_nested_indexing_context"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["CONTEXT_PATHS"]}]
+                                        subCatPropD[subCategory]["rcsb_nested_indexing_context"] = [
+                                            {"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"]}
+                                        ]
                                     else:
                                         subCatPropD[subCategory]["rcsb_nested_indexing"] = True
             #
