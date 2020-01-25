@@ -72,7 +72,7 @@ setup(
         "rcsb.utils.validation >= 0.18",
         "rcsb.utils.chemref >= 0.25",
         "rcsb.utils.citation >= 0.13",
-        "rcsb.utils.ec >= 0.18",
+        "rcsb.utils.ec >= 0.20",
         "rcsb.utils.taxonomy >= 0.25",
         "rcsb.utils.seq >= 0.25",
         "rcsb.utils.struct >= 0.22",
