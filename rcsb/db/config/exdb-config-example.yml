@@ -312,12 +312,13 @@ data_exchange_configuration:
 tree_node_lists_configuration:
     DATABASE_NAME: tree_node_lists
     DATABASE_VERSION_STRING: v5
-    COLLECTION_VERSION_STRING: 2.0.1
+    COLLECTION_VERSION_STRING: 2.0.2
     COLLECTION_TAXONOMY: tree_taxonomy_node_list
     COLLECTION_ENZYME: tree_ec_node_list
     COLLECTION_SCOP: tree_scop_node_list
     COLLECTION_CATH: tree_cath_node_list
     COLLECTION_ATC: tree_atc_node_list
+    COLLECTION_GO: tree_go_node_list
 
 #
 # Common configuration options for helper classes used for dictionary content generation

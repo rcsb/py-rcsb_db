@@ -200,3 +200,4 @@
  10-Jan-2020  V0.949 Update dependencides for rcsb.utils.struct
  20-Jan-2020  V0.950 pre-beta-rev-v1 - reorganizing assembly and feature categories, standardize on provenance_source, update enums
  25-Jan-2020  V0.951 nested schema extension adjustments
+ 27-Jan-2020  V0.952 configuration update updating ExDb collection names
