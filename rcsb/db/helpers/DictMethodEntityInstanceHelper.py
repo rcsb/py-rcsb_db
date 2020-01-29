@@ -390,6 +390,7 @@ class DictMethodEntityInstanceHelper(object):
                     ii += 1
             # ------------
             # Add SCOP assignments
+            oldCode = False
             scopU = rP.getResource("ScopProvider instance") if rP else None
             for asymId, authAsymId in asymAuthIdD.items():
                 if instTypeD[asymId] not in ["polymer", "branched"]:
@@ -400,18 +401,28 @@ class DictMethodEntityInstanceHelper(object):
                 for (sunId, domId, sccs, tId, authSeqBeg, authSeqEnd) in dL:
                     begSeqId = pAuthAsymD[(authAsymId, authSeqBeg, None)]["seq_id"] if (authAsymId, authSeqBeg, None) in pAuthAsymD else None
                     endSeqId = pAuthAsymD[(authAsymId, authSeqEnd, None)]["seq_id"] if (authAsymId, authSeqEnd, None) in pAuthAsymD else None
+                    # logger.info("%s (first) begSeqId %r endSeqId %r", entryId, begSeqId, endSeqId)
                     if not (begSeqId and endSeqId):
-                        logger.debug(
-                            "%s unqalified SCOP sunId %r domId %r sccs %r asymId %r authAsymId %r authSeqBeg %r authSeqEnd %r",
-                            entryId,
-                            sunId,
-                            domId,
-                            sccs,
-                            asymId,
-                            authAsymId,
-                            authSeqBeg,
-                            authSeqEnd,
-                        )
+                        # try another full range
+                        # begSeqId = asymIdRangesD[asymId]["begAuthSeqId"] if asymId in asymIdRangesD and "begAuthSeqId" in asymIdRangesD[asymId] else None
+                        # endSeqId = asymIdRangesD[asymId]["endAuthSeqId"] if asymId in asymIdRangesD and "endAuthSeqId" in asymIdRangesD[asymId] else None
+                        begSeqId = asymIdRangesD[asymId]["begSeqId"] if asymId in asymIdRangesD else None
+                        endSeqId = asymIdRangesD[asymId]["endSeqId"] if asymId in asymIdRangesD else None
+                        # logger.info("%s (altd) begSeqId %r endSeqId %r", entryId, begSeqId, endSeqId)
+                        if not (begSeqId and endSeqId):
+                            logger.debug(
+                                "%s unqalified SCOP sunId %r domId %r sccs %r asymId %r authAsymId %r authSeqBeg %r authSeqEnd %r",
+                                entryId,
+                                sunId,
+                                domId,
+                                sccs,
+                                asymId,
+                                authAsymId,
+                                authSeqBeg,
+                                authSeqEnd,
+                            )
+                            continue
+
                     cObj.setValue(ii + 1, "ordinal", ii)
                     cObj.setValue(entryId, "entry_id", ii)
                     cObj.setValue(entityId, "entity_id", ii)
@@ -430,15 +441,21 @@ class DictMethodEntityInstanceHelper(object):
                         cObj.setValue(";".join([str(t) for t in idLinL]), "annotation_lineage_id", ii)
                         cObj.setValue(";".join([str(jj) for jj in range(1, len(idLinL) + 1)]), "annotation_lineage_depth", ii)
                         #
-                    if begSeqId is not None and endSeqId is not None:
-                        cObj.setValue(begSeqId, "feature_positions_beg_seq_id", ii)
-                        cObj.setValue(endSeqId, "feature_positions_end_seq_id", ii)
-                    else:
-                        tSeqBeg = asymIdRangesD[asymId]["begAuthSeqId"] if asymId in asymIdRangesD and "begAuthSeqId" in asymIdRangesD[asymId] else None
-                        cObj.setValue(tSeqBeg, "feature_positions_beg_seq_id", ii)
-                        tSeqEnd = asymIdRangesD[asymId]["endAuthSeqId"] if asymId in asymIdRangesD and "endAuthSeqId" in asymIdRangesD[asymId] else None
-                        cObj.setValue(tSeqEnd, "feature_positions_end_seq_id", ii)
-                    #
+                    cObj.setValue(begSeqId, "feature_positions_beg_seq_id", ii)
+                    cObj.setValue(endSeqId, "feature_positions_end_seq_id", ii)
+                    if oldCode:
+                        if begSeqId is not None and endSeqId is not None:
+                            if begSeqId == 0:
+                                begSeqId += 1
+                                endSeqId += 1
+                            cObj.setValue(begSeqId, "feature_positions_beg_seq_id", ii)
+                            cObj.setValue(endSeqId, "feature_positions_end_seq_id", ii)
+                        else:
+                            tSeqBeg = asymIdRangesD[asymId]["begAuthSeqId"] if asymId in asymIdRangesD and "begAuthSeqId" in asymIdRangesD[asymId] else None
+                            cObj.setValue(tSeqBeg, "feature_positions_beg_seq_id", ii)
+                            tSeqEnd = asymIdRangesD[asymId]["endAuthSeqId"] if asymId in asymIdRangesD and "endAuthSeqId" in asymIdRangesD[asymId] else None
+                            cObj.setValue(tSeqEnd, "feature_positions_end_seq_id", ii)
+                        #
                     cObj.setValue("PDB entity", "reference_scheme", ii)
                     cObj.setValue("SCOPe", "provenance_source", ii)
                     cObj.setValue(version, "assignment_version", ii)

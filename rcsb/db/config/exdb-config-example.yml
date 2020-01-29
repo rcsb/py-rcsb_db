@@ -73,7 +73,7 @@
 # 16-Dec-2019 jdw update brief descriptions
 # 04-Jan-2020 jdw update search contexts for entity collections
 # 28-Jan-2020 jdw harmonize feature positions and expunge feature ranges
-#
+# 28-Jan-2020 jdw adjustments in feature position subcategories
 # ExDB configuration file example
 ---
 DEFAULT: {}
@@ -1523,17 +1523,17 @@ document_helper_configuration:
             - NAME: pdbx_core_assembly
               VERSION: 8.0.0
             - NAME: pdbx_core_polymer_entity
-              VERSION: 8.0.2
+              VERSION: 8.0.3
             - NAME: pdbx_core_nonpolymer_entity
-              VERSION: 8.0.1
-            - NAME: pdbx_core_branched_entity
-              VERSION: 8.0.1
-            - NAME: pdbx_core_polymer_entity_instance
               VERSION: 8.0.2
+            - NAME: pdbx_core_branched_entity
+              VERSION: 8.0.2
+            - NAME: pdbx_core_polymer_entity_instance
+              VERSION: 8.0.3
             - NAME: pdbx_core_nonpolymer_entity_instance
-              VERSION: 8.0.1
+              VERSION: 8.0.2
             - NAME: pdbx_core_branched_entity_instance
-              VERSION: 8.0.1
+              VERSION: 8.0.2
         bird:
             - NAME: bird
               VERSION: 5.2.0

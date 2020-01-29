@@ -132,7 +132,6 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
 
     def testValidateOptsRepo(self):
         # schemaLevel = "min"
-
         schemaLevel = "full"
         inputPathList = None
         eCount = self.__testValidateOpts(databaseNameD=self.__databaseNameD, inputPathList=inputPathList, schemaLevel=schemaLevel, mergeContentTypeD=self.__mergeContentTypeD)
@@ -255,12 +254,9 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             #
             mergeS = "-".join(mergeContentTypes) if mergeContentTypes else ""
             if self.__export and docList:
-                # for ii, doc in enumerate(docList[:1]):
-                for ii, doc in enumerate(docList):
-                    cn = containerNameList[ii]
-                    fp = os.path.join(HERE, "test-output", "prep-%s-%s-%s-%s.json" % (cn, databaseName, collectionName, mergeS))
-                    self.__mU.doExport(fp, [doc], fmt="json", indent=3)
-                    logger.debug("Exported %r", fp)
+                fp = os.path.join(HERE, "test-output", "prep-%s-%s-%s.json" % (databaseName, collectionName, mergeS))
+                self.__mU.doExport(fp, docList, fmt="json", indent=3)
+                logger.debug("Exported %r", fp)
             #
             return docList, containerNameList
 

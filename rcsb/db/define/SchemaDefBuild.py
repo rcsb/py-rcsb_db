@@ -592,6 +592,7 @@ class SchemaDefBuild(object):
         exportSearchContext = False
         addRcsbExtensions = "rcsb" in enforceOpts
         addBlockAttribute = True
+        mandatorySubcategoryAttributes = True
         addPrimaryKey = "addPrimaryKey" in enforceOpts
         suppressSingleton = not documentDefHelper.getRetainSingletonObjects(collectionName)
         suppressRelations = documentDefHelper.getSuppressedCategoryRelationships(collectionName)
@@ -758,7 +759,9 @@ class SchemaDefBuild(object):
                         if removeSubCategoryPrefix:
                             schemaAttributeName = schemaAttributeName.replace(subCategory + "_", "")
                         #
-                        isRequired = "mandatoryAttributes" in enforceOpts and fD["IS_MANDATORY"]
+                        # isRequired = "mandatoryAttributes" in enforceOpts and fD["IS_MANDATORY"]
+                        # JDW separate general support for mandatory attributes and support in subcategories.
+                        isRequired = mandatorySubcategoryAttributes and fD["IS_MANDATORY"]
                         if isRequired:
                             reqL.append(schemaAttributeName)
                         #

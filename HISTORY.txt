@@ -202,3 +202,4 @@
  25-Jan-2020  V0.951 nested schema extension adjustments
  27-Jan-2020  V0.952 configuration update updating ExDb collection names
  28-Jan-2020  V0.953 update configuration documentation and cleanup unused files
+ 29-Jan-2020  V0.954 finalize feature schema
