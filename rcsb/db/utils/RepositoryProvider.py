@@ -262,7 +262,7 @@ class RepositoryProvider(object):
             elif contentType in ["bird_chem_comp"]:
                 pth = os.path.join(self.__getRepoTopPath(contentType), idCode[-1], idCode + ".cif")
             elif contentType in ["pdbx", "pdbx_core"]:
-                pth = os.path.join(self.__getRepoTopPath(contentType), idCodel[1:3], idCodel, idCodel + ".cif.gz")
+                pth = os.path.join(self.__getRepoTopPath(contentType), idCodel[1:3], idCodel + ".cif.gz")
             elif contentType in ["bird_consolidated", "bird_chem_comp_core"]:
                 pth = os.path.join(self.__getRepoTopPath(contentType), idCode + ".cif")
             elif contentType in ["ihm_dev", "ihm_dev_core", "ihm_dev_full"]:

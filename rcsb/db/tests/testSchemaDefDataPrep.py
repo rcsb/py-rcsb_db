@@ -83,8 +83,8 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         #
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
-        self.__chemCompMockLen = 16
-        self.__pdbxMockLen = 67
+        self.__chemCompMockLen = 18
+        self.__pdbxMockLen = 68
         # removes timestamped data items to allow diffs.)
         excludeExtras = ["rcsb_load_status"]
         # excludeExtras = []
@@ -92,7 +92,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__verbose = True
         self.__modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=configName)
         #
-        self.__exportFlag = True
+        self.__exportFlag = False
         self.__diffFlag = False
         #
         self.__simpleTestCaseList = [

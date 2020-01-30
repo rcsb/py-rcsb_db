@@ -2303,7 +2303,9 @@ class DictMethodCommonUtils(object):
                     #    logger.warning("%s inconsistent alignment ID %r in difference record %d", dataContainer.getName(), alignId, ii + 1)
                     #    continue
                     #
-                    seqId = srsdObj.getValue("seq_num", ii)
+                    seqId = srsdObj.getValueOrDefault("seq_num", ii, defaultValue=None)
+                    if not seqId:
+                        continue
                     compId = srsdObj.getValue("mon_id", ii)
                     #
                     details = srsdObj.getValue("details", ii)

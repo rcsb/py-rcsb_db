@@ -1514,6 +1514,7 @@ class DictMethodEntityHelper(object):
                 jj += 1
                 ii += 1
             #
+            #
             seqMonomerFeatures = self.__commonU.getEntitySequenceMonomerFeatures(dataContainer)
             for (entityId, seqId, compId, filteredFeature), sDetails in seqMonomerFeatures.items():
                 if filteredFeature not in ["mutation"]:

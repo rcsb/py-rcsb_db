@@ -74,6 +74,7 @@
 # 04-Jan-2020 jdw update search contexts for entity collections
 # 28-Jan-2020 jdw harmonize feature positions and expunge feature ranges
 # 28-Jan-2020 jdw adjustments in feature position subcategories
+# 30-Jan-2020 jdw changing default PDBx repository path and organization
 # ExDB configuration file example
 ---
 DEFAULT: {}
@@ -197,7 +198,8 @@ site_info_remote_configuration:
     BIRD_FAMILY_REPO_PATH: /net/data/components/family-v3
     BIRD_CHEM_COMP_REPO_PATH: /data/components/prdcc-v3
     CHEM_COMP_REPO_PATH: /net/data/components/ligand-dict-v3
-    PDBX_REPO_PATH: /net/beta_data/mmcif-pdbx-load-v5.0
+    # PDBX_REPO_PATH: /net/beta_data/mmcif-pdbx-load-v5.0
+    PDBX_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/data/structures/divided/mmCIF
     RCSB_EXCHANGE_SANDBOX_PATH: /net/sandbox_v5/ftp-v5.0-support
     IHM_DEV_REPO_PATH: ../py-rcsb_db/rcsb/mock-data/MOCK_IHM_REPOMOCK_IHM_REPO
     VRPT_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/validation_reports
@@ -337,7 +339,7 @@ content_info_helper_configuration:
             VERSION: 6.0.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-pdbx-type-map.json
         pdbx_core:
-            VERSION: 8.0.0
+            VERSION: 8.1.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-pdbx-type-map.json
         bird:
             VERSION: 5.2.0
@@ -349,10 +351,10 @@ content_info_helper_configuration:
             VERSION: 5.2.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
         bird_chem_comp:
-            VERSION: 5.2.0
+            VERSION: 5.3.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
         bird_chem_comp_core:
-            VERSION: 6.2.0
+            VERSION: 6.3.0
             INSTANCE_DATA_TYPE_INFO_FILENAME: scan-chem_comp-type-map.json
         pdb_distro:
             VERSION: 1.1.0
@@ -1519,36 +1521,36 @@ document_helper_configuration:
               VERSION: 5.2.0
         pdbx_core:
             - NAME: pdbx_core_entry
-              VERSION: 8.0.1
+              VERSION: 8.0.2
             - NAME: pdbx_core_assembly
-              VERSION: 8.0.0
+              VERSION: 8.0.3
             - NAME: pdbx_core_polymer_entity
-              VERSION: 8.0.3
+              VERSION: 8.0.4
             - NAME: pdbx_core_nonpolymer_entity
-              VERSION: 8.0.2
-            - NAME: pdbx_core_branched_entity
-              VERSION: 8.0.2
-            - NAME: pdbx_core_polymer_entity_instance
               VERSION: 8.0.3
+            - NAME: pdbx_core_branched_entity
+              VERSION: 8.0.3
+            - NAME: pdbx_core_polymer_entity_instance
+              VERSION: 8.0.4
             - NAME: pdbx_core_nonpolymer_entity_instance
-              VERSION: 8.0.2
+              VERSION: 8.0.3
             - NAME: pdbx_core_branched_entity_instance
-              VERSION: 8.0.2
+              VERSION: 8.0.3
         bird:
             - NAME: bird
-              VERSION: 5.2.0
+              VERSION: 5.2.2
         bird_family:
             - NAME: family
-              VERSION: 5.2.0
+              VERSION: 5.2.2
         chem_comp:
             - NAME: chem_comp
-              VERSION: 5.2.0
+              VERSION: 5.2.2
         bird_chem_comp:
             - NAME: bird_chem_comp
-              VERSION: 5.2.0
+              VERSION: 5.2.2
         bird_chem_comp_core:
             - NAME: bird_chem_comp_core
-              VERSION: 6.5.0
+              VERSION: 6.5.2
         pdb_distro: []
         repository_holdings:
             - NAME: repository_holdings_update_entry
