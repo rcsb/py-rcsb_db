@@ -67,7 +67,7 @@ setup(
         'scandir; python_version < "3.0"',
         # 'configparser; python_version < "3.0"',
         "rcsb.utils.io >= 0.51",
-        "rcsb.utils.config >= 0.29",
+        "rcsb.utils.config >= 0.30",
         "rcsb.utils.multiproc >= 0.16",
         "rcsb.utils.validation >= 0.18",
         "rcsb.utils.chemref >= 0.32",
