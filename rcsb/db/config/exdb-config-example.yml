@@ -2422,12 +2422,8 @@ document_helper_configuration:
               - rcsb_polymer_entity_container_identifiers.entity_id
             - INDEX_NAME: search_1
               ATTRIBUTE_NAMES:
-              - rcsb_polymer_entity_container_identifiers.entry_id
-              - rcsb_polymer_entity_container_identifiers.entry_id
-            - INDEX_NAME: search_2
-              ATTRIBUTE_NAMES:
               - rcsb_polymer_entity_container_identifiers.rcsb_id
-            - INDEX_NAME: search_3
+            - INDEX_NAME: search_2
               ATTRIBUTE_NAMES:
               - rcsb_id
             - INDEX_NAME: replace
@@ -2440,12 +2436,8 @@ document_helper_configuration:
               - rcsb_nonpolymer_entity_container_identifiers.entity_id
             - INDEX_NAME: search_1
               ATTRIBUTE_NAMES:
-              - rcsb_nonpolymer_entity_container_identifiers.entry_id
-              - rcsb_nonpolymer_entity_container_identifiers.entry_id
-            - INDEX_NAME: search_4
-              ATTRIBUTE_NAMES:
               - rcsb_nonpolymer_entity_container_identifiers.rcsb_id
-            - INDEX_NAME: search_5
+            - INDEX_NAME: search_2
               ATTRIBUTE_NAMES:
               - rcsb_id
             - INDEX_NAME: replace
@@ -2459,12 +2451,8 @@ document_helper_configuration:
               - rcsb_branched_entity_container_identifiers.entity_id
             - INDEX_NAME: search_1
               ATTRIBUTE_NAMES:
-              - rcsb_branched_entity_container_identifiers.entry_id
-              - rcsb_branched_entity_container_identifiers.entry_id
-            - INDEX_NAME: search_2
-              ATTRIBUTE_NAMES:
               - rcsb_branched_entity_container_identifiers.rcsb_id
-            - INDEX_NAME: search_3
+            - INDEX_NAME: search_2
               ATTRIBUTE_NAMES:
               - rcsb_id
             - INDEX_NAME: replace
