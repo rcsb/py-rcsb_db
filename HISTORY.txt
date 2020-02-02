@@ -207,3 +207,4 @@
  30-Jan-2020  V0.956 Change PDBx MOCK repository organization from SANDBOX to FTP repository layout, handle missing data for
                      chromophores, and update configuration example file.
  30-Jan-2020  V0.957 Update dependency version for rcsb.utils.config
+  2-Feb-2020  V0.958 Corrections keyword arguments in RepoLoadWorkflow()
