@@ -56,13 +56,13 @@ class RepoLoadWorkflow(object):
             return False
         try:
             readBackCheck = kwargs.get("readBackCheck", False)
-            numProc = int(kwargs.get("numPro", 1))
+            numProc = int(kwargs.get("numProc", 1))
             chunkSize = int(kwargs.get("chunkSize", 10))
             fileLimit = int(kwargs.get("fileLimit")) if "fileLimit" in kwargs else None
             documentLimit = int(kwargs.get("documentLimit")) if "documentLimit" in kwargs else None
             failedFilePath = kwargs.get("failFileListPath", None)
             loadFileListPath = kwargs.get("loadFileListPath", None)
-            saveInputFileListPath = kwargs.get("saveFilListPath", None)
+            saveInputFileListPath = kwargs.get("saveFileListPath", None)
             schemaLevel = kwargs.get("schemaLevel", "min") if kwargs.get("schemaLevel") in ["min", "full"] else "min"
             loadType = kwargs.get("loadType", "full")  # or replace
             pruneDocumentSize = float(kwargs.get("pruneDocumentSize")) if "pruneDocumentSize" in kwargs else None
