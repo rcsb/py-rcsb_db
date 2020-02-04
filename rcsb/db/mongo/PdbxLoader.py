@@ -485,8 +485,8 @@ class PdbxLoader(object):
         self.__maxStepLength = maxStepLength
         #
         # Controls for multiprocessing execution -
-        self.__numProc = numProc
-        self.__chunkSize = chunkSize
+        self.__numProc = max(numProc, 1)
+        self.__chunkSize = max(chunkSize, 1)
         #
         self.__cfgOb = cfgOb
         self.__resourceName = resourceName
@@ -547,18 +547,23 @@ class PdbxLoader(object):
             desp = DataExchangeStatus()
             statusStartTimestamp = desp.setStartTime()
             #
+            logger.info("Beginning load operation (%r) for database %s", loadType, databaseName)
             startTime = self.__begin(message="loading operation")
             #
             modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=self.__sectionName)
             dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)
             dictApi = dP.getApiByName(databaseName)
+            # ---
             dmrP = DictMethodResourceProvider(self.__cfgOb, cachePath=self.__cachePath)
             # Cache dependencies in serial mode.
-            dmrP.cacheResources(useCache=True)
+            ok = dmrP.cacheResources(useCache=True)
+            if not ok:
+                logger.error("Checking cached resource dependencies failed - %s load (%r) aborted", databaseName, loadType)
+                return ok
+            # ---
             self.__dmh = DictMethodRunner(dictApi, modulePathMap=modulePathMap, resourceProvider=dmrP)
-
             locatorObjList = self.__rpP.getLocatorObjList(contentType=databaseName, inputPathList=inputPathList, mergeContentTypes=mergeContentTypes)
-            logger.debug("Path list length %d", len(locatorObjList))
+            logger.info("Loading database %s (%r) with path length %d", databaseName, loadType, len(locatorObjList))
             #
             if saveInputFileListPath:
                 self.__writePathList(saveInputFileListPath, self.__rpP.getLocatorPaths(locatorObjList))
@@ -615,7 +620,9 @@ class PdbxLoader(object):
                 subLists = [locatorObjList]
             #
             if subLists:
-                logger.info("Starting loadType %s with numProc %d outer subtask count %d subtask length %d", loadType, numProc, len(subLists), len(subLists[0]))
+                logger.info("Starting load of %s (%r) using numProc %d outer subtask count %d subtask length %d", databaseName, loadType, numProc, len(subLists), len(subLists[0]))
+            else:
+                logger.error("Path partitioning fails for %s (%r) using numProc %d", databaseName, loadType, numProc)
             #
             failList = []
             for ii, subList in enumerate(subLists):
@@ -651,9 +658,16 @@ class PdbxLoader(object):
                 self.__statusList.append(desp.getStatus())
             #
             if ok:
-                logger.info("Load operation returning status %r loading %d paths", ok, numPaths)
+                logger.info("Completed loading %s with status %r loaded %d paths", databaseName, ok, numPaths)
             else:
-                logger.info("Load operation returns status %r failure count %d of %d paths: %r", ok, len(failList), numPaths, [os.path.basename(pth) for pth in failedPathList])
+                logger.info(
+                    "Completed loading %s with status %r failure count %d of %d paths: %r",
+                    databaseName,
+                    ok,
+                    len(failList),
+                    numPaths,
+                    [os.path.basename(pth) for pth in failedPathList],
+                )
             #
             return ok
         except Exception as e:

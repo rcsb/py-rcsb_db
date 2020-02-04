@@ -139,12 +139,20 @@ class DictMethodResourceProvider(SingletonClass):
             bool: True for success or False otherwise
         """
         ret = True
+        tName = "CHECKING" if useCache else "REBUILDING"
+        logger.info("Begin %s cache for %d resources", tName, len(self.__resourcesD))
+        #
         for resourceName in self.__resourcesD:
             logger.debug("Caching resources for %r", resourceName)
             tU = self.__resourcesD[resourceName](self.__cfgOb, self.__configName, self.__cachePath, useCache=useCache, **kwargs)
             ok = tU.testCache()
+            if not ok:
+                logger.error("%s %s fails", tName, resourceName)
             ret = ret and ok
-            logger.info("After caching resource %r status %r of %r", resourceName, ok, ret)
+            if not ret:
+                logger.info("%s resource %r step status %r cumulative status %r", tName, resourceName, ok, ret)
+        #
+        logger.info("Completed %s %d resources with status %r", tName, len(self.__resourcesD), ret)
         return ret
 
     def __fetchCitationReferenceProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):

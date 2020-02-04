@@ -44,15 +44,16 @@ class RepoLoadWorkflow(object):
         #  Rebuild or check resource cache
         rebuildCache = kwargs.get("rebuildCache", False)
         self.__cacheStatus = self.buildResourceCache(rebuildCache=rebuildCache)
-        logger.info("Cache status if %r", self.__cacheStatus)
+        logger.debug("Cache status if %r", self.__cacheStatus)
         #
 
     def load(self, op, **kwargs):
         if not self.__cacheStatus:
-            logger.error("Cache update failed")
+            logger.error("Resource cache test or rebuild has failed - exiting")
             return False
         # argument processing
         if op not in ["pdbx-loader", "etl-repository-holdings", "etl-entity-sequence-clusters"]:
+            logger.error("Unsupported operation %r - exiting", op)
             return False
         try:
             readBackCheck = kwargs.get("readBackCheck", False)
@@ -83,9 +84,8 @@ class RepoLoadWorkflow(object):
             sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=self.__configName)
 
         except Exception as e:
-            logger.exception("Failing with %s", str(e))
+            logger.exception("Argument and configuratio processing failing with %s", str(e))
             return False
-
         #
 
         if op == "pdbx-loader" and dbType == "mongo" and databaseName in databaseNameList:
@@ -96,10 +96,10 @@ class RepoLoadWorkflow(object):
                     mu = MarshalUtil(workPath=self.__cachePath)
                     inputPathList = mu.doImport(loadFileListPath, fmt="list")
                     if not inputPathList:
-                        logger.error("Missing or empty input file path list %s", loadFileListPath)
+                        logger.error("Operation %r missing or empty input file path list %s - exiting", op, loadFileListPath)
                         return False
             except Exception as e:
-                logger.exception("Failing with %s", str(e))
+                logger.exception("Operation %r processing input path list failing with %s", op, str(e))
                 return False
             #
             try:
@@ -128,7 +128,7 @@ class RepoLoadWorkflow(object):
                 )
                 okS = self.loadStatus(mw.getLoadStatus(), readBackCheck=readBackCheck)
             except Exception as e:
-                logger.exception("Failing with %s", str(e))
+                logger.exception("Operation %r database %r failing with %s", op, databaseName, str(e))
         elif op == "etl-entity-sequence-clusters" and dbType == "mongo":
             cw = SequenceClustersEtlWorker(
                 self.__cfgOb, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=self.__debugFlag, readBackCheck=readBackCheck, workPath=self.__cachePath
@@ -149,7 +149,7 @@ class RepoLoadWorkflow(object):
             ok = rhw.load(dataSetId, loadType=loadType)
             okS = self.loadStatus(rhw.getLoadStatus(), readBackCheck=readBackCheck)
 
-        logger.info("Operations completed with status %r " % ok and okS)
+        logger.info("Completed operation %r with status %r", op, ok and okS)
 
         return ok and okS
 
