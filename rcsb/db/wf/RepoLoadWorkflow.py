@@ -84,7 +84,7 @@ class RepoLoadWorkflow(object):
             sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=self.__configName)
 
         except Exception as e:
-            logger.exception("Argument and configuratio processing failing with %s", str(e))
+            logger.exception("Argument and configuration processing failing with %s", str(e))
             return False
         #
 

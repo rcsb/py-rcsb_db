@@ -209,3 +209,4 @@
  30-Jan-2020  V0.957 Update dependency version for rcsb.utils.config
   2-Feb-2020  V0.958 Corrections keyword arguments in RepoLoadWorkflow()
   3-Feb-2020  V0.959 Split configuration file into site and schema portions
+  5-Feb-2020  V0.960 Fix some inconsistencies among repository holdings collections.

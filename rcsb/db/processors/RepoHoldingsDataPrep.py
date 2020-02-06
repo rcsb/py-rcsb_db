@@ -18,6 +18,8 @@
 # 29-Nov-2018 jdw Add support for NMR restraint versions.
 # 30-Nov-3018 jdw explicitly filter obsolete entries from current holdings
 # 13-Dec-2018 jdw Adjust logic for reporting assembly format availibility
+#  5-Feb-2020 jdw Drop superseded entries from the removed entry candidate list.
+#                 Avoid overlap between current and removed/unreleased entries.
 ##
 
 __docformat__ = "restructuredtext en"
@@ -48,11 +50,13 @@ class RepoHoldingsDataPrep(object):
         self.__assignDates = "assign-dates" in self.__filterType
         #
         self.__mU = MarshalUtil(workPath=self.__cachePath)
+        self.__currentCacheD = None
         #
 
     def getHoldingsCurrentEntry(self, updateId, dirPath=None):
         dList = []
-        retD = self.__getHoldingsCurrent(dirPath=dirPath)
+        retD = self.__currentCacheD if self.__currentCacheD else self.__getHoldingsCurrent(dirPath=dirPath)
+        self.__currentCacheD = retD
         for entryId, qD in retD.items():
             tD = (
                 {"rcsb_id": entryId, "entry_id": entryId, "update_id": updateId, "assembly_ids": qD["assembly_ids"]}
@@ -84,7 +88,11 @@ class RepoHoldingsDataPrep(object):
         dList = []
         retD = self.__getHoldingsUnreleased(dirPath=dirPath)
         prD = self.__getHoldingsPrerelease(dirPath=dirPath)
+        currentD = self.__currentCacheD if self.__currentCacheD else self.__getHoldingsCurrent(dirPath=dirPath)
+        self.__currentCacheD = currentD
         for entryId, qD in retD.items():
+            if entryId in currentD:
+                continue
             rD = {"rcsb_id": entryId}
             rD["rcsb_repository_holdings_unreleased_entry_container_identifiers"] = {"rcsb_id": entryId, "entry_id": entryId, "update_id": updateId}
             rD["rcsb_repository_holdings_unreleased"] = qD
@@ -98,11 +106,15 @@ class RepoHoldingsDataPrep(object):
         dList = []
         rmvD, aaD, spsD = self.__getHoldingsRemoved(dirPath=dirPath)
         trfD, insD = self.__getHoldingsTransferred(dirPath=dirPath)
+        currentD = self.__currentCacheD if self.__currentCacheD else self.__getHoldingsCurrent(dirPath=dirPath)
+        self.__currentCacheD = currentD
         #
-        # Get the list of keys -
+        # Get the list of candidate keys for removed entries -
         #
-        entryIdL = sorted(set(list(insD.keys()) + list(rmvD.keys()) + list(spsD.keys())))
+        entryIdL = sorted(set(list(insD.keys()) + list(rmvD.keys())))
         for entryId in entryIdL:
+            if entryId in currentD:
+                continue
             rD = {"rcsb_id": entryId}
             rD["rcsb_repository_holdings_removed_entry_container_identifiers"] = {"rcsb_id": entryId, "entry_id": entryId, "update_id": updateId}
             #
@@ -238,6 +250,8 @@ class RepoHoldingsDataPrep(object):
                     dD["id_codes_replaced_by"] = [obsIdD[entryId]]
                 #
                 insD[entryId] = dD
+            #
+            logger.info("Transferred entries %d - insilico models %d", len(trsfD), len(insD))
             #
         except Exception as e:
             logger.exception("Failing with %s", str(e))
