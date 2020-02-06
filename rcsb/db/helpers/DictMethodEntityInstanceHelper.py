@@ -906,8 +906,11 @@ class DictMethodEntityInstanceHelper(object):
                 fTypeL = sorted(set([pTup.outlierType for pTup in pTupL]))
                 jj = 1
                 for fType in fTypeL:
+                    if (asymId not in asymIdD) or (asymId not in asymAuthIdD):
+                        continue
                     entityId = asymIdD[asymId]
                     authAsymId = asymAuthIdD[asymId]
+                    #
                     cObj.setValue(ii + 1, "ordinal", ii)
                     cObj.setValue(entryId, "entry_id", ii)
                     cObj.setValue(entityId, "entity_id", ii)
