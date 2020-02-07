@@ -211,3 +211,4 @@
   3-Feb-2020  V0.959 Split configuration file into site and schema portions
   5-Feb-2020  V0.960 Fix some inconsistencies among repository holdings collections and add consistency checks for
                      entity instance validation features
+  6-Feb-2020  V0.961 Add additional chimeric and multi-reference test cases and suppress mongodb tracebacks on replace failures

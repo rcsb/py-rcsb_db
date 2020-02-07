@@ -304,7 +304,7 @@ class MongoDbUtil(object):
                 logger.error("Failing %s and %s selectD %r with %s", databaseName, collectionName, selectD, str(e))
                 return None
         except Exception as e:
-            logger.exception("Failing %s and %s selectD %r with %s", databaseName, collectionName, selectD, str(e))
+            logger.error("Failing %s and %s selectD %r with %s", databaseName, collectionName, selectD, str(e))
         return None
 
     def replaceList(self, databaseName, collectionName, dList, keyNames, upsertFlag=True):
