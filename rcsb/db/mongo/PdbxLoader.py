@@ -521,6 +521,7 @@ class PdbxLoader(object):
         validationLevel="min",
         mergeContentTypes=None,
         useNameFlag=True,
+        updateSchemaOnReplace=False,
     ):
         """Driver method for loading PDBx/mmCIF content into the Mongo document store.
 
@@ -537,6 +538,7 @@ class PdbxLoader(object):
             logSize (bool, optional): Compute and log bson serialized object size
             validationLevel (str, optional): Completeness of json/bson metadata schema bound to each collection (e.g. 'min', 'full' or None)
             useNameFlag (bool, optional): Use container name as unique identifier otherwise use UID property.
+            updateSchemaOnReplace (bool, optional): Update validation schema for loadType == 'replace'
         Returns:
             bool: True on success or False otherwise
 
@@ -602,6 +604,14 @@ class PdbxLoader(object):
                         bsonSchema = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="BSON", level=validationLevel)
                     ok = self.__createCollection(databaseName, collectionName, indexDL=indexDL, bsonSchema=bsonSchema)
                     logger.debug("Collection create return status %r", ok)
+                elif loadType == "replace" and updateSchemaOnReplace:
+                    bsonSchema = None
+                    if validationLevel and validationLevel in ["min", "full"]:
+                        bsonSchema = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="BSON", level=validationLevel)
+                    if bsonSchema:
+                        ok = self.__updateCollectionSchema(databaseName, collectionName, bsonSchema=bsonSchema)
+                        if not ok:
+                            logger.info("Schema update failing for %s (%s)", databaseName, collectionName)
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=filterType)
             optD["schemaDefAccess"] = sd
@@ -884,6 +894,24 @@ class PdbxLoader(object):
                         okI = mg.createIndex(databaseName, collectionName, indexD["ATTRIBUTE_NAMES"], indexName=indexD["INDEX_NAME"], indexType="DESCENDING", uniqueFlag=False)
 
             return ok1 and ok2 and ok3 and okI
+            #
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return False
+
+    def __updateCollectionSchema(self, databaseName, collectionName, bsonSchema=None, validationLevel="strict", validationAction="error"):
+        """Update validation schema for the input collection -
+        """
+        try:
+            logger.debug("Updating validatio for schema database %s collection %s", databaseName, collectionName)
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                ok1 = mg.databaseExists(databaseName)
+                ok2 = mg.collectionExists(databaseName, collectionName)
+                if ok1 and ok2:
+                    ok3 = mg.updateCollection(databaseName, collectionName, bsonSchema=bsonSchema, validationLevel=validationLevel, validationAction=validationAction)
+                    logger.info("Updated %r %r validation schema", databaseName, collectionName)
+            return ok1 and ok2 and ok3
             #
         except Exception as e:
             logger.exception("Failing with %s", str(e))

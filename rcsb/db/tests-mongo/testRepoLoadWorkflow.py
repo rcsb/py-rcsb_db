@@ -54,7 +54,7 @@ class RepoLoadWorkflowTests(unittest.TestCase):
         }
         self.__ldList = [
             {"databaseName": "bird_chem_comp_core", "collectionNameList": None, "loadType": "full"},
-            {"databaseName": "bird_chem_comp_core", "collectionNameList": None, "loadType": "replace"},
+            {"databaseName": "bird_chem_comp_core", "collectionNameList": None, "loadType": "replace", "updateSchemaOnReplace": True},
             {"databaseName": "pdbx_core", "collectionNameList": None, "loadType": "full"},
         ]
         #

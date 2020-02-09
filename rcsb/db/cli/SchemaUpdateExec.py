@@ -18,6 +18,7 @@ import argparse
 import logging
 import os
 
+from rcsb.db.define.SchemaDefAccess import SchemaDefAccess
 from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
@@ -58,8 +59,9 @@ def main():
     parser.add_argument("--config_name", default=defaultConfigName, help="Configuration section name")
     #
     parser.add_argument("--cache_path", default=None, help="Schema cache directory path")
-    parser.add_argument("--schema_types", default=None, help="Schema encoding (rcsb|json|bson) (comma separated)")
-    parser.add_argument("--schema_levels", default=None, help="Schema validation level (full|min) (comma separated)")
+    parser.add_argument("--encoding_types", default=None, help="Schema encoding (rcsb|json|bson) (comma separated)")
+    parser.add_argument("--validation_levels", default=None, help="Schema validation level (full|min) (comma separated)")
+    parser.add_argument("--compare_only", default=False, action="store_true", help="Perform comparison with cached schema")
     #
     parser.add_argument("--debug", default=False, action="store_true", help="Turn on verbose logging")
     parser.add_argument("--mock", default=False, action="store_true", help="Use MOCK repository configuration for dependencies and testing")
@@ -74,9 +76,10 @@ def main():
     configPath = args.config_path
     configName = args.config_name
     cachePath = args.cache_path
+    compareOnly = args.compare_only
     #
-    schemaTypes = args.schema_types.split(",") if args.schema_types else []
-    schemaLevels = args.schema_levels.split(",") if args.schema_levels else []
+    encodingTypes = args.encoding_types.split(",") if args.encoding_types else []
+    validationLevels = args.validation_levels.split(",") if args.validation_levels else []
     dataTypingList = ["ANY", "SQL"]
 
     if not configPath:
@@ -96,84 +99,112 @@ def main():
         logger.error("Missing or access issue with config file %r with %s", configPath, str(e))
         exit(1)
     #
-    schemaNameList = []
+    databaseNameList = []
     if args.update_chem_comp_ref:
-        schemaNameList.append("chem_comp")
+        databaseNameList.append("chem_comp")
 
     if args.update_bird_chem_comp_ref:
-        schemaNameList.append("bird_chem_comp")
+        databaseNameList.append("bird_chem_comp")
 
     if args.update_chem_comp_core_ref:
-        schemaNameList.append("chem_comp_core")
+        databaseNameList.append("chem_comp_core")
 
     if args.update_bird_chem_comp_core_ref:
-        schemaNameList.append("bird_chem_comp_core")
+        databaseNameList.append("bird_chem_comp_core")
 
     if args.update_bird_ref:
-        schemaNameList.append("bird")
+        databaseNameList.append("bird")
 
     if args.update_bird_family_ref:
-        schemaNameList.append("bird_family")
+        databaseNameList.append("bird_family")
 
     if args.update_pdbx:
-        schemaNameList.append("pdbx")
+        databaseNameList.append("pdbx")
 
     if args.update_pdbx_core:
-        schemaNameList.append("pdbx_core")
+        databaseNameList.append("pdbx_core")
 
     if args.update_repository_holdings:
-        schemaNameList.append("repository_holdings")
+        databaseNameList.append("repository_holdings")
 
     if args.update_entity_sequence_clusters:
-        schemaNameList.append("entity_sequence_clusters")
+        databaseNameList.append("sequence_clusters")
 
     if args.update_data_exchange:
-        schemaNameList.append("data_exchange")
+        databaseNameList.append("data_exchange")
 
     if args.update_ihm_dev:
-        schemaNameList.append("ihm_dev")
+        databaseNameList.append("ihm_dev")
 
     if args.update_drugbank_core:
-        schemaNameList.append("drugbank_core")
+        databaseNameList.append("drugbank_core")
 
     if args.update_config_deployed:
-        schemaNameList = cfgOb.getList("DATABASE_NAMES_DEPLOYED", sectionName="database_catalog_configuration")
+        databaseNameList = cfgOb.getList("DATABASE_NAMES_DEPLOYED", sectionName="database_catalog_configuration")
         dataTypingList = cfgOb.getList("DATATYPING_DEPLOYED", sectionName="database_catalog_configuration")
-        schemaLevels = cfgOb.getList("VALIDATION_LEVELS_DEPLOYED", sectionName="database_catalog_configuration")
-        schemaTypes = cfgOb.getList("ENCODING_TYPES_DEPLOYED", sectionName="database_catalog_configuration")
+        validationLevels = cfgOb.getList("VALIDATION_LEVELS_DEPLOYED", sectionName="database_catalog_configuration")
+        encodingTypes = cfgOb.getList("ENCODING_TYPES_DEPLOYED", sectionName="database_catalog_configuration")
 
     if args.update_config_all:
-        schemaNameList = cfgOb.getList("DATABASE_NAMES_ALL", sectionName="database_catalog_configuration")
+        databaseNameList = cfgOb.getList("DATABASE_NAMES_ALL", sectionName="database_catalog_configuration")
         dataTypingList = cfgOb.getList("DATATYPING_ALL", sectionName="database_catalog_configuration")
-        schemaLevels = cfgOb.getList("VALIDATION_LEVELS_ALL", sectionName="database_catalog_configuration")
-        schemaTypes = cfgOb.getList("ENCODING_TYPES_ALL", sectionName="database_catalog_configuration")
+        validationLevels = cfgOb.getList("VALIDATION_LEVELS_ALL", sectionName="database_catalog_configuration")
+        encodingTypes = cfgOb.getList("ENCODING_TYPES_ALL", sectionName="database_catalog_configuration")
 
     if args.update_config_test:
-        schemaNameList = cfgOb.getList("DATABASE_NAMES_TEST", sectionName="database_catalog_configuration")
+        databaseNameList = cfgOb.getList("DATABASE_NAMES_TEST", sectionName="database_catalog_configuration")
         dataTypingList = cfgOb.getList("DATATYPING_TEST", sectionName="database_catalog_configuration")
-        schemaLevels = cfgOb.getList("VALIDATION_LEVELS_TEST", sectionName="database_catalog_configuration")
-        schemaTypes = cfgOb.getList("ENCODING_TYPES_TEST", sectionName="database_catalog_configuration")
+        validationLevels = cfgOb.getList("VALIDATION_LEVELS_TEST", sectionName="database_catalog_configuration")
+        encodingTypes = cfgOb.getList("ENCODING_TYPES_TEST", sectionName="database_catalog_configuration")
     #
     scnD = cfgOb.get("document_collection_names", sectionName="document_helper_configuration")
     #
-    schemaNameList = list(set(schemaNameList))
+    databaseNameList = list(set(databaseNameList))
     logger.debug("Collections %s", list(scnD.items()))
-    logger.debug("schemaNameList %s", schemaNameList)
+    logger.debug("databaseNameList %s", databaseNameList)
 
-    schP = SchemaProvider(cfgOb, cachePath, useCache=False)
-    for schemaName in schemaNameList:
-        for schemaType in schemaTypes:
-            if schemaType == "rcsb":
-                for dataTyping in dataTypingList:
-                    logger.info("Creating schema definition for content type %s data typing %s", schemaName, dataTyping)
-                    schP.makeSchemaDef(schemaName, dataTyping=dataTyping, saveSchema=True)
-            else:
-                if schemaName in scnD:
-                    for dD in scnD[schemaName]:
-                        collectionName = dD["NAME"]
-                        for schemaLevel in schemaLevels:
-                            logger.info("Creating %r schema for content type %s collection %s", schemaType, schemaName, collectionName)
-                            schP.makeSchema(schemaName, collectionName, encodingType=schemaType, level=schemaLevel, saveSchema=True)
+    if compareOnly:
+        schP = SchemaProvider(cfgOb, cachePath, useCache=True)
+        difPathList = []
+        for databaseName in databaseNameList:
+            for dataTyping in dataTypingList:
+                logger.debug("Building schema %s with types %s", databaseName, dataTyping)
+                pth = schP.schemaDefCompare(databaseName, dataTyping)
+                if pth:
+                    difPathList.append(pth)
+        if difPathList:
+            logger.info("Schema definition difference path list %r", difPathList)
+        difPathList = []
+        for databaseName in databaseNameList:
+            dD = schP.makeSchemaDef(databaseName, dataTyping="ANY", saveSchema=False)
+            sD = SchemaDefAccess(dD)
+            for cd in sD.getCollectionInfo():
+                collectionName = cd["NAME"]
+                for encodingType in encodingTypes:
+                    if encodingType.lower() != "json":
+                        continue
+                    for level in validationLevels:
+                        pth = schP.jsonSchemaCompare(databaseName, collectionName, encodingType, level)
+                        if pth:
+                            difPathList.append(pth)
+        if difPathList:
+            logger.info("JSON schema difference path list %r", difPathList)
+
+    else:
+        schP = SchemaProvider(cfgOb, cachePath, useCache=False)
+        for databaseName in databaseNameList:
+            for encodingType in encodingTypes:
+                if encodingType == "rcsb":
+                    for dataTyping in dataTypingList:
+                        logger.info("Creating schema definition for content type %s data typing %s", databaseName, dataTyping)
+                        schP.makeSchemaDef(databaseName, dataTyping=dataTyping, saveSchema=True)
+                else:
+                    if databaseName in scnD:
+                        for dD in scnD[databaseName]:
+                            collectionName = dD["NAME"]
+                            for validationLevel in validationLevels:
+                                logger.info("Creating %r schema for content type %s collection %s", encodingType, databaseName, collectionName)
+                                schP.makeSchema(databaseName, collectionName, encodingType=encodingType, level=validationLevel, saveSchema=True)
 
 
 if __name__ == "__main__":

@@ -668,6 +668,8 @@ class DictMethodEntryHelper(object):
                 swObj = dataContainer.getObj("em_software")
                 swNameL.extend(swObj.getAttributeUniqueValueList("name"))
             if swNameL:
+                swNameD = {swName.upper().strip(): True for swName in swNameL if swName not in [".", "?"]}
+                swNameL = sorted(swNameD.keys())
                 cObj.setValue(";".join(swNameL), "software_programs_combined", 0)
             # ---------------------------------------------------------------------------------------------------------
             #  ENTITY FEATURES

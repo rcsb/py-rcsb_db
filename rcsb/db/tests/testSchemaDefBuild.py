@@ -65,6 +65,7 @@ class SchemaDefBuildTests(unittest.TestCase):
             # self.__databaseNameList = ["repository_holdings"]
             self.__dataTypingList = self.__cfgOb.getList("DATATYPING_TEST", sectionName="database_catalog_configuration")
         self.__saveSchema = True
+        self.__compareDefSchema = False
         self.__compareSchema = False
         #
         self.__startTime = time.time()
@@ -80,13 +81,14 @@ class SchemaDefBuildTests(unittest.TestCase):
                 for dataTyping in self.__dataTypingList:
                     logger.debug("Building schema %s with types %s", databaseName, dataTyping)
                     self.__schP.makeSchemaDef(databaseName, dataTyping=dataTyping, saveSchema=self.__saveSchema)
-                    if self.__compareSchema:
+                    if self.__compareDefSchema:
                         self.__schP.schemaDefCompare(databaseName, dataTyping)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
 
     def testBuildCollectionSchema(self):
+        schemaDifPathList = []
         for databaseName in self.__databaseNameList:
             dD = self.__schP.makeSchemaDef(databaseName, dataTyping="ANY", saveSchema=False)
             sD = SchemaDefAccess(dD)
@@ -98,7 +100,11 @@ class SchemaDefBuildTests(unittest.TestCase):
                     for level in self.__validationLevels:
                         self.__schP.makeSchema(databaseName, collectionName, encodingType=encodingType, level=level, saveSchema=self.__saveSchema)
                         if self.__compareSchema and encodingType.lower() == "json":
-                            self.__schP.jsonSchemaCompare(databaseName, collectionName, encodingType, level)
+                            pth = self.__schP.jsonSchemaCompare(databaseName, collectionName, encodingType, level)
+                            if pth:
+                                schemaDifPathList.append(pth)
+        if schemaDifPathList:
+            logger.info("Path dif list %r", schemaDifPathList)
 
     def testCompareSchema(self):
         databaseName = "pdbx_core"

@@ -67,9 +67,23 @@ class PdbxLoaderTests(unittest.TestCase):
         self.__documentStyle = "rowwise_by_name_with_cardinality"
         self.__ldList = [
             # {"databaseName": "chem_comp_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min"},
-            {"databaseName": "bird_chem_comp_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min"},
-            {"databaseName": "bird_chem_comp_core", "collectionNameList": None, "loadType": "replace", "mergeContentTypes": None, "validationLevel": "min"},
-            {"databaseName": "pdbx_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": ["vrpt"], "validationLevel": "min"},
+            {
+                "databaseName": "bird_chem_comp_core",
+                "collectionNameList": None,
+                "loadType": "full",
+                "mergeContentTypes": None,
+                "validationLevel": "min",
+                "updateSchemaOnReplace": False,
+            },
+            {
+                "databaseName": "bird_chem_comp_core",
+                "collectionNameList": None,
+                "loadType": "replace",
+                "mergeContentTypes": None,
+                "validationLevel": "min",
+                "updateSchemaOnReplace": True,
+            },
+            {"databaseName": "pdbx_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": ["vrpt"], "validationLevel": "min", "updateSchemaOnReplace": False},
         ]
         #
         self.__startTime = time.time()
@@ -116,6 +130,7 @@ class PdbxLoaderTests(unittest.TestCase):
                 validationLevel=kwargs["validationLevel"],
                 mergeContentTypes=kwargs["mergeContentTypes"],
                 useNameFlag=False,
+                updateSchemaOnReplace=kwargs["updateSchemaOnReplace"],
             )
             self.assertTrue(ok)
             ok = self.__loadStatus(mw.getLoadStatus())

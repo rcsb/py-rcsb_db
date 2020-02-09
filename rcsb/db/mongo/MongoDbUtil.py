@@ -105,7 +105,7 @@ class MongoDbUtil(object):
                                               via the Python API.
 
         Returns:
-            bool: True for sucess or false otherwise
+            bool: True for success or False otherwise
         """
         try:
             if overWrite and self.collectionExists(databaseName, collectionName):
@@ -113,6 +113,28 @@ class MongoDbUtil(object):
             #
             ok = self.__mgObj[databaseName].create_collection(collectionName)
             logger.debug("Return from create collection %r", ok)
+            if bsonSchema:
+                self.updateCollection(databaseName, collectionName, bsonSchema=bsonSchema, validationLevel=validationLevel, validationAction=validationAction)
+            return True
+        except Exception as e:
+            logger.exception("Failing for databaseName %s collectionName %s with %s", databaseName, collectionName, str(e))
+        return False
+
+    def updateCollection(self, databaseName, collectionName, bsonSchema=None, validationLevel="strict", validationAction="error"):
+        """ Update the validation schema and validation settings for the input collection
+        Args:
+            databaseName (str): Description
+            collectionName (str): Description
+            bsonSchema (dict, optional): JSON Schema (MongoDb flavor ~Draft 4 semantics w/ BSON types)
+            validationLevel (str, optional): Apply to all inserts (strict) of but not for updates to existing documents (moderate)
+            validationAction (str, optional): Reject inserts with error (error) or allow inserts with logged warning (warn)
+                                              Warnings are recorded in the MongoDB system log and these are not conveniently accessible
+                                              via the Python API.
+
+        Returns:
+            bool: True for success or False otherwise
+        """
+        try:
             if bsonSchema:
                 # bsonSchema.update({'additionalProperties': False})
                 sD = {"$jsonSchema": bsonSchema}
@@ -209,7 +231,7 @@ class MongoDbUtil(object):
                 rId = self.insert(databaseName, collectionName, dD, documentKey=kyVals)
                 if rId:
                     rIdL.append(rId)
-                    logger.debug("Insert suceeds for document %s", (kyVals,))
+                    logger.debug("Insert succeeds for document %s", (kyVals,))
                 else:
                     logger.debug("Loading document %r failed", (kyVals,))
         except Exception as e:

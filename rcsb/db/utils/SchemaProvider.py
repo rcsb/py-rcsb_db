@@ -369,7 +369,7 @@ class SchemaProvider(SingletonClass):
         fOrgD = self.__flatten(orgD)
         fNewD = self.__flatten(newD)
         if len(fOrgD) != len(fNewD):
-            logger.info("Schema lengths differ: org %d new %d", len(fOrgD), len(fNewD))
+            logger.debug("Schema lengths differ: org %d new %d", len(fOrgD), len(fNewD))
         #
         addedD = {k: fNewD[k] for k in set(fNewD) - set(fOrgD)}
         removedD = {k: fOrgD[k] for k in set(fOrgD) - set(fNewD)}

@@ -66,6 +66,7 @@ class RepoLoadWorkflow(object):
             saveInputFileListPath = kwargs.get("saveFileListPath", None)
             schemaLevel = kwargs.get("schemaLevel", "min") if kwargs.get("schemaLevel") in ["min", "full"] else "min"
             loadType = kwargs.get("loadType", "full")  # or replace
+            updateSchemaOnReplace = kwargs.get("updateSchemaOnReplace", False)
             pruneDocumentSize = float(kwargs.get("pruneDocumentSize")) if "pruneDocumentSize" in kwargs else None
 
             # "Document organization (rowwise_by_name_with_cardinality|rowwise_by_name|columnwise_by_name|rowwise_by_id|rowwise_no_name",
@@ -74,7 +75,6 @@ class RepoLoadWorkflow(object):
             #
             databaseName = kwargs.get("databaseName", None)
             databaseNameList = self.__cfgOb.get("DATABASE_NAMES_ALL", sectionName="database_catalog_configuration").split(",")
-            #
             collectionNameList = kwargs.get("collectionNameList", None)
             mergeValidationReports = kwargs.get("mergeValidationReports", True)
             #
@@ -125,6 +125,7 @@ class RepoLoadWorkflow(object):
                     pruneDocumentSize=pruneDocumentSize,
                     validationLevel=schemaLevel,
                     mergeContentTypes=["vrpt"] if mergeValidationReports else None,
+                    updateSchemaOnReplace=updateSchemaOnReplace,
                 )
                 okS = self.loadStatus(mw.getLoadStatus(), readBackCheck=readBackCheck)
             except Exception as e:

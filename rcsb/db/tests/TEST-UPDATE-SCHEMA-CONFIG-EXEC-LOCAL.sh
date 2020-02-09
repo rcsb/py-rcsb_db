@@ -4,8 +4,10 @@
 #
 # Updates:
 #
-# Test schema update using configuration settings and storing data in the local test directory --
+# Test schema update and comparison using configuration settings and storing data in the local test directory --
 #
 #
-schema_update_cli  --mock --update_config_deployed --cache_path ./test-output --config_path ../config/exdb-config-example.yml --config_name site_info_configuration  > ./test-output/LOGUPDCONFIGSCHEMA 2>&1
+schema_update_cli --update_config_deployed --cache_path ./test-output --config_path ../config/exdb-config-example.yml --config_name site_info_configuration  > ./test-output/LOGUPDSCHEMACONFIG 2>&1
+##
+schema_update_cli --compare_only --update_config_deployed --cache_path ./test-output --config_path ../config/exdb-config-example.yml --config_name site_info_configuration  > ./test-output/LOGCOMPARECONFIG 2>&1
 #
