@@ -268,7 +268,7 @@ class MongoDbUtil(object):
             logger.exception("Failing with %s", str(e))
         return None
 
-    def update(self, databaseName, collectionName, dObj, selectD):
+    def update(self, databaseName, collectionName, dObj, selectD, upsertFlag=False):
         """ Update documents satisfying the selection details with the content of dObj.
 
         Args:
@@ -285,7 +285,7 @@ class MongoDbUtil(object):
         try:
             numModified = 0
             clt = self.__mgObj[databaseName].get_collection(collectionName)
-            rV = clt.update_many(selectD, {"$set": dObj}, upsert=False, array_filters=None)
+            rV = clt.update_many(selectD, {"$set": dObj}, upsert=upsertFlag, array_filters=None)
             try:
                 numMatched = rV.matched_count
                 numModified = rV.modified_count

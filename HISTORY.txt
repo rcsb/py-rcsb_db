@@ -214,3 +214,4 @@
   6-Feb-2020  V0.961 Add additional chimeric and multi-reference test cases and suppress mongodb tracebacks on replace failures
   9-Feb-2020  V0.962 Cleanup combined software program list, separate tests to detect schema differences, add support for
                      schema updates to existing collections, update schema update CLI with compare methods.
+ 11-Feb-2020  V0.963 Expose upsertFlag on mongo update method wrapper.
