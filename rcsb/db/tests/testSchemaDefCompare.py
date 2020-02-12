@@ -79,7 +79,7 @@ class SchemaDefCompareTests(unittest.TestCase):
                     if pth:
                         difPathList.append(pth)
             if difPathList:
-                logger.info("Schema definition difference path list %r", difPathList)
+                logger.info("Schema definition difference path list %r", [os.path.split(pth)[1] for pth in difPathList])
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
@@ -101,7 +101,7 @@ class SchemaDefCompareTests(unittest.TestCase):
                             if pth:
                                 difPathList.append(pth)
             if difPathList:
-                logger.info("JSON schema difference path list %r", difPathList)
+                logger.info("JSON schema difference path list %r", [os.path.split(pth)[1] for pth in difPathList])
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()

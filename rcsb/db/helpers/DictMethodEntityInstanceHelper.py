@@ -211,6 +211,7 @@ class DictMethodEntityInstanceHelper(object):
             entityPolymerLengthD = self.__commonU.getPolymerEntityLengthsEnumerated(dataContainer)
             # typeList = self.__dApi.getEnumList("rcsb_entity_instance_feature_summary", "type", sortFlag=True)
             asymAuthD = self.__commonU.getAsymAuthIdMap(dataContainer)
+            instIdMapD = self.__commonU.getInstanceIdMap(dataContainer)
 
             fCountD = OrderedDict()
             fMonomerCountD = OrderedDict()
@@ -248,6 +249,7 @@ class DictMethodEntityInstanceHelper(object):
             #
             logger.debug("%s fCountD %r", entryId, fCountD)
             #
+
             ii = 0
             for asymId, fTypeD in fCountD.items():
                 entityId = instEntityD[asymId]
@@ -258,6 +260,9 @@ class DictMethodEntityInstanceHelper(object):
                     sObj.setValue(entityId, "entity_id", ii)
                     sObj.setValue(asymId, "asym_id", ii)
                     sObj.setValue(authAsymId, "auth_asym_id", ii)
+                    # add comp
+                    if asymId in instIdMapD and "comp_id" in instIdMapD[asymId] and instIdMapD[asymId]["comp_id"]:
+                        sObj.setValue(instIdMapD[asymId]["comp_id"], "comp_id", ii)
                     sObj.setValue(fType, "type", ii)
                     if fType.startswith("UNOBSERVED") and asymId in fMonomerCountD and fType in fMonomerCountD[asymId]:
                         fCount = sum(fMonomerCountD[asymId][fType])
@@ -1183,6 +1188,43 @@ class DictMethodEntityInstanceHelper(object):
                     cObj.setValue(version, "assignment_version", ii)
                     #
                     ii += 1
+            # ------------
+            #  Add covalent attchment property
+            npbD = self.__commonU.getBoundNonpolymersByInstance(dataContainer)
+            jj = 1
+            for asymId, rTupL in npbD.items():
+                for rTup in rTupL:
+                    if rTup.connectType in ["covalent bond"]:
+                        fType = "HAS_COVALENT_LINKAGE"
+                        fId = "COVALENT_LINKAGE_%d" % jj
+
+                    elif rTup.connectType in ["metal coordination"]:
+                        fType = "HAS_METAL_COORDINATION_LINKAGE"
+                        fId = "METAL_COORDINATION_LINKAGE_%d" % jj
+                    else:
+                        continue
+
+                    entityId = asymIdD[asymId]
+                    authAsymId = asymAuthIdD[asymId]
+                    cObj.setValue(ii + 1, "ordinal", ii)
+                    cObj.setValue(entryId, "entry_id", ii)
+                    cObj.setValue(entityId, "entity_id", ii)
+                    cObj.setValue(asymId, "asym_id", ii)
+                    cObj.setValue(authAsymId, "auth_asym_id", ii)
+                    cObj.setValue(rTup.targetCompId, "comp_id", ii)
+                    cObj.setValue(fId, "annotation_id", ii)
+                    cObj.setValue(fType, "type", ii)
+                    #
+                    # ("targetCompId", "connectType", "partnerCompId", "partnerAsymId", "partnerEntityType", "bondDistance", "bondOrder")
+                    cObj.setValue(
+                        "%s has %s with %s instance %s in model 1" % (rTup.targetCompId, rTup.connectType, rTup.partnerEntityType, rTup.partnerAsymId), "description", ii,
+                    )
+
+                    cObj.setValue("PDB", "provenance_source", ii)
+                    cObj.setValue("V1.0", "assignment_version", ii)
+                    #
+                    ii += 1
+                    jj += 1
 
             return True
         except Exception as e:
