@@ -42,15 +42,15 @@ class RepoLoadWorkflow(object):
             logger.setLevel(logging.DEBUG)
         #
         #  Rebuild or check resource cache
-        rebuildCache = kwargs.get("rebuildCache", False)
-        self.__cacheStatus = self.buildResourceCache(rebuildCache=rebuildCache)
-        logger.debug("Cache status if %r", self.__cacheStatus)
+        # rebuildCache = kwargs.get("rebuildCache", False)
+        # self.__cacheStatus = self.buildResourceCache(rebuildCache=rebuildCache)
+        # logger.debug("Cache status if %r", self.__cacheStatus)
         #
 
     def load(self, op, **kwargs):
-        if not self.__cacheStatus:
-            logger.error("Resource cache test or rebuild has failed - exiting")
-            return False
+        # if not self.__cacheStatus:
+        #    logger.error("Resource cache test or rebuild has failed - exiting")
+        #    return False
         # argument processing
         if op not in ["pdbx-loader", "etl-repository-holdings", "etl-entity-sequence-clusters"]:
             logger.error("Unsupported operation %r - exiting", op)
@@ -172,8 +172,10 @@ class RepoLoadWorkflow(object):
         """
         ret = False
         try:
+            useCache = not rebuildCache
+            logger.info("Cache setting useCache is %r", useCache)
             rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
-            ret = rp.cacheResources(useCache=not rebuildCache)
+            ret = rp.cacheResources(useCache=useCache)
 
         except Exception as e:
             logger.exception("Failing with %s", str(e))

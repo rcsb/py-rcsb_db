@@ -216,3 +216,4 @@
                      schema updates to existing collections, update schema update CLI with compare methods.
  11-Feb-2020  V0.963 Expose upsertFlag on mongo update method wrapper.
  12-Feb-2020  V0.964 Extend entity and entity instance annotations with convalent linkage details
+ 12-Feb-2020  V0.965 Add model_ids to entry_container_identifiers and update dependencies

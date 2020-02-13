@@ -45,7 +45,7 @@ class RepoLoadWorkflowTests(unittest.TestCase):
         configName = "site_info_configuration"
         cachePath = os.path.join(TOPDIR, "CACHE")
         #
-        self.__commonD = {"configPath": configPath, "mockTopPath": mockTopPath, "configName": configName, "cachePath": cachePath, "rebuildCache": False}
+        self.__commonD = {"configPath": configPath, "mockTopPath": mockTopPath, "configName": configName, "cachePath": cachePath}
         self.__loadCommonD = {
             "failedFilePath": os.path.join(HERE, "test-output", "failed-list.txt"),
             "readBackCheck": True,
@@ -65,10 +65,23 @@ class RepoLoadWorkflowTests(unittest.TestCase):
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
+    def testReourceCacheWorkflow(self):
+        """Test resource cache rebuild
+        """
+        #
+        try:
+            ok = RepoLoadWorkflow(**self.__commonD).buildResourceCache(rebuildCache=True)
+            self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+            self.fail()
+
     def testPdbxLoaderWorkflow(self):
         #
         try:
             rlWf = RepoLoadWorkflow(**self.__commonD)
+            ok = rlWf.buildResourceCache(rebuildCache=False)
+            self.assertTrue(ok)
             for ld in self.__ldList:
                 ld.update(self.__loadCommonD)
                 ok = rlWf.load("pdbx-loader", **ld)
@@ -88,6 +101,9 @@ class RepoLoadWorkflowTests(unittest.TestCase):
                 "chunkSize": 10,
             }
             rlWf = RepoLoadWorkflow(**self.__commonD)
+            ok = rlWf.buildResourceCache(rebuildCache=False)
+            self.assertTrue(ok)
+            #
             ok = rlWf.load("etl-repository-holdings", **etlCommonD)
             self.assertTrue(ok)
             #
