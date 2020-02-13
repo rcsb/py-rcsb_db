@@ -576,6 +576,20 @@ class DictMethodCommonUtils(object):
         wD = self.__fetchAtomSiteInfo(dataContainer, modelId=modelId)
         return wD["instanceAtomCountD"] if "instanceAtomCountD" in wD else {}
 
+    def getModelIdList(self, dataContainer):
+        """Return a list of model identifiers for the entry.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            list: [1,2,3]
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchAtomSiteInfo(dataContainer)
+        return wD["modelIdList"] if "modelIdList" in wD else []
+
     def getEntityTypeAtomCounts(self, dataContainer, modelId="1"):
         """Return a dictionary of deposited atom counts for each entity type.
 
@@ -908,6 +922,7 @@ class DictMethodCommonUtils(object):
                 "numAtomsModel": numAtomsModel,
                 "numModels": len(modelIdL),
                 "modelId": modelId,
+                "modelIdList": sorted(modelIdL),
                 "instancePolymerModeledMonomerCountD": {},
                 "instancePolymerUnmodeledMonomerCountD": {},
             }

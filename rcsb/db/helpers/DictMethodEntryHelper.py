@@ -495,7 +495,11 @@ class DictMethodEntryHelper(object):
             cObj.setValue(tV, "emdb_ids", 0)
             tV = ",".join([tId for tId in emdbIdAltD]) if emdbIdAltD else "?"
             cObj.setValue(tV, "related_emdb_ids", 0)
-
+            #
+            modelIdList = self.__commonU.getModelIdList(dataContainer)
+            tV = ",".join([str(tId) for tId in modelIdList]) if modelIdList else "?"
+            cObj.setValue(tV, "model_ids", 0)
+            #
             return True
         except Exception as e:
             logger.exception("For %s failing with %s", catName, str(e))
