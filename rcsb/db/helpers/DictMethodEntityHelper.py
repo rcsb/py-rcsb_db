@@ -1056,7 +1056,7 @@ class DictMethodEntityHelper(object):
             birdFeatureD = self.__getBirdFeatures(dataContainer)
             birdNameD = {}
             for (entityId, _, _, filteredFeature), fName in birdFeatureD.items():
-                if filteredFeature == "BIRD_MOLECULAR_NAME":
+                if filteredFeature == "BIRD_MOLECULAR_NAME" and fName:
                     birdNameD.setdefault(entityId, []).append(fName)
 
             for ii in range(eObj.getRowCount()):
