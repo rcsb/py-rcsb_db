@@ -1052,6 +1052,12 @@ class DictMethodEntityHelper(object):
             ncObj = None
             if dataContainer.exists("entity_name_com"):
                 ncObj = dataContainer.getObj("entity_name_com")
+            # get an BIRD assigned names -
+            birdFeatureD = self.__getBirdFeatures(dataContainer)
+            birdNameD = {}
+            for (entityId, _, _, filteredFeature), fName in birdFeatureD.items():
+                if filteredFeature == "BIRD_MOLECULAR_NAME":
+                    birdNameD.setdefault(entityId, []).append(fName)
 
             for ii in range(eObj.getRowCount()):
                 entityId = eObj.getValue("id", ii)
@@ -1067,7 +1073,7 @@ class DictMethodEntityHelper(object):
                 eObj.setValue("?", "rcsb_enzyme_class_combined_provenance_source", ii)
                 eObj.setValue("?", "rcsb_enzyme_class_combined_depth", ii)
                 #
-                if entityType not in ["polymer"]:
+                if entityType not in ["polymer", "branched"]:
                     continue
                 #
                 # --------------------------------------------------------------------------
@@ -1100,6 +1106,12 @@ class DictMethodEntityHelper(object):
                         sourceL.append("PDB Synonym")
                         provCodeL.append("ECO:0000303")
                     logger.debug("%s ii %d ncL %r", dataContainer.getName(), ii, ncL)
+                #
+                if entityId in birdNameD:
+                    for nm in birdNameD[entityId]:
+                        nameL.append(nm)
+                        sourceL.append("PDB BIRD Name")
+                        provCodeL.append("ECO:0000303")
                 #
                 if nameL:
                     eObj.setValue(";".join(nameL), "rcsb_macromolecular_names_combined_name", ii)
@@ -1313,7 +1325,8 @@ class DictMethodEntityHelper(object):
                 prdId = pfObj.getValue("prd_id", ii)
                 prdType = pfObj.getValueOrDefault("class", ii, defaultValue=None)
                 prdClass = pfObj.getValueOrDefault("type", ii, defaultValue=None)
-                pfD[prdId] = (prdType, prdClass)
+                prdName = pfObj.getValueOrDefault("name", ii, defaultValue=None)
+                pfD[prdId] = (prdType, prdClass, prdName)
 
             pObj = dataContainer.getObj("pdbx_molecule")
             bD = {}
@@ -1326,6 +1339,8 @@ class DictMethodEntityHelper(object):
                     bD[(entityId, compId, prdId, "BIRD_MOLECULE_TYPE")] = pfD[prdId][0]
                 if pfD[prdId][1]:
                     bD[(entityId, compId, prdId, "BIRD_MOLECULE_CLASS")] = pfD[prdId][1]
+                if pfD[prdId][2]:
+                    bD[(entityId, compId, prdId, "BIRD_MOLECULE_NAME")] = pfD[prdId][2]
 
         except Exception as e:
             logger.exception("Failing for %s with %s", dataContainer.getName(), str(e))

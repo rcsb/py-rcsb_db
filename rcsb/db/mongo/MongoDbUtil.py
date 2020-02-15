@@ -397,6 +397,30 @@ class MongoDbUtil(object):
         #
         return delTupL
 
+    def delete(self, databaseName, collectionName, selectD):
+        """Delete objects from the input collection based on the input selection query.
+
+
+        Args:
+            databaseName (str): Target database name
+            collectionName (str): Target collection name
+            selectD (dict): selection query
+
+        Returns:
+            (int): deletion count
+
+        """
+        delCount = 0
+        try:
+            clt = self.__mgObj[databaseName].get_collection(collectionName)
+            rV = clt.delete_many(selectD)
+            delCount = rV.deleted_count
+            logger.debug("%s %s deleted %d", databaseName, collectionName, delCount)
+        except Exception as e:
+            logger.error("Failing %s and %s selectD %r with %s", databaseName, collectionName, selectD.items(), str(e))
+        #
+        return delCount
+
     def createIndex(self, databaseName, collectionName, keyList, indexName="primary", indexType="DESCENDING", uniqueFlag=False):
 
         try:

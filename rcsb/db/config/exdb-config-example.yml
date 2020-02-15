@@ -1,6 +1,8 @@
 # File: exdb-config-example.yml (site dependent portion)
 # Date: 3-Feb-2020 jdw
 #
+# Updated:
+#   15-Feb-2020 - Now referencing py-rcsb_exdb_assets in development branch.
 ---
 DEFAULT: {}
 ##
@@ -63,12 +65,12 @@ site_info_configuration:
     CITATION_REFERENCE_CACHE_DIR: cit_ref
     #
     #
-    PROVENANCE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/provenance/rcsb_extend_provenance_info.json
+    PROVENANCE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/provenance/rcsb_extend_provenance_info.json
     PROVENANCE_INFO_CACHE_DIR:  provenance
     #
-    SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/schema_definitions
+    SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/schema_definitions
     SCHEMA_DEFINITION_CACHE_DIR: schema_definitions
-    JSON_SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/json_schema_definitions
+    JSON_SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/json_schema_definitions
     JSON_SCHEMA_DEFINITION_CACHE_DIR: json_schema_definitions
     #
     # Helper class binding and mappings
@@ -83,7 +85,7 @@ site_info_configuration:
     CONTENT_DEF_HELPER_MODULE: rcsb.db.helpers.ContentDefinitionHelper
     DOCUMENT_DEF_HELPER_MODULE: rcsb.db.helpers.DocumentDefinitionHelper
     CONFIG_APPEND_LOCATOR_PATHS:
-      - https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/config/exdb-config-schema.yml
+      - https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/config/exdb-config-schema.yml
 #
 ##
 site_info_remote_configuration:
@@ -156,12 +158,12 @@ site_info_remote_configuration:
     EXDB_CACHE_DIR: exdb
     CITATION_REFERENCE_CACHE_DIR: cit_ref
     #
-    PROVENANCE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/provenance/rcsb_extend_provenance_info.json
+    PROVENANCE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/provenance/rcsb_extend_provenance_info.json
     PROVENANCE_INFO_CACHE_DIR:  provenance
     #
-    SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/schema_definitions
+    SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/schema_definitions
     SCHEMA_DEFINITION_CACHE_DIR: schema_definitions
-    JSON_SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/json_schema_definitions
+    JSON_SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/json_schema_definitions
     JSON_SCHEMA_DEFINITION_CACHE_DIR: json_schema_definitions
     #
     # Helper class binding and mappings
@@ -176,5 +178,5 @@ site_info_remote_configuration:
     CONTENT_DEF_HELPER_MODULE: rcsb.db.helpers.ContentDefinitionHelper
     DOCUMENT_DEF_HELPER_MODULE: rcsb.db.helpers.DocumentDefinitionHelper
     CONFIG_APPEND_LOCATOR_PATHS:
-      - https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/config/exdb-config-schema.yml
+      - https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/config/exdb-config-schema.yml
 #

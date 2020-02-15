@@ -217,3 +217,5 @@
  11-Feb-2020  V0.963 Expose upsertFlag on mongo update method wrapper.
  12-Feb-2020  V0.964 Extend entity and entity instance annotations with convalent linkage details
  12-Feb-2020  V0.965 Add model_ids to entry_container_identifiers and update dependencies
+ 14-Feb-2020  V0.966 Add MongoDb maintenance operations, point example config to development branch assets, update enums with
+                     BIRD_MOLECULE_NAME.
