@@ -11,6 +11,7 @@
 #  13-Aug-2019 jdw return class instances in all cases. Add cache management support.
 #   9-Sep-2019 jdw add AtcProvider() and SiftsSummaryProvider()
 #  25-Nov-2019 jdw add CitationReferenceProvider(), ChemCompProvider() and  JournalTitleAbbreviationProvider()'s
+#  16-Feb-2020 jdw add support for configuration of development resources
 ##
 """
 Resource provider for DictMethodHelper tools.
@@ -241,8 +242,9 @@ class DictMethodResourceProvider(SingletonClass):
     def __fetchValidationProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
         logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
         if not self.__vrptP:
+            urlTarget = cfgOb.get("VRPT_DICT_MAPPING_LOCATOR", sectionName=configName)
             dirPath = os.path.join(cachePath, cfgOb.get("DICTIONARY_CACHE_DIR", sectionName=configName))
-            self.__vrptP = ValidationReportProvider(dirPath=dirPath, useCache=useCache)
+            self.__vrptP = ValidationReportProvider(dirPath=dirPath, urlTarget=urlTarget, useCache=useCache)
         #
         return self.__vrptP
 

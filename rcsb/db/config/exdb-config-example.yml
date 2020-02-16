@@ -3,11 +3,12 @@
 #
 # Updated:
 #   15-Feb-2020 - Now referencing py-rcsb_exdb_assets in development branch.
+#   16-Feb-2020 - Move dictionary locators and type and coverage config to site config sections.
 ---
 DEFAULT: {}
 ##
 site_info_configuration:
-    # Site specific path and server configuration options -
+    # Site specific path and server configuration options - (referencing development resources)
     #
     CONFIG_SUPPORT_TOKEN: CONFIG_SUPPORT_TOKEN_ENV
     #
@@ -81,7 +82,20 @@ site_info_configuration:
       rcsb.db.helpers.DictMethodEntityHelper: rcsb.db.helpers.DictMethodEntityHelper
       rcsb.db.helpers.DictMethodAssemblyHelper: rcsb.db.helpers.DictMethodAssemblyHelper
       rcsb.db.helpers.DictMethodEntityInstanceHelper: rcsb.db.helpers.DictMethodEntityInstanceHelper
-
+    # ------ ------ ------ ------ ------ ------ ------ -------
+    # ADDED rcsb.db V0.966 Source dictionary locators -
+    #
+    PDBX_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/mmcif_pdbx_v5_next.dic
+    RCSB_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/rcsb_mmcif_ext_v1.dic
+    IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/ihm-extension.dic
+    FLR_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/flr-extension.dic
+    VRPT_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/vrpt_mmcif_ext.dic
+    VRPT_DICT_MAPPING_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/vrpt_dictmap.json
+    # ------ ------ ------ ------ ------ ------ ------ ------ ------
+    # Added in rcsb.db V0.966 - Data type details and type mapping
+    APP_DATA_TYPE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/data_type_and_coverage/app_data_type_mapping.cif
+    INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH:  https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/data_type_and_coverage
+    #
     CONTENT_DEF_HELPER_MODULE: rcsb.db.helpers.ContentDefinitionHelper
     DOCUMENT_DEF_HELPER_MODULE: rcsb.db.helpers.DocumentDefinitionHelper
     CONFIG_APPEND_LOCATOR_PATHS:
@@ -174,7 +188,20 @@ site_info_remote_configuration:
       rcsb.db.helpers.DictMethodEntityHelper: rcsb.db.helpers.DictMethodEntityHelper
       rcsb.db.helpers.DictMethodAssemblyHelper: rcsb.db.helpers.DictMethodAssemblyHelper
       rcsb.db.helpers.DictMethodEntityInstanceHelper: rcsb.db.helpers.DictMethodEntityInstanceHelper
-
+    #
+    # ADDED rcsb.db V0.966 Source dictionary locators -
+    #
+    PDBX_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionaries/mmcif_pdbx_v5_next.dic
+    RCSB_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionaries/rcsb_mmcif_ext_v1.dic
+    IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionaries/ihm-extension.dic
+    FLR_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionaries/flr-extension.dic
+    VRPT_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionaries/vrpt_mmcif_ext.dic
+    VRPT_DICT_MAPPING_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionaries/vrpt_dictmap.json
+    #
+    # Added in rcsb.db V0.966 - Data type details and type mapping
+    APP_DATA_TYPE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/data_type_and_coverage/app_data_type_mapping.cif
+    INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH:  https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/data_type_and_coverage
+    #
     CONTENT_DEF_HELPER_MODULE: rcsb.db.helpers.ContentDefinitionHelper
     DOCUMENT_DEF_HELPER_MODULE: rcsb.db.helpers.DocumentDefinitionHelper
     CONFIG_APPEND_LOCATOR_PATHS:

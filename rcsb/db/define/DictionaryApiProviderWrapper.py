@@ -70,6 +70,6 @@ class DictionaryApiProviderWrapper(SingletonClass):
             logger.error("Missing dictionary locator configuration for database schema %s", databaseName)
             dictLocators = []
         else:
-            dictLocators = [self.__cfgOb.getPath(configLocator, sectionName=self.__contentInfoConfigName) for configLocator in self.__dictLocatorMap[databaseName]]
+            dictLocators = [self.__cfgOb.getPath(configLocator, sectionName=self.__configName) for configLocator in self.__dictLocatorMap[databaseName]]
         #
         return self.__dP.getApi(dictLocators, **kwargs)

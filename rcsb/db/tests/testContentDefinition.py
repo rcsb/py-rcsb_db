@@ -46,14 +46,13 @@ class ContentDefinitionTests(unittest.TestCase):
         self.__verbose = True
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         self.__pathConfig = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
-        configName = "site_info_configuration"
-        self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
+        self.__configName = "site_info_configuration"
+        self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, defaultSectionName=self.__configName, mockTopPath=self.__mockTopPath)
         #
         #
-        self.__contentInfoConfigName = "content_info_helper_configuration"
-        self.__pathPdbxDictionaryFile = self.__cfgOb.getPath("PDBX_DICT_LOCATOR", sectionName=self.__contentInfoConfigName)
-        self.__pathRcsbDictionaryFile = self.__cfgOb.getPath("RCSB_DICT_LOCATOR", sectionName=self.__contentInfoConfigName)
-        self.__pathVrptDictionaryFile = self.__cfgOb.getPath("VRPT_DICT_LOCATOR", sectionName=self.__contentInfoConfigName)
+        self.__pathPdbxDictionaryFile = self.__cfgOb.getPath("PDBX_DICT_LOCATOR", sectionName=self.__configName)
+        self.__pathRcsbDictionaryFile = self.__cfgOb.getPath("RCSB_DICT_LOCATOR", sectionName=self.__configName)
+        self.__pathVrptDictionaryFile = self.__cfgOb.getPath("VRPT_DICT_LOCATOR", sectionName=self.__configName)
 
         self.__mU = MarshalUtil()
         #

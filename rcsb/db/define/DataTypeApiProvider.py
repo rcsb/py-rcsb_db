@@ -45,7 +45,7 @@ class DataTypeApiProvider(SingletonClass):
         self.__configName = self.__cfgOb.getDefaultSectionName()
         self.__useCache = useCache
         self.__cachePath = cachePath
-        self.__contentInfoConfigName = "content_info_helper_configuration"
+        # self.__contentInfoConfigName = "content_info_helper_configuration"
         self.__fileU = FileUtil()
         self.__contentDefHelper = self.__cfgOb.getHelper("CONTENT_DEF_HELPER_MODULE", sectionName=self.__configName, cfgOb=self.__cfgOb)
         self.__dirPath = os.path.join(cachePath, self.__cfgOb.get("DATA_TYPE_INFO_CACHE_DIR", sectionName=self.__configName))
@@ -63,7 +63,7 @@ class DataTypeApiProvider(SingletonClass):
             (object): Instance of DataTypeInstanceInfo()
         """
         _ = kwargs
-        dataTypeInstanceLocatorPath = self.__cfgOb.getPath("INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH", sectionName=self.__contentInfoConfigName)
+        dataTypeInstanceLocatorPath = self.__cfgOb.getPath("INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH", sectionName=self.__configName)
         dataTypeInstanceFile = self.__contentDefHelper.getDataTypeInstanceFile(databaseName) if self.__contentDefHelper else None
         if dataTypeInstanceLocatorPath and dataTypeInstanceFile:
             loc = os.path.join(dataTypeInstanceLocatorPath, dataTypeInstanceFile)
@@ -85,7 +85,7 @@ class DataTypeApiProvider(SingletonClass):
             (object): Instance of DataTypeApplicationInfo()
         """
         _ = kwargs
-        dataTypeApplicationLocator = self.__cfgOb.getPath("APP_DATA_TYPE_INFO_LOCATOR", sectionName=self.__contentInfoConfigName)
+        dataTypeApplicationLocator = self.__cfgOb.getPath("APP_DATA_TYPE_INFO_LOCATOR", sectionName=self.__configName)
         filePath = self.__reload(dataTypeApplicationLocator, self.__dirPath, useCache=self.__useCache)
         dtApi = DataTypeApplicationInfo(filePath, dataTyping=appName, workPath=self.__dirPath) if filePath else None
         return dtApi
