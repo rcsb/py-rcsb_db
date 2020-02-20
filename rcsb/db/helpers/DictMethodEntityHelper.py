@@ -1346,6 +1346,18 @@ class DictMethodEntityHelper(object):
             logger.exception("Failing for %s with %s", dataContainer.getName(), str(e))
         return bD
 
+    def __getEntityFeatureTypes(self, eType):
+        eTupL = []
+        if eType == "polymer":
+            eTupL = self.__dApi.getEnumListWithDetail("rcsb_polymer_entity_feature_summary", "type")
+        elif eType == "non-polymer":
+            eTupL = self.__dApi.getEnumListWithDetail("rcsb_nonpolymer_entity_feature_summary", "type")
+        elif eType == "branched":
+            eTupL = self.__dApi.getEnumListWithDetail("rcsb_branched_entity_feature_summary", "type")
+        #
+        fTypeL = sorted([tup[0] for tup in eTupL])
+        return fTypeL
+
     def buildEntityFeatureSummary(self, dataContainer, catName, **kwargs):
         """ Build category rcsb_entity_feature_summary (UPDATED)
 
@@ -1377,14 +1389,17 @@ class DictMethodEntityHelper(object):
             fObj = dataContainer.getObj("rcsb_entity_feature")
             #
             entityPolymerLengthD = self.__commonU.getPolymerEntityLengthsEnumerated(dataContainer)
+            eTypeD = self.__commonU.getEntityTypes(dataContainer)
 
             fCountD = OrderedDict()
             fMonomerCountD = OrderedDict()
             for ii in range(fObj.getRowCount()):
                 entityId = fObj.getValue("entity_id", ii)
+                #
                 fType = fObj.getValue("type", ii)
                 fId = fObj.getValue("feature_id", ii)
                 fCountD.setdefault(entityId, {}).setdefault(fType, set()).add(fId)
+
                 #
                 tbegS = fObj.getValueOrDefault("feature_positions_beg_seq_id", ii, defaultValue=None)
                 tendS = fObj.getValueOrDefault("feature_positions_end_seq_id", ii, defaultValue=None)
@@ -1400,24 +1415,33 @@ class DictMethodEntityHelper(object):
                     fMonomerCountD.setdefault(entityId, {}).setdefault(fType, []).append(len(seqIdL))
             #
             ii = 0
-            for entityId, fTypeD in fCountD.items():
-                for fType, fS in fTypeD.items():
+            for entityId, eType in eTypeD.items():
+                fTypes = self.__getEntityFeatureTypes(eType)
+                for fType in fTypes:
                     sObj.setValue(ii + 1, "ordinal", ii)
                     sObj.setValue(entryId, "entry_id", ii)
                     sObj.setValue(entityId, "entity_id", ii)
                     sObj.setValue(fType, "type", ii)
-                    sObj.setValue(len(fS), "count", ii)
+
+                    minL = maxL = None
                     fracC = 0.0
+                    fCount = 0
+                    if entityId in fCountD and fType in fCountD[entityId]:
+                        fCount = len(fCountD[entityId][fType])
+
                     if entityId in fMonomerCountD and fType in fMonomerCountD[entityId] and entityId in entityPolymerLengthD:
                         fracC = float(sum(fMonomerCountD[entityId][fType])) / float(entityPolymerLengthD[entityId])
-                    sObj.setValue(round(fracC, 5), "coverage", ii)
                     #
                     if fType in ["artifact"] and entityId in fMonomerCountD and fType in fMonomerCountD[entityId]:
                         minL = min(fMonomerCountD[entityId][fType])
                         maxL = max(fMonomerCountD[entityId][fType])
+
+                    sObj.setValue(round(fracC, 5), "coverage", ii)
+                    sObj.setValue(fCount, "count", ii)
+                    if minL is not None:
                         sObj.setValue(minL, "minimum_length", ii)
                         sObj.setValue(maxL, "maximum_length", ii)
-
+                    #
                     ii += 1
         except Exception as e:
             logger.exception("Failing with %s", str(e))

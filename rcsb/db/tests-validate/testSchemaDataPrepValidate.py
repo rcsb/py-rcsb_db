@@ -106,7 +106,6 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         }
 
         self.__databaseNameD = {
-
             "pdbx_core": [
                 "pdbx_core_polymer_entity",
                 "pdbx_core_entry",

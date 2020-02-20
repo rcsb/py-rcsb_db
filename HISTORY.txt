@@ -219,3 +219,4 @@
  12-Feb-2020  V0.965 Add model_ids to entry_container_identifiers and update dependencies
  14-Feb-2020  V0.966 Add MongoDb maintenance operations, point example config to development branch assets, update enums with
                      BIRD_MOLECULE_NAME.
+ 19-Feb-2020  V0.967 Initialize zero values for feature counts and coverage

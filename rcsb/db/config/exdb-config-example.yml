@@ -4,11 +4,12 @@
 # Updated:
 #   15-Feb-2020 - Now referencing py-rcsb_exdb_assets in development branch.
 #   16-Feb-2020 - Move dictionary locators and type and coverage config to site config sections.
+#   20-Feb-2020 - IMPORTANT NOTE -- Schema locators in this file now point at a development branch.
 ---
 DEFAULT: {}
 ##
 site_info_configuration:
-    # Site specific path and server configuration options - (referencing development resources)
+    # Site specific path and server configuration options - (REFERENCING DEVELOPMENT RESOURCES)
     #
     CONFIG_SUPPORT_TOKEN: CONFIG_SUPPORT_TOKEN_ENV
     #
@@ -103,6 +104,8 @@ site_info_configuration:
 #
 ##
 site_info_remote_configuration:
+    # Site specific path and server configuration options - (REFERENCING DEVELOPMENT RESOURCES)
+    #
     CONFIG_SUPPORT_TOKEN: CONFIG_SUPPORT_TOKEN_ENV
     #
     # Database server connection details:

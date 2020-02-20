@@ -174,7 +174,30 @@ class DictMethodEntityInstanceHelper(object):
 
         return True
 
-    def buildEntityInstanceFeatureSummary(self, dataContainer, catName, **kwargs):
+    def __initializeInstanceFeatureType(self, dataContainer, asymId, fCountD, countType="set"):
+        instTypeD = self.__commonU.getInstanceTypes(dataContainer)
+        eType = instTypeD[asymId]
+        if eType == "polymer":
+            eTupL = self.__dApi.getEnumListWithDetail("rcsb_polymer_instance_feature_summary", "type")
+        elif eType in ["non-polymer", "water"]:
+            eTupL = self.__dApi.getEnumListWithDetail("rcsb_nonpolymer_instance_feature_summary", "type")
+        elif eType == "branched":
+            eTupL = self.__dApi.getEnumListWithDetail("rcsb_branched_instance_feature_summary", "type")
+        else:
+            logger.error("%r asymId %r eType %r", dataContainer.getName(), asymId, eType)
+        #
+        fTypeL = sorted([tup[0] for tup in eTupL])
+        #
+        for fType in fTypeL:
+            if countType == "set":
+                fCountD.setdefault(asymId, {}).setdefault(fType, set())
+            else:
+                fCountD.setdefault(asymId, {}).setdefault(fType, [])
+            #
+        return fCountD
+
+    # ---- JDW
+    def buildEntityInstanceFeatureSummaryPrev(self, dataContainer, catName, **kwargs):
         """ Build category rcsb_entity_instance_feature_summary (UPDATED)
 
         Example:
@@ -217,6 +240,10 @@ class DictMethodEntityInstanceHelper(object):
             fMonomerCountD = OrderedDict()
             for ii in range(fObj.getRowCount()):
                 asymId = fObj.getValue("asym_id", ii)
+                # ---- initialize counts
+                # fCountD = self.__initializeInstanceFeatureType(dataContainer, asymId, fCountD, countType="set")
+                # fMonomerCountD = self.__initializeInstanceFeatureType(dataContainer, asymId, fMonomerCountD, countType="list")
+                # ----
                 fType = fObj.getValue("type", ii)
                 fId = fObj.getValue("feature_id", ii)
                 fCountD.setdefault(asymId, {}).setdefault(fType, set()).add(fId)
@@ -264,6 +291,7 @@ class DictMethodEntityInstanceHelper(object):
                     if asymId in instIdMapD and "comp_id" in instIdMapD[asymId] and instIdMapD[asymId]["comp_id"]:
                         sObj.setValue(instIdMapD[asymId]["comp_id"], "comp_id", ii)
                     sObj.setValue(fType, "type", ii)
+                    #
                     if fType.startswith("UNOBSERVED") and asymId in fMonomerCountD and fType in fMonomerCountD[asymId]:
                         fCount = sum(fMonomerCountD[asymId][fType])
                     else:
@@ -278,14 +306,16 @@ class DictMethodEntityInstanceHelper(object):
                         and asymId in fMonomerCountD
                         and fType in fMonomerCountD[asymId]
                     ):
-                        minL = min(fMonomerCountD[asymId][fType])
-                        maxL = max(fMonomerCountD[asymId][fType])
+                        minL = min(fMonomerCountD[asymId][fType]) if fMonomerCountD[asymId][fType] else 0
+                        maxL = max(fMonomerCountD[asymId][fType]) if fMonomerCountD[asymId][fType] else 0
                         sObj.setValue(minL, "minimum_length", ii)
                         sObj.setValue(maxL, "maximum_length", ii)
                     ii += 1
         except Exception as e:
             logger.exception("Failing for %s with %s", dataContainer.getName(), str(e))
         return True
+
+    # ---- JDW
 
     def buildEntityInstanceFeatures(self, dataContainer, catName, **kwargs):
         """ Build category rcsb_entity_instance_feature ...
@@ -965,7 +995,8 @@ class DictMethodEntityInstanceHelper(object):
             logger.exception("For %s %r failing with %s", dataContainer.getName(), catName, str(e))
         return False
 
-    def buildInstanceValidationFeatureSummary(self, dataContainer, catName, **kwargs):
+    # --- JDW
+    def buildInstanceValidationFeatureSummaryPrev(self, dataContainer, catName, **kwargs):
         """ Build category rcsb_entity_instance_validation_feature_summary
 
         Example:
@@ -1008,6 +1039,11 @@ class DictMethodEntityInstanceHelper(object):
             fInstanceCountD = OrderedDict()
             for ii in range(fObj.getRowCount()):
                 asymId = fObj.getValue("asym_id", ii)
+                # ---- initialize counts
+                # fCountD = self.__initializeInstanceValidationFeatureType(dataContainer, asymId, fCountD, countType="set")
+                # fMonomerCountD = self.__initializeInstanceValidationFeatureType(dataContainer, asymId, fMonomerCountD, countType="list")
+                # fInstanceCountD = self.__initializeInstanceValidationFeatureType(dataContainer, asymId, fInstanceCountD, countType="list")
+                # ----
                 fType = fObj.getValue("type", ii)
                 fId = fObj.getValue("feature_id", ii)
                 fCountD.setdefault(asymId, {}).setdefault(fType, set()).add(fId)
@@ -1049,6 +1085,7 @@ class DictMethodEntityInstanceHelper(object):
                 entityId = instEntityD[asymId]
                 authAsymId = asymAuthD[asymId]
                 for fType, fS in fTypeD.items():
+                    #
                     sObj.setValue(ii + 1, "ordinal", ii)
                     sObj.setValue(entryId, "entry_id", ii)
                     sObj.setValue(entityId, "entity_id", ii)
@@ -1059,11 +1096,11 @@ class DictMethodEntityInstanceHelper(object):
                     sObj.setValue(fType, "type", ii)
                     fracC = 0.0
                     #
-                    if asymId in fMonomerCountD and fType in fMonomerCountD[asymId]:
+                    if asymId in fMonomerCountD and fType in fMonomerCountD[asymId] and fMonomerCountD[asymId][fType]:
                         fCount = sum(fMonomerCountD[asymId][fType])
                         if asymId in fMonomerCountD and fType in fMonomerCountD[asymId] and entityId in entityPolymerLengthD:
                             fracC = float(sum(fMonomerCountD[asymId][fType])) / float(entityPolymerLengthD[entityId])
-                    elif asymId in fInstanceCountD and fType in fInstanceCountD[asymId]:
+                    elif asymId in fInstanceCountD and fType in fInstanceCountD[asymId] and fInstanceCountD[asymId][fType]:
                         fCount = sum(fInstanceCountD[asymId][fType])
                     else:
                         fCount = len(fS)
@@ -1071,8 +1108,313 @@ class DictMethodEntityInstanceHelper(object):
                     sObj.setValue(fCount, "count", ii)
                     sObj.setValue(round(fracC, 5), "coverage", ii)
                     #
-
                     ii += 1
+
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return True
+
+    def __initializeInstanceValidationFeatureType(self, dataContainer, asymId, fCountD, countType="set"):
+        instTypeD = self.__commonU.getInstanceTypes(dataContainer)
+        eType = instTypeD[asymId]
+        # rcsb_entity_instance_validation_feature_summary.type
+        if eType == "polymer":
+            eTupL = self.__dApi.getEnumListWithDetail("rcsb_entity_instance_validation_feature_summary", "type")
+        elif eType in ["non-polymer", "water"]:
+            eTupL = self.__dApi.getEnumListWithDetail("rcsb_entity_instance_validation_feature_summary", "type")
+        elif eType == "branched":
+            eTupL = self.__dApi.getEnumListWithDetail("rcsb_entity_instance_validation_feature_summary", "type")
+        else:
+            logger.error("%r asymId %r eType %r", dataContainer.getName(), asymId, eType)
+        #
+        fTypeL = sorted([tup[0] for tup in eTupL])
+        #
+        for fType in fTypeL:
+            if countType == "set":
+                fCountD.setdefault(asymId, {}).setdefault(fType, set())
+            else:
+                fCountD.setdefault(asymId, {}).setdefault(fType, [])
+            #
+        return fCountD
+
+    # --- JDW
+    def __getInstanceFeatureTypes(self, eType):
+        #
+        vTupL = self.__dApi.getEnumListWithDetail("rcsb_entity_instance_validation_feature_summary", "type")
+        if eType == "polymer":
+            eTupL = self.__dApi.getEnumListWithDetail("rcsb_polymer_instance_feature_summary", "type")
+        elif eType in ["non-polymer", "water"]:
+            eTupL = self.__dApi.getEnumListWithDetail("rcsb_nonpolymer_instance_feature_summary", "type")
+        elif eType == "branched":
+            eTupL = self.__dApi.getEnumListWithDetail("rcsb_branched_instance_feature_summary", "type")
+        else:
+            logger.error("Unexpected eType %r -- no features types provided", eType)
+            eTupL = []
+        # Distinct elements in the instance specific categories. (remove validation types)
+        vTypeL = sorted([tup[0] for tup in vTupL])
+        iTypeL = sorted([tup[0] for tup in eTupL])
+        fTypeL = sorted(set(iTypeL) - set(vTypeL))
+        return fTypeL
+
+    def __getInstanceValidationFeatureTypes(self, eType):
+        #
+        vTupL = self.__dApi.getEnumListWithDetail("rcsb_entity_instance_validation_feature_summary", "type")
+        if eType == "polymer":
+            eTupL = self.__dApi.getEnumListWithDetail("rcsb_polymer_instance_feature_summary", "type")
+        elif eType in ["non-polymer", "water"]:
+            eTupL = self.__dApi.getEnumListWithDetail("rcsb_nonpolymer_instance_feature_summary", "type")
+        elif eType == "branched":
+            eTupL = self.__dApi.getEnumListWithDetail("rcsb_branched_instance_feature_summary", "type")
+        else:
+            logger.error("Unexpected eType %r -- no features types provided", eType)
+            eTupL = []
+        # Common elements in the instance specific categories.
+        vTypeL = sorted([tup[0] for tup in vTupL])
+        iTypeL = sorted([tup[0] for tup in eTupL])
+        fTypeL = sorted(set(vTypeL).intersection(iTypeL))
+        return fTypeL
+
+    # --- JDW
+    def buildEntityInstanceFeatureSummary(self, dataContainer, catName, **kwargs):
+        """ Build category rcsb_entity_instance_feature_summary (UPDATED)
+
+        Example:
+
+            loop_
+            _rcsb_entity_instance_feature_summary.ordinal
+            _rcsb_entity_instance_feature_summary.entry_id
+            _rcsb_entity_instance_feature_summary.entity_id
+            _rcsb_entity_instance_feature_summary.asym_id
+            _rcsb_entity_instance_feature_summary.auth_asym_id
+            #
+            _rcsb_entity_instance_feature_summary.type
+            _rcsb_entity_instance_feature_summary.count
+            _rcsb_entity_instance_feature_summary.coverage
+            # ...
+        """
+        logger.debug("Starting with %r %r %r", dataContainer.getName(), catName, kwargs)
+        try:
+            if catName != "rcsb_entity_instance_feature_summary":
+                return False
+            if not dataContainer.exists("rcsb_entity_instance_feature") and not dataContainer.exists("entry"):
+                return False
+
+            if not dataContainer.exists(catName):
+                dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
+            #
+            eObj = dataContainer.getObj("entry")
+            entryId = eObj.getValue("id", 0)
+            #
+            sObj = dataContainer.getObj(catName)
+            fObj = dataContainer.getObj("rcsb_entity_instance_feature")
+            #
+            instEntityD = self.__commonU.getInstanceEntityMap(dataContainer)
+            entityPolymerLengthD = self.__commonU.getPolymerEntityLengthsEnumerated(dataContainer)
+            # typeList = self.__dApi.getEnumList("rcsb_entity_instance_feature_summary", "type", sortFlag=True)
+            asymAuthD = self.__commonU.getAsymAuthIdMap(dataContainer)
+            instIdMapD = self.__commonU.getInstanceIdMap(dataContainer)
+            instTypeD = self.__commonU.getInstanceTypes(dataContainer)
+            #
+            fCountD = OrderedDict()
+            fMonomerCountD = OrderedDict()
+            for ii in range(fObj.getRowCount()):
+                asymId = fObj.getValue("asym_id", ii)
+                # ---- initialize counts
+                # fCountD = self.__initializeInstanceFeatureType(dataContainer, asymId, fCountD, countType="set")
+                # fMonomerCountD = self.__initializeInstanceFeatureType(dataContainer, asymId, fMonomerCountD, countType="list")
+                # ----
+                fType = fObj.getValue("type", ii)
+                fId = fObj.getValue("feature_id", ii)
+                fCountD.setdefault(asymId, {}).setdefault(fType, set()).add(fId)
+                #
+                tbegS = fObj.getValueOrDefault("feature_positions_beg_seq_id", ii, defaultValue=None)
+                tendS = fObj.getValueOrDefault("feature_positions_end_seq_id", ii, defaultValue=None)
+                if fObj.hasAttribute("feature_positions_beg_seq_id") and tbegS is not None and fObj.hasAttribute("feature_positions_end_seq_id") and tendS is not None:
+                    begSeqIdL = str(fObj.getValue("feature_positions_beg_seq_id", ii)).split(";")
+                    endSeqIdL = str(fObj.getValue("feature_positions_end_seq_id", ii)).split(";")
+                    monCount = 0
+                    for begSeqId, endSeqId in zip(begSeqIdL, endSeqIdL):
+                        try:
+                            monCount += abs(int(endSeqId) - int(begSeqId) + 1)
+                        except Exception:
+                            logger.warning(
+                                "%s fType %r fId %r bad sequence begSeqIdL %r endSeqIdL %r tbegS %r tendS %r",
+                                dataContainer.getName(),
+                                fType,
+                                fId,
+                                begSeqIdL,
+                                endSeqIdL,
+                                tbegS,
+                                tendS,
+                            )
+
+                    fMonomerCountD.setdefault(asymId, {}).setdefault(fType, []).append(monCount)
+                elif fObj.hasAttribute("feature_positions_beg_seq_id") and tbegS:
+                    seqIdL = str(fObj.getValue("feature_positions_beg_seq_id", ii)).split(";")
+                    fMonomerCountD.setdefault(asymId, {}).setdefault(fType, []).append(len(seqIdL))
+            #
+            logger.debug("%s fCountD %r", entryId, fCountD)
+            #
+
+            ii = 0
+            for asymId, entityId in instEntityD.items():
+                eType = instTypeD[asymId]
+                authAsymId = asymAuthD[asymId]
+                fTypeL = self.__getInstanceFeatureTypes(eType)
+                # All entity type specific features
+                for fType in fTypeL:
+                    sObj.setValue(ii + 1, "ordinal", ii)
+                    sObj.setValue(entryId, "entry_id", ii)
+                    sObj.setValue(entityId, "entity_id", ii)
+                    sObj.setValue(asymId, "asym_id", ii)
+                    sObj.setValue(authAsymId, "auth_asym_id", ii)
+                    # add comp
+                    if asymId in instIdMapD and "comp_id" in instIdMapD[asymId] and instIdMapD[asymId]["comp_id"]:
+                        sObj.setValue(instIdMapD[asymId]["comp_id"], "comp_id", ii)
+                    sObj.setValue(fType, "type", ii)
+                    fracC = 0.0
+                    minL = maxL = 0
+                    if asymId in fMonomerCountD and fType in fMonomerCountD[asymId]:
+                        if fType.startswith("UNOBSERVED"):
+                            fCount = sum(fMonomerCountD[asymId][fType])
+                        else:
+                            fCount = len(fCountD[asymId][fType])
+
+                        if entityId in entityPolymerLengthD:
+                            fracC = float(sum(fMonomerCountD[asymId][fType])) / float(entityPolymerLengthD[entityId])
+
+                        if fType in ["CATH", "SCOP", "HELIX_P", "SHEET", "UNASSIGNED_SEC_STRUCT", "UNOBSERVED_RESIDUE_XYZ", "ZERO_OCCUPANCY_RESIDUE_XYZ"]:
+                            minL = min(fMonomerCountD[asymId][fType])
+                            maxL = max(fMonomerCountD[asymId][fType])
+                    elif asymId in fCountD and fType in fCountD[asymId] and fCountD[asymId][fType]:
+                        fCount = len(fCountD[asymId][fType])
+                    else:
+                        fCount = 0
+                    sObj.setValue(fCount, "count", ii)
+                    sObj.setValue(round(fracC, 5), "coverage", ii)
+                    if minL is not None:
+                        sObj.setValue(minL, "minimum_length", ii)
+                        sObj.setValue(maxL, "maximum_length", ii)
+                    ii += 1
+        except Exception as e:
+            logger.exception("Failing for %s with %s", dataContainer.getName(), str(e))
+        return True
+
+    def buildInstanceValidationFeatureSummary(self, dataContainer, catName, **kwargs):
+        """ Build category rcsb_entity_instance_validation_feature_summary
+
+        Example:
+
+            loop_
+            _rcsb_entity_instance_validation_feature_summary.ordinal
+            _rcsb_entity_instance_validation_feature_summary.entry_id
+            _rcsb_entity_instance_validation_feature_summary.entity_id
+            _rcsb_entity_instance_validation_feature_summary.asym_id
+            _rcsb_entity_instance_validation_feature_summary.auth_asym_id
+            _rcsb_entity_instance_validation_feature_summary.type
+            _rcsb_entity_instance_validation_feature_summary.count
+            _rcsb_entity_instance_validation_feature_summary.coverage
+            # ...
+        """
+        logger.debug("Starting with %r %r %r", dataContainer.getName(), catName, kwargs)
+        try:
+            if catName != "rcsb_entity_instance_validation_feature_summary":
+                return False
+            if not dataContainer.exists("rcsb_entity_instance_validation_feature") and not dataContainer.exists("entry"):
+                return False
+
+            if not dataContainer.exists(catName):
+                dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
+            #
+            eObj = dataContainer.getObj("entry")
+            entryId = eObj.getValue("id", 0)
+            #
+            sObj = dataContainer.getObj(catName)
+            fObj = dataContainer.getObj("rcsb_entity_instance_validation_feature")
+            #
+            instIdMapD = self.__commonU.getInstanceIdMap(dataContainer)
+            instEntityD = self.__commonU.getInstanceEntityMap(dataContainer)
+            entityPolymerLengthD = self.__commonU.getPolymerEntityLengthsEnumerated(dataContainer)
+            asymAuthD = self.__commonU.getAsymAuthIdMap(dataContainer)
+            instTypeD = self.__commonU.getInstanceTypes(dataContainer)
+
+            fCountD = OrderedDict()
+            fMonomerCountD = OrderedDict()
+            fInstanceCountD = OrderedDict()
+            for ii in range(fObj.getRowCount()):
+                asymId = fObj.getValue("asym_id", ii)
+                fType = fObj.getValue("type", ii)
+                fId = fObj.getValue("feature_id", ii)
+                fCountD.setdefault(asymId, {}).setdefault(fType, set()).add(fId)
+                #
+                tbegS = fObj.getValueOrDefault("feature_positions_beg_seq_id", ii, defaultValue=None)
+                tendS = fObj.getValueOrDefault("feature_positions_end_seq_id", ii, defaultValue=None)
+                if fObj.hasAttribute("feature_positions_beg_seq_id") and tbegS is not None and fObj.hasAttribute("feature_positions_end_seq_id") and tendS is not None:
+                    begSeqIdL = str(fObj.getValue("feature_positions_beg_seq_id", ii)).split(";")
+                    endSeqIdL = str(fObj.getValue("feature_positions_end_seq_id", ii)).split(";")
+                    monCount = 0
+                    for begSeqId, endSeqId in zip(begSeqIdL, endSeqIdL):
+                        try:
+                            monCount += abs(int(endSeqId) - int(begSeqId) + 1)
+                        except Exception:
+                            logger.warning(
+                                "In %s fType %r fId %r bad sequence range begSeqIdL %r endSeqIdL %r tbegS %r tendS %r",
+                                dataContainer.getName(),
+                                fType,
+                                fId,
+                                begSeqIdL,
+                                endSeqIdL,
+                                tbegS,
+                                tendS,
+                            )
+                    fMonomerCountD.setdefault(asymId, {}).setdefault(fType, []).append(monCount)
+                elif fObj.hasAttribute("feature_positions_beg_seq_id") and tbegS:
+                    seqIdL = str(fObj.getValue("feature_positions_beg_seq_id", ii)).split(";")
+                    fMonomerCountD.setdefault(asymId, {}).setdefault(fType, []).append(len(seqIdL))
+
+                tS = fObj.getValueOrDefault("feature_value_details", ii, defaultValue=None)
+                if fObj.hasAttribute("feature_value_details") and tS is not None:
+                    dL = str(fObj.getValue("feature_value_details", ii)).split(";")
+                    fInstanceCountD.setdefault(asymId, {}).setdefault(fType, []).append(len(dL))
+            #
+            ii = 0
+            # Summarize all instances -
+            for asymId, entityId in instEntityD.items():
+                eType = instTypeD[asymId]
+                authAsymId = asymAuthD[asymId]
+                fTypeL = self.__getInstanceValidationFeatureTypes(eType)
+                # All entity type specific features
+                for fType in fTypeL:
+                    #
+                    sObj.setValue(ii + 1, "ordinal", ii)
+                    sObj.setValue(entryId, "entry_id", ii)
+                    sObj.setValue(entityId, "entity_id", ii)
+                    sObj.setValue(asymId, "asym_id", ii)
+                    if asymId in instIdMapD and "comp_id" in instIdMapD[asymId] and instIdMapD[asymId]["comp_id"]:
+                        sObj.setValue(instIdMapD[asymId]["comp_id"], "comp_id", ii)
+                    sObj.setValue(authAsymId, "auth_asym_id", ii)
+                    sObj.setValue(fType, "type", ii)
+                    #
+                    # Sum features of different granularities
+                    #
+                    fracC = 0.0
+                    if asymId in fMonomerCountD and fType in fMonomerCountD[asymId] and fMonomerCountD[asymId][fType]:
+                        fCount = sum(fMonomerCountD[asymId][fType])
+                        if asymId in fMonomerCountD and fType in fMonomerCountD[asymId] and entityId in entityPolymerLengthD:
+                            fracC = float(sum(fMonomerCountD[asymId][fType])) / float(entityPolymerLengthD[entityId])
+                    elif asymId in fInstanceCountD and fType in fInstanceCountD[asymId] and fInstanceCountD[asymId][fType]:
+                        fCount = sum(fInstanceCountD[asymId][fType])
+                    elif asymId in fCountD and fType in fCountD[asymId] and fCountD[asymId][fType]:
+                        fCount = len(fCountD[asymId][fType])
+                    else:
+                        # default zero value
+                        fCount = 0
+                    #
+                    sObj.setValue(fCount, "count", ii)
+                    sObj.setValue(round(fracC, 5), "coverage", ii)
+                    #
+                    ii += 1
+
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return True
