@@ -578,7 +578,8 @@ class DictMethodEntityHelper(object):
                         # add check for missing values here
                         if at in ["rcsb_gene_name_value"] and v[ii] and v[ii] not in [".", "?"]:
                             tgL = v[ii].split(",")
-                            cObj.setValue(";".join(tgL), at, iRow)
+                            fgL = self.__filterCaseDuplicates(tgL)
+                            cObj.setValue(";".join(fgL), at, iRow)
                             cObj.setValue(";".join([provSource for jj in range(len(tgL))]), "rcsb_gene_name_provenance_source", iRow)
                         else:
                             cObj.setValue(v[ii], at, iRow)
@@ -599,7 +600,8 @@ class DictMethodEntityHelper(object):
                             #
                             cnL = taxU.getCommonNames(taxId)
                             if cnL:
-                                cObj.setValue(";".join(list(OrderedDict.fromkeys(cnL))), "ncbi_common_names", iRow)
+                                fcnL = self.__filterCaseDuplicates(cnL)
+                                cObj.setValue(";".join(list(OrderedDict.fromkeys(fcnL))), "ncbi_common_names", iRow)
                             # Add lineage -
                             linL = taxU.getLineageWithNames(taxId)
                             if linL is not None:
@@ -1084,7 +1086,11 @@ class DictMethodEntityHelper(object):
                 nmL = str(eObj.getValue("pdbx_description", ii)).split(",")
                 nmL = self.__cleanupCsv(nmL)
                 nmL = [tV.strip() for tV in nmL if len(tV) > 3]
+                nmLookUpD = {}
                 for nm in nmL:
+                    if nm.upper() in nmLookUpD:
+                        continue
+                    nmLookUpD[nm.upper()] = True
                     nameL.append(nm)
                     sourceL.append("PDB Preferred Name")
                     provCodeL.append("ECO:0000304")
@@ -1102,6 +1108,9 @@ class DictMethodEntityHelper(object):
                     ncL = self.__cleanupCsv(ncL)
                     ncL = [tV.strip() for tV in ncL if len(tV) > 3]
                     for nc in ncL:
+                        if nc.upper() in nmLookUpD:
+                            continue
+                        nmLookUpD[nc.upper()] = True
                         nameL.append(nc)
                         sourceL.append("PDB Synonym")
                         provCodeL.append("ECO:0000303")
@@ -1109,6 +1118,9 @@ class DictMethodEntityHelper(object):
                 #
                 if entityId in birdNameD:
                     for nm in birdNameD[entityId]:
+                        if nm.upper() in nmLookUpD:
+                            continue
+                        nmLookUpD[nm.upper()] = True
                         nameL.append(nm)
                         sourceL.append("PDB BIRD Name")
                         provCodeL.append("ECO:0000303")
@@ -1170,6 +1182,20 @@ class DictMethodEntityHelper(object):
         except Exception:
             pass
         return rL
+
+    def __filterCaseDuplicates(self, inpSL):
+        oL = []
+        try:
+            lookUpD = {}
+            for inpS in inpSL:
+                if inpS.upper() in lookUpD:
+                    continue
+                lookUpD[inpS.upper()] = True
+                oL.append(inpS)
+        except Exception:
+            return inpSL
+
+        return oL
 
     def __getAttribList(self, sObj, atTupL):
         atL = []

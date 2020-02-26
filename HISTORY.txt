@@ -220,3 +220,5 @@
  14-Feb-2020  V0.966 Add MongoDb maintenance operations, point example config to development branch assets, update enums with
                      BIRD_MOLECULE_NAME.
  19-Feb-2020  V0.967 Initialize zero values for feature counts and coverage
+ 26-Feb-2020  V0.968 Add missing provenance source for rcsb_chem_comp_synonyms, filter case duplicates for taxonomy common
+                     names, entity descriptions, and gene names.

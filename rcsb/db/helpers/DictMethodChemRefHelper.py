@@ -567,7 +567,7 @@ class DictMethodChemRefHelper(object):
             #
             # Create the new target category
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=["comp_id", "ordinal", "name", "provenance_code"]))
+                dataContainer.append(DataCategory(catName, attributeNameList=["comp_id", "ordinal", "name", "provenance_source"]))
             else:
                 # remove the rowlist -
                 pass
@@ -588,15 +588,26 @@ class DictMethodChemRefHelper(object):
             wObj.setValue(ccId, "comp_id", iRow)
             wObj.setValue(ccName, "name", iRow)
             wObj.setValue(iRow + 1, "ordinal", iRow)
-            wObj.setValue(provCode, "provenance_code", iRow)
+            wObj.setValue(provCode, "provenance_source", iRow)
             iRow += 1
+            #
+            if dataContainer.exists("pdbx_chem_comp_synoynms"):
+                qObj = dataContainer.getObj("pdbx_chem_comp_synoynms")
+                for ii in range(qObj.getRowCount()):
+                    nm = qObj.getValue("name", ii)
+                    wObj.setValue(ccId, "comp_id", iRow)
+                    wObj.setValue(nm, "name", iRow)
+                    wObj.setValue(iRow + 1, "ordinal", iRow)
+                    wObj.setValue(provCode, "provenance_source", iRow)
+                    iRow += 1
+
             for nm in ccSynonymL:
                 if nm in ["?", "."]:
                     continue
                 wObj.setValue(ccId, "comp_id", iRow)
                 wObj.setValue(nm, "name", iRow)
                 wObj.setValue(iRow + 1, "ordinal", iRow)
-                wObj.setValue(provCode, "provenance_code", iRow)
+                wObj.setValue(provCode, "provenance_source", iRow)
                 iRow += 1
             #
             ccIObj = dataContainer.getObj("pdbx_chem_comp_identifier")
@@ -606,7 +617,7 @@ class DictMethodChemRefHelper(object):
                 wObj.setValue(ccId, "comp_id", iRow)
                 wObj.setValue(nm, "name", iRow)
                 wObj.setValue(iRow + 1, "ordinal", iRow)
-                wObj.setValue(prog, "provenance_code", iRow)
+                wObj.setValue(prog, "provenance_source", iRow)
                 iRow += 1
             #
             rP = kwargs.get("resourceProvider")
@@ -621,7 +632,7 @@ class DictMethodChemRefHelper(object):
                         wObj.setValue(ccId, "comp_id", iRow)
                         wObj.setValue(nm, "name", iRow)
                         wObj.setValue(iRow + 1, "ordinal", iRow)
-                        wObj.setValue("DrugBank", "provenance_code", iRow)
+                        wObj.setValue("DrugBank", "provenance_source", iRow)
                         iRow += 1
 
             return True

@@ -1216,6 +1216,7 @@ class DictMethodEntityInstanceHelper(object):
             instTypeD = self.__commonU.getInstanceTypes(dataContainer)
             #
             fCountD = OrderedDict()
+            fValuesD = OrderedDict()
             fMonomerCountD = OrderedDict()
             for ii in range(fObj.getRowCount()):
                 asymId = fObj.getValue("asym_id", ii)
@@ -1252,6 +1253,16 @@ class DictMethodEntityInstanceHelper(object):
                 elif fObj.hasAttribute("feature_positions_beg_seq_id") and tbegS:
                     seqIdL = str(fObj.getValue("feature_positions_beg_seq_id", ii)).split(";")
                     fMonomerCountD.setdefault(asymId, {}).setdefault(fType, []).append(len(seqIdL))
+                # JDW
+                elif fObj.hasAttribute("feature_value_reported"):
+                    tValue = fObj.getValueOrDefault("feature_value_reported", ii, defaultValue=None)
+                    if tValue:
+                        try:
+                            tvL = [float(t) for t in tValue.split(";")]
+                            fValuesD.setdefault(asymId, {}).setdefault(fType, []).extend(tvL)
+                        except Exception:
+                            pass
+
             #
             logger.debug("%s fCountD %r", entryId, fCountD)
             #
@@ -1286,15 +1297,30 @@ class DictMethodEntityInstanceHelper(object):
                         if fType in ["CATH", "SCOP", "HELIX_P", "SHEET", "UNASSIGNED_SEC_STRUCT", "UNOBSERVED_RESIDUE_XYZ", "ZERO_OCCUPANCY_RESIDUE_XYZ"]:
                             minL = min(fMonomerCountD[asymId][fType])
                             maxL = max(fMonomerCountD[asymId][fType])
+
                     elif asymId in fCountD and fType in fCountD[asymId] and fCountD[asymId][fType]:
                         fCount = len(fCountD[asymId][fType])
                     else:
                         fCount = 0
+                    #
+                    minV = maxV = 0
+                    if asymId in fValuesD and fType in fValuesD[asymId]:
+                        if fType in ["HAS_COVALENT_LINKAGE", "HAS_METAL_COORDINATION_LINKAGE"]:
+                            try:
+                                minV = min(fValuesD[asymId][fType])
+                                maxV = max(fValuesD[asymId][fType])
+                            except Exception:
+                                pass
+
                     sObj.setValue(fCount, "count", ii)
                     sObj.setValue(round(fracC, 5), "coverage", ii)
                     if minL is not None:
                         sObj.setValue(minL, "minimum_length", ii)
                         sObj.setValue(maxL, "maximum_length", ii)
+                    if minV is not None:
+                        sObj.setValue(minV, "minimum_value", ii)
+                        sObj.setValue(maxV, "maximum_value", ii)
+                    #
                     ii += 1
         except Exception as e:
             logger.exception("Failing for %s with %s", dataContainer.getName(), str(e))
