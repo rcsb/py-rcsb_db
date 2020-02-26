@@ -572,6 +572,11 @@ class DictMethodChemRefHelper(object):
                 # remove the rowlist -
                 pass
             #
+            pTupL = self.__dApi.getEnumListWithDetail(catName, "provenance_source")
+            provLookupD = {pTup[0].upper(): pTup[0] for pTup in pTupL}
+            provLookupD["ACD-LABS"] = "ACDLabs"
+            provLookupD["PDB"] = "PDB Reference Data"
+
             wObj = dataContainer.getObj(catName)
             #
             # Get all of the names relevant names from the definition -
@@ -614,11 +619,15 @@ class DictMethodChemRefHelper(object):
             for ii in range(ccIObj.getRowCount()):
                 nm = ccIObj.getValue("identifier", ii)
                 prog = ccIObj.getValue("program", ii)
-                wObj.setValue(ccId, "comp_id", iRow)
-                wObj.setValue(nm, "name", iRow)
-                wObj.setValue(iRow + 1, "ordinal", iRow)
-                wObj.setValue(prog, "provenance_source", iRow)
-                iRow += 1
+                if prog and prog.upper() in provLookupD:
+                    sProg = provLookupD[prog.upper()]
+                    wObj.setValue(ccId, "comp_id", iRow)
+                    wObj.setValue(nm, "name", iRow)
+                    wObj.setValue(iRow + 1, "ordinal", iRow)
+                    wObj.setValue(sProg, "provenance_source", iRow)
+                    iRow += 1
+                else:
+                    logger.error("%s unknown provenance %r", ccId, prog)
             #
             rP = kwargs.get("resourceProvider")
             dbProvider = rP.getResource("DrugBankProvider instance") if rP else None
