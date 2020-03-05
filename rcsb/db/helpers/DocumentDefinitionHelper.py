@@ -387,6 +387,8 @@ class DocumentDefinitionHelper(object):
                 for nD in nDL:
                     if "CONTEXT_ATTRIBUTE_NAMES" in nD and "NAME" in nD:
                         catD[nD["CATEGORY"]] = {"CONTEXT_NAME": nD["NAME"], "CONTEXT_PATHS": nD["CONTEXT_ATTRIBUTE_NAMES"], "FIRST_CONTEXT_PATH": nD["CONTEXT_ATTRIBUTE_NAMES"][0]}
+                    elif "NAME" in nD:
+                        catD[nD["CATEGORY"]] = {"CONTEXT_NAME": nD["NAME"], "CONTEXT_PATHS": [], "FIRST_CONTEXT_PATH": None}
                 cD[collectionName] = catD
         except Exception as e:
             logger.exception("Failing with %s", str(e))

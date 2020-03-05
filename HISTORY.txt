@@ -222,3 +222,4 @@
  19-Feb-2020  V0.967 Initialize zero values for feature counts and coverage
  26-Feb-2020  V0.968 Add missing provenance source for rcsb_chem_comp_synonyms, filter case duplicates for taxonomy common
                      names, entity descriptions, and gene names.
+  5-Mar-2020  V0.969 Allow category nested contexts
