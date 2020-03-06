@@ -67,7 +67,7 @@ jobs:
       #
       - script: sudo apt-get update
         displayName: 'update apt'
-      - script: sudo apt-get upgrade --fix-mising
+      - script: sudo apt-get upgrade
         displayName: 'upgrade apt'
       - script: sudo apt-get update
         displayName: 'update apt'
