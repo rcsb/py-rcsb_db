@@ -73,20 +73,7 @@ class SchemaProviderTests(unittest.TestCase):
                     if encodingType.lower() == "rcsb":
                         continue
                     for level in self.__validationLevels:
-                        logger.info("Loading ->%s %s %s %s", databaseName, collectionName, encodingType, level)
-                        sD = self.__schP.getJsonSchema(databaseName, collectionName, encodingType=encodingType, level=level)
-                        self.assertTrue(sD is not None)
-
-    def testSchemaAccessAdhoc(self):
-        for databaseName in ["uniprot_core"]:
-            cDL = self.__docHelper.getCollectionInfo(databaseName)
-            for cD in cDL:
-                collectionName = cD["NAME"]
-                for encodingType in self.__encodingTypes:
-                    if encodingType.lower() == "rcsb":
-                        continue
-                    for level in self.__validationLevels:
-                        logger.info("Loading ->%s %s %s %s", databaseName, collectionName, encodingType, level)
+                        logger.debug("Loading ->%s %s %s %s", databaseName, collectionName, encodingType, level)
                         sD = self.__schP.getJsonSchema(databaseName, collectionName, encodingType=encodingType, level=level)
                         self.assertTrue(sD is not None)
 
@@ -94,7 +81,6 @@ class SchemaProviderTests(unittest.TestCase):
 def schemaProviderSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(SchemaProviderTests("testSchemaAccessDefault"))
-    suiteSelect.addTest(SchemaProviderTests("testSchemaAccessAdhoc"))
     return suiteSelect
 
 
