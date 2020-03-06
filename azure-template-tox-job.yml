@@ -65,7 +65,9 @@ jobs:
       - script: apt-cache policy | grep http | awk '{print $2 $3}' | sort -u
         displayName: 'Checking for repos'
       #
-      - script: sudo apt-get upgrade
+      - script: sudo apt-get update
+        displayName: 'update apt'
+      - script: sudo apt-get upgrade --fix-mising
         displayName: 'upgrade apt'
       - script: sudo apt-get update
         displayName: 'update apt'
