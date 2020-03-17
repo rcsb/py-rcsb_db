@@ -64,6 +64,7 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
+# pylint: disable=too-many-lines
 
 import logging
 from string import capwords
@@ -972,3 +973,37 @@ class DictMethodEntryHelper(object):
                     if self.__commonU.isFloat(rv):
                         rL.append(rv)
         return rL
+
+    def addCategoryPrimaryCitation(self, dataContainer, blockName, **kwargs):
+        """
+        Add  rcsb_primary_citation category as a copy or the citation category
+        with rcsb extensions.
+        """
+        try:
+            logger.debug("Starting with %r %r %r", dataContainer.getName(), blockName, kwargs)
+            # Exit if source categories are missing
+            if not dataContainer.exists("citation"):
+                return False
+            cObj = dataContainer.getObj("citation")
+            catName = "rcsb_primary_citation"
+            #
+            # Create the new target category rcsb_entry_info
+            if not dataContainer.exists(catName):
+                dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
+            # --------------------------------------------------------------------------------------------------------
+            # catName = rcsb_entry_info
+            rObj = dataContainer.getObj(catName)
+            atNameList = self.__dApi.getAttributeNameList(catName)
+            logger.debug("Category %s dict attributes %r", catName, atNameList)
+            #
+            for ii in range(cObj.getRowCount()):
+                pv = cObj.getValue("id", ii)
+                if pv.upper() == "PRIMARY":
+                    for atName in atNameList:
+                        if cObj.hasAttribute(atName):
+                            rObj.setValue(cObj.getValue(atName, ii), atName, 0)
+
+            return True
+        except Exception as e:
+            logger.exception("%s %s failing with %s", dataContainer.getName(), catName, str(e))
+        return False

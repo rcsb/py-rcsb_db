@@ -2242,6 +2242,19 @@ class DictMethodCommonUtils(object):
                     authAsymId = srsObj.getValue("pdbx_strand_id", iRow)
                     dbSeqIdBeg = srsObj.getValue("db_align_beg", iRow)
                     dbSeqIdEnd = srsObj.getValue("db_align_end", iRow)
+                    # ----
+                    try:
+                        idbSeqIdBeg = int(dbSeqIdBeg)
+                        if idbSeqIdBeg == 0:
+                            idbSeqIdBeg = 1
+                            dbSeqIdBeg = str(idbSeqIdBeg)
+                            idbSeqIdEnd = int(dbSeqIdEnd)
+                            idbSeqIdEnd += 1
+                            dbSeqIdEnd = str(idbSeqIdEnd)
+                            logger.info("%s offset reference sequence database position", dataContainer.getName())
+                    except Exception:
+                        pass
+                    # ----
                     #
                     tS = srsObj.getValue("pdbx_db_accession", iRow)
                     # use the parent pdbx_accession
