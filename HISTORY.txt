@@ -223,3 +223,4 @@
  26-Feb-2020  V0.968 Add missing provenance source for rcsb_chem_comp_synonyms, filter case duplicates for taxonomy common
                      names, entity descriptions, and gene names.
   5-Mar-2020  V0.969 Allow category nested contexts and remote tests for uniprot-core
+ 17-Mar-2020  V0.970 Add separate primary citation category and offset for zero based sequence database references
