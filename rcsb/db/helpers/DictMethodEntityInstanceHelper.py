@@ -32,7 +32,8 @@ class DictMethodEntityInstanceHelper(object):
     def __init__(self, **kwargs):
         """
         Args:
-            **kwargs: (dict)  Placeholder for future key-value arguments
+            resourceProvider: (obj) instance of DictMethodResourceProvider()
+            raiseExceptions: (bool, optional) flag to raise rather than handle exceptions
 
         """
         #

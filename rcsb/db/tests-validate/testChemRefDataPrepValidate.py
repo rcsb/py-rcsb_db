@@ -66,8 +66,8 @@ class ChemRefDataPrepValidateTests(unittest.TestCase):
             collectionNames = ["drugbank_core"]
             user = self.__cfgOb.get("_DRUGBANK_AUTH_USERNAME", sectionName=self.__configName)
             pw = self.__cfgOb.get("_DRUGBANK_AUTH_PASSWORD", sectionName=self.__configName)
-            cacheDir = self.__cfgOb.get("DRUGBANK_CACHE_DIR", sectionName=self.__configName)
-            dbP = DrugBankProvider(dirPath=os.path.join(self.__cachePath, cacheDir), useCache=True, username=user, password=pw)
+            # cacheDir = self.__cfgOb.get("DRUGBANK_CACHE_DIR", sectionName=self.__configName)
+            dbP = DrugBankProvider(cachePath=self.__cachePath, useCache=True, username=user, password=pw)
             # idD = dbP.getMapping()
             # crExt = ChemRefExtractor(self.__cfgOb)
             # idD = crExt.getChemCompAccesionMapping(extResource)

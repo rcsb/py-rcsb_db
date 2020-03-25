@@ -40,7 +40,8 @@ class DocumentDefinitionHelper(object):
     def __init__(self, **kwargs):
         """
         Args:
-            **kwargs: (below)
+            cfgOb (obj): instance of ConfigInfo()
+            config_section (str): target configuration section name
 
         """
         # ----

@@ -41,7 +41,7 @@ class DictMethodEntityHelper(object):
     def __init__(self, **kwargs):
         """
         Args:
-            **kwargs: (dict)  Placeholder for future key-value arguments
+            resourceProvider: (obj) instance of DictMethodResourceProvider()
 
         """
         #

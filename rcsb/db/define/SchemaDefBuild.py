@@ -650,6 +650,7 @@ class SchemaDefBuild(object):
         #
         dictSchema = self.__contentInfo.getSchemaNames()
         #
+        sNameD = {}
         schemaPropD = {}
         mandatoryCategoryL = []
         for catName, fullAtNameList in dictSchema.items():
@@ -669,6 +670,7 @@ class SchemaDefBuild(object):
             #
             # -> Create a schema id  for catName <-
             sName = convertNameF(catName)
+            sNameD[sName] = catName
             schemaId = sName.upper()
             #
             #  These are the content type schema level filters -
@@ -712,10 +714,10 @@ class SchemaDefBuild(object):
                 else:
                     # JDW Adjusted minItems=1
                     catPropD = {typeKey: "array", "items": pD, "minItems": 1, "uniqueItems": True}
-                #
                 if dataTypingU == "JSON" and addRcsbExtensions:
                     if documentDefHelper.isCategoryNested(collectionName, catName):
                         tD = documentDefHelper.getCategoryNestedContext(collectionName, catName)
+                        logger.debug("%s Nested context dict %r", collectionName, tD)
                         if "FIRST_CONTEXT_PATH" in tD and tD["FIRST_CONTEXT_PATH"]:
                             catPropD["rcsb_nested_indexing"] = True
                             catPropD["rcsb_nested_indexing_context"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"]}]
@@ -851,6 +853,9 @@ class SchemaDefBuild(object):
         #
         if suppressSingleton and len(schemaPropD) == 1:
             logger.debug("%s %s suppressing category in singleton schema", databaseName, collectionName)
+            sName = list(schemaPropD.keys())[0]
+            catName = sNameD[sName]
+            logger.debug("%s singleton state sName %r catName %r", collectionName, sName, catName)
             # rD = copy.deepcopy(catPropD)
             for k, v in privKeyD.items():
                 pD["properties"][k] = v
@@ -860,6 +865,17 @@ class SchemaDefBuild(object):
             rD = copy.deepcopy(pD)
             # if "additionalProperties" in rD:
             #    rD["additionalProperties"] = True
+
+            if dataTypingU == "JSON" and addRcsbExtensions:
+                if documentDefHelper.isCategoryNested(collectionName, catName):
+                    tD = documentDefHelper.getCategoryNestedContext(collectionName, catName)
+                    logger.debug("%s Nested context dict %r", collectionName, tD)
+                    if "FIRST_CONTEXT_PATH" in tD and tD["FIRST_CONTEXT_PATH"]:
+                        rD["rcsb_nested_indexing"] = True
+                        rD["rcsb_nested_indexing_context"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"]}]
+                    else:
+                        rD["rcsb_nested_indexing"] = True
+            # logger.info("%s singleton state rD %r", collectionName, rD)
         else:
             for k, v in privKeyD.items():
                 schemaPropD[k] = v

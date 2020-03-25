@@ -12,6 +12,7 @@
 #   9-Sep-2019 jdw add AtcProvider() and SiftsSummaryProvider()
 #  25-Nov-2019 jdw add CitationReferenceProvider(), ChemCompProvider() and  JournalTitleAbbreviationProvider()'s
 #  16-Feb-2020 jdw add support for configuration of development resources
+#  19-Mar-2020 jdw add ResidProvider() and send cachePath directly to all modules in rcsb.utils.chemref.
 ##
 """
 Resource provider for DictMethodHelper tools.
@@ -31,6 +32,8 @@ from rcsb.utils.chemref.AtcProvider import AtcProvider
 from rcsb.utils.chemref.ChemCompModelProvider import ChemCompModelProvider
 from rcsb.utils.chemref.ChemCompProvider import ChemCompProvider
 from rcsb.utils.chemref.DrugBankProvider import DrugBankProvider
+from rcsb.utils.chemref.PsiModProvider import PsiModProvider
+from rcsb.utils.chemref.ResidProvider import ResidProvider
 from rcsb.utils.citation.CitationReferenceProvider import CitationReferenceProvider
 from rcsb.utils.citation.JournalTitleAbbreviationProvider import JournalTitleAbbreviationProvider
 from rcsb.utils.ec.EnzymeDatabaseProvider import EnzymeDatabaseProvider
@@ -72,6 +75,8 @@ class DictMethodResourceProvider(SingletonClass):
         self.__scopU = None
         self.__cathU = None
         self.__dbU = None
+        self.__residU = None
+        self.__psimodU = None
         self.__ccU = None
         self.__ccmU = None
         self.__commonU = None
@@ -95,6 +100,8 @@ class DictMethodResourceProvider(SingletonClass):
             "CathProvider instance": self.__fetchCathProvider,
             "EnzymeProvider instance": self.__fetchEnzymeProvider,
             "DrugBankProvider instance": self.__fetchDrugBankProvider,
+            "ResidProvider instance": self.__fetchResidProvider,
+            "PsiModProvider instance": self.__fetchPsiModProvider,
             "ChemCompModelProvider instance": self.__fetchChemCompModelProvider,
             "ChemCompProvider instance": self.__fetchChemCompProvider,
             "AtcProvider instance": self.__fetchAtcProvider,
@@ -200,33 +207,53 @@ class DictMethodResourceProvider(SingletonClass):
 
     #
     def __fetchDrugBankProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        _ = cfgOb
         logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
         if not self.__dbU:
-            dbDataPath = os.path.join(cachePath, cfgOb.get("DRUGBANK_CACHE_DIR", sectionName=configName))
+            # dbDataPath = os.path.join(cachePath, cfgOb.get("DRUGBANK_CACHE_DIR", sectionName=configName))
             un = cfgOb.get("_DRUGBANK_AUTH_USERNAME", sectionName=configName)
             pw = cfgOb.get("_DRUGBANK_AUTH_PASSWORD", sectionName=configName)
-            self.__dbU = DrugBankProvider(dirPath=dbDataPath, useCache=useCache, username=un, password=pw, **kwargs)
+            self.__dbU = DrugBankProvider(cachePath=cachePath, useCache=useCache, username=un, password=pw, **kwargs)
         return self.__dbU
 
+    #
+    def __fetchResidProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        _ = cfgOb
+        logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
+        if not self.__residU:
+            # dbDataPath = os.path.join(cachePath, cfgOb.get("RESID_CACHE_DIR", sectionName=configName))
+            self.__residU = ResidProvider(cachePath=cachePath, useCache=useCache, **kwargs)
+        return self.__residU
+
+    def __fetchPsiModProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        _ = cfgOb
+        logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
+        if not self.__psimodU:
+            self.__psimodU = PsiModProvider(cachePath=cachePath, useCache=useCache, **kwargs)
+        return self.__psimodU
+
     def __fetchChemCompModelProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        _ = cfgOb
         logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
         if not self.__ccmU:
-            dirPath = os.path.join(cachePath, cfgOb.get("CHEM_COMP_CACHE_DIR", sectionName=configName))
-            self.__ccmU = ChemCompModelProvider(dirPath=dirPath, useCache=useCache, **kwargs)
+            # dirPath = os.path.join(cachePath, cfgOb.get("CHEM_COMP_CACHE_DIR", sectionName=configName))
+            self.__ccmU = ChemCompModelProvider(cachePath=cachePath, useCache=useCache, **kwargs)
         return self.__ccmU
 
     def __fetchChemCompProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        _ = cfgOb
         logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
         if not self.__ccU:
-            dirPath = os.path.join(cachePath, cfgOb.get("CHEM_COMP_CACHE_DIR", sectionName=configName))
-            self.__ccU = ChemCompProvider(dirPath=dirPath, useCache=useCache, **kwargs)
+            # dirPath = os.path.join(cachePath, cfgOb.get("CHEM_COMP_CACHE_DIR", sectionName=configName))
+            self.__ccU = ChemCompProvider(cachePath=cachePath, useCache=useCache, **kwargs)
         return self.__ccU
 
     def __fetchAtcProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        _ = cfgOb
         logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
         if not self.__atcP:
-            dirPath = os.path.join(cachePath, cfgOb.get("ATC_CACHE_DIR", sectionName=configName))
-            self.__atcP = AtcProvider(dirPath=dirPath, useCache=useCache, **kwargs)
+            # dirPath = os.path.join(cachePath, cfgOb.get("ATC_CACHE_DIR", sectionName=configName))
+            self.__atcP = AtcProvider(cachePath=cachePath, useCache=useCache, **kwargs)
         return self.__atcP
 
     def __fetchSiftsSummaryProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):

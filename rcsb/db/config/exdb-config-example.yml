@@ -50,12 +50,12 @@ site_info_configuration:
     #
     # Supporting and integrated resource data cache directory names
     #
-    DRUGBANK_CACHE_DIR: DrugBank
+    #DRUGBANK_CACHE_DIR: DrugBank
     _DRUGBANK_AUTH_USERNAME: 0qrpNd4OhGuVsJqEpcsAVEovZ0hl6QkgxmbTy3bPssd06Z9tuM6bJqgsWwmFCd0JnjIMIEWyKPMmF1pI5g==
     _DRUGBANK_AUTH_PASSWORD: lA/K132i8DOtLdMHfm3gpNqprZ6ABKjsCRxfcXIMnxpKQzBv/B6dmC7x1vRO86JhqdT0b84=
     #
-    ATC_CACHE_DIR: atc
-    CHEM_COMP_CACHE_DIR: chem_comp
+    #ATC_CACHE_DIR: atc
+    #CHEM_COMP_CACHE_DIR: chem_comp
     NCBI_TAXONOMY_CACHE_DIR: NCBI
     ENZYME_CLASSIFICATION_CACHE_DIR: ec
     STRUCT_DOMAIN_CLASSIFICATION_CACHE_DIR: domains_struct
@@ -159,12 +159,12 @@ site_info_remote_configuration:
     #
     # Supporting and integrated resource data cache directory names
     #
-    DRUGBANK_CACHE_DIR: DrugBank
+    #DRUGBANK_CACHE_DIR: DrugBank
     _DRUGBANK_AUTH_USERNAME: 0qrpNd4OhGuVsJqEpcsAVEovZ0hl6QkgxmbTy3bPssd06Z9tuM6bJqgsWwmFCd0JnjIMIEWyKPMmF1pI5g==
     _DRUGBANK_AUTH_PASSWORD: lA/K132i8DOtLdMHfm3gpNqprZ6ABKjsCRxfcXIMnxpKQzBv/B6dmC7x1vRO86JhqdT0b84=
     #
-    ATC_CACHE_DIR: atc
-    CHEM_COMP_CACHE_DIR: chem_comp
+    #ATC_CACHE_DIR: atc
+    #CHEM_COMP_CACHE_DIR: chem_comp
     NCBI_TAXONOMY_CACHE_DIR: NCBI
     ENZYME_CLASSIFICATION_CACHE_DIR: ec
     STRUCT_DOMAIN_CLASSIFICATION_CACHE_DIR: domains_struct

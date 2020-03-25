@@ -31,7 +31,7 @@ class DictMethodChemRefHelper(object):
     def __init__(self, **kwargs):
         """
         Args:
-            **kwargs: (dict)  Placeholder for future key-value arguments
+            resourceProvider: (obj) instance of DictMethodResourceProvider()
 
         """
         #
@@ -70,113 +70,49 @@ class DictMethodChemRefHelper(object):
             if not (dataContainer.exists("chem_comp_atom") and dataContainer.exists("chem_comp_bond")):
                 return False
             rP = kwargs.get("resourceProvider")
+            # ------- new
+            ccId = self.__getChemCompId(dataContainer)
+            dbId, atcIdL, mappingType, dbVersion = self.__getDrugBankMapping(dataContainer, rP)
+            logger.debug("Using DrugBank version %r", dbVersion)
             #  ------------ ----------------------- ----------------------- ----------------------- -----------
-            dbProvider = rP.getResource("DrugBankProvider instance") if rP else None
-            atcP = rP.getResource("AtcProvider instance") if rP else None
-            dbD = dbProvider.getMapping()
-            if dbD:
-                ccId = dataContainer.getName()
+            if dbId:
                 #
-                dbMapD = dbD["id_map"]
-                inKeyD = dbD["inchikey_map"]
-                atcD = dbD["db_atc_map"]
-                logger.debug("atcD length is %d", len(atcD))
-                logger.debug("inKeyD length is %d", len(inKeyD))
-                dbId = None
-                mType = None
+                if dataContainer.exists("rcsb_chem_comp_container_identifiers"):
+                    tObj = dataContainer.getObj("rcsb_chem_comp_container_identifiers")
+                    if not tObj.hasAttribute("drugbank_id"):
+                        tObj.appendAttribute("drugbank_id")
+                    tObj.setValue(dbId, "drugbank_id", 0)
+                    if atcIdL:
+                        if not tObj.hasAttribute("atc_codes"):
+                            tObj.appendAttribute("atc_codes")
+                        tObj.setValue(",".join(atcIdL), "atc_codes", 0)
                 #
-                if dataContainer.exists("rcsb_chem_comp_descriptor"):
-                    ccIObj = dataContainer.getObj("rcsb_chem_comp_descriptor")
-
-                    if ccIObj.hasAttribute("InChIKey"):
-                        inky = ccIObj.getValue("InChIKey", 0)
-                        logger.debug("inKeyD length is %d testing %r", len(inKeyD), inky)
-                        if inky in inKeyD:
-                            logger.debug("Matching inchikey for %s", ccId)
-                            dbId = inKeyD[inky][0]["drugbank_id"]
-                            mType = "matching InChIKey in DrugBank"
+                if not dataContainer.exists(catName):
+                    dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
+                wObj = dataContainer.getObj(catName)
+                rL = wObj.selectIndices("DrugBank", "resource_name")
+                ok = False
+                if rL:
+                    ok = wObj.removeRows(rL)
+                    if not ok:
+                        logger.debug("Error removing rows in %r %r", catName, rL)
+                # ---
+                iRow = wObj.getRowCount()
+                wObj.setValue(ccId, "comp_id", iRow)
+                wObj.setValue(iRow + 1, "ordinal", iRow)
+                wObj.setValue("DrugBank", "resource_name", iRow)
+                wObj.setValue(dbId, "resource_accession_code", iRow)
+                wObj.setValue(mappingType, "related_mapping_method", iRow)
                 #
-
-                if not dbId and dbMapD and dataContainer.getName() in dbMapD:
-                    dbId = dbMapD[ccId]["drugbank_id"]
-                    mType = "assigned by DrugBank resource"
-                    logger.debug("Matching db assignment for %s", ccId)
-
-                if dbId:
-                    #
-                    if dataContainer.exists("rcsb_chem_comp_container_identifiers"):
-                        tObj = dataContainer.getObj("rcsb_chem_comp_container_identifiers")
-                        if not tObj.hasAttribute("drugbank_id"):
-                            tObj.appendAttribute("drugbank_id")
-                        tObj.setValue(dbId, "drugbank_id", 0)
-                        if atcD and dbId in atcD:
-                            if not tObj.hasAttribute("atc_codes"):
-                                tObj.appendAttribute("atc_codes")
-                            tObj.setValue(",".join(atcD[dbId]), "atc_codes", 0)
-
-                    #
-                    if not dataContainer.exists(catName):
-                        dataContainer.append(
-                            DataCategory(
-                                catName,
-                                attributeNameList=[
-                                    "comp_id",
-                                    "ordinal",
-                                    "resource_name",
-                                    "resource_accession_code",
-                                    "related_mapping_method",
-                                    "resource_lineage_name",
-                                    "resource_lineage_id",
-                                    "resource_lineage_depth",
-                                ],
-                            )
-                        )
-                    wObj = dataContainer.getObj(catName)
-                    logger.debug("Using DrugBank mapping length %d", len(dbMapD))
-                    rL = wObj.selectIndices("DrugBank", "resource_name")
-                    ok = False
-                    if rL:
-                        ok = wObj.removeRows(rL)
-                        if not ok:
-                            logger.debug("Error removing rows in %r %r", catName, rL)
-                    iRow = wObj.getRowCount()
-                    wObj.setValue(ccId, "comp_id", iRow)
-                    wObj.setValue(iRow + 1, "ordinal", iRow)
-                    wObj.setValue("DrugBank", "resource_name", iRow)
-                    wObj.setValue(dbId, "resource_accession_code", iRow)
-                    wObj.setValue(mType, "related_mapping_method", iRow)
-                    #
-                    if atcD and dbId in atcD:
-                        rL = wObj.selectIndices("ATC", "resource_name")
-                        if rL:
-                            ok = wObj.removeRows(rL)
-                            if not ok:
-                                logger.debug("Error removing rows in %r %r", catName, rL)
-                        iRow = wObj.getRowCount()
-                        for atcId in atcD[dbId]:
-                            iRow = wObj.getRowCount()
-                            wObj.setValue(ccId, "comp_id", iRow)
-                            wObj.setValue(iRow + 1, "ordinal", iRow)
-                            wObj.setValue("ATC", "resource_name", iRow)
-                            wObj.setValue(atcId, "resource_accession_code", iRow)
-                            wObj.setValue(mType, "related_mapping_method", iRow)
-                            #
-                            wObj.setValue(";".join(atcP.getNameLineage(atcId)), "resource_lineage_name", iRow)
-                            idLinL = atcP.getIdLineage(atcId)
-                            logger.debug("dbId %r atcId %r lineage %r", dbId, atcId, idLinL)
-                            wObj.setValue(";".join(idLinL), "resource_lineage_id", iRow)
-                            wObj.setValue(";".join([str(jj) for jj in range(0, len(idLinL) + 1)]), "resource_lineage_depth", iRow)
-            #
             #  ------------ ----------------------- ----------------------- ----------------------- -----------
             ccmProvider = rP.getResource("ChemCompModelProvider instance") if rP else None
             csdMapD = ccmProvider.getMapping()
             #
-            if csdMapD and dataContainer.getName() in csdMapD:
+            if csdMapD and ccId in csdMapD:
                 if not dataContainer.exists(catName):
-                    dataContainer.append(DataCategory(catName, attributeNameList=["comp_id", "ordinal", "resource_name", "resource_accession_code", "related_mapping_method"]))
+                    dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
                 wObj = dataContainer.getObj(catName)
                 logger.debug("Using CSD model mapping length %d", len(csdMapD))
-                ccId = dataContainer.getName()
                 dbId = csdMapD[ccId][0]["db_code"]
                 rL = wObj.selectIndices("CCDC/CSD", "resource_name")
                 if rL:
@@ -190,7 +126,219 @@ class DictMethodChemRefHelper(object):
                 wObj.setValue(dbId, "resource_accession_code", iRow)
                 wObj.setValue("assigned by PDB", "related_mapping_method", iRow)
             #
+            residProvider = rP.getResource("ResidProvider instance") if rP else None
+            residMapD = residProvider.getMapping()
+            #
+            if residMapD and ccId in residMapD:
+                if not dataContainer.exists(catName):
+                    dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
+                wObj = dataContainer.getObj(catName)
+                rL = wObj.selectIndices("RESID", "resource_name")
+                if rL:
+                    ok = wObj.removeRows(rL)
+                    if not ok:
+                        logger.debug("Error removing rows in %r %r", catName, rL)
+                logger.debug("Using RESID model mapping length %d", len(residMapD))
+                for rD in residMapD[ccId]:
+                    dbId = rD["residCode"]
+                    iRow = wObj.getRowCount()
+                    wObj.setValue(ccId, "comp_id", iRow)
+                    wObj.setValue(iRow + 1, "ordinal", iRow)
+                    wObj.setValue("RESID", "resource_name", iRow)
+                    wObj.setValue(dbId, "resource_accession_code", iRow)
+                    wObj.setValue("matching by RESID resource", "related_mapping_method", iRow)
+            return True
+        except Exception as e:
+            logger.exception("For %s failing with %s", catName, str(e))
+        return False
 
+    def __getChemCompId(self, dataContainer):
+        if not dataContainer.exists("chem_comp"):
+            return None
+        ccObj = dataContainer.getObj("chem_comp")
+        if not ccObj.hasAttribute("pdbx_release_status"):
+            return None
+        return ccObj.getValueOrDefault("id", 0, None)
+
+    def __getDrugBankMapping(self, dataContainer, resourceProvider):
+        """ Return the DrugBank mapping for the chemical definition in the input dataContainer.
+
+        Args:
+            dataContainer (obj): instance of a DataContainer() object
+            resourceProvider (obj): instance of a ResourceProvider() object
+
+        Returns:
+            mType, DrugBankId, actL (str,str, list): mapping type and DrugBank accession code, list of ATC assignments
+        """
+        try:
+            dbId = None
+            atcL = []
+            mappingType = None
+
+            dbProvider = resourceProvider.getResource("DrugBankProvider instance") if resourceProvider else None
+            dbD = dbProvider.getMapping()
+            dbVersion = dbProvider.getVersion()
+            if dbD:
+                ccId = self.__getChemCompId(dataContainer)
+                #
+                dbMapD = dbD["id_map"]
+                inKeyD = dbD["inchikey_map"]
+                atcD = dbD["db_atc_map"]
+                logger.debug("atcD length is %d", len(atcD))
+                logger.debug("inKeyD length is %d", len(inKeyD))
+                #
+                if dataContainer.exists("rcsb_chem_comp_descriptor"):
+                    ccIObj = dataContainer.getObj("rcsb_chem_comp_descriptor")
+
+                    if ccIObj.hasAttribute("InChIKey"):
+                        inky = ccIObj.getValue("InChIKey", 0)
+                        logger.debug("inKeyD length is %d testing %r", len(inKeyD), inky)
+                        if inky in inKeyD:
+                            logger.debug("Matching inchikey for %s", ccId)
+                            dbId = inKeyD[inky][0]["drugbank_id"]
+                            mappingType = "matching InChIKey in DrugBank"
+                #
+
+                if not dbId and dbMapD and dataContainer.getName() in dbMapD:
+                    dbId = dbMapD[ccId]["drugbank_id"]
+                    mappingType = "assigned by DrugBank resource"
+                    logger.debug("Matching db assignment for %s", ccId)
+                if atcD and dbId in atcD:
+                    atcL = atcD[dbId]
+
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+
+        return dbId, atcL, mappingType, dbVersion
+
+    def addChemCompAnnotation(self, dataContainer, catName, **kwargs):
+        """Generate the rcsb_chem_annotation category -
+
+        Args:
+            dataContainer ([type]): [description]
+            catName ([type]): [description]
+
+        Returns:
+            [type]: [description]
+
+                loop_
+                _rcsb_chem_comp_annotation.ordinal
+                _rcsb_chem_comp_annotation.entry_id
+                _rcsb_chem_comp_annotation.entity_id
+                #
+                _rcsb_chem_comp_annotation.annotation_id
+                _rcsb_chem_comp_annotation.type
+                _rcsb_chem_comp_annotation.name
+                _rcsb_chem_comp_annotation.description
+                #
+                _rcsb_chem_comp_annotation.annotation_lineage_id
+                _rcsb_chem_comp_annotation.annotation_lineage_name
+                _rcsb_chem_comp_annotation.annotation_lineage_depth
+                #
+                _rcsb_chem_comp_annotation.provenance_source
+                _rcsb_chem_comp_annotation.assignment_version
+                # ...
+        """
+        try:
+            # Exit if these source categories are missing
+            if not (dataContainer.exists("chem_comp_atom") and dataContainer.exists("chem_comp_bond")):
+                return False
+            #
+            logger.debug("Starting with  %r %r", dataContainer.getName(), catName)
+            rP = kwargs.get("resourceProvider")
+            #
+            # ----
+            ccId = self.__getChemCompId(dataContainer)
+            dbId, atcIdL, mappingType, dbVersion = self.__getDrugBankMapping(dataContainer, rP)
+            atcP = rP.getResource("AtcProvider instance") if rP else None
+            if atcIdL and atcP:
+                #
+                if not dataContainer.exists(catName):
+                    dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
+                # -----
+                wObj = dataContainer.getObj(catName)
+                #
+                for atcId in atcIdL:
+                    iRow = wObj.getRowCount()
+                    wObj.setValue(ccId, "comp_id", iRow)
+                    wObj.setValue(iRow + 1, "ordinal", iRow)
+                    wObj.setValue("ATC", "type", iRow)
+                    wObj.setValue(atcId, "annotation_id", iRow)
+                    wObj.setValue(atcP.getAtcName(atcId), "name", iRow)
+                    #
+                    wObj.setValue("ATC " + mappingType, "description", iRow)
+                    # ---
+                    wObj.setValue(";".join(atcP.getNameLineage(atcId)), "annotation_lineage_name", iRow)
+                    idLinL = atcP.getIdLineage(atcId)
+                    wObj.setValue(";".join(idLinL), "annotation_lineage_id", iRow)
+                    wObj.setValue(";".join([str(jj) for jj in range(0, len(idLinL) + 1)]), "annotation_lineage_depth", iRow)
+                    #
+                    wObj.setValue("DrugBank", "provenance_source", iRow)
+                    wObj.setValue(dbVersion, "assignment_version", iRow)
+                    logger.debug("dbId %r atcId %r lineage %r", dbId, atcId, idLinL)
+            # -----
+            rsProvider = rP.getResource("ResidProvider instance") if rP else None
+            residD = rsProvider.getMapping()
+            #
+            if residD and (ccId in residD):
+                if not dataContainer.exists(catName):
+                    dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
+                wObj = dataContainer.getObj(catName)
+                # -----
+                residVersion = rsProvider.getVersion()
+                jj = 1
+                for rD in residD[ccId]:
+                    if "modRes" not in rD:
+                        continue
+                    for modRes in rD["modRes"]:
+                        iRow = wObj.getRowCount()
+                        wObj.setValue(ccId, "comp_id", iRow)
+                        wObj.setValue(iRow + 1, "ordinal", iRow)
+                        wObj.setValue("Modification Type", "type", iRow)
+                        wObj.setValue("modres_%d" % jj, "annotation_id", iRow)
+                        wObj.setValue(modRes, "name", iRow)
+                        wObj.setValue("RESID", "provenance_source", iRow)
+                        wObj.setValue(residVersion, "assignment_version", iRow)
+                        jj += 1
+                #
+                jj = 1
+                for rD in residD[ccId]:
+                    if "genEnzymes" not in rD:
+                        continue
+                    for genEnzyme in rD["genEnzymes"]:
+                        iRow = wObj.getRowCount()
+                        wObj.setValue(ccId, "comp_id", iRow)
+                        wObj.setValue(iRow + 1, "ordinal", iRow)
+                        wObj.setValue("Generating Enzyme", "type", iRow)
+                        wObj.setValue("enzyme_%d" % jj, "annotation_id", iRow)
+                        wObj.setValue(genEnzyme, "name", iRow)
+                        wObj.setValue("RESID", "provenance_source", iRow)
+                        wObj.setValue(residVersion, "assignment_version", iRow)
+                        jj += 1
+                #
+                psimodP = rP.getResource("PsiModProvider instance") if rP else None
+                if psimodP:
+                    jj = 1
+                    for rD in residD[ccId]:
+                        if "ontRefs" not in rD:
+                            continue
+                        for ontId in rD["ontRefs"]:
+                            if ontId[:3] != "MOD":
+                                continue
+                            iRow = wObj.getRowCount()
+                            wObj.setValue(ccId, "comp_id", iRow)
+                            wObj.setValue(iRow + 1, "ordinal", iRow)
+                            wObj.setValue("PSI-MOD", "type", iRow)
+                            wObj.setValue(ontId, "annotation_id", iRow)
+                            wObj.setValue(psimodP.getName(ontId), "name", iRow)
+                            wObj.setValue("RESID", "provenance_source", iRow)
+                            wObj.setValue(residVersion, "assignment_version", iRow)
+                            #
+                            linL = psimodP.getLineage(ontId)
+                            wObj.setValue(";".join([tup[0] for tup in linL]), "annotation_lineage_id", iRow)
+                            wObj.setValue(";".join([tup[1] for tup in linL]), "annotation_lineage_name", iRow)
+                            wObj.setValue(";".join([str(tup[2]) for tup in linL]), "annotation_lineage_depth", iRow)
+                    #
             return True
         except Exception as e:
             logger.exception("For %s failing with %s", catName, str(e))
