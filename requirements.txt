@@ -25,4 +25,3 @@ SQLAlchemy; sys_platform == 'linux'
 # For crate and cockroach -
 crate
 psycopg2-binary
-networkx >= 2.4

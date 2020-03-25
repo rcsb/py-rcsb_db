@@ -79,7 +79,6 @@ setup(
         "SQLAlchemy; sys_platform == 'linux'",
         "psycopg2-binary",
         "crate",
-        "networkx >= 2.4",
     ],
     packages=find_packages(exclude=["rcsb.db.tests", "rcsb.db.tests-*", "tests.*"]),
     package_data={
