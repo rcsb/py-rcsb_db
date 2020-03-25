@@ -224,3 +224,4 @@
                      names, entity descriptions, and gene names.
   5-Mar-2020  V0.969 Allow category nested contexts and remote tests for uniprot-core
  17-Mar-2020  V0.970 Add separate primary citation category and offset for zero based sequence database references
+ 24-Mar-2020  V0.971 Add support for rcsb_chem_comp_annotation and various fixes for schema builder.
