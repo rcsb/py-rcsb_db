@@ -50,10 +50,14 @@ class DocumentDefinitionHelper(object):
         sectionName = kwargs.get("config_section", "document_helper_configuration")
         self.__cfgD = self.__cfgOb.exportConfig(sectionName=sectionName)
         self.__searchTypeD = {}
+        self.__searchTypeAttributeD = {}
         self.__attributeDescriptionD = {}
         self.__categoryNested = {}
         self.__subCategoryNested = {}
         self.__attributeSeachPriority = {}
+        #
+        self.__searchGroupD = {}
+        self.__searchGroupAttributeD = {}
         #
         # ----
 
@@ -261,14 +265,15 @@ class DocumentDefinitionHelper(object):
 
         returns:
             dict : {collectionName: {(category, attribute): [search type, ...], }, }
+            dict : {(category, attribute): [(searchType, collectionName), ... ]
 
         """
         cD = {}
+        pD = {}
         try:
             # preprocess search context data --
             for collectionName, tDL in self.__cfgD["collection_attribute_search_contexts"].items():
                 aD = {}
-                # logger.info("collectionName %r len tDL %d", collectionName, len(tDL))
                 for tD in tDL:
                     for atName in tD["ATTRIBUTE_NAMES"]:
                         ff = atName.split(".")
@@ -276,24 +281,12 @@ class DocumentDefinitionHelper(object):
                             logger.error("Bad attribute name for search type %r", atName)
                             continue
                         aD.setdefault((ff[0], ff[1]), []).append(tD["SEARCH_TYPE"])
-                        # if tD["SEARCH_TYPE"] in ["exact-match", "suggest"]:
-                        #    aD.setdefault((ff[0], ff[1]), []).append("full-text")
-                    #
-                # REMOVE tmp print unique text search
-                # logger.info("%s:", collectionName)
-                # logger.info("- SEARCH_TYPE: text-mode")
-                # logger.info("  ATTRIBUTE_NAMES:")
-                # for tup, sL in aD.items():
-                #     if ("exact-match" in sL and "full-text" in sL) or ("default-match" in sL) or ("suggest" in sL and "exact-match" in sL and "full-text" in sL):
-                #         continue
-                #     if "full-text" in sL:
-                #         logger.info(" - %s.%s", tup[0], tup[1])
-                # #
+                        pD.setdefault((ff[0], ff[1]), []).append((tD["SEARCH_TYPE"], collectionName))
                 cD[collectionName] = {tup: self.__filterSearchContexts(sorted(list(set(sL)))) for tup, sL in aD.items()}
-            # logger.info("processed search context for %r", cD)
+
         except Exception as e:
             logger.exception("Failing with %s", str(e))
-        return cD
+        return cD, pD
 
     def __filterSearchContexts(self, stL, overlapFlag=False):
         """Automatically filter dependent search contexts.
@@ -322,13 +315,28 @@ class DocumentDefinitionHelper(object):
         rL = []
         try:
             if not self.__searchTypeD:
-                self.__searchTypeD = self.__prepareAttributeSearchContexts()
+                self.__searchTypeD, self.__searchTypeAttributeD = self.__prepareAttributeSearchContexts()
             rL = self.__searchTypeD[collectionName][(categoryName, attributeName)]
             # logger.info("Collection %r categoryName %r attributeName %r failing with %s", collectionName, categoryName, attributeName, rL)
         except Exception as e:
             logger.debug(" ---- Collection %sr categoryName %r attributeName %r failing with %s", collectionName, categoryName, attributeName, str(e))
 
         return rL
+
+    def getSearchContexts(self, categoryName, attributeName):
+        """ Return the list of search types and collections assigned to the input category/attribute
+
+        Returns:
+            list : [(search type, collectionName),  ...]
+
+        """
+        try:
+            if not self.__searchTypeD:
+                self.__searchTypeD, self.__searchTypeAttributeD = self.__prepareAttributeSearchContexts()
+            return self.__searchTypeAttributeD.get((categoryName, attributeName), [])
+        except Exception as e:
+            logger.debug(" ---- CategoryName %r attributeName %r failing with %s", categoryName, attributeName, str(e))
+        return []
 
     def isTextSearchType(self, categoryName, attributeName):
         _ = categoryName
@@ -432,6 +440,26 @@ class DocumentDefinitionHelper(object):
         except Exception:
             pass
         return ret
+
+    def getNestedContexts(self, categoryName):
+        """Return collections in which the input category is nested.
+
+        Args:
+            categoryName (str): category name
+
+        Returns:
+            dict: [{"CONTEXT_NAME": <name>, "CONTEXT_PATHS": <full_path_list>}]
+
+        """
+        retL = []
+        try:
+            self.__categoryNested = self.__prepareCategoryNested() if not self.__categoryNested else self.__categoryNested
+            for collectionName in self.__categoryNested:
+                if categoryName in self.__categoryNested[collectionName]:
+                    retL.append(self.__categoryNested[collectionName][categoryName])
+        except Exception:
+            pass
+        return retL
 
     def __prepareSubCategoryNested(self):
         """
@@ -549,3 +577,134 @@ class DocumentDefinitionHelper(object):
         except Exception:
             pass
         return None
+
+    def __prepareAttributeSearchGroups(self):
+        """
+        Example:
+
+        search_group_membership:
+            - GROUP_NAME: ID(s) and Keywords
+              ATTRIBUTE_NAME_LIST:
+                - rcsb_entry_container_identifiers.entry_id
+                - pdbx_deposit_group.group_id
+                - rcsb_pubmed_container_identifiers.pubmed_id
+                - rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers.database_accession
+                - rcsb_polymer_entity_container_identifiers.reference_sequence_identifiers.database_name
+                - struct_keywords.pdbx_keywords
+                - rcsb_entity_source_organism.rcsb_gene_name.value
+            - GROUP_NAME: Structure Annotation
+              ATTRIBUTE_NAME_LIST:
+                - rcsb_polymer_entity.pdbx_description
+                - rcsb_polymer_entity.rcsb_macromolecular_names_combined.name
+                - rcsb_membrane_lineage.name
+                - pdbx_database_status.pdb_format_compatible
+
+        returns:
+            dict : {(category, attribute): [(search group, iorder), ...], }, }
+            dict : {group_name: [(category, attribute), ... ], ...}
+        """
+        aD = {}
+        gD = {}
+        try:
+            for sgD in self.__cfgD["search_group_membership"]:
+                groupName = sgD["GROUP_NAME"]
+                jj = 5
+                for atName in sgD["ATTRIBUTE_NAMES"]:
+                    ff = atName.split(".")
+                    if len(ff) != 2:
+                        logger.error("Bad attribute name for search group %r", atName)
+                        continue
+                    aD.setdefault((ff[0], ff[1]), []).append((groupName, jj))
+                    gD.setdefault(groupName, []).append((ff[0], ff[1]))
+                    jj += 5
+
+        except Exception as e:
+            logger.exception("Failing with sgD %r %s", sgD if sgD else None, str(e))
+        return gD, aD
+
+    def inSearchGroup(self, categoryName, attributeName):
+        """[summary]
+
+        Args:
+            categoryName ([type]): [description]
+            attributeName ([type]): [description]
+
+        Returns:
+            bool: True if in a search group or False otherwise
+        """
+        try:
+            self.__searchGroupD, self.__searchGroupAttributeD = (
+                self.__prepareAttributeSearchGroups() if not self.__searchGroupD else (self.__searchGroupD, self.__searchGroupAttributeD)
+            )
+            return self.__searchGroupAttributeD.get((categoryName, attributeName), None) is not None
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return False
+
+    def getSearchGroup(self, categoryName, attributeName):
+        """[summary]
+
+        Args:
+            categoryName ([type]): [description]
+            attributeName ([type]): [description]
+
+        Returns:
+            list: [(groupName, priorityOrder),...]
+        """
+        try:
+            self.__searchGroupD, self.__searchGroupAttributeD = (
+                self.__prepareAttributeSearchGroups() if not self.__searchGroupD else (self.__searchGroupD, self.__searchGroupAttributeD)
+            )
+            return self.__searchGroupAttributeD.get((categoryName, attributeName), [])
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return []
+
+    def getSearchGroupAttributes(self, searchGroupName):
+        try:
+            self.__searchGroupD, self.__searchGroupAttributeD = (
+                self.__prepareAttributeSearchGroups() if not self.__searchGroupD else (self.__searchGroupD, self.__searchGroupAttributeD)
+            )
+            return self.__searchGroupD.get(searchGroupName, [])
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return []
+
+    def getSearchGroups(self):
+        try:
+            self.__searchGroupD, self.__searchGroupAttributeD = (
+                self.__prepareAttributeSearchGroups() if not self.__searchGroupD else (self.__searchGroupD, self.__searchGroupAttributeD)
+            )
+            return list(self.__searchGroupD.keys())
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return []
+
+    def checkSearchGroups(self):
+        groupNameList = self.getSearchGroups()
+        for groupName in groupNameList:
+            # get attributes in group
+            attributeTupList = self.getSearchGroupAttributes(groupName)
+            logger.info("Search Group (%d): %s", len(attributeTupList), groupName)
+            # get search context and brief descriptions -
+            for catName, atName in attributeTupList:
+                searchContextTupL = self.getSearchContexts(catName, atName)
+                if not searchContextTupL:
+                    logger.warning("Missing search context for %r %r", catName, atName)
+                descriptionText = self.getAttributeDescription(catName, atName, contextType="brief")
+                if not descriptionText:
+                    logger.warning("Missing brief description %r %r", catName, atName)
+                #
+                nestedContextDL = self.getNestedContexts(catName)
+                for nestedContextD in nestedContextDL:
+                    contextName = nestedContextD["CONTEXT_NAME"]
+                    contextPath = nestedContextD["CONTEXT_PATH"] if "CONTEXT_PATH" in nestedContextD else None
+                    if contextPath:
+                        cpCatName = contextPath.split(".")[0]
+                        cpAtName = contextPath.split(".")[1]
+                        nestedPathSearchContext = self.getSearchContexts(cpCatName, cpAtName)
+                        if not nestedPathSearchContext:
+                            logger.warning("Missing nested (%r) search context for %r %r", contextName, cpCatName, cpAtName)
+                #
+                logger.info("  %r %r -> %r (%s)", catName, atName, descriptionText, ",".join([tup[0] for tup in searchContextTupL]))
+        return True
