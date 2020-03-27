@@ -536,6 +536,9 @@ class SchemaDefBuild(object):
                         fD["DESCRIPTION_ANNOTATED"].append({"text": tD["text"], "context": "brief"})
                     elif tD["context"] == "dictionary":
                         fD["DESCRIPTION_ANNOTATED"].append({"text": tD["text"], "context": "brief"})
+            # ----
+            fD["SEARCH_GROUP_AND_PRIORITY"] = [{"group_name": tup[0], "priority_order": tup[1]} for tup in documentDefHelper.getSearchGroup(catName, atName)]
+            # ----
         #
         return aD
         #
@@ -714,15 +717,11 @@ class SchemaDefBuild(object):
                 else:
                     # JDW Adjusted minItems=1
                     catPropD = {typeKey: "array", "items": pD, "minItems": 1, "uniqueItems": True}
-                if dataTypingU == "JSON" and addRcsbExtensions:
-                    if documentDefHelper.isCategoryNested(collectionName, catName):
-                        tD = documentDefHelper.getCategoryNestedContext(collectionName, catName)
-                        logger.debug("%s Nested context dict %r", collectionName, tD)
-                        if "FIRST_CONTEXT_PATH" in tD and tD["FIRST_CONTEXT_PATH"]:
-                            catPropD["rcsb_nested_indexing"] = True
-                            catPropD["rcsb_nested_indexing_context"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"]}]
-                        else:
-                            catPropD["rcsb_nested_indexing"] = True
+                #
+            if dataTypingU == "JSON" and addRcsbExtensions:
+                self.__updateCategoryNestedContext(catPropD, collectionName, catName, documentDefHelper)
+                #
+
             if addBlockAttribute and blockAttributeName:
                 schemaAttributeName = convertNameF(blockAttributeName)
                 pD.setdefault("required", []).append(schemaAttributeName)
@@ -865,17 +864,9 @@ class SchemaDefBuild(object):
             rD = copy.deepcopy(pD)
             # if "additionalProperties" in rD:
             #    rD["additionalProperties"] = True
-
             if dataTypingU == "JSON" and addRcsbExtensions:
-                if documentDefHelper.isCategoryNested(collectionName, catName):
-                    tD = documentDefHelper.getCategoryNestedContext(collectionName, catName)
-                    logger.debug("%s Nested context dict %r", collectionName, tD)
-                    if "FIRST_CONTEXT_PATH" in tD and tD["FIRST_CONTEXT_PATH"]:
-                        rD["rcsb_nested_indexing"] = True
-                        rD["rcsb_nested_indexing_context"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"]}]
-                    else:
-                        rD["rcsb_nested_indexing"] = True
-            # logger.info("%s singleton state rD %r", collectionName, rD)
+                self.__updateCategoryNestedContext(rD, collectionName, catName, documentDefHelper)
+            logger.debug("%s singleton state rD %r", collectionName, rD)
         else:
             for k, v in privKeyD.items():
                 schemaPropD[k] = v
@@ -886,6 +877,7 @@ class SchemaDefBuild(object):
             if mandatoryCategoryL:
                 rD["required"] = mandatoryCategoryL
 
+        #
         if dataTypingU == "BSON":
             rD["properties"]["_id"] = {"bsonType": "objectId"}
             logger.debug("Adding mongo key %r", rD["properties"]["_id"])
@@ -910,6 +902,17 @@ class SchemaDefBuild(object):
                 }
             )
 
+        return rD
+
+    def __updateCategoryNestedContext(self, rD, collectionName, catName, documentDefHelper):
+        if documentDefHelper.isCategoryNested(collectionName, catName):
+            tD = documentDefHelper.getCategoryNestedContext(collectionName, catName)
+            logger.debug("%s Nested context dict %r", collectionName, tD)
+            if "FIRST_CONTEXT_PATH" in tD and tD["FIRST_CONTEXT_PATH"]:
+                rD["rcsb_nested_indexing"] = True
+                rD["rcsb_nested_indexing_context"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"]}]
+            else:
+                rD["rcsb_nested_indexing"] = True
         return rD
 
     def __getJsonRef(self, pathList, itemSubCategoryList=None):
@@ -1040,6 +1043,8 @@ class SchemaDefBuild(object):
                     atPropD["rcsb_enum_annotated"] = fD["ENUMS_ANNOTATED"]
                 if fD["DESCRIPTION_ANNOTATED"]:
                     atPropD["rcsb_description"] = fD["DESCRIPTION_ANNOTATED"]
+                if fD["SEARCH_GROUP_AND_PRIORITY"]:
+                    atPropD["rcsb_search_group"] = fD["SEARCH_GROUP_AND_PRIORITY"]
             #
         except Exception as e:
             logger.exception("Failing with %s", str(e))

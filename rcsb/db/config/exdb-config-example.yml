@@ -9,204 +9,204 @@
 DEFAULT: {}
 ##
 site_info_configuration:
-    # Site specific path and server configuration options - (REFERENCING DEVELOPMENT RESOURCES)
-    #
-    CONFIG_SUPPORT_TOKEN: CONFIG_SUPPORT_TOKEN_ENV
-    #
-    # Database server connection details
-    #
-    MONGO_DB_HOST: localhost
-    MONGO_DB_PORT: '27017'
-    _MONGO_DB_USER_NAME: ''
-    _MONGO_DB_PASSWORD: ''
-    MYSQL_DB_HOST_NAME: localhost
-    MYSQL_DB_PORT_NUMBER: '3306'
-    _MYSQL_DB_USER_NAME: wrIzBGtCsQmkjc7tbEPQ3oEaOnpvivXaKcQsvXD6kn4KHMvA7LCL4O9GlAI=
-    _MYSQL_DB_PASSWORD: qXPp32Z6DhNVMwo9fQIK5+KB13c1Jd43E3Bn6LmJcSyXc0NAt4H/hwo/xglYpmELV5Vqaw==
-    MYSQL_DB_DATABASE_NAME: mysql
-    CRATE_DB_HOST: localhost
-    CRATE_DB_PORT: '4200'
-    COCKROACH_DB_HOST: localhost
-    COCKROACH_DB_PORT: '26257'
-    COCKROACH_DB_NAME: system
-    _COCKROACH_DB_USER_NAME: HR2ez8iLbEpvN+hXKIQS3qa6/QpiFRpf/WvrfHiwfjcL09E+iWTQJhsxTsw=
-    #
-    # Primary repository data and related computed repository data paths
-    #
-    BIRD_REPO_PATH: MOCK_BIRD_REPO
-    BIRD_FAMILY_REPO_PATH: MOCK_BIRD_FAMILY_REPO
-    BIRD_CHEM_COMP_REPO_PATH: MOCK_BIRD_CC_REPO
-    CHEM_COMP_REPO_PATH: MOCK_CHEM_COMP_REPO
-    PDBX_REPO_PATH: MOCK_PDBX_SANDBOX
-    RCSB_EXCHANGE_SANDBOX_PATH: MOCK_EXCHANGE_SANDBOX
-    IHM_DEV_REPO_PATH: MOCK_IHM_REPO
-    VRPT_REPO_PATH: MOCK_VALIDATION_REPORTS
-    VRPT_REPO_PATH_ENV: VRPT_REPO_PATH_ALT
-    #
-    RCSB_SEQUENCE_CLUSTER_DATA_PATH: cluster_data/mmseqs-20180608
-    SIFTS_SUMMARY_DATA_PATH: sifts-summary
-    # -------------------------------------------------------------------------------------------
-    #   -- Below are common across current deployments -
-    #
-    # Supporting and integrated resource data cache directory names
-    #
-    #DRUGBANK_CACHE_DIR: DrugBank
-    _DRUGBANK_AUTH_USERNAME: 0qrpNd4OhGuVsJqEpcsAVEovZ0hl6QkgxmbTy3bPssd06Z9tuM6bJqgsWwmFCd0JnjIMIEWyKPMmF1pI5g==
-    _DRUGBANK_AUTH_PASSWORD: lA/K132i8DOtLdMHfm3gpNqprZ6ABKjsCRxfcXIMnxpKQzBv/B6dmC7x1vRO86JhqdT0b84=
-    #
-    #ATC_CACHE_DIR: atc
-    #CHEM_COMP_CACHE_DIR: chem_comp
-    NCBI_TAXONOMY_CACHE_DIR: NCBI
-    ENZYME_CLASSIFICATION_CACHE_DIR: ec
-    STRUCT_DOMAIN_CLASSIFICATION_CACHE_DIR: domains_struct
-    SIFTS_SUMMARY_CACHE_DIR: sifts_summary
-    DICTIONARY_CACHE_DIR: dictionaries
-    DATA_TYPE_INFO_CACHE_DIR: data_type_and_coverage
-    REPO_UTIL_CACHE_DIR: repo_util
-    EXDB_CACHE_DIR: exdb
-    CITATION_REFERENCE_CACHE_DIR: cit_ref
-    #
-    #
-    PROVENANCE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/provenance/rcsb_extend_provenance_info.json
-    PROVENANCE_INFO_CACHE_DIR:  provenance
-    #
-    SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/schema_definitions
-    SCHEMA_DEFINITION_CACHE_DIR: schema_definitions
-    JSON_SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/json_schema_definitions
-    JSON_SCHEMA_DEFINITION_CACHE_DIR: json_schema_definitions
-    #
-    # Helper class binding and mappings
-    #
-    DICT_METHOD_HELPER_MODULE_PATH_MAP:
-      rcsb.db.helpers.DictMethodEntryHelper: rcsb.db.helpers.DictMethodEntryHelper
-      rcsb.db.helpers.DictMethodChemRefHelper: rcsb.db.helpers.DictMethodChemRefHelper
-      rcsb.db.helpers.DictMethodEntityHelper: rcsb.db.helpers.DictMethodEntityHelper
-      rcsb.db.helpers.DictMethodAssemblyHelper: rcsb.db.helpers.DictMethodAssemblyHelper
-      rcsb.db.helpers.DictMethodEntityInstanceHelper: rcsb.db.helpers.DictMethodEntityInstanceHelper
-    # ------ ------ ------ ------ ------ ------ ------ -------
-    # ADDED rcsb.db V0.966 Source dictionary locators -
-    #
-    PDBX_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/mmcif_pdbx_v5_next.dic
-    RCSB_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/rcsb_mmcif_ext_v1.dic
-    IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/ihm-extension.dic
-    FLR_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/flr-extension.dic
-    VRPT_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/vrpt_mmcif_ext.dic
-    VRPT_DICT_MAPPING_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/vrpt_dictmap.json
-    # ------ ------ ------ ------ ------ ------ ------ ------ ------
-    # Added in rcsb.db V0.966 - Data type details and type mapping
-    APP_DATA_TYPE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/data_type_and_coverage/app_data_type_mapping.cif
-    INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH:  https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/data_type_and_coverage
-    #
-    CONTENT_DEF_HELPER_MODULE: rcsb.db.helpers.ContentDefinitionHelper
-    DOCUMENT_DEF_HELPER_MODULE: rcsb.db.helpers.DocumentDefinitionHelper
-    CONFIG_APPEND_LOCATOR_PATHS:
-      - https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/config/exdb-config-schema.yml
+  # Site specific path and server configuration options - (REFERENCING DEVELOPMENT RESOURCES)
+  #
+  CONFIG_SUPPORT_TOKEN: CONFIG_SUPPORT_TOKEN_ENV
+  #
+  # Database server connection details
+  #
+  MONGO_DB_HOST: localhost
+  MONGO_DB_PORT: "27017"
+  _MONGO_DB_USER_NAME: ""
+  _MONGO_DB_PASSWORD: ""
+  MYSQL_DB_HOST_NAME: localhost
+  MYSQL_DB_PORT_NUMBER: "3306"
+  _MYSQL_DB_USER_NAME: wrIzBGtCsQmkjc7tbEPQ3oEaOnpvivXaKcQsvXD6kn4KHMvA7LCL4O9GlAI=
+  _MYSQL_DB_PASSWORD: qXPp32Z6DhNVMwo9fQIK5+KB13c1Jd43E3Bn6LmJcSyXc0NAt4H/hwo/xglYpmELV5Vqaw==
+  MYSQL_DB_DATABASE_NAME: mysql
+  CRATE_DB_HOST: localhost
+  CRATE_DB_PORT: "4200"
+  COCKROACH_DB_HOST: localhost
+  COCKROACH_DB_PORT: "26257"
+  COCKROACH_DB_NAME: system
+  _COCKROACH_DB_USER_NAME: HR2ez8iLbEpvN+hXKIQS3qa6/QpiFRpf/WvrfHiwfjcL09E+iWTQJhsxTsw=
+  #
+  # Primary repository data and related computed repository data paths
+  #
+  BIRD_REPO_PATH: MOCK_BIRD_REPO
+  BIRD_FAMILY_REPO_PATH: MOCK_BIRD_FAMILY_REPO
+  BIRD_CHEM_COMP_REPO_PATH: MOCK_BIRD_CC_REPO
+  CHEM_COMP_REPO_PATH: MOCK_CHEM_COMP_REPO
+  PDBX_REPO_PATH: MOCK_PDBX_SANDBOX
+  RCSB_EXCHANGE_SANDBOX_PATH: MOCK_EXCHANGE_SANDBOX
+  IHM_DEV_REPO_PATH: MOCK_IHM_REPO
+  VRPT_REPO_PATH: MOCK_VALIDATION_REPORTS
+  VRPT_REPO_PATH_ENV: VRPT_REPO_PATH_ALT
+  #
+  RCSB_SEQUENCE_CLUSTER_DATA_PATH: cluster_data/mmseqs-20180608
+  SIFTS_SUMMARY_DATA_PATH: sifts-summary
+  # -------------------------------------------------------------------------------------------
+  #   -- Below are common across current deployments -
+  #
+  # Supporting and integrated resource data cache directory names
+  #
+  #DRUGBANK_CACHE_DIR: DrugBank
+  _DRUGBANK_AUTH_USERNAME: 0qrpNd4OhGuVsJqEpcsAVEovZ0hl6QkgxmbTy3bPssd06Z9tuM6bJqgsWwmFCd0JnjIMIEWyKPMmF1pI5g==
+  _DRUGBANK_AUTH_PASSWORD: lA/K132i8DOtLdMHfm3gpNqprZ6ABKjsCRxfcXIMnxpKQzBv/B6dmC7x1vRO86JhqdT0b84=
+  #
+  #ATC_CACHE_DIR: atc
+  #CHEM_COMP_CACHE_DIR: chem_comp
+  NCBI_TAXONOMY_CACHE_DIR: NCBI
+  ENZYME_CLASSIFICATION_CACHE_DIR: ec
+  STRUCT_DOMAIN_CLASSIFICATION_CACHE_DIR: domains_struct
+  SIFTS_SUMMARY_CACHE_DIR: sifts_summary
+  DICTIONARY_CACHE_DIR: dictionaries
+  DATA_TYPE_INFO_CACHE_DIR: data_type_and_coverage
+  REPO_UTIL_CACHE_DIR: repo_util
+  EXDB_CACHE_DIR: exdb
+  CITATION_REFERENCE_CACHE_DIR: cit_ref
+  #
+  #
+  PROVENANCE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/provenance/rcsb_extend_provenance_info.json
+  PROVENANCE_INFO_CACHE_DIR: provenance
+  #
+  SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/schema_definitions
+  SCHEMA_DEFINITION_CACHE_DIR: schema_definitions
+  JSON_SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/json_schema_definitions
+  JSON_SCHEMA_DEFINITION_CACHE_DIR: json_schema_definitions
+  #
+  # Helper class binding and mappings
+  #
+  DICT_METHOD_HELPER_MODULE_PATH_MAP:
+    rcsb.db.helpers.DictMethodEntryHelper: rcsb.db.helpers.DictMethodEntryHelper
+    rcsb.db.helpers.DictMethodChemRefHelper: rcsb.db.helpers.DictMethodChemRefHelper
+    rcsb.db.helpers.DictMethodEntityHelper: rcsb.db.helpers.DictMethodEntityHelper
+    rcsb.db.helpers.DictMethodAssemblyHelper: rcsb.db.helpers.DictMethodAssemblyHelper
+    rcsb.db.helpers.DictMethodEntityInstanceHelper: rcsb.db.helpers.DictMethodEntityInstanceHelper
+  # ------ ------ ------ ------ ------ ------ ------ -------
+  # ADDED rcsb.db V0.966 Source dictionary locators -
+  #
+  PDBX_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/mmcif_pdbx_v5_next.dic
+  RCSB_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/rcsb_mmcif_ext_v1.dic
+  IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/ihm-extension.dic
+  FLR_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/flr-extension.dic
+  VRPT_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/vrpt_mmcif_ext.dic
+  VRPT_DICT_MAPPING_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/vrpt_dictmap.json
+  # ------ ------ ------ ------ ------ ------ ------ ------ ------
+  # Added in rcsb.db V0.966 - Data type details and type mapping
+  APP_DATA_TYPE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/data_type_and_coverage/app_data_type_mapping.cif
+  INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/data_type_and_coverage
+  #
+  CONTENT_DEF_HELPER_MODULE: rcsb.db.helpers.ContentDefinitionHelper
+  DOCUMENT_DEF_HELPER_MODULE: rcsb.db.helpers.DocumentDefinitionHelper
+  CONFIG_APPEND_LOCATOR_PATHS:
+    - https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/config/exdb-config-schema.yml
 #
 ##
 site_info_remote_configuration:
-    # Site specific path and server configuration options - (REFERENCING DEVELOPMENT RESOURCES)
-    #
-    CONFIG_SUPPORT_TOKEN: CONFIG_SUPPORT_TOKEN_ENV
-    #
-    # Database server connection details:
-    #     dev: 128.6.244.78
-    # staging: 128.6.244.222
-    #
-    MONGO_DB_HOST: 128.6.244.78
-    MONGO_DB_PORT: '27017'
-    _MONGO_DB_USER_NAME: ''
-    _MONGO_DB_PASSWORD: ''
-    MONGO_DB_ADMIN_DB_NAME: admin
-    #
-    #  Old Mongo-v4 clusters
-    # MONGO_DB_HOST: 128.6.244.57
-    # MONGO_DB_HOST: 132.249.213.189
-    # MONGO_DB_PORT: '27017'
-    #_MONGO_DB_USER_NAME: VT07dR5TeajhsXUNzAZnhAHc/qaCZkbwlfwMKVmd+OHwvYMACcrB+25jY1IOClrZ
-    #_MONGO_DB_PASSWORD: Mr3LslVzCkbErV3+5a3snm2RBaTrZo/Xi219hjSnwBxxHHHG6V36a6igSJSrmFTd0yQ=
-    #
-    #
-    MYSQL_DB_HOST_NAME: localhost
-    MYSQL_DB_PORT_NUMBER: '3306'
-    _MYSQL_DB_USER_NAME: wrIzBGtCsQmkjc7tbEPQ3oEaOnpvivXaKcQsvXD6kn4KHMvA7LCL4O9GlAI=
-    _MYSQL_DB_PASSWORD: qXPp32Z6DhNVMwo9fQIK5+KB13c1Jd43E3Bn6LmJcSyXc0NAt4H/hwo/xglYpmELV5Vqaw==
-    MYSQL_DB_DATABASE_NAME: mysql
-    #
-    CRATE_DB_HOST: localhost
-    CRATE_DB_PORT: '4200'
-    COCKROACH_DB_HOST: localhost
-    COCKROACH_DB_PORT: '26257'
-    COCKROACH_DB_NAME: system
-    _COCKROACH_DB_USER_NAME: HR2ez8iLbEpvN+hXKIQS3qa6/QpiFRpf/WvrfHiwfjcL09E+iWTQJhsxTsw=
-    #
-    # Primary repository data and related computed repository data paths
-    #
-    BIRD_REPO_PATH: /net/data/components/prd-v3
-    BIRD_FAMILY_REPO_PATH: /net/data/components/family-v3
-    BIRD_CHEM_COMP_REPO_PATH: /data/components/prdcc-v3
-    CHEM_COMP_REPO_PATH: /net/data/components/ligand-dict-v3
-    # PDBX_REPO_PATH: /net/beta_data/mmcif-pdbx-load-v5.0
-    PDBX_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/data/structures/divided/mmCIF
-    RCSB_EXCHANGE_SANDBOX_PATH: /net/sandbox_v5/ftp-v5.0-support
-    IHM_DEV_REPO_PATH: ../py-rcsb_db/rcsb/mock-data/MOCK_IHM_REPOMOCK_IHM_REPO
-    VRPT_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/validation_reports
-    VRPT_REPO_PATH_ENV: VRPT_REPO_PATH_ALT
-    #
-    RCSB_SEQUENCE_CLUSTER_DATA_PATH: /net/users/update/Data/sequence-clusters/current-mmseqs
-    SIFTS_SUMMARY_DATA_PATH: /net/data-remote/ebi/sifts/flatfiles/csv
-    # -------------------------------------------------------------------------------------------
-    #   -- Options below in this section are common across current deployments -
-    #
-    # Supporting and integrated resource data cache directory names
-    #
-    #DRUGBANK_CACHE_DIR: DrugBank
-    _DRUGBANK_AUTH_USERNAME: 0qrpNd4OhGuVsJqEpcsAVEovZ0hl6QkgxmbTy3bPssd06Z9tuM6bJqgsWwmFCd0JnjIMIEWyKPMmF1pI5g==
-    _DRUGBANK_AUTH_PASSWORD: lA/K132i8DOtLdMHfm3gpNqprZ6ABKjsCRxfcXIMnxpKQzBv/B6dmC7x1vRO86JhqdT0b84=
-    #
-    #ATC_CACHE_DIR: atc
-    #CHEM_COMP_CACHE_DIR: chem_comp
-    NCBI_TAXONOMY_CACHE_DIR: NCBI
-    ENZYME_CLASSIFICATION_CACHE_DIR: ec
-    STRUCT_DOMAIN_CLASSIFICATION_CACHE_DIR: domains_struct
-    SIFTS_SUMMARY_CACHE_DIR: sifts_summary
-    DICTIONARY_CACHE_DIR: dictionaries
-    DATA_TYPE_INFO_CACHE_DIR: data_type_and_coverage
-    REPO_UTIL_CACHE_DIR: repo_util
-    EXDB_CACHE_DIR: exdb
-    CITATION_REFERENCE_CACHE_DIR: cit_ref
-    #
-    PROVENANCE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/provenance/rcsb_extend_provenance_info.json
-    PROVENANCE_INFO_CACHE_DIR:  provenance
-    #
-    SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/schema_definitions
-    SCHEMA_DEFINITION_CACHE_DIR: schema_definitions
-    JSON_SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/json_schema_definitions
-    JSON_SCHEMA_DEFINITION_CACHE_DIR: json_schema_definitions
-    #
-    # Helper class binding and mappings
-    #
-    DICT_METHOD_HELPER_MODULE_PATH_MAP:
-      rcsb.db.helpers.DictMethodEntryHelper: rcsb.db.helpers.DictMethodEntryHelper
-      rcsb.db.helpers.DictMethodChemRefHelper: rcsb.db.helpers.DictMethodChemRefHelper
-      rcsb.db.helpers.DictMethodEntityHelper: rcsb.db.helpers.DictMethodEntityHelper
-      rcsb.db.helpers.DictMethodAssemblyHelper: rcsb.db.helpers.DictMethodAssemblyHelper
-      rcsb.db.helpers.DictMethodEntityInstanceHelper: rcsb.db.helpers.DictMethodEntityInstanceHelper
-    #
-    # ADDED rcsb.db V0.966 Source dictionary locators -
-    #
-    PDBX_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionaries/mmcif_pdbx_v5_next.dic
-    RCSB_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionaries/rcsb_mmcif_ext_v1.dic
-    IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionaries/ihm-extension.dic
-    FLR_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionaries/flr-extension.dic
-    VRPT_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionaries/vrpt_mmcif_ext.dic
-    VRPT_DICT_MAPPING_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionaries/vrpt_dictmap.json
-    #
-    # Added in rcsb.db V0.966 - Data type details and type mapping
-    APP_DATA_TYPE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/data_type_and_coverage/app_data_type_mapping.cif
-    INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH:  https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/data_type_and_coverage
-    #
-    CONTENT_DEF_HELPER_MODULE: rcsb.db.helpers.ContentDefinitionHelper
-    DOCUMENT_DEF_HELPER_MODULE: rcsb.db.helpers.DocumentDefinitionHelper
-    CONFIG_APPEND_LOCATOR_PATHS:
-      - https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/config/exdb-config-schema.yml
+  # Site specific path and server configuration options - (REFERENCING DEVELOPMENT RESOURCES)
+  #
+  CONFIG_SUPPORT_TOKEN: CONFIG_SUPPORT_TOKEN_ENV
+  #
+  # Database server connection details:
+  #     dev: 128.6.244.78
+  # staging: 128.6.244.222
+  #
+  MONGO_DB_HOST: 128.6.244.78
+  MONGO_DB_PORT: "27017"
+  _MONGO_DB_USER_NAME: ""
+  _MONGO_DB_PASSWORD: ""
+  MONGO_DB_ADMIN_DB_NAME: admin
+  #
+  #  Old Mongo-v4 clusters
+  # MONGO_DB_HOST: 128.6.244.57
+  # MONGO_DB_HOST: 132.249.213.189
+  # MONGO_DB_PORT: '27017'
+  #_MONGO_DB_USER_NAME: VT07dR5TeajhsXUNzAZnhAHc/qaCZkbwlfwMKVmd+OHwvYMACcrB+25jY1IOClrZ
+  #_MONGO_DB_PASSWORD: Mr3LslVzCkbErV3+5a3snm2RBaTrZo/Xi219hjSnwBxxHHHG6V36a6igSJSrmFTd0yQ=
+  #
+  #
+  MYSQL_DB_HOST_NAME: localhost
+  MYSQL_DB_PORT_NUMBER: "3306"
+  _MYSQL_DB_USER_NAME: wrIzBGtCsQmkjc7tbEPQ3oEaOnpvivXaKcQsvXD6kn4KHMvA7LCL4O9GlAI=
+  _MYSQL_DB_PASSWORD: qXPp32Z6DhNVMwo9fQIK5+KB13c1Jd43E3Bn6LmJcSyXc0NAt4H/hwo/xglYpmELV5Vqaw==
+  MYSQL_DB_DATABASE_NAME: mysql
+  #
+  CRATE_DB_HOST: localhost
+  CRATE_DB_PORT: "4200"
+  COCKROACH_DB_HOST: localhost
+  COCKROACH_DB_PORT: "26257"
+  COCKROACH_DB_NAME: system
+  _COCKROACH_DB_USER_NAME: HR2ez8iLbEpvN+hXKIQS3qa6/QpiFRpf/WvrfHiwfjcL09E+iWTQJhsxTsw=
+  #
+  # Primary repository data and related computed repository data paths
+  #
+  BIRD_REPO_PATH: /net/data/components/prd-v3
+  BIRD_FAMILY_REPO_PATH: /net/data/components/family-v3
+  BIRD_CHEM_COMP_REPO_PATH: /data/components/prdcc-v3
+  CHEM_COMP_REPO_PATH: /net/data/components/ligand-dict-v3
+  # PDBX_REPO_PATH: /net/beta_data/mmcif-pdbx-load-v5.0
+  PDBX_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/data/structures/divided/mmCIF
+  RCSB_EXCHANGE_SANDBOX_PATH: /net/sandbox_v5/ftp-v5.0-support
+  IHM_DEV_REPO_PATH: ../py-rcsb_db/rcsb/mock-data/MOCK_IHM_REPOMOCK_IHM_REPO
+  VRPT_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/validation_reports
+  VRPT_REPO_PATH_ENV: VRPT_REPO_PATH_ALT
+  #
+  RCSB_SEQUENCE_CLUSTER_DATA_PATH: /net/users/update/Data/sequence-clusters/current-mmseqs
+  SIFTS_SUMMARY_DATA_PATH: /net/data-remote/ebi/sifts/flatfiles/csv
+  # -------------------------------------------------------------------------------------------
+  #   -- Options below in this section are common across current deployments -
+  #
+  # Supporting and integrated resource data cache directory names
+  #
+  #DRUGBANK_CACHE_DIR: DrugBank
+  _DRUGBANK_AUTH_USERNAME: 0qrpNd4OhGuVsJqEpcsAVEovZ0hl6QkgxmbTy3bPssd06Z9tuM6bJqgsWwmFCd0JnjIMIEWyKPMmF1pI5g==
+  _DRUGBANK_AUTH_PASSWORD: lA/K132i8DOtLdMHfm3gpNqprZ6ABKjsCRxfcXIMnxpKQzBv/B6dmC7x1vRO86JhqdT0b84=
+  #
+  #ATC_CACHE_DIR: atc
+  #CHEM_COMP_CACHE_DIR: chem_comp
+  NCBI_TAXONOMY_CACHE_DIR: NCBI
+  ENZYME_CLASSIFICATION_CACHE_DIR: ec
+  STRUCT_DOMAIN_CLASSIFICATION_CACHE_DIR: domains_struct
+  SIFTS_SUMMARY_CACHE_DIR: sifts_summary
+  DICTIONARY_CACHE_DIR: dictionaries
+  DATA_TYPE_INFO_CACHE_DIR: data_type_and_coverage
+  REPO_UTIL_CACHE_DIR: repo_util
+  EXDB_CACHE_DIR: exdb
+  CITATION_REFERENCE_CACHE_DIR: cit_ref
+  #
+  PROVENANCE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/provenance/rcsb_extend_provenance_info.json
+  PROVENANCE_INFO_CACHE_DIR: provenance
+  #
+  SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/schema_definitions
+  SCHEMA_DEFINITION_CACHE_DIR: schema_definitions
+  JSON_SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/json_schema_definitions
+  JSON_SCHEMA_DEFINITION_CACHE_DIR: json_schema_definitions
+  #
+  # Helper class binding and mappings
+  #
+  DICT_METHOD_HELPER_MODULE_PATH_MAP:
+    rcsb.db.helpers.DictMethodEntryHelper: rcsb.db.helpers.DictMethodEntryHelper
+    rcsb.db.helpers.DictMethodChemRefHelper: rcsb.db.helpers.DictMethodChemRefHelper
+    rcsb.db.helpers.DictMethodEntityHelper: rcsb.db.helpers.DictMethodEntityHelper
+    rcsb.db.helpers.DictMethodAssemblyHelper: rcsb.db.helpers.DictMethodAssemblyHelper
+    rcsb.db.helpers.DictMethodEntityInstanceHelper: rcsb.db.helpers.DictMethodEntityInstanceHelper
+  #
+  # ADDED rcsb.db V0.966 Source dictionary locators -
+  #
+  PDBX_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionaries/mmcif_pdbx_v5_next.dic
+  RCSB_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionaries/rcsb_mmcif_ext_v1.dic
+  IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionaries/ihm-extension.dic
+  FLR_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionaries/flr-extension.dic
+  VRPT_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionaries/vrpt_mmcif_ext.dic
+  VRPT_DICT_MAPPING_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionaries/vrpt_dictmap.json
+  #
+  # Added in rcsb.db V0.966 - Data type details and type mapping
+  APP_DATA_TYPE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/data_type_and_coverage/app_data_type_mapping.cif
+  INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/data_type_and_coverage
+  #
+  CONTENT_DEF_HELPER_MODULE: rcsb.db.helpers.ContentDefinitionHelper
+  DOCUMENT_DEF_HELPER_MODULE: rcsb.db.helpers.DocumentDefinitionHelper
+  CONFIG_APPEND_LOCATOR_PATHS:
+    - https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/config/exdb-config-schema.yml
 #

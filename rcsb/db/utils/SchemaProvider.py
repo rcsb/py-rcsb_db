@@ -343,7 +343,7 @@ class SchemaProvider(SingletonClass):
                 schemaLocator = self.__getJsonSchemaLocator(databaseName, collectionName, encodingType=encodingType, level=level)
                 localPath = os.path.join(self.__jsonSchemaCachePath, self.__fileU.getFileName(schemaLocator))
                 mU = MarshalUtil(workPath=self.__workPath)
-                mU.doExport(localPath, cD, fmt="json", indent=3)
+                mU.doExport(localPath, cD, fmt="json", indent=3, enforceAscii=False)
         except Exception as e:
             logger.exception("Building schema %s collection %s failing with %s", databaseName, collectionName, str(e))
         return cD
@@ -357,7 +357,7 @@ class SchemaProvider(SingletonClass):
                 schemaLocator = self.__getSchemaDefLocator(databaseName, dataTyping=dataTyping)
                 localPath = os.path.join(self.__schemaCachePath, self.__fileU.getFileName(schemaLocator))
                 mU = MarshalUtil(workPath=self.__workPath)
-                mU.doExport(localPath, schemaDef, fmt="json", indent=3)
+                mU.doExport(localPath, schemaDef, fmt="json", indent=3, enforceAscii=False)
         except Exception as e:
             logger.exception("Building schema %s failing with %s", databaseName, str(e))
         return schemaDef
