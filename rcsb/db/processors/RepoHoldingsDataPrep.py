@@ -502,6 +502,12 @@ class RepoHoldingsDataPrep(object):
                 "releaseDate": "1994-01-31",
                 "obsoletedBy": [
                     "1AW6"
+                ],
+                "content_type": [
+                    "entry mmCIF",
+                    "entry PDB",
+                    "entry PDBML",
+                    "structure factors"
                 ]},
 
         Returns;
@@ -523,10 +529,15 @@ class RepoHoldingsDataPrep(object):
             fp = os.path.join(dirPath, "status", "obsolete_entry.json_2")
             dD = self.__mU.doImport(fp, "json")
             for dT in dD:
+                # ---
+                ctL = dT["content_type"] if "content_type" in dT else []
+                # ---
                 rbL = dT["obsoletedBy"] if "obsoletedBy" in dT else []
                 d1 = {"title": dT["title"], "details": dT["details"], "audit_authors": dT["depositionAuthors"]}
                 if rbL:
                     d1["id_codes_replaced_by"] = rbL
+                if ctL:
+                    d1["repository_content_types"] = ctL
 
                 dTupL = [("deposit_date", "depositionDate"), ("remove_date", "obsoletedDate"), ("release_date", "releaseDate")]
                 for dTup in dTupL:
