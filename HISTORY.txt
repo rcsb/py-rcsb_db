@@ -226,4 +226,5 @@
  17-Mar-2020  V0.970 Add separate primary citation category and offset for zero based sequence database references
  24-Mar-2020  V0.971 Add support for rcsb_chem_comp_annotation and various fixes for schema builder.
  27-Mar-2020  V0.972 Add support for rcsb_repository_holdings_removed.repository_content_types
- 11-Apr-2020  V0.973 Add test case for pdbx_audit_revision_details.description
+  1-Apr-2020  V0.973 Add test cases for pdbx_audit_revision_details.description
+  1-Apr-2020  V0.974 Add test cases for RESID annotations

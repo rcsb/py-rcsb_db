@@ -70,7 +70,7 @@ setup(
         "rcsb.utils.config >= 0.33",
         "rcsb.utils.multiproc >= 0.16",
         "rcsb.utils.validation >= 0.20",
-        "rcsb.utils.chemref >= 0.36",
+        "rcsb.utils.chemref >= 0.38",
         "rcsb.utils.citation >= 0.15",
         "rcsb.utils.ec >= 0.21",
         "rcsb.utils.taxonomy >= 0.28",

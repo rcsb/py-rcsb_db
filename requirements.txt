@@ -11,7 +11,7 @@ mmcif >= 0.51
 rcsb.utils.config >= 0.33
 rcsb.utils.io >= 0.57
 rcsb.utils.multiproc >= 0.16
-rcsb.utils.chemref >= 0.36
+rcsb.utils.chemref >= 0.38
 rcsb.utils.citation >= 0.15
 rcsb.utils.validation >= 0.20
 scandir; python_version < "3.0"
