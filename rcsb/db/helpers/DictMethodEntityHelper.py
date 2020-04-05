@@ -1165,7 +1165,7 @@ class DictMethodEntityHelper(object):
                         eObj.setValue("?", "rcsb_enzyme_class_combined_provenance_source", ii)
                         eObj.setValue("?", "rcsb_enzyme_class_combined_depth", ii)
                         if ecIdL:
-                            logger.warning("%s non-existent EC class detected %r", dataContainer.getName(), ecV)
+                            logger.warning("%s obsolete or undefined EC class detected %r", dataContainer.getName(), ecV)
             return True
         except Exception as e:
             logger.exception("For %s %s failing with %s", catName, atName, str(e))

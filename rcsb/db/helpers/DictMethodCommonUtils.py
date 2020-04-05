@@ -2251,7 +2251,7 @@ class DictMethodCommonUtils(object):
                             idbSeqIdEnd = int(dbSeqIdEnd)
                             idbSeqIdEnd += 1
                             dbSeqIdEnd = str(idbSeqIdEnd)
-                            logger.info("%s offset reference sequence database position", dataContainer.getName())
+                            logger.debug("%s offset reference sequence database position", dataContainer.getName())
                     except Exception:
                         pass
                     # ----
