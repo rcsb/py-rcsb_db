@@ -831,9 +831,48 @@ class DictMethodEntryHelper(object):
                 cObj.setValue(str(polymerLengthBounds[0]), "polymer_monomer_count_minimum", 0)
                 cObj.setValue(str(polymerLengthBounds[1]), "polymer_monomer_count_maximum", 0)
             #
+            # ---------------------------------------------------------------------------------------------------------
+            # Consolidate diffraction wavelength details -
+            wL = []
+            try:
+                if dataContainer.exists("diffrn_radiation_wavelength"):
+                    swObj = dataContainer.getObj("diffrn_radiation_wavelength")
+                    wL.extend(swObj.getAttributeUniqueValueList("wavelength"))
+                if dataContainer.exists("diffrn_radiation"):
+                    swObj = dataContainer.getObj("diffrn_radiation")
+                    if swObj.hasAttribute("pdbx_wavelength"):
+                        wL.extend(swObj.getAttributeUniqueValueList("pdbx_wavelength"))
+                    if swObj.hasAttribute("pdbx_wavelength_list"):
+                        tL = []
+                        for tS in swObj.getAttributeUniqueValueList("pdbx_wavelength_list"):
+                            tL.extend(tS.split(","))
+                        if tL:
+                            wL.extend(tL)
+                if dataContainer.exists("diffrn_source"):
+                    swObj = dataContainer.getObj("diffrn_source")
+                    if swObj.hasAttribute("pdbx_wavelength"):
+                        wL.extend(swObj.getAttributeUniqueValueList("pdbx_wavelength"))
+                    if swObj.hasAttribute("pdbx_wavelength_list"):
+                        tL = []
+                        for tS in swObj.getAttributeUniqueValueList("pdbx_wavelength_list"):
+                            tL.extend(tS.split(","))
+                        if tL:
+                            wL.extend(tL)
+                fL = []
+                for wS in wL:
+                    try:
+                        fL.append(float(wS))
+                    except Exception:
+                        pass
+                if fL:
+                    cObj.setValue("%.4f" % min(fL), "diffrn_radiation_wavelength_minimum", 0)
+                    cObj.setValue("%.4f" % max(fL), "diffrn_radiation_wavelength_maximum", 0)
+            except Exception as e:
+                logger.exception("%s failing wavelength processing with %s", entryId, str(e))
             return True
         except Exception as e:
             logger.exception("For %s %r failing with %s", dataContainer.getName(), catName, str(e))
+        #
         return False
 
     def filterBlockByMethod(self, dataContainer, blockName, **kwargs):
@@ -987,11 +1026,9 @@ class DictMethodEntryHelper(object):
             cObj = dataContainer.getObj("citation")
             catName = "rcsb_primary_citation"
             #
-            # Create the new target category rcsb_entry_info
             if not dataContainer.exists(catName):
                 dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
             # --------------------------------------------------------------------------------------------------------
-            # catName = rcsb_entry_info
             rObj = dataContainer.getObj(catName)
             atNameList = self.__dApi.getAttributeNameList(catName)
             logger.debug("Category %s dict attributes %r", catName, atNameList)

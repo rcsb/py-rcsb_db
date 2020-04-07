@@ -229,3 +229,5 @@
   1-Apr-2020  V0.973 Add test cases for pdbx_audit_revision_details.description
   1-Apr-2020  V0.974 Add test cases for RESID annotations
   5-Apr-2020  V0.975 Adjustments to logging details for sequence processing
+  7-Apr-2020  V0.976 Add min/max for consolidated diffraction wavelength details
+
