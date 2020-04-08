@@ -781,8 +781,8 @@ class SchemaDefBuild(object):
                             if dataTypingU == "JSON" and addRcsbExtensions:
                                 if documentDefHelper.isSubCategoryNested(collectionName, catName, subCategory):
                                     tD = documentDefHelper.getSubCategoryNestedContext(collectionName, catName, subCategory)
-                                    if "FIRST_CONTEXT_PATH" in tD:
-                                        catPropD["rcsb_nested_indexing"] = True
+                                    if "FIRST_CONTEXT_PATH" in tD and tD["FIRST_CONTEXT_PATH"]:
+                                        subCatPropD[subCategory]["rcsb_nested_indexing"] = True
                                         subCatPropD[subCategory]["rcsb_nested_indexing_context"] = [
                                             {"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"]}
                                         ]

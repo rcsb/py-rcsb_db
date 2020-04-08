@@ -483,8 +483,12 @@ class DocumentDefinitionHelper(object):
         for collectionName, nDL in self.__cfgD["collection_subcategory_nested"].items():
             subCatD = {}
             for nD in nDL:
-                if "CONTEXT_ATTRIBUTE_NAMES" in nD:
-                    subCatD[(nD["CATEGORY"], nD["SUBCATEGORY"])] = {"CONTEXT_NAME": nD["SUBCATEGORY"], "CONTEXT_PATHS": nD["CONTEXT_ATTRIBUTE_NAMES"]}
+                if "CONTEXT_ATTRIBUTE_NAMES" in nD and "SUBCATEGORY" in nD:
+                    subCatD[(nD["CATEGORY"], nD["SUBCATEGORY"])] = {
+                        "CONTEXT_NAME": nD["SUBCATEGORY"],
+                        "CONTEXT_PATHS": nD["CONTEXT_ATTRIBUTE_NAMES"],
+                        "FIRST_CONTEXT_PATH": nD["CONTEXT_ATTRIBUTE_NAMES"][0],
+                    }
                 else:
                     subCatD[(nD["CATEGORY"], nD["SUBCATEGORY"])] = {"CONTEXT_NAME": nD["SUBCATEGORY"]}
             cD[collectionName] = subCatD
@@ -522,12 +526,13 @@ class DocumentDefinitionHelper(object):
             (dict): {"CONTEXT_NAME": <name>, "CONTEXT_PATHS": <full_path_list>}
 
         """
-        ret = False
+        ret = None
         try:
             self.__subCategoryNested = self.__prepareSubCategoryNested() if not self.__subCategoryNested else self.__subCategoryNested
             ret = self.__subCategoryNested[collectionName][(categoryName, subCategoryName)]
         except Exception:
             pass
+        logger.debug("collection %r category %r subcat %r : %r", collectionName, categoryName, subCategoryName, ret)
         return ret
 
     def __prepareAttributeSearchPriorities(self):
