@@ -507,7 +507,8 @@ class DictMethodEntryHelper(object):
         return False
 
     def consolidateAccessionDetails(self, dataContainer, catName, **kwargs):
-        """ Consolidate accession details into the rcsb_accession_info category.
+        """ Consolidate accession details into the rcsb_accession_info category. Also include
+        a flag for the availability of any supporting experimental data.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -553,6 +554,13 @@ class DictMethodEntryHelper(object):
             4 'Structure model' 1 3 2014-11-12
             5 'Structure model' 1 4 2017-10-25
             #
+
+            #  - For EM and SAS -
+            _pdbx_database_related.db_name        EMDB
+            _pdbx_database_related.details
+            'pseudo-atomic model of the RNA polymerase lambda-based antitermination complex solved by cryo-EM'
+            _pdbx_database_related.db_id          EMD-3561
+            _pdbx_database_related.content_type   'associated EM volume'
         """
         ##
         try:
@@ -576,7 +584,24 @@ class DictMethodEntryHelper(object):
             cObj.setValue(statusCode, "status_code", 0)
             cObj.setValue(depositDate, "deposit_date", 0)
             # cObj.setValue(depositDate[:4], "deposit_year", 0)
-
+            #
+            # -- Experimental data availability --
+            #
+            expDataRelFlag = "N"
+            statusSf = tObj.getValueOrDefault("status_code_sf", 0, defaultValue=None)
+            statusMr = tObj.getValueOrDefault("status_code_mr", 0, defaultValue=None)
+            statusCs = tObj.getValueOrDefault("status_code_cs", 0, defaultValue=None)
+            #
+            if statusSf == "REL" or statusMr == "REL" or statusCs == "REL":
+                expDataRelFlag = "Y"
+            else:
+                if dataContainer.exists("pdbx_database_related"):
+                    rObj = dataContainer.getObj("pdbx_database_related")
+                    ctL = rObj.getAttributeValueList("content_type")
+                    if "associated EM volume" in ctL or "associated SAS data" in ctL:
+                        expDataRelFlag = "Y"
+            #
+            cObj.setValue(expDataRelFlag, "has_released_experimental_data", 0)
             #
             tObj = dataContainer.getObj("pdbx_audit_revision_history")
             nRows = tObj.getRowCount()
