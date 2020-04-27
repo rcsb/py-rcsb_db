@@ -805,7 +805,7 @@ class DictMethodEntityInstanceHelper(object):
         return False
 
     def addConnectionDetails(self, dataContainer, catName, **kwargs):
-        """ Build rcsb_struc_conn category -
+        """ Build rcsb_struct_conn category -
 
         Args:
             dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance

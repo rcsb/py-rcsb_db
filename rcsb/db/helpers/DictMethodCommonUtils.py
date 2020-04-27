@@ -1798,6 +1798,7 @@ class DictMethodCommonUtils(object):
             "value_order": "pdbx_value_order",
             "dist_value": "pdbx_dist_value",
             "description": "details",
+            "role": "pdbx_role",
         }
         jAttMapD = {
             "id": "id",
@@ -1818,6 +1819,7 @@ class DictMethodCommonUtils(object):
             "value_order": "pdbx_value_order",
             "dist_value": "pdbx_dist_value",
             "description": "details",
+            "role": "pdbx_role",
         }
         typeMapD = {
             "covale": "covalent bond",
@@ -1849,14 +1851,16 @@ class DictMethodCommonUtils(object):
                 #
                 tD = OrderedDict()
                 for ky, atName in iAttMapD.items():
-                    val = tObj.getValue(atName, ii) if atName != "conn_type_id" else typeMapD[tObj.getValue(atName, ii).lower()]
-                    tD[ky] = val
+                    if tObj.hasAttribute(atName):
+                        val = tObj.getValue(atName, ii) if atName != "conn_type_id" else typeMapD[tObj.getValue(atName, ii).lower()]
+                        tD[ky] = val
                 instConnectL.append(tD)
                 # Flip the bond sense so all target connections are accounted for
                 tD = OrderedDict()
                 for ky, atName in jAttMapD.items():
-                    val = tObj.getValue(atName, ii) if atName != "conn_type_id" else typeMapD[tObj.getValue(atName, ii).lower()]
-                    tD[ky] = val
+                    if tObj.hasAttribute(atName):
+                        val = tObj.getValue(atName, ii) if atName != "conn_type_id" else typeMapD[tObj.getValue(atName, ii).lower()]
+                        tD[ky] = val
                 instConnectL.append(tD)
 
             boundNonpolymerEntityD, boundNonpolymerInstanceD, boundNonpolymerComponentIdL = self.__getBoundNonpolymers(dataContainer, instConnectL)

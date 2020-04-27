@@ -1731,7 +1731,7 @@ class DictMethodEntityHelper(object):
                     ("rcsb_entity_instance_feature_summary", "rcsb_branched_instance_feature_summary", "entity_id"),
                     ("rcsb_entity_instance_validation_feature", "rcsb_branched_instance_feature", "entity_id"),
                     ("rcsb_entity_instance_validation_feature_summary", "rcsb_branched_instance_feature_summary", "entity_id"),
-                    ("rcsb_struct_conn", "rcsb_branched _struct_conn", "entity_id"),
+                    ("rcsb_struct_conn", "rcsb_branched_struct_conn", "entity_id"),
                     ("rcsb_entity_annotation", "rcsb_branched_entity_annotation", "entity_id"),
                     ("rcsb_entity_instance_annotation", "rcsb_branched_instance_annotation", "entity_id"),
                 ],
