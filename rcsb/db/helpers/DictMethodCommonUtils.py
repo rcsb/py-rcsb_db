@@ -1085,8 +1085,9 @@ class DictMethodCommonUtils(object):
                 for ii in range(brsObj.getRowCount()):
                     asymId = brsObj.getValue("asym_id", ii)
                     entityId = brsObj.getValue("entity_id", ii)
-                    authAsymId = brsObj.getValue("auth_asym_id", ii)
-                    authSeqNum = brsObj.getValue("auth_seq_num", ii)
+                    #
+                    authAsymId = brsObj.getValue("pdb_asym_id", ii)
+                    authSeqNum = brsObj.getValue("pdb_seq_num", ii)
                     monId = brsObj.getValue("mon_id", ii)
                     seqNum = brsObj.getValue("num", ii)
                     asymAuthIdD[asymId] = authAsymId

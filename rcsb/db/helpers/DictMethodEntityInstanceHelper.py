@@ -60,6 +60,7 @@ class DictMethodEntityInstanceHelper(object):
         _rcsb_entity_instance_container_identifiers.comp_id
         _rcsb_entity_instance_container_identifiers.auth_seq_id
         ...
+
         """
         logger.debug("Starting catName %s kwargs %r", catName, kwargs)
         try:
@@ -71,18 +72,19 @@ class DictMethodEntityInstanceHelper(object):
             cObj = dataContainer.getObj(catName)
             asymD = self.__commonU.getInstanceIdMap(dataContainer)
             npAuthAsymD = self.__commonU.getNonPolymerIdMap(dataContainer)
+            brAuthAsymD = self.__commonU.getBranchedIdMap(dataContainer)
             #
             for ii, ky in enumerate(sorted(asymD)):
                 for k, v in asymD[ky].items():
                     cObj.setValue(v, k, ii)
 
-            ok = self.__addPdbxValidateAsymIds(dataContainer, asymD, npAuthAsymD)
+            ok = self.__addPdbxValidateAsymIds(dataContainer, asymD, npAuthAsymD, brAuthAsymD)
             return ok
         except Exception as e:
             logger.exception("For %s failing with %s", catName, str(e))
         return False
 
-    def __addPdbxValidateAsymIds(self, dataContainer, asymMapD, npAuthAsymMapD):
+    def __addPdbxValidateAsymIds(self, dataContainer, asymMapD, npAuthAsymMapD, brAuthAsymMapD):
         """ Internal method to insert Asym_id's into the following categories:
 
                 _pdbx_validate_close_contact.rcsb_label_asym_id_1
@@ -123,7 +125,7 @@ class DictMethodEntityInstanceHelper(object):
             "pdbx_validate_polymer_linkage": [("auth_asym_id_1", "auth_seq_id_1", "rcsb_label_asym_id_1"), ("auth_asym_id_2", "auth_seq_id_2", "rcsb_label_asym_id_2")],
             "pdbx_distant_solvent_atoms": [("auth_asym_id", "auth_seq_id", "rcsb_label_asym_id")],
         }
-        #
+        # -- JDW
         # polymer lookup
         authAsymD = {}
         for asymId, dD in asymMapD.items():
@@ -136,7 +138,13 @@ class DictMethodEntityInstanceHelper(object):
         for (authAsymId, seqId), dD in npAuthAsymMapD.items():
             if dD["entity_type"].lower() not in ["polymer", "branched"]:
                 authAsymD[(authAsymId, seqId)] = dD["asym_id"]
-
+        #
+        # branched lookup
+        logger.debug("%s authAsymD %r", dataContainer.getName(), authAsymD)
+        for (authAsymId, seqId), dD in brAuthAsymMapD.items():
+            if dD["entity_type"].lower() in ["branched"]:
+                authAsymD[(authAsymId, seqId)] = dD["asym_id"]
+        #
         #
         for catName, mTupL in mD.items():
             if not dataContainer.exists(catName):
@@ -168,7 +176,7 @@ class DictMethodEntityInstanceHelper(object):
                         cObj.setValue(authAsymD[(authVal, "?")], mTup[2], ii)
                     else:
                         if authVal not in ["."]:
-                            logger.warning("%s %s missing mapping auth asymId %s", dataContainer.getName(), catName, authVal)
+                            logger.warning("%s %s missing mapping auth asymId %s authSeqId %r", dataContainer.getName(), catName, authVal, authSeqId)
                         if not cObj.hasAttribute(mTup[2]):
                             cObj.appendAttribute(mTup[2])
                         cObj.setValue("?", mTup[2], ii)
@@ -899,6 +907,13 @@ class DictMethodEntityInstanceHelper(object):
             _rcsb_entity_instance_validation_feature.feature_positions_beg_seq_id
             _rcsb_entity_instance_validation_feature.feature_positions_end_seq_id
             _rcsb_entity_instance_validation_feature.feature_positions_beg_comp_id
+            #
+            _rcsb_entity_instance_validation_feature.feature_value_comp_id
+            _rcsb_entity_instance_validation_feature.feature_value_reported
+            _rcsb_entity_instance_validation_feature.feature_value_reference
+            _rcsb_entity_instance_validation_feature.feature_value_uncertainty_estimate
+            _rcsb_entity_instance_validation_feature.feature_value_uncertainty_estimate_type
+            _rcsb_entity_instance_validation_feature.feature_value_details
 
         """
         logger.debug("Starting with %r %r %r", dataContainer.getName(), catName, kwargs)
@@ -965,7 +980,7 @@ class DictMethodEntityInstanceHelper(object):
                         descriptionS = tN + " in instance %s model %s" % (asymId, modelId)
                         cObj.setValue(";".join([pTup.compId for pTup in pTupL if pTup.outlierType == fType]), "feature_positions_beg_comp_id", ii)
                         cObj.setValue(";".join([str(pTup.seqId) for pTup in pTupL if pTup.outlierType == fType]), "feature_positions_beg_seq_id", ii)
-                        cObj.setValue("PDB entity", "reference_scheme", ii)
+
                     else:
                         cObj.setValue(pTupL[0].compId, "comp_id", ii)
                         descriptionS = tN + " in %s instance %s model %s" % (pTupL[0].compId, asymId, modelId)
@@ -983,6 +998,7 @@ class DictMethodEntityInstanceHelper(object):
                             "feature_value_uncertainty_estimate_type",
                             ii,
                         )
+                    cObj.setValue("PDB entity", "reference_scheme", ii)
                     cObj.setValue(descriptionS, "description", ii)
                     cObj.setValue("PDB", "provenance_source", ii)
                     cObj.setValue("V1.0", "assignment_version", ii)
