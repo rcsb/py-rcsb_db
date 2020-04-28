@@ -232,3 +232,4 @@
   7-Apr-2020  V0.976 Add min/max for consolidated diffraction wavelength details
   8-Apr-2020  V0.977 Adjust handling of nested contexts for subcategories.
  17-Apr-2020  V0.978 Add rcsb_accession_info.has_released_experimental_data
+ 27-Apr-2020  V0.979 Adjustments for remediated carbohydrate data files, leave BIRD_* annotations solely in definition collections.

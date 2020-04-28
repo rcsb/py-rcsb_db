@@ -1533,26 +1533,28 @@ class DictMethodEntityHelper(object):
                 ii += 1
             #
             # BIRD type and class
-            birdFeatureD = self.__getBirdFeatures(dataContainer)
-            for (entityId, compId, prdId, filteredFeature), fName in birdFeatureD.items():
-                cObj.setValue(ii + 1, "ordinal", ii)
-                cObj.setValue(entryId, "entry_id", ii)
-                cObj.setValue(entityId, "entity_id", ii)
-                cObj.setValue(compId, "comp_id", ii)
-                cObj.setValue(filteredFeature, "type", ii)
-                cObj.setValue("entity_feature_%d" % jj, "feature_id", ii)
-                if compId:
-                    details = "Non-polymer BIRD %s chemical component %s" % (prdId, compId)
-                else:
-                    details = "Polymer BIRD %s entity %s" % (prdId, entityId)
-                cObj.setValue(details, "description", ii)
-                #
-                cObj.setValue(fName, "name", ii)
-                cObj.setValue("PDB", "provenance_source", ii)
-                cObj.setValue("V1.0", "assignment_version", ii)
-                #
-                jj += 1
-                ii += 1
+            skipBird = True
+            if not skipBird:
+                birdFeatureD = self.__getBirdFeatures(dataContainer)
+                for (entityId, compId, prdId, filteredFeature), fName in birdFeatureD.items():
+                    cObj.setValue(ii + 1, "ordinal", ii)
+                    cObj.setValue(entryId, "entry_id", ii)
+                    cObj.setValue(entityId, "entity_id", ii)
+                    cObj.setValue(compId, "comp_id", ii)
+                    cObj.setValue(filteredFeature, "type", ii)
+                    cObj.setValue("entity_feature_%d" % jj, "feature_id", ii)
+                    if compId:
+                        details = "Non-polymer BIRD %s chemical component %s" % (prdId, compId)
+                    else:
+                        details = "Polymer BIRD %s entity %s" % (prdId, entityId)
+                    cObj.setValue(details, "description", ii)
+                    #
+                    cObj.setValue(fName, "name", ii)
+                    cObj.setValue("PDB", "provenance_source", ii)
+                    cObj.setValue("V1.0", "assignment_version", ii)
+                    #
+                    jj += 1
+                    ii += 1
             #
             # Monomer modifications
             jj = 1
