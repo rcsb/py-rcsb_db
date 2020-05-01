@@ -55,10 +55,10 @@ class RepoHoldingsDataPrepTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testProcessLegacyFiles(self):
-        """ Test loading and processing operations for reposotpru holdings and status echange data.
+        """ Test loading and processing operations for repository holdings and status echange data.
         """
         try:
-            rhdp = RepoHoldingsDataPrep(sandboxPath=self.__sandboxPath, cachePath=self.__cachePath)
+            rhdp = RepoHoldingsDataPrep(cfgOb=self.__cfgOb, sandboxPath=self.__sandboxPath, cachePath=self.__cachePath)
             rL = rhdp.getHoldingsUpdateEntry(updateId=self.__updateId)
             self.assertGreaterEqual(len(rL), 10)
             logger.debug("update data length %r", len(rL))

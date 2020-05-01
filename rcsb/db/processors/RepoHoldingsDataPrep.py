@@ -20,6 +20,7 @@
 # 13-Dec-2018 jdw Adjust logic for reporting assembly format availibility
 #  5-Feb-2020 jdw Drop superseded entries from the removed entry candidate list.
 #                 Avoid overlap between current and removed/unreleased entries.
+# 30-Apr-2020 jdw new NMR content types and support for config option RCSB_EDMAP_LIST_PATH
 ##
 
 __docformat__ = "restructuredtext en"
@@ -44,6 +45,7 @@ class RepoHoldingsDataPrep(object):
     """
 
     def __init__(self, **kwargs):
+        self.__cfgOb = kwargs.get("cfgOb", None)
         self.__cachePath = kwargs.get("cachePath", None)
         self.__sandboxPath = kwargs.get("sandboxPath", None)
         self.__filterType = kwargs.get("filterType", "")
@@ -273,12 +275,21 @@ class RepoHoldingsDataPrep(object):
         dirPath = dirPath if dirPath else self.__sandboxPath
         try:
             updateTypeList = ["added", "modified", "obsolete"]
-            contentTypeList = ["entries", "mr", "cs", "sf"]
-            contentNameD = {"entries": "coordinates", "mr": "NMR restraints", "cs": "NMR chemical shifts", "sf": "structure factors"}
+            contentTypeList = ["entries", "mr", "cs", "sf", "nef", "nmr-str"]
+            contentNameD = {
+                "entries": "coordinates",
+                "mr": "NMR restraints",
+                "cs": "NMR chemical shifts",
+                "sf": "structure factors",
+                "nef": "Combined NMR data (NEF)",
+                "nmr-str": "Combined NMR data (NMR-STAR)",
+            }
             #
             for updateType in updateTypeList:
                 for contentType in contentTypeList:
                     fp = os.path.join(dirPath, "update-lists", updateType + "-" + contentType)
+                    if not self.__mU.exists(fp):
+                        continue
                     entryIdL = self.__mU.doImport(fp, "list")
                     #
                     uD = {}
@@ -312,13 +323,22 @@ class RepoHoldingsDataPrep(object):
         dirPath = dirPath if dirPath else self.__sandboxPath
         try:
             updateTypeList = ["all"]
-            contentTypeList = ["pdb", "mr", "cs", "sf"]
-            contentNameD = {"pdb": "coordinates", "mr": "NMR restraints", "cs": "NMR chemical shifts", "sf": "structure factors"}
+            contentTypeList = ["pdb", "mr", "cs", "sf", "nef", "nmr-str"]
+            contentNameD = {
+                "pdb": "coordinates",
+                "mr": "NMR restraints",
+                "cs": "NMR chemical shifts",
+                "sf": "structure factors",
+                "nef": "Combined NMR data (NEF)",
+                "nmr-str": "Combined NMR data (NMR-STAR)",
+            }
             #
             tD = {}
             for updateType in updateTypeList:
                 for contentType in contentTypeList:
                     fp = os.path.join(dirPath, "update-lists", updateType + "-" + contentType + "-list")
+                    if not self.__mU.exists(fp):
+                        continue
                     entryIdL = self.__mU.doImport(fp, "list")
                     #
                     for entryId in entryIdL:
@@ -365,7 +385,11 @@ class RepoHoldingsDataPrep(object):
             for entryId in nmrV2List:
                 nmrV2D[entryId.strip().upper()] = False
             #
-            fp = os.path.join(dirPath, "status", "edmaps.json")
+            if self.__cfgOb:
+                configName = self.__cfgOb.getDefaultSectionName()
+                fp = self.__cfgOb.getPath("RCSB_EDMAP_LIST_PATH", sectionName=configName)
+            else:
+                fp = os.path.join(dirPath, "status", "edmaps.json")
             qD = self.__mU.doImport(fp, "json")
             edD = {}
             for entryId in qD:

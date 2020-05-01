@@ -112,7 +112,7 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
         """
         rL = []
         try:
-            rhdp = RepoHoldingsDataPrep(sandboxPath=self.__sandboxPath, workPath=self.__cachePath)
+            rhdp = RepoHoldingsDataPrep(cfgOb=self.__cfgOb, sandboxPath=self.__sandboxPath, workPath=self.__cachePath)
             if collectionName == "repository_holdings_update_entry":
                 rL = rhdp.getHoldingsUpdateEntry(updateId=updateId)
                 self.assertGreaterEqual(len(rL), 10)

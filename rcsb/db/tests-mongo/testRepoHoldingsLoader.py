@@ -81,7 +81,7 @@ class RepoHoldingsLoaderTests(unittest.TestCase):
         """
         try:
             sectionName = "repository_holdings_configuration"
-            rhdp = RepoHoldingsDataPrep(sandboxPath=self.__sandboxPath, cachePath=self.__cachePath, filterType=self.__filterType)
+            rhdp = RepoHoldingsDataPrep(cfgOb=self.__cfgOb, sandboxPath=self.__sandboxPath, cachePath=self.__cachePath, filterType=self.__filterType)
             #
             dl = DocumentLoader(
                 self.__cfgOb,
