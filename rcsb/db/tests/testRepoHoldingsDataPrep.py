@@ -60,8 +60,8 @@ class RepoHoldingsDataPrepTests(unittest.TestCase):
         try:
             rhdp = RepoHoldingsDataPrep(cfgOb=self.__cfgOb, sandboxPath=self.__sandboxPath, cachePath=self.__cachePath)
             rL = rhdp.getHoldingsUpdateEntry(updateId=self.__updateId)
-            self.assertGreaterEqual(len(rL), 10)
             logger.debug("update data length %r", len(rL))
+            self.assertGreaterEqual(len(rL), 10)
             #
             rL = rhdp.getHoldingsCurrentEntry(updateId=self.__updateId)
             self.assertGreaterEqual(len(rL), 10)

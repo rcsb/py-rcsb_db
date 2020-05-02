@@ -234,3 +234,4 @@
  17-Apr-2020  V0.978 Add rcsb_accession_info.has_released_experimental_data
  27-Apr-2020  V0.979 Adjustments for remediated carbohydrate data files, leave BIRD_* annotations solely in definition collections.
  30-Apr-2020  V0.980 New NMR repo holdings content types, specific configuration option added for ed maps list
+  2-May-2020  V0.981 Restore out-of-sync repository holdings data processing module and update related tests

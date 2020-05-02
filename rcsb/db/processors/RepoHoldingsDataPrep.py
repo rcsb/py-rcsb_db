@@ -285,6 +285,7 @@ class RepoHoldingsDataPrep(object):
                 "nmr-str": "Combined NMR data (NMR-STAR)",
             }
             #
+            uD = {}
             for updateType in updateTypeList:
                 for contentType in contentTypeList:
                     fp = os.path.join(dirPath, "update-lists", updateType + "-" + contentType)
@@ -292,7 +293,6 @@ class RepoHoldingsDataPrep(object):
                         continue
                     entryIdL = self.__mU.doImport(fp, "list")
                     #
-                    uD = {}
                     for entryId in entryIdL:
                         entryId = entryId.strip().upper()
                         if entryId not in uD:
