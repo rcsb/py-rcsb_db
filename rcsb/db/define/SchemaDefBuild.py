@@ -783,9 +783,19 @@ class SchemaDefBuild(object):
                                     tD = documentDefHelper.getSubCategoryNestedContext(collectionName, catName, subCategory)
                                     if "FIRST_CONTEXT_PATH" in tD and tD["FIRST_CONTEXT_PATH"]:
                                         subCatPropD[subCategory]["rcsb_nested_indexing"] = True
-                                        subCatPropD[subCategory]["rcsb_nested_indexing_context"] = [
-                                            {"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"]}
-                                        ]
+                                        ###
+                                        if "CONTEXT_ATTRIBUTE_VALUES" in tD and tD["CONTEXT_ATTRIBUTE_VALUES"]:
+                                            vvDL = []
+                                            for cavD in tD["CONTEXT_ATTRIBUTE_VALUES"]:
+                                                vvD = {"context_value": cavD["CONTEXT_VALUE"], "search_paths": cavD["SEARCH_PATHS"]}
+                                                vvDL.append(vvD)
+                                            subCatPropD[subCategory]["rcsb_nested_indexing_context"] = [
+                                                {"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"], "context_attributes": vvDL}
+                                            ]
+                                        else:
+                                            subCatPropD[subCategory]["rcsb_nested_indexing_context"] = [
+                                                {"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"]}
+                                            ]
                                     else:
                                         subCatPropD[subCategory]["rcsb_nested_indexing"] = True
             #
@@ -905,12 +915,52 @@ class SchemaDefBuild(object):
         return rD
 
     def __updateCategoryNestedContext(self, rD, collectionName, catName, documentDefHelper):
+        """Insert nested context details into a category schema object
+
+        Args:
+            rD (dict): current category schema object
+            collectionName (string): collection name
+            catName (str): data category Name
+            documentDefHelper (obj): instance of DocumentDefHelper()
+
+        Returns:
+            dict : updated category schema object
+
+        Output schema example:
+
+        "rcsb_nested_indexing_context": [
+                {
+                "category_name": "annotation_type",
+                "category_path": "rcsb_polymer_entity_annotation.type"
+                "context_attributes": [
+                    {
+                        "context_value": 'vxxxxx',
+                        "search_paths": [ 'p1', 'p2', 'p3']
+                    }
+                ]
+                }
+            ]
+
+                 CONTEXT_ATTRIBUTE_VALUES:
+                    - CONTEXT_VALUE: a_value
+                      SEARCH_PATHS:
+                      - a.b
+                      - c.d
+        """
         if documentDefHelper.isCategoryNested(collectionName, catName):
             tD = documentDefHelper.getCategoryNestedContext(collectionName, catName)
             logger.debug("%s Nested context dict %r", collectionName, tD)
             if "FIRST_CONTEXT_PATH" in tD and tD["FIRST_CONTEXT_PATH"]:
                 rD["rcsb_nested_indexing"] = True
-                rD["rcsb_nested_indexing_context"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"]}]
+                if "CONTEXT_ATTRIBUTE_VALUES" in tD and tD["CONTEXT_ATTRIBUTE_VALUES"]:
+                    vDL = []
+                    for cavD in tD["CONTEXT_ATTRIBUTE_VALUES"]:
+                        vD = {"context_value": cavD["CONTEXT_VALUE"], "search_paths": cavD["SEARCH_PATHS"]}
+                        vDL.append(vD)
+                    rD["rcsb_nested_indexing_context"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"], "context_attributes": vDL}]
+                else:
+                    rD["rcsb_nested_indexing_context"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"]}]
+                #
             else:
                 rD["rcsb_nested_indexing"] = True
         return rD

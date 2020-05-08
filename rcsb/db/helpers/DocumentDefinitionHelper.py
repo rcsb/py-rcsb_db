@@ -382,11 +382,39 @@ class DocumentDefinitionHelper(object):
         Example:
 
         collection_category_nested:
-            pdbx_core_entry:
-              - CATEGORY: citation
-                NAME: citation_primary
-                CONTEXT_ATTRIBUTE_NAMES:
-                - citation.rcsb_is_primary
+            pdbx_core_polymer_entity:
+                - CATEGORY: rcsb_polymer_entity_feature_summary
+                    NAME: feature_summary
+                    CONTEXT_ATTRIBUTE_NAMES:
+                    - rcsb_polymer_entity_feature_summary.type
+                - CATEGORY: rcsb_polymer_entity_annotation
+                    NAME: annotation_type
+                    CONTEXT_ATTRIBUTE_NAMES:
+                    - rcsb_polymer_entity_annotation.type
+
+                    # new
+                    CONTEXT_ATTRIBUTE_VALUES:
+                    - CONTEXT_VALUE: a_value
+                      SEARCH_PATHS:
+                      - a.b
+                      - c.d
+
+            # From above ---
+            "rcsb_nested_indexing": true,
+            "rcsb_nested_indexing_context": [
+                {
+                "category_name": "annotation_type",
+                "category_path": "rcsb_polymer_entity_annotation.type"
+                "context_attributes": [
+                    {
+                        "context_value": 'vxxxxx',
+                        "search_paths": [ 'p1', 'p2', 'p3']
+                    }
+
+                ]
+                }
+            ]
+
         """
         cD = {}
         try:
@@ -394,10 +422,21 @@ class DocumentDefinitionHelper(object):
             for collectionName, nDL in self.__cfgD["collection_category_nested"].items():
                 catD = {}
                 for nD in nDL:
+                    cVDL = []
+                    if "CONTEXT_ATTRIBUTE_VALUES" in nD:
+                        for tD in nD["CONTEXT_ATTRIBUTE_VALUES"]:
+                            if "CONTEXT_VALUE" in tD and "SEARCH_PATHS" in tD:
+                                cVDL.append({"CONTEXT_VALUE": tD["CONTEXT_VALUE"], "SEARCH_PATHS": tD["SEARCH_PATHS"]})
+
                     if "CONTEXT_ATTRIBUTE_NAMES" in nD and "NAME" in nD:
-                        catD[nD["CATEGORY"]] = {"CONTEXT_NAME": nD["NAME"], "CONTEXT_PATHS": nD["CONTEXT_ATTRIBUTE_NAMES"], "FIRST_CONTEXT_PATH": nD["CONTEXT_ATTRIBUTE_NAMES"][0]}
+                        catD[nD["CATEGORY"]] = {
+                            "CONTEXT_NAME": nD["NAME"],
+                            "CONTEXT_PATHS": nD["CONTEXT_ATTRIBUTE_NAMES"],
+                            "FIRST_CONTEXT_PATH": nD["CONTEXT_ATTRIBUTE_NAMES"][0],
+                            "CONTEXT_ATTRIBUTE_VALUES": cVDL,
+                        }
                     elif "NAME" in nD:
-                        catD[nD["CATEGORY"]] = {"CONTEXT_NAME": nD["NAME"], "CONTEXT_PATHS": [], "FIRST_CONTEXT_PATH": None}
+                        catD[nD["CATEGORY"]] = {"CONTEXT_NAME": nD["NAME"], "CONTEXT_PATHS": [], "FIRST_CONTEXT_PATH": None, "CONTEXT_ATTRIBUTE_VALUES": cVDL}
                 cD[collectionName] = catD
         except Exception as e:
             logger.exception("Failing with %s", str(e))
@@ -483,11 +522,18 @@ class DocumentDefinitionHelper(object):
         for collectionName, nDL in self.__cfgD["collection_subcategory_nested"].items():
             subCatD = {}
             for nD in nDL:
+                cVDL = []
+                if "CONTEXT_ATTRIBUTE_VALUES" in nD:
+                    for tD in nD["CONTEXT_ATTRIBUTE_VALUES"]:
+                        if "CONTEXT_VALUE" in tD and "SEARCH_PATHS" in tD:
+                            cVDL.append({"CONTEXT_VALUE": tD["CONTEXT_VALUE"], "SEARCH_PATHS": tD["SEARCH_PATHS"]})
+                #
                 if "CONTEXT_ATTRIBUTE_NAMES" in nD and "SUBCATEGORY" in nD:
                     subCatD[(nD["CATEGORY"], nD["SUBCATEGORY"])] = {
                         "CONTEXT_NAME": nD["SUBCATEGORY"],
                         "CONTEXT_PATHS": nD["CONTEXT_ATTRIBUTE_NAMES"],
                         "FIRST_CONTEXT_PATH": nD["CONTEXT_ATTRIBUTE_NAMES"][0],
+                        "CONTEXT_ATTRIBUTE_VALUES": cVDL,
                     }
                 else:
                     subCatD[(nD["CATEGORY"], nD["SUBCATEGORY"])] = {"CONTEXT_NAME": nD["SUBCATEGORY"]}
@@ -695,10 +741,10 @@ class DocumentDefinitionHelper(object):
             for catName, atName in attributeTupList:
                 searchContextTupL = self.getSearchContexts(catName, atName)
                 if not searchContextTupL:
-                    logger.warning("Missing search context for %r %r", catName, atName)
+                    logger.warning("Missing search context for %s.%s", catName, atName)
                 descriptionText = self.getAttributeDescription(catName, atName, contextType="brief")
                 if not descriptionText:
-                    logger.warning("Missing brief description %r %r", catName, atName)
+                    logger.warning("Missing brief description %s.%s", catName, atName)
                 #
                 nestedContextDL = self.getNestedContexts(catName)
                 for nestedContextD in nestedContextDL:
@@ -711,5 +757,5 @@ class DocumentDefinitionHelper(object):
                         if not nestedPathSearchContext:
                             logger.warning("Missing nested (%r) search context for %r %r", contextName, cpCatName, cpAtName)
                 #
-                logger.info("  %r %r -> %r (%s)", catName, atName, descriptionText, ",".join([tup[0] for tup in searchContextTupL]))
+                logger.debug("  %r %r -> %r (%s)", catName, atName, descriptionText, ",".join([tup[0] for tup in searchContextTupL]))
         return True

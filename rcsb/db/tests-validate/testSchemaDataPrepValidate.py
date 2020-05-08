@@ -106,6 +106,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         }
 
         self.__databaseNameD = {
+            "bird_chem_comp_core": ["bird_chem_comp_core"],
             "pdbx_core": [
                 "pdbx_core_polymer_entity",
                 "pdbx_core_entry",
@@ -116,7 +117,6 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                 "pdbx_core_nonpolymer_entity_instance",
                 "pdbx_core_branched_entity_instance",
             ],
-            "bird_chem_comp_core": ["bird_chem_comp_core"],
         }
         self.__mergeContentTypeD = {"pdbx_core": ["vrpt"]}
         # self.__databaseNameD = {"chem_comp_core": ["chem_comp_core"], "bird_chem_comp_core": ["bird_chem_comp_core"]}
