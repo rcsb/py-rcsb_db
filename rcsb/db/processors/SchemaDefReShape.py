@@ -35,7 +35,8 @@ class SliceValues(object):
         for sp in spiL:
             catId = sp["CATEGORY"]
             if catId not in schemaDataDictById:
-                logger.warning("slicefilter %s category missing %s keys %r", sliceFilter, catId, list(schemaDataDictById.keys()))
+                logger.debug("slicefilter %s category missing %s keys %r", sliceFilter, catId, list(schemaDataDictById.keys()))
+                logger.info("slicefilter %s category missing %s", sliceFilter, catId)
         vD = {}
         for sp in spiL:
             catId = sp["CATEGORY"]
