@@ -73,12 +73,12 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         #
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
-        self.__verbose = True
+        self.__verbose = False
         #
         self.__modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=configName)
         self.__testDirPath = os.path.join(HERE, "test-output", "pdbx-fails")
         self.__testIhmDirPath = os.path.join(HERE, "test-output", "ihm-files")
-        self.__export = True
+        self.__export = False
         #
         self.__extraOpts = None
         # The following for extended parent/child info -
@@ -157,7 +157,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
     def testValidateOptsIhmRepo(self):
         schemaLevel = "min"
         inputPathList = None
-        self.__export = True
+        self.__export = False
 
         databaseNameD = {"ihm_dev_full": ["ihm_dev_full"]}
         databaseNameD = {"ihm_dev": ["ihm_dev"]}
