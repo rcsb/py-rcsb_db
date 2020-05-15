@@ -237,3 +237,4 @@
   2-May-2020  V0.981 Restore out-of-sync repository holdings data processing module and update related tests
   8-May-2020  V0.982 Adding support for context_attribute_values and search path schema extensions.
  13-May-2020  V0.983 Adjustments to suppress materialization of an assembly of deposited coordinates
+ 15-May-2020  V0.984 Adjustments to suppress logging of missing assembly data

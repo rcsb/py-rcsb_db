@@ -56,6 +56,7 @@ site_info_configuration:
   #DRUGBANK_CACHE_DIR: DrugBank
   _DRUGBANK_AUTH_USERNAME: 0qrpNd4OhGuVsJqEpcsAVEovZ0hl6QkgxmbTy3bPssd06Z9tuM6bJqgsWwmFCd0JnjIMIEWyKPMmF1pI5g==
   _DRUGBANK_AUTH_PASSWORD: lA/K132i8DOtLdMHfm3gpNqprZ6ABKjsCRxfcXIMnxpKQzBv/B6dmC7x1vRO86JhqdT0b84=
+  DRUGBANK_MOCK_URL_TARGET: DrugBank/full_database.zip
   #
   #ATC_CACHE_DIR: atc
   #CHEM_COMP_CACHE_DIR: chem_comp

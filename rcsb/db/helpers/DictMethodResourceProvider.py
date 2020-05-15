@@ -25,6 +25,9 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+import platform
+import resource
+import time
 
 from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
 from rcsb.db.helpers.DictMethodCommonUtils import DictMethodCommonUtils
@@ -151,6 +154,7 @@ class DictMethodResourceProvider(SingletonClass):
         logger.info("Begin %s cache for %d resources", tName, len(self.__resourcesD))
         #
         for resourceName in self.__resourcesD:
+            startTime = time.time()
             logger.debug("Caching resources for %r", resourceName)
             tU = self.__resourcesD[resourceName](self.__cfgOb, self.__configName, self.__cachePath, useCache=useCache, **kwargs)
             ok = tU.testCache()
@@ -159,9 +163,17 @@ class DictMethodResourceProvider(SingletonClass):
             ret = ret and ok
             if not ret:
                 logger.info("%s resource %r step status %r cumulative status %r", tName, resourceName, ok, ret)
+            self.__resourceUsageReport(startTime)
         #
         logger.info("Completed %s %d resources with status %r", tName, len(self.__resourcesD), ret)
         return ret
+
+    def __resourceUsageReport(self, startTime):
+        unitS = "MB" if platform.system() == "Darwin" else "GB"
+        rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        logger.info("Maximum total resident memory size %.4f %s", rusageMax / 10 ** 6, unitS)
+        endTime = time.time()
+        logger.info("Step completed at %s (%.4f seconds)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
 
     def __fetchCitationReferenceProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
         logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
@@ -210,7 +222,12 @@ class DictMethodResourceProvider(SingletonClass):
         _ = cfgOb
         logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
         if not self.__dbU:
-            # dbDataPath = os.path.join(cachePath, cfgOb.get("DRUGBANK_CACHE_DIR", sectionName=configName))
+            # If a mock DrugBank URL is provided add this as an argument.
+            mockUrlTarget = cfgOb.getPath("DRUGBANK_MOCK_URL_TARGET", sectionName=configName)
+            logger.info("Using mock DrugBank source file %r", mockUrlTarget)
+            if mockUrlTarget:
+                kwargs["urlTarget"] = mockUrlTarget
+                logger.info("Using mock DrugBank source file %r", mockUrlTarget)
             un = cfgOb.get("_DRUGBANK_AUTH_USERNAME", sectionName=configName)
             pw = cfgOb.get("_DRUGBANK_AUTH_PASSWORD", sectionName=configName)
             self.__dbU = DrugBankProvider(cachePath=cachePath, useCache=useCache, username=un, password=pw, **kwargs)

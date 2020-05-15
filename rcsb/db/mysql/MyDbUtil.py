@@ -26,11 +26,13 @@
 Utility classes to create connections and process SQL commands with a MySQL RDBMS.
 
 """
+
 from __future__ import generators
 
 import logging
 import warnings
 
+# pylint: disable=no-member
 import MySQLdb
 
 __docformat__ = "restructuredtext en"
