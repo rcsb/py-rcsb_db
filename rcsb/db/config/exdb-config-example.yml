@@ -6,6 +6,7 @@
 #   16-Feb-2020 - Move dictionary locators and type and coverage config to site config sections.
 #   20-Feb-2020 - IMPORTANT NOTE -- Schema locators in this file now point at a development branch.
 #   30-Apr-2020 - Add RCSB_EDMAP_LIST_PATH option as path to edmaps.json
+#   18-May-2020 - Added DRUGBANK_MOCK_URL_TARGET to point to mangable raw DB dataset.
 ---
 DEFAULT: {}
 ##
