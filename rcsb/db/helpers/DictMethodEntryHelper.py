@@ -785,14 +785,14 @@ class DictMethodEntryHelper(object):
             # Various atom counts -
             #
             repModelId = repModelL[0]
-            numAtomsModel, numAtomsTotal, numModelsTotal = self.__commonU.getDepositedAtomCounts(dataContainer, modelId=repModelId)
+            numHeavyAtomsModel, numAtomsTotal, numModelsTotal = self.__commonU.getDepositedAtomCounts(dataContainer, modelId=repModelId)
             #
-            logger.debug("numAtomsTotal %d numAtomsModel %d numModelsTotal %d", numAtomsTotal, numAtomsModel, numModelsTotal)
-            logger.debug("entity type atom counts %r", self.__commonU.getEntityTypeAtomCounts(dataContainer, modelId=repModelId))
-            logger.debug("instance atom counts %r", self.__commonU.getEntityTypeAtomCounts(dataContainer, modelId=repModelId))
+            logger.debug("numAtomsTotal %d numHeavyAtomsModel %d numModelsTotal %d", numAtomsTotal, numHeavyAtomsModel, numModelsTotal)
+            logger.debug("entity type atom counts %r", self.__commonU.getEntityTypeHeavyAtomCounts(dataContainer, modelId=repModelId))
+            logger.debug("instance atom counts %r", self.__commonU.getEntityTypeHeavyAtomCounts(dataContainer, modelId=repModelId))
             #
-            if numAtomsModel > 0:
-                cObj.setValue(numAtomsModel, "deposited_atom_count", 0)
+            if numHeavyAtomsModel > 0:
+                cObj.setValue(numHeavyAtomsModel, "deposited_atom_count", 0)
                 cObj.setValue(numModelsTotal, "deposited_model_count", 0)
             #
 

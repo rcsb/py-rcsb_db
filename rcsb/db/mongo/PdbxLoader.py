@@ -27,6 +27,7 @@
 #     16-Feb-2019 jdw  Add argument mergeContentTypes to load() method. Generalize the handling of path lists to
 #                      support locator object lists.
 #      6-Aug-2019 jdw  Add schema generation option and move dictionary API instantiation into load() method.
+#     18-May-2020 jdw  Add brute force document purging for loadType=replace
 #
 ##
 """
@@ -101,11 +102,13 @@ class PdbxLoaderWorker(object):
             #
             collectionName = None
             cIdD = {}
+            cNameL = []
             containerList = []
             for locatorObj in dataList:
                 # JDW
                 cL = self.__rpP.getContainerList([locatorObj])
                 if cL:
+                    cNameL.append(cL[0].getName().upper().strip())
                     cId = cL[0].getName() if useNameFlag else cL[0].getProp("uid")
                     cIdD[cId] = locatorObj
                     containerList.extend(cL)
@@ -116,6 +119,11 @@ class PdbxLoaderWorker(object):
                 else:
                     logger.debug("%s No dynamic method handler for ", procName)
             # -----
+            if loadType != "full":
+                for collectionName in collectionNameList:
+                    ok = self.__purgeDocuments(databaseName, collectionName, cNameL)
+                    logger.debug("%s %s - loadType %r cNameL %r (%r)", databaseName, collectionName, loadType, cNameL, ok)
+            # --
             failContainerIdS = set()
             rejectContainerIdS = set()
             # -----
@@ -237,6 +245,22 @@ class PdbxLoaderWorker(object):
                 #
         logger.info("%s maximum document size loaded %.4f MB", procName, maxDocumentMegaBytes)
         return True
+
+    def __purgeDocuments(self, databaseName, collectionName, cardinalIdL):
+        """Purge documents from collection within database with cardinal identifiers in cardinalIdL.
+
+        """
+        try:
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                for cardId in cardinalIdL:
+                    selectD = {"rcsb_id": "/%s/" % cardId}
+                    dCount = mg.delete(databaseName, collectionName, selectD)
+                    logger.debug("Remove %d objects in database %s collection %s selection %r", dCount, databaseName, collectionName, selectD)
+            return True
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return False
 
     #
 
@@ -717,11 +741,13 @@ class PdbxLoader(object):
             #
             collectionName = None
             cIdD = {}
+            cNameL = []
             containerList = []
             for locatorObj in dataList:
                 # JDW
                 cL = self.__rpP.getContainerList([locatorObj])
                 if cL:
+                    cNameL.append(cL[0].getName().upper().strip())
                     cId = cL[0].getName() if useNameFlag else cL[0].getProp("uid")
                     cIdD[cId] = locatorObj
                     containerList.extend(cL)
@@ -731,6 +757,12 @@ class PdbxLoader(object):
                     self.__dmh.apply(container)
                 else:
                     logger.debug("%s No dynamic method handler for ", procName)
+            # -----
+            if loadType != "full":
+                for collectionName in collectionNameList:
+                    ok = self.__purgeDocuments(databaseName, collectionName, cNameL)
+                    logger.debug("%s %s - loadType %r cNameL %r (%r)", databaseName, collectionName, loadType, cNameL, ok)
+                    # --
             # -----
             failContainerIdS = set()
             rejectContainerIdS = set()
@@ -761,6 +793,9 @@ class PdbxLoader(object):
                     collectionName=collectionName,
                 )
                 #
+                # -- JDWJDW
+                # logger.info("loadType %r collectionName %r replaceIdL %r idList %r", loadType, collectionName, replaceIdL, containerIdList)
+                # --
                 # ------
                 # Collect the container identifiers for the rejected containers (paths for logging only)
                 # Note that rejections are NOT treated as failures!
@@ -934,6 +969,22 @@ class PdbxLoader(object):
                 ok = mg.collectionExists(databaseName, collectionName)
                 logger.debug("Post drop collections = %r", mg.getCollectionNames(databaseName))
             return ok
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return False
+
+    def __purgeDocuments(self, databaseName, collectionName, cardinalIdL):
+        """Purge documents from collection within database with cardinal identifiers in cardinalIdL.
+
+        """
+        try:
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                for cardId in cardinalIdL:
+                    selectD = {"rcsb_id": "/%s/" % cardId}
+                    dCount = mg.delete(databaseName, collectionName, selectD)
+                    logger.debug("Remove %d objects in database %s collection %s selection %r", dCount, databaseName, collectionName, selectD)
+            return True
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return False

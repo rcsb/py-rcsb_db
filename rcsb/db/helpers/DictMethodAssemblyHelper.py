@@ -86,11 +86,11 @@ class DictMethodAssemblyHelper(object):
             #
             #
             for ii, assemblyId in enumerate(assemblyIdL):
-                if assemblyId not in rD["assemblyAtomCountByTypeD"]:
+                if assemblyId not in rD["assemblyHeavyAtomCountByTypeD"]:
                     continue
-                if assemblyId not in rD["assemblyAtomCountD"]:
+                if assemblyId not in rD["assemblyHeavyAtomCountD"]:
                     continue
-                dD = rD["assemblyAtomCountByTypeD"][assemblyId]
+                dD = rD["assemblyHeavyAtomCountByTypeD"][assemblyId]
                 #
                 cObj.setValue(entryId, "entry_id", ii)
                 cObj.setValue(assemblyId, "assembly_id", ii)
@@ -108,7 +108,7 @@ class DictMethodAssemblyHelper(object):
                 num = dD["branched"] if "branched" in dD else 0
                 cObj.setValue(num, "branched_atom_count", ii)
 
-                num = rD["assemblyAtomCountD"][assemblyId]
+                num = rD["assemblyHeavyAtomCountD"][assemblyId]
                 cObj.setValue(num, "atom_count", ii)
                 #
                 num1 = rD["assemblyModeledMonomerCountD"][assemblyId]
@@ -576,13 +576,13 @@ class DictMethodAssemblyHelper(object):
         eTypeD = self.__commonU.getEntityTypes(dataContainer)
         epTypeFilteredD = self.__commonU.getPolymerEntityFilteredTypes(dataContainer)
         #
-        instAtomCount = self.__commonU.getInstanceAtomCounts(dataContainer, modelId="1")
+        instHeavyAtomCount = self.__commonU.getInstanceHeavyAtomCounts(dataContainer, modelId="1")
         instModeledMonomerCount = self.__commonU.getInstanceModeledMonomerCounts(dataContainer, modelId="1")
         instUnmodeledMonomerCount = self.__commonU.getInstanceUnModeledMonomerCounts(dataContainer, modelId="1")
         # -------------------------
         assemblyInstanceCountByTypeD = {}
-        assemblyAtomCountByTypeD = {}
-        assemblyAtomCountD = {}
+        assemblyHeavyAtomCountByTypeD = {}
+        assemblyHeavyAtomCountD = {}
         assemblyModeledMonomerCountD = {}
         assemblyUnmodeledMonomerCountD = {}
         # Pre-generation (source instances)
@@ -605,14 +605,14 @@ class DictMethodAssemblyHelper(object):
                     # Initialize instances count
                     if assemblyId not in assemblyInstanceCountByTypeD:
                         assemblyInstanceCountByTypeD[assemblyId] = {eType: 0 for eType in ["polymer", "non-polymer", "branched", "macrolide", "water"]}
-                    if assemblyId not in assemblyAtomCountByTypeD:
-                        assemblyAtomCountByTypeD[assemblyId] = {eType: 0 for eType in ["polymer", "non-polymer", "branched", "macrolide", "water"]}
+                    if assemblyId not in assemblyHeavyAtomCountByTypeD:
+                        assemblyHeavyAtomCountByTypeD[assemblyId] = {eType: 0 for eType in ["polymer", "non-polymer", "branched", "macrolide", "water"]}
                     if assemblyId not in assemblyModeledMonomerCountD:
                         assemblyModeledMonomerCountD[assemblyId] = 0
                     if assemblyId not in assemblyUnmodeledMonomerCountD:
                         assemblyUnmodeledMonomerCountD[assemblyId] = 0
-                    if assemblyId not in assemblyAtomCountD:
-                        assemblyAtomCountD[assemblyId] = 0
+                    if assemblyId not in assemblyHeavyAtomCountD:
+                        assemblyHeavyAtomCountD[assemblyId] = 0
                     #
                     opExpression = tObj.getValue("oper_expression", ii)
                     opCount, opL = self.__expandOperatorList(opExpression)
@@ -628,9 +628,11 @@ class DictMethodAssemblyHelper(object):
                         iList = [asymId for asymId in asymIdList if asymId in instanceTypeD and instanceTypeD[asymId] == eType]
                         assemblyInstanceCountByTypeD[assemblyId][eType] += len(iList) * opCount
                         #
-                        atCountList = [instAtomCount[asymId] for asymId in asymIdList if asymId in instanceTypeD and instanceTypeD[asymId] == eType and asymId in instAtomCount]
-                        assemblyAtomCountByTypeD[assemblyId][eType] += sum(atCountList) * opCount
-                        assemblyAtomCountD[assemblyId] += sum(atCountList) * opCount
+                        atCountList = [
+                            instHeavyAtomCount[asymId] for asymId in asymIdList if asymId in instanceTypeD and instanceTypeD[asymId] == eType and asymId in instHeavyAtomCount
+                        ]
+                        assemblyHeavyAtomCountByTypeD[assemblyId][eType] += sum(atCountList) * opCount
+                        assemblyHeavyAtomCountD[assemblyId] += sum(atCountList) * opCount
                         #
                     #
                     modeledMonomerCountList = [
@@ -704,8 +706,8 @@ class DictMethodAssemblyHelper(object):
                     #
             #
             logger.debug("%s assemblyInstanceCountByTypeD %r", dataContainer.getName(), assemblyInstanceCountByTypeD.items())
-            logger.debug("%s assemblyAtomCountByTypeD %r", dataContainer.getName(), assemblyAtomCountByTypeD.items())
-            logger.debug("%s assemblyAtomCountD %r", dataContainer.getName(), assemblyAtomCountD.items())
+            logger.debug("%s assemblyHeavyAtomCountByTypeD %r", dataContainer.getName(), assemblyHeavyAtomCountByTypeD.items())
+            logger.debug("%s assemblyHeavyAtomCountD %r", dataContainer.getName(), assemblyHeavyAtomCountD.items())
             logger.debug("%s assemblyModeledMonomerCountD %r", dataContainer.getName(), assemblyModeledMonomerCountD.items())
             logger.debug("%s assemblyUnmodeledMonomerCountD %r", dataContainer.getName(), assemblyUnmodeledMonomerCountD.items())
             logger.debug("%s assemblyPolymerClassD %r", dataContainer.getName(), assemblyPolymerClassD.items())
@@ -716,8 +718,8 @@ class DictMethodAssemblyHelper(object):
             #
             rD = {
                 "assemblyInstanceCountByTypeD": assemblyInstanceCountByTypeD,
-                "assemblyAtomCountByTypeD": assemblyAtomCountByTypeD,
-                "assemblyAtomCountD": assemblyAtomCountD,
+                "assemblyHeavyAtomCountByTypeD": assemblyHeavyAtomCountByTypeD,
+                "assemblyHeavyAtomCountD": assemblyHeavyAtomCountD,
                 "assemblyModeledMonomerCountD": assemblyModeledMonomerCountD,
                 "assemblyUnmodeledMonomerCountD": assemblyUnmodeledMonomerCountD,
                 "assemblyInstanceCountByPolymerTypeD": assemblyInstanceCountByPolymerTypeD,
