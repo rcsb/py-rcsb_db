@@ -732,11 +732,17 @@ class DocumentDefinitionHelper(object):
         return []
 
     def checkSearchGroups(self):
+        """[summary]
+
+        Returns:
+            [type]: [description]
+        """
         groupNameList = self.getSearchGroups()
+        logger.info("Search groups (%d)", len(groupNameList))
         for groupName in groupNameList:
             # get attributes in group
             attributeTupList = self.getSearchGroupAttributes(groupName)
-            logger.info("Search Group (%d): %s", len(attributeTupList), groupName)
+            logger.info("Search Group (%2d): %s", len(attributeTupList), groupName)
             # get search context and brief descriptions -
             for catName, atName in attributeTupList:
                 searchContextTupL = self.getSearchContexts(catName, atName)

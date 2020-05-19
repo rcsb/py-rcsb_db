@@ -171,9 +171,11 @@ class DictMethodResourceProvider(SingletonClass):
     def __resourceUsageReport(self, startTime):
         unitS = "MB" if platform.system() == "Darwin" else "GB"
         rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        logger.info("Maximum total resident memory size %.4f %s", rusageMax / 10 ** 6, unitS)
+        # logger.info("Maximum total resident memory size %.3f %s", rusageMax / 10 ** 6, unitS)
         endTime = time.time()
-        logger.info("Step completed at %s (%.4f seconds)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
+        logger.info(
+            "Step completed at %s (%.4f secs/%.3f %s)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime, rusageMax / 10 ** 6, unitS,
+        )
 
     def __fetchCitationReferenceProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
         logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)

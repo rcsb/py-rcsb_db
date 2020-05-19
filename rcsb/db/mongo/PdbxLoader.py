@@ -254,7 +254,8 @@ class PdbxLoaderWorker(object):
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
                 for cardId in cardinalIdL:
-                    selectD = {"rcsb_id": "/%s/" % cardId}
+                    # selectD = {"rcsb_id": "/%s/" % cardId} # this filter did not work
+                    selectD = {"rcsb_id": {"$regex": "^%s" % cardId.upper(), "$options": "i"}}  # case-insensitive
                     dCount = mg.delete(databaseName, collectionName, selectD)
                     logger.debug("Remove %d objects in database %s collection %s selection %r", dCount, databaseName, collectionName, selectD)
             return True
@@ -649,6 +650,8 @@ class PdbxLoader(object):
             maxStepLength = self.__maxStepLength
             if numPaths > maxStepLength:
                 numLists = int(numPaths / maxStepLength)
+                # JDW always fill numProc
+                numLists = max(numLists, numProc)
                 subLists = [locatorObjList[i::numLists] for i in range(numLists)]
             else:
                 subLists = [locatorObjList]
@@ -760,6 +763,7 @@ class PdbxLoader(object):
             # -----
             if loadType != "full":
                 for collectionName in collectionNameList:
+                    logger.info("Purging objects from %s for %d containers", collectionName, len(cNameL))
                     ok = self.__purgeDocuments(databaseName, collectionName, cNameL)
                     logger.debug("%s %s - loadType %r cNameL %r (%r)", databaseName, collectionName, loadType, cNameL, ok)
                     # --
@@ -981,7 +985,7 @@ class PdbxLoader(object):
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
                 for cardId in cardinalIdL:
-                    selectD = {"rcsb_id": "/%s/" % cardId}
+                    selectD = {"rcsb_id": {"$regex": "^%s" % cardId.upper(), "$options": "i"}}  # case-insensitive
                     dCount = mg.delete(databaseName, collectionName, selectD)
                     logger.debug("Remove %d objects in database %s collection %s selection %r", dCount, databaseName, collectionName, selectD)
             return True
