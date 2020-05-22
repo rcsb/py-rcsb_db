@@ -338,6 +338,21 @@ class DocumentDefinitionHelper(object):
             logger.debug(" ---- CategoryName %r attributeName %r failing with %s", categoryName, attributeName, str(e))
         return []
 
+    def getAllAttributeSearchContexts(self):
+        """ Return search context data structure
+
+        Returns:
+            dict - {(category,attribute): [contexts,,,]}
+
+        """
+        try:
+            if not self.__searchTypeD:
+                self.__searchTypeD, self.__searchTypeAttributeD = self.__prepareAttributeSearchContexts()
+            return self.__searchTypeAttributeD
+        except Exception as e:
+            logger.debug("Failing with %s", str(e))
+        return {}
+
     def isTextSearchType(self, categoryName, attributeName):
         _ = categoryName
         _ = attributeName
@@ -579,6 +594,25 @@ class DocumentDefinitionHelper(object):
         except Exception:
             pass
         logger.debug("collection %r category %r subcat %r : %r", collectionName, categoryName, subCategoryName, ret)
+        return ret
+
+    def getAllSubCategoryNestedContexts(self):
+        """Return is the full nested subcategory data structure.
+
+        Args:
+            categoryName (str): categoryName
+            subCategoryName (str): subcategory name
+
+        Returns:
+            (dict): {"CONTEXT_NAME": <name>, "CONTEXT_PATHS": <full_path_list>}
+
+        """
+        ret = None
+        try:
+            self.__subCategoryNested = self.__prepareSubCategoryNested() if not self.__subCategoryNested else self.__subCategoryNested
+            ret = self.__subCategoryNested
+        except Exception:
+            pass
         return ret
 
     def __prepareAttributeSearchPriorities(self):

@@ -241,3 +241,4 @@
  16-May-2020  V0.985 Adding test case for branched entity replace test
  18-May-2020  V0.986 More complete object purge for loadType replace, explicitly filter heavy atoms in counting stats.
  19-May-2020  V0.987 Reduce verbose logging of memory usage and use alternative $regex filter for mongo purging
+ 21-May-2020  V0.988 Added additional methods to export search group and context statistics
