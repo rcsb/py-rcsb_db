@@ -64,6 +64,8 @@ class SchemaDefBuildTests(unittest.TestCase):
             self.__databaseNameList = self.__cfgOb.getList("DATABASE_NAMES_TEST", sectionName="database_catalog_configuration")
             # self.__databaseNameList = ["repository_holdings"]
             self.__dataTypingList = self.__cfgOb.getList("DATATYPING_TEST", sectionName="database_catalog_configuration")
+
+        # self.__databaseNameList = ["sequence_clusters"]
         self.__saveSchema = True
         self.__compareDefSchema = False
         self.__compareSchema = False

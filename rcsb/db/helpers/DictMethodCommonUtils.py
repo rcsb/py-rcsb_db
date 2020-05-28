@@ -795,6 +795,20 @@ class DictMethodCommonUtils(object):
         wD = self.__fetchAtomSiteInfo(dataContainer)
         return wD["entityTypeUniqueIds"] if "entityTypeUniqueIds" in wD else {}
 
+    def getAuthToSeqIdMap(self, dataContainer):
+        """Return an instance (asymId) dictionary of auth to entity residue sequence mapping
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            dict:   seqIdMapAsymD[asymId] = [<authSeqId + insCode>, ... ]
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchAtomSiteInfo(dataContainer)
+        return wD["seqIdMapAsymD"] if "seqIdMapAsymD" in wD else {}
+
     def __fetchAtomSiteInfo(self, dataContainer, modelId="1"):
         wD = self.__atomInfoCache.get((dataContainer.getName(), modelId))
         if not wD:
@@ -875,6 +889,8 @@ class DictMethodCommonUtils(object):
                     }
                 entityTypeUniqueIds[<entity_type>][<entity_id>] = {'asymIds': [...],'authAsymIds': [...], 'ccIds': [...]}
 
+                seqIdMapAsymD[asymId] = [<authSeqId + insCode>, ... ]
+
         """
         #
         numAtomsAll = 0
@@ -936,6 +952,7 @@ class DictMethodCommonUtils(object):
         entityTypeUniqueIds = {}
         tAsymIdD = {}
         seqIdObsMapD = {}
+        seqIdMapAsymD = {}
         epLengthD = self.getPolymerEntityLengths(dataContainer)
         asymIdPolymerRangesD = {}
         instanceIdMapD = {}
@@ -967,9 +984,16 @@ class DictMethodCommonUtils(object):
                     #
                     insCode = psObj.getValueOrDefault("pdb_ins_code", ii, defaultValue=None)
                     aSeqD.setdefault(asymId, []).append(authSeqId)
-                    #
+                    # ---
+                    tC = authSeqId
                     if authSeqId not in [".", "?"]:
                         seqIdObsMapD.setdefault(asymId, {})[seqId] = (authSeqId, insCode)
+                    else:
+                        tC = "?"
+                    if insCode and tC != "?":
+                        tC += insCode
+                    seqIdMapAsymD.setdefault(asymId, []).append(tC)
+                    # ---
                     #
                     pAuthAsymIdMapD[(authAsymId, authSeqId, insCode)] = {
                         "entry_id": entryId,
@@ -1024,6 +1048,7 @@ class DictMethodCommonUtils(object):
             atomSiteInfoD["instancePolymerUnmodeledMonomerCountD"] = instancePolymerUnmodeledMonomerCountD
             atomSiteInfoD["asymAuthIdD"] = asymAuthIdD
             atomSiteInfoD["asymIdPolymerRangesD"] = asymIdPolymerRangesD
+            atomSiteInfoD["seqIdMapAsymD"] = seqIdMapAsymD
             # --------------
             logger.debug(
                 "%s instancePolymerModeledMonomerCountD(%d) %r",

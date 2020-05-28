@@ -73,10 +73,13 @@ class DictMethodEntityInstanceHelper(object):
             asymD = self.__commonU.getInstanceIdMap(dataContainer)
             npAuthAsymD = self.__commonU.getNonPolymerIdMap(dataContainer)
             brAuthAsymD = self.__commonU.getBranchedIdMap(dataContainer)
+            seqIdMapAsymD = self.__commonU.getAuthToSeqIdMap(dataContainer)
             #
-            for ii, ky in enumerate(sorted(asymD)):
-                for k, v in asymD[ky].items():
+            for ii, asymId in enumerate(sorted(asymD)):
+                for k, v in asymD[asymId].items():
                     cObj.setValue(v, k, ii)
+                v = ",".join(seqIdMapAsymD[asymId]) if asymId in seqIdMapAsymD else "?"
+                cObj.setValue(v, "auth_to_entity_poly_seq_mapping", ii)
 
             ok = self.__addPdbxValidateAsymIds(dataContainer, asymD, npAuthAsymD, brAuthAsymD)
             return ok
