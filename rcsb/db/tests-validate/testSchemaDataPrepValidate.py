@@ -136,7 +136,9 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         inputPathList = None
         eCount = self.__testValidateOpts(databaseNameD=self.__databaseNameD, inputPathList=inputPathList, schemaLevel=schemaLevel, mergeContentTypeD=self.__mergeContentTypeD)
         logger.info("Total validation errors schema level %s : %d", schemaLevel, eCount)
-        self.assertLessEqual(eCount, 1)
+        # expected errors
+        # pdbx_core_entry (3JWB) path deque(['reflns_shell', 0, 'Rmerge_I_obs']) error: 33.9 is greater than or equal to the maximum of 10.0
+        self.assertLessEqual(eCount, 2)
 
     @unittest.skip("Disable troubleshooting test")
     def testValidateOptsList(self):
