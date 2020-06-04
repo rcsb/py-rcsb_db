@@ -45,7 +45,7 @@ class DictionaryProviderTests(unittest.TestCase):
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         dictLocatorMap = self.__cfgOb.get("DICT_LOCATOR_CONFIG_MAP", sectionName=self.__contentInfoConfigName)
         schemaName = "pdbx_core"
-        self.__dictLocators = [self.__cfgOb.getPath(configLocator, sectionName=self.__contentInfoConfigName) for configLocator in dictLocatorMap[schemaName]]
+        self.__dictLocators = [self.__cfgOb.getPath(configLocator, sectionName=self.__configName) for configLocator in dictLocatorMap[schemaName]]
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
