@@ -386,17 +386,17 @@ class ContentDefinition(object):
                 return enumTupList
             else:
                 isFloat = False
-                for enum, _ in enumTupList:
+                for enum, _, _, _ in enumTupList:
                     if "." in enum:
                         isFloat = True
                         break
                 if isFloat:
-                    for enum, detail in enumTupList:
+                    for enum, detail, brief, units in enumTupList:
                         try:
                             if isFloat:
-                                rL.append((float(enum), detail))
+                                rL.append((float(enum), detail, brief, units))
                             else:
-                                rL.append((int(enum), detail))
+                                rL.append((int(enum), detail, brief, units))
                         except Exception:
                             pass
                 return rL
@@ -405,8 +405,8 @@ class ContentDefinition(object):
 
     def __hasEnumDetails(self, enumTupList):
         dCount = 0
-        for _, detail in enumTupList:
-            if detail:
+        for _, detail, brief, units in enumTupList:
+            if detail or brief or units:
                 dCount += 1
         return dCount > 0
 
@@ -506,14 +506,20 @@ class ContentDefinition(object):
             fD["METHODS"] = methodD[(catName, atName)] if (catName, atName) in methodD else []
             fD["CONTENT_CLASSES"] = self.__getContentClasses(catName, atName)
             fD["ENUMS"] = sorted(self.__assignEnumTypes(self.__dApi.getEnumList(catName, atName), pType))
-            enumTupList = self.__dApi.getEnumListAltWithDetail(catName, atName)
+            enumTupList = self.__dApi.getEnumListAltWithFullDetails(catName, atName)
+            #
             if self.__hasEnumDetails(enumTupList):
+                #
                 fD["ENUMS_ANNOTATED"] = []
                 for eTup in self.__assignEnumTupTypes(enumTupList, pType):
+                    teD = {"value": eTup[0]}
                     if eTup[1]:
-                        fD["ENUMS_ANNOTATED"].append({"value": eTup[0], "detail": eTup[1]})
-                    else:
-                        fD["ENUMS_ANNOTATED"].append({"value": eTup[0]})
+                        teD["detail"] = eTup[1]
+                    if eTup[2]:
+                        teD["name"] = eTup[2]
+                    if eTup[3]:
+                        teD["units"] = eTup[3]
+                    fD["ENUMS_ANNOTATED"].append(teD)
             #
             fD["EXAMPLES"] = self.__dApi.getExampleListPdbx(catName, atName)
             fD["EXAMPLES"].extend(self.__dApi.getExampleList(catName, atName))

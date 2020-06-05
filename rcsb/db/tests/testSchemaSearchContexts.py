@@ -205,7 +205,11 @@ class SchemaSearchContextsTests(unittest.TestCase):
                     logger.warning("Missing nested enums %s.%s", cpCatName, cpAtName)
                 else:
                     logger.debug("All context enums count %d", len(enumDL))
-                    enumMapD = {enumD["value"]: enumD["detail"] for enumD in enumDL}
+                    for enumD in enumDL:
+                        if "name" not in enumD:
+                            logger.warning("Missing nested enum (name) for %s.%s", cpCatName, cpAtName)
+                    #
+                    enumMapD = {enumD["value"]: enumD["name"] if "name" in enumD else enumD["detail"] for enumD in enumDL}
                 # --
                 nestedDescriptionText = self.__docHelper.getAttributeDescription(cpCatName, cpAtName, contextType="brief")
                 if not nestedDescriptionText:
@@ -314,7 +318,11 @@ class SchemaSearchContextsTests(unittest.TestCase):
                 logger.warning("Missing nested enums %s.%s", cpCatName, cpAtName)
             else:
                 logger.debug("All context enums count %d", len(enumDL))
-                enumMapD = {enumD["value"]: enumD["detail"] for enumD in enumDL}
+                for enumD in enumDL:
+                    if "name" not in enumD:
+                        logger.warning("Missing nested enum (name) for %s.%s", cpCatName, cpAtName)
+                #
+                enumMapD = {enumD["value"]: enumD["name"] if "name" in enumD else enumD["detail"] for enumD in enumDL}
             # --
             nestedDescriptionText = self.__docHelper.getAttributeDescription(cpCatName, cpAtName, contextType="brief")
             if not nestedDescriptionText:
