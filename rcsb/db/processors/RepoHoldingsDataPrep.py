@@ -97,10 +97,13 @@ class RepoHoldingsDataPrep(object):
                 continue
             rD = {"rcsb_id": entryId}
             rD["rcsb_repository_holdings_unreleased_entry_container_identifiers"] = {"rcsb_id": entryId, "entry_id": entryId, "update_id": updateId}
-            rD["rcsb_repository_holdings_unreleased"] = qD
             if entryId in prD:
                 rD["rcsb_repository_holdings_prerelease"] = prD[entryId]
-
+                qD["prerelease_sequence_available_flag"] = "Y"
+            else:
+                qD["prerelease_sequence_available_flag"] = "N"
+            rD["rcsb_repository_holdings_unreleased"] = qD
+            #
             dList.append(rD)
         return dList
 

@@ -244,3 +244,4 @@
  21-May-2020  V0.988 Added additional methods to export search group and context statistics
  22-May-2020  V0.989 Adding auth to entity polymer sequence residue mapping item.
   3-Jun-2020  V0.990 Updating dependencies for rcsb.utils.validation and validation test conditions.
+  4-Jun-2020  V0.991 Adding new flag for prerelease sequence availability
