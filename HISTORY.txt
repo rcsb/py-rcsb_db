@@ -246,3 +246,4 @@
   3-Jun-2020  V0.990 Updating dependencies for rcsb.utils.validation and validation test conditions.
   4-Jun-2020  V0.991 Adding new flag for prerelease sequence availability
   5-Jun-2020  V0.992 Adding support for new enum DDL attributes.
+ 12-Jun-2020  V0.993 Adjustments to the labeling of site, occupancy and oberserved features

@@ -642,6 +642,8 @@ class DictMethodEntityInstanceHelper(object):
                     cObj.setValue("V1.0", "assignment_version", ii)
                     if tId in ligandSiteD:
                         cObj.setValue(ligandSiteD[tId]["description"], "description", ii)
+                        if ligandSiteD[tId]["siteLabel"]:
+                            cObj.setValue(ligandSiteD[tId]["siteLabel"], "name", ii)
                     #
                     ii += 1
             #
@@ -657,14 +659,14 @@ class DictMethodEntityInstanceHelper(object):
                 #
                 if zeroOccFlag:
                     cObj.setValue("ZERO_OCCUPANCY_RESIDUE_XYZ", "type", ii)
-                    tS = "residue coordinates reported with zero-occupancy in model %s" % modelId
+                    tS = "All atom coordinates for this residue are reported with zero-occupancy in model %s" % modelId
                     cObj.setValue(tS, "description", ii)
                     cObj.setValue("residue coordinates with zero occupancy", "name", ii)
                 else:
                     cObj.setValue("UNOBSERVED_RESIDUE_XYZ", "type", ii)
-                    tS = "residue coordinates unobserved in model %s" % modelId
+                    tS = "No coordinates for this residue are reported in model %s" % modelId
                     cObj.setValue(tS, "description", ii)
-                    cObj.setValue("residue coordinates unobserved", "name", ii)
+                    cObj.setValue("unmodeled residue", "name", ii)
                 #
                 cObj.setValue(str(1), "feature_id", ii)
                 #
@@ -689,14 +691,14 @@ class DictMethodEntityInstanceHelper(object):
                 #
                 if zeroOccFlag:
                     cObj.setValue("ZERO_OCCUPANCY_ATOM_XYZ", "type", ii)
-                    tS = "residue coordinates reported with zero-occupancy in model %s" % modelId
+                    tS = "Some atom coordinates in this residue are reported with zero-occupancy in model %s" % modelId
                     cObj.setValue(tS, "description", ii)
                     cObj.setValue("atom coordinates with zero occupancy", "name", ii)
                 else:
                     cObj.setValue("UNOBSERVED_ATOM_XYZ", "type", ii)
-                    tS = "atom coordinates unobserved in model %s" % modelId
+                    tS = "Some atom coordinates in this residue are not reported in model %s" % modelId
                     cObj.setValue(tS, "description", ii)
-                    cObj.setValue("atom coordinates unobserved", "name", ii)
+                    cObj.setValue("partially modeled residue", "name", ii)
                 #
                 cObj.setValue(str(1), "feature_id", ii)
                 #

@@ -3079,10 +3079,20 @@ class DictMethodCommonUtils(object):
                    "polymerLigand": {"asymId": ., "entityId": ., "begSeqId": ., "endSeqId":. },
                    "nonPolymerLigands": [{"asymId": ., "entityId": ., "compId": .}, ...],
                    "description": raw or generated text,
+                   "siteLabel": replacement for data site id,
                    }
 
         """
-        rD = {"evCode": evCode, "fromDetails": fromDetails, "isRaw": True, "entityType": None, "polymerLigand": None, "nonPolymerLigands": None, "description": None}
+        rD = {
+            "evCode": evCode,
+            "fromDetails": fromDetails,
+            "isRaw": True,
+            "entityType": None,
+            "polymerLigand": None,
+            "nonPolymerLigands": None,
+            "description": None,
+            "siteLabel": None,
+        }
         npAuthAsymD = self.getNonPolymerIdMap(dataContainer)
         pAuthAsymD = self.getPolymerIdMap(dataContainer)
         asymAuthIdD = self.getAsymAuthIdMap(dataContainer)
@@ -3092,6 +3102,7 @@ class DictMethodCommonUtils(object):
         # Note that this is a non-unique index inversion
         authAsymD = {v: k for k, v in asymAuthIdD.items()}
         instEntityD = self.getInstanceEntityMap(dataContainer)
+        evS = "Software generated" if evCode == "software" else "Author provided"
         #
         if len(ligL) == 1:
             authAsymId, compId, authSeqId, ssDetails = ligL[0]
@@ -3109,8 +3120,9 @@ class DictMethodCommonUtils(object):
                     begSeqId = asymIdPolymerRangesD[asymId]["begSeqId"]
                     endSeqId = asymIdPolymerRangesD[asymId]["endSeqId"]
                     tD = {"asymId": asymId, "entityId": instEntityD[asymId], "begSeqId": begSeqId, "endSeqId": endSeqId}
-                    rD["description"] = "Binding site for entity %s instance %s (%s-%s)" % (entityId, asymId, begSeqId, endSeqId)
+                    rD["description"] = "%s binding site for entity %s (%s-%s) instance %s chain %s" % (evS, entityId, begSeqId, endSeqId, asymId, authAsymId)
                     rD["polymerLigand"] = tD
+                    rD["siteLabel"] = "chain %s" % authAsymId
             elif (authAsymId, authSeqId) in npAuthAsymD:
                 # single non-polymer-ligand -
                 asymId = npAuthAsymD[(authAsymId, authSeqId)]["asym_id"]
@@ -3118,7 +3130,8 @@ class DictMethodCommonUtils(object):
                 entityId = instEntityD[asymId]
                 tD = {"asymId": asymId, "entityId": instEntityD[asymId], "compId": compId}
                 rD["nonPolymerLigands"] = [tD]
-                rD["description"] = "Binding site for ligand entity %s component %s instance %s" % (entityId, compId, asymId)
+                rD["description"] = "%s binding site for ligand entity %s component %s instance %s chain %s" % (evS, entityId, compId, asymId, authAsymId)
+                rD["siteLabel"] = "ligand %s" % compId
             elif (authAsymId, authSeqId, None) in pAuthAsymD:
                 # single monomer ligand - an odd case
                 asymId = pAuthAsymD[(authAsymId, authSeqId, None)]["asym_id"]
@@ -3126,8 +3139,9 @@ class DictMethodCommonUtils(object):
                 seqId = pAuthAsymD[(authAsymId, authSeqId, None)]["seq_id"]
                 rD["entityType"] = iTypeD[asymId]
                 tD = {"asymId": asymId, "entityId": entityId, "begSeqId": seqId, "endSeqId": seqId}
-                rD["description"] = "Binding site for entity %s instance %s (%s)" % (entityId, asymId, seqId)
+                rD["description"] = "%s binding site for entity %s instance %s chainId %s (%s)" % (evS, entityId, asymId, authAsymId, authSeqId)
                 rD["polymerLigand"] = tD
+                rD["siteLabel"] = "chain %s" % authAsymId
             else:
                 logger.debug("%s untranslated single ligand details %r", dataContainer.getName(), ligL)
                 logger.debug("npAuthAsymD %r", npAuthAsymD)
@@ -3148,14 +3162,18 @@ class DictMethodCommonUtils(object):
                 tDB = {"asymId": asymIdB, "entityId": entityIdB, "compId": compIdB}
                 rD["nonPolymerLigands"] = [tDA, tDB]
                 rD["entityType"] = iTypeD[asymIdA]
-                rD["description"] = "Binding site for ligands entity %s component %s instance %s and entity %s component %s instance %s" % (
+                rD["description"] = "%s binding site for ligands: entity %s component %s instance %s chain %s and entity %s component %s instance %s chain %s" % (
+                    evS,
                     entityIdA,
                     compIdA,
                     asymIdA,
+                    authAsymIdA,
                     entityIdB,
                     compIdB,
                     asymIdB,
+                    authAsymIdB,
                 )
+                rD["siteLabel"] = "ligands %s/%s" % (compIdA, compIdB)
             elif (authAsymIdA, authSeqIdA, None) in pAuthAsymD and (authAsymIdB, authSeqIdB, None) in pAuthAsymD and authAsymIdA == authAsymIdB:
                 asymIdA = pAuthAsymD[(authAsymIdA, authSeqIdA, None)]["asym_id"]
                 entityIdA = pAuthAsymD[(authAsymIdA, authSeqIdA, None)]["entity_id"]
@@ -3165,8 +3183,17 @@ class DictMethodCommonUtils(object):
                 endSeqId = pAuthAsymD[(authAsymIdB, authSeqIdB, None)]["seq_id"]
                 tD = {"asymId": asymIdA, "entityId": instEntityD[asymIdA], "begSeqId": begSeqId, "endSeqId": endSeqId}
                 rD["entityType"] = iTypeD[asymIdA]
-                rD["description"] = "Binding site for ligands entity %s instance %s and entity %s instance %s" % (entityIdA, asymIdA, entityIdB, asymIdB)
+                rD["description"] = "%s binding site for entity %s instance %s chain %s and entity %s instance %s chain %s" % (
+                    evS,
+                    entityIdA,
+                    asymIdA,
+                    authAsymIdA,
+                    entityIdB,
+                    asymIdB,
+                    authAsymIdB,
+                )
                 rD["polymerLigand"] = tD
+                rD["siteLabel"] = "chains %s/%s" % (authAsymIdA, authAsymIdB)
             else:
                 logger.debug("%s untranslated ligand details %r", dataContainer.getName(), ligL)
                 rD["description"] = ssDetailsA
