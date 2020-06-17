@@ -25,6 +25,7 @@ from jsonschema import Draft4Validator, FormatChecker
 from rcsb.db.processors.RepoHoldingsDataPrep import RepoHoldingsDataPrep
 from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
+from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()
@@ -42,12 +43,15 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
         self.__pathConfig = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
         self.__cachePath = os.path.join(TOPDIR, "CACHE")
         self.__updateId = "2018_25"
+        self.__export = False
         #
         configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
         self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=True)
         self.__sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=configName)
         #
+        self.__mU = MarshalUtil(workPath=self.__cachePath)
+
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
@@ -87,6 +91,9 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
                 _ = self.__schP.makeSchemaDef(schemaName, dataTyping="ANY", saveSchema=True)
                 cD = self.__schP.makeSchema(schemaName, collectionName, encodingType="JSON", level=schemaLevel, saveSchema=True)
                 dL = self.__getRepositoryHoldingsDocuments(schemaName, collectionName, updateId)
+                if self.__export:
+                    savePath = os.path.join(HERE, "test-output", collectionName + ".json")
+                    self.__mU.doExport(savePath, dL, fmt="json", indent=3)
                 # Raises exceptions for schema compliance.
                 Draft4Validator.check_schema(cD)
                 #
@@ -97,7 +104,9 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
                         cCount = 0
                         for error in sorted(valInfo.iter_errors(dD), key=str):
                             logger.info("schema %s collection %s path %s error: %s", schemaName, collectionName, error.path, error.message)
+                            logger.info(">>>")
                             logger.info(">>> failing object is %r", dD)
+                            logger.info(">>>")
                             eCount += 1
                             cCount += 1
                         #

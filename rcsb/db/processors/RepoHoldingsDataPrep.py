@@ -604,6 +604,11 @@ class RepoHoldingsDataPrep(object):
         Returns:
             list: List of dictionaries containing data for rcsb_repository_holdings_prerelease
 
+        >6I99 Entity 1
+        HHHHHHENLYFQGELKREEITLLKELGSGQFGVVKLGKWKGQYDVAVKMIKEG....
+        >6JKE Entity 1
+        GRVTNQLQYLHKVVMKALWKHQFAWPFRQPVDAVKLGLPDYHKIIKQPMDMGTI....
+
         """
         retD = {}
         fields = []
@@ -616,15 +621,21 @@ class RepoHoldingsDataPrep(object):
             for sid in sD:
                 fields = sid.split("_")
                 entryId = str(fields[0]).upper()
+                entityId = str(fields[1])
                 if entryId not in seqD:
                     seqD[entryId] = []
-                seqD[entryId].append(sD[sid]["sequence"])
+                seqD[entryId].append((entityId, sD[sid]["sequence"]))
             logger.debug("Loaded prerelease sequences for %d entries", len(seqD))
             #
-            for entryId, seqL in seqD.items():
-                dD = {"seq_one_letter_code": seqL}
+            for entryId, seqTupL in seqD.items():
+                # dD = {"seq_one_letter_code": seqL}
                 logger.debug("Adding prerelease sequences for %s", entryId)
-                retD[entryId] = {k: v for k, v in dD.items() if v}
+                for entityId, seqS in seqTupL:
+                    if not seqS:
+                        continue
+                    retD.setdefault(entryId, []).append({"entity_id": entityId, "seq_one_letter_code": seqS})
+                #
+                # retD[entryId] = {k: v for k, vTup in dD.items() if vTup[1]}
         except Exception as e:
             logger.error("Fields: %r", fields)
             logger.exception("Failing with %s", str(e))
