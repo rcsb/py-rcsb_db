@@ -248,3 +248,4 @@
   5-Jun-2020  V0.992 Adding support for new enum DDL attributes.
  12-Jun-2020  V0.993 Adjustments to the labeling of site, occupancy and oberserved features
  17-Jun-2020  V0.994 Adjustments rcsb_repository_holdings_unreleased_entry collection
+ 18-Jun-2020  V0.995 Adding entity taxonomy count.

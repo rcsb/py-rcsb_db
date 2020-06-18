@@ -21,7 +21,7 @@ import itertools
 import logging
 import re
 
-from collections import OrderedDict
+from collections import defaultdict, OrderedDict
 
 from mmcif.api.DataCategory import DataCategory
 from rcsb.utils.seq.SeqAlign import SeqAlign, splitSeqAlignObjList
@@ -515,7 +515,7 @@ class DictMethodEntityHelper(object):
             srcL = []
             hostL = []
             for entityId in entityIdL:
-                partCountD[entityId] = 1
+                partCountD[entityId] = 0
                 eL = []
                 tf = False
                 if s1Obj:
@@ -560,7 +560,8 @@ class DictMethodEntityHelper(object):
                         continue
 
             iRow = 0
-            entryTaxIdD = {}
+            entryTaxIdD = defaultdict(int)
+            entityTaxIdD = {}
             for (entityId, sType, atL, tv) in srcL:
                 ii = atL.index("ncbi_taxonomy_id") if "ncbi_taxonomy_id" in atL else -1
                 if ii > 0 and len(tv[ii].split(",")) > 1:
@@ -588,7 +589,8 @@ class DictMethodEntityHelper(object):
                             taxId = int(self.__reNonDigit.sub("", v[ii]))
                             taxId = taxU.getMergedTaxId(taxId)
                             cObj.setValue(str(taxId), "ncbi_taxonomy_id", iRow)
-                            entryTaxIdD[taxId] = entryTaxIdD[taxId] + 1 if taxId in entryTaxIdD else 1
+                            entryTaxIdD[taxId] += 1
+                            entityTaxIdD.setdefault(entityId, set()).add(taxId)
                             #
                             sn = taxU.getScientificName(taxId)
                             if sn:
@@ -622,7 +624,7 @@ class DictMethodEntityHelper(object):
                     ii = atL.index("pdbx_src_id") if "pdbx_src_id" in atL else -1
                     for jj, row in enumerate(tvL, 1):
                         row[ii] = str(jj)
-                    partCountD[entityId] = len(tvL)
+                    # partCountD[entityId] = len(tvL)
                 else:
                     tvL = [tv]
                 for v in tvL:
@@ -659,7 +661,7 @@ class DictMethodEntityHelper(object):
             # Update entity attributes
             #    _entity.rcsb_multiple_source_flag
             #    _entity.rcsb_source_part_count
-            for atName in ["rcsb_source_part_count", "rcsb_multiple_source_flag"]:
+            for atName in ["rcsb_source_part_count", "rcsb_multiple_source_flag", "rcsb_source_taxonomy_count"]:
                 if not eObj.hasAttribute(atName):
                     eObj.appendAttribute(atName)
             #
@@ -668,6 +670,8 @@ class DictMethodEntityHelper(object):
                 cFlag = "Y" if partCountD[entityId] > 1 else "N"
                 eObj.setValue(partCountD[entityId], "rcsb_source_part_count", ii)
                 eObj.setValue(cFlag, "rcsb_multiple_source_flag", ii)
+                if entityId in entityTaxIdD:
+                    eObj.setValue(len(entityTaxIdD[entityId]), "rcsb_source_taxonomy_count", ii)
 
             logger.debug("Entry taxonomy count is %d", len(entryTaxIdD))
             if dataContainer.exists("rcsb_entry_info"):
