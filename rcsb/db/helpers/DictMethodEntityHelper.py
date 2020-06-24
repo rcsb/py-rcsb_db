@@ -24,7 +24,7 @@ import re
 from collections import defaultdict, OrderedDict
 
 from mmcif.api.DataCategory import DataCategory
-from rcsb.utils.seq.SeqAlign import SeqAlign, splitSeqAlignObjList
+from rcsb.utils.seq.SeqAlign import splitSeqAlignObjList
 
 logger = logging.getLogger(__name__)
 
@@ -52,10 +52,13 @@ class DictMethodEntityHelper(object):
         rP = kwargs.get("resourceProvider")
         self.__commonU = rP.getResource("DictMethodCommonUtils instance") if rP else None
         self.__dApi = rP.getResource("Dictionary API instance (pdbx_core)") if rP else None
-        self.__useSiftsAlign = False
+        #
+        self.__useSiftsAlign = True
         self.__ssP = None
         if self.__useSiftsAlign:
             self.__ssP = rP.getResource("SiftsSummaryProvider instance") if rP else None
+            self.__useSiftsAlign = False if not self.__ssP else self.__useSiftsAlign
+        #
         self.__ccP = rP.getResource("ChemCompProvider instance") if rP else None
 
         #
@@ -78,8 +81,8 @@ class DictMethodEntityHelper(object):
                 continue
             entityId = asymIdD[asymId]
             # accumulate the sifts alignments by entity.
-            siftsAlignD.setdefault((entryId, entityId), []).extend([SeqAlign("SIFTS", **sa) for sa in self.__ssP.getIdentifiers(entryId, authAsymId, idType="UNPAL")])
-
+            # siftsAlignD.setdefault((entryId, entityId), []).extend([SeqAlign("SIFTS", **sa) for sa in self.__ssP.getIdentifiers(entryId, authAsymId, idType="UNPAL")])
+            siftsAlignD.setdefault((entryId, entityId), []).extend(self.__ssP.getSeqAlignObjList(entryId, authAsymId))
         for (entryId, entityId), seqAlignObjL in siftsAlignD.items():
             if seqAlignObjL:
                 # re-group alignments by common accession
@@ -108,8 +111,8 @@ class DictMethodEntityHelper(object):
         entityRefAlignmentD = self.__commonU.getEntityReferenceAlignments(dataContainer)
         pdbEntityAlignD = {}
         # --- PDB alignments -
-        for entityId, entityAlignL in entityRefAlignmentD.items():
-            seqAlignObjL = [SeqAlign("PDB", **sa) for sa in entityAlignL]
+        for entityId, seqAlignObjL in entityRefAlignmentD.items():
+            # seqAlignObjL = [SeqAlign("PDB", **sa) for sa in entityAlignL]
             if seqAlignObjL:
                 alRefD = {}
                 for seqAlignObj in seqAlignObjL:
@@ -126,7 +129,7 @@ class DictMethodEntityHelper(object):
                             if tLen and tLen > 0:
                                 pdbEntityAlignD.setdefault((entryId, entityId, "PDB"), {}).setdefault((dbName, dbAcc, dbIsoform), []).append(grpAlignL[idxMax])
                             else:
-                                logger.warning("Skipping %s inconsistent alignment for entity %r %r", entryId, entityId, entityAlignL)
+                                logger.warning("Skipping %s inconsistent alignment for entity %r %r", entryId, entityId, seqAlignObjL)
                         except Exception:
                             pass
             #
@@ -168,10 +171,15 @@ class DictMethodEntityHelper(object):
             cObj = dataContainer.getObj(catName)
             #
             pdbEntityAlignD = self.__processPdbAlignments(dataContainer)
+            #
             if self.__useSiftsAlign:
                 siftsEntityAlignD = self.__processSiftsAlignments(dataContainer)
                 logger.debug("siftsEntityAlignD %d", len(siftsEntityAlignD))
-                pdbEntityAlignD.update(siftsEntityAlignD)
+                #
+                for (entryId, entityId, provSource), refD in siftsEntityAlignD.items():
+                    if (entryId, entityId, "PDB") in pdbEntityAlignD:
+                        del pdbEntityAlignD[(entryId, entityId, "PDB")]
+                    pdbEntityAlignD.update({(entryId, entityId, provSource): refD})
             #
             # ---
 
@@ -275,71 +283,51 @@ class DictMethodEntityHelper(object):
                 modPolymerMonomerL = entityPolymerModMonomerIds[entityId] if entityId in entityPolymerModMonomerIds else []
                 #
                 refSeqIdD = {"dbName": [], "dbAccession": [], "provSource": [], "dbIsoform": []}
-                relatedAnnIdD = {"dbName": [], "dbAccession": [], "provSource": []}
 
                 asymIdL = entityTypeUniqueIds[eType][entityId]["asymIds"] if eType in entityTypeUniqueIds else []
                 authAsymIdL = entityTypeUniqueIds[eType][entityId]["authAsymIds"] if eType in entityTypeUniqueIds else []
                 ccMonomerL = entityTypeUniqueIds[eType][entityId]["ccIds"] if eType in entityTypeUniqueIds else []
 
+                if eType in ["polymer", "non-polymer", "branched"] and not asymIdL:
+                    logger.warning("%s inconsistent molecular system (no instances) for %r entity %s", entryId, eType, entityId)
+                #
                 if eType == "polymer":
 
-                    # asymIdL = psObj.selectValuesWhere("asym_id", entityId, "entity_id")
-                    # authAsymIdL = psObj.selectValuesWhere("pdb_strand_id", entityId, "entity_id")
-                    # ccMonomerL = psObj.selectValuesWhere("mon_id", entityId, "entity_id")
-                    # -----
-
-                    #
-                    if self.__ssP:
-                        if self.__useSiftsAlign:
-                            dbIdL = []
-                            for authAsymId in authAsymIdL:
-                                dbIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="UNPID"))
+                    if self.__useSiftsAlign:
+                        dbIdL = []
+                        for authAsymId in authAsymIdL:
+                            dbIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="UNPID"))
+                        # If SIFTS is defined
+                        if dbIdL:
                             for dbId in sorted(set(dbIdL)):
                                 refSeqIdD["dbName"].append("UniProt")
                                 refSeqIdD["provSource"].append("SIFTS")
                                 refSeqIdD["dbAccession"].append(dbId)
                                 refSeqIdD["dbIsoform"].append("?")
-                        dbIdL = []
-                        for authAsymId in authAsymIdL:
-                            dbIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="PFAMID"))
-                        # --- NO LONGER USING THIS CODE ---
-                        for dbId in sorted(set(dbIdL)):
-                            relatedAnnIdD["dbName"].append("Pfam")
-                            relatedAnnIdD["provSource"].append("SIFTS")
-                            relatedAnnIdD["dbAccession"].append(dbId)
-                        dbIdL = []
-                        for authAsymId in authAsymIdL:
-                            dbIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="IPROID"))
-                        for dbId in sorted(set(dbIdL)):
-                            relatedAnnIdD["dbName"].append("InterPro")
-                            relatedAnnIdD["provSource"].append("SIFTS")
-                            relatedAnnIdD["dbAccession"].append(dbId)
-                        dbIdL = []
-                        for authAsymId in authAsymIdL:
-                            dbIdL.extend(self.__ssP.getIdentifiers(entryId, authAsymId, idType="GOID"))
-                        for dbId in sorted(set(dbIdL)):
-                            relatedAnnIdD["dbName"].append("GO")
-                            relatedAnnIdD["provSource"].append("SIFTS")
-                            relatedAnnIdD["dbAccession"].append(dbId)
-                # elif npsObj:
-                #    asymIdL = npsObj.selectValuesWhere("asym_id", entityId, "entity_id")
-                #    authAsymIdL = npsObj.selectValuesWhere("pdb_strand_id", entityId, "entity_id")
-                #    ccLigandL = npsObj.selectValuesWhere("mon_id", entityId, "entity_id")
-                #    # logger.debug("entityId %r ligands %r", entityId, set(ccLigandL))
-                #
-                if eType in ["polymer", "non-polymer", "branched"] and not asymIdL:
-                    logger.warning("%s inconsistent molecular system (no instances) for %r entity %s", entryId, eType, entityId)
-                #
-                if eType == "polymer" and entityId in seqEntityRefDbD:
-                    for dbD in seqEntityRefDbD[entityId]:
-                        refSeqIdD["dbName"].append(dbD["dbName"])
-                        refSeqIdD["provSource"].append("PDB")
-                        refSeqIdD["dbAccession"].append(dbD["dbAccession"])
-                        #
-                        if dbD["dbIsoform"]:
-                            refSeqIdD["dbIsoform"].append(dbD["dbIsoform"])
-                        else:
-                            refSeqIdD["dbIsoform"].append("?")
+                        # else fallback to PDB
+                        elif entityId in seqEntityRefDbD:
+                            for dbD in seqEntityRefDbD[entityId]:
+                                refSeqIdD["dbName"].append(dbD["dbName"])
+                                refSeqIdD["provSource"].append("PDB")
+                                refSeqIdD["dbAccession"].append(dbD["dbAccession"])
+                                #
+                                if dbD["dbIsoform"]:
+                                    refSeqIdD["dbIsoform"].append(dbD["dbIsoform"])
+                                else:
+                                    refSeqIdD["dbIsoform"].append("?")
+
+                    else:
+                        if entityId in seqEntityRefDbD:
+                            for dbD in seqEntityRefDbD[entityId]:
+                                refSeqIdD["dbName"].append(dbD["dbName"])
+                                refSeqIdD["provSource"].append("PDB")
+                                refSeqIdD["dbAccession"].append(dbD["dbAccession"])
+                                #
+                                if dbD["dbIsoform"]:
+                                    refSeqIdD["dbIsoform"].append(dbD["dbIsoform"])
+                                else:
+                                    refSeqIdD["dbIsoform"].append("?")
+
                 #
                 # logger.info("refSeqIdD %r %r %r", entryId, entityId, refSeqIdD)
 
@@ -368,11 +356,7 @@ class DictMethodEntityHelper(object):
                     cObj.setValue(",".join(refSeqIdD["provSource"]).strip(), "reference_sequence_identifiers_provenance_source", ii)
                     cObj.setValue(",".join(refSeqIdD["dbIsoform"]).strip(), "reference_sequence_identifiers_database_isoform", ii)
                 #
-                # if relatedAnnIdD["dbName"]:
-                #    cObj.setValue(",".join(relatedAnnIdD["dbName"]).strip(), "related_annotation_identifiers_resource_name", ii)
-                #    cObj.setValue(",".join(relatedAnnIdD["dbAccession"]).strip(), "related_annotation_identifiers_resource_identifier", ii)
-                #    cObj.setValue(",".join(relatedAnnIdD["provSource"]).strip(), "related_annotation_identifiers_provenance_source", ii)
-                #
+
                 ii += 1
             _ = self.__addEntityCompIds(dataContainer)
             _ = self.__addBirdEntityIds(dataContainer)

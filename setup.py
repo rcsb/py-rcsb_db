@@ -74,7 +74,7 @@ setup(
         "rcsb.utils.citation >= 0.15",
         "rcsb.utils.ec >= 0.21",
         "rcsb.utils.taxonomy >= 0.28",
-        "rcsb.utils.seq >= 0.40",
+        "rcsb.utils.seq >= 0.43",
         "rcsb.utils.struct >= 0.24",
         "SQLAlchemy; sys_platform == 'linux'",
         "psycopg2-binary",
