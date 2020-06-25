@@ -72,7 +72,7 @@ class PdbxLoaderTests(unittest.TestCase):
                 "collectionNameList": None,
                 "loadType": "full",
                 "mergeContentTypes": None,
-                "validationLevel": "min",
+                "validationLevel": "full",
                 "updateSchemaOnReplace": False,
             },
             {
@@ -80,7 +80,7 @@ class PdbxLoaderTests(unittest.TestCase):
                 "collectionNameList": None,
                 "loadType": "replace",
                 "mergeContentTypes": None,
-                "validationLevel": "min",
+                "validationLevel": "full",
                 "updateSchemaOnReplace": True,
             },
             {"databaseName": "pdbx_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": ["vrpt"], "validationLevel": "min", "updateSchemaOnReplace": False},
