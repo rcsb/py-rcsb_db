@@ -548,7 +548,7 @@ class PdbxLoader(object):
         validationLevel="min",
         mergeContentTypes=None,
         useNameFlag=True,
-        updateSchemaOnReplace=False,
+        updateSchemaOnReplace=True,
     ):
         """Driver method for loading PDBx/mmCIF content into the Mongo document store.
 
@@ -839,10 +839,11 @@ class PdbxLoader(object):
                     )
                 #
                 if failDocIdS:
-                    logger.info("failDocIdS %r", failDocIdS)
+                    logger.info("Load failures: %r", failDocIdS)
                     for dD in dList:
                         tId = self.__getKeyValues(dD, docIdL)
                         if tId in failDocIdS:
+                            logger.info("Validating document %r", tId)
                             self.__validateDocuments(databaseName, collectionName, [dD], docIdL, schemaLevel=validationLevel)
 
                 # ------
@@ -885,7 +886,7 @@ class PdbxLoader(object):
     #
     def __validateDocuments(self, databaseName, collectionName, dList, docIdL, schemaLevel="full"):
         #
-        logger.info("Validating databaseName %s collectionName %s numObject %d", databaseName, collectionName, len(dList))
+        logger.info("Validating databaseName %s collectionName %s numObject %d docIdL %r", databaseName, collectionName, len(dList), docIdL)
         eCount = 0
         cD = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="JSON", level=schemaLevel)
         # cD = self.__schP.makeSchema(databaseName, collectionName, encodingType="JSON", level=schemaLevel, saveSchema=True, extraOpts=self.__extraOpts)
@@ -895,26 +896,27 @@ class PdbxLoader(object):
         except Exception as e:
             logger.error("%s %s schema validation fails with %s", databaseName, collectionName, str(e))
         #
+        filterErrors = True
         valInfo = Draft4Validator(cD, format_checker=FormatChecker())
         logger.info("Validating %d documents from %s %s", len(dList), databaseName, collectionName)
         for ii, dD in enumerate(dList):
             cN = self.__getKeyValues(dD, docIdL)
-            logger.info("Schema %s collection %s document %d", databaseName, collectionName, ii)
+            logger.info("Checking with schema %s collection %s document (%d) %r", databaseName, collectionName, ii + 1, cN)
             try:
                 cCount = 0
                 for error in sorted(valInfo.iter_errors(dD), key=str):
                     # filter artifacts -
                     #
-                    if "properties are not allowed ('_id' was unexpected)" in error.message:
+                    if filterErrors and "properties are not allowed ('_id' was unexpected)" in error.message:
                         continue
-                    if "datetime.datetime" in error.message and "is not of type 'string'" in error.message:
+                    if filterErrors and "datetime.datetime" in error.message and "is not of type 'string'" in error.message:
                         continue
-                    logger.info("schema %s collection %s (%s) path %s error: %s", databaseName, collectionName, cN, error.path, error.message)
-                    logger.debug("Failing document %d : %r", ii, list(dD.items()))
+                    logger.info("Document issues with schema %s collection %s (%s) path %s error: %s", databaseName, collectionName, cN, error.path, error.message)
+                    logger.debug("Failing document %d : %r", ii + 1, list(dD.items()))
                     eCount += 1
                     cCount += 1
                 if cCount > 0:
-                    logger.info("schema %s collection %s container %s error count %d", databaseName, collectionName, cN, cCount)
+                    logger.info("For schema %s collection %s container %s error count %d", databaseName, collectionName, cN, cCount)
             except Exception as e:
                 logger.exception("Validation processing error %s", str(e))
         return eCount

@@ -74,6 +74,7 @@ class PdbxLoaderTests(unittest.TestCase):
                 "mergeContentTypes": None,
                 "validationLevel": "full",
                 "updateSchemaOnReplace": False,
+                "status": True,
             },
             {
                 "databaseName": "bird_chem_comp_core",
@@ -82,8 +83,26 @@ class PdbxLoaderTests(unittest.TestCase):
                 "mergeContentTypes": None,
                 "validationLevel": "full",
                 "updateSchemaOnReplace": True,
+                "status": True,
             },
-            {"databaseName": "pdbx_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": ["vrpt"], "validationLevel": "min", "updateSchemaOnReplace": False},
+            {
+                "databaseName": "pdbx_core",
+                "collectionNameList": None,
+                "loadType": "full",
+                "mergeContentTypes": ["vrpt"],
+                "validationLevel": "min",
+                "updateSchemaOnReplace": False,
+                "status": True,
+            },
+            {
+                "databaseName": "pdbx_core",
+                "collectionNameList": None,
+                "loadType": "replace",
+                "mergeContentTypes": ["vrpt"],
+                "validationLevel": "full",
+                "updateSchemaOnReplace": True,
+                "status": False,
+            },
         ]
         #
         self.__startTime = time.time()
@@ -132,7 +151,7 @@ class PdbxLoaderTests(unittest.TestCase):
                 useNameFlag=False,
                 updateSchemaOnReplace=kwargs["updateSchemaOnReplace"],
             )
-            self.assertTrue(ok)
+            self.assertEqual(ok, kwargs["status"])
             ok = self.__loadStatus(mw.getLoadStatus())
             self.assertTrue(ok)
         except Exception as e:
