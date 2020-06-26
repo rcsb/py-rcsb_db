@@ -66,6 +66,9 @@ class DictMethodResourceProviderFixture(unittest.TestCase):
 
     def testRecoverResourceCache(self):
         """Fixture - generate and check resource caches
+
+        TOTAL - Maximum resident memory size 7902.0442 MB
+        SIFTS(2.9499 secs/1115.558 MB)
         """
         try:
             rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)

@@ -66,7 +66,7 @@ class RepoLoadWorkflow(object):
             saveInputFileListPath = kwargs.get("saveFileListPath", None)
             schemaLevel = kwargs.get("schemaLevel", "min") if kwargs.get("schemaLevel") in ["min", "full"] else "min"
             loadType = kwargs.get("loadType", "full")  # or replace
-            updateSchemaOnReplace = kwargs.get("updateSchemaOnReplace", False)
+            updateSchemaOnReplace = kwargs.get("updateSchemaOnReplace", True)
             pruneDocumentSize = float(kwargs.get("pruneDocumentSize")) if "pruneDocumentSize" in kwargs else None
 
             # "Document organization (rowwise_by_name_with_cardinality|rowwise_by_name|columnwise_by_name|rowwise_by_id|rowwise_no_name",

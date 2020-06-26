@@ -189,7 +189,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             _ = self.__schP.makeSchemaDef(databaseName, dataTyping="ANY", saveSchema=True)
             pthList = inputPathList if inputPathList else self.__rpP.getLocatorObjList(databaseName, mergeContentTypes=mergeContentTypes)
             for collectionName in databaseNameD[databaseName]:
-                cD = self.__schP.makeSchema(databaseName, collectionName, encodingType="JSON", level=schemaLevel, saveSchema=True, extraOpts=self.__extraOpts)
+                cD = self.__schP.makeSchema(databaseName, collectionName, encodingType="JSON", level=schemaLevel, saveSchema=True, extraOpts=None)
                 #
                 dL, cnL = self.__testPrepDocumentsFromContainers(
                     pthList, databaseName, collectionName, styleType="rowwise_by_name_with_cardinality", mergeContentTypes=mergeContentTypes

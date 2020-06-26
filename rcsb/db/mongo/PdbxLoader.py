@@ -50,6 +50,8 @@ import time
 
 import bson
 
+from jsonschema import Draft4Validator
+from jsonschema import FormatChecker
 from mmcif.api.DictMethodRunner import DictMethodRunner
 from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
 from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
@@ -546,7 +548,7 @@ class PdbxLoader(object):
         validationLevel="min",
         mergeContentTypes=None,
         useNameFlag=True,
-        updateSchemaOnReplace=False,
+        updateSchemaOnReplace=True,
     ):
         """Driver method for loading PDBx/mmCIF content into the Mongo document store.
 
@@ -610,6 +612,7 @@ class PdbxLoader(object):
             optD["logSize"] = logSize
             optD["pruneDocumentSize"] = pruneDocumentSize
             optD["useNameFlag"] = useNameFlag
+            optD["validationLevel"] = validationLevel
             # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             #
 
@@ -738,6 +741,7 @@ class PdbxLoader(object):
             dtf = optionsD["dataTransformFactory"]
             collectionNameList = optionsD["collectionNameList"]
             useNameFlag = optionsD["useNameFlag"]
+            validationLevel = optionsD["validationLevel"]
             sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=workingDir, verbose=self.__verbose)
             # -------------------------------------------
             # -- Create map of  cIdD{ container identifier} =  locatorObj
@@ -763,7 +767,7 @@ class PdbxLoader(object):
             # -----
             if loadType != "full":
                 for collectionName in collectionNameList:
-                    logger.info("Purging objects from %s for %d containers", collectionName, len(cNameL))
+                    logger.debug("Purging objects from %s for %d containers", collectionName, len(cNameL))
                     ok = self.__purgeDocuments(databaseName, collectionName, cNameL)
                     logger.debug("%s %s - loadType %r cNameL %r (%r)", databaseName, collectionName, loadType, cNameL, ok)
                     # --
@@ -833,6 +837,15 @@ class PdbxLoader(object):
                     ok, _, failDocIdS = self.__loadDocuments(
                         databaseName, collectionName, dList, docIdL, replaceIdL=replaceIdL, loadType=loadType, readBackCheck=readBackCheck, pruneDocumentSize=pruneDocumentSize
                     )
+                #
+                if failDocIdS:
+                    logger.info("Load failures: %r", failDocIdS)
+                    for dD in dList:
+                        tId = self.__getKeyValues(dD, docIdL)
+                        if tId in failDocIdS:
+                            logger.info("Validating document %r", tId)
+                            self.__validateDocuments(databaseName, collectionName, [dD], docIdL, schemaLevel=validationLevel)
+
                 # ------
                 # Collect the container identifiers for the successful loads (paths for logging only)
                 #
@@ -871,6 +884,43 @@ class PdbxLoader(object):
     # -------------- -------------- -------------- -------------- -------------- -------------- --------------
     #                                        ---  Supporting code follows ---
     #
+    def __validateDocuments(self, databaseName, collectionName, dList, docIdL, schemaLevel="full"):
+        #
+        logger.info("Validating databaseName %s collectionName %s numObject %d docIdL %r", databaseName, collectionName, len(dList), docIdL)
+        eCount = 0
+        cD = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="JSON", level=schemaLevel)
+        # cD = self.__schP.makeSchema(databaseName, collectionName, encodingType="JSON", level=schemaLevel, saveSchema=True, extraOpts=self.__extraOpts)
+        # Raises exceptions for schema compliance.
+        try:
+            Draft4Validator.check_schema(cD)
+        except Exception as e:
+            logger.error("%s %s schema validation fails with %s", databaseName, collectionName, str(e))
+        #
+        filterErrors = True
+        valInfo = Draft4Validator(cD, format_checker=FormatChecker())
+        logger.info("Validating %d documents from %s %s", len(dList), databaseName, collectionName)
+        for ii, dD in enumerate(dList):
+            cN = self.__getKeyValues(dD, docIdL)
+            logger.info("Checking with schema %s collection %s document (%d) %r", databaseName, collectionName, ii + 1, cN)
+            try:
+                cCount = 0
+                for error in sorted(valInfo.iter_errors(dD), key=str):
+                    # filter artifacts -
+                    #
+                    if filterErrors and "properties are not allowed ('_id' was unexpected)" in error.message:
+                        continue
+                    if filterErrors and "datetime.datetime" in error.message and "is not of type 'string'" in error.message:
+                        continue
+                    logger.info("Document issues with schema %s collection %s (%s) path %s error: %s", databaseName, collectionName, cN, error.path, error.message)
+                    logger.debug("Failing document %d : %r", ii + 1, list(dD.items()))
+                    eCount += 1
+                    cCount += 1
+                if cCount > 0:
+                    logger.info("For schema %s collection %s container %s error count %d", databaseName, collectionName, cN, cCount)
+            except Exception as e:
+                logger.exception("Validation processing error %s", str(e))
+        return eCount
+
     def __logDocumentSize(self, procName, dList, docIdL):
         maxDocumentMegaBytes = -1
         thresholdMB = 15.8
@@ -1068,6 +1118,8 @@ class PdbxLoader(object):
                     successDocIdS = sIdS
                 # enumerate the failures
                 failDocIdS = inputDocIdS - successDocIdS
+                #
+
                 #
                 if readBackCheck:
                     # build an index of the input document list

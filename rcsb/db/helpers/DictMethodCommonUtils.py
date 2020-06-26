@@ -29,6 +29,7 @@ import sys
 from collections import OrderedDict, namedtuple
 
 from rcsb.utils.io.CacheUtils import CacheUtils
+from rcsb.utils.seq.SeqAlign import SeqAlign
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +97,7 @@ class DictMethodCommonUtils(object):
         self.__atomInfoCache = CacheUtils(size=cacheSize, label="atom site counts and mapping")
         self.__protSSCache = CacheUtils(size=cacheSize, label="protein secondary structure")
         self.__instanceConnectionCache = CacheUtils(size=cacheSize, label="instance connections")
+        self.__entityReferenceSequenceDetailsCache = CacheUtils(size=cacheSize, label="entity reference sequence details")
         self.__entitySequenceFeatureCache = CacheUtils(size=cacheSize, label="entity sequence features")
         self.__instanceSiteInfoCache = CacheUtils(size=cacheSize, label="instance site details")
         self.__instanceUnobservedCache = CacheUtils(size=cacheSize, label="instance unobserved details")
@@ -2006,8 +2008,23 @@ class DictMethodCommonUtils(object):
         """
         if not dataContainer or not dataContainer.getName():
             return {}
-        wD = self.__fetchSequenceFeatures(dataContainer)
+        wD = self.__fetchReferenceSequenceDetails(dataContainer)
         return wD["seqEntityAlignmentD"] if "seqEntityAlignmentD" in wD else {}
+
+    def getEntityPolymerSequences(self, dataContainer):
+        """Return a dictionary of the sequences (one-letter-codes) for each polymer entity.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            dict: {entityId: {'sequence': ..., 'polymerType': ... , 'polymerTypeFiltered': ... },  ... }
+
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchReferenceSequenceDetails(dataContainer)
+        return wD["entityPolymerSequenceD"] if "entityPolymerSequenceD" in wD else {}
 
     def getEntitySequenceReferenceCodes(self, dataContainer):
         """Return a dictionary of reference database accession codes.
@@ -2021,7 +2038,7 @@ class DictMethodCommonUtils(object):
         """
         if not dataContainer or not dataContainer.getName():
             return {}
-        wD = self.__fetchSequenceFeatures(dataContainer)
+        wD = self.__fetchReferenceSequenceDetails(dataContainer)
         return wD["seqEntityRefDbD"] if "seqEntityRefDbD" in wD else {}
 
     def __fetchSequenceFeatures(self, dataContainer):
@@ -2029,6 +2046,13 @@ class DictMethodCommonUtils(object):
         if not wD:
             wD = self.__getSequenceFeatures(dataContainer)
             self.__entitySequenceFeatureCache.set(dataContainer.getName(), wD)
+        return wD
+
+    def __fetchReferenceSequenceDetails(self, dataContainer):
+        wD = self.__entityReferenceSequenceDetailsCache.get(dataContainer.getName())
+        if not wD:
+            wD = self.__getReferenceSequenceDetails(dataContainer)
+            self.__entityReferenceSequenceDetailsCache.set(dataContainer.getName(), wD)
         return wD
 
     def getDatabaseNameMap(self):
@@ -2050,16 +2074,14 @@ class DictMethodCommonUtils(object):
         }
         return dbNameMapD
 
-    def __getSequenceFeatures(self, dataContainer):
-        """ Get point sequence features.
+    def __getReferenceSequenceDetails(self, dataContainer):
+        """ Get reference sequence and related alignment details.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
 
         Returns:
-            dict : {"seqFeatureCountsD": {entityId: {"mutation": #, "conflict": # ... }, }
-                    "seqMonomerFeatureD": {(entityId, seqId, compId, filteredFeature): set(feature,...), ...}
-                    "seqRangeFeatureD" : {(entityId, str(beg), str(end), "artifact"): set(details)}
+            dict : {
                     "seqEntityAlignmentD" : {entityId: [{'dbName': 'UNP' , 'dbAccession': 'P000000', ... }]}
                     "seqEntityRefDbD":  {entityId: [{'dbName': 'UNP' , 'dbAccession': 'P000000'),  }]},
                     }
@@ -2195,12 +2217,24 @@ class DictMethodCommonUtils(object):
         #
         #  To exclude self references -
         excludeRefDbList = ["PDB"]
-        rD = {"seqFeatureCountsD": {}, "seqMonomerFeatureD": {}, "seqRangeFeatureD": {}, "seqEntityAlignmentD": {}, "seqEntityRefDbD": {}}
+        rD = {"seqEntityAlignmentD": {}, "seqEntityRefDbD": {}, "entityPolymerSeqenceD": {}}
         try:
             # Exit if source categories are missing
-            if not (dataContainer.exists("struct_ref_seq") and dataContainer.exists("struct_ref")):
+            if not (dataContainer.exists("struct_ref_seq") and dataContainer.exists("struct_ref") and dataContainer.exists("entity_poly")):
                 return rD
             # ------- --------- ------- --------- ------- --------- ------- --------- ------- ---------
+            entityPolymerSequenceD = {}
+            if dataContainer.exists("entity_poly"):
+                epObj = dataContainer.getObj("entity_poly")
+                for ii in range(epObj.getRowCount()):
+                    entityId = epObj.getValue("entity_id", ii)
+                    pType = epObj.getValue("type", ii)
+                    pTypeFiltered = self.filterEntityPolyType(pType)
+                    if epObj.hasAttribute("pdbx_seq_one_letter_code_can"):
+                        sampleSeq = self.__stripWhiteSpace(epObj.getValue("pdbx_seq_one_letter_code_can", ii))
+                        if sampleSeq and sampleSeq not in ["?", "."]:
+                            entityPolymerSequenceD[entityId] = {"sequence": sampleSeq, "polymerType": pType, "polymerTypeFiltered": pTypeFiltered}
+            #
             srObj = None
             if dataContainer.exists("struct_ref"):
                 srObj = dataContainer.getObj("struct_ref")
@@ -2209,9 +2243,9 @@ class DictMethodCommonUtils(object):
             if dataContainer.exists("struct_ref_seq"):
                 srsObj = dataContainer.getObj("struct_ref_seq")
 
-            srsdObj = None
-            if dataContainer.exists("struct_ref_seq_dif"):
-                srsdObj = dataContainer.getObj("struct_ref_seq_dif")
+            # srsdObj = None
+            # if dataContainer.exists("struct_ref_seq_dif"):
+            #    srsdObj = dataContainer.getObj("struct_ref_seq_dif")
 
             polymerEntityTypeD = self.getPolymerEntityFilteredTypes(dataContainer)
             # Map alignId -> entityId
@@ -2301,18 +2335,22 @@ class DictMethodCommonUtils(object):
 
                     dbAccessionAlignS.add(dbAccessionAlign)
                     #
+                    #
                     seqEntityAlignmentD.setdefault(entityId, []).append(
-                        {
-                            "authAsymId": authAsymId,
-                            "entitySeqIdBeg": entitySeqIdBeg,
-                            "entitySeqIdEnd": entitySeqIdEnd,
-                            "dbSeqIdBeg": dbSeqIdBeg,
-                            "dbSeqIdEnd": dbSeqIdEnd,
-                            "dbName": dbName,
-                            "dbAccession": dbAccessionAlign,
-                            "dbIsoform": dbIsoform,
-                            "entityAlignLength": entityAlignLength,
-                        }
+                        SeqAlign(
+                            "PDB",
+                            **{
+                                "authAsymId": authAsymId,
+                                "entitySeqIdBeg": entitySeqIdBeg,
+                                "entitySeqIdEnd": entitySeqIdEnd,
+                                "dbSeqIdBeg": dbSeqIdBeg,
+                                "dbSeqIdEnd": dbSeqIdEnd,
+                                "dbName": dbName,
+                                "dbAccession": dbAccessionAlign,
+                                "dbIsoform": dbIsoform,
+                                "entityAlignLength": entityAlignLength,
+                            },
+                        )
                     )
                 # Check consistency
                 try:
@@ -2336,7 +2374,54 @@ class DictMethodCommonUtils(object):
                     if tup[1]:
                         seqEntityRefDbD.setdefault(entityId, []).append({"dbName": tS, "dbAccession": tup[1], "dbIsoform": tup[2]})
                     else:
-                        logger.warning("%s %s skipping incomplete sequence reference %r", dataContainer.getName(), entityId, tup)
+                        logger.warning("%s %s skipping incomplete sequence reference assignment %r", dataContainer.getName(), entityId, tup)
+
+            return {
+                "seqEntityAlignmentD": seqEntityAlignmentD,
+                "seqEntityRefDbD": seqEntityRefDbD,
+                "entityPolymerSequenceD": entityPolymerSequenceD,
+            }
+        except Exception as e:
+            logger.exception("%s failing with %s", dataContainer.getName(), str(e))
+        return rD
+
+    def __getSequenceFeatures(self, dataContainer):
+        """ Get point and range sequence features.
+
+        Args:
+            dataContainer (object): mmif.api.DataContainer object instance
+
+        Returns:
+            dict : {"seqFeatureCountsD": {entityId: {"mutation": #, "conflict": # ... }, }
+                    "seqMonomerFeatureD": {(entityId, seqId, compId, filteredFeature): set(feature,...), ...}
+                    "seqRangeFeatureD" : {(entityId, str(beg), str(end), "artifact"): set(details)}
+                    }
+
+        """
+        logger.debug("Starting with %r", dataContainer.getName())
+        self.__addStructRefSeqEntityIds(dataContainer)
+        #
+        #  To exclude self references -
+        # excludeRefDbList = ["PDB"]
+        rD = {"seqFeatureCountsD": {}, "seqMonomerFeatureD": {}, "seqRangeFeatureD": {}}
+        try:
+            # Exit if source categories are missing
+            if not (dataContainer.exists("struct_ref_seq") and dataContainer.exists("struct_ref")):
+                return rD
+            # ------- --------- ------- --------- ------- --------- ------- --------- ------- ---------
+            # srObj = None
+            # if dataContainer.exists("struct_ref"):
+            #    srObj = dataContainer.getObj("struct_ref")
+            #
+            # srsObj = None
+            # if dataContainer.exists("struct_ref_seq"):
+            #    srsObj = dataContainer.getObj("struct_ref_seq")
+
+            srsdObj = None
+            if dataContainer.exists("struct_ref_seq_dif"):
+                srsdObj = dataContainer.getObj("struct_ref_seq_dif")
+
+            # polymerEntityTypeD = self.getPolymerEntityFilteredTypes(dataContainer)
             #
             # ------- --------- ------- --------- ------- --------- ------- --------- ------- ---------
             #   (entityId, seqId, compId, filteredFeature) -> set{details, ...}
@@ -2348,7 +2433,7 @@ class DictMethodCommonUtils(object):
             seqIdDetailsD = {}
             if srsdObj:
                 for ii in range(srsdObj.getRowCount()):
-                    alignId = srsdObj.getValue("align_id", ii)
+                    # alignId = srsdObj.getValue("align_id", ii)
                     #
                     # entityId = alignEntityMapD[alignId]
                     entityId = srsdObj.getValueOrDefault("rcsb_entity_id", ii, defaultValue=None)
@@ -2356,7 +2441,7 @@ class DictMethodCommonUtils(object):
                         continue
                     #
                     # authAsymId = srsdObj.getValue("pdbx_pdb_strand_id", ii)
-                    dbName = srsdObj.getValue("pdbx_seq_db_name", ii)
+                    # dbName = srsdObj.getValue("pdbx_seq_db_name", ii)
                     #
                     # Can't rely on alignId
                     # Keep difference records for self-referenced entity sequences.
@@ -2406,8 +2491,6 @@ class DictMethodCommonUtils(object):
                 "seqFeatureCountsD": seqFeatureCountsD,
                 "seqMonomerFeatureD": seqMonomerFeatureD,
                 "seqRangeFeatureD": seqRangeFeatureD,
-                "seqEntityAlignmentD": seqEntityAlignmentD,
-                "seqEntityRefDbD": seqEntityRefDbD,
             }
         except Exception as e:
             logger.exception("%s failing with %s", dataContainer.getName(), str(e))
@@ -2436,8 +2519,10 @@ class DictMethodCommonUtils(object):
             atName = "rcsb_entity_id"
             srsObj = dataContainer.getObj(catName)
             if not srsObj.hasAttribute(atName):
-                # srsObj.appendAttribute(atName)
                 srsObj.appendAttributeExtendRows(atName, defaultValue="?")
+            else:
+                # skip if attribute has already been added -
+                return True
             #
             srObj = dataContainer.getObj("struct_ref")
             #
