@@ -101,7 +101,7 @@ class PdbxLoaderTests(unittest.TestCase):
                 "mergeContentTypes": ["vrpt"],
                 "validationLevel": "full",
                 "updateSchemaOnReplace": True,
-                "status": False,
+                "status": True,
             },
         ]
         #
@@ -113,7 +113,6 @@ class PdbxLoaderTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testPdbxLoader(self):
-        #
         for ld in self.__ldList:
             self.__pdbxLoaderWrapper(**ld)
 

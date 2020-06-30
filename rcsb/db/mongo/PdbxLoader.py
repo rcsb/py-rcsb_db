@@ -549,6 +549,8 @@ class PdbxLoader(object):
         mergeContentTypes=None,
         useNameFlag=True,
         updateSchemaOnReplace=True,
+        validateFailures=True,
+        reloadPartial=True,
     ):
         """Driver method for loading PDBx/mmCIF content into the Mongo document store.
 
@@ -566,6 +568,8 @@ class PdbxLoader(object):
             validationLevel (str, optional): Completeness of json/bson metadata schema bound to each collection (e.g. 'min', 'full' or None)
             useNameFlag (bool, optional): Use container name as unique identifier otherwise use UID property.
             updateSchemaOnReplace (bool, optional): Update validation schema for loadType == 'replace'
+            validateFailures (bool, optional): output validation report on load failures
+            reloadPartial (bool, optional): on load failures attempt reload of partial objects.
         Returns:
             bool: True on success or False otherwise
 
@@ -613,6 +617,8 @@ class PdbxLoader(object):
             optD["pruneDocumentSize"] = pruneDocumentSize
             optD["useNameFlag"] = useNameFlag
             optD["validationLevel"] = validationLevel
+            optD["validateFailures"] = validateFailures
+            optD["reloadPartial"] = reloadPartial
             # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             #
 
@@ -742,6 +748,9 @@ class PdbxLoader(object):
             collectionNameList = optionsD["collectionNameList"]
             useNameFlag = optionsD["useNameFlag"]
             validationLevel = optionsD["validationLevel"]
+            validateFailures = optionsD["validateFailures"]
+            reloadPartial = optionsD["reloadPartial"]
+            #
             sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=workingDir, verbose=self.__verbose)
             # -------------------------------------------
             # -- Create map of  cIdD{ container identifier} =  locatorObj
@@ -774,6 +783,7 @@ class PdbxLoader(object):
             # -----
             failContainerIdS = set()
             rejectContainerIdS = set()
+            cardinalIdFailS = set()
             # -----
             for collectionName in collectionNameList:
                 ok = True
@@ -839,12 +849,27 @@ class PdbxLoader(object):
                     )
                 #
                 if failDocIdS:
-                    logger.info("Load failures: %r", failDocIdS)
+
+                    logger.info("Initial load failures: %r", failDocIdS)
+                    fList = []
                     for dD in dList:
                         tId = self.__getKeyValues(dD, docIdL)
                         if tId in failDocIdS:
-                            logger.info("Validating document %r", tId)
-                            self.__validateDocuments(databaseName, collectionName, [dD], docIdL, schemaLevel=validationLevel)
+                            fList.append(dD)
+                            if validateFailures:
+                                logger.info("Validating document %r", tId)
+                                self.__validateDocuments(databaseName, collectionName, [dD], docIdL, schemaLevel=validationLevel)
+                    #
+                    #  -- Try and repair failDocIdS --
+                    #
+                    if reloadPartial:
+                        logger.debug("Attempting corrections on documents %r", failDocIdS)
+                        fList = self.__validateAndFix(databaseName, collectionName, fList, docIdL, schemaLevel=validationLevel)
+
+                        fOk, _, failDocIdS = self.__loadDocuments(
+                            databaseName, collectionName, fList, docIdL, replaceIdL=replaceIdL, loadType=loadType, readBackCheck=readBackCheck, pruneDocumentSize=pruneDocumentSize
+                        )
+                        logger.info("Final load (%r) failures: %r", fOk, failDocIdS)
 
                 # ------
                 # Collect the container identifiers for the successful loads (paths for logging only)
@@ -852,6 +877,7 @@ class PdbxLoader(object):
                 failPathList = []
                 for dId in failDocIdS:
                     cId = indexDoc[dId]
+                    cardinalIdFailS.add(dId[0])
                     failContainerIdS.add(cId)
                     locObj = cIdD[cId]
                     failPathList.extend(self.__rpP.getLocatorPaths([locObj], locatorIndex=0))
@@ -870,7 +896,13 @@ class PdbxLoader(object):
             # ----
             retList = [locatorObj for cId, locatorObj in cIdD.items() if cId not in failContainerIdS]
             logger.debug("%s %s load worker returns  successes %d rejects %d failures %d", procName, databaseName, len(retList), len(rejectContainerIdS), len(failContainerIdS))
-
+            #
+            if cardinalIdFailS:
+                # remove all collection objects related to a load failure
+                for collectionName in collectionNameList:
+                    logger.info("Purging all objects from %s for failed ids: %r", collectionName, cardinalIdFailS)
+                    ok = self.__purgeDocuments(databaseName, collectionName, list(cardinalIdFailS))
+            #
             ok = len(failContainerIdS) == 0
             self.__end(startTime, procName + " with status " + str(ok))
             return retList, [], []
@@ -883,6 +915,68 @@ class PdbxLoader(object):
 
     # -------------- -------------- -------------- -------------- -------------- -------------- --------------
     #                                        ---  Supporting code follows ---
+    #
+    def __validateAndFix(self, databaseName, collectionName, dList, docIdL, schemaLevel="full"):
+        """[summary]
+
+        Args:
+            databaseName ([type]): [description]
+            collectionName ([type]): [description]
+            dList ([type]): [description]
+            docIdL ([type]): [description]
+            schemaLevel (str, optional): [description]. Defaults to "full".
+
+        Returns:
+            (list):  updated document list (remediated for validation issues)
+        """
+        #
+        rList = []
+        logger.info("Validating and fixing objects in databaseName %s collectionName %s numObject %d docIdL %r", databaseName, collectionName, len(dList), docIdL)
+        cD = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="JSON", level=schemaLevel)
+        # --
+        try:
+            Draft4Validator.check_schema(cD)
+        except Exception as e:
+            logger.error("%s %s schema validation fails with %s", databaseName, collectionName, str(e))
+        # --
+        filterArtifactErrors = True
+        valInfo = Draft4Validator(cD, format_checker=FormatChecker())
+        for ii, dD in enumerate(dList):
+            cN = self.__getKeyValues(dD, docIdL)
+            logger.info("Checking %r with schema %s collection %s document (%d)", cN, databaseName, collectionName, ii + 1)
+            updL = []
+            try:
+                for error in sorted(valInfo.iter_errors(dD), key=str):
+                    #
+                    # Filter and cleanup artifacts -
+                    #
+                    if filterArtifactErrors and "properties are not allowed ('_id' was unexpected)" in error.message:
+                        dD.pop("_id")
+                        continue
+                    if filterArtifactErrors and "datetime.datetime" in error.message and "is not of type 'string'" in error.message:
+                        continue
+                    #
+                    logger.info("Document issues with schema %s collection %s (%s) path %s error: %s", databaseName, collectionName, cN, error.path, error.message)
+                    logger.debug("Failing document %d : %r", ii + 1, list(dD.items()))
+                    #
+                    pLen = len(error.path)
+                    if pLen >= 1:
+                        subObjName = str(error.path[0])
+                        if subObjName in dD:
+                            logger.info("Found subobject %r", subObjName)
+                            logger.info("subObject %r", dD[subObjName])
+                            dD.pop(subObjName)
+                            updL.append(cN)
+                    #
+            except Exception as e:
+                logger.exception("Validation updating processing error %s", str(e))
+            #
+            if updL:
+                rList.append(dD)
+        #
+        logger.info("Corrected document count (%d) %r", len(updL), updL)
+        return rList
+
     #
     def __validateDocuments(self, databaseName, collectionName, dList, docIdL, schemaLevel="full"):
         #

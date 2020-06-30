@@ -251,3 +251,4 @@
  18-Jun-2020  V0.995 Adding entity taxonomy count.
  25-Jun-2020  V0.996 Adding schema validation to automatically follow on from any load failures in mongo/PdbxLoader()
  25-Jun-2020  V0.997 Update dependencies
+ 30-Jun-2020  V0.998 Add partial reload of failed object salvage path
