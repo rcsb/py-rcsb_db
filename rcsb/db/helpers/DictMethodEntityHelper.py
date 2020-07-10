@@ -990,6 +990,38 @@ class DictMethodEntityHelper(object):
             logger.exception("%s %s failing with %s", dataContainer.getName(), catName, str(e))
         return False
 
+    def addBranchedEntityComponentCounts(self, dataContainer, catName, atName, **kwargs):
+        """Add total number branched components in the branched entity.
+
+        Args:
+            dataContainer (object): mmif.api.DataContainer object instance
+            catName (str): target category name
+            atName (str): target attribute name
+
+        Returns:
+            bool: True for success or False otherwise
+        """
+        try:
+            logger.debug("Starting with %r %r %r %r", dataContainer.getName(), catName, atName, kwargs)
+            if not (dataContainer.exists("pdbx_entity_branch") and dataContainer.exists("pdbx_entity_branch_list")):
+                return False
+            #
+            ebObj = dataContainer.getObj("pdbx_entity_branch")
+            eblObj = dataContainer.getObj("pdbx_entity_branch_list")
+            #
+            if not ebObj.hasAttribute(atName):
+                ebObj.appendAttribute(atName)
+
+            for ii in range(ebObj.getRowCount()):
+                entityId = ebObj.getValue("entity_id", ii)
+                tL = eblObj.selectValuesWhere("entity_id", entityId, "entity_id")
+                ebObj.setValue(len(tL), atName, ii)
+
+            return True
+        except Exception as e:
+            logger.exception("For %s %s failing with %s", catName, atName, str(e))
+        return False
+
     def addEntityMisc(self, dataContainer, catName, atName, **kwargs):
         """ Add consolidated enzyme classification macromolecule names to the entity category.
 
