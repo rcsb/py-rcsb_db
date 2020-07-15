@@ -253,3 +253,4 @@
  25-Jun-2020  V0.997 Update dependencies
  30-Jun-2020  V0.998 Add partial reload of failed object salvage path
  10-Jul-2020  V0.999 Adding support for derivative branched entity methods
+ 15-Jul-2020  V1.001 Adding methods to export water counting statistics.
