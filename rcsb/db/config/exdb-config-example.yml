@@ -111,13 +111,13 @@ site_info_configuration:
 #  Added V1.001 for stash storage server
 # local|server
   STASH_MODE: local
-  STASH_LOCAL_BASE_DIR: stash-storage
+  STASH_LOCAL_BASE_PATH: stash-storage
   #
   STASH_SERVER_URL: sftp://bl-east.rcsb.org
   STASH_SERVER_FALLBACK_URL: sftp://bl-west.rcsb.org
   _STASH_AUTH_USERNAME: 4Thjq6SFXelrqhyawXGkwNHQ2MJQRGjHpedv4mhpRlmIc7muS7YrlSQpS3Rao7EFskrZ
   _STASH_AUTH_PASSWORD: FAQNnkUD6mjGTWeciRE7yQZu4/txndI6f4LBnGvmAbMT2/ndsmQ+xcUb7ShDnMhdurMbkH4i
-  _STASH_BASE_PATH: 9Hdw+MvKcF+zwv4yr+n61fYuVey6nTu7JRMpFbDuSjqVDYQEh8NCS23GpJJJMDKVIw==
+  _STASH_SERVER_BASE_PATH: 9Hdw+MvKcF+zwv4yr+n61fYuVey6nTu7JRMpFbDuSjqVDYQEh8NCS23GpJJJMDKVIw==
 
 ##
 site_info_remote_configuration:
@@ -233,11 +233,11 @@ site_info_remote_configuration:
 #  Added V1.001 for stash storage server
 # local|server
   STASH_MODE: server
-  STASH_LOCAL_BASE_DIR: stash-storage
+  STASH_LOCAL_BASE_PATH: stash-storage
   #
   STASH_SERVER_URL: sftp://bl-east.rcsb.org
   STASH_SERVER_FALLBACK_URL: sftp://bl-west.rcsb.org
   _STASH_AUTH_USERNAME: 4Thjq6SFXelrqhyawXGkwNHQ2MJQRGjHpedv4mhpRlmIc7muS7YrlSQpS3Rao7EFskrZ
   _STASH_AUTH_PASSWORD: FAQNnkUD6mjGTWeciRE7yQZu4/txndI6f4LBnGvmAbMT2/ndsmQ+xcUb7ShDnMhdurMbkH4i
-  _STASH_BASE_PATH: 9Hdw+MvKcF+zwv4yr+n61fYuVey6nTu7JRMpFbDuSjqVDYQEh8NCS23GpJJJMDKVIw==
+  _STASH_SERVER_BASE_PATH: 9Hdw+MvKcF+zwv4yr+n61fYuVey6nTu7JRMpFbDuSjqVDYQEh8NCS23GpJJJMDKVIw==
 #
