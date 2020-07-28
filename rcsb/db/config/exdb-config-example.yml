@@ -7,6 +7,7 @@
 #   20-Feb-2020 - IMPORTANT NOTE -- Schema locators in this file now point at a development branch.
 #   30-Apr-2020 - Add RCSB_EDMAP_LIST_PATH option as path to edmaps.json
 #   18-May-2020 - Added DRUGBANK_MOCK_URL_TARGET to point to mangable raw DB dataset.
+#   28-Jul-2020 - Add stash server options
 ---
 DEFAULT: {}
 ##
@@ -106,7 +107,14 @@ site_info_configuration:
   DOCUMENT_DEF_HELPER_MODULE: rcsb.db.helpers.DocumentDefinitionHelper
   CONFIG_APPEND_LOCATOR_PATHS:
     - https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/config/exdb-config-schema.yml
-#
+# ------ ------ ------ ------ ------ ------ ------ ------ ------
+#  Added V1.001 for stash storage server
+  STASH_SERVER_URL: sftp://bl-east.rcsb.org
+  STASH_SERVER_FALLBACK_URL: sftp://bl-west.rcsb.org
+  _STASH_AUTH_USERNAME: 4Thjq6SFXelrqhyawXGkwNHQ2MJQRGjHpedv4mhpRlmIc7muS7YrlSQpS3Rao7EFskrZ
+  _STASH_AUTH_PASSWORD: FAQNnkUD6mjGTWeciRE7yQZu4/txndI6f4LBnGvmAbMT2/ndsmQ+xcUb7ShDnMhdurMbkH4i
+  _STASH_BASE_PATH: 9Hdw+MvKcF+zwv4yr+n61fYuVey6nTu7JRMpFbDuSjqVDYQEh8NCS23GpJJJMDKVIw==
+
 ##
 site_info_remote_configuration:
   # Site specific path and server configuration options - (REFERENCING DEVELOPMENT RESOURCES)
@@ -216,4 +224,12 @@ site_info_remote_configuration:
   DOCUMENT_DEF_HELPER_MODULE: rcsb.db.helpers.DocumentDefinitionHelper
   CONFIG_APPEND_LOCATOR_PATHS:
     - https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/config/exdb-config-schema.yml
+#
+# ------ ------ ------ ------ ------ ------ ------ ------ ------
+#  Added V1.001 for stash storage server
+  STASH_SERVER_URL: sftp://bl-east.rcsb.org
+  STASH_SERVER_FALLBACK_URL: sftp://bl-west.rcsb.org
+  _STASH_AUTH_USERNAME: 4Thjq6SFXelrqhyawXGkwNHQ2MJQRGjHpedv4mhpRlmIc7muS7YrlSQpS3Rao7EFskrZ
+  _STASH_AUTH_PASSWORD: FAQNnkUD6mjGTWeciRE7yQZu4/txndI6f4LBnGvmAbMT2/ndsmQ+xcUb7ShDnMhdurMbkH4i
+  _STASH_BASE_PATH: 9Hdw+MvKcF+zwv4yr+n61fYuVey6nTu7JRMpFbDuSjqVDYQEh8NCS23GpJJJMDKVIw==
 #
