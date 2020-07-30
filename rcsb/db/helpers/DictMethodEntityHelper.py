@@ -248,8 +248,6 @@ class DictMethodEntityHelper(object):
                 dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
             #
             cObj = dataContainer.getObj(catName)
-            # psObj = dataContainer.getObj("pdbx_poly_seq_scheme")
-            # npsObj = dataContainer.getObj("pdbx_nonpoly_scheme")
             #
             tObj = dataContainer.getObj("entry")
             entryId = tObj.getValue("id", 0)

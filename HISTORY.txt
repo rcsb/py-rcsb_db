@@ -256,3 +256,4 @@
  15-Jul-2020  V1.001 Adding methods to export water counting statistics.
  28-Jul-2020  V1.002 Add stash server config options to example configuration file
  28-Jul-2020  V1.003 Tweak stash configuration
+ 30-Jul-2020  V1.004 Add PubChem and Pharos mapping

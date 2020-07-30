@@ -13,6 +13,9 @@
 #  25-Nov-2019 jdw add CitationReferenceProvider(), ChemCompProvider() and  JournalTitleAbbreviationProvider()'s
 #  16-Feb-2020 jdw add support for configuration of development resources
 #  19-Mar-2020 jdw add ResidProvider() and send cachePath directly to all modules in rcsb.utils.chemref.
+#  29-Jul-2020 jdw add PubChemProvider() from  rcsb.utils.chemref.
+#  30-Jul-2020 jdw add PharosProvider() from  rcsb.utils.chemref.
+##
 ##
 """
 Resource provider for DictMethodHelper tools.
@@ -36,6 +39,8 @@ from rcsb.utils.chemref.ChemCompModelProvider import ChemCompModelProvider
 from rcsb.utils.chemref.ChemCompProvider import ChemCompProvider
 from rcsb.utils.chemref.DrugBankProvider import DrugBankProvider
 from rcsb.utils.chemref.PsiModProvider import PsiModProvider
+from rcsb.utils.chemref.PharosProvider import PharosProvider
+from rcsb.utils.chemref.PubChemProvider import PubChemProvider
 from rcsb.utils.chemref.ResidProvider import ResidProvider
 from rcsb.utils.citation.CitationReferenceProvider import CitationReferenceProvider
 from rcsb.utils.citation.JournalTitleAbbreviationProvider import JournalTitleAbbreviationProvider
@@ -90,6 +95,8 @@ class DictMethodResourceProvider(SingletonClass):
         self.__vrptP = None
         self.__crP = None
         self.__jtaP = None
+        self.__pcP = None
+        self.__phP = None
         #
         #
         # self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
@@ -112,6 +119,8 @@ class DictMethodResourceProvider(SingletonClass):
             "ValidationProvider instance": self.__fetchValidationProvider,
             "CitationReferenceProvider instance": self.__fetchCitationReferenceProvider,
             "JournalTitleAbbreviationProvider instance": self.__fetchJournalTitleAbbreviationProvider,
+            "PubChemProvider instance": self.__fetchPubChemProvider,
+            "PharosProvider instance": self.__fetchPharosProvider,
         }
         logger.debug("Dictionary resource provider init completed")
         #
@@ -309,3 +318,61 @@ class DictMethodResourceProvider(SingletonClass):
         dictApi = self.__dApiW.getApiByName(schemaName)
         # numRev = dictApi.getDictionaryRevisionCount()
         return dictApi
+
+    def __fetchPubChemProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
+        if not self.__pcP:
+            #
+            try:
+                minCount = 20
+                userName = cfgOb.get("_STASH_AUTH_USERNAME", sectionName=configName)
+                password = cfgOb.get("_STASH_AUTH_PASSWORD", sectionName=configName)
+                basePath = cfgOb.get("_STASH_SERVER_BASE_PATH", sectionName=configName)
+                url = cfgOb.get("STASH_SERVER_URL", sectionName=configName)
+                urlFallBack = cfgOb.get("STASH_SERVER_FALLBACK_URL", sectionName=configName)
+                #
+                pcP = PubChemProvider(cachePath=cachePath, useCache=useCache)
+                ok = pcP.fromStash(url, basePath, userName=userName, password=password)
+                ok = pcP.reload()
+                ok = pcP.testCache(minCount=minCount)
+                if not ok:
+                    ok = pcP.fromStash(urlFallBack, basePath, userName=userName, password=password)
+                    ok = pcP.testCache(minCount=minCount)
+                #
+                if ok and pcP:
+                    self.__pcP = pcP
+                    riD = pcP.getIdentifiers()
+                    logger.info("Fetched PubChem mapping dictionary (%d)", len(riD))
+            except Exception as e:
+                logger.exception("Failing with %s", str(e))
+            #
+        return self.__pcP
+
+    def __fetchPharosProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
+        logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
+        if not self.__phP:
+            #
+            try:
+                minCount = 20
+                userName = cfgOb.get("_STASH_AUTH_USERNAME", sectionName=configName)
+                password = cfgOb.get("_STASH_AUTH_PASSWORD", sectionName=configName)
+                basePath = cfgOb.get("_STASH_SERVER_BASE_PATH", sectionName=configName)
+                url = cfgOb.get("STASH_SERVER_URL", sectionName=configName)
+                urlFallBack = cfgOb.get("STASH_SERVER_FALLBACK_URL", sectionName=configName)
+                #
+                phP = PharosProvider(cachePath=cachePath, useCache=useCache)
+                ok = phP.fromStash(url, basePath, userName=userName, password=password)
+                ok = phP.reload()
+                ok = phP.testCache(minCount=minCount)
+                if not ok:
+                    ok = phP.fromStash(urlFallBack, basePath, userName=userName, password=password)
+                    ok = phP.testCache(minCount=minCount)
+                #
+                if ok and phP:
+                    self.__phP = phP
+                    riD = phP.getIdentifiers()
+                    logger.info("Fetched Pharos ChEMBL identifiers (%d)", len(riD))
+            except Exception as e:
+                logger.exception("Failing with %s", str(e))
+            #
+        return self.__phP

@@ -1108,7 +1108,8 @@ class DictMethodCommonUtils(object):
                 for eId in entityIdL:
                     if entityTypeD[eId] in ["branched"]:
                         tAsymIdL = brsObj.selectValuesWhere("asym_id", eId, "entity_id")
-                        tAuthAsymIdL = brsObj.selectValuesWhere("auth_asym_id", eId, "entity_id")
+                        # changed to pdb_asym_id on 2020-07-29
+                        tAuthAsymIdL = brsObj.selectValuesWhere("pdb_asym_id", eId, "entity_id")
                         tCcIdL = brsObj.selectValuesWhere("mon_id", eId, "entity_id")
                         entityTypeUniqueIds.setdefault(entityTypeD[eId], {}).setdefault(eId, {"asymIds": tAsymIdL, "authAsymIds": tAuthAsymIdL, "ccIds": tCcIdL})
                 # ---
