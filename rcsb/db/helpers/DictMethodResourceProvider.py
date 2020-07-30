@@ -351,7 +351,7 @@ class DictMethodResourceProvider(SingletonClass):
     def __fetchPharosProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):
         logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
         if not self.__phP:
-            #
+            # --
             try:
                 minCount = 0
                 userName = cfgOb.get("_STASH_AUTH_USERNAME", sectionName=configName)
