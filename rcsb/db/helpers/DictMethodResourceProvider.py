@@ -324,7 +324,7 @@ class DictMethodResourceProvider(SingletonClass):
         if not self.__pcP:
             #
             try:
-                minCount = 20
+                minCount = 0
                 userName = cfgOb.get("_STASH_AUTH_USERNAME", sectionName=configName)
                 password = cfgOb.get("_STASH_AUTH_PASSWORD", sectionName=configName)
                 basePath = cfgOb.get("_STASH_SERVER_BASE_PATH", sectionName=configName)
@@ -334,12 +334,12 @@ class DictMethodResourceProvider(SingletonClass):
                 pcP = PubChemProvider(cachePath=cachePath, useCache=useCache)
                 ok = pcP.fromStash(url, basePath, userName=userName, password=password)
                 ok = pcP.reload()
-                ok = pcP.testCache(minCount=minCount)
+                ok = pcP.testCache(minCount=10)
                 if not ok:
                     ok = pcP.fromStash(urlFallBack, basePath, userName=userName, password=password)
                     ok = pcP.testCache(minCount=minCount)
                 #
-                if ok and pcP:
+                if pcP:
                     self.__pcP = pcP
                     riD = pcP.getIdentifiers()
                     logger.info("Fetched PubChem mapping dictionary (%d)", len(riD))
@@ -353,7 +353,7 @@ class DictMethodResourceProvider(SingletonClass):
         if not self.__phP:
             #
             try:
-                minCount = 20
+                minCount = 0
                 userName = cfgOb.get("_STASH_AUTH_USERNAME", sectionName=configName)
                 password = cfgOb.get("_STASH_AUTH_PASSWORD", sectionName=configName)
                 basePath = cfgOb.get("_STASH_SERVER_BASE_PATH", sectionName=configName)
@@ -363,16 +363,16 @@ class DictMethodResourceProvider(SingletonClass):
                 phP = PharosProvider(cachePath=cachePath, useCache=useCache)
                 ok = phP.fromStash(url, basePath, userName=userName, password=password)
                 ok = phP.reload()
-                ok = phP.testCache(minCount=minCount)
+                ok = phP.testCache(minCount=10)
                 if not ok:
                     ok = phP.fromStash(urlFallBack, basePath, userName=userName, password=password)
                     ok = phP.testCache(minCount=minCount)
                 #
-                if ok and phP:
+                if phP:
                     self.__phP = phP
                     riD = phP.getIdentifiers()
                     logger.info("Fetched Pharos ChEMBL identifiers (%d)", len(riD))
             except Exception as e:
-                logger.exception("Failing with %s", str(e))
+                logger.warning("Failing with %s", str(e))
             #
         return self.__phP

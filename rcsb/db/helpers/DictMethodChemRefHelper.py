@@ -234,6 +234,7 @@ class DictMethodChemRefHelper(object):
                 dbMapD = dbD["id_map"]
                 inKeyD = dbD["inchikey_map"]
                 atcD = dbD["db_atc_map"]
+                logger.info("DrugBank correspondence length is %d", len(dbMapD))
                 logger.debug("atcD length is %d", len(atcD))
                 logger.debug("inKeyD length is %d", len(inKeyD))
                 #
