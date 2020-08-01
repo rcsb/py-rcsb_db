@@ -109,16 +109,14 @@ site_info_configuration:
     - https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/config/exdb-config-schema.yml
 # ------ ------ ------ ------ ------ ------ ------ ------ ------
 #  Added V1.001 for stash storage server
-# local|server
+#  -- This is a placeholder configuration to support remote testing --
+#  local|server
   STASH_MODE: local
   STASH_LOCAL_BASE_PATH: stash-storage
   #
-  STASH_SERVER_URL: sftp://bl-east.rcsb.org
-  STASH_SERVER_FALLBACK_URL: sftp://bl-west.rcsb.org
-  _STASH_AUTH_USERNAME: 4Thjq6SFXelrqhyawXGkwNHQ2MJQRGjHpedv4mhpRlmIc7muS7YrlSQpS3Rao7EFskrZ
-  _STASH_AUTH_PASSWORD: FAQNnkUD6mjGTWeciRE7yQZu4/txndI6f4LBnGvmAbMT2/ndsmQ+xcUb7ShDnMhdurMbkH4i
-  _STASH_SERVER_BASE_PATH: 9Hdw+MvKcF+zwv4yr+n61fYuVey6nTu7JRMpFbDuSjqVDYQEh8NCS23GpJJJMDKVIw==
-
+  STASH_SERVER_URL: https://raw.githubusercontent.com
+  STASH_SERVER_FALLBACK_URL: https://raw.githubusercontent.com
+  _STASH_SERVER_BASE_PATH: bIo7kGc2w6Oel0QNr7Pc/4bFfDQayhPxddnGHynP6yudxc44QYuAFoTFdOqY2ZzsM2DEk56r26MfG66bEQ42lp38guy837xwzN1Vgu+r9zvAm11HXEA=
 ##
 site_info_remote_configuration:
   # Site specific path and server configuration options - (REFERENCING DEVELOPMENT RESOURCES)
