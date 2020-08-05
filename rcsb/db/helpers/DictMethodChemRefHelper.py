@@ -66,7 +66,6 @@ class DictMethodChemRefHelper(object):
         """
         try:
             logger.debug("Starting with  %r %r", dataContainer.getName(), catName)
-            # Exit if source categories are missing
             if not (dataContainer.exists("chem_comp_atom") and dataContainer.exists("chem_comp_bond")):
                 return False
             rP = kwargs.get("resourceProvider")
@@ -147,8 +146,7 @@ class DictMethodChemRefHelper(object):
                     wObj.setValue("RESID", "resource_name", iRow)
                     wObj.setValue(dbId, "resource_accession_code", iRow)
                     wObj.setValue("matching by RESID resource", "related_mapping_method", iRow)
-            # JDW JDW
-            # --- Add pubchem mapping ---
+            #
             pubchemProvider = rP.getResource("PubChemProvider instance") if rP else None
             pubchemMapD = pubchemProvider.getIdentifiers()
             if pubchemMapD and ccId in pubchemMapD:
@@ -178,7 +176,7 @@ class DictMethodChemRefHelper(object):
                             for tId in tObj:
                                 xD.setdefault(tName, set()).add(tId)
                                 if pharosChemblD and tId in pharosChemblD:
-                                    logger.info("Mapping ccId %r to Pharos %r", ccId, tId)
+                                    logger.debug("Mapping ccId %r to Pharos %r", ccId, tId)
                                     xD.setdefault("Pharos", set()).add(tId)
 
                 #
@@ -289,17 +287,66 @@ class DictMethodChemRefHelper(object):
                 _rcsb_chem_comp_annotation.provenance_source
                 _rcsb_chem_comp_annotation.assignment_version
                 # ...
+
+                loop_
+                _pdbx_chem_comp_feature.comp_id
+                _pdbx_chem_comp_feature.type
+                _pdbx_chem_comp_feature.value
+                _pdbx_chem_comp_feature.source
+                _pdbx_chem_comp_feature.support
+                NAG 'CARBOHYDRATE ISOMER' D        PDB ?
+                NAG 'CARBOHYDRATE RING'   pyranose PDB ?
+                NAG 'CARBOHYDRATE ANOMER' beta     PDB ?
         """
         try:
-            # Exit if these source categories are missing
             if not (dataContainer.exists("chem_comp_atom") and dataContainer.exists("chem_comp_bond")):
                 return False
             #
             logger.debug("Starting with  %r %r", dataContainer.getName(), catName)
             rP = kwargs.get("resourceProvider")
+            ccId = self.__getChemCompId(dataContainer)
+            # ----
+            if dataContainer.exists("pdbx_chem_comp_feature"):
+                fObj = dataContainer.getObj("pdbx_chem_comp_feature")
+                if not dataContainer.exists(catName):
+                    dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
+                wObj = dataContainer.getObj(catName)
+                #
+                modDate = None
+                if dataContainer.exists("chem_comp"):
+                    cObj = dataContainer.getObj("chem_comp")
+                    if cObj.hasAttribute("pdbx_modified_date"):
+                        modDate = cObj.getValue("pdbx_modified_date", 0)
+                    else:
+                        logger.info("%r missing modified_date", ccId)
+                #
+                fD = {}
+                for ii in range(fObj.getRowCount()):
+                    pSource = fObj.getValue("source", ii)
+                    pCode = "PDB Reference Data" if pSource.upper() == "PDB" else None
+                    if not pCode:
+                        continue
+                    fType = fObj.getValue("type", ii)
+                    if fType.upper() not in ["CARBOHYDRATE ISOMER", "CARBOHYDRATE RING", "CARBOHYDRATE ANOMER", "CARBOHYDRATE PRIMARY CARBONYL GROUP"]:
+                        continue
+                    fType = fType.title()
+                    fValue = fObj.getValue("value", ii)
+                    if (fType, fValue, pCode) in fD:
+                        continue
+                    fD[(fType, fValue, pCode)] = True
+                    #
+                    iRow = wObj.getRowCount()
+                    wObj.setValue(ccId, "comp_id", iRow)
+                    wObj.setValue(iRow + 1, "ordinal", iRow)
+                    wObj.setValue(fType, "type", iRow)
+                    wObj.setValue("%s_%d" % (ccId, ii + 1), "annotation_id", iRow)
+                    wObj.setValue(fValue, "name", iRow)
+                    wObj.setValue(pCode, "provenance_source", iRow)
+                    av = modDate if modDate else "1.0"
+                    wObj.setValue(av, "assignment_version", iRow)
             #
             # ----
-            ccId = self.__getChemCompId(dataContainer)
+
             dbId, atcIdL, mappingType, dbVersion = self.__getDrugBankMapping(dataContainer, rP)
             atcP = rP.getResource("AtcProvider instance") if rP else None
             if atcIdL and atcP:
@@ -752,27 +799,33 @@ class DictMethodChemRefHelper(object):
                  _rcsb_chem_comp_synonyms.ordinal
                  _rcsb_chem_comp_synonyms.name
                  _rcsb_chem_comp_synonyms.provenance_code
-                    ATP 1 "adenosine 5'-(tetrahydrogen triphosphate)"  'PDB Reference Data'
-                    ATP 2 "Adenosine 5'-triphosphate"  'PDB Reference Data'
-                    ATP 3 Atriphos  DrugBank
-                    ATP 4 Striadyne DrugBank
+                 _rcsb_chem_comp_synonyms.type
+
+                    ATP 1 "adenosine 5'-(tetrahydrogen triphosphate)"  'PDB Reference Data' 'Preferred Name'
+                    ATP 2 "Adenosine 5'-triphosphate"  'PDB Reference Data' 'PDB Reference Data' 'Preferred Common Name'
+                    ATP 3 Atriphos  DrugBank 'Synonym'
+                    ATP 4 Striadyne DrugBank 'Synonym'
 
         """
         try:
             logger.debug("Starting with  %r %r", dataContainer.getName(), catName)
-            if not (dataContainer.exists("chem_comp") and dataContainer.exists("pdbx_chem_comp_identifier")):
+            if not (dataContainer.exists("chem_comp") and dataContainer.exists("chem_comp_atom") and dataContainer.exists("pdbx_chem_comp_identifier")):
                 return False
             #
             #
             # Create the new target category
             if not dataContainer.exists(catName):
-                dataContainer.append(DataCategory(catName, attributeNameList=["comp_id", "ordinal", "name", "provenance_source"]))
+                dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
             else:
                 # remove the rowlist -
                 pass
             #
+            tTupL = self.__dApi.getEnumListWithDetail(catName, "type")
+            typeLookupD = {tTup[0].upper(): tTup[0] for tTup in tTupL}
+
             pTupL = self.__dApi.getEnumListWithDetail(catName, "provenance_source")
             provLookupD = {pTup[0].upper(): pTup[0] for pTup in pTupL}
+
             provLookupD["ACD-LABS"] = "ACDLabs"
             provLookupD["PDB"] = "PDB Reference Data"
 
@@ -781,6 +834,7 @@ class DictMethodChemRefHelper(object):
             # Get all of the names relevant names from the definition -
             #
             iRow = 0
+            nmD = {}
             provCode = "PDB Reference Data"
             ccObj = dataContainer.getObj("chem_comp")
             ccId = ccObj.getValue("id", 0)
@@ -793,37 +847,59 @@ class DictMethodChemRefHelper(object):
             wObj.setValue(ccName, "name", iRow)
             wObj.setValue(iRow + 1, "ordinal", iRow)
             wObj.setValue(provCode, "provenance_source", iRow)
+            wObj.setValue("Preferred Name", "type", iRow)
             iRow += 1
+            nmD[ccName] = True
             #
-            if dataContainer.exists("pdbx_chem_comp_synoynms"):
-                qObj = dataContainer.getObj("pdbx_chem_comp_synoynms")
+            if dataContainer.exists("pdbx_chem_comp_synonyms"):
+                qObj = dataContainer.getObj("pdbx_chem_comp_synonyms")
                 for ii in range(qObj.getRowCount()):
+                    sType = qObj.getValue("type", ii)
+                    pCode = provCode
+                    pType = "Preferred Synonym" if sType.upper() == "PREFERRED" else "Synonym"
                     nm = qObj.getValue("name", ii)
+                    if nm in nmD:
+                        continue
+                    nmD[nm] = True
+                    logger.debug("Synonym %r sType %r pCode %r", nm, sType, pCode)
                     wObj.setValue(ccId, "comp_id", iRow)
                     wObj.setValue(nm, "name", iRow)
                     wObj.setValue(iRow + 1, "ordinal", iRow)
-                    wObj.setValue(provCode, "provenance_source", iRow)
+                    wObj.setValue(pCode, "provenance_source", iRow)
+                    wObj.setValue(pType, "type", iRow)
                     iRow += 1
+            else:
+                logger.debug("No synonyms for %s", ccId)
 
             for nm in ccSynonymL:
                 if nm in ["?", "."]:
                     continue
+                if nm in nmD:
+                    continue
+                nmD[nm] = True
                 wObj.setValue(ccId, "comp_id", iRow)
                 wObj.setValue(nm, "name", iRow)
                 wObj.setValue(iRow + 1, "ordinal", iRow)
                 wObj.setValue(provCode, "provenance_source", iRow)
+                wObj.setValue("Synonym", "type", iRow)
                 iRow += 1
             #
             ccIObj = dataContainer.getObj("pdbx_chem_comp_identifier")
             for ii in range(ccIObj.getRowCount()):
                 nm = ccIObj.getValue("identifier", ii)
                 prog = ccIObj.getValue("program", ii)
+                iType = ccIObj.getValue("type", ii)
+                if not iType or iType.upper() not in typeLookupD:
+                    continue
                 if prog and prog.upper() in provLookupD:
                     sProg = provLookupD[prog.upper()]
+                    sType = typeLookupD[iType.upper()]
                     wObj.setValue(ccId, "comp_id", iRow)
                     wObj.setValue(nm, "name", iRow)
                     wObj.setValue(iRow + 1, "ordinal", iRow)
                     wObj.setValue(sProg, "provenance_source", iRow)
+                    wObj.setValue(sType, "type", iRow)
+
                     iRow += 1
                 else:
                     logger.error("%s unknown provenance %r", ccId, prog)
@@ -841,6 +917,7 @@ class DictMethodChemRefHelper(object):
                         wObj.setValue(nm, "name", iRow)
                         wObj.setValue(iRow + 1, "ordinal", iRow)
                         wObj.setValue("DrugBank", "provenance_source", iRow)
+                        wObj.setValue("Synonym", "type", iRow)
                         iRow += 1
 
             return True
