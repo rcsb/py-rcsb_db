@@ -257,3 +257,4 @@
  28-Jul-2020  V1.002 Add stash server config options to example configuration file
  28-Jul-2020  V1.003 Tweak stash configuration
  30-Jul-2020  V1.004 Add PubChem and Pharos mapping
+  5-Aug-2020  V1.005 Add carbohydrate content to rcsb_chem_comp_synonyms and rcsb_chem_comp_annotation
