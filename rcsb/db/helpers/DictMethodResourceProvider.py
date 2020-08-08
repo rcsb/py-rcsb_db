@@ -90,7 +90,8 @@ class DictMethodResourceProvider(SingletonClass):
         self.__commonU = None
         self.__dApiW = None
         self.__atcP = None
-        self.__siftsAbbreviated = kwargs.get("siftsAbbreviated", "PROD")
+        # self.__siftsAbbreviated = kwargs.get("siftsAbbreviated", "PROD")
+        self.__siftsAbbreviated = kwargs.get("siftsAbbreviated", "TEST")
         self.__ssP = None
         self.__vrptP = None
         self.__crP = None
