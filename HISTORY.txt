@@ -253,9 +253,9 @@
  25-Jun-2020  V0.997 Update dependencies
  30-Jun-2020  V0.998 Add partial reload of failed object salvage path
  10-Jul-2020  V0.999 Adding support for derivative branched entity methods
- 15-Jul-2020  V1.001 Adding methods to export water counting statistics.
- 28-Jul-2020  V1.002 Add stash server config options to example configuration file
- 28-Jul-2020  V1.003 Tweak stash configuration
- 30-Jul-2020  V1.004 Add PubChem and Pharos mapping
-  5-Aug-2020  V1.005 Add carbohydrate content to rcsb_chem_comp_synonyms and rcsb_chem_comp_annotation
-  8-Aug-2020  V1.006 Limit SIFTS summary data cached
+ 15-Jul-2020  V1.100 Adding methods to export water counting statistics.
+ 28-Jul-2020  V1.200 Add stash server config options to example configuration file
+ 28-Jul-2020  V1.300 Tweak stash configuration
+ 30-Jul-2020  V1.400 Add PubChem and Pharos mapping
+  5-Aug-2020  V1.500 Add carbohydrate content to rcsb_chem_comp_synonyms and rcsb_chem_comp_annotation
+  8-Aug-2020  V1.610 Limit SIFTS summary data cached
