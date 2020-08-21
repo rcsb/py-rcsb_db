@@ -85,8 +85,8 @@ class SliceValues(object):
         try:
             result = self.data[self.index]
             self.index += 1
-        except IndexError:
-            raise StopIteration
+        except IndexError as e:
+            raise StopIteration from e
         return result
 
     def __prev__(self):
