@@ -1247,11 +1247,11 @@ class PdbxLoader(object):
         return False, [], inputDocIdS
 
     def __getKeyValues(self, dct, keyNames):
-        """Return the tuple of values of corresponding to the input dictionary key names expressed in dot notation.
+        """Return the tuple of values corresponding to the input dictionary of key names expressed in dot notation.
 
         Args:
             dct (dict): source dictionary object (nested)
-            keyNames (list): list of dictionary keys in dot notatoin
+            keyNames (list): list of dictionary keys in dot notation
 
         Returns:
             tuple: tuple of values corresponding to the input key names

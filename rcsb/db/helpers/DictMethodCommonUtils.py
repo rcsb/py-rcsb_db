@@ -2756,7 +2756,7 @@ class DictMethodCommonUtils(object):
 
     def getPolymerComposition(self, polymerTypeList):
         """ Map in list of dictionary entity polymer/branched types to a composition string.
-            Input polymerTypeList contains entity_poly.type and entity_branch.type values.
+            Input polymerTypeList contains entity_poly.type and pdbx_entity_branch.type values.
 
         Args:
             polymerTypeList (list): List of PDBx/mmCIF dictionary polymer/branched types

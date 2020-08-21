@@ -260,3 +260,4 @@
   5-Aug-2020  V1.500 Add carbohydrate content to rcsb_chem_comp_synonyms and rcsb_chem_comp_annotation
   8-Aug-2020  V1.610 Limit SIFTS summary data cached
  15-Aug-2020  V1.620 Update dependency version for CATH backup
+ 21-Aug-2020  V1.630 Turn on the carbohydrate type options.

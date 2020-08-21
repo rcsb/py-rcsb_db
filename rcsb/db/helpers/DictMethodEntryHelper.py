@@ -739,8 +739,8 @@ class DictMethodEntryHelper(object):
                     epObj.setValue(self.__commonU.filterEntityPolyType(pTypeL[ii]), atName, ii)
             #
             # Add any branched entity types to the type list -
-            if dataContainer.exists("entity_branch"):
-                ebObj = dataContainer.getObj("entity_branch")
+            if dataContainer.exists("pdbx_entity_branch"):
+                ebObj = dataContainer.getObj("pdbx_entity_branch")
                 pTypeL.extend(ebObj.getAttributeValueList("type"))
             #
             polymerCompClass, ptClass, naClass, eptD = self.__commonU.getPolymerComposition(pTypeL)
