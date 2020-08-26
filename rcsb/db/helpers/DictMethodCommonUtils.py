@@ -2857,20 +2857,20 @@ class DictMethodCommonUtils(object):
         elif len(cD) == 3:
             if "DNA" in cD and "RNA" in cD and "NA-hybrid" in cD:
                 compClass = "DNA/RNA"
-            elif "oligosaccharide" in cD and all([cD[j] in ["oligosaccharide", "DNA", "RNA", "NA-hybrid"] for j in cD]):
+            elif "oligosaccharide" in cD and all([j in ["oligosaccharide", "DNA", "RNA", "NA-hybrid"] for j in cD]):
                 compClass = "NA/oligosaccharide"
-            elif "protein" in cD and all([cD[j] in ["protein", "DNA", "RNA", "NA-hybrid"] for j in cD]):
+            elif "protein" in cD and all([j in ["protein", "DNA", "RNA", "NA-hybrid"] for j in cD]):
                 compClass = "protein/NA"
-            elif "oligosaccharide" in cD and "protein" in cD and all([cD[j] in ["protein", "oligosaccharide", "DNA", "RNA", "NA-hybrid"] for j in cD]):
+            elif "oligosaccharide" in cD and "protein" in cD and all([j in ["protein", "oligosaccharide", "DNA", "RNA", "NA-hybrid"] for j in cD]):
                 compClass = "protein/NA/oligosaccharide"
             else:
                 compClass = "other type composition"
         elif len(cD) >= 4:
-            if "oligosaccharide" in cD and all([cD[j] in ["oligosaccharide", "DNA", "RNA", "NA-hybrid"] for j in cD]):
+            if "oligosaccharide" in cD and all([j in ["oligosaccharide", "DNA", "RNA", "NA-hybrid"] for j in cD]):
                 compClass = "NA/oligosaccharide"
-            elif "protein" in cD and all([cD[j] in ["protein", "DNA", "RNA", "NA-hybrid"] for j in cD]):
+            elif "protein" in cD and all([j in ["protein", "DNA", "RNA", "NA-hybrid"] for j in cD]):
                 compClass = "protein/NA"
-            elif "oligosaccharide" in cD and "protein" in cD and all([cD[j] in ["protein", "oligosaccharide", "DNA", "RNA", "NA-hybrid"] for j in cD]):
+            elif "oligosaccharide" in cD and "protein" in cD and all([j in ["protein", "oligosaccharide", "DNA", "RNA", "NA-hybrid"] for j in cD]):
                 compClass = "protein/NA/oligosaccharide"
             else:
                 compClass = "other type composition"

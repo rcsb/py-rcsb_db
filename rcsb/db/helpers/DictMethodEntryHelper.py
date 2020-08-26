@@ -744,8 +744,9 @@ class DictMethodEntryHelper(object):
                 pTypeL.extend(ebObj.getAttributeValueList("type"))
             #
             polymerCompClass, ptClass, naClass, eptD = self.__commonU.getPolymerComposition(pTypeL)
+            if eptD and len(eptD) > 2:
+                logger.info("%s entity type count=%d class=%s typeD %r", dataContainer.getName(), len(eptD), polymerCompClass, eptD)
             #
-
             cObj.setValue(polymerCompClass, "polymer_composition", 0)
             cObj.setValue(ptClass, "selected_polymer_entity_types", 0)
             cObj.setValue(naClass, "na_polymer_entity_types", 0)
