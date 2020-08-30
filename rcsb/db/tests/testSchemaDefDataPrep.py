@@ -92,7 +92,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__verbose = True
         self.__modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=configName)
         #
-        self.__exportFlag = False
+        self.__exportFlag = True
         self.__diffFlag = False
         #
         self.__simpleTestCaseList = [

@@ -431,9 +431,9 @@ class SchemaDefDataPrep(object):
                                         for atName in atNameL:
                                             cAtName = atName.replace(scAg + "_", "") if removeSubCategoryPrefix else atName
                                             # JDW filter missing values
-                                            if not doc[sName][atName][ii] or doc[sName][atName][ii] in [".", "?"]:
+                                            if not doc[sName][atName] or doc[sName][atName] in [".", "?"]:
                                                 continue
-                                            dD[cAtName] = doc[sName][atName][ii]
+                                            dD[cAtName] = doc[sName][atName]
                                         doc[sName][scAg] = dD
                                     else:
                                         # all members of the the subcategory must be list type -
