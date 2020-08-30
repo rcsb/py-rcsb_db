@@ -262,3 +262,4 @@
  15-Aug-2020  V1.620 Update dependency version for CATH backup
  21-Aug-2020  V1.630 Turn on the carbohydrate type options.
  26-Aug-2020  V1.631 Adjust polymer type counting -
+ 29-Aug-2020  V1.632 Add fix for missing data collection resolution

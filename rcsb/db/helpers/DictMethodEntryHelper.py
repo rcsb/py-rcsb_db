@@ -896,8 +896,12 @@ class DictMethodEntryHelper(object):
                 if fL:
                     cObj.setValue("%.4f" % min(fL), "diffrn_radiation_wavelength_minimum", 0)
                     cObj.setValue("%.4f" % max(fL), "diffrn_radiation_wavelength_maximum", 0)
+
             except Exception as e:
                 logger.exception("%s failing wavelength processing with %s", entryId, str(e))
+            #
+            # JDW
+            self.__updateReflnsResolution(dataContainer)
             return True
         except Exception as e:
             logger.exception("For %s %r failing with %s", dataContainer.getName(), catName, str(e))
@@ -1072,4 +1076,102 @@ class DictMethodEntryHelper(object):
             return True
         except Exception as e:
             logger.exception("%s %s failing with %s", dataContainer.getName(), catName, str(e))
+        return False
+
+    def __updateReflnsResolution(self, dataContainer):
+        """ Find a plausable data collection diffraction high resolution limit from one of the following sources.
+        #
+        _rcsb_entry_info.diffrn_resolution_high_value
+        _rcsb_entry_info.diffrn_resolution_high_provenance_source
+
+        Update category 'reflns' with any missing resolution extrema data using limits in category reflns_shell.
+
+            _reflns.entry_id                     2DCG
+            _reflns.d_resolution_high            0.900
+            _reflns.pdbx_diffrn_id               1
+            _reflns.pdbx_ordinal                 1
+
+
+            _refine.entry_id                                 2DCG
+            _refine.ls_number_reflns_obs                     15000
+            _refine.ls_number_reflns_all                     ?
+            _refine.pdbx_ls_sigma_I                          2.000
+            _refine.ls_d_res_low                             ?
+            _refine.ls_d_res_high                            0.900
+            _refine.pdbx_refine_id                           'X-RAY DIFFRACTION'
+            _refine.pdbx_diffrn_id                           1
+
+            _reflns_shell.d_res_high             1.18
+            _reflns_shell.d_res_low              1.25
+            _reflns_shell.pdbx_ordinal           1
+            _reflns_shell.pdbx_diffrn_id         1
+            #
+
+        """
+        try:
+            logger.debug("Starting with %r", dataContainer.getName())
+            #
+            if not dataContainer.exists("exptl") or not dataContainer.exists("rcsb_entry_info"):
+                return False
+            # --------------------------------------------------------------------------------------------------------
+            #  Only applicable to X-ray
+            #
+            xObj = dataContainer.getObj("exptl")
+            methodL = xObj.getAttributeValueList("method")
+            _, expMethod = self.__commonU.filterExperimentalMethod(methodL)
+            if expMethod not in ["X-ray", "Neutron", "Multiple methods"]:
+                return False
+            #
+            resValue = resProvSource = None
+            #
+            # Here are the various cases -
+            if dataContainer.exists("reflns"):
+                rObj = dataContainer.getObj("reflns")
+                if rObj.hasAttribute("d_resolution_high"):
+                    rvL = rObj.getAttributeValueList("d_resolution_high")
+                    fvL = [float(rv) for rv in rvL if self.__commonU.isFloat(rv)]
+                    if fvL:
+                        resValue = round(min(fvL), 2)
+                        resProvSource = "Depositor assigned"
+
+            if not resValue and dataContainer.exists("reflns_shell"):
+                rObj = dataContainer.getObj("reflns_shell")
+                if rObj.hasAttribute("d_res_high"):
+                    rvL = rObj.getAttributeValueList("d_res_high")
+                    fvL = [float(rv) for rv in rvL if self.__commonU.isFloat(rv)]
+                    if fvL:
+                        resValue = round(min(fvL), 2)
+                        resProvSource = "From the high resolution shell"
+
+            if not resValue and dataContainer.exists("refine"):
+
+                rObj = dataContainer.getObj("refine")
+                if rObj.hasAttribute("ls_d_res_high"):
+                    fvL = []
+                    for ii in range(rObj.getRowCount()):
+                        rId = rObj.getValue("pdbx_refine_id", ii)
+                        if rId in ["X-RAY DIFFRACTION", "NEUTRON DIFFRACTION", "FIBER DIFFRACTION"]:
+                            rv = rObj.getValue("ls_d_res_high", ii)
+                            if self.__commonU.isFloat(rv):
+                                fvL.append(float(rv))
+                    if fvL:
+                        resValue = round(min(fvL), 2)
+                        resProvSource = "From refinement resolution cutoff"
+            #
+            if not resValue:
+                logger.info("No source of data collection resolution available for %r", dataContainer.getName())
+            else:
+                logger.debug("Data collection diffraction limit %r PS %r", resValue, resProvSource)
+
+            if resValue:
+                eObj = dataContainer.getObj("rcsb_entry_info")
+                for atName in ["diffrn_resolution_high_value", "diffrn_resolution_high_provenance_source"]:
+                    if not eObj.hasAttribute(atName):
+                        eObj.appendAttribute(atName)
+                eObj.setValue(resValue, "diffrn_resolution_high_value", 0)
+                eObj.setValue(resProvSource, "diffrn_resolution_high_provenance_source", 0)
+                # --------------------------------------------------------------------------------------------------------
+                return True
+        except Exception as e:
+            logger.exception("%s failing with %s", dataContainer.getName(), str(e))
         return False
