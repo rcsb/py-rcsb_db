@@ -50,8 +50,7 @@ logger = logging.getLogger(__name__)
 
 
 class SchemaDefBuild(object):
-    """ Integrate dictionary metadata and file based(type/coverage) into internal and JSON/BSON schema defintions.
-    """
+    """Integrate dictionary metadata and file based(type/coverage) into internal and JSON/BSON schema defintions."""
 
     def __init__(self, databaseName, cfgOb, cachePath=None, includeContentClasses=None):
         """Integrate dictionary metadata and file based(type/coverage) into internal and JSON/BSON schema defintions.
@@ -103,8 +102,7 @@ class SchemaDefBuild(object):
         return rD
 
     def __build(self, databaseName, dataTyping, contentDefHelper, documentDefHelper, includeContentClasses):
-        """
-        """
+        """"""
         databaseVersion = contentDefHelper.getDatabaseVersion(databaseName) if contentDefHelper else ""
 
         #
@@ -163,9 +161,7 @@ class SchemaDefBuild(object):
         return rD
 
     def __testContentClasses(self, includeContentClasses, assignedContentClasses):
-        """ Return True if any of the include content classes are assigned.
-
-        """
+        """Return True if any of the include content classes are assigned."""
         # logger.debug("includeContentClasses %r assignedContentClasses %r" % (includeContentClasses, assignedContentClasses))
         for cc in includeContentClasses:
             if cc in assignedContentClasses:
@@ -311,7 +307,11 @@ class SchemaDefBuild(object):
                     appWidth = dtAppInfo.getAppTypeDefaultWidth(fD["TYPE_CODE"])
                     instWidth = dtInstInfo.getMaxWidth(catName, atName)
                     #
-                    revAppType, revAppWidth = dtAppInfo.updateCharType(fD["IS_KEY"], appType, instWidth, appWidth, bufferPercent=20.0)
+                    try:
+                        revAppType, revAppWidth = dtAppInfo.updateCharType(fD["IS_KEY"], appType, instWidth, appWidth, bufferPercent=20.0)
+                    except Exception as e:
+                        logger.exception("Failing for catName %r atName %r fD[TYPE_CODE] %r with %s", catName, atName, fD["TYPE_CODE"], str(e))
+
                     if verbose and dataTyping in ["SQL", "ANY"]:
                         logger.debug(
                             "catName %s atName %s cifType %s appType %s appWidth %r instWidth %r --> revAppType %r revAppWidth %r ",
@@ -509,8 +509,7 @@ class SchemaDefBuild(object):
         return sliceD
 
     def __convertNameDefault(self, name):
-        """ Default schema name converter -
-        """
+        """Default schema name converter -"""
         logger.info("Using default name conversion for %r", name)
         return name
 
@@ -966,8 +965,7 @@ class SchemaDefBuild(object):
         return rD
 
     def __getJsonRef(self, pathList, itemSubCategoryList=None):
-        """ Add parent reference and optional group membership and labeling.
-        """
+        """Add parent reference and optional group membership and labeling."""
         refD = {}
         try:
             refD = {"$ref": "#" + "/".join(pathList)}
@@ -1102,8 +1100,7 @@ class SchemaDefBuild(object):
         return atPropD
 
     def __subCategoryTest(self, filterList, atSubCategoryList):
-        """ Return true if any element of filter list in atSubCategoryList
-        """
+        """Return true if any element of filter list in atSubCategoryList"""
         if not filterList or not atSubCategoryList:
             return False
         for subCat in filterList:

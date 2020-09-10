@@ -79,9 +79,7 @@ def cmpElements(lhs, rhs):
 
 
 class DictMethodEntryHelper(object):
-    """ Helper class implements entry-level method references in the RCSB dictionary extension.
-
-    """
+    """Helper class implements entry-level method references in the RCSB dictionary extension."""
 
     def __init__(self, **kwargs):
         """
@@ -106,21 +104,19 @@ class DictMethodEntryHelper(object):
         logger.info(msg)
 
     def deferredItemMethod(self, dataContainer, catName, atName, **kwargs):
-        """ Placeholder for an item method.
-        """
+        """Placeholder for an item method."""
         _ = kwargs
         logger.debug("Called deferred item method %r %r for %r", catName, atName, dataContainer.getName())
         return True
 
     def deferredCategoryMethod(self, dataContainer, catName, **kwargs):
-        """ Placeholder for a category method.
-        """
+        """Placeholder for a category method."""
         _ = kwargs
         logger.debug("Called deferred category method %r for %r", catName, dataContainer.getName())
         return True
 
     def setDatablockId(self, dataContainer, catName, atName, **kwargs):
-        """ Item-level method to set the value of the input item to the current container name.
+        """Item-level method to set the value of the input item to the current container name.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -507,7 +503,7 @@ class DictMethodEntryHelper(object):
         return False
 
     def consolidateAccessionDetails(self, dataContainer, catName, **kwargs):
-        """ Consolidate accession details into the rcsb_accession_info category. Also include
+        """Consolidate accession details into the rcsb_accession_info category. Also include
         a flag for the availability of any supporting experimental data.
 
         Args:
@@ -909,9 +905,7 @@ class DictMethodEntryHelper(object):
         return False
 
     def filterBlockByMethod(self, dataContainer, blockName, **kwargs):
-        """ Filter empty placeholder data categories by experimental method.
-
-        """
+        """Filter empty placeholder data categories by experimental method."""
         logger.debug("Starting with %r blockName %r kwargs %r", dataContainer.getName(), blockName, kwargs)
         try:
             if not dataContainer.exists("exptl"):
@@ -951,8 +945,7 @@ class DictMethodEntryHelper(object):
         return False
 
     def filterEnumerations(self, dataContainer, catName, atName, **kwargs):
-        """ Standardize the item value to conform to enumeration specifications.
-        """
+        """Standardize the item value to conform to enumeration specifications."""
         logger.debug("Starting with %r %r %r %r", dataContainer.getName(), atName, catName, kwargs)
         subD = {("pdbx_reference_molecule", "class"): [("Anti-tumor", "Antitumor")]}
         try:
@@ -978,29 +971,29 @@ class DictMethodEntryHelper(object):
         return False
 
     def __getRepresentativeModels(self, dataContainer):
-        """ Return the list of representative models
+        """Return the list of representative models
 
-            Example:
-                #
-                _pdbx_nmr_ensemble.entry_id                                      5TM0
-                _pdbx_nmr_ensemble.conformers_calculated_total_number            15
-                _pdbx_nmr_ensemble.conformers_submitted_total_number             15
-                _pdbx_nmr_ensemble.conformer_selection_criteria                  'all calculated structures submitted'
-                _pdbx_nmr_ensemble.representative_conformer                      ?
-                _pdbx_nmr_ensemble.average_constraints_per_residue               ?
-                _pdbx_nmr_ensemble.average_constraint_violations_per_residue     ?
-                _pdbx_nmr_ensemble.maximum_distance_constraint_violation         ?
-                _pdbx_nmr_ensemble.average_distance_constraint_violation         ?
-                _pdbx_nmr_ensemble.maximum_upper_distance_constraint_violation   ?
-                _pdbx_nmr_ensemble.maximum_lower_distance_constraint_violation   ?
-                _pdbx_nmr_ensemble.distance_constraint_violation_method          ?
-                _pdbx_nmr_ensemble.maximum_torsion_angle_constraint_violation    ?
-                _pdbx_nmr_ensemble.average_torsion_angle_constraint_violation    ?
-                _pdbx_nmr_ensemble.torsion_angle_constraint_violation_method     ?
-                #
-                _pdbx_nmr_representative.entry_id             5TM0
-                _pdbx_nmr_representative.conformer_id         1
-                _pdbx_nmr_representative.selection_criteria   'fewest violations'
+        Example:
+            #
+            _pdbx_nmr_ensemble.entry_id                                      5TM0
+            _pdbx_nmr_ensemble.conformers_calculated_total_number            15
+            _pdbx_nmr_ensemble.conformers_submitted_total_number             15
+            _pdbx_nmr_ensemble.conformer_selection_criteria                  'all calculated structures submitted'
+            _pdbx_nmr_ensemble.representative_conformer                      ?
+            _pdbx_nmr_ensemble.average_constraints_per_residue               ?
+            _pdbx_nmr_ensemble.average_constraint_violations_per_residue     ?
+            _pdbx_nmr_ensemble.maximum_distance_constraint_violation         ?
+            _pdbx_nmr_ensemble.average_distance_constraint_violation         ?
+            _pdbx_nmr_ensemble.maximum_upper_distance_constraint_violation   ?
+            _pdbx_nmr_ensemble.maximum_lower_distance_constraint_violation   ?
+            _pdbx_nmr_ensemble.distance_constraint_violation_method          ?
+            _pdbx_nmr_ensemble.maximum_torsion_angle_constraint_violation    ?
+            _pdbx_nmr_ensemble.average_torsion_angle_constraint_violation    ?
+            _pdbx_nmr_ensemble.torsion_angle_constraint_violation_method     ?
+            #
+            _pdbx_nmr_representative.entry_id             5TM0
+            _pdbx_nmr_representative.conformer_id         1
+            _pdbx_nmr_representative.selection_criteria   'fewest violations'
         """
         repModelL = []
         if dataContainer.exists("pdbx_nmr_representative"):
@@ -1026,8 +1019,7 @@ class DictMethodEntryHelper(object):
         return repModelL
 
     def __filterExperimentalResolution(self, dataContainer):
-        """ Collect resolution estimates from method specific sources.
-        """
+        """Collect resolution estimates from method specific sources."""
         rL = []
         if dataContainer.exists("refine"):
             tObj = dataContainer.getObj("refine")
@@ -1079,7 +1071,7 @@ class DictMethodEntryHelper(object):
         return False
 
     def __updateReflnsResolution(self, dataContainer):
-        """ Find a plausable data collection diffraction high resolution limit from one of the following sources.
+        """Find a plausable data collection diffraction high resolution limit from one of the following sources.
         #
         _rcsb_entry_info.diffrn_resolution_high_value
         _rcsb_entry_info.diffrn_resolution_high_provenance_source
@@ -1159,7 +1151,7 @@ class DictMethodEntryHelper(object):
                         resProvSource = "From refinement resolution cutoff"
             #
             if not resValue:
-                logger.info("No source of data collection resolution available for %r", dataContainer.getName())
+                logger.debug("No source of data collection resolution available for %r", dataContainer.getName())
             else:
                 logger.debug("Data collection diffraction limit %r PS %r", resValue, resProvSource)
 
