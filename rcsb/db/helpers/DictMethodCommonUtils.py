@@ -44,8 +44,7 @@ NonpolymerBoundInstance = namedtuple("NonpolymerBoundInstance", BoundInstanceFie
 
 
 class DictMethodCommonUtils(object):
-    """  Helper class implements common utility external method references supporting the RCSB dictionary extension.
-    """
+    """Helper class implements common utility external method references supporting the RCSB dictionary extension."""
 
     # Dictionary of current standard monomers -
     aaDict3 = {
@@ -337,7 +336,7 @@ class DictMethodCommonUtils(object):
         return wD["fwTypeBoundD"] if "fwTypeBoundD" in wD else {}
 
     def getTargetComponents(self, dataContainer):
-        """ Return a components targets.
+        """Return a components targets.
 
         Args:
             dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
@@ -351,7 +350,7 @@ class DictMethodCommonUtils(object):
         return wD["ccTargets"] if "ccTargets" in wD else []
 
     def __getEntityAndInstanceTypes(self, dataContainer):
-        """ Internal method to collect and return entity/instance type, size and mapping information.
+        """Internal method to collect and return entity/instance type, size and mapping information.
 
         Args:
             dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
@@ -978,7 +977,8 @@ class DictMethodCommonUtils(object):
                 aSeqD = {}
                 for ii in range(psObj.getRowCount()):
                     asymId = psObj.getValue("asym_id", ii)
-                    authSeqId = psObj.getValue("auth_seq_num", ii)
+                    # authSeqId = psObj.getValue("auth_seq_num", ii)
+                    authSeqId = psObj.getValue("pdb_seq_num", ii)
                     seqId = psObj.getValue("seq_id", ii)
                     compId = psObj.getValue("mon_id", ii)
                     entityId = psObj.getValue("entity_id", ii)
@@ -1235,7 +1235,7 @@ class DictMethodCommonUtils(object):
         return wD
 
     def getProtSecStructFeatures(self, dataContainer):
-        """ Get secondary structure features using standard nomenclature.
+        """Get secondary structure features using standard nomenclature.
 
         Args:
             dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
@@ -1744,7 +1744,7 @@ class DictMethodCommonUtils(object):
         return wD
 
     def __getInstanceConnections(self, dataContainer):
-        """ Get instance connections (e.g., intermolecular bonds and non-primary connectivity)
+        """Get instance connections (e.g., intermolecular bonds and non-primary connectivity)
 
         Args:
             dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
@@ -1905,7 +1905,7 @@ class DictMethodCommonUtils(object):
         }
 
     def __getBoundNonpolymers(self, dataContainer, instConnectL):
-        """ Get nonpolymer bound
+        """Get nonpolymer bound
 
         Args:
             dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
@@ -2076,7 +2076,7 @@ class DictMethodCommonUtils(object):
         return dbNameMapD
 
     def __getReferenceSequenceDetails(self, dataContainer):
-        """ Get reference sequence and related alignment details.
+        """Get reference sequence and related alignment details.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -2387,7 +2387,7 @@ class DictMethodCommonUtils(object):
         return rD
 
     def __getSequenceFeatures(self, dataContainer):
-        """ Get point and range sequence features.
+        """Get point and range sequence features.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -2498,7 +2498,7 @@ class DictMethodCommonUtils(object):
         return rD
 
     def __addStructRefSeqEntityIds(self, dataContainer):
-        """ Add entity ids in categories struct_ref_seq and struct_ref_seq_dir instances.
+        """Add entity ids in categories struct_ref_seq and struct_ref_seq_dir instances.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -2712,7 +2712,7 @@ class DictMethodCommonUtils(object):
         return rT
 
     def guessEntityPolyTypes(self, monomerL):
-        """ Guess the polymer types to from the monomer list.
+        """Guess the polymer types to from the monomer list.
 
         Args:
             monomerL (list): list of monomers (chemical component ids)
@@ -2755,7 +2755,7 @@ class DictMethodCommonUtils(object):
         return pType, fpType
 
     def getPolymerComposition(self, polymerTypeList):
-        """ Map in list of dictionary entity polymer/branched types to a composition string.
+        """Map in list of dictionary entity polymer/branched types to a composition string.
             Input polymerTypeList contains entity_poly.type and pdbx_entity_branch.type values.
 
         Args:
@@ -2904,7 +2904,7 @@ class DictMethodCommonUtils(object):
         return compClass, ptClass, naClass, cD
 
     def filterExperimentalMethod(self, methodL):
-        """ Apply a standard filter to the input experimental method list returning a method count and
+        """Apply a standard filter to the input experimental method list returning a method count and
             a simplified method name.
 
         Args:
@@ -2964,9 +2964,7 @@ class DictMethodCommonUtils(object):
         return ts
 
     def __stripWhiteSpace(self, val):
-        """ Remove all white space from the input value.
-
-        """
+        """Remove all white space from the input value."""
         if val is None:
             return val
         return self.__wsPattern.sub("", val)
@@ -3470,7 +3468,7 @@ class DictMethodCommonUtils(object):
         return wD
 
     def __getUnobserved(self, dataContainer):
-        """ Internal method to extract unobserved and zero occupancy features.
+        """Internal method to extract unobserved and zero occupancy features.
 
         Args:
             dataContainer ([type]): [description]
@@ -3598,7 +3596,7 @@ class DictMethodCommonUtils(object):
         return wD
 
     def __getInstanceModelOutliers(self, dataContainer):
-        """ Internal method to assemble model outliers details.
+        """Internal method to assemble model outliers details.
 
         Args:
             dataContainer ([type]): [description]
@@ -3640,7 +3638,14 @@ class DictMethodCommonUtils(object):
                         zVal = vObj.getValueOrDefault("Z", ii, defaultValue=None)
                         tS = "%s-%s dist=%s Z=%s" % (atomI, atomJ, obsDist, zVal)
                         #
-                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "BOND_OUTLIER", tS,))
+                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(
+                            OutlierValue(
+                                compId,
+                                int(seqId),
+                                "BOND_OUTLIER",
+                                tS,
+                            )
+                        )
                 #
                 logger.debug("length instanceModelOutlierD %d", len(instanceModelOutlierD))
             # ----
@@ -3662,7 +3667,14 @@ class DictMethodCommonUtils(object):
                         zVal = vObj.getValueOrDefault("Z", ii, defaultValue=None)
                         tS = "%s-%s-%s angle=%s Z=%s" % (atomI, atomJ, atomK, obsDist, zVal)
                         #
-                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "ANGLE_OUTLIER", tS,))
+                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(
+                            OutlierValue(
+                                compId,
+                                int(seqId),
+                                "ANGLE_OUTLIER",
+                                tS,
+                            )
+                        )
                 #
                 logger.debug("length instanceModelOutlierD %d", len(instanceModelOutlierD))
             # ----
@@ -3684,7 +3696,14 @@ class DictMethodCommonUtils(object):
                     tS = "%s angle=%s Z=%s" % (atoms, obsDist, zVal)
                     # OutlierValue = collections.namedtuple("OutlierValue", "compId, seqId, outlierType, description, reported, reference, uncertaintyValue, uncertaintyType")
                     if seqId:
-                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "MOGUL_BOND_OUTLIER", tS,))
+                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(
+                            OutlierValue(
+                                compId,
+                                int(seqId),
+                                "MOGUL_BOND_OUTLIER",
+                                tS,
+                            )
+                        )
                     else:
                         instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(
                             OutlierValue(compId, None, "MOGUL_BOND_OUTLIER", tS, obsDist, meanValue, zVal, "Z-Score")
@@ -3709,7 +3728,14 @@ class DictMethodCommonUtils(object):
                     zVal = vObj.getValueOrDefault("Zscore", ii, defaultValue=None)
                     tS = "%s angle=%s Z=%s" % (atoms, obsDist, zVal)
                     if seqId:
-                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "MOGUL_ANGLE_OUTLIER", tS,))
+                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(
+                            OutlierValue(
+                                compId,
+                                int(seqId),
+                                "MOGUL_ANGLE_OUTLIER",
+                                tS,
+                            )
+                        )
                     else:
                         instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(
                             OutlierValue(compId, None, "MOGUL_ANGLE_OUTLIER", tS, obsDist, meanValue, zVal, "Z-Score")
@@ -3737,15 +3763,43 @@ class DictMethodCommonUtils(object):
                     #
                     if seqId:
                         if rotamerClass and rotamerClass.upper() == "OUTLIER":
-                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "ROTAMER_OUTLIER", None,))
+                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(
+                                OutlierValue(
+                                    compId,
+                                    int(seqId),
+                                    "ROTAMER_OUTLIER",
+                                    None,
+                                )
+                            )
                         if ramaClass and ramaClass.upper() == "OUTLIER":
-                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "RAMACHANDRAN_OUTLIER", None,))
+                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(
+                                OutlierValue(
+                                    compId,
+                                    int(seqId),
+                                    "RAMACHANDRAN_OUTLIER",
+                                    None,
+                                )
+                            )
                         if rsrZ and float(rsrZ) > 2.0:
                             tS = "%s > 2.0" % rsrZ
-                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "RSRZ_OUTLIER", tS,))
+                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(
+                                OutlierValue(
+                                    compId,
+                                    int(seqId),
+                                    "RSRZ_OUTLIER",
+                                    tS,
+                                )
+                            )
                         if rsrCc and float(rsrCc) < 0.650:
                             tS = "RSRCC < 0.65"
-                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "RSRCC_OUTLIER", tS,))
+                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(
+                                OutlierValue(
+                                    compId,
+                                    int(seqId),
+                                    "RSRCC_OUTLIER",
+                                    tS,
+                                )
+                            )
                     else:
                         if rsrZ and float(rsrZ) > 2.0:
                             tS = "%s > 2.0" % rsrZ
