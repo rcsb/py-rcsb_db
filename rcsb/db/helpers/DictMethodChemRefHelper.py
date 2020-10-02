@@ -24,8 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 class DictMethodChemRefHelper(object):
-    """ Helper class implements external method references supporting chemical
-        reference data definitions in the RCSB dictionary extension.
+    """Helper class implements external method references supporting chemical
+    reference data definitions in the RCSB dictionary extension.
     """
 
     def __init__(self, **kwargs):
@@ -45,7 +45,7 @@ class DictMethodChemRefHelper(object):
         logger.info(msg)
 
     def addChemCompRelated(self, dataContainer, catName, **kwargs):
-        """ Add category rcsb_chem_comp_related.
+        """Add category rcsb_chem_comp_related.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -209,7 +209,7 @@ class DictMethodChemRefHelper(object):
         return ccObj.getValueOrDefault("id", 0, None)
 
     def __getDrugBankMapping(self, dataContainer, resourceProvider):
-        """ Return the DrugBank mapping for the chemical definition in the input dataContainer.
+        """Return the DrugBank mapping for the chemical definition in the input dataContainer.
 
         Args:
             dataContainer (obj): instance of a DataContainer() object
@@ -565,7 +565,7 @@ class DictMethodChemRefHelper(object):
         return createDate, releaseDate, reviseDate
 
     def addChemCompInfo(self, dataContainer, catName, **kwargs):
-        """ Add category rcsb_chem_comp_info and rcsb_chem_comp_container_identifiers.
+        """Add category rcsb_chem_comp_info and rcsb_chem_comp_container_identifiers.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -839,9 +839,9 @@ class DictMethodChemRefHelper(object):
             ccObj = dataContainer.getObj("chem_comp")
             ccId = ccObj.getValue("id", 0)
             ccName = ccObj.getValue("name", 0)
-            ccSynonymL = []
-            if ccObj.hasAttribute("pdbx_synonyms"):
-                ccSynonymL = str(ccObj.getValue("pdbx_synonyms", 0)).split(";")
+            # ccSynonymL = []
+            # if ccObj.hasAttribute("pdbx_synonyms"):
+            #    ccSynonymL = str(ccObj.getValue("pdbx_synonyms", 0)).split(";")
             #
             wObj.setValue(ccId, "comp_id", iRow)
             wObj.setValue(ccName, "name", iRow)
@@ -857,7 +857,7 @@ class DictMethodChemRefHelper(object):
                     sType = qObj.getValue("type", ii)
                     pCode = provCode
                     pType = "Preferred Synonym" if sType.upper() == "PREFERRED" else "Synonym"
-                    nm = qObj.getValue("name", ii)
+                    nm = str(qObj.getValue("name", ii)).strip()
                     if nm in nmD:
                         continue
                     nmD[nm] = True
@@ -871,22 +871,22 @@ class DictMethodChemRefHelper(object):
             else:
                 logger.debug("No synonyms for %s", ccId)
 
-            for nm in ccSynonymL:
-                if nm in ["?", "."]:
-                    continue
-                if nm in nmD:
-                    continue
-                nmD[nm] = True
-                wObj.setValue(ccId, "comp_id", iRow)
-                wObj.setValue(nm, "name", iRow)
-                wObj.setValue(iRow + 1, "ordinal", iRow)
-                wObj.setValue(provCode, "provenance_source", iRow)
-                wObj.setValue("Synonym", "type", iRow)
-                iRow += 1
+            # for nm in ccSynonymL:
+            #     if nm in ["?", "."]:
+            #         continue
+            #     if nm in nmD:
+            #         continue
+            #     nmD[nm] = True
+            #     wObj.setValue(ccId, "comp_id", iRow)
+            #     wObj.setValue(nm, "name", iRow)
+            #     wObj.setValue(iRow + 1, "ordinal", iRow)
+            #     wObj.setValue(provCode, "provenance_source", iRow)
+            #     wObj.setValue("Synonym", "type", iRow)
+            #     iRow += 1
             #
             ccIObj = dataContainer.getObj("pdbx_chem_comp_identifier")
             for ii in range(ccIObj.getRowCount()):
-                nm = ccIObj.getValue("identifier", ii)
+                nm = str(ccIObj.getValue("identifier", ii)).strip()
                 prog = ccIObj.getValue("program", ii)
                 iType = ccIObj.getValue("type", ii)
                 if not iType or iType.upper() not in typeLookupD:
@@ -914,7 +914,7 @@ class DictMethodChemRefHelper(object):
                     iRow = wObj.getRowCount()
                     for nm in dbMapD[ccId]["aliases"]:
                         wObj.setValue(ccId, "comp_id", iRow)
-                        wObj.setValue(nm, "name", iRow)
+                        wObj.setValue(str(nm).strip(), "name", iRow)
                         wObj.setValue(iRow + 1, "ordinal", iRow)
                         wObj.setValue("DrugBank", "provenance_source", iRow)
                         wObj.setValue("Synonym", "type", iRow)
