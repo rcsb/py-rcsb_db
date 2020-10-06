@@ -138,14 +138,7 @@ class RepoLoadWorkflow(object):
             okS = self.loadStatus(cw.getLoadStatus(), readBackCheck=readBackCheck)
         elif op == "etl-repository-holdings" and dbType == "mongo":
             rhw = RepoHoldingsEtlWorker(
-                self.__cfgOb,
-                sandboxPath,
-                self.__cachePath,
-                numProc=numProc,
-                chunkSize=chunkSize,
-                documentLimit=documentLimit,
-                verbose=self.__debugFlag,
-                readBackCheck=readBackCheck,
+                self.__cfgOb, sandboxPath, self.__cachePath, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=self.__debugFlag, readBackCheck=readBackCheck,
             )
             ok = rhw.load(dataSetId, loadType=loadType)
             okS = self.loadStatus(rhw.getLoadStatus(), readBackCheck=readBackCheck)

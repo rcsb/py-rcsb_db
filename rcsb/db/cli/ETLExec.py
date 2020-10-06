@@ -164,16 +164,12 @@ def main():
     ##
     if args.db_type == "mongo":
         if args.etl_entity_sequence_clusters:
-            cw = SequenceClustersEtlWorker(
-                cfgOb, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck, workPath=cachePath
-            )
+            cw = SequenceClustersEtlWorker(cfgOb, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck, workPath=cachePath)
             ok = cw.etl(dataSetId, seqDataLocator, loadType=loadType)
             okS = loadStatus(cw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
         if args.etl_repository_holdings:
-            rhw = RepoHoldingsEtlWorker(
-                cfgOb, sandboxPath, cachePath, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck
-            )
+            rhw = RepoHoldingsEtlWorker(cfgOb, sandboxPath, cachePath, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck)
             ok = rhw.load(dataSetId, loadType=loadType)
             okS = loadStatus(rhw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 

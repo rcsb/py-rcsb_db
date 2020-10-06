@@ -1714,11 +1714,7 @@ class DictMethodEntityHelper(object):
         try:
             if not (dataContainer.exists("entry") and dataContainer.exists("entity")):
                 return False
-            if (
-                dataContainer.exists("rcsb_polymer_entity_feature")
-                or dataContainer.exists("rcsb_nonpolymer_entity_feature")
-                or dataContainer.exists("rcsb_branched_entity_feature")
-            ):
+            if dataContainer.exists("rcsb_polymer_entity_feature") or dataContainer.exists("rcsb_nonpolymer_entity_feature") or dataContainer.exists("rcsb_branched_entity_feature"):
                 return True
             # -----
             categoryMapD = {

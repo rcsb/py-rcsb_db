@@ -32,17 +32,7 @@ logger = logging.getLogger(__name__)
 
 class DocumentLoader(object):
     def __init__(
-        self,
-        cfgOb,
-        cachePath,
-        resourceName="MONGO_DB",
-        numProc=4,
-        chunkSize=15,
-        documentLimit=None,
-        verbose=False,
-        readBackCheck=False,
-        maxStepLength=2000,
-        schemaRebuildFlag=False,
+        self, cfgOb, cachePath, resourceName="MONGO_DB", numProc=4, chunkSize=15, documentLimit=None, verbose=False, readBackCheck=False, maxStepLength=2000, schemaRebuildFlag=False,
     ):
         self.__verbose = verbose
         #

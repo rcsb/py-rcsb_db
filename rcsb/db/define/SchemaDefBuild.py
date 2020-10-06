@@ -65,9 +65,7 @@ class SchemaDefBuild(object):
         self.__cfgOb = cfgOb
         self.__databaseName = databaseName
         self.__cachePath = cachePath if cachePath else "."
-        self.__includeContentClasses = (
-            includeContentClasses if includeContentClasses else ["GENERATED_CONTENT", "EVOLVING_CONTENT", "CONSOLIDATED_BIRD_CONTENT", "INTEGRATED_CONTENT"]
-        )
+        self.__includeContentClasses = includeContentClasses if includeContentClasses else ["GENERATED_CONTENT", "EVOLVING_CONTENT", "CONSOLIDATED_BIRD_CONTENT", "INTEGRATED_CONTENT"]
         #
         self.__contentDefHelper = self.__cfgOb.getHelper("CONTENT_DEF_HELPER_MODULE", sectionName=configName, cfgOb=self.__cfgOb)
         self.__documentDefHelper = self.__cfgOb.getHelper("DOCUMENT_DEF_HELPER_MODULE", sectionName=configName, cfgOb=self.__cfgOb)
@@ -787,14 +785,24 @@ class SchemaDefBuild(object):
                                             vvDL = []
                                             for cavD in tD["CONTEXT_ATTRIBUTE_VALUES"]:
                                                 vvD = {"context_value": cavD["CONTEXT_VALUE"], "search_paths": cavD["SEARCH_PATHS"]}
+                                                #
+                                                if "ATTRIBUTES" in cavD:
+                                                    aL = []
+                                                    for atD in cavD["ATTRIBUTES"]:
+                                                        dD = {}
+                                                        if "EXAMPLES" in atD:
+                                                            dD["examples"] = atD["EXAMPLES"]
+                                                        if "PATH" in atD:
+                                                            dD["path"] = atD["PATH"]
+                                                        aL.append(dD)
+                                                    vvD["attributes"] = aL
+                                                #
                                                 vvDL.append(vvD)
                                             subCatPropD[subCategory]["rcsb_nested_indexing_context"] = [
                                                 {"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"], "context_attributes": vvDL}
                                             ]
                                         else:
-                                            subCatPropD[subCategory]["rcsb_nested_indexing_context"] = [
-                                                {"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"]}
-                                            ]
+                                            subCatPropD[subCategory]["rcsb_nested_indexing_context"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"]}]
                                     else:
                                         subCatPropD[subCategory]["rcsb_nested_indexing"] = True
             #
@@ -955,6 +963,16 @@ class SchemaDefBuild(object):
                     vDL = []
                     for cavD in tD["CONTEXT_ATTRIBUTE_VALUES"]:
                         vD = {"context_value": cavD["CONTEXT_VALUE"], "search_paths": cavD["SEARCH_PATHS"]}
+                        if "ATTRIBUTES" in cavD:
+                            aL = []
+                            for atD in cavD["ATTRIBUTES"]:
+                                dD = {}
+                                if "EXAMPLES" in atD:
+                                    dD["examples"] = atD["EXAMPLES"]
+                                if "PATH" in atD:
+                                    dD["path"] = atD["PATH"]
+                                aL.append(dD)
+                            vD["attributes"] = aL
                         vDL.append(vD)
                     rD["rcsb_nested_indexing_context"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"], "context_attributes": vDL}]
                 else:

@@ -70,7 +70,7 @@ class SchemaSearchContextsTests(unittest.TestCase):
 
     @unittest.skipIf(skipFlag, "Troubleshooting test")
     def testUnUsedIndexedItems(self):
-        """ Enumerate items that are indexed by have no search group assignments.
+        """Enumerate items that are indexed by have no search group assignments.
 
         collection_attribute_search_contexts
         """
@@ -112,8 +112,7 @@ class SchemaSearchContextsTests(unittest.TestCase):
 
     @unittest.skipIf(skipFlag, "Troubleshooting test")
     def testExpandSearchGroups(self):
-        """Expand search groups and metadata content as these would be display in RCSB search menu.
-        """
+        """Expand search groups and metadata content as these would be display in RCSB search menu."""
         _, afD = self.__getContentFeatures()
         groupNameList = self.__docHelper.getSearchGroups()
         logger.info("Search groups (%d)", len(groupNameList))
@@ -206,6 +205,7 @@ class SchemaSearchContextsTests(unittest.TestCase):
                 else:
                     logger.debug("All context enums count %d", len(enumDL))
                     for enumD in enumDL:
+                        logger.info("%s.%s enumD %r", cpCatName, cpAtName, enumD)
                         if "name" not in enumD:
                             logger.warning("Missing nested enum (name) for %s.%s", cpCatName, cpAtName)
                     #
@@ -250,6 +250,19 @@ class SchemaSearchContextsTests(unittest.TestCase):
                             tS = enumDetail + " " + briefDescr
                             logger.debug("%s,%s tS %r", cnS, anS, tS)
                             retD.setdefault((cnS, anS), []).append(tS)
+                        for aD in cvD["ATTRIBUTES"]:
+                            sp = aD["PATH"]
+                            if sp.count(".") > 1:
+                                k = sp.rfind(".")
+                                sp = sp[:k] + "_" + sp[k + 1 :]
+                            cnS = sp.split(".")[0]
+                            anS = sp.split(".")[1]
+                            briefDescr = self.__docHelper.getAttributeDescription(cnS, anS, contextType="brief")
+                            tS = enumDetail + " " + briefDescr
+                            logger.debug("%s,%s tS %r", cnS, anS, tS)
+                            retD.setdefault((cnS, anS), []).append(tS)
+                            exL = aD["EXAMPLES"]
+                            logger.info("%s,%s sp %r examplesL %r", cnS, anS, sp, exL)
         #
         for k, vL in retD.items():
             for v in vL:
@@ -366,6 +379,18 @@ class SchemaSearchContextsTests(unittest.TestCase):
                         briefDescr = self.__docHelper.getAttributeDescription(cnS, anS, contextType="brief")
                         tS = enumDetail + " " + briefDescr
                         retD.setdefault((cnS, anS), []).append(tS)
+                    for aD in cvD["ATTRIBUTES"]:
+                        sp = aD["PATH"]
+                        if sp.count(".") > 1:
+                            k = sp.rfind(".")
+                            sp = sp[:k] + "_" + sp[k + 1 :]
+                        cnS = sp.split(".")[0]
+                        anS = sp.split(".")[1]
+                        briefDescr = self.__docHelper.getAttributeDescription(cnS, anS, contextType="brief")
+                        tS = enumDetail + " " + briefDescr
+                        retD.setdefault((cnS, anS), []).append(tS)
+                        exL = aD["EXAMPLES"]
+                        logger.debug("%s,%s sp %r exL %r", cnS, anS, sp, exL)
         #
         for k, vL in retD.items():
             for v in vL:
@@ -374,8 +399,7 @@ class SchemaSearchContextsTests(unittest.TestCase):
         return retD
 
     def __getContentFeatures(self):
-        """ Get category and attribute features
-        """
+        """Get category and attribute features"""
         try:
             cH = ContentDefinitionHelper(cfgOb=self.__cfgOb)
             dictApi = self.__dP.getApiByLocators(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile])

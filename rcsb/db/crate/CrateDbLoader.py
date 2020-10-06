@@ -195,9 +195,7 @@ class CrateDbLoader(object):
                 "Insert succeeds for table %s %d of %d rows at %s (%.3f seconds)", tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime
             )
         else:
-            logger.info(
-                "Insert fails for table %s %d of %d rows at %s (%.3f seconds)", tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime
-            )
+            logger.info("Insert fails for table %s %d of %d rows at %s (%.3f seconds)", tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
         return ret
 
 

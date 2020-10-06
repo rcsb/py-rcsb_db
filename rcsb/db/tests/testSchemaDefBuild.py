@@ -126,8 +126,7 @@ class SchemaDefBuildTests(unittest.TestCase):
 
     @unittest.skip("Deprecated test")
     def testCompareSchemaCategories(self):
-        """ Compare common categories across schema definitions.
-        """
+        """Compare common categories across schema definitions."""
         try:
             sdCc = SchemaDefAccess(self.__schP.makeSchemaDef("chem_comp_core", dataTyping="ANY", saveSchema=False))
             sdBcc = SchemaDefAccess(self.__schP.makeSchemaDef("bird_chem_comp_core", dataTyping="ANY", saveSchema=False))

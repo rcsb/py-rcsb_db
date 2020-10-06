@@ -219,8 +219,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         return eCount
 
     def __testPrepDocumentsFromContainers(self, inputPathList, databaseName, collectionName, styleType="rowwise_by_name_with_cardinality", mergeContentTypes=None):
-        """Test case -  create loadable PDBx data from repository files
-        """
+        """Test case -  create loadable PDBx data from repository files"""
         try:
 
             sd, _, _, _ = self.__schP.getSchemaInfo(databaseName)

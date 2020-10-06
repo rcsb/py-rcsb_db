@@ -707,12 +707,7 @@ class PdbxLoader(object):
                 logger.info("Completed loading %s with status %r loaded %d paths", databaseName, ok, numPaths)
             else:
                 logger.info(
-                    "Completed loading %s with status %r failure count %d of %d paths: %r",
-                    databaseName,
-                    ok,
-                    len(failList),
-                    numPaths,
-                    [os.path.basename(pth) for pth in failedPathList],
+                    "Completed loading %s with status %r failure count %d of %d paths: %r", databaseName, ok, len(failList), numPaths, [os.path.basename(pth) for pth in failedPathList],
                 )
             #
             return ok

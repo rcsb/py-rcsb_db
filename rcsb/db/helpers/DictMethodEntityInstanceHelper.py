@@ -271,14 +271,7 @@ class DictMethodEntityInstanceHelper(object):
                             monCount += abs(int(endSeqId) - int(begSeqId) + 1)
                         except Exception:
                             logger.warning(
-                                "%s fType %r fId %r bad sequence begSeqIdL %r endSeqIdL %r tbegS %r tendS %r",
-                                dataContainer.getName(),
-                                fType,
-                                fId,
-                                begSeqIdL,
-                                endSeqIdL,
-                                tbegS,
-                                tendS,
+                                "%s fType %r fId %r bad sequence begSeqIdL %r endSeqIdL %r tbegS %r tendS %r", dataContainer.getName(), fType, fId, begSeqIdL, endSeqIdL, tbegS, tendS,
                             )
 
                     fMonomerCountD.setdefault(asymId, {}).setdefault(fType, []).append(monCount)
@@ -738,9 +731,7 @@ class DictMethodEntityInstanceHelper(object):
                     #
                     # ("targetCompId", "connectType", "partnerCompId", "partnerAsymId", "partnerEntityType", "bondDistance", "bondOrder")
                     cObj.setValue(
-                        ";".join(
-                            ["%s has %s with %s instance %s in model 1" % (rTup.targetCompId, rTup.connectType, rTup.partnerEntityType, rTup.partnerAsymId) for rTup in rTupL]
-                        ),
+                        ";".join(["%s has %s with %s instance %s in model 1" % (rTup.targetCompId, rTup.connectType, rTup.partnerEntityType, rTup.partnerAsymId) for rTup in rTupL]),
                         "feature_value_details",
                         ii,
                     )
@@ -994,9 +985,7 @@ class DictMethodEntityInstanceHelper(object):
                         cObj.setValue(";".join([pTup.reported if pTup.reported else "?" for pTup in pTupL if pTup.outlierType == fType]), "feature_value_reported", ii)
                         cObj.setValue(";".join([pTup.reference if pTup.reference else "?" for pTup in pTupL if pTup.outlierType == fType]), "feature_value_reference", ii)
                         cObj.setValue(
-                            ";".join([pTup.uncertaintyValue if pTup.uncertaintyValue else "?" for pTup in pTupL if pTup.outlierType == fType]),
-                            "feature_value_uncertainty_estimate",
-                            ii,
+                            ";".join([pTup.uncertaintyValue if pTup.uncertaintyValue else "?" for pTup in pTupL if pTup.outlierType == fType]), "feature_value_uncertainty_estimate", ii,
                         )
                         cObj.setValue(
                             ";".join([pTup.uncertaintyType if pTup.uncertaintyType else "?" for pTup in pTupL if pTup.outlierType == fType]),
@@ -1261,14 +1250,7 @@ class DictMethodEntityInstanceHelper(object):
                             monCount += abs(int(endSeqId) - int(begSeqId) + 1)
                         except Exception:
                             logger.warning(
-                                "%s fType %r fId %r bad sequence begSeqIdL %r endSeqIdL %r tbegS %r tendS %r",
-                                dataContainer.getName(),
-                                fType,
-                                fId,
-                                begSeqIdL,
-                                endSeqIdL,
-                                tbegS,
-                                tendS,
+                                "%s fType %r fId %r bad sequence begSeqIdL %r endSeqIdL %r tbegS %r tendS %r", dataContainer.getName(), fType, fId, begSeqIdL, endSeqIdL, tbegS, tendS,
                             )
 
                     fMonomerCountD.setdefault(asymId, {}).setdefault(fType, []).append(monCount)

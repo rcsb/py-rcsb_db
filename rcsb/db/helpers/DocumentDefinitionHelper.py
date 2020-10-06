@@ -32,9 +32,9 @@ logger = logging.getLogger(__name__)
 
 
 class DocumentDefinitionHelper(object):
-    """ Inject additional configuration information into a document schema definition.
+    """Inject additional configuration information into a document schema definition.
 
-        Single source of document schema semantic configuration content.
+    Single source of document schema semantic configuration content.
     """
 
     def __init__(self, **kwargs):
@@ -62,8 +62,7 @@ class DocumentDefinitionHelper(object):
         # ----
 
     def getCollectionInfo(self, schemaName):
-        """ Returns a list of [{NAME: xx, VERSION: xxx}, ...] for the input schema.
-        """
+        """Returns a list of [{NAME: xx, VERSION: xxx}, ...] for the input schema."""
         cL = []
         try:
             cL = [td for td in self.__cfgD["document_collection_names"][schemaName]]
@@ -72,8 +71,7 @@ class DocumentDefinitionHelper(object):
         return cL
 
     def getCollectionVersion(self, schemaName, collectionName):
-        """ Return the version string for the the input schema/collection
-        """
+        """Return the version string for the the input schema/collection"""
         v = None
         try:
             for td in self.__cfgD["document_collection_names"][schemaName]:
@@ -84,9 +82,7 @@ class DocumentDefinitionHelper(object):
         return v
 
     def getExcluded(self, collectionName):
-        """  For input collection, return the list of excluded schema identifiers.
-
-        """
+        """For input collection, return the list of excluded schema identifiers."""
         includeL = []
         try:
             includeL = [tS.upper() for tS in self.__cfgD["document_collection_content_filters"][collectionName]["EXCLUDE"]]
@@ -95,9 +91,7 @@ class DocumentDefinitionHelper(object):
         return includeL
 
     def getIncluded(self, collectionName):
-        """  For input collection, return the list of included schema identifiers.
-
-        """
+        """For input collection, return the list of included schema identifiers."""
         excludeL = []
         try:
             excludeL = [tS.upper() for tS in self.__cfgD["document_collection_content_filters"][collectionName]["INCLUDE"]]
@@ -106,9 +100,7 @@ class DocumentDefinitionHelper(object):
         return excludeL
 
     def getSliceFilter(self, collectionName):
-        """  For input collection, return an optional slice filter or None.
-
-        """
+        """For input collection, return an optional slice filter or None."""
         sf = None
         try:
             sf = self.__cfgD["document_collection_content_filters"][collectionName]["SLICE"]
@@ -143,8 +135,7 @@ class DocumentDefinitionHelper(object):
         return ret
 
     def getDocumentReplaceAttributeNames(self, collectionName):
-        """ Return index labeled replace in provided or 'primary' otherwise
-        """
+        """Return index labeled replace in provided or 'primary' otherwise"""
         ret = []
         try:
             for dD in self.__cfgD["collection_indices"][collectionName]:
@@ -218,8 +209,8 @@ class DocumentDefinitionHelper(object):
         return ret
 
     def getRetainSingletonObjects(self, collectionName):
-        """ By default singleton objects are expanded in global scope.  To avoid
-            this behaviour set the retain singleton option for the collection.
+        """By default singleton objects are expanded in global scope.  To avoid
+        this behaviour set the retain singleton option for the collection.
         """
         ret = False
         try:
@@ -230,14 +221,14 @@ class DocumentDefinitionHelper(object):
 
     def getSuppressedCategoryRelationships(self, collectionName):
         """
-         Example:
+        Example:
 
-            collection_suppress_category_relationships:
-                ihm_dev:
-                    - PARENT_CATEGORY_NAME: chem_comp
-                      CHILD_CATEGORY_NAME: atom_site
-                    - PARENT_CATEGORY_NAME: entity_poly_seq
-                      CHILD_CATEGORY_NAME: atom_site
+           collection_suppress_category_relationships:
+               ihm_dev:
+                   - PARENT_CATEGORY_NAME: chem_comp
+                     CHILD_CATEGORY_NAME: atom_site
+                   - PARENT_CATEGORY_NAME: entity_poly_seq
+                     CHILD_CATEGORY_NAME: atom_site
         """
         rL = []
         try:
@@ -306,7 +297,7 @@ class DocumentDefinitionHelper(object):
         return stL
 
     def getAttributeSearchContexts(self, collectionName, categoryName, attributeName):
-        """ Return the list of search types assigned to the input collection/item.
+        """Return the list of search types assigned to the input collection/item.
 
         returns:
             list : [search type, ...]
@@ -324,7 +315,7 @@ class DocumentDefinitionHelper(object):
         return rL
 
     def getSearchContexts(self, categoryName, attributeName):
-        """ Return the list of search types and collections assigned to the input category/attribute
+        """Return the list of search types and collections assigned to the input category/attribute
 
         Returns:
             list : [(search type, collectionName),  ...]
@@ -339,7 +330,7 @@ class DocumentDefinitionHelper(object):
         return []
 
     def getAllAttributeSearchContexts(self):
-        """ Return search context data structure
+        """Return search context data structure
 
         Returns:
             dict - {(category,attribute): [contexts,,,]}
@@ -423,7 +414,19 @@ class DocumentDefinitionHelper(object):
                 "context_attributes": [
                     {
                         "context_value": 'vxxxxx',
-                        "search_paths": [ 'p1', 'p2', 'p3']
+                        "search_paths": [ 'p1', 'p2'],
+                        #
+                        # new in 2020-10-05
+                        "attributes": [
+                            {
+                                "path": 'p1',
+                                "examples": ['ex1', 'ex2']
+                            },
+                            {
+                                "path": 'p2',
+                                "examples": ['ex1', 'ex2']
+                            }
+                        ]
                     }
 
                 ]
@@ -440,8 +443,15 @@ class DocumentDefinitionHelper(object):
                     cVDL = []
                     if "CONTEXT_ATTRIBUTE_VALUES" in nD:
                         for tD in nD["CONTEXT_ATTRIBUTE_VALUES"]:
-                            if "CONTEXT_VALUE" in tD and "SEARCH_PATHS" in tD:
-                                cVDL.append({"CONTEXT_VALUE": tD["CONTEXT_VALUE"], "SEARCH_PATHS": tD["SEARCH_PATHS"]})
+                            # To be deprecated
+                            if "CONTEXT_VALUE" in tD and "SEARCH_PATHS" in tD and "ATTRIBUTES" not in tD:
+                                cVDL.append({"CONTEXT_VALUE": tD["CONTEXT_VALUE"], "SEARCH_PATHS": tD["SEARCH_PATHS"], "ATTRIBUTES": []})
+                            # Use this
+                            elif "CONTEXT_VALUE" in tD and "ATTRIBUTES" in tD:
+                                if "SEARCH_PATHS" in tD:
+                                    cVDL.append({"CONTEXT_VALUE": tD["CONTEXT_VALUE"], "SEARCH_PATHS": tD["SEARCH_PATHS"], "ATTRIBUTES": tD["ATTRIBUTES"]})
+                                else:
+                                    cVDL.append({"CONTEXT_VALUE": tD["CONTEXT_VALUE"], "SEARCH_PATHS": [], "ATTRIBUTES": tD["ATTRIBUTES"]})
 
                     if "CONTEXT_ATTRIBUTE_NAMES" in nD and "NAME" in nD:
                         catD[nD["CATEGORY"]] = {
@@ -540,8 +550,15 @@ class DocumentDefinitionHelper(object):
                 cVDL = []
                 if "CONTEXT_ATTRIBUTE_VALUES" in nD:
                     for tD in nD["CONTEXT_ATTRIBUTE_VALUES"]:
-                        if "CONTEXT_VALUE" in tD and "SEARCH_PATHS" in tD:
-                            cVDL.append({"CONTEXT_VALUE": tD["CONTEXT_VALUE"], "SEARCH_PATHS": tD["SEARCH_PATHS"]})
+                        # to be deprecated
+                        if "CONTEXT_VALUE" in tD and "SEARCH_PATHS" in tD and "ATTRIBUTES" not in tD:
+                            cVDL.append({"CONTEXT_VALUE": tD["CONTEXT_VALUE"], "SEARCH_PATHS": tD["SEARCH_PATHS"], "ATTRIBUTES": []})
+                        # Use this
+                        elif "CONTEXT_VALUE" in tD and "ATTRIBUTES" in tD:
+                            if "SEARCH_PATHS" in tD:
+                                cVDL.append({"CONTEXT_VALUE": tD["CONTEXT_VALUE"], "SEARCH_PATHS": tD["SEARCH_PATHS"], "ATTRIBUTES": tD["ATTRIBUTES"]})
+                            else:
+                                cVDL.append({"CONTEXT_VALUE": tD["CONTEXT_VALUE"], "SEARCH_PATHS": [], "ATTRIBUTES": tD["ATTRIBUTES"]})
                 #
                 if "CONTEXT_ATTRIBUTE_NAMES" in nD and "SUBCATEGORY" in nD:
                     subCatD[(nD["CATEGORY"], nD["SUBCATEGORY"])] = {

@@ -128,14 +128,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "mergeContentTypes": None,
                 "rejectLength": 2,
             },
-            {
-                "contentType": "pdbx_core",
-                "mockLength": self.__pdbxMockLen,
-                "filterType": self.__fTypeRow,
-                "styleType": "rowwise_by_name",
-                "mergeContentTypes": None,
-                "rejectLength": 5,
-            },
+            {"contentType": "pdbx_core", "mockLength": self.__pdbxMockLen, "filterType": self.__fTypeRow, "styleType": "rowwise_by_name", "mergeContentTypes": None, "rejectLength": 5,},
         ]
         #
         self.__fullTestCaseList = [
