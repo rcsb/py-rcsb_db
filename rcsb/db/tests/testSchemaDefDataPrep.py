@@ -128,7 +128,14 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "mergeContentTypes": None,
                 "rejectLength": 2,
             },
-            {"contentType": "pdbx_core", "mockLength": self.__pdbxMockLen, "filterType": self.__fTypeRow, "styleType": "rowwise_by_name", "mergeContentTypes": None, "rejectLength": 5,},
+            {
+                "contentType": "pdbx_core",
+                "mockLength": self.__pdbxMockLen,
+                "filterType": self.__fTypeRow,
+                "styleType": "rowwise_by_name",
+                "mergeContentTypes": None,
+                "rejectLength": 5,
+            },
         ]
         #
         self.__fullTestCaseList = [
@@ -203,7 +210,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             )
 
     def __simpleSchemaDataPrep(self, contentType, filterType, styleType, mockLength, rejectLength=0, dataSelectors=None, mergeContentTypes=None):
-        """ Internal method for preparing file-based data NOT requiring dynamic methods, slicing, or key injection.
+        """Internal method for preparing file-based data NOT requiring dynamic methods, slicing, or key injection.
 
         Args:
             contentType (str): Content type name
@@ -269,7 +276,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                     del doc[excl]
 
     def __fullSchemaDataPrep(self, contentType, filterType, styleType, mockLength, rejectLength=0, dataSelectors=None, mergeContentTypes=None, excludeExtras=None):
-        """ Internal method for preparing file-based data requiring dynamic methods, slicing, or key injection.
+        """Internal method for preparing file-based data requiring dynamic methods, slicing, or key injection.
 
         Args:
             contentType (str): Content type name
