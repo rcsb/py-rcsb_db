@@ -48,7 +48,7 @@ site_info_configuration:
   #
   RCSB_EDMAP_LIST_PATH: MOCK_EXCHANGE_SANDBOX/status/edmaps.json
   #
-  RCSB_SEQUENCE_CLUSTER_DATA_PATH: cluster_data/mmseqs-20180608
+  RCSB_SEQUENCE_CLUSTER_DATA_PATH: cluster_data/mmseqs_clusters_current
   SIFTS_SUMMARY_DATA_PATH: sifts-summary
   # -------------------------------------------------------------------------------------------
   #   -- Below are common across current deployments -

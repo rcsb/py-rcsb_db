@@ -267,3 +267,4 @@
  10-Sep-2020  V1.634 Trap missing data type exception in schema construction
  24-Sep-2020  V1.635 Use alternative mapping from pdbx_poly_seq_scheme
   1-Oct-2020  V1.636 Change handling of chemical component synonyms
+  7-Oct-2020  V1.637 Update sequence cluster data and config path
