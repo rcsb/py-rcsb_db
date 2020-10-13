@@ -133,12 +133,13 @@ site_info_remote_configuration:
   _MONGO_DB_PASSWORD: ""
   MONGO_DB_ADMIN_DB_NAME: admin
   #
-  #  Old Mongo-v4 clusters
-  # MONGO_DB_HOST: 128.6.244.57
-  # MONGO_DB_HOST: 132.249.213.189
+  #  Channel B
+  # MONGO_DB_HOST: 128.6.244.74
+  #  Channel A
+  # MONGO_DB_HOST: 128.6.244.215
   # MONGO_DB_PORT: '27017'
-  #_MONGO_DB_USER_NAME: VT07dR5TeajhsXUNzAZnhAHc/qaCZkbwlfwMKVmd+OHwvYMACcrB+25jY1IOClrZ
-  #_MONGO_DB_PASSWORD: Mr3LslVzCkbErV3+5a3snm2RBaTrZo/Xi219hjSnwBxxHHHG6V36a6igSJSrmFTd0yQ=
+  #_MONGO_DB_USER_NAME: vknsNHfQ1nyy5w1vsfP4fbOp1iPxD3K5yZmNFsJDqTRl+87zicTLa9lkHG5uReM=
+  #_MONGO_DB_PASSWORD: wfm/FNyhON/AGaJfLhL5ZA0ObAVU0DZ0sICB2eemS8GFfAOZvo3Y/vXTkjLayViwppj2MQ==
   #
   #
   MYSQL_DB_HOST_NAME: localhost

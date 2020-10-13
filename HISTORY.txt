@@ -269,3 +269,4 @@
   1-Oct-2020  V1.636 Change handling of chemical component synonyms
   7-Oct-2020  V1.637 Update sequence cluster data and config path
  12-Oct-2020  V1.638 Update modeled residue counts and add option to use selective internal enumerations.
+ 13-Oct-2020  V1.639 Update example data and configuration
