@@ -59,9 +59,11 @@ class ContentDefinition(object):
         iQueryStrings = []
         unitCardinalityList = []
         dataSelectFilterD = OrderedDict()
+
         itemTransformD = OrderedDict()
         self.__categoryContentClasses = OrderedDict()
         self.__attributeContentClasses = OrderedDict()
+        self.__intEnumD = OrderedDict()
         iterableD = OrderedDict()
         #
         self.__categoryList = sorted(self.__dApi.getCategoryList())
