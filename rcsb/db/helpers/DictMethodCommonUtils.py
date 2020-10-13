@@ -975,10 +975,12 @@ class DictMethodCommonUtils(object):
                         entityTypeUniqueIds.setdefault(entityTypeD[eId], {}).setdefault(eId, {"asymIds": tAsymIdL, "authAsymIds": tAuthAsymIdL, "ccIds": tCcIdL})
                 # ---
                 aSeqD = {}
+                aOrgSeqD = {}
                 for ii in range(psObj.getRowCount()):
                     asymId = psObj.getValue("asym_id", ii)
                     # authSeqId = psObj.getValue("auth_seq_num", ii)
                     authSeqId = psObj.getValue("pdb_seq_num", ii)
+                    authOrgSeqId = psObj.getValue("auth_seq_num", ii)
                     seqId = psObj.getValue("seq_id", ii)
                     compId = psObj.getValue("mon_id", ii)
                     entityId = psObj.getValue("entity_id", ii)
@@ -986,6 +988,7 @@ class DictMethodCommonUtils(object):
                     #
                     insCode = psObj.getValueOrDefault("pdb_ins_code", ii, defaultValue=None)
                     aSeqD.setdefault(asymId, []).append(authSeqId)
+                    aOrgSeqD.setdefault(asymId, []).append(authOrgSeqId)
                     # ---
                     tC = authSeqId
                     if authSeqId not in [".", "?"]:
@@ -1025,7 +1028,8 @@ class DictMethodCommonUtils(object):
 
                 #
                 #  Get the modeled and unmodeled monomer counts by asymId
-                for asymId, sL in aSeqD.items():
+                #  JDW not use aOrgSeqD.items()
+                for asymId, sL in aOrgSeqD.items():
                     instancePolymerModeledMonomerCountD[asymId] = len([t for t in sL if t not in ["?", "."]])
                     instancePolymerUnmodeledMonomerCountD[asymId] = len([t for t in sL if t in ["?", "."]])
                 #  Get polymer range details for each polymer instance
@@ -3638,7 +3642,14 @@ class DictMethodCommonUtils(object):
                         zVal = vObj.getValueOrDefault("Z", ii, defaultValue=None)
                         tS = "%s-%s dist=%s Z=%s" % (atomI, atomJ, obsDist, zVal)
                         #
-                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "BOND_OUTLIER", tS,))
+                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(
+                            OutlierValue(
+                                compId,
+                                int(seqId),
+                                "BOND_OUTLIER",
+                                tS,
+                            )
+                        )
                 #
                 logger.debug("length instanceModelOutlierD %d", len(instanceModelOutlierD))
             # ----
@@ -3660,7 +3671,14 @@ class DictMethodCommonUtils(object):
                         zVal = vObj.getValueOrDefault("Z", ii, defaultValue=None)
                         tS = "%s-%s-%s angle=%s Z=%s" % (atomI, atomJ, atomK, obsDist, zVal)
                         #
-                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "ANGLE_OUTLIER", tS,))
+                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(
+                            OutlierValue(
+                                compId,
+                                int(seqId),
+                                "ANGLE_OUTLIER",
+                                tS,
+                            )
+                        )
                 #
                 logger.debug("length instanceModelOutlierD %d", len(instanceModelOutlierD))
             # ----
@@ -3682,9 +3700,18 @@ class DictMethodCommonUtils(object):
                     tS = "%s angle=%s Z=%s" % (atoms, obsDist, zVal)
                     # OutlierValue = collections.namedtuple("OutlierValue", "compId, seqId, outlierType, description, reported, reference, uncertaintyValue, uncertaintyType")
                     if seqId:
-                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "MOGUL_BOND_OUTLIER", tS,))
+                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(
+                            OutlierValue(
+                                compId,
+                                int(seqId),
+                                "MOGUL_BOND_OUTLIER",
+                                tS,
+                            )
+                        )
                     else:
-                        instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(OutlierValue(compId, None, "MOGUL_BOND_OUTLIER", tS, obsDist, meanValue, zVal, "Z-Score"))
+                        instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(
+                            OutlierValue(compId, None, "MOGUL_BOND_OUTLIER", tS, obsDist, meanValue, zVal, "Z-Score")
+                        )
                 #
                 logger.debug("length instanceModelOutlierD %d", len(instanceModelOutlierD))
 
@@ -3705,9 +3732,18 @@ class DictMethodCommonUtils(object):
                     zVal = vObj.getValueOrDefault("Zscore", ii, defaultValue=None)
                     tS = "%s angle=%s Z=%s" % (atoms, obsDist, zVal)
                     if seqId:
-                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "MOGUL_ANGLE_OUTLIER", tS,))
+                        instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(
+                            OutlierValue(
+                                compId,
+                                int(seqId),
+                                "MOGUL_ANGLE_OUTLIER",
+                                tS,
+                            )
+                        )
                     else:
-                        instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(OutlierValue(compId, None, "MOGUL_ANGLE_OUTLIER", tS, obsDist, meanValue, zVal, "Z-Score"))
+                        instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(
+                            OutlierValue(compId, None, "MOGUL_ANGLE_OUTLIER", tS, obsDist, meanValue, zVal, "Z-Score")
+                        )
                 logger.debug("length instanceModelOutlierD %d", len(instanceModelOutlierD))
                 #
                 #
@@ -3731,15 +3767,43 @@ class DictMethodCommonUtils(object):
                     #
                     if seqId:
                         if rotamerClass and rotamerClass.upper() == "OUTLIER":
-                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "ROTAMER_OUTLIER", None,))
+                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(
+                                OutlierValue(
+                                    compId,
+                                    int(seqId),
+                                    "ROTAMER_OUTLIER",
+                                    None,
+                                )
+                            )
                         if ramaClass and ramaClass.upper() == "OUTLIER":
-                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "RAMACHANDRAN_OUTLIER", None,))
+                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(
+                                OutlierValue(
+                                    compId,
+                                    int(seqId),
+                                    "RAMACHANDRAN_OUTLIER",
+                                    None,
+                                )
+                            )
                         if rsrZ and float(rsrZ) > 2.0:
                             tS = "%s > 2.0" % rsrZ
-                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "RSRZ_OUTLIER", tS,))
+                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(
+                                OutlierValue(
+                                    compId,
+                                    int(seqId),
+                                    "RSRZ_OUTLIER",
+                                    tS,
+                                )
+                            )
                         if rsrCc and float(rsrCc) < 0.650:
                             tS = "RSRCC < 0.65"
-                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(OutlierValue(compId, int(seqId), "RSRCC_OUTLIER", tS,))
+                            instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(
+                                OutlierValue(
+                                    compId,
+                                    int(seqId),
+                                    "RSRCC_OUTLIER",
+                                    tS,
+                                )
+                            )
                     else:
                         if rsrZ and float(rsrZ) > 2.0:
                             tS = "%s > 2.0" % rsrZ

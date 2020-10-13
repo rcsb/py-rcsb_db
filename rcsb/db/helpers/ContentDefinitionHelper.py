@@ -50,9 +50,7 @@ logger = logging.getLogger(__name__)
 
 
 class ContentDefinitionHelper(object):
-    """ Supplements dictionary information with configuration as required for schema production.
-
-    """
+    """Supplements dictionary information with configuration as required for schema production."""
 
     #
     __rE0 = re.compile("(database|cell|order|partition|group)$", flags=re.IGNORECASE)
@@ -154,9 +152,9 @@ class ContentDefinitionHelper(object):
         return itD
 
     def getTransformItems(self, transformName):
-        """ Return the list of items subject to the input attribute filter.
+        """Return the list of items subject to the input attribute filter.
 
-            _itemTransformers{<filterName> : [{'CATEGORY_NAME':..., 'ATTRIBUTE_NAME': ... },{}]
+        _itemTransformers{<filterName> : [{'CATEGORY_NAME':..., 'ATTRIBUTE_NAME': ... },{}]
         """
         try:
             return self.__cfgD["item_transformers"][transformName]
@@ -164,16 +162,14 @@ class ContentDefinitionHelper(object):
             return []
 
     def getItemTransforms(self, categoryName, attributeName):
-        """ Return the list of transforms to be applied to the input item (categoryName, attributeName).
-        """
+        """Return the list of transforms to be applied to the input item (categoryName, attributeName)."""
         try:
             return self.__itD[(categoryName, attributeName)]
         except Exception:
             return []
 
     def getItemTransformD(self):
-        """ Return the dictionary of transforms to be applied to the input item (categoryName, attributeName).
-        """
+        """Return the dictionary of transforms to be applied to the input item (categoryName, attributeName)."""
         try:
             return self.__itD
         except Exception:
@@ -183,9 +179,9 @@ class ContentDefinitionHelper(object):
         return self.__cfgD["cardinality_category_extras"]
 
     def getCardinalityKeyItem(self, databaseName):
-        """ Identify the parent item for the dictionary subset that can be used to
-            identify child categories with unity cardinality.   That is, logically containing
-            a single data row in any instance.
+        """Identify the parent item for the dictionary subset that can be used to
+        identify child categories with unity cardinality.   That is, logically containing
+        a single data row in any instance.
 
         """
         try:
@@ -194,10 +190,18 @@ class ContentDefinitionHelper(object):
             pass
         return {"CATEGORY_NAME": None, "ATTRIBUTE_NAME": None}
 
-    def getTypeCodes(self, kind):
-        """ Get the list of CIF type codes of a particular kind.
+    def getInternalEnumItems(self, databaseName):
+        """Return the list of items in the input database that should use internal enumerations."""
+        try:
+            return self.__cfgD["internal_enumeration_items"][databaseName]
+        except Exception:
+            pass
+        return []
 
-           returns (dict) [{'TYPE_CODE': <type> ... other feature of the type}]
+    def getTypeCodes(self, kind):
+        """Get the list of CIF type codes of a particular kind.
+
+        returns (dict) [{'TYPE_CODE': <type> ... other feature of the type}]
         """
         try:
             return self.__cfgD["type_code_classes"][kind]
@@ -214,8 +218,8 @@ class ContentDefinitionHelper(object):
         return []
 
     def getSelectionFilter(self, databaseName, kind):
-        """  Interim api for selection filters defined in terms of dictionary category and attributes name and their values.
-             JDW Warning -- check for yaml artifacts
+        """Interim api for selection filters defined in terms of dictionary category and attributes name and their values.
+        JDW Warning -- check for yaml artifacts
         """
         try:
             return self.__cfgD["selection_filters"][(kind, databaseName)]
@@ -224,9 +228,7 @@ class ContentDefinitionHelper(object):
         return []
 
     def getDatabaseSelectionFilters(self, databaseName):
-        """  Interim api for selection filters for a particular dictionary subset.
-
-        """
+        """Interim api for selection filters for a particular dictionary subset."""
         try:
             vD = OrderedDict()
             tD = {kind: v for (kind, dS), v in self.__cfgD["selection_filters"].items() if dS == databaseName}
@@ -241,9 +243,7 @@ class ContentDefinitionHelper(object):
         return {}
 
     def getContentClass(self, databaseName, kind):
-        """  Interim api for special category classes.
-
-        """
+        """Interim api for special category classes."""
         try:
             return self.__cfgD["special_content"][(kind, databaseName)]
         except Exception:
@@ -251,9 +251,7 @@ class ContentDefinitionHelper(object):
         return []
 
     def getDatabaseContentClass(self, databaseName):
-        """  Interim api for special category classes.
-
-        """
+        """Interim api for special category classes."""
         try:
             return {kind: v for (kind, dS), v in self.__cfgD["special_content"].items() if dS == databaseName}
         except Exception:
@@ -261,9 +259,7 @@ class ContentDefinitionHelper(object):
         return {}
 
     def getSliceParentItems(self, databaseName, kind):
-        """  Interim api for slice parent itens defined in terms of dictionary category and attributes name and their values.
-
-        """
+        """Interim api for slice parent itens defined in terms of dictionary category and attributes name and their values."""
         try:
             return self.__cfgD["slice_parent_items"][(kind, databaseName)]
         except Exception:
@@ -271,9 +267,7 @@ class ContentDefinitionHelper(object):
         return []
 
     def getDatabaseSliceParents(self, databaseName):
-        """  Interim api for slice parent items for a particular dictionary subset.
-
-        """
+        """Interim api for slice parent items for a particular dictionary subset."""
         try:
             return {kind: v for (kind, dS), v in self.__cfgD["slice_parent_items"].items() if dS == databaseName}
         except Exception:
@@ -281,9 +275,7 @@ class ContentDefinitionHelper(object):
         return {}
 
     def getSliceParentFilters(self, databaseName, kind):
-        """  Interim api for slice parent condition filters defined in terms of dictionary category and attributes name and their values.
-
-        """
+        """Interim api for slice parent condition filters defined in terms of dictionary category and attributes name and their values."""
         try:
             return self.__cfgD["slice_parent_filters"][(kind, databaseName)]
         except Exception:
@@ -291,9 +283,7 @@ class ContentDefinitionHelper(object):
         return []
 
     def getDatabaseSliceParentFilters(self, databaseName):
-        """  Interim api for slice parent condition filters for a particular dictionary subset.
-
-        """
+        """Interim api for slice parent condition filters for a particular dictionary subset."""
         try:
             return {kind: v for (kind, dS), v in self.__cfgD["slice_parent_filters"].items() if dS == databaseName}
         except Exception:
@@ -321,13 +311,11 @@ class ContentDefinitionHelper(object):
             return self.__convertNameDefault
 
     def __convertNamePunc(self, name):
-        """ Default schema name converter -
-        """
+        """Default schema name converter -"""
         return ContentDefinitionHelper.__rE1.sub("_", ContentDefinitionHelper.__rE2.sub("", name))
 
     def __convertNameDefault(self, name):
-        """ Default schema name converter -
-        """
+        """Default schema name converter -"""
         if ContentDefinitionHelper.__rE0.match(name) or name[0].isdigit():
             name = "the_" + name
         return ContentDefinitionHelper.__rE1.sub("_", ContentDefinitionHelper.__rE2.sub("", name))
@@ -341,9 +329,7 @@ class ContentDefinitionHelper(object):
     #    return cls.__re1.sub('_', cls.__re2.sub('', name))
 
     def getExcluded(self, schemaName):
-        """  For input schema definition, return the list of excluded schema identifiers.
-
-        """
+        """For input schema definition, return the list of excluded schema identifiers."""
         includeL = []
         try:
             includeL = [tS.upper() for tS in self.__cfgD["schema_content_filters"][schemaName]["EXCLUDE"]]
@@ -360,9 +346,7 @@ class ContentDefinitionHelper(object):
         return atExcludeD
 
     def getIncluded(self, schemaName):
-        """  For input schema definition, return the list of included schema identifiers.
-
-        """
+        """For input schema definition, return the list of included schema identifiers."""
         excludeL = []
         try:
             excludeL = [tS.upper() for tS in self.__cfgD["schema_content_filters"][schemaName]["INCLUDE"]]

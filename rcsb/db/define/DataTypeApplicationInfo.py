@@ -81,6 +81,7 @@ class DataTypeApplicationInfo(object):
         "citation_doi",
         "exp_data_doi",
         "asym_id",
+        "pdbx_PDB_obsoleted_db_id",
         "",
     ]
     # These are generic types -
@@ -116,6 +117,7 @@ class DataTypeApplicationInfo(object):
         "char",
         "int",
         "int",
+        "char",
         "char",
         "char",
         "char",
@@ -177,6 +179,7 @@ class DataTypeApplicationInfo(object):
         "20",
         "20",
         "20",
+        "20",
         "",
     ]
 
@@ -188,6 +191,7 @@ class DataTypeApplicationInfo(object):
         "0",
         "0",
         "6",
+        "0",
         "0",
         "0",
         "0",
@@ -297,8 +301,7 @@ class DataTypeApplicationInfo(object):
         return {}
 
     def updateCharType(self, isKey, appType, dataWidth, defaultWidth, bufferPercent=30.0, minWidth=10):
-        """ Skeleton implementation needs to add bracket typing around [80, 256, 1024, 2048, ... ]
-        """
+        """Skeleton implementation needs to add bracket typing around [80, 256, 1024, 2048, ... ]"""
         retDataWidth = defaultWidth
         retDataType = appType
         iWidth = dataWidth + int(bufferPercent * 0.01 * dataWidth)
@@ -314,48 +317,44 @@ class DataTypeApplicationInfo(object):
         return (retDataType, retDataWidth)
 
     def hasType(self, cifType):
-        """
-        """
+        """"""
         try:
             return cifType in self.__dtmD
         except Exception:
             return False
 
     def getAppTypeName(self, cifType, default=None):
-        """
-        """
+        """"""
         try:
             return self.__dtmD[cifType]["app_type_code"]
         except Exception:
             return default
 
     def getAppTypeDefaultWidth(self, cifType, default=None):
-        """
-        """
+        """"""
         try:
             return self.__dtmD[cifType]["app_width_default"]
         except Exception:
             return default
 
     def getAppTypeDefaultPrecision(self, cifType, default=None):
-        """
-        """
+        """"""
         try:
             return self.__dtmD[cifType]["app_precision_default"]
         except Exception:
             return default
 
     def writeDefaultDataTypeMap(self, outPath, dataTyping="ANY"):
-        """ Write data file containing application default dictionary to application data type mapping
+        """Write data file containing application default dictionary to application data type mapping
 
-                  data_rcsb_data_type_map
-                    loop_
-                    _pdbx_data_type_application_map.application_name
-                    _pdbx_data_type_application_map.type_code
-                    _pdbx_data_type_application_map.app_type_code
-                    _pdbx_data_type_application_map.app_precision_default
-                    _pdbx_data_type_application_map.app_width_default
-                    # .... type mapping data ...
+        data_rcsb_data_type_map
+          loop_
+          _pdbx_data_type_application_map.application_name
+          _pdbx_data_type_application_map.type_code
+          _pdbx_data_type_application_map.app_type_code
+          _pdbx_data_type_application_map.app_precision_default
+          _pdbx_data_type_application_map.app_width_default
+          # .... type mapping data ...
         """
         try:
             #
@@ -385,19 +384,19 @@ class DataTypeApplicationInfo(object):
         return False
 
     def updateDefaultDataTypeMap(self, filePath, mapD, dataTyping="ANY"):
-        """ Update data file containing application default data type mapping with any
-            updates from the input type mapping dictionary
+        """Update data file containing application default data type mapping with any
+         updates from the input type mapping dictionary
 
-           mapD['cif_type_code'] -> ['application_name', 'app_type_code', 'app_precision_default', 'app_width_default', 'type_code']
+        mapD['cif_type_code'] -> ['application_name', 'app_type_code', 'app_precision_default', 'app_width_default', 'type_code']
 
-                  data_rcsb_data_type_map
-                    loop_
-                    _pdbx_data_type_application_map.application_name
-                    _pdbx_data_type_application_map.type_code
-                    _pdbx_data_type_application_map.app_type_code
-                    _pdbx_data_type_application_map.app_precision_default
-                    _pdbx_data_type_application_map.app_width_default
-                    # .... type mapping data ...
+               data_rcsb_data_type_map
+                 loop_
+                 _pdbx_data_type_application_map.application_name
+                 _pdbx_data_type_application_map.type_code
+                 _pdbx_data_type_application_map.app_type_code
+                 _pdbx_data_type_application_map.app_precision_default
+                 _pdbx_data_type_application_map.app_width_default
+                 # .... type mapping data ...
         """
         try:
             #
@@ -430,19 +429,19 @@ class DataTypeApplicationInfo(object):
         return False
 
     def readDefaultDataTypeMap(self, locator, dataTyping="ANY"):
-        """ Read data file containing application default data type mapping
+        """Read data file containing application default data type mapping
 
-                  data_rcsb_data_type_map
-                    loop_
-                    _pdbx_data_type_application_map.application_name
-                    _pdbx_data_type_application_map.type_code
-                    _pdbx_data_type_application_map.app_type_code
-                    _pdbx_data_type_application_map.app_precision_default
-                    _pdbx_data_type_application_map.app_width_default
-                    # .... type mapping data ...
+              data_rcsb_data_type_map
+                loop_
+                _pdbx_data_type_application_map.application_name
+                _pdbx_data_type_application_map.type_code
+                _pdbx_data_type_application_map.app_type_code
+                _pdbx_data_type_application_map.app_precision_default
+                _pdbx_data_type_application_map.app_width_default
+                # .... type mapping data ...
 
-            Return (dict):  map[cifType] -> appType, width, precision
-                        mapD['cif_type_code'] -> ['application_name', 'app_type_code', 'app_precision_default', 'app_width_default', 'type_code']
+        Return (dict):  map[cifType] -> appType, width, precision
+                    mapD['cif_type_code'] -> ['application_name', 'app_type_code', 'app_precision_default', 'app_width_default', 'type_code']
         """
         try:
             #

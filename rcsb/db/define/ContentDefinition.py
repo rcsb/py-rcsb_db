@@ -37,9 +37,7 @@ logger = logging.getLogger(__name__)
 
 
 class ContentDefinition(object):
-    """ Assemble configuration and dictionary metadata required to build/load database schema definitions ...
-
-    """
+    """Assemble configuration and dictionary metadata required to build/load database schema definitions ..."""
 
     def __init__(self, dictApi, contentDefHelper=None, databaseName=None, **kwargs):
         """
@@ -79,6 +77,9 @@ class ContentDefinition(object):
         logger.debug("Primary key replacement category index: %r", self.__keyReplaceCategoryD)
         #
         if contentDefHelper and databaseName:
+            self.__intEnumD = {(tD["CATEGORY_NAME"], tD["ATTRIBUTE_NAME"]): True for tD in contentDefHelper.getInternalEnumItems(databaseName)}
+            logger.debug("Internal enum items %r", self.__intEnumD)
+            #
             cardD = contentDefHelper.getCardinalityKeyItem(databaseName)
             logger.debug("Cardinality attribute %r", cardD.items())
             #
@@ -182,12 +183,12 @@ class ContentDefinition(object):
         return {}
 
     def __getContentClasses(self, catName, atName=None, wildCardAtName="__all__"):
-        """ Return a list of contexts for input categpry and optional attribute.
+        """Return a list of contexts for input categpry and optional attribute.
 
-            Handle the special case of unspecified attributes interpreted as wildcard.
+        Handle the special case of unspecified attributes interpreted as wildcard.
 
-            Return:
-              contextList (list): list of context names
+        Return:
+          contextList (list): list of context names
         """
         cL = []
         try:
@@ -203,8 +204,8 @@ class ContentDefinition(object):
         return cL
 
     def __getSliceChildren(self, sliceParentD):
-        """ Internal method to build data structure containing the parent-child relationships for the
-            input slice parent construction.
+        """Internal method to build data structure containing the parent-child relationships for the
+        input slice parent construction.
 
         """
         retD = OrderedDict()
@@ -294,13 +295,13 @@ class ContentDefinition(object):
 
     def getSelectionFilters(self):
         """
-            Returns:  relevant data selection filters for in a dictionary by filter name.
+        Returns:  relevant data selection filters for in a dictionary by filter name.
         """
         return self.__dataSelectFilterD
 
     def getCategories(self):
         """
-            Returns:  list of dictionary categories
+        Returns:  list of dictionary categories
         """
         #
         return self.__categoryList
@@ -311,7 +312,7 @@ class ContentDefinition(object):
     def getCategoryAttributes(self, catName):
         """
 
-           Returns: list of attributes in the input category
+        Returns: list of attributes in the input category
         """
         return self.__categorySchema[catName]
 
@@ -505,7 +506,12 @@ class ContentDefinition(object):
             #
             fD["METHODS"] = methodD[(catName, atName)] if (catName, atName) in methodD else []
             fD["CONTENT_CLASSES"] = self.__getContentClasses(catName, atName)
-            fD["ENUMS"] = sorted(self.__assignEnumTypes(self.__dApi.getEnumList(catName, atName), pType))
+            if (catName, atName) in self.__intEnumD:
+                fD["ENUMS"] = sorted(self.__assignEnumTypes(self.__dApi.getEnumListPdbx(catName, atName), pType))
+                logger.debug("Using internal enums for %s %s %d", catName, atName, len(fD["ENUMS"]))
+            else:
+                fD["ENUMS"] = sorted(self.__assignEnumTypes(self.__dApi.getEnumList(catName, atName), pType))
+            #
             enumTupList = self.__dApi.getEnumListAltWithFullDetails(catName, atName)
             #
             if self.__hasEnumDetails(enumTupList):
@@ -587,11 +593,11 @@ class ContentDefinition(object):
         return cD
 
     def __getUnitCardinalityCategories(self, parentDList):
-        """ Assign categories with unit cardinality relative to the input list of parent key items.
+        """Assign categories with unit cardinality relative to the input list of parent key items.
 
-            parentDList (dict):  [{'CATEGORY_NAME':xxx 'ATTRIBUTE_NAME': xxxx}]
+        parentDList (dict):  [{'CATEGORY_NAME':xxx 'ATTRIBUTE_NAME': xxxx}]
 
-            Return: category name list
+        Return: category name list
         """
         numParents = len(parentDList)
         logger.debug("Parent slice count %d def %r", numParents, parentDList)
@@ -631,8 +637,7 @@ class ContentDefinition(object):
         return sorted(keyItems)
 
     def __indexContexts(self, dictSchema):
-        """  Extract the category an item level dictionary contexts.
-        """
+        """Extract the category an item level dictionary contexts."""
         catIndex = {}
         atIndex = {}
         for catName in dictSchema:
