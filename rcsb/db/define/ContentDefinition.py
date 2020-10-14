@@ -382,6 +382,65 @@ class ContentDefinition(object):
         else:
             return enumList
 
+    def __assignExampleTypes(self, catName, atName, examList, pT):
+
+        try:
+            rL = []
+            if examList:
+                if pT != "numb":
+                    return examList
+                else:
+                    isFloat = False
+                    for enum in examList:
+                        if "." in enum:
+                            isFloat = True
+                            break
+                    if isFloat:
+                        # a rare case
+                        rL = [float(enum) for enum in examList]
+                    else:
+                        rL = [int(enum) for enum in examList]
+                    return rL
+
+            else:
+                return examList
+        except Exception:
+            logger.exception("catName %r atName %r primitive %r failing for examList %r", catName, atName, pT, examList)
+        return examList
+
+    def __assignExampleTupTypes(self, catName, atName, examTupList, pT):
+        try:
+            rL = []
+            if examTupList:
+                if pT != "numb":
+                    for exam, detail in examTupList:
+                        exam = str(exam).strip() if exam else exam
+                        detail = str(detail).strip() if detail else detail
+                        rL.append((exam, detail))
+                    return rL
+                else:
+                    isFloat = False
+                    for exam, _ in examTupList:
+                        if "." in exam:
+                            isFloat = True
+                            break
+                    if isFloat:
+                        for exam, detail in examTupList:
+                            try:
+                                if isFloat:
+                                    rL.append((float(exam), detail))
+                                else:
+                                    rL.append((int(exam), detail))
+                            except Exception:
+                                pass
+                    return rL
+            else:
+                return examTupList
+        except Exception as e:
+            logger.exception("catName %r atName %r (%r) %r %s", catName, atName, pT, examTupList, str(e))
+        #
+        return examTupList
+
     def __assignEnumTupTypes(self, enumTupList, pT):
         rL = []
         if enumTupList:
@@ -511,10 +570,10 @@ class ContentDefinition(object):
             if (catName, atName) in self.__intEnumD:
                 fD["ENUMS"] = sorted(self.__assignEnumTypes(self.__dApi.getEnumListPdbx(catName, atName), pType))
                 logger.debug("Using internal enums for %s %s %d", catName, atName, len(fD["ENUMS"]))
+                enumTupList = self.__dApi.getEnumListAltWithFullDetails(catName, atName)
             else:
                 fD["ENUMS"] = sorted(self.__assignEnumTypes(self.__dApi.getEnumList(catName, atName), pType))
-            #
-            enumTupList = self.__dApi.getEnumListAltWithFullDetails(catName, atName)
+                enumTupList = self.__dApi.getEnumListWithFullDetails(catName, atName)
             #
             if self.__hasEnumDetails(enumTupList):
                 #
@@ -528,10 +587,10 @@ class ContentDefinition(object):
                     if eTup[3]:
                         teD["units"] = eTup[3]
                     fD["ENUMS_ANNOTATED"].append(teD)
-            #
-            fD["EXAMPLES"] = self.__dApi.getExampleListPdbx(catName, atName)
-            fD["EXAMPLES"].extend(self.__dApi.getExampleList(catName, atName))
-            #
+            # -----
+            fD["EXAMPLES"] = self.__assignExampleTupTypes(catName, atName, self.__dApi.getExampleListPdbx(catName, atName), pType)
+            fD["EXAMPLES"].extend(self.__assignExampleTupTypes(catName, atName, self.__dApi.getExampleList(catName, atName), pType))
+            # -----
             scL = []
             for scTup in self.__dApi.getItemSubCategoryList(catName, atName):
                 if scTup[1] is not None:

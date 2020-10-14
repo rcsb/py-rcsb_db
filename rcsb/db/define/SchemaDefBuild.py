@@ -65,7 +65,9 @@ class SchemaDefBuild(object):
         self.__cfgOb = cfgOb
         self.__databaseName = databaseName
         self.__cachePath = cachePath if cachePath else "."
-        self.__includeContentClasses = includeContentClasses if includeContentClasses else ["GENERATED_CONTENT", "EVOLVING_CONTENT", "CONSOLIDATED_BIRD_CONTENT", "INTEGRATED_CONTENT"]
+        self.__includeContentClasses = (
+            includeContentClasses if includeContentClasses else ["GENERATED_CONTENT", "EVOLVING_CONTENT", "CONSOLIDATED_BIRD_CONTENT", "INTEGRATED_CONTENT"]
+        )
         #
         self.__contentDefHelper = self.__cfgOb.getHelper("CONTENT_DEF_HELPER_MODULE", sectionName=configName, cfgOb=self.__cfgOb)
         self.__documentDefHelper = self.__cfgOb.getHelper("DOCUMENT_DEF_HELPER_MODULE", sectionName=configName, cfgOb=self.__cfgOb)
@@ -802,7 +804,9 @@ class SchemaDefBuild(object):
                                                 {"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"], "context_attributes": vvDL}
                                             ]
                                         else:
-                                            subCatPropD[subCategory]["rcsb_nested_indexing_context"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"]}]
+                                            subCatPropD[subCategory]["rcsb_nested_indexing_context"] = [
+                                                {"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"]}
+                                            ]
                                     else:
                                         subCatPropD[subCategory]["rcsb_nested_indexing"] = True
             #
@@ -1080,7 +1084,8 @@ class SchemaDefBuild(object):
             if dataTypingU not in ["BSON"]:
                 try:
                     if fD["EXAMPLES"]:
-                        atPropD["examples"] = [str(t1).strip() for t1, _ in fD["EXAMPLES"]]
+                        # atPropD["examples"] = [str(t1).strip() for t1, _ in fD["EXAMPLES"]]
+                        atPropD["examples"] = [t1 for t1, _ in fD["EXAMPLES"]]
                 except Exception as e:
                     logger.exception("Failing for %r with %s", fD["EXAMPLES"], str(e))
                 if fD["DESCRIPTION"]:
