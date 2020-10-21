@@ -910,15 +910,25 @@ class DictMethodChemRefHelper(object):
             if dbD:
                 dbMapD = dbD["id_map"]
                 #
-                if dbMapD and ccId in dbMapD and "aliases" in dbMapD[ccId]:
-                    iRow = wObj.getRowCount()
-                    for nm in dbMapD[ccId]["aliases"]:
-                        wObj.setValue(ccId, "comp_id", iRow)
-                        wObj.setValue(str(nm).strip(), "name", iRow)
-                        wObj.setValue(iRow + 1, "ordinal", iRow)
-                        wObj.setValue("DrugBank", "provenance_source", iRow)
-                        wObj.setValue("Synonym", "type", iRow)
-                        iRow += 1
+                if dbMapD and ccId in dbMapD:
+                    if "aliases" in dbMapD[ccId]:
+                        iRow = wObj.getRowCount()
+                        for nm in dbMapD[ccId]["aliases"]:
+                            wObj.setValue(ccId, "comp_id", iRow)
+                            wObj.setValue(str(nm).strip(), "name", iRow)
+                            wObj.setValue(iRow + 1, "ordinal", iRow)
+                            wObj.setValue("DrugBank", "provenance_source", iRow)
+                            wObj.setValue("Synonym", "type", iRow)
+                            iRow += 1
+                    if "brand_names" in dbMapD[ccId]:
+                        iRow = wObj.getRowCount()
+                        for nm in dbMapD[ccId]["brand_names"]:
+                            wObj.setValue(ccId, "comp_id", iRow)
+                            wObj.setValue(str(nm).strip(), "name", iRow)
+                            wObj.setValue(iRow + 1, "ordinal", iRow)
+                            wObj.setValue("DrugBank", "provenance_source", iRow)
+                            wObj.setValue("Brand Name", "type", iRow)
+                            iRow += 1
 
             return True
         except Exception as e:

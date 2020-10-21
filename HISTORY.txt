@@ -271,3 +271,4 @@
  12-Oct-2020  V1.638 Update modeled residue counts and add option to use selective internal enumerations.
  13-Oct-2020  V1.639 Update example data and configuration
  13-Oct-2020  V1.640 Cast examples in schema, adjust handling of internal enumeration fallbacks
+ 21-Oct-2020  V1.641 Add DrugBank brand names to rcsb_chem_comp_synonyms
