@@ -24,8 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class RepoHoldingsEtlWorker(object):
-    """ Prepare and load repository holdings and repository update data.
-    """
+    """Prepare and load repository holdings and repository update data."""
 
     def __init__(self, cfgOb, sandboxPath, cachePath, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False):
         self.__cfgOb = cfgOb
@@ -55,7 +54,7 @@ class RepoHoldingsEtlWorker(object):
         return False
 
     def load(self, updateId, loadType="full"):
-        """ Load legacy repository holdings and status data -
+        """Load legacy repository holdings and status data -
 
         Relevant configuration options:
 
@@ -116,7 +115,12 @@ class RepoHoldingsEtlWorker(object):
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_REMOVED", sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-
+            #
+            dList = rhdp.getHoldingsCombinedEntry(updateId=updateId)
+            collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_COMBINED", sectionName=sectionName)
+            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            #
             return True
         except Exception as e:
             logger.exception("Failing with %s", str(e))

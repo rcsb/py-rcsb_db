@@ -68,7 +68,7 @@ class RepoHoldingsLoaderTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testLoadHoldings(self):
-        """ Test case - load legacy repository holdings and status data -
+        """Test case - load legacy repository holdings and status data -
 
         [repository_holdings]
         DATABASE_NAME=repository_holdings
@@ -77,6 +77,7 @@ class RepoHoldingsLoaderTests(unittest.TestCase):
         COLLECTION_HOLDINGS_CURRENT=rcsb_repository_holdings_current_entry
         COLLECTION_HOLDINGS_UNRELEASED=rcsb_repository_holdings_unreleased_entry
         COLLECTION_HOLDINGS_REMOVED=rcsb_repository_holdings_removed_entry
+        COLLECTION_HOLDINGS_COMBINED=rcsb_repository_holdings_combined_entry
 
         """
         try:
@@ -122,6 +123,13 @@ class RepoHoldingsLoaderTests(unittest.TestCase):
             ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
             logger.info("Collection %r length %d load status %r", collectionName, len(dList), ok)
             self.assertTrue(ok)
+            #
+            dList = rhdp.getHoldingsCombinedEntry(updateId=self.__updateId)
+            collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_COMBINED", sectionName=sectionName)
+            ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            logger.info("Collection %r length %d load status %r", collectionName, len(dList), ok)
+            self.assertTrue(ok)
+            #
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()

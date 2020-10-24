@@ -81,6 +81,7 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
                 "repository_holdings_current_entry",
                 "repository_holdings_unreleased_entry",
                 "repository_holdings_removed_entry",
+                "repository_holdings_combined_entry",
             ],
             "entity_sequence_clusters": ["cluster_members", "cluster_provenance", "entity_members"],
         }
@@ -117,8 +118,7 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
         return eCount
 
     def __getRepositoryHoldingsDocuments(self, schemaName, collectionName, updateId):
-        """ Test loading and processing operations for legacy holdings and status data.
-        """
+        """Test loading and processing operations for legacy holdings and status data."""
         rL = []
         try:
             rhdp = RepoHoldingsDataPrep(cfgOb=self.__cfgOb, sandboxPath=self.__sandboxPath, workPath=self.__cachePath)
@@ -142,6 +142,10 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
                 if collectionName == "repository_holdings_removed":
                     self.assertGreaterEqual(len(rL), 10)
                     logger.debug("removed data length %r", len(rL))
+            elif collectionName == "repository_holdings_combined_entry":
+                rL = rhdp.getHoldingsCombinedEntry(updateId=updateId)
+                self.assertGreaterEqual(len(rL), 10)
+                logger.debug("holdings data length %r", len(rL))
 
             #
         except Exception as e:

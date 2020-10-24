@@ -21,6 +21,7 @@
 #  5-Feb-2020 jdw Drop superseded entries from the removed entry candidate list.
 #                 Avoid overlap between current and removed/unreleased entries.
 # 30-Apr-2020 jdw new NMR content types and support for config option RCSB_EDMAP_LIST_PATH
+# 23-Oct-2020 jdw add getHoldingsCombined()
 ##
 
 __docformat__ = "restructuredtext en"
@@ -39,10 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 class RepoHoldingsDataPrep(object):
-    """
-    Consolidate legacy data describing repository content updates and repository entry status.
-
-    """
+    """Consolidate legacy data describing repository content updates and repository entry status."""
 
     def __init__(self, **kwargs):
         self.__cfgOb = kwargs.get("cfgOb", None)
@@ -54,6 +52,66 @@ class RepoHoldingsDataPrep(object):
         self.__mU = MarshalUtil(workPath=self.__cachePath)
         self.__currentCacheD = None
         #
+
+    def getHoldingsCombinedEntry(self, updateId, dirPath=None):
+        dList = []
+        retD = self.__getHoldingsCombined(dirPath=dirPath)
+        for entryId, qD in retD.items():
+            tD = {"rcsb_id": entryId, "entry_id": entryId, "update_id": updateId}
+            rD = {
+                "rcsb_id": entryId,
+                "rcsb_repository_holdings_combined_entry_container_identifiers": tD,
+                "rcsb_repository_holdings_combined": qD,
+            }
+            dList.append(rD)
+        return dList
+
+    def __getHoldingsCombined(self, dirPath=None):
+        retD = {}
+        dirPath = dirPath if dirPath else self.__sandboxPath
+        currentD = self.__currentCacheD if self.__currentCacheD else self.__getHoldingsCurrent(dirPath=dirPath)
+        for entryId, tD in currentD.items():
+            retD[entryId] = {"status": "CURRENT", "status_code": "REL"}
+        logger.debug("Released entries %d", len(retD))
+        #
+        unRelD = self.__getHoldingsUnreleased(dirPath=dirPath)
+        # logger.info("@@@ unRelD %r", unRelD)
+        for entryId, tD in unRelD.items():
+            if entryId not in retD and tD["status_code"] in ["AUCO", "AUTH", "HOLD", "HPUB", "POLC", "PROC", "REFI", "REPL", "WAIT", "WDRN"]:
+                retD[entryId] = {"status": "UNRELEASED", "status_code": tD["status_code"]}
+        logger.debug("Released & unreleased entries %d", len(retD))
+        #
+        trfD, _ = self.__getHoldingsTransferred(dirPath=dirPath)
+        for entryId, tD in trfD.items():
+            if entryId not in retD and tD["status_code"] in ["TRSF"]:
+                retD[entryId] = {"status": "REMOVED", "status_code": tD["status_code"]}
+        #
+        logger.debug("Released & unreleased & transferred entries %d", len(retD))
+        #
+        rmvD, _, replacesD = self.__getHoldingsRemoved(dirPath=dirPath)
+        #
+        for entryId in rmvD:
+            if entryId not in retD:
+                retD[entryId] = {"status": "REMOVED", "status_code": "OBS"}
+        #
+        replacedByD = {}
+        for entryId, tD in replacesD.items():
+            for sId in tD["id_codes_superseded"]:
+                replacedByD[sId] = entryId
+        #
+        for entryId in rmvD:
+            if entryId in retD:
+                continue
+            tId = entryId
+            if tId in replacedByD:
+                while tId in replacedByD:
+                    tId = replacedByD[tId]
+                retD[entryId] = {"status": "REMOVED", "status_code": "OBS", "id_code_replaced_by_latest": tId}
+            else:
+                retD[entryId] = {"status": "REMOVED", "status_code": "OBS"}
+        #
+        logger.debug("Released & unreleased & transferred & removed entries %d", len(retD))
+        return retD
 
     def getHoldingsCurrentEntry(self, updateId, dirPath=None):
         dList = []
@@ -137,7 +195,7 @@ class RepoHoldingsDataPrep(object):
         return dList
 
     def __getHoldingsTransferred(self, dirPath=None):
-        """ Parse legacy lists defining the repository contents transferred to alternative repositories
+        """Parse legacy lists defining the repository contents transferred to alternative repositories
 
         Args:
             updateId (str): update identifier (e.g. 2018_32)
@@ -264,7 +322,7 @@ class RepoHoldingsDataPrep(object):
         return trsfD, insD
 
     def __getHoldingsUpdate(self, dirPath=None):
-        """ Parse legacy lists defining the contents of the repository update
+        """Parse legacy lists defining the contents of the repository update
 
         Args:
             updateId (str): update identifier (e.g. 2018_32)
@@ -311,7 +369,7 @@ class RepoHoldingsDataPrep(object):
         return retD
 
     def __getHoldingsCurrent(self, dirPath=None):
-        """ Parse legacy lists defining the current contents of the repository update
+        """Parse legacy lists defining the current contents of the repository update
 
         Args:
             updateId (str): update identifier (e.g. 2018_32)
@@ -456,7 +514,7 @@ class RepoHoldingsDataPrep(object):
         return retD
 
     def __getHoldingsUnreleased(self, dirPath=None):
-        """ Parse the legacy exchange status file containing details for unreleased entries:
+        """Parse the legacy exchange status file containing details for unreleased entries:
 
         Args:
             updateId (str): update identifier (e.g. 2018_32)
@@ -514,7 +572,7 @@ class RepoHoldingsDataPrep(object):
         return retD
 
     def __getHoldingsRemoved(self, dirPath=None):
-        """ Parse the legacy exchange file containing details of removed entries:
+        """Parse the legacy exchange file containing details of removed entries:
 
             {
                 "entryId": "125D",
@@ -594,7 +652,7 @@ class RepoHoldingsDataPrep(object):
         return rL1D, rL2D, rL3D
 
     def __getHoldingsPrerelease(self, dirPath=None):
-        """ Parse the legacy exchange status file containing prerelease sequence data.
+        """Parse the legacy exchange status file containing prerelease sequence data.
 
         Args:
             updateId (str): update identifier (e.g. 2018_32)

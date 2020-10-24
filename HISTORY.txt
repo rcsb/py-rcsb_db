@@ -272,3 +272,4 @@
  13-Oct-2020  V1.639 Update example data and configuration
  13-Oct-2020  V1.640 Cast examples in schema, adjust handling of internal enumeration fallbacks
  21-Oct-2020  V1.641 Add DrugBank brand names to rcsb_chem_comp_synonyms
+ 23-Oct-2020  V1.642 Add rcsb_repository_holdings_combined_entry collection
