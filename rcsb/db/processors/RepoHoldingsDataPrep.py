@@ -90,23 +90,26 @@ class RepoHoldingsDataPrep(object):
         #
         rmvD, _, replacesD = self.__getHoldingsRemoved(dirPath=dirPath)
         #
-        for entryId in rmvD:
-            if entryId not in retD:
-                retD[entryId] = {"status": "REMOVED", "status_code": "OBS"}
+        # for entryId in rmvD:
+        #    if entryId not in retD:
+        #        retD[entryId] = {"status": "REMOVED", "status_code": "OBS"}
         #
         replacedByD = {}
         for entryId, tD in replacesD.items():
             for sId in tD["id_codes_superseded"]:
-                replacedByD[sId] = entryId
+                replacedByD[sId.strip().upper()] = entryId.strip().upper()
         #
         for entryId in rmvD:
-            if entryId in retD:
+            if entryId in currentD:
                 continue
             tId = entryId
             if tId in replacedByD:
                 while tId in replacedByD:
                     tId = replacedByD[tId]
-                retD[entryId] = {"status": "REMOVED", "status_code": "OBS", "id_code_replaced_by_latest": tId}
+                if tId in currentD:
+                    retD[entryId] = {"status": "REMOVED", "status_code": "OBS", "id_code_replaced_by_latest": tId}
+                else:
+                    logger.debug("%r missing replacedby entry %r", entryId, tId)
             else:
                 retD[entryId] = {"status": "REMOVED", "status_code": "OBS"}
         #
@@ -241,7 +244,7 @@ class RepoHoldingsDataPrep(object):
                 entryId = str(fields[0]).strip().upper()
                 obsDateD[entryId] = dateutil.parser.parse(fields[2]) if self.__assignDates else fields[2]
                 if len(fields) > 3 and len(fields[3]) > 3:
-                    obsIdD[entryId] = fields[3]
+                    obsIdD[entryId] = str(fields[3]).strip().upper()
             logger.debug("Read %d obsolete insilico id codes", len(obsDateD))
             # ---------  ---------  ---------  ---------  ---------  ---------  ---------
             fp = os.path.join(dirPath, "status", "model-archive-PDB-insilico-mapping.list")
@@ -405,8 +408,8 @@ class RepoHoldingsDataPrep(object):
                     for entryId in entryIdL:
                         entryId = entryId.strip().upper()
                         if entryId not in tD:
-                            tD[entryId] = {}
-                        tD[entryId][contentNameD[contentType]] = True
+                            tD[entryId.upper()] = {}
+                        tD[entryId.upper()][contentNameD[contentType]] = True
             #
             fp = os.path.join(dirPath, "status", "biounit_file_list.tsv")
             lines = self.__mU.doImport(fp, "list")
@@ -416,8 +419,8 @@ class RepoHoldingsDataPrep(object):
                 entryId = fields[0].strip().upper()
                 assemId = fields[1].strip()
                 if entryId not in assemD:
-                    assemD[entryId] = []
-                assemD[entryId].append(assemId)
+                    assemD[entryId.upper()] = []
+                assemD[entryId.upper()].append(assemId)
             #
             #
             fp = os.path.join(dirPath, "status", "pdb_bundle_index_list.tsv")
@@ -466,7 +469,8 @@ class RepoHoldingsDataPrep(object):
             #
             # Revise content types bundles and assemblies
             #
-            for entryId, dD in tD.items():
+            for qId, dD in tD.items():
+                entryId = qId.strip().upper()
                 if entryId in obsD:
                     continue
                 rD[entryId] = []
@@ -620,7 +624,7 @@ class RepoHoldingsDataPrep(object):
                 rbL = dT["obsoletedBy"] if "obsoletedBy" in dT else []
                 d1 = {"title": dT["title"], "details": dT["details"], "audit_authors": dT["depositionAuthors"]}
                 if rbL:
-                    d1["id_codes_replaced_by"] = rbL
+                    d1["id_codes_replaced_by"] = [t.upper() for t in rbL]
                 if ctL:
                     d1["repository_content_types"] = ctL
 
@@ -642,7 +646,7 @@ class RepoHoldingsDataPrep(object):
                         sD[pdbId].append(dT["entryId"])
             #
             for pdbId in sD:
-                if len(sD[pdbId]) > 1:
+                if sD[pdbId]:
                     rL3D[pdbId] = {"id_codes_superseded": sD[pdbId]}
 
             logger.debug("Computed data lengths  %d %d %d", len(rL1D), len(rL2D), len(rL3D))
