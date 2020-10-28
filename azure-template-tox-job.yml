@@ -41,7 +41,7 @@ jobs:
       - bash: |
           set -e
           ls -la /Applications/Xcode*
-          sudo xcode-select --switch /Applications/Xcode_10.2.app/Contents/Developer
+          sudo xcode-select --switch /Applications/Xcode_12.2.app/Contents/Developer
           which g++
           c++ --version
         displayName: "setup Xcode"
@@ -56,6 +56,8 @@ jobs:
         displayName: 'Install bison'
       - script: which bison
         displayName: 'Check bison'
+      - script: brew install mariadb
+        displayName: 'Install mariadb'
     # ----------------------------------------------
     - ${{ if startsWith(parameters.os, 'linux') }}:
       - script: lsb_release -a
@@ -143,6 +145,11 @@ jobs:
       - script: |
           export CONFIG_SUPPORT_TOKEN_ENV=$(VAR_CONFIG_SUPPORT_TOKEN_ENV)
           ${{ format('python -m tox -e {0}', parameters.tox) }}
+        displayName: 'Running tox task'
+    - ${{ if and(not(startsWith(parameters.tox, 'py')), startsWith(parameters.python, '3.9')) }}:
+      - script: |
+          export CONFIG_SUPPORT_TOKEN_ENV=$(VAR_CONFIG_SUPPORT_TOKEN_ENV)
+          ${{ format('python -m tox -e {0}-py39', parameters.tox) }}
         displayName: 'Running tox task'
     - ${{ if and(not(startsWith(parameters.tox, 'py')), startsWith(parameters.python, '3.8')) }}:
       - script: |
