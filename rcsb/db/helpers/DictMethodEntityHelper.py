@@ -34,9 +34,7 @@ def cmpElements(lhs, rhs):
 
 
 class DictMethodEntityHelper(object):
-    """Helper class implements methods supporting entity-level item and category methods in the RCSB dictionary extension.
-
-    """
+    """Helper class implements methods supporting entity-level item and category methods in the RCSB dictionary extension."""
 
     def __init__(self, **kwargs):
         """
@@ -53,7 +51,9 @@ class DictMethodEntityHelper(object):
         self.__commonU = rP.getResource("DictMethodCommonUtils instance") if rP else None
         self.__dApi = rP.getResource("Dictionary API instance (pdbx_core)") if rP else None
         #
-        self.__useSiftsAlign = True
+        self.__useSiftsAlign = rP.getReferenceSequenceAlignmentOpt() == "SIFTS"
+        logger.info("SIFTS alignment option %r", self.__useSiftsAlign)
+        #
         self.__ssP = None
         if self.__useSiftsAlign:
             self.__ssP = rP.getResource("SiftsSummaryProvider instance") if rP else None
@@ -365,7 +365,7 @@ class DictMethodEntityHelper(object):
         return False
 
     def filterSourceOrganismDetails(self, dataContainer, catName, **kwargs):
-        """ Load new categories rcsb_entity_source_organism and rcsb_entity_host_organism
+        """Load new categories rcsb_entity_source_organism and rcsb_entity_host_organism
          and add related source flags in the entity category.
 
         Args:
@@ -666,7 +666,7 @@ class DictMethodEntityHelper(object):
         return False
 
     def __addEntityCompIds(self, dataContainer):
-        """ Add entity_id and BIRD codes to selected categories.
+        """Add entity_id and BIRD codes to selected categories.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -706,7 +706,7 @@ class DictMethodEntityHelper(object):
         return False
 
     def __addBirdEntityIds(self, dataContainer):
-        """ Add entity_id and BIRD codes to selected categories.
+        """Add entity_id and BIRD codes to selected categories.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -823,7 +823,7 @@ class DictMethodEntityHelper(object):
         return False
 
     def addStructRefSeqEntityIds(self, dataContainer, catName, **kwargs):
-        """ Add entity ids in categories struct_ref_seq and struct_ref_seq_dir instances.
+        """Add entity ids in categories struct_ref_seq and struct_ref_seq_dir instances.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -878,7 +878,7 @@ class DictMethodEntityHelper(object):
         return False
 
     def buildEntityPolyInfo(self, dataContainer, catName, **kwargs):
-        """ Build category rcsb_entity_poly_info and supplement category entity_poly.
+        """Build category rcsb_entity_poly_info and supplement category entity_poly.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -1021,7 +1021,7 @@ class DictMethodEntityHelper(object):
         return False
 
     def addEntityMisc(self, dataContainer, catName, atName, **kwargs):
-        """ Add consolidated enzyme classification macromolecule names to the entity category.
+        """Add consolidated enzyme classification macromolecule names to the entity category.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -1190,8 +1190,7 @@ class DictMethodEntityHelper(object):
         return False
 
     def __cleanupCsv(self, tL):
-        """ Ad hoc cleanup function for comma separated lists with embedded punctuation
-        """
+        """Ad hoc cleanup function for comma separated lists with embedded punctuation"""
         rL = []
         try:
             key_paths = functools.cmp_to_key(cmpElements)
@@ -1226,13 +1225,13 @@ class DictMethodEntityHelper(object):
         return atSL, atL
 
     def __normalizeCsvToList(self, entryId, colL, separator=","):
-        """ Normalize a row containing some character delimited fields.
+        """Normalize a row containing some character delimited fields.
 
-            Expand list of uneven lists into unifornm list of lists.
-            Only two list lengths are logically supported: 1 and second
-            maximum length.
+        Expand list of uneven lists into unifornm list of lists.
+        Only two list lengths are logically supported: 1 and second
+        maximum length.
 
-            returns: list of expanded rows or the original input.
+        returns: list of expanded rows or the original input.
 
         """
         tcL = []
@@ -1289,16 +1288,14 @@ class DictMethodEntityHelper(object):
         return rL
 
     def __stripWhiteSpace(self, val):
-        """ Remove all white space from the input value.
-
-        """
+        """Remove all white space from the input value."""
         if val is None:
             return val
         return self.__wsPattern.sub("", val)
 
     #
     def __getTargetComponentFeatures(self, dataContainer):
-        """ Get targeted components-
+        """Get targeted components-
 
         Args:
             dataContainer ([type]): [description]
@@ -1325,7 +1322,7 @@ class DictMethodEntityHelper(object):
 
     #
     def __getBirdFeatures(self, dataContainer):
-        """ Get type and class Bird annotations -
+        """Get type and class Bird annotations -
 
         Args:
             dataContainer ([type]): [description]
@@ -1403,7 +1400,7 @@ class DictMethodEntityHelper(object):
         return fTypeL
 
     def buildEntityFeatureSummary(self, dataContainer, catName, **kwargs):
-        """ Build category rcsb_entity_feature_summary (UPDATED)
+        """Build category rcsb_entity_feature_summary (UPDATED)
 
         Example:
 
@@ -1492,7 +1489,7 @@ class DictMethodEntityHelper(object):
         return True
 
     def buildEntityFeatures(self, dataContainer, catName, **kwargs):
-        """ Build category rcsb_entity_feature ...
+        """Build category rcsb_entity_feature ...
 
         Example:
             loop_
@@ -1650,7 +1647,7 @@ class DictMethodEntityHelper(object):
         return False
 
     def addTypedEntityCategories(self, dataContainer, blockName, **kwargs):
-        """ Slice common entity categories into type specific entity categories.
+        """Slice common entity categories into type specific entity categories.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -1700,7 +1697,7 @@ class DictMethodEntityHelper(object):
         return False
 
     def addTypedEntityFeatureCategories(self, dataContainer, blockName, **kwargs):
-        """ Slice common entity categories into type specific entity categories.
+        """Slice common entity categories into type specific entity categories.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -1714,7 +1711,11 @@ class DictMethodEntityHelper(object):
         try:
             if not (dataContainer.exists("entry") and dataContainer.exists("entity")):
                 return False
-            if dataContainer.exists("rcsb_polymer_entity_feature") or dataContainer.exists("rcsb_nonpolymer_entity_feature") or dataContainer.exists("rcsb_branched_entity_feature"):
+            if (
+                dataContainer.exists("rcsb_polymer_entity_feature")
+                or dataContainer.exists("rcsb_nonpolymer_entity_feature")
+                or dataContainer.exists("rcsb_branched_entity_feature")
+            ):
                 return True
             # -----
             categoryMapD = {
@@ -1759,7 +1760,7 @@ class DictMethodEntityHelper(object):
         return False
 
     def __sliceCategoriesByEntityType(self, dataContainer, categoryMapD):
-        """ Slice common entity categories into type specific entity categories.
+        """Slice common entity categories into type specific entity categories.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -1822,7 +1823,7 @@ class DictMethodEntityHelper(object):
 
     #
     def buildEntityAnnotations(self, dataContainer, catName, **kwargs):
-        """ Build category rcsb_entity_annotation ...
+        """Build category rcsb_entity_annotation ...
 
         Example:
             loop_

@@ -15,6 +15,7 @@
 #  19-Mar-2020 jdw add ResidProvider() and send cachePath directly to all modules in rcsb.utils.chemref.
 #  29-Jul-2020 jdw add PubChemProvider() from  rcsb.utils.chemref.
 #  30-Jul-2020 jdw add PharosProvider() from  rcsb.utils.chemref.
+#  29-Oct-2020 jdw add method getReferenceSequenceAlignmentOpt()
 ##
 ##
 """
@@ -56,12 +57,10 @@ logger = logging.getLogger(__name__)
 
 
 class DictMethodResourceProvider(SingletonClass):
-    """ Resource provider for DictMethodHelper tools.
-
-    """
+    """Resource provider for DictMethodHelper tools."""
 
     def __init__(self, cfgOb, **kwargs):
-        """ Resource provider for dictionary method runner.
+        """Resource provider for dictionary method runner.
 
         Arguments:
             cfgOb {object} -- instance ConfigUtils class
@@ -129,8 +128,11 @@ class DictMethodResourceProvider(SingletonClass):
     def echo(self, msg):
         logger.info(msg)
 
+    def getReferenceSequenceAlignmentOpt(self):
+        return self.__cfgOb.get("REFERENCE_SEQUENCE_ALIGNMETS", sectionName=self.__configName, default="SIFTS")
+
     def getResource(self, resourceName, default=None, useCache=True, **kwargs):
-        """ Return the named input resource or the default value.
+        """Return the named input resource or the default value.
 
         Arguments:
             resourceName {str} -- resource name
@@ -184,7 +186,11 @@ class DictMethodResourceProvider(SingletonClass):
         # logger.info("Maximum total resident memory size %.3f %s", rusageMax / 10 ** 6, unitS)
         endTime = time.time()
         logger.info(
-            "Step completed at %s (%.4f secs/%.3f %s)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime, rusageMax / 10 ** 6, unitS,
+            "Step completed at %s (%.4f secs/%.3f %s)",
+            time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
+            endTime - startTime,
+            rusageMax / 10 ** 6,
+            unitS,
         )
 
     def __fetchCitationReferenceProvider(self, cfgOb, configName, cachePath, useCache=True, **kwargs):

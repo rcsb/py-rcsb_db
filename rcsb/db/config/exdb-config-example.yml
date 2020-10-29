@@ -8,6 +8,7 @@
 #   30-Apr-2020 - Add RCSB_EDMAP_LIST_PATH option as path to edmaps.json
 #   18-May-2020 - Added DRUGBANK_MOCK_URL_TARGET to point to mangable raw DB dataset.
 #   28-Jul-2020 - Add stash server options
+#   29-Oct-2020 - add REFERENCE_SEQUENCE_ALIGNMETS: PDB to site_info_configuration
 ---
 DEFAULT: {}
 ##
@@ -117,6 +118,7 @@ site_info_configuration:
   STASH_SERVER_URL: https://raw.githubusercontent.com
   STASH_SERVER_FALLBACK_URL: https://raw.githubusercontent.com
   _STASH_SERVER_BASE_PATH: bIo7kGc2w6Oel0QNr7Pc/4bFfDQayhPxddnGHynP6yudxc44QYuAFoTFdOqY2ZzsM2DEk56r26MfG66bEQ42lp38guy837xwzN1Vgu+r9zvAm11HXEA=
+  REFERENCE_SEQUENCE_ALIGNMETS: PDB
 ##
 site_info_remote_configuration:
   # Site specific path and server configuration options - (REFERENCING DEVELOPMENT RESOURCES)
