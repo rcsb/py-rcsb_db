@@ -364,6 +364,49 @@ class DictMethodEntityHelper(object):
             logger.exception("For %s  %s failing with %s", dataContainer.getName(), catName, str(e))
         return False
 
+    def __salvageMissingTaxonomy(self, dataContainer, **kwargs):
+        """Add missing taxonomy identifiers using scientific name as a surogate.
+
+        Args:
+            dataContainer (obj): data container object
+
+        Returns:
+            bool: True for success or False otherwise
+        """
+        #
+        ok = False
+        try:
+            rP = kwargs.get("resourceProvider")
+            taxU = rP.getResource("TaxonomyProvider instance") if rP else None
+            #
+            for catName, atSn, atTaxId in [
+                ("entity_src_gen", "pdbx_host_org_scientific_name", "pdbx_host_org_ncbi_taxonomy_id"),
+                ("entity_src_nat", "pdbx_organism_scientific", "pdbx_ncbi_taxonomy_id"),
+                ("entity_src_syn", "organism_scientific", "ncbi_taxonomy_id"),
+            ]:
+                if dataContainer.exists(catName):
+                    sObj = dataContainer.getObj(catName)
+                    for ii in range(sObj.getRowCount()):
+                        taxId = sObj.getValueOrDefault(atTaxId, ii, defaultValue=None)
+                        #
+                        if taxId:
+                            continue
+                        sn = sObj.getValueOrDefault(atSn, ii, defaultValue=None)
+                        if sn:
+                            taxId = taxU.getTaxId(sn)
+                            if taxId:
+                                if not sObj.hasAttribute(atTaxId):
+                                    sObj.appendAttribute(atTaxId)
+                                logger.info("%s salvaged taxId %r using %r", dataContainer.getName(), taxId, sn)
+                                sObj.setValue(str(taxId), atTaxId, ii)
+                            else:
+                                logger.warning("%s taxId salvage fails for scientific name %s", dataContainer.getName(), sn)
+            ok = True
+        except Exception as e:
+            logger.exception("Failing for %r with %s", dataContainer.getName(), str(e))
+
+        return ok
+
     def filterSourceOrganismDetails(self, dataContainer, catName, **kwargs):
         """Load new categories rcsb_entity_source_organism and rcsb_entity_host_organism
          and add related source flags in the entity category.
@@ -428,6 +471,10 @@ class DictMethodEntityHelper(object):
             # if there is no source information then exit
             if not (dataContainer.exists("entity_src_gen") or dataContainer.exists("entity_src_nat") or dataContainer.exists("pdbx_entity_src_syn")):
                 return False
+            #
+            # Try to supply missing taxIds
+            self.__salvageMissingTaxonomy(dataContainer, **kwargs)
+            #
             # Create the new target category
             if not dataContainer.exists(catName):
                 dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
@@ -640,6 +687,7 @@ class DictMethodEntityHelper(object):
                     logger.debug("%r entity %r - UPDATED %r %r", sType, entityId, atL, v)
                     iRow += 1
             # -------------------------------------------------------------------------
+            # -------------------------------------------------------------------------
             # Update entity attributes
             #    _entity.rcsb_multiple_source_flag
             #    _entity.rcsb_source_part_count
@@ -647,18 +695,20 @@ class DictMethodEntityHelper(object):
                 if not eObj.hasAttribute(atName):
                     eObj.appendAttribute(atName)
             #
+            taxCountTotal = 0
             for ii in range(eObj.getRowCount()):
                 entityId = eObj.getValue("id", ii)
                 cFlag = "Y" if partCountD[entityId] > 1 else "N"
                 eObj.setValue(partCountD[entityId], "rcsb_source_part_count", ii)
                 eObj.setValue(cFlag, "rcsb_multiple_source_flag", ii)
-                if entityId in entityTaxIdD:
-                    eObj.setValue(len(entityTaxIdD[entityId]), "rcsb_source_taxonomy_count", ii)
+                taxCount = len(entityTaxIdD[entityId]) if entityId in entityTaxIdD else 0
+                eObj.setValue(taxCount, "rcsb_source_taxonomy_count", ii)
+                taxCountTotal += taxCount
 
-            logger.debug("Entry taxonomy count is %d", len(entryTaxIdD))
+            logger.debug("Entities with taxonomies %d entry total taxonomy count is %d", len(entryTaxIdD), taxCountTotal)
             if dataContainer.exists("rcsb_entry_info"):
                 eiObj = dataContainer.getObj("rcsb_entry_info")
-                eiObj.setValue(len(entryTaxIdD), "polymer_entity_taxonomy_count", 0)
+                eiObj.setValue(taxCountTotal, "polymer_entity_taxonomy_count", 0)
             #
             return True
         except Exception as e:

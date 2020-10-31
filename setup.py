@@ -73,7 +73,7 @@ setup(
         "rcsb.utils.chemref >= 0.58",
         "rcsb.utils.citation >= 0.15",
         "rcsb.utils.ec >= 0.21",
-        "rcsb.utils.taxonomy >= 0.28",
+        "rcsb.utils.taxonomy >= 0.29",
         "rcsb.utils.seq >= 0.43",
         "rcsb.utils.struct >= 0.26",
         "SQLAlchemy; sys_platform == 'linux'",

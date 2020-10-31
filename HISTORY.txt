@@ -275,3 +275,4 @@
  23-Oct-2020  V1.642 Add rcsb_repository_holdings_combined_entry collection
  24-Oct-2020  V1.643 Incorporate obsolete/supersede item in rcsb_repository_holdings_combined_entry
  28-Oct-2020  V1.644 Make reference alignment options accessible from the configuration file
+ 31-Oct-2030  V1.645 Add taxonomy identifier salvage method
