@@ -52,7 +52,7 @@ class DictMethodEntityHelper(object):
         self.__dApi = rP.getResource("Dictionary API instance (pdbx_core)") if rP else None
         #
         self.__useSiftsAlign = rP.getReferenceSequenceAlignmentOpt() == "SIFTS"
-        logger.info("SIFTS alignment option %r", self.__useSiftsAlign)
+        # logger.info("SIFTS alignment option %r", self.__useSiftsAlign)
         #
         self.__ssP = None
         if self.__useSiftsAlign:
