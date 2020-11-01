@@ -378,8 +378,9 @@ class DictMethodEntityHelper(object):
         try:
             rP = kwargs.get("resourceProvider")
             taxU = rP.getResource("TaxonomyProvider instance") if rP else None
-            #
+            # "pdbx_gene_src_scientific_name" "pdbx_gene_src_ncbi_taxonomy_id"
             for catName, atSn, atTaxId in [
+                ("entity_src_gen", "pdbx_gene_src_scientific_name", "pdbx_gene_src_ncbi_taxonomy_id"),
                 ("entity_src_gen", "pdbx_host_org_scientific_name", "pdbx_host_org_ncbi_taxonomy_id"),
                 ("entity_src_nat", "pdbx_organism_scientific", "pdbx_ncbi_taxonomy_id"),
                 ("entity_src_syn", "organism_scientific", "ncbi_taxonomy_id"),
