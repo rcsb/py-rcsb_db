@@ -20,7 +20,7 @@ jobs:
     ${{ if eq(parameters.os, 'macos') }}:
       vmImage: 'macOS-10.14'
     ${{ if eq(parameters.os, 'linux') }}:
-      vmImage: 'ubuntu-18.04'
+      vmImage: 'ubuntu-20.04'
 
   variables:
     - group: py-shared-variables
