@@ -17,7 +17,7 @@ jobs:
     ${{ if eq(parameters.os, 'macos') }}:
       vmImage: 'macOS-10.14'
     ${{ if eq(parameters.os, 'linux') }}:
-      vmImage: 'ubuntu-latest'
+      vmImage: 'ubuntu-20.04'
   dependsOn:
   - ${{ format('build_test_{0}_{1}', parameters.tox, parameters.os) }}
   condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
