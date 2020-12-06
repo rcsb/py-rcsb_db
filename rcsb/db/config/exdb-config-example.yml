@@ -126,19 +126,22 @@ site_info_remote_configuration:
   CONFIG_SUPPORT_TOKEN: CONFIG_SUPPORT_TOKEN_ENV
   #
   # Database server connection details:
-  #     dev: 128.6.244.78
-  # staging: 128.6.244.222
+  #     dev: 128.6.158.254
+  # staging: 128.6.159.43
   #
-  MONGO_DB_HOST: 128.6.244.78
+  MONGO_DB_HOST: 128.6.158.254
   MONGO_DB_PORT: "27017"
-  _MONGO_DB_USER_NAME: ""
-  _MONGO_DB_PASSWORD: ""
+  _MONGO_DB_USER_NAME: vknsNHfQ1nyy5w1vsfP4fbOp1iPxD3K5yZmNFsJDqTRl+87zicTLa9lkHG5uReM=
+  _MONGO_DB_PASSWORD: wfm/FNyhON/AGaJfLhL5ZA0ObAVU0DZ0sICB2eemS8GFfAOZvo3Y/vXTkjLayViwppj2MQ==
+  #_MONGO_DB_USER_NAME: ""
+  #_MONGO_DB_PASSWORD: ""
   MONGO_DB_ADMIN_DB_NAME: admin
   #
+  #
   #  Channel B
-  # MONGO_DB_HOST: 128.6.244.74
+  # MONGO_DB_HOST: 128.6.159.133
   #  Channel A
-  # MONGO_DB_HOST: 128.6.244.215
+  # MONGO_DB_HOST: 128.6.159.137
   # MONGO_DB_PORT: '27017'
   #_MONGO_DB_USER_NAME: vknsNHfQ1nyy5w1vsfP4fbOp1iPxD3K5yZmNFsJDqTRl+87zicTLa9lkHG5uReM=
   #_MONGO_DB_PASSWORD: wfm/FNyhON/AGaJfLhL5ZA0ObAVU0DZ0sICB2eemS8GFfAOZvo3Y/vXTkjLayViwppj2MQ==

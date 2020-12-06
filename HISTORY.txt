@@ -277,3 +277,4 @@
  28-Oct-2020  V1.644 Make reference alignment options accessible from the configuration file
  31-Oct-2030  V1.645 Add taxonomy identifier salvage method
   1-Nov-2030  V1.646 Extend taxonomy identifier salvage method
+  6-Dec-2030  V1.647 Update database server configuration
