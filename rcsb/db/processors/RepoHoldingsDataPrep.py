@@ -429,11 +429,16 @@ class RepoHoldingsDataPrep(object):
             for entryId in bundleIdList:
                 bundleD[entryId.strip().upper()] = True
             #
-            fp = os.path.join(dirPath, "status", "validation_report_list.tsv")
+            fp = os.path.join(dirPath, "status", "validation_report_list_new.tsv")
             vList = self.__mU.doImport(fp, "list")
             valD = {}
-            for entryId in vList:
-                valD[entryId.strip().upper()] = True
+            valImageD = {}
+            for line in vList:
+                fields = line.split("\t")
+                entryId = fields[0].strip().upper()
+                imageFlag = fields[1].strip().upper()
+                valD[entryId] = True
+                valImageD[entryId] = imageFlag == "Y"
             #
             #
             fp = os.path.join(dirPath, "status", "entries_without_polymers.tsv")
@@ -499,6 +504,8 @@ class RepoHoldingsDataPrep(object):
                 #
                 if entryId in valD:
                     rD[entryId].append("validation report")
+                if entryId in valImageD:
+                    rD[entryId].append("validation slider image")
                 if entryId in edD:
                     rD[entryId].append("2fo-fc Map")
                     rD[entryId].append("fo-fc Map")
