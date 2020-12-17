@@ -562,7 +562,7 @@ class DictMethodCommonUtils(object):
         return wD["asymAuthIdD"] if "asymAuthIdD" in wD else {}
 
     def getInstanceHeavyAtomCounts(self, dataContainer, modelId="1"):
-        """Return a dictionary of deposited atom counts for each entity instance.
+        """Return a dictionary of deposited heavy atom counts for each entity instance.
 
         Args:
             dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
@@ -576,6 +576,22 @@ class DictMethodCommonUtils(object):
             return {}
         wD = self.__fetchAtomSiteInfo(dataContainer, modelId=modelId)
         return wD["instanceHeavyAtomCountD"] if "instanceHeavyAtomCountD" in wD else {}
+
+    def getInstanceHydrogenAtomCounts(self, dataContainer, modelId="1"):
+        """Return a dictionary of deposited hydrogen atom counts for each entity instance.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+            modelId (str, optional): model index. Defaults to "1".
+
+
+        Returns:
+            dict: {'asymId': <# of deposited atoms>, ...}
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchAtomSiteInfo(dataContainer, modelId=modelId)
+        return wD["instanceHydrogenAtomCountD"] if "instanceHydrogenAtomCountD" in wD else {}
 
     def getModelIdList(self, dataContainer):
         """Return a list of model identifiers for the entry.
@@ -663,15 +679,16 @@ class DictMethodCommonUtils(object):
             modelId (str, optional): model index. Defaults to "1".
 
         Returns:
-            (int, int, int)  deposited heavy atoms in input model, total deposited atom count, and total deposited model count
+            (int, int, int, int)  deposited heavy atoms in input model, hydrogen atoms in input model, total deposited atom count, and total deposited model count
         """
         if not dataContainer or not dataContainer.getName():
             return {}
         wD = self.__fetchAtomSiteInfo(dataContainer, modelId=modelId)
         numHeavyAtomsModel = wD["numHeavyAtomsModel"] if "numHeavyAtomsModel" in wD else 0
+        numHydrogenAtomsModel = wD["numHydrogenAtomsModel"] if "numHydrogenAtomsModel" in wD else 0
         numAtomsTotal = wD["numAtomsAll"] if "numAtomsAll" in wD else 0
         numModelsTotal = wD["numModels"] if "numModels" in wD else 0
-        return numHeavyAtomsModel, numAtomsTotal, numModelsTotal
+        return numHeavyAtomsModel, numHydrogenAtomsModel, numAtomsTotal, numModelsTotal
 
     def getInstancePolymerRanges(self, dataContainer):
         """Return a dictionary of polymer residue range and length for each entity instance.
@@ -898,6 +915,11 @@ class DictMethodCommonUtils(object):
         numHeavyAtomsModel = 0
         typeHeavyAtomCountD = {}
         instanceHeavyAtomCountD = {}
+        #
+        numHydrogenAtomsModel = 0
+        typeHydrogenAtomCountD = {}
+        instanceHydrogenAtomCountD = {}
+        #
         instancePolymerModeledMonomerCountD = {}
         instancePolymerUnmodeledMonomerCountD = {}
         modelIdL = []
@@ -928,6 +950,20 @@ class DictMethodCommonUtils(object):
                 for asymId, aCount in instanceHeavyAtomCountD.items():
                     tt = instanceTypeD[asymId]
                     typeHeavyAtomCountD[tt] += aCount
+
+                # Hydrogen counts ...
+                cndL = [("type_symbol", "in", ["H", "D", "T"]), ("pdbx_PDB_model_num", "eq", modelId)]
+                numHydrogenAtomsModel = tObj.countValuesWhereOpConditions(cndL)
+                #
+                cD = tObj.getCombinationCountsWithConditions(["label_asym_id", "pdbx_PDB_model_num"], [("type_symbol", "in", ["H", "D", "T"])])
+                for asymId, _ in instanceTypeD.items():
+                    instanceHydrogenAtomCountD[asymId] = cD[(asymId, modelId)] if (asymId, modelId) in cD else 0
+                #
+                typeHydrogenAtomCountD = {k: 0 for k in ["polymer", "non-polymer", "branched", "macrolide", "water"]}
+                for asymId, aCount in instanceHydrogenAtomCountD.items():
+                    tt = instanceTypeD[asymId]
+                    typeHydrogenAtomCountD[tt] += aCount
+                #
             else:
                 logger.warning("Missing atom_site category for %s", dataContainer.getName())
             #
@@ -945,6 +981,9 @@ class DictMethodCommonUtils(object):
                 "modelIdList": sorted(modelIdL),
                 "instancePolymerModeledMonomerCountD": {},
                 "instancePolymerUnmodeledMonomerCountD": {},
+                "instanceHydrogenAtomCountD": instanceHydrogenAtomCountD,
+                "typeHydrogenAtomCountD": typeHydrogenAtomCountD,
+                "numHydrogenAtomsModel": numHydrogenAtomsModel,
             }
         except Exception as e:
             logger.exception("Failing with %r with %r", dataContainer.getName(), str(e))

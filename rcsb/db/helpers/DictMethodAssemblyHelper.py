@@ -28,8 +28,7 @@ def cmpElements(lhs, rhs):
 
 
 class DictMethodAssemblyHelper(object):
-    """ Helper class implementing external assembly-level methods  supporting the RCSB dictionary extension.
-    """
+    """Helper class implementing external assembly-level methods  supporting the RCSB dictionary extension."""
 
     def __init__(self, **kwargs):
         """
@@ -50,7 +49,7 @@ class DictMethodAssemblyHelper(object):
         logger.info(msg)
 
     def addAssemblyInfo(self, dataContainer, catName, **kwargs):
-        """ Build rcsb_assembly_info category.
+        """Build rcsb_assembly_info category.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -110,6 +109,9 @@ class DictMethodAssemblyHelper(object):
 
                 num = rD["assemblyHeavyAtomCountD"][assemblyId]
                 cObj.setValue(num, "atom_count", ii)
+                #
+                num = rD["assemblyHydrogenAtomCountD"][assemblyId]
+                cObj.setValue(num, "hydrogen_atom_count", ii)
                 #
                 num1 = rD["assemblyModeledMonomerCountD"][assemblyId]
                 num2 = rD["assemblyUnmodeledMonomerCountD"][assemblyId]
@@ -176,7 +178,7 @@ class DictMethodAssemblyHelper(object):
         return False
 
     def buildContainerAssemblyIds(self, dataContainer, catName, **kwargs):
-        """ Build category rcsb_assembly_container_identifiers.
+        """Build category rcsb_assembly_container_identifiers.
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -221,7 +223,7 @@ class DictMethodAssemblyHelper(object):
         return False
 
     def addDepositedAssembly(self, dataContainer, catName, **kwargs):
-        """ Add the deposited coordinates as an additional separate assembly labeled as 'deposited'
+        """Add the deposited coordinates as an additional separate assembly labeled as 'deposited'
         to categories, pdbx_struct_assembly and pdb_struct_assembly_gen.
 
         Args:
@@ -317,7 +319,7 @@ class DictMethodAssemblyHelper(object):
         return False
 
     def filterAssemblyDetails(self, dataContainer, catName, **kwargs):
-        """ Filter _pdbx_struct_assembly.details -> _pdbx_struct_assembly.rcsb_details
+        """Filter _pdbx_struct_assembly.details -> _pdbx_struct_assembly.rcsb_details
             with a more limited vocabulary -
 
 
@@ -382,7 +384,7 @@ class DictMethodAssemblyHelper(object):
         return False
 
     def assignAssemblyCandidates(self, dataContainer, catName, **kwargs):
-        """ Flag candidate biological assemblies as 'author_defined_assembly' ad author_and_software_defined_assembly'
+        """Flag candidate biological assemblies as 'author_defined_assembly' ad author_and_software_defined_assembly'
 
         Args:
             dataContainer (object): mmif.api.DataContainer object instance
@@ -458,7 +460,7 @@ class DictMethodAssemblyHelper(object):
         return False
 
     def filterAssemblyCandidates(self, dataContainer, catName, **kwargs):
-        """ Filter assemblies to only candidates and deposited cases
+        """Filter assemblies to only candidates and deposited cases
 
 
         Args:
@@ -541,31 +543,31 @@ class DictMethodAssemblyHelper(object):
         return opCount, rL
 
     def __getAssemblyComposition(self, dataContainer):
-        """ Return assembly composition by entity and instance type counts.
+        """Return assembly composition by entity and instance type counts.
 
-            Example -
-                loop_
-                _pdbx_struct_assembly.id
-                _pdbx_struct_assembly.details
-                _pdbx_struct_assembly.method_details
-                _pdbx_struct_assembly.oligomeric_details
-                _pdbx_struct_assembly.oligomeric_count
-                1 'complete icosahedral assembly'                ? 180-meric      180
-                2 'icosahedral asymmetric unit'                  ? trimeric       3
-                3 'icosahedral pentamer'                         ? pentadecameric 15
-                4 'icosahedral 23 hexamer'                       ? octadecameric  18
-                5 'icosahedral asymmetric unit, std point frame' ? trimeric       3
-                #
-                loop_
-                _pdbx_struct_assembly_gen.assembly_id
-                _pdbx_struct_assembly_gen.oper_expression
-                _pdbx_struct_assembly_gen.asym_id_list
-                1 '(1-60)'           A,B,C
-                2 1                  A,B,C
-                3 '(1-5)'            A,B,C
-                4 '(1,2,6,10,23,24)' A,B,C
-                5 P                  A,B,C
-                #
+        Example -
+            loop_
+            _pdbx_struct_assembly.id
+            _pdbx_struct_assembly.details
+            _pdbx_struct_assembly.method_details
+            _pdbx_struct_assembly.oligomeric_details
+            _pdbx_struct_assembly.oligomeric_count
+            1 'complete icosahedral assembly'                ? 180-meric      180
+            2 'icosahedral asymmetric unit'                  ? trimeric       3
+            3 'icosahedral pentamer'                         ? pentadecameric 15
+            4 'icosahedral 23 hexamer'                       ? octadecameric  18
+            5 'icosahedral asymmetric unit, std point frame' ? trimeric       3
+            #
+            loop_
+            _pdbx_struct_assembly_gen.assembly_id
+            _pdbx_struct_assembly_gen.oper_expression
+            _pdbx_struct_assembly_gen.asym_id_list
+            1 '(1-60)'           A,B,C
+            2 1                  A,B,C
+            3 '(1-5)'            A,B,C
+            4 '(1,2,6,10,23,24)' A,B,C
+            5 P                  A,B,C
+            #
         """
         #
         instanceTypeD = self.__commonU.getInstanceTypes(dataContainer)
@@ -575,14 +577,17 @@ class DictMethodAssemblyHelper(object):
         epTypeD = self.__commonU.getEntityPolymerTypes(dataContainer)
         eTypeD = self.__commonU.getEntityTypes(dataContainer)
         epTypeFilteredD = self.__commonU.getPolymerEntityFilteredTypes(dataContainer)
-        #
+        # JDW
         instHeavyAtomCount = self.__commonU.getInstanceHeavyAtomCounts(dataContainer, modelId="1")
+        instHydrogenAtomCount = self.__commonU.getInstanceHydrogenAtomCounts(dataContainer, modelId="1")
+        #
         instModeledMonomerCount = self.__commonU.getInstanceModeledMonomerCounts(dataContainer, modelId="1")
         instUnmodeledMonomerCount = self.__commonU.getInstanceUnModeledMonomerCounts(dataContainer, modelId="1")
         # -------------------------
         assemblyInstanceCountByTypeD = {}
         assemblyHeavyAtomCountByTypeD = {}
         assemblyHeavyAtomCountD = {}
+        assemblyHydrogenAtomCountD = {}
         assemblyModeledMonomerCountD = {}
         assemblyUnmodeledMonomerCountD = {}
         # Pre-generation (source instances)
@@ -613,6 +618,8 @@ class DictMethodAssemblyHelper(object):
                         assemblyUnmodeledMonomerCountD[assemblyId] = 0
                     if assemblyId not in assemblyHeavyAtomCountD:
                         assemblyHeavyAtomCountD[assemblyId] = 0
+                    if assemblyId not in assemblyHydrogenAtomCountD:
+                        assemblyHydrogenAtomCountD[assemblyId] = 0
                     #
                     opExpression = tObj.getValue("oper_expression", ii)
                     opCount, opL = self.__expandOperatorList(opExpression)
@@ -634,9 +641,15 @@ class DictMethodAssemblyHelper(object):
                         assemblyHeavyAtomCountByTypeD[assemblyId][eType] += sum(atCountList) * opCount
                         assemblyHeavyAtomCountD[assemblyId] += sum(atCountList) * opCount
                         #
+                        hAtCountList = [
+                            instHydrogenAtomCount[asymId] for asymId in asymIdList if asymId in instanceTypeD and instanceTypeD[asymId] == eType and asymId in instHydrogenAtomCount
+                        ]
+                        assemblyHydrogenAtomCountD[assemblyId] += sum(hAtCountList) * opCount
                     #
                     modeledMonomerCountList = [
-                        instModeledMonomerCount[asymId] for asymId in asymIdList if asymId in instanceTypeD and instanceTypeD[asymId] == "polymer" and asymId in instModeledMonomerCount
+                        instModeledMonomerCount[asymId]
+                        for asymId in asymIdList
+                        if asymId in instanceTypeD and instanceTypeD[asymId] == "polymer" and asymId in instModeledMonomerCount
                     ]
                     assemblyModeledMonomerCountD[assemblyId] += sum(modeledMonomerCountList) * opCount
                     #
@@ -689,7 +702,9 @@ class DictMethodAssemblyHelper(object):
                     #
                     pEntityTypeD = Counter(pTypeFilteredL)
                     assemblyEntityCountByPolymerTypeD[assemblyId] = {pType: 0 for pType in ["Protein", "DNA", "RNA", "NA-hybrid", "Other"]}
-                    assemblyEntityCountByPolymerTypeD[assemblyId] = {pType: pEntityTypeD[pType] for pType in ["Protein", "DNA", "RNA", "NA-hybrid", "Other"] if pType in pEntityTypeD}
+                    assemblyEntityCountByPolymerTypeD[assemblyId] = {
+                        pType: pEntityTypeD[pType] for pType in ["Protein", "DNA", "RNA", "NA-hybrid", "Other"] if pType in pEntityTypeD
+                    }
                     #
                     eTypeL = [eTypeD[entityId] for entityId in entityIdList if entityId in eTypeD]
                     entityTypeD = Counter(eTypeL)
@@ -704,6 +719,7 @@ class DictMethodAssemblyHelper(object):
             logger.debug("%s assemblyInstanceCountByTypeD %r", dataContainer.getName(), assemblyInstanceCountByTypeD.items())
             logger.debug("%s assemblyHeavyAtomCountByTypeD %r", dataContainer.getName(), assemblyHeavyAtomCountByTypeD.items())
             logger.debug("%s assemblyHeavyAtomCountD %r", dataContainer.getName(), assemblyHeavyAtomCountD.items())
+            logger.debug("%s assemblyHydrogenAtomCountD %r", dataContainer.getName(), assemblyHydrogenAtomCountD.items())
             logger.debug("%s assemblyModeledMonomerCountD %r", dataContainer.getName(), assemblyModeledMonomerCountD.items())
             logger.debug("%s assemblyUnmodeledMonomerCountD %r", dataContainer.getName(), assemblyUnmodeledMonomerCountD.items())
             logger.debug("%s assemblyPolymerClassD %r", dataContainer.getName(), assemblyPolymerClassD.items())
@@ -716,6 +732,7 @@ class DictMethodAssemblyHelper(object):
                 "assemblyInstanceCountByTypeD": assemblyInstanceCountByTypeD,
                 "assemblyHeavyAtomCountByTypeD": assemblyHeavyAtomCountByTypeD,
                 "assemblyHeavyAtomCountD": assemblyHeavyAtomCountD,
+                "assemblyHydrogenAtomCountD": assemblyHydrogenAtomCountD,
                 "assemblyModeledMonomerCountD": assemblyModeledMonomerCountD,
                 "assemblyUnmodeledMonomerCountD": assemblyUnmodeledMonomerCountD,
                 "assemblyInstanceCountByPolymerTypeD": assemblyInstanceCountByPolymerTypeD,

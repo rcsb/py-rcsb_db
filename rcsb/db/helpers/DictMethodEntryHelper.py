@@ -782,7 +782,7 @@ class DictMethodEntryHelper(object):
             # Various atom counts -
             #
             repModelId = repModelL[0]
-            numHeavyAtomsModel, numAtomsTotal, numModelsTotal = self.__commonU.getDepositedAtomCounts(dataContainer, modelId=repModelId)
+            numHeavyAtomsModel, numHydrogenAtomsModel, numAtomsTotal, numModelsTotal = self.__commonU.getDepositedAtomCounts(dataContainer, modelId=repModelId)
             #
             logger.debug("numAtomsTotal %d numHeavyAtomsModel %d numModelsTotal %d", numAtomsTotal, numHeavyAtomsModel, numModelsTotal)
             logger.debug("entity type atom counts %r", self.__commonU.getEntityTypeHeavyAtomCounts(dataContainer, modelId=repModelId))
@@ -792,6 +792,7 @@ class DictMethodEntryHelper(object):
             if numHeavyAtomsModel > 0:
                 cObj.setValue(numHeavyAtomsModel, "deposited_atom_count", 0)
                 cObj.setValue(numModelsTotal, "deposited_model_count", 0)
+                cObj.setValue(numHydrogenAtomsModel, "deposited_hydrogen_atom_count", 0)
                 tCD = self.__commonU.getEntityTypeHeavyAtomCounts(dataContainer, modelId=repModelId)
                 wCount = tCD["water"] if tCD and "water" in tCD else 0
                 cObj.setValue(wCount, "deposited_solvent_atom_count", 0)

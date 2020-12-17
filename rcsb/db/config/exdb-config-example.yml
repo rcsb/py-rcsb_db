@@ -9,6 +9,7 @@
 #   18-May-2020 - Added DRUGBANK_MOCK_URL_TARGET to point to mangable raw DB dataset.
 #   28-Jul-2020 - Add stash server options
 #   29-Oct-2020 - add REFERENCE_SEQUENCE_ALIGNMETS: PDB to site_info_configuration
+#   11-Dec-2020 - add alternate pw for mysql
 ---
 DEFAULT: {}
 ##
@@ -27,6 +28,7 @@ site_info_configuration:
   MYSQL_DB_PORT_NUMBER: "3306"
   _MYSQL_DB_USER_NAME: wrIzBGtCsQmkjc7tbEPQ3oEaOnpvivXaKcQsvXD6kn4KHMvA7LCL4O9GlAI=
   _MYSQL_DB_PASSWORD: qXPp32Z6DhNVMwo9fQIK5+KB13c1Jd43E3Bn6LmJcSyXc0NAt4H/hwo/xglYpmELV5Vqaw==
+  _MYSQL_DB_PASSWORD_ALT: s6mNxq3FIwZLrLiIeHpDZQcuVxfQqrR3gA+dEMOGgHwsjrJV5da08H74RmnNRus74Q==
   MYSQL_DB_DATABASE_NAME: mysql
   CRATE_DB_HOST: localhost
   CRATE_DB_PORT: "4200"
@@ -151,6 +153,7 @@ site_info_remote_configuration:
   MYSQL_DB_PORT_NUMBER: "3306"
   _MYSQL_DB_USER_NAME: wrIzBGtCsQmkjc7tbEPQ3oEaOnpvivXaKcQsvXD6kn4KHMvA7LCL4O9GlAI=
   _MYSQL_DB_PASSWORD: qXPp32Z6DhNVMwo9fQIK5+KB13c1Jd43E3Bn6LmJcSyXc0NAt4H/hwo/xglYpmELV5Vqaw==
+  _MYSQL_DB_PASSWORD_ALT: s6mNxq3FIwZLrLiIeHpDZQcuVxfQqrR3gA+dEMOGgHwsjrJV5da08H74RmnNRus74Q==
   MYSQL_DB_DATABASE_NAME: mysql
   #
   CRATE_DB_HOST: localhost
