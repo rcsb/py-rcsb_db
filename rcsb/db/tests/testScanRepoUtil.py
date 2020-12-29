@@ -65,8 +65,7 @@ class ScanRepoUtilTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)\n", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testScanRepos(self):
-        """ Test case - scan ihm data
-        """
+        """Test case - scan ihm data"""
         for contentType in ["chem_comp_core", "bird_chem_comp_core", "bird_family", "pdbx_core", "ihm_dev"]:
             ok = self.__testScanRepo(contentType=contentType, scanType="full")
             self.assertTrue(ok)
@@ -74,15 +73,16 @@ class ScanRepoUtilTests(unittest.TestCase):
             self.assertTrue(ok)
 
     def __testScanRepo(self, contentType, scanType="full"):
-        """ Utility method to scan repo for data type and coverage content.
+        """Utility method to scan repo for data type and coverage content.
 
-            Using mock repos for tests.
+        Using mock repos for tests.
         """
         try:
             failedFilePath = os.path.join(HERE, "test-output", "%s-failed-list-%s.txt" % (contentType, scanType))
             savedFilePath = os.path.join(HERE, "test-output", "%s-path-list-%s.txt" % (contentType, scanType))
             scanDataFilePath = os.path.join(HERE, "test-output", "%s-scan-data.pic" % (contentType))
             dataCoverageFilePath = os.path.join(HERE, "test-output", "%s-scan-data-coverage-%s.json" % (contentType, scanType))
+            dataCoverageItemFilePath = os.path.join(HERE, "test-output", "%s-scan-data-item-coverage-%s.tdd" % (contentType, scanType))
             dataTypeFilePath = os.path.join(HERE, "test-output", "%s-scan-data-type-%s.json" % (contentType, scanType))
             #
             dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)
@@ -108,6 +108,8 @@ class ScanRepoUtilTests(unittest.TestCase):
             ok = sr.evalScan(scanDataFilePath, dataTypeFilePath, evalType="data_type")
             self.assertTrue(ok)
             ok = sr.evalScan(scanDataFilePath, dataCoverageFilePath, evalType="data_coverage")
+            self.assertTrue(ok)
+            ok = sr.evalScanItem(scanDataFilePath, dataCoverageItemFilePath)
             self.assertTrue(ok)
 
             return ok

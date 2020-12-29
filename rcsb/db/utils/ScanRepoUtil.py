@@ -29,11 +29,10 @@ import datetime
 import logging
 import time
 
+from mmcif.api.DataCategory import DataCategory
 from rcsb.db.utils.RepositoryProvider import RepositoryProvider
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
-
-from mmcif.api.DataCategory import DataCategory
 
 logger = logging.getLogger(__name__)
 
@@ -42,8 +41,7 @@ ScanSummary = collections.namedtuple("ScanSummary", "containerId, fromPath, scan
 
 
 class ScanRepoUtil(object):
-    """Tools for for scanning repositories and collecting coverage and type data information.
-    """
+    """Tools for for scanning repositories and collecting coverage and type data information."""
 
     def __init__(self, cfgOb, attributeDataTypeD=None, numProc=4, chunkSize=15, fileLimit=None, maxStepLength=2000, workPath=None):
         """
@@ -129,7 +127,7 @@ class ScanRepoUtil(object):
             retLists = [[] for ii in range(numResults)]
             diagList = []
             for ii, subList in enumerate(subLists):
-                logger.debug("Running outer subtask %d or %d length %d", ii + 1, len(subLists), len(subList))
+                logger.info("Running outer subtask %d of %d length %d", ii + 1, len(subLists), len(subList))
                 #
                 mpu = MultiProcUtil(verbose=True)
                 mpu.setOptions(optionsD=optD)
@@ -137,8 +135,9 @@ class ScanRepoUtil(object):
                 ok, failListT, retListsT, diagListT = mpu.runMulti(dataList=subList, numProc=numProc, numResults=numResults, chunkSize=chunkSize)
                 failList.extend(failListT)
                 # retLists is a list of lists -
-                for _ in range(numResults):
-                    retLists[ii].extend(retListsT[ii])
+                logger.debug("status %r fail len %r ret len %r", ok, len(failListT), len(retListsT))
+                for jj in range(numResults):
+                    retLists[jj].extend(retListsT[jj])
                 diagList.extend(diagListT)
             logger.debug("Scan failed path list %r", failList)
             logger.debug("Scan path list success length %d load list failed length %d", len(locatorObjList), len(failList))
@@ -181,11 +180,17 @@ class ScanRepoUtil(object):
         if evalType in ["data_type"]:
             rD = self.__evalScanDataType(scanDataD)
         elif evalType in ["data_coverage"]:
-            rD = self.__evalScanDataCoverage(scanDataD)
+            rD, _ = self.__evalScanDataCoverage(scanDataD)
         else:
             logger.debug("Unknown evalType %r", evalType)
         ok = self.__mU.doExport(evalJsonFilePath, rD, fmt="json")
 
+        return ok
+
+    def evalScanItem(self, scanDataFilePath, evalFilePath):
+        scanDataD = self.__mU.doImport(scanDataFilePath, fmt="pickle")
+        _, cL = self.__evalScanDataCoverage(scanDataD)
+        ok = self.__mU.doExport(evalFilePath, cL, fmt="list")
         return ok
 
     def __evalScanDataType(self, scanDataD):
@@ -233,13 +238,14 @@ class ScanRepoUtil(object):
                         sD[catName][svTup.atName] = {"count": 0, "instances": []}
                     sD[catName][svTup.atName]["instances"].append(svTup.containerId)
                     sD[catName][svTup.atName]["count"] += 1
-        return sD
+        cL = []
+        for catName, aD in sD.items():
+            for atName, tD in aD.items():
+                cL.append("%s\t%s" % ("_" + catName + "." + atName, tD["count"]))
+        return sD, cL
 
     def scanWorker(self, dataList, procName, optionsD, workingDir):
-        """ Multi-proc worker method for scanning repository data files-
-
-
-        """
+        """Multi-proc worker method for scanning repository data files-"""
         try:
             _ = workingDir
             startTime = self.__begin(message=procName)
@@ -272,8 +278,7 @@ class ScanRepoUtil(object):
         return [], [], []
 
     def __getContainerList(self, locatorObjList):
-        """
-        """
+        """"""
         utcnow = datetime.datetime.utcnow()
         ts = utcnow.strftime("%Y-%m-%d:%H:%M:%S")
         cL = []
@@ -289,9 +294,9 @@ class ScanRepoUtil(object):
         return cL
 
     def __scanContainer(self, container):
-        """ Scan the input container for
+        """Scan the input container for
 
-          Get the file name -
+        Get the file name -
         """
         cName = container.getName()
         loadStatusObj = container.getObj("rcsb_load_status")

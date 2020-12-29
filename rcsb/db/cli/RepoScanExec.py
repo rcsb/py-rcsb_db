@@ -43,12 +43,12 @@ def scanRepo(
     inputPathList=None,
     pathListFilePath=None,
     dataCoverageFilePath=None,
+    dataCoverageItemFilePath=None,
     dataTypeFilePath=None,
     failedFilePath=None,
     cachePath=None,
 ):
-    """ Utility method to scan the data repository of the input content type and store type and coverage details.
-    """
+    """Utility method to scan the data repository of the input content type and store type and coverage details."""
     try:
         #
         # configName = cfgOb.getDefaultSectionName()
@@ -73,6 +73,8 @@ def scanRepo(
             ok = sr.evalScan(scanDataFilePath, dataTypeFilePath, evalType="data_type")
         if dataCoverageFilePath:
             ok = sr.evalScan(scanDataFilePath, dataCoverageFilePath, evalType="data_coverage")
+        if dataCoverageItemFilePath:
+            ok = sr.evalScanItem(scanDataFilePath, dataCoverageItemFilePath)
 
         return ok
     except Exception as e:
@@ -103,6 +105,7 @@ def main():
     parser.add_argument("--fail_file_list_path", default=None, help="Output file containing file paths that fail scan")
     parser.add_argument("--scan_data_file_path", default=None, help="Output working file storing scan data (Pickle)")
     parser.add_argument("--coverage_file_path", default=None, help="Coverage map (JSON) output path")
+    parser.add_argument("--coverage_item_file_path", default=None, help="Coverage by item (tdd) output path")
     parser.add_argument("--type_map_file_path", default=None, help="Type map (JSON) output path")
 
     parser.add_argument("--num_proc", default=2, help="Number of processes to execute (default=2)")
@@ -151,6 +154,7 @@ def main():
         outputFileListPath = args.output_file_list_path
         scanDataFilePath = args.scan_data_file_path
         dataCoverageFilePath = args.coverage_file_path
+        dataCoverageItemFilePath = args.coverage_item_file_path
         dataTypeFilePath = args.type_map_file_path
         cachePath = args.cache_path if args.cache_path else "."
     except Exception as e:
@@ -203,6 +207,7 @@ def main():
         inputPathList=inputPathList,
         pathListFilePath=outputFileListPath,
         dataCoverageFilePath=dataCoverageFilePath,
+        dataCoverageItemFilePath=dataCoverageItemFilePath,
         dataTypeFilePath=dataTypeFilePath,
         failedFilePath=failedFilePath,
         cachePath=cachePath,

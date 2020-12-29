@@ -280,3 +280,4 @@
   6-Dec-2020  V1.647 Update database server configuration
   9-Dec-2020  V1.648 Add validation slider image repository content type
  16-Dec-2020  V1.649 Add hydrogen atom counts -
+ 28-Dec-2020  V1.650 Corrections to indexing in multiprocessing RepoScanUtils(), fix CLI test cases
