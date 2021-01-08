@@ -283,3 +283,4 @@
  28-Dec-2020  V1.650 Corrections to indexing in multiprocessing RepoScanUtils(), fix CLI test cases
   6-Jan-2021  V1.651 Enumeration updates for selected polymer types.
   8-Jan-2021  V1.652 Add mongodb distinct() method.
+  8-Jan-2021  V1.653 Enumeration updates for selected polymer types.
