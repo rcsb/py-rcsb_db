@@ -2924,7 +2924,7 @@ class DictMethodCommonUtils(object):
         #
         if compClass in ["homomeric protein", "heteromeric protein"]:
             ptClass = "Protein (only)"
-        elif compClass in ["DNA", "RNA", "NA-hybrid"]:
+        elif compClass in ["DNA", "RNA", "NA-hybrid", "DNA/RNA"]:
             ptClass = "Nucleic acid (only)"
         elif compClass in ["protein/NA"]:
             ptClass = "Protein/NA"
@@ -3754,9 +3754,7 @@ class DictMethodCommonUtils(object):
                             )
                         )
                     else:
-                        instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(
-                            OutlierValue(compId, None, "MOGUL_BOND_OUTLIER", tS, obsDist, meanValue, zVal, "Z-Score")
-                        )
+                        instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(OutlierValue(compId, None, "MOGUL_BOND_OUTLIER", tS, obsDist, meanValue, zVal, "Z-Score"))
                 #
                 logger.debug("length instanceModelOutlierD %d", len(instanceModelOutlierD))
 
@@ -3786,9 +3784,7 @@ class DictMethodCommonUtils(object):
                             )
                         )
                     else:
-                        instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(
-                            OutlierValue(compId, None, "MOGUL_ANGLE_OUTLIER", tS, obsDist, meanValue, zVal, "Z-Score")
-                        )
+                        instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(OutlierValue(compId, None, "MOGUL_ANGLE_OUTLIER", tS, obsDist, meanValue, zVal, "Z-Score"))
                 logger.debug("length instanceModelOutlierD %d", len(instanceModelOutlierD))
                 #
                 #
