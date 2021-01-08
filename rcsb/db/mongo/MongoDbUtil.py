@@ -11,6 +11,7 @@
 #       6-Sep-2018  jdw method to invoke general database command
 #       7-Sep-2018  jdw add schema binding to createCollection method.createCollection. Change the default option to bypassValidation=False
 #                       for method insertList()
+#       8-Jan-2021  jdw add distinct() method
 ##
 """
 Base class for simple essential database operations for MongoDb.
@@ -121,7 +122,7 @@ class MongoDbUtil(object):
         return False
 
     def updateCollection(self, databaseName, collectionName, bsonSchema=None, validationLevel="strict", validationAction="error"):
-        """ Update the validation schema and validation settings for the input collection
+        """Update the validation schema and validation settings for the input collection
         Args:
             databaseName (str): Description
             collectionName (str): Description
@@ -269,7 +270,7 @@ class MongoDbUtil(object):
         return None
 
     def update(self, databaseName, collectionName, dObj, selectD, upsertFlag=False):
-        """ Update documents satisfying the selection details with the content of dObj.
+        """Update documents satisfying the selection details with the content of dObj.
 
         Args:
             databaseName (str): Target database name
@@ -454,8 +455,8 @@ class MongoDbUtil(object):
         return False
 
     def fetch(self, databaseName, collectionName, selectL, queryD=None, suppressId=False):
-        """ Fetch selections (selectL) from documents satisfying input
-            query constraints.
+        """Fetch selections (selectL) from documents satisfying input
+        query constraints.
         """
         dList = []
         try:
@@ -486,8 +487,18 @@ class MongoDbUtil(object):
             logger.debug("Current indexes for %s %s : %r", databaseName, collectionName, clt.list_indexes())
             return clt.count_documents(tF)
         except Exception as e:
-            logger.exception("Failing %s and %s with %s", databaseName, collectionName, str(e))
+            logger.exception("Failing for %s and %s with %s", databaseName, collectionName, str(e))
         return 0
+
+    def distinct(self, databaseName, collectionName, ky):
+        """ Return a list of distinct values for the input key in the collection. """
+        rL = []
+        try:
+            clt = self.__mgObj[databaseName].get_collection(collectionName)
+            rL = clt.distinct(ky)
+        except Exception as e:
+            logger.exception("Failing for %s and %s (%s) with %s", databaseName, collectionName, ky, str(e))
+        return rL
 
     def __getKeyValues(self, dct, keyNames):
         """Return the tuple of values of corresponding to the input dictionary key names expressed in dot notation.
@@ -510,8 +521,7 @@ class MongoDbUtil(object):
         return tuple(rL)
 
     def __getKeyValue(self, dct, keyName):
-        """  Return the value of the corresponding key expressed in dot notation in the input dictionary object (nested).
-        """
+        """Return the value of the corresponding key expressed in dot notation in the input dictionary object (nested)."""
         try:
             kys = keyName.split(".")
             for key in kys:

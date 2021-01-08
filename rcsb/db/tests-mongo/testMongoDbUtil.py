@@ -133,9 +133,7 @@ class MongoDbUtilTests(unittest.TestCase):
         return rD
 
     def testCreateDatabase(self):
-        """Test case -  create database -
-
-        """
+        """Test case -  create database -"""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
@@ -148,8 +146,7 @@ class MongoDbUtilTests(unittest.TestCase):
             self.fail()
 
     def testCreateCollection(self):
-        """Test case -  create collection -
-        """
+        """Test case -  create collection -"""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
@@ -171,8 +168,7 @@ class MongoDbUtilTests(unittest.TestCase):
             self.fail()
 
     def testCreateDropDatabase(self):
-        """Test case -  create/drop database -
-        """
+        """Test case -  create/drop database -"""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
@@ -194,8 +190,7 @@ class MongoDbUtilTests(unittest.TestCase):
             self.fail()
 
     def testCreateCollectionDropDatabase(self):
-        """Test case -  create/drop collection -
-        """
+        """Test case -  create/drop collection -"""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
@@ -217,8 +212,7 @@ class MongoDbUtilTests(unittest.TestCase):
             self.fail()
 
     def testCreateDropCollection(self):
-        """Test case -  create/drop collection -
-        """
+        """Test case -  create/drop collection -"""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
@@ -247,9 +241,7 @@ class MongoDbUtilTests(unittest.TestCase):
             self.fail()
 
     def testInsertSingle(self):
-        """Test case -  create collection and insert data -
-
-        """
+        """Test case -  create collection and insert data -"""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
@@ -274,9 +266,7 @@ class MongoDbUtilTests(unittest.TestCase):
             self.fail()
 
     def testInsertList(self):
-        """Test case -  create collection and insert data -
-
-        """
+        """Test case -  create collection and insert data -"""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
@@ -308,9 +298,7 @@ class MongoDbUtilTests(unittest.TestCase):
             self.fail()
 
     def testReplaceSingle(self):
-        """Test case -  create collection and insert document  and then replace document -
-
-        """
+        """Test case -  create collection and insert document  and then replace document -"""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
@@ -361,9 +349,7 @@ class MongoDbUtilTests(unittest.TestCase):
             self.fail()
 
     def testReplaceList(self):
-        """Test case -  create collection and insert document list - replace and upsert document list
-
-        """
+        """Test case -  create collection and insert document list - replace and upsert document list"""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 nDocs = 10
@@ -414,9 +400,7 @@ class MongoDbUtilTests(unittest.TestCase):
             self.fail()
 
     def testSingleIndex(self):
-        """Test case -  create collection, create simple single index, insert document list, read check documents
-
-        """
+        """Test case -  create collection, create simple single index, insert document list, read check documents"""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 nDocs = 100
@@ -461,9 +445,7 @@ class MongoDbUtilTests(unittest.TestCase):
             self.fail()
 
     def testSingleIndexSelect(self):
-        """Test case -  create collection, create simple single index, insert document list, read check documents.
-
-        """
+        """Test case -  create collection, create simple single index, insert document list, read check documents."""
         try:
             logger.debug("Starting testSingleIndexSelect")
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
@@ -481,8 +463,9 @@ class MongoDbUtilTests(unittest.TestCase):
                 self.assertTrue(ok)
 
                 dList = []
+                nRows = 5
                 for ii in range(nDocs):
-                    dObj = self.__makeDataObj(2, 5, 5, ii)
+                    dObj = self.__makeDataObj(2, 5, nRows, ii)
                     dList.append(dObj)
                 #
                 keyName = "DOC_ID"
@@ -521,15 +504,23 @@ class MongoDbUtilTests(unittest.TestCase):
                 logger.debug("Fetch length %d", len(dList))
                 for ii, dD in enumerate(dList):
                     logger.debug("Fetch num %d: %r", ii, dD)
-
+                atName = "category_0.attribute_0"
+                vL0 = mg.distinct(self.__dbName, self.__collectionName, atName)
+                self.assertEqual(len(vL0), nRows + 2)
+                logger.debug("vL0 %r", vL0)
+                vL1 = mg.distinct(self.__dbName, self.__collectionName, "category_1.attribute_0")
+                self.assertEqual(len(vL1), nRows + 2)
+                for v in vL0:
+                    num = mg.count(self.__dbName, self.__collectionName, countFilter={atName: v})
+                    logger.debug("%s value %s (%d)", atName, v, num)
+                    self.assertGreaterEqual(num, 100)
+                #
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
 
     def testSchemaValidation1(self):
-        """Test case -  create collection and insert data with schema validation (ext. schema assignment)
-
-        """
+        """Test case -  create collection and insert data with schema validation (ext. schema assignment)"""
 
         #  Example of a Mongo flavor of JsonSchema
         vexpr = {"$jsonSchema": self.__mongoSchema}
@@ -574,9 +565,7 @@ class MongoDbUtilTests(unittest.TestCase):
             self.fail()
 
     def testSchemaValidation2(self):
-        """Test case -  create collection and insert data with schema validation (strict mode) (integrated schema assignment)
-
-        """
+        """Test case -  create collection and insert data with schema validation (strict mode) (integrated schema assignment)"""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
@@ -614,9 +603,7 @@ class MongoDbUtilTests(unittest.TestCase):
             self.fail()
 
     def testSchemaValidation3(self):
-        """Test case -  create collection and insert data with schema validation (warn mode) (integrated schema assignment)
-
-        """
+        """Test case -  create collection and insert data with schema validation (warn mode) (integrated schema assignment)"""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
