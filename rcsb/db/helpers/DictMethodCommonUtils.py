@@ -2933,7 +2933,7 @@ class DictMethodCommonUtils(object):
             ptClass = "Protein/Oligosaccharide"
         elif compClass in ["oligosaccharide"]:
             ptClass = "Oligosaccharide (only)"
-        elif compClass in ["protein/NA/oligosaccharide"]
+        elif compClass in ["protein/NA/oligosaccharide"]:
             ptClass = "Protein/NA/Oligosaccharide"
         # JDW
         else:
@@ -3756,7 +3756,9 @@ class DictMethodCommonUtils(object):
                             )
                         )
                     else:
-                        instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(OutlierValue(compId, None, "MOGUL_BOND_OUTLIER", tS, obsDist, meanValue, zVal, "Z-Score"))
+                        instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(
+                            OutlierValue(compId, None, "MOGUL_BOND_OUTLIER", tS, obsDist, meanValue, zVal, "Z-Score")
+                        )
                 #
                 logger.debug("length instanceModelOutlierD %d", len(instanceModelOutlierD))
 
@@ -3786,7 +3788,9 @@ class DictMethodCommonUtils(object):
                             )
                         )
                     else:
-                        instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(OutlierValue(compId, None, "MOGUL_ANGLE_OUTLIER", tS, obsDist, meanValue, zVal, "Z-Score"))
+                        instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(
+                            OutlierValue(compId, None, "MOGUL_ANGLE_OUTLIER", tS, obsDist, meanValue, zVal, "Z-Score")
+                        )
                 logger.debug("length instanceModelOutlierD %d", len(instanceModelOutlierD))
                 #
                 #

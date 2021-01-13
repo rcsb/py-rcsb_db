@@ -236,6 +236,48 @@ class DictMethodEntryHelper(object):
             logger.exception("Failing with %s", str(e))
         return False
 
+    def aggregateCitationOrcidIdentifiers(self, dataContainer, catName, atName, **kwargs):
+        """Set the value of the input data item with list of citation authors.
+
+        Args:
+            dataContainer (object): mmif.api.DataContainer object instance
+            catName (str): Category name
+            atName (str): Attribute name
+
+        Returns:
+            bool: True for success or False otherwise
+        """
+        logger.debug("Starting catName %s atName %s kwargs %r", catName, atName, kwargs)
+        try:
+            if not dataContainer.exists(catName) or not dataContainer.exists("citation_author"):
+                return False
+            #
+            cObj = dataContainer.getObj(catName)
+            if not cObj.hasAttribute(atName):
+                cObj.appendAttribute(atName)
+            citIdL = cObj.getAttributeValueList("id")
+            #
+            tObj = dataContainer.getObj("citation_author")
+            #
+
+            citIdL = list(set(citIdL))
+            tD = {}
+            for ii, citId in enumerate(citIdL):
+                if tObj.hasAttribute("identifier_ORCID"):
+                    tD[citId] = tObj.selectValuesWhere("identifier_ORCID", citId, "citation_id")
+                else:
+                    tD[citId] = []
+            for ii in range(cObj.getRowCount()):
+                citId = cObj.getValue("id", ii)
+                if tD[citId]:
+                    cObj.setValue(",".join(tD[citId]), atName, ii)
+                else:
+                    cObj.setValue("?", atName, ii)
+            return True
+        except Exception as e:
+            logger.exception("Failing for %r with %s", dataContainer.getName(), str(e))
+        return False
+
     def aggregateCitationAuthors(self, dataContainer, catName, atName, **kwargs):
         """Set the value of the input data item with list of citation authors.
 
@@ -283,6 +325,7 @@ class DictMethodEntryHelper(object):
             bool: True for success or False otherwise
         """
         logger.debug("Starting catName %s atName %s kwargs %r", catName, atName, kwargs)
+        revAbbrev = None
         try:
             if not dataContainer.exists(catName):
                 return False
@@ -311,8 +354,8 @@ class DictMethodEntryHelper(object):
         return False
 
     def __updateJournalAbbreviation(self, rcsbId, issn, curAbbrev):
+        revAbbrev = None
         try:
-            revAbbrev = None
             if issn:
                 medlineAbbrev = self.__crP.getMedlineJournalAbbreviation(issn)
                 # medlineIsoAbbrev = self.__crP.getMedlineJournalIsoAbbreviation(issn)
@@ -1044,6 +1087,7 @@ class DictMethodEntryHelper(object):
         Add  rcsb_primary_citation category as a copy or the citation category
         with rcsb extensions.
         """
+        catName = None
         try:
             logger.debug("Starting with %r %r %r", dataContainer.getName(), blockName, kwargs)
             # Exit if source categories are missing
