@@ -2933,8 +2933,8 @@ class DictMethodCommonUtils(object):
             ptClass = "Protein/Oligosaccharide"
         elif compClass in ["oligosaccharide"]:
             ptClass = "Oligosaccharide (only)"
-        elif compClass in ["protein/NA/oligosaccharide"]:
-            ptClass = "Protein/NA/Oligosaccharide"
+        # elif compClass in ["protein/NA/oligosaccharide"]:
+        #    ptClass = "Protein/NA/Oligosaccharide"
         # JDW
         else:
             ptClass = "Other"

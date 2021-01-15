@@ -285,3 +285,4 @@
   8-Jan-2021  V1.652 Add mongodb distinct() method.
   8-Jan-2021  V1.653 Enumeration updates for selected polymer types.
  12-Jan-2021  V1.654 Add primary citation author ORCIDs
+ 15-Jan-2021  V1.655 Back out Protein/NA/Oligosaccharide selected polymer type for now
