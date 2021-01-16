@@ -78,7 +78,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=configName)
         self.__testDirPath = os.path.join(HERE, "test-output", "pdbx-fails")
         self.__testIhmDirPath = os.path.join(HERE, "test-output", "ihm-files")
-        self.__export = False
+        self.__export = True
         #
         self.__extraOpts = None
         # The following for extended parent/child info -
