@@ -26,8 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class DictMethodEntityInstanceHelper(object):
-    """ This helper class implements methods supporting entity-instance-level functions in the RCSB dictionary extension.
-    """
+    """This helper class implements methods supporting entity-instance-level functions in the RCSB dictionary extension."""
 
     def __init__(self, **kwargs):
         """
@@ -88,26 +87,26 @@ class DictMethodEntityInstanceHelper(object):
         return False
 
     def __addPdbxValidateAsymIds(self, dataContainer, asymMapD, npAuthAsymMapD, brAuthAsymMapD):
-        """ Internal method to insert Asym_id's into the following categories:
+        """Internal method to insert Asym_id's into the following categories:
 
-                _pdbx_validate_close_contact.rcsb_label_asym_id_1
-                _pdbx_validate_close_contact.rcsb_label_asym_id_2
-                _pdbx_validate_symm_contact.rcsb_label_asym_id_1
-                _pdbx_validate_symm_contact.rcsb_label_asym_id_2
-                _pdbx_validate_rmsd_bond.rcsb_label_asym_id_1
-                _pdbx_validate_rmsd_bond.rcsb_label_asym_id_2
-                _pdbx_validate_rmsd_angle.rcsb_label_asym_id_1
-                _pdbx_validate_rmsd_angle.rcsb_label_asym_id_2
-                _pdbx_validate_rmsd_angle.rcsb_label_asym_id_3
-                _pdbx_validate_torsion.rcsb_label_asym_id
-                _pdbx_validate_peptide_omega.rcsb_label_asym_id_1
-                _pdbx_validate_peptide_omega.rcsb_label_asym_id_2
-                _pdbx_validate_chiral.rcsb_label_asym_id
-                _pdbx_validate_planes.rcsb_label_asym_id
-                _pdbx_validate_planes_atom.rcsb_label_asym_id
-                _pdbx_validate_main_chain_plane.rcsb_label_asym_id
-                _pdbx_validate_polymer_linkage.rcsb_label_asym_id_1
-                _pdbx_validate_polymer_linkage.rcsb_label_asym_id_2
+        _pdbx_validate_close_contact.rcsb_label_asym_id_1
+        _pdbx_validate_close_contact.rcsb_label_asym_id_2
+        _pdbx_validate_symm_contact.rcsb_label_asym_id_1
+        _pdbx_validate_symm_contact.rcsb_label_asym_id_2
+        _pdbx_validate_rmsd_bond.rcsb_label_asym_id_1
+        _pdbx_validate_rmsd_bond.rcsb_label_asym_id_2
+        _pdbx_validate_rmsd_angle.rcsb_label_asym_id_1
+        _pdbx_validate_rmsd_angle.rcsb_label_asym_id_2
+        _pdbx_validate_rmsd_angle.rcsb_label_asym_id_3
+        _pdbx_validate_torsion.rcsb_label_asym_id
+        _pdbx_validate_peptide_omega.rcsb_label_asym_id_1
+        _pdbx_validate_peptide_omega.rcsb_label_asym_id_2
+        _pdbx_validate_chiral.rcsb_label_asym_id
+        _pdbx_validate_planes.rcsb_label_asym_id
+        _pdbx_validate_planes_atom.rcsb_label_asym_id
+        _pdbx_validate_main_chain_plane.rcsb_label_asym_id
+        _pdbx_validate_polymer_linkage.rcsb_label_asym_id_1
+        _pdbx_validate_polymer_linkage.rcsb_label_asym_id_2
         """
         #
         mD = {
@@ -210,7 +209,7 @@ class DictMethodEntityInstanceHelper(object):
 
     # ---- JDW
     def buildEntityInstanceFeatureSummaryPrev(self, dataContainer, catName, **kwargs):
-        """ Build category rcsb_entity_instance_feature_summary (UPDATED)
+        """Build category rcsb_entity_instance_feature_summary (UPDATED)
 
         Example:
 
@@ -271,7 +270,14 @@ class DictMethodEntityInstanceHelper(object):
                             monCount += abs(int(endSeqId) - int(begSeqId) + 1)
                         except Exception:
                             logger.warning(
-                                "%s fType %r fId %r bad sequence begSeqIdL %r endSeqIdL %r tbegS %r tendS %r", dataContainer.getName(), fType, fId, begSeqIdL, endSeqIdL, tbegS, tendS,
+                                "%s fType %r fId %r bad sequence begSeqIdL %r endSeqIdL %r tbegS %r tendS %r",
+                                dataContainer.getName(),
+                                fType,
+                                fId,
+                                begSeqIdL,
+                                endSeqIdL,
+                                tbegS,
+                                tendS,
                             )
 
                     fMonomerCountD.setdefault(asymId, {}).setdefault(fType, []).append(monCount)
@@ -323,7 +329,7 @@ class DictMethodEntityInstanceHelper(object):
     # ---- JDW
 
     def buildEntityInstanceFeatures(self, dataContainer, catName, **kwargs):
-        """ Build category rcsb_entity_instance_feature ...
+        """Build category rcsb_entity_instance_feature ...
 
         Example:
             loop_
@@ -731,7 +737,9 @@ class DictMethodEntityInstanceHelper(object):
                     #
                     # ("targetCompId", "connectType", "partnerCompId", "partnerAsymId", "partnerEntityType", "bondDistance", "bondOrder")
                     cObj.setValue(
-                        ";".join(["%s has %s with %s instance %s in model 1" % (rTup.targetCompId, rTup.connectType, rTup.partnerEntityType, rTup.partnerAsymId) for rTup in rTupL]),
+                        ";".join(
+                            ["%s has %s with %s instance %s in model 1" % (rTup.targetCompId, rTup.connectType, rTup.partnerEntityType, rTup.partnerAsymId) for rTup in rTupL]
+                        ),
                         "feature_value_details",
                         ii,
                     )
@@ -801,7 +809,7 @@ class DictMethodEntityInstanceHelper(object):
         return False
 
     def addConnectionDetails(self, dataContainer, catName, **kwargs):
-        """ Build rcsb_struct_conn category -
+        """Build rcsb_struct_conn category -
 
         Args:
             dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
@@ -873,15 +881,13 @@ class DictMethodEntityInstanceHelper(object):
         return False
 
     def __stripWhiteSpace(self, val):
-        """ Remove all white space from the input value.
-
-        """
+        """Remove all white space from the input value."""
         if val is None:
             return val
         return self.__wsPattern.sub("", val)
 
     def buildInstanceValidationFeatures(self, dataContainer, catName, **kwargs):
-        """ Build category rcsb_entity_instance_validation_feature ...
+        """Build category rcsb_entity_instance_validation_feature ...
 
         Example:
             loop_
@@ -917,7 +923,7 @@ class DictMethodEntityInstanceHelper(object):
             "ROTAMER_OUTLIER": "Molprobity rotamer outlier",
             "RAMACHANDRAN_OUTLIER": "Molprobity Ramachandran outlier",
             "RSRZ_OUTLIER": "Real space R-value Z score > 2",
-            "RSRCC_OUTLIER": "Real space density correlation value < 0.65",
+            "RSCC_OUTLIER": "Real space density correlation value < 0.65",
             "MOGUL_BOND_OUTLIER": "Mogul bond distance outlier",
             "MOGUL_ANGLE_OUTLIER": "Mogul bond angle outlier",
             "BOND_OUTLIER": "Molprobity bond distance outlier",
@@ -948,7 +954,7 @@ class DictMethodEntityInstanceHelper(object):
             #
             logger.debug("Length instanceModelOutlierD %d", len(instanceModelOutlierD))
             #
-            # (modelId, asymId), []).append((compId, int(seqId), "RSRCC_OUTLIER", tS)
+            # (modelId, asymId), []).append((compId, int(seqId), "RSCC_OUTLIER", tS)
             for (modelId, asymId, hasSeq), pTupL in instanceModelOutlierD.items():
                 fTypeL = sorted(set([pTup.outlierType for pTup in pTupL]))
                 jj = 1
@@ -985,7 +991,9 @@ class DictMethodEntityInstanceHelper(object):
                         cObj.setValue(";".join([pTup.reported if pTup.reported else "?" for pTup in pTupL if pTup.outlierType == fType]), "feature_value_reported", ii)
                         cObj.setValue(";".join([pTup.reference if pTup.reference else "?" for pTup in pTupL if pTup.outlierType == fType]), "feature_value_reference", ii)
                         cObj.setValue(
-                            ";".join([pTup.uncertaintyValue if pTup.uncertaintyValue else "?" for pTup in pTupL if pTup.outlierType == fType]), "feature_value_uncertainty_estimate", ii,
+                            ";".join([pTup.uncertaintyValue if pTup.uncertaintyValue else "?" for pTup in pTupL if pTup.outlierType == fType]),
+                            "feature_value_uncertainty_estimate",
+                            ii,
                         )
                         cObj.setValue(
                             ";".join([pTup.uncertaintyType if pTup.uncertaintyType else "?" for pTup in pTupL if pTup.outlierType == fType]),
@@ -1008,7 +1016,7 @@ class DictMethodEntityInstanceHelper(object):
 
     # --- JDW
     def buildInstanceValidationFeatureSummaryPrev(self, dataContainer, catName, **kwargs):
-        """ Build category rcsb_entity_instance_validation_feature_summary
+        """Build category rcsb_entity_instance_validation_feature_summary
 
         Example:
 
@@ -1187,7 +1195,7 @@ class DictMethodEntityInstanceHelper(object):
 
     # --- JDW
     def buildEntityInstanceFeatureSummary(self, dataContainer, catName, **kwargs):
-        """ Build category rcsb_entity_instance_feature_summary (UPDATED)
+        """Build category rcsb_entity_instance_feature_summary (UPDATED)
 
         Example:
 
@@ -1250,7 +1258,14 @@ class DictMethodEntityInstanceHelper(object):
                             monCount += abs(int(endSeqId) - int(begSeqId) + 1)
                         except Exception:
                             logger.warning(
-                                "%s fType %r fId %r bad sequence begSeqIdL %r endSeqIdL %r tbegS %r tendS %r", dataContainer.getName(), fType, fId, begSeqIdL, endSeqIdL, tbegS, tendS,
+                                "%s fType %r fId %r bad sequence begSeqIdL %r endSeqIdL %r tbegS %r tendS %r",
+                                dataContainer.getName(),
+                                fType,
+                                fId,
+                                begSeqIdL,
+                                endSeqIdL,
+                                tbegS,
+                                tendS,
                             )
 
                     fMonomerCountD.setdefault(asymId, {}).setdefault(fType, []).append(monCount)
@@ -1331,7 +1346,7 @@ class DictMethodEntityInstanceHelper(object):
         return True
 
     def buildInstanceValidationFeatureSummary(self, dataContainer, catName, **kwargs):
-        """ Build category rcsb_entity_instance_validation_feature_summary
+        """Build category rcsb_entity_instance_validation_feature_summary
 
         Example:
 
@@ -1451,7 +1466,7 @@ class DictMethodEntityInstanceHelper(object):
 
     #
     def buildEntityInstanceAnnotations(self, dataContainer, catName, **kwargs):
-        """ Build category rcsb_entity_instance_annotation ...
+        """Build category rcsb_entity_instance_annotation ...
 
         Example:
             loop_
@@ -1589,7 +1604,9 @@ class DictMethodEntityInstanceHelper(object):
                     #
                     # ("targetCompId", "connectType", "partnerCompId", "partnerAsymId", "partnerEntityType", "bondDistance", "bondOrder")
                     cObj.setValue(
-                        "%s has %s with %s instance %s in model 1" % (rTup.targetCompId, rTup.connectType, rTup.partnerEntityType, rTup.partnerAsymId), "description", ii,
+                        "%s has %s with %s instance %s in model 1" % (rTup.targetCompId, rTup.connectType, rTup.partnerEntityType, rTup.partnerAsymId),
+                        "description",
+                        ii,
                     )
 
                     cObj.setValue("PDB", "provenance_source", ii)

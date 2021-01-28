@@ -42,7 +42,7 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.9",
     ),
     entry_points={
         "console_scripts": [
@@ -66,7 +66,7 @@ setup(
         "mmcif >= 0.57",
         'scandir; python_version < "3.0"',
         # 'configparser; python_version < "3.0"',
-        "rcsb.utils.io >= 0.95",
+        "rcsb.utils.io >= 0.97",
         "rcsb.utils.config >= 0.35",
         "rcsb.utils.multiproc >= 0.17",
         "rcsb.utils.validation >= 0.22",

@@ -3842,12 +3842,12 @@ class DictMethodCommonUtils(object):
                                 )
                             )
                         if rsrCc and float(rsrCc) < 0.650:
-                            tS = "RSRCC < 0.65"
+                            tS = "RSCC < 0.65"
                             instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(
                                 OutlierValue(
                                     compId,
                                     int(seqId),
-                                    "RSRCC_OUTLIER",
+                                    "RSCC_OUTLIER",
                                     tS,
                                 )
                             )
@@ -3856,8 +3856,8 @@ class DictMethodCommonUtils(object):
                             tS = "%s > 2.0" % rsrZ
                             instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(OutlierValue(compId, None, "RSRZ_OUTLIER", tS, rsr, None, rsrZ, "Z-Score"))
                         if rsrCc and float(rsrCc) < 0.650:
-                            tS = "RSRCC < 0.65"
-                            instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(OutlierValue(compId, None, "RSRCC_OUTLIER", tS, rsrCc))
+                            tS = "RSCC < 0.65"
+                            instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(OutlierValue(compId, None, "RSCC_OUTLIER", tS, rsrCc))
                 #
             logger.debug("instanceModelOutlierD %r", instanceModelOutlierD)
             rD = {"instanceModelOutlierD": instanceModelOutlierD}
