@@ -24,6 +24,8 @@ jobs:
 
   variables:
     - group: py-shared-variables
+    - name: DECODE_PERCENTS
+      value: false
 
   steps:
     #
