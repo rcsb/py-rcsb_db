@@ -739,9 +739,9 @@ class DictMethodChemRefHelper(object):
                 prog = ccIObj.getValue("program", ii)
                 typ = ccIObj.getValue("type", ii)
                 #
-                if typ == "SMILES_CANONICAL" and prog == "CACTVS":
+                if typ == "SMILES_CANONICAL" and prog.upper().startswith("OPENEYE"):
                     wObj.setValue(nm, "SMILES_stereo", iRow)
-                elif typ == "SMILES" and prog == "CACTVS":
+                elif typ == "SMILES" and prog.upper().startswith("OPENEYE"):
                     wObj.setValue(nm, "SMILES", iRow)
                 elif typ == "InChI" and prog == "InChI":
                     wObj.setValue(nm, "InChI", iRow)

@@ -288,3 +288,4 @@
  15-Jan-2021  V1.655 Back out Protein/NA/Oligosaccharide selected polymer type for now
  16-Jan-2021  V1.656 Further enumeration updates for polymer types.
  28-Jan-2021  V1.657 RSRCC -> RSCC
+ 29-Jan-2021  V1.658 Expose OpenEye SMILES descriptors as RCSB descriptors
