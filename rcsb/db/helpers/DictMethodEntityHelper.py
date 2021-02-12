@@ -398,7 +398,7 @@ class DictMethodEntityHelper(object):
                             if taxId:
                                 if not sObj.hasAttribute(atTaxId):
                                     sObj.appendAttribute(atTaxId)
-                                logger.info("%s salvaged taxId %r using %r", dataContainer.getName(), taxId, sn)
+                                logger.debug("%s salvaged taxId %r using %r", dataContainer.getName(), taxId, sn)
                                 sObj.setValue(str(taxId), atTaxId, ii)
                             else:
                                 logger.warning("%s taxId salvage fails for scientific name %s", dataContainer.getName(), sn)
@@ -788,9 +788,10 @@ class DictMethodEntityHelper(object):
         _rcsb_entity_containter_identifiers.prd_id
 
         """
+        catName = "pdbx_molecule"
+        atName = "rcsb_entity_id"
         try:
-            catName = "pdbx_molecule"
-            atName = "rcsb_entity_id"
+
             logger.debug("Starting catName %s atName %s", catName, atName)
             if catName != "pdbx_molecule" and "atName" != "rcsb_entity_id":
                 return False
@@ -1234,7 +1235,7 @@ class DictMethodEntityHelper(object):
                         eObj.setValue("?", "rcsb_enzyme_class_combined_provenance_source", ii)
                         eObj.setValue("?", "rcsb_enzyme_class_combined_depth", ii)
                         if ecIdL:
-                            logger.warning("%s obsolete or undefined EC class detected %r", dataContainer.getName(), ecV)
+                            logger.debug("%s obsolete or undefined EC class detected %r", dataContainer.getName(), ecV)
             return True
         except Exception as e:
             logger.exception("For %s %s failing with %s", catName, atName, str(e))

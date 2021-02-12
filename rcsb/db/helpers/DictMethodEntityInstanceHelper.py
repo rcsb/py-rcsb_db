@@ -18,6 +18,7 @@ __license__ = "Apache 2.0"
 
 import logging
 import re
+import time
 from collections import OrderedDict
 
 from mmcif.api.DataCategory import DataCategory
@@ -43,6 +44,8 @@ class DictMethodEntityInstanceHelper(object):
         rP = kwargs.get("resourceProvider")
         self.__commonU = rP.getResource("DictMethodCommonUtils instance") if rP else None
         self.__dApi = rP.getResource("Dictionary API instance (pdbx_core)") if rP else None
+        self.__ccP = rP.getResource("ChemCompProvider instance") if rP else None
+        self.__rlsP = rP.getResource("RcsbLigandScoreProvider instance") if rP else None
         #
         logger.debug("Dictionary entity-instance level method helper init")
 
@@ -187,6 +190,7 @@ class DictMethodEntityInstanceHelper(object):
 
     def __initializeInstanceFeatureType(self, dataContainer, asymId, fCountD, countType="set"):
         instTypeD = self.__commonU.getInstanceTypes(dataContainer)
+        eTupL = []
         eType = instTypeD[asymId]
         if eType == "polymer":
             eTupL = self.__dApi.getEnumListWithDetail("rcsb_polymer_instance_feature_summary", "type")
@@ -1136,6 +1140,7 @@ class DictMethodEntityInstanceHelper(object):
     def __initializeInstanceValidationFeatureType(self, dataContainer, asymId, fCountD, countType="set"):
         instTypeD = self.__commonU.getInstanceTypes(dataContainer)
         eType = instTypeD[asymId]
+        eTupL = []
         # rcsb_entity_instance_validation_feature_summary.type
         if eType == "polymer":
             eTupL = self.__dApi.getEnumListWithDetail("rcsb_entity_instance_validation_feature_summary", "type")
@@ -1619,3 +1624,153 @@ class DictMethodEntityInstanceHelper(object):
         except Exception as e:
             logger.exception("%s %s failing with %s", dataContainer.getName(), catName, str(e))
         return False
+
+    def buildInstanceValidationScores(self, dataContainer, catName, **kwargs):
+        """Build category rcsb_nonpolymer_instance_validation_score ...
+
+        Example:
+            loop_
+            _rcsb_nonpolymer_instance_validation_score.ordinal
+            _rcsb_nonpolymer_instance_validation_score.entry_id
+            _rcsb_nonpolymer_instance_validation_score.entity_id
+            _rcsb_nonpolymer_instance_validation_score.asym_id
+            _rcsb_nonpolymer_instance_validation_score.auth_asym_id
+            _rcsb_nonpolymer_instance_validation_score.comp_id
+            _rcsb_nonpolymer_instance_validation_score.model_id
+            _rcsb_nonpolymer_instance_validation_score.type
+            _rcsb_nonpolymer_instance_validation_score.mogul_angles_RMSZ
+            _rcsb_nonpolymer_instance_validation_score.mogul_bonds_RMSZ
+            _rcsb_nonpolymer_instance_validation_score.RSR
+            _rcsb_nonpolymer_instance_validation_score.RSCC
+            _rcsb_nonpolymer_instance_validation_score.score_model_fit
+            _rcsb_nonpolymer_instance_validation_score.score_model_geometry
+            _rcsb_nonpolymer_instance_validation_score.ranking_model_fit
+            _rcsb_nonpolymer_instance_validation_score.ranking_model_geometry
+            _rcsb_nonpolymer_instance_validation_score.is_best_instance
+            _rcsb_nonpolymer_instance_validation_score.is_subject_of_investigation
+            #
+        """
+        logger.debug("Starting with %s %r %r", dataContainer.getName(), catName, kwargs)
+        startTime = time.time()
+        try:
+            if catName != "rcsb_nonpolymer_instance_validation_score":
+                return False
+            if not dataContainer.exists("entry"):
+                return False
+            #
+            eObj = dataContainer.getObj("entry")
+            entryId = eObj.getValue("id", 0)
+            #
+            # Create the new target category
+            if not dataContainer.exists(catName):
+                dataContainer.append(DataCategory(catName, attributeNameList=self.__dApi.getAttributeNameList(catName)))
+            cObj = dataContainer.getObj(catName)
+            ii = cObj.getRowCount()
+            #
+            asymIdD = self.__commonU.getInstanceEntityMap(dataContainer)
+            asymAuthIdD = self.__commonU.getAsymAuthIdMap(dataContainer)
+            #
+            instanceModelValidationD = self.__commonU.getInstanceNonpolymerValidationInfo(dataContainer)
+            #
+            # NonpolymerValidationFields = ("rsr", "rscc", "mogul_bonds_rmsz", "mogul_angles_rmsz", "missing_heavy_atom_count")
+            #
+            logger.debug("Length instanceModelValidationD %d", len(instanceModelValidationD))
+            #
+            ccTargets = self.__commonU.getTargetComponents(dataContainer)
+            #
+            meanD, stdD, loadingD = self.__rlsP.getParameterStatistics()
+            excludeList = self.__rlsP.getLigandExcludeList()
+            rankD = {}
+            scoreD = {}
+            # calculate scores and ranks and find best ranking
+            for (modelId, asymId, compId), vTup in instanceModelValidationD.items():
+                if (asymId not in asymIdD) or (asymId not in asymAuthIdD):
+                    continue
+                numHeavyAtoms = self.__ccP.getAtomCountHeavy(compId)
+                if not numHeavyAtoms:
+                    continue
+                completeness = float(numHeavyAtoms - vTup.missing_heavy_atom_count) / float(numHeavyAtoms)
+                logger.debug("compId %s numHeavyAtoms %d completeness %0.2f", compId, numHeavyAtoms, completeness)
+                #
+                fitScore, fitRanking = self.__calculateFitScore(vTup.rsr, vTup.rscc, completeness, meanD, stdD, loadingD)
+                geoScore, geoRanking = self.__calculateGeometryScore(vTup.mogul_bonds_rmsz, vTup.mogul_angles_rmsz, meanD, stdD, loadingD)
+                #
+                rankD[compId] = (max(fitRanking, rankD[compId][0]), asymId) if compId in rankD else (fitRanking, asymId)
+
+                scoreD[(modelId, asymId, compId)] = (fitScore, fitRanking, geoScore, geoRanking)
+            #
+            for (modelId, asymId, compId), vTup in instanceModelValidationD.items():
+                if (modelId, asymId, compId) not in scoreD:
+                    continue
+                #
+                entityId = asymIdD[asymId]
+                authAsymId = asymAuthIdD[asymId]
+                #
+                cObj.setValue(ii + 1, "ordinal", ii)
+                cObj.setValue(modelId, "model_id", ii)
+                cObj.setValue(entryId, "entry_id", ii)
+                cObj.setValue(entityId, "entity_id", ii)
+                cObj.setValue(asymId, "asym_id", ii)
+                cObj.setValue(authAsymId, "auth_asym_id", ii)
+                cObj.setValue(compId, "comp_id", ii)
+                cObj.setValue("RCSB_LIGAND_QUALITY_2021", "type", ii)
+                #
+                cObj.setValue(vTup.rsr, "RSR", ii)
+                cObj.setValue(vTup.rscc, "RSCC", ii)
+                cObj.setValue(vTup.mogul_angles_rmsz, "mogul_angles_RMSZ", ii)
+                cObj.setValue(vTup.mogul_bonds_rmsz, "mogul_bonds_RMSZ", ii)
+                #
+                sTup = scoreD[(modelId, asymId, compId)]
+                cObj.setValue(sTup[0], "score_model_fit", ii)
+                cObj.setValue(sTup[1], "ranking_model_fit", ii)
+                cObj.setValue(sTup[2], "score_model_geometry", ii)
+                cObj.setValue(sTup[3], "ranking_model_geometry", ii)
+                isBest = "Y" if rankD[compId][1] == asymId else "N"
+                cObj.setValue(isBest, "is_best_instance", ii)
+                #
+                isTarget = "N"
+                if compId in ccTargets:
+                    isTarget = "Y"
+                elif compId in excludeList:
+                    isTarget = "N"
+                elif self.__ccP.getFormulaWeight(compId) and self.__ccP.getFormulaWeight(compId) > 150.0:
+                    isTarget = "Y"
+                cObj.setValue(isTarget, "is_subject_of_investigation", ii)
+                #
+                ii += 1
+                #
+            ##
+            endTime = time.time()
+            logger.debug("Completed at %s (%.4f seconds)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
+            return True
+        except Exception as e:
+            logger.exception("For %s %r failing with %s", dataContainer.getName(), catName, str(e))
+        return False
+
+    def __calculateFitScore(self, rsr, rscc, completeness, meanD, stdD, loadingD):
+        fitScore = None
+        fitRanking = 0.0
+        try:
+            if rsr and rscc:
+                if completeness < 1.0:
+                    rsr = rsr + 0.08235 * (1.0 - completeness)
+                    rscc = rscc - 0.09652 * (1.0 - completeness)
+                fitScore = ((rsr - meanD["rsr"]) / stdD["rsr"]) * loadingD["rsr"] + ((rscc - meanD["rscc"]) / stdD["rscc"]) * loadingD["rscc"]
+                fitRanking = self.__rlsP.getFitScoreRanking(fitScore)
+        except Exception as e:
+            logger.exception("Failing for rsr %r rscc %r with %s", rsr, rscc, str(e))
+        return fitScore, fitRanking
+
+    def __calculateGeometryScore(self, bondsRmsZ, anglesRmsZ, meanD, stdD, loadingD):
+        geoScore = None
+        geoRanking = 0.0
+        try:
+            if bondsRmsZ and anglesRmsZ:
+                geoScore = ((bondsRmsZ - meanD["mogul_bonds_rmsz"]) / stdD["mogul_bonds_rmsz"]) * loadingD["mogul_bonds_rmsz"] + (
+                    (anglesRmsZ - meanD["mogul_angles_rmsz"]) / stdD["mogul_angles_rmsz"]
+                ) * loadingD["mogul_angles_rmsz"]
+                geoRanking = self.__rlsP.getGeometryScoreRanking(geoScore)
+        except Exception as e:
+            logger.exception("Failing for bondsRmsZ %r anglesRmsZ %r with %r", bondsRmsZ, anglesRmsZ, str(e))
+
+        return geoScore, geoRanking

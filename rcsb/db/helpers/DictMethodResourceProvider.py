@@ -42,6 +42,7 @@ from rcsb.utils.chemref.DrugBankProvider import DrugBankProvider
 from rcsb.utils.chemref.PsiModProvider import PsiModProvider
 from rcsb.utils.chemref.PharosProvider import PharosProvider
 from rcsb.utils.chemref.PubChemProvider import PubChemProvider
+from rcsb.utils.chemref.RcsbLigandScoreProvider import RcsbLigandScoreProvider
 from rcsb.utils.chemref.ResidProvider import ResidProvider
 from rcsb.utils.citation.CitationReferenceProvider import CitationReferenceProvider
 from rcsb.utils.citation.JournalTitleAbbreviationProvider import JournalTitleAbbreviationProvider
@@ -75,8 +76,6 @@ class DictMethodResourceProvider(SingletonClass):
         self.__configName = kwargs.get("configName", self.__cfgOb.getDefaultSectionName())
         self.__cachePath = kwargs.get("cachePath", ".")
         #
-        self.__drugBankMappingDict = {}
-        self.__csdModelMappingDict = {}
         self.__taxU = None
         self.__ecU = None
         self.__scopU = None
@@ -97,6 +96,7 @@ class DictMethodResourceProvider(SingletonClass):
         self.__jtaP = None
         self.__pcP = None
         self.__phP = None
+        self.__rlsP = None
         #
         #
         # self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
@@ -121,6 +121,7 @@ class DictMethodResourceProvider(SingletonClass):
             "JournalTitleAbbreviationProvider instance": self.__fetchJournalTitleAbbreviationProvider,
             "PubChemProvider instance": self.__fetchPubChemProvider,
             "PharosProvider instance": self.__fetchPharosProvider,
+            "RcsbLigandScoreProvider instance": self.__fetchRcsbLigandScoreProvider,
         }
         logger.debug("Dictionary resource provider init completed")
         #
@@ -383,3 +384,10 @@ class DictMethodResourceProvider(SingletonClass):
                 logger.warning("Failing with %s", str(e))
             #
         return self.__phP
+
+    def __fetchRcsbLigandScoreProvider(self, cfgOb, configName, cachePath, useCache=None, **kwargs):
+        logger.debug("configName %s cachePath %s kwargs %r", configName, cachePath, kwargs)
+        _ = cfgOb
+        if not self.__rlsP:
+            self.__rlsP = RcsbLigandScoreProvider(cachePath=cachePath, useCache=useCache)
+        return self.__rlsP

@@ -42,6 +42,9 @@ NonpolymerBoundEntity = namedtuple("NonpolymerBoundEntity", BoundEntityFields, d
 BoundInstanceFields = ("targetCompId", "connectType", "partnerCompId", "partnerAsymId", "partnerEntityType", "bondDistance", "bondOrder")
 NonpolymerBoundInstance = namedtuple("NonpolymerBoundInstance", BoundInstanceFields, defaults=(None,) * len(BoundInstanceFields))
 
+NonpolymerValidationFields = ("rsr", "rscc", "mogul_bonds_rmsz", "mogul_angles_rmsz", "missing_heavy_atom_count")
+NonpolymerValidationInstance = namedtuple("NonpolymerValidationInstance", NonpolymerValidationFields, defaults=(None,) * len(NonpolymerValidationFields))
+
 
 class DictMethodCommonUtils(object):
     """Helper class implements common utility external method references supporting the RCSB dictionary extension."""
@@ -420,6 +423,7 @@ class DictMethodCommonUtils(object):
             entityPolymerMonomerCountD = {}
             entityPolymerLengthD = {}
             hasEntityPolySeq = False
+            epsObj = None
             if dataContainer.exists("entity_poly_seq"):
                 epsObj = dataContainer.getObj("entity_poly_seq")
                 hasEntityPolySeq = True
@@ -922,6 +926,7 @@ class DictMethodCommonUtils(object):
         #
         instancePolymerModeledMonomerCountD = {}
         instancePolymerUnmodeledMonomerCountD = {}
+        atomSiteInfoD = {}
         modelIdL = []
         asymAuthIdD = {}
         instanceTypeD = self.getInstanceTypes(dataContainer)
@@ -1470,7 +1475,7 @@ class DictMethodCommonUtils(object):
                     if (begAsymId == endAsymId) and (begSeqId <= endSeqId):
                         cisPeptideD.setdefault(cId, []).append((begAsymId, begSeqId, endSeqId, modelId, omegaAngle))
                     else:
-                        logger.warning("%s inconsistent cis peptide description id = %s", dataContainer.getName(), cId)
+                        logger.debug("%s inconsistent cis peptide description id = %s", dataContainer.getName(), cId)
 
             if dataContainer.exists("struct_conf"):
                 tObj = dataContainer.getObj("struct_conf")
@@ -1491,7 +1496,7 @@ class DictMethodCommonUtils(object):
                         if (begAsymId == endAsymId) and (begSeqId <= endSeqId):
                             helixRangeD.setdefault(hId, []).append((begAsymId, begSeqId, endSeqId))
                         else:
-                            logger.warning("%s inconsistent struct_conf description id = %s", dataContainer.getName(), hId)
+                            logger.debug("%s inconsistent struct_conf description id = %s", dataContainer.getName(), hId)
 
             logger.debug("%s helixRangeD %r", dataContainer.getName(), helixRangeD.items())
 
@@ -1513,7 +1518,7 @@ class DictMethodCommonUtils(object):
                     if (begAsymId == endAsymId) and (begSeqId <= endSeqId):
                         sheetRangeD.setdefault(sId, []).append((begAsymId, begSeqId, endSeqId))
                     else:
-                        logger.warning("%s inconsistent struct_sheet_range description id = %s", dataContainer.getName(), sId)
+                        logger.debug("%s inconsistent struct_sheet_range description id = %s", dataContainer.getName(), sId)
 
             logger.debug("%s sheetRangeD %r", dataContainer.getName(), sheetRangeD.items())
             #
@@ -2308,11 +2313,11 @@ class DictMethodCommonUtils(object):
                     continue
                 #
                 if entityId not in polymerEntityTypeD:
-                    logger.warning("%s skipping non-polymer entity %r in sequence reference", dataContainer.getName(), entityId)
+                    logger.debug("%s skipping non-polymer entity %r in sequence reference", dataContainer.getName(), entityId)
                     continue
 
                 if dbName in ["UNP"] and polymerEntityTypeD[entityId] != "Protein":
-                    logger.warning("%s skipping inconsistent reference assignment for %s polymer type %s", dataContainer.getName(), dbName, polymerEntityTypeD[entityId])
+                    logger.debug("%s skipping inconsistent reference assignment for %s polymer type %s", dataContainer.getName(), dbName, polymerEntityTypeD[entityId])
                     continue
                 #
                 tS = srObj.getValue("pdbx_db_accession", ii)
@@ -2329,12 +2334,12 @@ class DictMethodCommonUtils(object):
 
                 #
                 if dbIsoform and dbAccession not in dbIsoform:
-                    logger.warning("entryId %r entityId %r accession %r isoform %r inconsistency", dataContainer.getName(), entityId, dbAccession, dbIsoform)
+                    logger.debug("entryId %r entityId %r accession %r isoform %r inconsistency", dataContainer.getName(), entityId, dbAccession, dbIsoform)
                 # ---
                 # Get indices for the target refId.
                 iRowL = srsObj.selectIndices(refId, "ref_id")
                 logger.debug("entryId %r entityId %r refId %r rowList %r", dataContainer.getName(), entityId, refId, iRowL)
-
+                entitySeqIdBeg = entitySeqIdEnd = 0
                 for iRow in iRowL:
                     try:
                         entitySeqIdBeg = srsObj.getValue("seq_align_beg", iRow)
@@ -2344,7 +2349,7 @@ class DictMethodCommonUtils(object):
                         entityAlignLength = 0
                     #
                     if entityAlignLength <= 0:
-                        logger.warning("%s entity %r skipping bad alignment seqBeg %r seqEnd %r", dataContainer.getName(), entityId, entitySeqIdBeg, entitySeqIdEnd)
+                        logger.debug("%s entity %r skipping bad alignment seqBeg %r seqEnd %r", dataContainer.getName(), entityId, entitySeqIdBeg, entitySeqIdEnd)
                         continue
 
                     alignId = srsObj.getValue("align_id", iRow)
@@ -2405,7 +2410,7 @@ class DictMethodCommonUtils(object):
                     elif dbAccession:
                         tupSeqEntityRefDbD.setdefault(entityId, []).append((dbName, dbAccession, dbIsoform))
                     else:
-                        logger.warning("%s entityId %r inconsistent reference sequence %r %r", dataContainer.getName(), entityId, dbAccession, dbAccessionAlignS)
+                        logger.debug("%s entityId %r inconsistent reference sequence %r %r", dataContainer.getName(), entityId, dbAccession, dbAccessionAlignS)
                 except Exception:
                     logger.exception("%s entityId %r inconsistent reference sequence %r %r", dataContainer.getName(), entityId, dbAccession, dbAccessionAlignS)
 
@@ -2418,7 +2423,7 @@ class DictMethodCommonUtils(object):
                     if tup[1]:
                         seqEntityRefDbD.setdefault(entityId, []).append({"dbName": tS, "dbAccession": tup[1], "dbIsoform": tup[2]})
                     else:
-                        logger.warning("%s %s skipping incomplete sequence reference assignment %r", dataContainer.getName(), entityId, tup)
+                        logger.debug("%s %s skipping incomplete sequence reference assignment %r", dataContainer.getName(), entityId, tup)
 
             return {
                 "seqEntityAlignmentD": seqEntityAlignmentD,
@@ -2505,7 +2510,7 @@ class DictMethodCommonUtils(object):
                             entityArtifactD.setdefault(entityId, []).append(int(seqId))
                             seqIdDetailsD[int(seqId)] = details.lower()
                         except Exception:
-                            logger.warning("Incomplete sequence difference for %r %r %r %r", dataContainer.getName(), entityId, seqId, details)
+                            logger.debug("Incomplete sequence difference for %r %r %r %r", dataContainer.getName(), entityId, seqId, details)
                     else:
                         seqMonomerFeatureD.setdefault((entityId, seqId, compId, filteredDetails), set()).add(details.lower())
                 #
@@ -2552,10 +2557,9 @@ class DictMethodCommonUtils(object):
             bool: True for success or False otherwise
 
         """
+        catName = "struct_ref_seq"
         try:
-            catName = "struct_ref_seq"
             logger.debug("Starting with %r %r", dataContainer.getName(), catName)
-
             #
             if not (dataContainer.exists(catName) and dataContainer.exists("struct_ref")):
                 return False
@@ -3511,6 +3515,36 @@ class DictMethodCommonUtils(object):
         wD = self.__fetchUnobservedInfo(dataContainer)
         return wD["polyAtomRng"] if "polyAtomRng" in wD else {}
 
+    def getUnobservedNonPolymerAtomInfo(self, dataContainer):
+        """Return a dictionary of nonpolymer instances containing unobserved atoms (std nomenclature).
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            dict: {(modelId, compId, asymId, occFlag): [atomId, .. ], ...}
+
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchUnobservedInfo(dataContainer)
+        return wD["nonPolyMissingAtomD"] if "nonPolyMissingAtomD" in wD else {}
+
+    def getUnobservedNonPolymerAtomInfoAuth(self, dataContainer):
+        """Return a dictionary of nonpolymer instances containing unobserved atoms (auth nomenclature)
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            dict: {(modelId, compId, authtAsymId, authSeqIdm, occFlag): [atomId, .. ], ...}
+
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchUnobservedInfo(dataContainer)
+        return wD["nonPolyMissingAtomAuthD"] if "nonPolyMissingAtomAuthD" in wD else {}
+
     def __fetchUnobservedInfo(self, dataContainer):
         wD = self.__instanceUnobservedCache.get(dataContainer.getName())
         if not wD:
@@ -3527,9 +3561,11 @@ class DictMethodCommonUtils(object):
         Returns:
             {"polyResRng":  {(modelId, asymId, occFlag): [seqId range list], ...},
              "polyAtomRng": {(modelId, asymId, occFlag): [seqId range list], ...},
+             "nonPolyMissingAtomD": {(modelId, compId, asymId, zeroOccFlag): [atomId,...], },
+             "nonPolyMissingAtomAuthD": {(modelId, compId, authAsymId, authSeqId, zeroOccFlag): [atomId,...], },
              }
 
-            occFlag = 0 - zero occupancy
+            occFlag = 0 -> zero occupancy
         Example:
 
                 loop_
@@ -3603,24 +3639,33 @@ class DictMethodCommonUtils(object):
                 logger.debug("polyResRngD %r", polyResRngD)
             #
             polyAtomRngD = {}
+            nonPolyMissingAtomD = {}
+            nonPolyMissingAtomAuthD = {}
             if atomObj:
                 for ii in range(atomObj.getRowCount()):
                     modelId = atomObj.getValueOrDefault("PDB_model_num", ii, defaultValue=None)
                     pFlag = atomObj.getValueOrDefault("polymer_flag", ii, defaultValue=None)
+                    occFlag = atomObj.getValueOrDefault("occupancy_flag", ii, defaultValue=None)
+                    zeroOccFlag = occFlag and int(occFlag) == 0
+                    asymId = atomObj.getValueOrDefault("label_asym_id", ii, defaultValue=None)
                     if pFlag == "Y":
-                        occFlag = atomObj.getValueOrDefault("occupancy_flag", ii, defaultValue=None)
-                        zeroOccFlag = occFlag and int(occFlag) == 0
-                        asymId = atomObj.getValueOrDefault("label_asym_id", ii, defaultValue=None)
                         # authAsymId = resObj.getValueOrDefault("auth_asym_id", ii, defaultValue=None)
                         seqId = atomObj.getValueOrDefault("label_seq_id", ii, defaultValue=None)
                         if seqId:
                             polyAtomRngD.setdefault((modelId, asymId, zeroOccFlag), []).append(int(seqId))
+                    else:
+                        authAsymId = atomObj.getValueOrDefault("auth_asym_id", ii, defaultValue=None)
+                        authSeqId = atomObj.getValueOrDefault("auth_seq_id", ii, defaultValue=None)
+                        atomId = atomObj.getValueOrDefault("label_atom_id", ii, defaultValue=None)
+                        compId = atomObj.getValueOrDefault("label_comp_id", ii, defaultValue=None)
+                        nonPolyMissingAtomD.setdefault((modelId, compId, asymId, zeroOccFlag), []).append(atomId)
+                        nonPolyMissingAtomAuthD.setdefault((modelId, compId, authAsymId, authSeqId, zeroOccFlag), []).append(atomId)
                 #
                 for tup in polyAtomRngD:
                     polyAtomRngD[tup] = list(self.__toRangeList(polyAtomRngD[tup]))
                 logger.debug("polyAtomRngD %r", polyAtomRngD)
             #
-            rD = {"polyResRng": polyResRngD, "polyAtomRng": polyAtomRngD}
+            rD = {"polyResRng": polyResRngD, "polyAtomRng": polyAtomRngD, "nonPolyMissingAtomD": nonPolyMissingAtomD, "nonPolyMissingAtomAuthD": nonPolyMissingAtomAuthD}
         except Exception as e:
             logger.exception("%s failing with %s", dataContainer.getName(), str(e))
         return rD
@@ -3639,6 +3684,21 @@ class DictMethodCommonUtils(object):
         wD = self.__fetchInstanceModelOutliers(dataContainer)
         return wD["instanceModelOutlierD"] if "instanceModelOutlierD" in wD else {}
 
+    def getInstanceNonpolymerValidationInfo(self, dataContainer):
+        """Return a dictionary of nonpolymer validation details.
+
+        Args:
+            dataContainer (object):  mmcif.api.mmif.api.DataContainer object instance
+
+        Returns:
+            dict: {(modelId, asymId): NonpolymerValidationInstance(rsr, rsrCc, bondsRmsZ, anglesRmsZ, missingAtomCount)}
+
+        """
+        if not dataContainer or not dataContainer.getName():
+            return {}
+        wD = self.__fetchInstanceModelOutliers(dataContainer)
+        return wD["instanceModelValidationD"] if "instanceModelValidationD" in wD else {}
+
     def __fetchInstanceModelOutliers(self, dataContainer):
         wD = self.__modelOutliersCache.get(dataContainer.getName())
         if not wD:
@@ -3654,7 +3714,52 @@ class DictMethodCommonUtils(object):
 
         Returns:
             {"instanceModelOutlierD": {(modelId, asymId): [(compId, seqId, "BOND_OUTLIER", optional_description), ...}}
-
+        #
+            loop_
+            _pdbx_vrpt_instance_results.ordinal
+            _pdbx_vrpt_instance_results.entity_id
+            _pdbx_vrpt_instance_results.auth_asym_id
+            _pdbx_vrpt_instance_results.label_asym_id
+            _pdbx_vrpt_instance_results.label_comp_id
+            _pdbx_vrpt_instance_results.auth_seq_id
+            _pdbx_vrpt_instance_results.label_seq_id
+            _pdbx_vrpt_instance_results.PDB_ins_code
+            _pdbx_vrpt_instance_results.label_alt_id
+            _pdbx_vrpt_instance_results.PDB_model_num
+            _pdbx_vrpt_instance_results.num_H_reduce
+            _pdbx_vrpt_instance_results.cis_peptide
+            _pdbx_vrpt_instance_results.natoms_eds
+            _pdbx_vrpt_instance_results.RSR
+            _pdbx_vrpt_instance_results.RSRCC
+            _pdbx_vrpt_instance_results.RSRZ
+            _pdbx_vrpt_instance_results.OWAB
+            _pdbx_vrpt_instance_results.average_occupancy
+            _pdbx_vrpt_instance_results.ramachandran_class
+            _pdbx_vrpt_instance_results.rotamer_class
+            _pdbx_vrpt_instance_results.phi
+            _pdbx_vrpt_instance_results.psi
+            _pdbx_vrpt_instance_results.mogul_angles_RMSZ
+            _pdbx_vrpt_instance_results.mogul_bonds_RMSZ
+            _pdbx_vrpt_instance_results.mogul_RMSZ_num_angles
+            _pdbx_vrpt_instance_results.mogul_RMSZ_num_bonds
+            # ...
+            302 1 A A TYR 340 343 ? ? 1 9  ?   12 0.108 0.943 0.117  71.350  1.000 Favored m-85    -111.8 6.4    ?    ?    ?  ?
+            303 1 A A LYS 341 344 ? ? 1 13 ?   9  0.120 0.955 -0.380 67.860  1.000 Favored mttt    -73.3  139.6  ?    ?    ?  ?
+            304 1 A A ILE 342 345 ? ? 1 11 ?   8  0.147 0.964 0.799  76.030  1.000 Favored pt      -140.0 171.7  ?    ?    ?  ?
+            305 1 A A ASN 343 346 ? ? 1 6  ?   8  0.182 0.948 1.114  82.730  1.000 Favored m-80    52.8   49.6   ?    ?    ?  ?
+            306 1 A A GLN 344 347 ? ? 1 2  ?   5  0.193 0.807 1.002  97.730  1.000 ?       ?       ?      ?      ?    ?    ?  ?
+            # ...
+            307 2 A B PEG 401 .   ? A 1 10 ?   14 0.154 0.914 ?      36.150  1.000 ?       ?       ?      ?      0.76 0.64 5  6
+            308 2 A B PEG 401 .   ? B 1 10 ?   14 0.154 0.914 ?      36.150  1.000 ?       ?       ?      ?      0.97 0.68 5  6
+            309 3 A C HYO 402 .   ? ? 1 ?  ?   21 0.108 0.947 ?      35.530  1.000 ?       ?       ?      ?      2.18 4.96 32 23
+            310 4 A D NI  403 .   ? ? 1 ?  ?   1  0.096 0.999 ?      28.080  1.000 ?       ?       ?      ?      ?    ?    ?  ?
+            311 5 A E OGA 404 .   ? ? 1 3  ?   10 0.104 0.976 ?      30.510  1.000 ?       ?       ?      ?      1.87 3.23 4  3
+            312 6 A F EDO 405 .   ? ? 1 6  ?   4  0.097 0.941 ?      42.000  1.000 ?       ?       ?      ?      0.32 0.80 2  3
+            313 6 A G EDO 406 .   ? ? 1 6  ?   4  0.252 0.797 ?      57.320  1.000 ?       ?       ?      ?      0.73 0.61 2  3
+            314 7 A H SR  407 .   ? ? 1 ?  ?   1  0.143 1.000 ?      30.560  0.840 ?       ?       ?      ?      ?    ?    ?  ?
+            315 8 A I UNX 408 .   ? ? 1 ?  ?   1  0.321 0.940 ?      41.340  1.000 ?       ?       ?      ?      ?    ?    ?  ?
+            316 8 A J UNX 409 .   ? ? 1 ?  ?   1  0.611 0.922 ?      61.040  1.000 ?       ?       ?      ?      ?    ?    ?  ?
+            # ...
         """
         logger.debug("Starting with %r", dataContainer.getName())
         #
@@ -3670,8 +3775,10 @@ class DictMethodCommonUtils(object):
             ):
                 return rD
             # ------- --------- ------- --------- ------- --------- ------- --------- ------- ---------
+            nonPolyMissingAtomD = self.getUnobservedNonPolymerAtomInfo(dataContainer)
             #
             instanceModelOutlierD = {}
+            instanceModelValidationD = {}
             vObj = None
             if dataContainer.exists("pdbx_vrpt_bond_outliers"):
                 vObj = dataContainer.getObj("pdbx_vrpt_bond_outliers")
@@ -3812,6 +3919,9 @@ class DictMethodCommonUtils(object):
                     rsrZ = vObj.getValueOrDefault("RSRZ", ii, defaultValue=None)
                     rsrCc = vObj.getValueOrDefault("RSRCC", ii, defaultValue=None)
                     #
+                    anglesRmsZ = vObj.getValueOrDefault("mogul_angles_RMSZ", ii, defaultValue=None)
+                    bondsRmsZ = vObj.getValueOrDefault("mogul_bonds_RMSZ", ii, defaultValue=None)
+                    #
                     if seqId:
                         if rotamerClass and rotamerClass.upper() == "OUTLIER":
                             instanceModelOutlierD.setdefault((modelId, asymId, True), []).append(
@@ -3858,9 +3968,24 @@ class DictMethodCommonUtils(object):
                         if rsrCc and float(rsrCc) < 0.650:
                             tS = "RSCC < 0.65"
                             instanceModelOutlierD.setdefault((modelId, asymId, False), []).append(OutlierValue(compId, None, "RSCC_OUTLIER", tS, rsrCc))
+                        # NonpolymerValidationFields = ("rsr", "rscc",  "mogul_bonds_rmsz", "mogul_angles_rmsz", "heavy_atom_count", "modeled_heavy_atom_count")
+                        # "nonPolyMissingAtomD": {(modelId, compId, asymId, zeroOccFlag): [atomId,...], },
+                        missingAtomCount = len(nonPolyMissingAtomD[(modelId, compId, asymId, 0)]) if (modelId, compId, asymId, 0) in nonPolyMissingAtomD else 0
+                        missingAtomCount += len(nonPolyMissingAtomD[(modelId, compId, asymId, 1)]) if (modelId, compId, asymId, 1) in nonPolyMissingAtomD else 0
+                        instanceModelValidationD[(modelId, asymId, compId)] = NonpolymerValidationInstance(
+                            float(rsr) if rsr else None,
+                            float(rsrCc) if rsrCc else None,
+                            float(bondsRmsZ) if bondsRmsZ else None,
+                            float(anglesRmsZ) if anglesRmsZ else None,
+                            missingAtomCount,
+                        )
+                        if missingAtomCount > 0:
+                            logger.debug("%s %s missing atom count %d", dataContainer.getName(), compId, missingAtomCount)
                 #
             logger.debug("instanceModelOutlierD %r", instanceModelOutlierD)
-            rD = {"instanceModelOutlierD": instanceModelOutlierD}
+            logger.debug("instanceModelValidationD %r", instanceModelValidationD)
+
+            rD = {"instanceModelOutlierD": instanceModelOutlierD, "instanceModelValidationD": instanceModelValidationD}
         except Exception as e:
             logger.exception("%s failing with %s", dataContainer.getName(), str(e))
         return rD
