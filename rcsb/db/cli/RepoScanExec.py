@@ -20,8 +20,8 @@ import os
 import sys
 from collections import OrderedDict
 
-from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
-from rcsb.db.utils.ScanRepoUtil import ScanRepoUtil
+from rcsb.utils.dictionary.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
+from rcsb.utils.repository.ScanRepoUtil import ScanRepoUtil
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 

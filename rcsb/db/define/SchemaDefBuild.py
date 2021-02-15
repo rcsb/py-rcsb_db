@@ -44,7 +44,7 @@ from collections import OrderedDict
 
 from rcsb.db.define.DataTypeApiProvider import DataTypeApiProvider
 from rcsb.db.define.ContentDefinition import ContentDefinition
-from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
+from rcsb.utils.dictionary.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
 
 logger = logging.getLogger(__name__)
 

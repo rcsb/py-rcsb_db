@@ -32,11 +32,11 @@ from jsonschema import Draft4Validator
 from jsonschema import FormatChecker
 
 from mmcif.api.DictMethodRunner import DictMethodRunner
-from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
-from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
+from rcsb.utils.dictionary.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
+from rcsb.utils.dictionary.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.processors.DataTransformFactory import DataTransformFactory
 from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
-from rcsb.db.utils.RepositoryProvider import RepositoryProvider
+from rcsb.utils.repository.RepositoryProvider import RepositoryProvider
 from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil

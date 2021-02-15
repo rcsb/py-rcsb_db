@@ -43,7 +43,7 @@ from rcsb.db.crate.CrateDbUtil import CrateDbQuery
 
 #
 from rcsb.db.sql.SqlGen import SqlGenAdmin
-from rcsb.db.utils.RepositoryProvider import RepositoryProvider
+from rcsb.utils.repository.RepositoryProvider import RepositoryProvider
 from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
@@ -104,8 +104,7 @@ class SchemaDefLoadercrateDbMultiTests(unittest.TestCase):
             self.fail()
 
     def testSchemaCreate(self):
-        """  Create table schema (live) for BIRD, chemical component, and PDBx data.
-        """
+        """Create table schema (live) for BIRD, chemical component, and PDBx data."""
         try:
             sd, _, _, _ = self.__schP.getSchemaInfo("bird")
             ret = self.__schemaCreate(schemaDefObj=sd)
@@ -124,8 +123,7 @@ class SchemaDefLoadercrateDbMultiTests(unittest.TestCase):
             self.fail()
 
     def testSchemaRemove(self):
-        """  Remove table schema (live) for BIRD, chemical component, and PDBx data.
-        """
+        """Remove table schema (live) for BIRD, chemical component, and PDBx data."""
         try:
             sd, _, _, _ = self.__schP.getSchemaInfo("bird")
             ret = self.__schemaRemove(schemaDefObj=sd)
@@ -187,8 +185,7 @@ class SchemaDefLoadercrateDbMultiTests(unittest.TestCase):
         return [], [], []
 
     def __testLoadFilesMulti(self, contentType):
-        """Test case - create load w/insert-many all chemical component definition data files - (multiproc test)
-        """
+        """Test case - create load w/insert-many all chemical component definition data files - (multiproc test)"""
         numProc = self.__numProc
         chunkSize = self.__chunkSize
         try:
@@ -217,8 +214,7 @@ class SchemaDefLoadercrateDbMultiTests(unittest.TestCase):
             self.fail()
 
     def __schemaCreate(self, schemaDefObj):
-        """Test case -  create table schema using schema definition
-        """
+        """Test case -  create table schema using schema definition"""
         ret = 0
         try:
             tableIdList = schemaDefObj.getTableIdList()
@@ -244,8 +240,7 @@ class SchemaDefLoadercrateDbMultiTests(unittest.TestCase):
             self.fail()
 
     def __schemaRemove(self, schemaDefObj):
-        """Test case -  remove table schema using schema definition
-        """
+        """Test case -  remove table schema using schema definition"""
         ret = 0
         try:
             tableIdList = schemaDefObj.getTableIdList()

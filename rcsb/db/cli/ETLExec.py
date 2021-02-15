@@ -27,7 +27,7 @@ from rcsb.db.cli.RepoHoldingsEtlWorker import RepoHoldingsEtlWorker
 from rcsb.db.cli.SequenceClustersEtlWorker import SequenceClustersEtlWorker
 
 # from rcsb.db.cli.TreeNodeListWorker import TreeNodeListWorker
-from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
+from rcsb.utils.dictionary.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.utils.TimeUtil import TimeUtil
 from rcsb.utils.config.ConfigUtil import ConfigUtil
@@ -50,8 +50,7 @@ def loadStatus(statusList, cfgOb, cachePath, readBackCheck=True):
 
 
 def buildResourceCache(cfgOb, configName, cachePath, rebuildCache=False):
-    """Generate and cache resource dependencies.
-    """
+    """Generate and cache resource dependencies."""
     ret = False
     try:
         rp = DictMethodResourceProvider(cfgOb, configName=configName, cachePath=cachePath)
@@ -164,12 +163,16 @@ def main():
     ##
     if args.db_type == "mongo":
         if args.etl_entity_sequence_clusters:
-            cw = SequenceClustersEtlWorker(cfgOb, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck, workPath=cachePath)
+            cw = SequenceClustersEtlWorker(
+                cfgOb, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck, workPath=cachePath
+            )
             ok = cw.etl(dataSetId, seqDataLocator, loadType=loadType)
             okS = loadStatus(cw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
         if args.etl_repository_holdings:
-            rhw = RepoHoldingsEtlWorker(cfgOb, sandboxPath, cachePath, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck)
+            rhw = RepoHoldingsEtlWorker(
+                cfgOb, sandboxPath, cachePath, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck
+            )
             ok = rhw.load(dataSetId, loadType=loadType)
             okS = loadStatus(rhw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 

@@ -23,7 +23,7 @@ import time
 import unittest
 
 from rcsb.db.define.ContentDefinition import ContentDefinition
-from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
+from rcsb.utils.dictionary.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
 from rcsb.db.helpers.ContentDefinitionHelper import ContentDefinitionHelper
 from rcsb.db.helpers.DocumentDefinitionHelper import DocumentDefinitionHelper
 from rcsb.utils.config.ConfigUtil import ConfigUtil
