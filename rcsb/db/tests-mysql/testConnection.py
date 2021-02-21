@@ -80,8 +80,7 @@ class ConnectionTests(unittest.TestCase):
         return cObj.getClientConnection()
 
     def testCreateConnectionContext(self):
-        """Test case -  connection creation using context manager
-        """
+        """Test case -  connection creation using context manager"""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName="MYSQL_DB") as client:
                 self.assertNotEqual(client, None)
@@ -91,8 +90,7 @@ class ConnectionTests(unittest.TestCase):
             self.fail()
 
     def testCreateConnection(self):
-        """Test case -  connection creation
-        """
+        """Test case -  connection creation"""
         try:
             cObj = self.__open(self.__connectD)
             client = self.__getClientConnection(cObj)
@@ -104,8 +102,7 @@ class ConnectionTests(unittest.TestCase):
             self.fail()
 
     def testCreateMultipleConnections(self):
-        """Test case -  multiple connection creation
-        """
+        """Test case -  multiple connection creation"""
         try:
             for _ in range(100):
                 cObj = self.__open(self.__connectD)
@@ -118,8 +115,7 @@ class ConnectionTests(unittest.TestCase):
             self.fail()
 
     def testCreateMultipleConnectionsContext(self):
-        """Test case -  multiple connection creation
-        """
+        """Test case -  multiple connection creation"""
         try:
             for _ in range(100):
                 with Connection(cfgOb=self.__cfgOb, resourceName="MYSQL_DB") as client:
@@ -129,8 +125,7 @@ class ConnectionTests(unittest.TestCase):
             self.fail()
 
     def testCreateMultipleConnectionsWithQuery(self):
-        """Test case -  multiple connection creation
-        """
+        """Test case -  multiple connection creation"""
         try:
             for ii in range(100):
                 cObj = self.__open(self.__connectD)
@@ -147,8 +142,7 @@ class ConnectionTests(unittest.TestCase):
             self.fail()
 
     def testCreateMultipleConnWithQueryContext(self):
-        """Test case -  multiple connection creation
-        """
+        """Test case -  multiple connection creation"""
         try:
             for ii in range(100):
                 with Connection(cfgOb=self.__cfgOb, resourceName="MYSQL_DB") as client:

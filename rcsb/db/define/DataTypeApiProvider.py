@@ -29,8 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class DataTypeApiProvider(SingletonClass):
-    """ Data type application and instance information provider.
-    """
+    """Data type application and instance information provider."""
 
     def __init__(self, cfgOb, cachePath, useCache=True, **kwargs):
         """Data type application and instance information provider.

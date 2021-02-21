@@ -84,9 +84,9 @@ class ConnectionBase(object):
             logger.exception("Failing with %s", str(e))
 
     def openConnection(self):
-        """ Create a database connection and return a connection object.
+        """Create a database connection and return a connection object.
 
-            Returns None on failure
+        Returns None on failure
         """
         #
         if self._dbCon is not None:
@@ -122,8 +122,7 @@ class ConnectionBase(object):
         return self._dbCon
 
     def closeConnection(self):
-        """ Close db session
-        """
+        """Close db session"""
         if self._dbCon is not None:
             self._dbCon.close()
             self._dbCon = None

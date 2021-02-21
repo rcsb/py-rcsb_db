@@ -36,9 +36,7 @@ logger = logging.getLogger(__name__)
 
 class SchemaDefAccess(object):
 
-    """ Schema definition accessors.
-
-    """
+    """Schema definition accessors."""
 
     def __init__(self, schemaDef, **kwargs):
         # def __init__(self, databaseName=None, schemaDefDict=None, convertNames=False, versionedDatabaseName=None, documentDefDict=None, verbose=True):
@@ -75,8 +73,7 @@ class SchemaDefAccess(object):
             return []
 
     def getCollectionInfo(self):
-        """ Return the collection info [{'NAME': , 'VERSION': xx }, ... ] for the input content type.
-        """
+        """Return the collection info [{'NAME': , 'VERSION': xx }, ... ] for the input content type."""
         cdL = []
         try:
             cdL = self.__documentDefDict["CONTENT_TYPE_COLLECTION_INFO"]
@@ -85,8 +82,7 @@ class SchemaDefAccess(object):
         return cdL
 
     def getCollectionVersion(self, collectionName):
-        """ Return the collection info [{'NAME': , 'VERSION': xx }, ... ] for the input content type.
-        """
+        """Return the collection info [{'NAME': , 'VERSION': xx }, ... ] for the input content type."""
         ret = None
         try:
             for cd in self.__documentDefDict["CONTENT_TYPE_COLLECTION_INFO"]:
@@ -107,9 +103,7 @@ class SchemaDefAccess(object):
         return None
 
     def getCollectionExcluded(self, collectionName):
-        """  For input collection, return the list of excluded object ids.
-
-        """
+        """For input collection, return the list of excluded object ids."""
         excludeL = []
         try:
             excludeL = self.__documentDefDict["COLLECTION_CONTENT"][collectionName]["EXCLUDE"]
@@ -118,8 +112,7 @@ class SchemaDefAccess(object):
         return excludeL
 
     def getCollectionSelected(self, collectionName):
-        """ For input collection, return the list of selected object ids or the full object id list if no selection is defined.
-        """
+        """For input collection, return the list of selected object ids or the full object id list if no selection is defined."""
         sL = []
         try:
             sL = self.__documentDefDict["COLLECTION_CONTENT"][collectionName]["INCLUDE"]
@@ -134,9 +127,7 @@ class SchemaDefAccess(object):
         return sL
 
     def getCollectionSliceFilter(self, collectionName):
-        """  For input collection, return the defined slice filter
-
-        """
+        """For input collection, return the defined slice filter"""
         sf = None
         try:
             sf = self.__documentDefDict["COLLECTION_CONTENT"][collectionName]["SLICE_FILTER"]
@@ -145,9 +136,7 @@ class SchemaDefAccess(object):
         return sf
 
     def getCollectionExcludedAttributes(self, collectionName, asSchemaIds=False):
-        """  For input collection, return a dictionary of attributes flagged for exclusion.
-
-        """
+        """For input collection, return a dictionary of attributes flagged for exclusion."""
         eD = None
         try:
             eD = {}
@@ -178,8 +167,7 @@ class SchemaDefAccess(object):
         return list(self.__selectionFilterDict.keys())
 
     def getDocumentKeyAttributeNames(self, collectionName):
-        """ Return list of key document attributes required to uniquely identify a document.
-        """
+        """Return list of key document attributes required to uniquely identify a document."""
         ret = []
         try:
             return list(self.__documentDefDict["COLLECTION_DOCUMENT_ATTRIBUTE_NAMES"][collectionName])
@@ -188,8 +176,8 @@ class SchemaDefAccess(object):
         return ret
 
     def getDocumentReplaceAttributeNames(self, collectionName):
-        """ Return list of document attributes required to remove all relevant documents
-            prior  to load 'replace' operation.
+        """Return list of document attributes required to remove all relevant documents
+        prior  to load 'replace' operation.
         """
         ret = []
         try:
@@ -199,8 +187,7 @@ class SchemaDefAccess(object):
         return ret
 
     def getPrivateDocumentAttributes(self, collectionName):
-        """ Return list of key document identifiers and document private document names.
-        """
+        """Return list of key document identifiers and document private document names."""
         ret = []
         try:
             return [d for d in self.__documentDefDict["COLLECTION_DOCUMENT_PRIVATE_KEYS"][collectionName]]
@@ -209,8 +196,7 @@ class SchemaDefAccess(object):
         return ret
 
     def getDocumentIndices(self, collectionName):
-        """ Return list of document indices.
-        """
+        """Return list of document indices."""
         ret = []
         try:
             return [d for d in self.__documentDefDict["COLLECTION_DOCUMENT_INDICES"][collectionName]]
@@ -219,8 +205,7 @@ class SchemaDefAccess(object):
         return ret
 
     def getDocumentIndex(self, collectionName, indexName):
-        """ Return the attribute list for a particular document index.
-        """
+        """Return the attribute list for a particular document index."""
         ret = []
         try:
             for dD in self.__documentDefDict["COLLECTION_DOCUMENT_INDICES"][collectionName]:
@@ -231,8 +216,7 @@ class SchemaDefAccess(object):
         return ret
 
     def getSubCategoryAggregates(self, collectionName):
-        """  Return the list of subcategory aggregates for the input collection.
-        """
+        """Return the list of subcategory aggregates for the input collection."""
         try:
             return [d["NAME"] for d in self.__documentDefDict["COLLECTION_SUB_CATEGORY_AGGREGATES"][collectionName]]
         except Exception:
@@ -241,8 +225,7 @@ class SchemaDefAccess(object):
         return []
 
     def getSubCategorySchemaIdList(self, subCategoryName):
-        """ Return the schema Ids containing the input subCategory
-        """
+        """Return the schema Ids containing the input subCategory"""
         sIdL = []
         try:
             for sId in self.__schemaDefDict:
@@ -254,8 +237,7 @@ class SchemaDefAccess(object):
         return sIdL
 
     def getSubCategoryAttributeIdList(self, schemaId, subCategoryName):
-        """ Return the schema attribute Ids containing the input subCategory
-        """
+        """Return the schema attribute Ids containing the input subCategory"""
         atIdL = []
         try:
             tD = self.__schemaDefDict[schemaId]
@@ -267,8 +249,7 @@ class SchemaDefAccess(object):
         return atIdL
 
     def getSubCategoryAggregatesUnitCardinality(self, collectionName, subCategoryName):
-        """  Return if the input subcategory aggregate has unit cardinality.
-        """
+        """Return if the input subcategory aggregate has unit cardinality."""
         try:
             for dD in self.__documentDefDict["COLLECTION_SUB_CATEGORY_AGGREGATES"][collectionName]:
                 if subCategoryName == dD["NAME"]:
@@ -318,8 +299,8 @@ class SchemaDefAccess(object):
         return [tup[0] for tup in sTupL]
 
     def getDefaultAttributeParameterMap(self, schemaId, skipAuto=True):
-        """ For the input table, return a dictionary of attribute identifiers and parameter names.
-            Default parameter names are compressed and camel-case conversions of the attribute ids.
+        """For the input table, return a dictionary of attribute identifiers and parameter names.
+        Default parameter names are compressed and camel-case conversions of the attribute ids.
         """
         dL = []
         aIdList = self.getAttributeIdList(schemaId)
@@ -360,8 +341,8 @@ class SchemaDefAccess(object):
         return qAN
 
     def __makeSliceIndex(self):
-        """  Return a dictionary of slice parent and child attribures together with schema objects
-             to be included in every slice.
+        """Return a dictionary of slice parent and child attribures together with schema objects
+        to be included in every slice.
 
         """
         sliceD = {}
@@ -387,25 +368,21 @@ class SchemaDefAccess(object):
         return sliceD, extraD
 
     def getSliceNames(self):
-        """ Return a list of the slice names defined for the current schema
-        """
+        """Return a list of the slice names defined for the current schema"""
         try:
             return list(self.__sliceParentItemD.keys())
         except Exception:
             return []
 
     def getSliceParentItems(self, sliceName):
-        """ Return a list of dictionaries containing the parent items for input slice name
-
-        """
+        """Return a list of dictionaries containing the parent items for input slice name"""
         try:
             return self.__sliceParentItemD[sliceName]
         except Exception:
             return []
 
     def getSliceParentFilters(self, sliceName):
-        """ Return a list of dictionaries containing the parent items for input slice name
-        """
+        """Return a list of dictionaries containing the parent items for input slice name"""
         try:
             return self.__sliceParentFilterD[sliceName]
         except Exception:
@@ -437,8 +414,7 @@ class SchemaDefAccess(object):
 
 class SchemaDef(object):
 
-    """  Wrapper class for table schema definition.
-    """
+    """Wrapper class for table schema definition."""
 
     def __init__(self, schemaDefDict=None):
         self.__tD = schemaDefDict if schemaDefDict else {}
@@ -500,8 +476,7 @@ class SchemaDef(object):
 
     # deprecated
     def getMapAttributeInfo(self, attributeId):
-        """ Return the tuple of mapping details for the input attribute id.
-        """
+        """Return the tuple of mapping details for the input attribute id."""
         raise NotImplementedError()
 
     def getAttributeType(self, attributeId):
@@ -609,8 +584,7 @@ class SchemaDef(object):
         return []
 
     def getAttributeIdList(self):
-        """ Get the ordered attribute Id list
-        """
+        """Get the ordered attribute Id list"""
         tupL = []
         for k, v in self.__tD["ATTRIBUTE_INFO"].items():
             tupL.append((k, v["ORDER"]))
@@ -618,8 +592,7 @@ class SchemaDef(object):
         return [tup[0] for tup in sTupL]
 
     def getAttributeNameList(self):
-        """ Get the ordered attribute name list
-        """
+        """Get the ordered attribute name list"""
         tupL = []
         for k, v in self.__tD["ATTRIBUTE_INFO"].items():
             tupL.append((k, v["ORDER"]))
@@ -645,8 +618,7 @@ class SchemaDef(object):
             return []
 
     def getMapAttributeNameList(self):
-        """ Get the ordered mapped attribute name list
-        """
+        """Get the ordered mapped attribute name list"""
         try:
             tupL = []
             for k in self.__tD["ATTRIBUTE_MAP"].keys():
@@ -659,8 +631,7 @@ class SchemaDef(object):
             return []
 
     def getMapAttributeIdList(self):
-        """ Get the ordered mapped attribute name list
-        """
+        """Get the ordered mapped attribute name list"""
         try:
             tupL = []
             for k in self.__tD["ATTRIBUTE_MAP"].keys():
@@ -674,8 +645,7 @@ class SchemaDef(object):
             return []
 
     def getMapInstanceCategoryList(self):
-        """ Get the unique list of data instance categories within the attribute map.
-        """
+        """Get the unique list of data instance categories within the attribute map."""
         try:
             cL = [vD["CATEGORY"] for k, vD in self.__tD["ATTRIBUTE_MAP"].items() if vD["CATEGORY"] is not None]  #
             uL = list(set(cL))
@@ -684,8 +654,7 @@ class SchemaDef(object):
             return []
 
     def getMapOtherAttributeIdList(self):
-        """ Get the list of attributes that have no assigned data instance mapping.
-        """
+        """Get the list of attributes that have no assigned data instance mapping."""
         try:
             aL = []
             for k, vD in self.__tD["ATTRIBUTE_MAP"].items():
@@ -696,8 +665,7 @@ class SchemaDef(object):
             return []
 
     def getMapInstanceAttributeList(self, categoryName):
-        """ Get the list of instance category attribute names for mapped attributes in the input instance category.
-        """
+        """Get the list of instance category attribute names for mapped attributes in the input instance category."""
         try:
             aL = []
             for _, vD in self.__tD["ATTRIBUTE_MAP"].items():
@@ -708,8 +676,7 @@ class SchemaDef(object):
             return []
 
     def getMapInstanceAttributeIdList(self, categoryName):
-        """ Get the list of schema attribute Ids for mapped attributes from the input instance category.
-        """
+        """Get the list of schema attribute Ids for mapped attributes from the input instance category."""
         try:
             aL = []
             for k, vD in self.__tD["ATTRIBUTE_MAP"].items():
@@ -720,25 +687,23 @@ class SchemaDef(object):
             return []
 
     def getMapAttributeFunction(self, attributeId):
-        """ Return the tuple element of mapping details for the input attribute id for the optional function.
-        """
+        """Return the tuple element of mapping details for the input attribute id for the optional function."""
         try:
             return self.__tD["ATTRIBUTE_MAP"][attributeId]["METHOD_NAME"]
         except Exception:
             return None
 
     def getMapAttributeFunctionArgs(self, attributeId):
-        """ Return the tuple element of mapping details for the input attribute id for the optional function arguments.
-        """
+        """Return the tuple element of mapping details for the input attribute id for the optional function arguments."""
         try:
             return self.__tD["ATTRIBUTE_MAP"][attributeId]["ARGUMENTS"]
         except Exception:
             return None
 
     def getMapAttributeIdDict(self):
-        """ Return the dictionary of d[schema attribute id] = mapped instance category attribute
+        """Return the dictionary of d[schema attribute id] = mapped instance category attribute
 
-            Exclude and attributes that lack a schema mapping (e.g. functional mappings )
+        Exclude and attributes that lack a schema mapping (e.g. functional mappings )
         """
         dD = {}
         for k, vD in self.__tD["ATTRIBUTE_MAP"].items():
@@ -747,9 +712,9 @@ class SchemaDef(object):
         return dD
 
     def getMapAttributeNameDict(self):
-        """ Return the dictionary of d[schema attribute id] = mapped instance category attribute
+        """Return the dictionary of d[schema attribute id] = mapped instance category attribute
 
-            Exclude and attributes that lack a schema mapping (e.g. functional mappings )
+        Exclude and attributes that lack a schema mapping (e.g. functional mappings )
         """
         dD = {}
         for k, vD in self.__tD["ATTRIBUTE_MAP"].items():
@@ -758,24 +723,21 @@ class SchemaDef(object):
         return dD
 
     def getMapMergeIndexAttributes(self, categoryName):
-        """  Return the list of merging index attribures for this mapped instance category.
-        """
+        """Return the list of merging index attribures for this mapped instance category."""
         try:
             return self.__tD["MAP_MERGE_INDICES"][categoryName]["ATTRIBUTES"]
         except Exception:
             return []
 
     def getMapMergeIndexType(self, indexName):
-        """ Return the merging index type for this mapped instance category.
-        """
+        """Return the merging index type for this mapped instance category."""
         try:
             return self.__tD["MAP_MERGE_INDICES"][indexName]["TYPE"]
         except Exception:
             return []
 
     def getAppNullValue(self, attributeId):
-        """ Return the appropriate NULL value for this attribute:.
-        """
+        """Return the appropriate NULL value for this attribute:."""
         try:
             if self.__isStringType(self.__tD["ATTRIBUTE_INFO"][attributeId]["APP_TYPE"].upper()):
                 return ""
@@ -787,8 +749,7 @@ class SchemaDef(object):
             return r"\N"
 
     def getAppNullValueDict(self):
-        """ Return a dictionary containing appropriate NULL value for each attribute.
-        """
+        """Return a dictionary containing appropriate NULL value for each attribute."""
         dD = {}
         atId = atInfo = None
         try:
@@ -806,8 +767,8 @@ class SchemaDef(object):
         return dD
 
     def getStringWidthDict(self):
-        """ Return a dictionary containing maximum string widths assigned to char data types.
-            Non-character type data items are assigned zero width.
+        """Return a dictionary containing maximum string widths assigned to char data types.
+        Non-character type data items are assigned zero width.
         """
         dD = {}
         for atId, atInfo in self.__tD["ATTRIBUTE_INFO"].items():
@@ -824,8 +785,7 @@ class SchemaDef(object):
             return False
 
     def isOtherAttributeType(self, attributeId):
-        """ Get the list of attributes that have no assigned instance mapping.
-        """
+        """Get the list of attributes that have no assigned instance mapping."""
         try:
             return self.__tD["ATTRIBUTE_MAP"][attributeId]["CATEGORY"] is None
         except Exception:
@@ -838,41 +798,37 @@ class SchemaDef(object):
             return None
 
     def __isStringType(self, sqlType):
-        """ Return if input type corresponds to a common SQL string data type.
-        """
+        """Return if input type corresponds to a common SQL string data type."""
         try:
             return sqlType.upper() in ["VARCHAR", "CHAR", "TEXT", "MEDIUMTEXT", "LONGTEXT"]
         except Exception:
             return False
 
     def __isDateType(self, sqlType):
-        """ Return if input type corresponds to a common SQL date/time data type.
-        """
+        """Return if input type corresponds to a common SQL date/time data type."""
         try:
             return sqlType.upper() in ["DATE", "DATETIME"]
         except Exception:
             return False
 
     def __isFloatType(self, sqlType):
-        """ Return if input type corresponds to a common SQL string data type.
-        """
+        """Return if input type corresponds to a common SQL string data type."""
         try:
             return sqlType.upper() in ["FLOAT", "DECIMAL", "DOUBLE PRECISION", "NUMERIC"]
         except Exception:
             return False
 
     def __isIntegerType(self, sqlType):
-        """ Return if input type corresponds to a common SQL string data type.
-        """
+        """Return if input type corresponds to a common SQL string data type."""
         try:
             return sqlType.upper().startswith("INT") or sqlType.upper() in ["INTEGER", "BIGINT", "SMALLINT"]
         except Exception:
             return False
 
     def getDeleteAttributeId(self):
-        """ Return the attribute identifier that is used to delete all of the
-            records associated with the highest level of organizaiton provided by
-            this schema definition (e.g. entry, definition, ...).
+        """Return the attribute identifier that is used to delete all of the
+        records associated with the highest level of organizaiton provided by
+        this schema definition (e.g. entry, definition, ...).
         """
         try:
             return self.__tD["SCHEMA_DELETE_ATTRIBUTE"]
@@ -880,9 +836,9 @@ class SchemaDef(object):
             return None
 
     def getDeleteAttributeName(self):
-        """ Return the attribute name that is used to delete all of the
-            records associated with the highest level of organizaiton provided by
-            this schema definition (e.g. entry, definition, ...).
+        """Return the attribute name that is used to delete all of the
+        records associated with the highest level of organizaiton provided by
+        this schema definition (e.g. entry, definition, ...).
         """
         try:
             return self.__tD["ATTRIBUTES"][self.__tD["SCHEMA_DELETE_ATTRIBUTE"]]
@@ -890,8 +846,7 @@ class SchemaDef(object):
             return None
 
     def hasSliceAttributes(self, sliceName):
-        """ Return True if slice attributes are defined for this schema object.
-        """
+        """Return True if slice attributes are defined for this schema object."""
         try:
             if self.__tD["SLICE_ATTRIBUTES"][sliceName]:
                 return True
@@ -901,24 +856,21 @@ class SchemaDef(object):
             return False
 
     def hasSliceUnitCardinality(self, sliceName):
-        """ Return True if slice for this schema object has unit cardinality.
-        """
+        """Return True if slice for this schema object has unit cardinality."""
         try:
             return self.__tD["SLICE_UNIT_CARDINALITY"][sliceName]
         except Exception:
             return False
 
     def isSliceExtra(self, sliceName):
-        """ Return True if this schema object is extra included content in the input slice.
-        """
+        """Return True if this schema object is extra included content in the input slice."""
         try:
             return self.__tD["SLICE_CATEGORY_EXTRAS"][sliceName]
         except Exception:
             return False
 
     def getSliceAttributeId(self, sliceName, parentCategoryId, parentAttributeId):
-        """ Naive method to return corresponding child attribute for the input slice parent.
-        """
+        """Naive method to return corresponding child attribute for the input slice parent."""
         try:
             for dD in self.__tD["SLICE_ATTRIBUTES"][sliceName]:
                 if dD["PARENT_CATEGORY"] == parentCategoryId and dD["PARENT_ATTRIBUTE"] == parentAttributeId:

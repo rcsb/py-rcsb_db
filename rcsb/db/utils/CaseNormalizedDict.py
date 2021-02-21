@@ -24,8 +24,8 @@ logger = logging.getLogger(__name__)
 
 class CaseNormalizedDict(dict):
 
-    """ Dictionary container with case insensitive key comparison preserving the
-        case of the input keys.
+    """Dictionary container with case insensitive key comparison preserving the
+    case of the input keys.
 
     """
 
@@ -60,8 +60,8 @@ class CaseNormalizedDict(dict):
 
 class CaseNormalizedDict2(collections.MutableMapping):
 
-    """ Dictionary container with case insensitive key comparison preserving the
-        case of the input keys.
+    """Dictionary container with case insensitive key comparison preserving the
+    case of the input keys.
 
     """
 

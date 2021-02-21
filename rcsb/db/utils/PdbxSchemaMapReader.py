@@ -206,7 +206,7 @@ class PdbxSchemaMapReader(object):
 
     def __readSchemaMap(self, schemaMapFile):
         """Read RCSB schema map file and return the list of table names, attribute definitions,
-           attribute mapping, table and attribute abbreviations.
+        attribute mapping, table and attribute abbreviations.
         """
         tableNameList = []
         atDefList = []

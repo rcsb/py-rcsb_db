@@ -71,9 +71,7 @@ class SchemaDefAccessTests(unittest.TestCase):
         return {}
 
     def __testAccessors(self, schemaDef):
-        """  Verify data and accessor mapping -
-
-        """
+        """Verify data and accessor mapping -"""
 
         sd = SchemaDefAccess(schemaDef)
         logger.debug("Schema name %s", sd.getName())

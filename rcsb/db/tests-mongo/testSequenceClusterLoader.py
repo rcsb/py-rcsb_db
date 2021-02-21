@@ -82,8 +82,7 @@ class SequenceClusterLoaderTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def __fetchProvenance(self):
-        """ Test case for fetching a provenance dictionary content.
-        """
+        """Test case for fetching a provenance dictionary content."""
         try:
             provU = ProvenanceProvider(self.__cfgOb, self.__cachePath)
             pD = provU.fetch()
@@ -93,8 +92,7 @@ class SequenceClusterLoaderTests(unittest.TestCase):
             self.fail()
 
     def __testExtract(self, dataSetId, dataLocator, levels):
-        """ Test extraction on an example sequence cluster data set.
-        """
+        """Test extraction on an example sequence cluster data set."""
         try:
             cdp = ClusterDataPrep(workPath=self.__workPath, entitySchemaName=self.__entitySchemaName, clusterSchemaName=self.__clusterSchemaName)
             cifD, docBySequenceD, docByClusterD = cdp.extract(dataSetId, clusterSetLocator=dataLocator, levels=levels, clusterType="entity")
@@ -107,8 +105,7 @@ class SequenceClusterLoaderTests(unittest.TestCase):
             self.fail()
 
     def testLoadCluster(self):
-        """ Test case - load example sequence cluster document data
-        """
+        """Test case - load example sequence cluster document data"""
         try:
             dl = DocumentLoader(
                 self.__cfgOb,

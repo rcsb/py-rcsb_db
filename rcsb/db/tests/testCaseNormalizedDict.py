@@ -50,9 +50,7 @@ class CaseNormalizedDictTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testCaseCompareExamples1(self):
-        """ Verify case comparison operations.
-
-        """
+        """Verify case comparison operations."""
         try:
             examples = ["Test1", "test1", "TEST1", "tesT1", "tEst1"]
             #
@@ -73,9 +71,7 @@ class CaseNormalizedDictTests(unittest.TestCase):
             self.fail()
 
     def testCaseCompareExamples2(self):
-        """ Verify case comparison operations.
-
-        """
+        """Verify case comparison operations."""
         try:
             examples = ["Test1", "Test2", "Test3", "Test4"]
             #
@@ -92,9 +88,7 @@ class CaseNormalizedDictTests(unittest.TestCase):
             self.fail()
 
     def testSerializationJson(self):
-        """ Verify case comparison operations.
-
-        """
+        """Verify case comparison operations."""
         try:
             examples = ["Test1", "test1", "TEST1", "tesT1", "tEst1"]
             #
@@ -109,9 +103,7 @@ class CaseNormalizedDictTests(unittest.TestCase):
             self.fail()
 
     def testSerializationPickle(self):
-        """ Verify case comparison operations.
-
-        """
+        """Verify case comparison operations."""
         try:
             examples = ["Test1", "test1", "TEST1", "tesT1", "tEst1"]
             #

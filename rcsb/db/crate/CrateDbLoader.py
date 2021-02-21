@@ -36,8 +36,7 @@ logger = logging.getLogger(__name__)
 
 class CrateDbLoader(object):
 
-    """ Map PDBx/mmCIF instance data to SQL loadable data using external schema definition.
-    """
+    """Map PDBx/mmCIF instance data to SQL loadable data using external schema definition."""
 
     def __init__(self, schemaDefObj, ioObj=None, dbCon=None, workPath=".", cleanUp=False, warnings="default", verbose=True):
         self.__verbose = verbose
@@ -60,28 +59,28 @@ class CrateDbLoader(object):
         #
 
     def load(self, inputPathList=None, containerList=None, loadType="batch-file", deleteOpt=None, tableIdSkipD=None):
-        """ Load data for each table defined in the current schema definition object.
-            Data are extracted from the input path or container list.
+        """Load data for each table defined in the current schema definition object.
+        Data are extracted from the input path or container list.
 
-            Data source options:
+        Data source options:
 
-              inputPathList = [<full path of target input file>, ....]
+          inputPathList = [<full path of target input file>, ....]
 
-            or
+        or
 
-              containerList = [ data container, ...]
+          containerList = [ data container, ...]
 
 
-            loadType  =  ['crate-insert' | 'crate-insert-many']
-            deleteOpt = 'selected' | 'all'
+        loadType  =  ['crate-insert' | 'crate-insert-many']
+        deleteOpt = 'selected' | 'all'
 
-            tableIdSkipD - searchable container with tableIds to be skipped on loading -
+        tableIdSkipD - searchable container with tableIds to be skipped on loading -
 
-            Loading is performed using the current database server connection.
+        Loading is performed using the current database server connection.
 
-            Intermediate data files for 'batch-file' loading are created in the current working path.
+        Intermediate data files for 'batch-file' loading are created in the current working path.
 
-            Returns True for success or False otherwise.
+        Returns True for success or False otherwise.
 
         """
         tableIdSkipD = tableIdSkipD if tableIdSkipD is not None else {}
@@ -108,15 +107,15 @@ class CrateDbLoader(object):
         return False
 
     def __crateInsertImport(self, tableId, rowList=None, containerNameList=None, deleteOpt="selected", sqlMode="many", refresh=True):
-        """ Load the input table using sql crate templated inserts of the input rowlist of dictionaries (i.e. d[attributeId]=value).
+        """Load the input table using sql crate templated inserts of the input rowlist of dictionaries (i.e. d[attributeId]=value).
 
-            The containerNameList corresponding to the data within loadable data in rowList can be provided
-            if 'selected' deletions are to performed prior to the the batch data inserts.
+        The containerNameList corresponding to the data within loadable data in rowList can be provided
+        if 'selected' deletions are to performed prior to the the batch data inserts.
 
-            deleteOpt = ['selected','all'] where 'selected' deletes rows corresponding to the input container
-                        list before insert.   The 'all' options truncates the table prior to insert.
+        deleteOpt = ['selected','all'] where 'selected' deletes rows corresponding to the input container
+                    list before insert.   The 'all' options truncates the table prior to insert.
 
-                        Deletions are performed in the absence of loadable data.
+                    Deletions are performed in the absence of loadable data.
 
         """
         startTime = time.time()

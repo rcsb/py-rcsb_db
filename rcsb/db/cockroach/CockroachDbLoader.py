@@ -34,8 +34,7 @@ logger = logging.getLogger(__name__)
 
 class CockroachDbLoader(object):
 
-    """Map PDBx/mmCIF instance data to SQL loadable data using external schema definition.
-    """
+    """Map PDBx/mmCIF instance data to SQL loadable data using external schema definition."""
 
     def __init__(self, schemaDefObj, ioObj=None, dbCon=None, workPath=".", cleanUp=False, warnings="default", verbose=True):
         """Map PDBx/mmCIF instance data to SQL loadable data using external schema definition.
@@ -223,7 +222,12 @@ class CockroachDbLoader(object):
             endTime = time.time()
             if ret:
                 logger.debug(
-                    "Insert succeeds for table %s %d of %d rows at %s (%.3f seconds)", tableName, lenR, lenT, time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - endTime1,
+                    "Insert succeeds for table %s %d of %d rows at %s (%.3f seconds)",
+                    tableName,
+                    lenR,
+                    lenT,
+                    time.strftime("%Y %m %d %H:%M:%S", time.localtime()),
+                    endTime - endTime1,
                 )
             else:
                 logger.error(

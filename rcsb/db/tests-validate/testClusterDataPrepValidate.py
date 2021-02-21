@@ -102,8 +102,7 @@ class ClusterDataPrepValidateTests(unittest.TestCase):
         return eCount
 
     def __fetchProvenance(self):
-        """ Test case for fetching a provenance dictionary content.
-        """
+        """Test case for fetching a provenance dictionary content."""
         try:
             provKeyName = "rcsb_entity_sequence_cluster_prov"
             provU = ProvenanceProvider(self.__cfgOb, self.__cachePath, useCache=True)
@@ -114,8 +113,7 @@ class ClusterDataPrepValidateTests(unittest.TestCase):
             self.fail()
 
     def __getSequenceClusterData(self, collectionName, dataSetId=None, dataLocator=None, levels=None):
-        """ Test extraction on an example sequence cluster data set.
-        """
+        """Test extraction on an example sequence cluster data set."""
         try:
             #
             if collectionName == "cluster_provenance":

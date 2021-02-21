@@ -735,9 +735,7 @@ class DocumentDefinitionHelper(object):
             bool: True if in a search group or False otherwise
         """
         try:
-            self.__searchGroupD, self.__searchGroupAttributeD = (
-                self.__prepareAttributeSearchGroups() if not self.__searchGroupD else (self.__searchGroupD, self.__searchGroupAttributeD)
-            )
+            self.__searchGroupD, self.__searchGroupAttributeD = self.__prepareAttributeSearchGroups() if not self.__searchGroupD else (self.__searchGroupD, self.__searchGroupAttributeD)
             return self.__searchGroupAttributeD.get((categoryName, attributeName), None) is not None
         except Exception as e:
             logger.exception("Failing with %s", str(e))
@@ -754,9 +752,7 @@ class DocumentDefinitionHelper(object):
             list: [(groupName, priorityOrder),...]
         """
         try:
-            self.__searchGroupD, self.__searchGroupAttributeD = (
-                self.__prepareAttributeSearchGroups() if not self.__searchGroupD else (self.__searchGroupD, self.__searchGroupAttributeD)
-            )
+            self.__searchGroupD, self.__searchGroupAttributeD = self.__prepareAttributeSearchGroups() if not self.__searchGroupD else (self.__searchGroupD, self.__searchGroupAttributeD)
             return self.__searchGroupAttributeD.get((categoryName, attributeName), [])
         except Exception as e:
             logger.exception("Failing with %s", str(e))
@@ -764,9 +760,7 @@ class DocumentDefinitionHelper(object):
 
     def getSearchGroupAttributes(self, searchGroupName):
         try:
-            self.__searchGroupD, self.__searchGroupAttributeD = (
-                self.__prepareAttributeSearchGroups() if not self.__searchGroupD else (self.__searchGroupD, self.__searchGroupAttributeD)
-            )
+            self.__searchGroupD, self.__searchGroupAttributeD = self.__prepareAttributeSearchGroups() if not self.__searchGroupD else (self.__searchGroupD, self.__searchGroupAttributeD)
             return self.__searchGroupD.get(searchGroupName, [])
         except Exception as e:
             logger.exception("Failing with %s", str(e))
@@ -774,9 +768,7 @@ class DocumentDefinitionHelper(object):
 
     def getSearchGroups(self):
         try:
-            self.__searchGroupD, self.__searchGroupAttributeD = (
-                self.__prepareAttributeSearchGroups() if not self.__searchGroupD else (self.__searchGroupD, self.__searchGroupAttributeD)
-            )
+            self.__searchGroupD, self.__searchGroupAttributeD = self.__prepareAttributeSearchGroups() if not self.__searchGroupD else (self.__searchGroupD, self.__searchGroupAttributeD)
             return list(self.__searchGroupD.keys())
         except Exception as e:
             logger.exception("Failing with %s", str(e))
