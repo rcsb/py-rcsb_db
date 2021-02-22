@@ -293,3 +293,4 @@
  12-Feb-2021  V1.660 Add ligand validation score and generation category rcsb_nonpolymer_instance_validation_score
  15-Feb-2021  V1.661 Split out dictionary methods repository tools into rcsb.utils.dictionary and rcsb.utils.repository
  21-Feb-2021  V1.662 Integrating latest rcsb.utils.dictionary and rcsb.utils.repository.
+ 22-Feb-2021  V1.663 Further integratio adjustments for rcsb.utils.dictionary.
