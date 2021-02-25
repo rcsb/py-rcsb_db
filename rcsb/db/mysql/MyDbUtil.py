@@ -54,8 +54,7 @@ logger = logging.getLogger(__name__)
 
 class MyDbQuery(object):
 
-    """ Parameterized SQL queries using Python DBI protocol...
-    """
+    """Parameterized SQL queries using Python DBI protocol..."""
 
     def __init__(self, dbcon, verbose=True):
         self.__dbcon = dbcon
@@ -67,13 +66,13 @@ class MyDbQuery(object):
         self.__warningAction = "default"
 
     def sqlBatchTemplateCommand(self, templateValueList, prependSqlList=None):
-        """  Execute a batch sql commands followed by a single commit. Commands are
-             are describe in a template with an associated list of values.
+        """Execute a batch sql commands followed by a single commit. Commands are
+        are describe in a template with an associated list of values.
 
-             prependSqlList = Optional list of SQL commands to be executed prior to any
-                              batch template commands.
+        prependSqlList = Optional list of SQL commands to be executed prior to any
+                         batch template commands.
 
-             Errors and warnings that generate exceptions are caught by this method.
+        Errors and warnings that generate exceptions are caught by this method.
         """
         with warnings.catch_warnings():
             self.__setWarningHandler()
@@ -108,9 +107,9 @@ class MyDbQuery(object):
             return False
 
     def sqlTemplateCommand(self, sqlTemplate=None, valueList=None):
-        """  Execute sql template command with associated value list.
+        """Execute sql template command with associated value list.
 
-             Errors and warnings that generate exceptions are caught by this method.
+        Errors and warnings that generate exceptions are caught by this method.
         """
         vList = valueList if valueList else []
         with warnings.catch_warnings():
@@ -147,11 +146,11 @@ class MyDbQuery(object):
             return False
 
     def __setWarningHandler(self):
-        """  'error' will map all MySQL warnings to exceptions -
+        """'error' will map all MySQL warnings to exceptions -
 
-             'ignore' will completely suppress warnings
+        'ignore' will completely suppress warnings
 
-             other settings may print warning directly to stderr
+        other settings may print warning directly to stderr
         """
         if self.__warningAction == "error":
             warnings.simplefilter("error", category=MySQLdb.Warning)
@@ -161,7 +160,7 @@ class MyDbQuery(object):
             warnings.simplefilter("default")
 
     def sqlCommand(self, sqlCommandList):
-        """  Execute the input list of SQL commands catching exceptions from the server.
+        """Execute the input list of SQL commands catching exceptions from the server.
 
         The treatment of warning is controlled by a prior setting of self.setWarnings("error"|"ignore"|"default")
 
@@ -203,8 +202,7 @@ class MyDbQuery(object):
         return False
 
     def sqlCommand2(self, queryString):
-        """   Execute SQL command catching exceptions returning no data from the server.
-        """
+        """Execute SQL command catching exceptions returning no data from the server."""
         curs = None
         with warnings.catch_warnings():
             self.__setWarningHandler()
@@ -235,8 +233,7 @@ class MyDbQuery(object):
         return []
 
     def __fetchIter(self, cursor, rowSize=1000):
-        """ Chunked iterator to manage results fetches to mysql server
-        """
+        """Chunked iterator to manage results fetches to mysql server"""
         while True:
             results = cursor.fetchmany(rowSize)
             if not results:
@@ -245,8 +242,7 @@ class MyDbQuery(object):
                 yield result
 
     def selectRows(self, queryString):
-        """ Execute SQL command and return list of lists for the result set.
-        """
+        """Execute SQL command and return list of lists for the result set."""
         rowList = []
         with warnings.catch_warnings():
             warnings.simplefilter("error")
@@ -280,8 +276,7 @@ class MyDbQuery(object):
         return []
 
     def simpleQuery(self, selectList, fromList, condition="", orderList=None, returnObj=None):
-        """
-        """
+        """"""
         #
         oL = orderList if orderList else []
         retObj = returnObj if returnObj else []

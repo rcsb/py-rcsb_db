@@ -63,8 +63,7 @@ class DataTypeApplicationInfoTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testDefaults(self):
-        """ Verify default type assignments and read, write and update operations.
-        """
+        """Verify default type assignments and read, write and update operations."""
         try:
             dta = DataTypeApiProvider(self.__cfgOb, self.__cachePath, useCache=False)
             dtInfo = dta.getDataTypeApplicationApi("ANY")
@@ -88,8 +87,7 @@ class DataTypeApplicationInfoTests(unittest.TestCase):
             self.fail()
 
     def testStored(self):
-        """ Verify stored type mapping assignments.
-        """
+        """Verify stored type mapping assignments."""
         try:
             dta = DataTypeApiProvider(self.__cfgOb, self.__cachePath, useCache=False)
             dtInfo = dta.getDataTypeApplicationApi("JSON")

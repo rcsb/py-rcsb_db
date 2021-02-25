@@ -58,7 +58,7 @@ logger = logging.getLogger(__name__)
 class SchemaDefDataPrep(object):
 
     """Generic mapper of PDBx/mmCIF instance data to a data organization consistent
-       with an external schema definition defined in class SchemaDefBase().
+    with an external schema definition defined in class SchemaDefBase().
     """
 
     def __init__(self, schemaDefAccessObj, dtObj=None, workPath=None, verbose=True):
@@ -77,8 +77,7 @@ class SchemaDefDataPrep(object):
         #
 
     def setSchemaIdExcludeList(self, schemaIdList):
-        """ Set list of schema Ids to be excluded from any data extraction operations.
-        """
+        """Set list of schema Ids to be excluded from any data extraction operations."""
         try:
             self.__schemaIdExcludeD = {sId: True for sId in schemaIdList}
             return True
@@ -87,10 +86,10 @@ class SchemaDefDataPrep(object):
         return False
 
     def setSchemaIdIncludeList(self, schemaIdList):
-        """ Set list of schema Ids for inclusion in any data extraction operations. (subject to exclusion).
+        """Set list of schema Ids for inclusion in any data extraction operations. (subject to exclusion).
 
-            This list will limit the candidate tables selected from the current schema and exclusions if
-            specified will still be applied.
+        This list will limit the candidate tables selected from the current schema and exclusions if
+        specified will still be applied.
         """
         try:
             self.__schemaIdIncludeD = {sId: True for sId in schemaIdList}
@@ -105,8 +104,8 @@ class SchemaDefDataPrep(object):
         return ts
 
     def __mergeContainers(self, locatorObj, fmt="mmcif", mergeTarget=0):
-        """ Consolidate content in auxiliary files locatorObj[1:] into
-            locatorObj[0] container index 'mergeTarget'.
+        """Consolidate content in auxiliary files locatorObj[1:] into
+        locatorObj[0] container index 'mergeTarget'.
 
         """
         #
@@ -136,8 +135,7 @@ class SchemaDefDataPrep(object):
         return cL
 
     def getContainerList(self, locatorObjList, filterType="none"):
-        """ Return the data container list obtained by parsing the input locator list.
-        """
+        """Return the data container list obtained by parsing the input locator list."""
         cL = []
         _ = filterType
         for locatorObj in locatorObjList:
@@ -149,9 +147,7 @@ class SchemaDefDataPrep(object):
         return cL
 
     def getLocatorsFromPaths(self, locatorObjList, pathList, locatorIndex=0):
-        """ Return locator objects with paths (locatorObjIndex) matching the input pathList.
-
-        """
+        """Return locator objects with paths (locatorObjIndex) matching the input pathList."""
         # index the input locatorObjList
         rL = []
         try:
@@ -183,22 +179,22 @@ class SchemaDefDataPrep(object):
         return []
 
     def fetch(self, locatorObjList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, useNameFlag=True, collectionName=None):
-        """ Return a dictionary of loadable data for each table defined in the current schema
-            definition object.   Data are extracted from all files in the input file list,
-            and this is added in single schema instance such that data from multiple files are appended to a
-            one collection of tables.     The organization of the loadable data is controlled
-            by the style preference:
+        """Return a dictionary of loadable data for each table defined in the current schema
+        definition object.   Data are extracted from all files in the input file list,
+        and this is added in single schema instance such that data from multiple files are appended to a
+        one collection of tables.     The organization of the loadable data is controlled
+        by the style preference:
 
-            Returns: schemaDataDict, containerNameList
+        Returns: schemaDataDict, containerNameList
 
-                 For styleType settings:
+             For styleType settings:
 
-                     rowwise_by_id:      dict[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
-                     rowwise_by_name:    dict[<tableName>] = [ row1Dict[attributeName]=value,  row2dict[], .. ]
-                     rowwise_no_name:    dict[<tableName>] = {'attributes': [atName1, atName2,... ], 'data' : [[val1, val2, .. ],[val1, val2,... ]]}
-                     columnwise_by_name: dict[<tableName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
+                 rowwise_by_id:      dict[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
+                 rowwise_by_name:    dict[<tableName>] = [ row1Dict[attributeName]=value,  row2dict[], .. ]
+                 rowwise_no_name:    dict[<tableName>] = {'attributes': [atName1, atName2,... ], 'data' : [[val1, val2, .. ],[val1, val2,... ]]}
+                 columnwise_by_name: dict[<tableName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
 
-                filterTypes: "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
+            filterTypes: "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
 
         """
         schemaDataDictById, containerNameList, _ = self.__fetch(locatorObjList, filterType, dataSelectors=dataSelectors, useNameFlag=useNameFlag)
@@ -206,24 +202,24 @@ class SchemaDefDataPrep(object):
         return schemaDataDict, containerNameList
 
     def fetchDocuments(self, locatorObjList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, sliceFilter=None, useNameFlag=True, collectionName=None):
-        """ Return a list of dictionaries of loadable data for each table defined in the current schema
-            definition object.   Data are extracted from the each input file, and each data
-            set is stored in a separate schema instance (document).  The organization
-            of the loadable data is controlled by the style preference:
+        """Return a list of dictionaries of loadable data for each table defined in the current schema
+        definition object.   Data are extracted from the each input file, and each data
+        set is stored in a separate schema instance (document).  The organization
+        of the loadable data is controlled by the style preference:
 
-            Returns: schemaDataDictList, containerNameList
+        Returns: schemaDataDictList, containerNameList
 
-                 For styleType settings:
+             For styleType settings:
 
-                     rowwise_by_id:      dict[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
-                     rowwise_by_name:    dict[<tableName>] = [ row1Dict[attributeName]=value,  row2dict[], .. ]
-                     rowwise_no_name:    dict[<tableName>] = {'attributes': [atName1, atName2,... ], 'data' : [[val1, val2, .. ],[val1, val2,... ]]}
-                     columnwise_by_name: dict[<tableName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
+                 rowwise_by_id:      dict[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
+                 rowwise_by_name:    dict[<tableName>] = [ row1Dict[attributeName]=value,  row2dict[], .. ]
+                 rowwise_no_name:    dict[<tableName>] = {'attributes': [atName1, atName2,... ], 'data' : [[val1, val2, .. ],[val1, val2,... ]]}
+                 columnwise_by_name: dict[<tableName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
 
-                 filterTypes: "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
-                 sliceFilter: name of slice filter
-                 useNameFlag: use container name rather than container UID as a unique identifier
-                 collectionName:  name target collection for the processed documents
+             filterTypes: "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
+             sliceFilter: name of slice filter
+             useNameFlag: use container name rather than container UID as a unique identifier
+             collectionName:  name target collection for the processed documents
         """
         schemaDataDictList = []
         containerNameList = []
@@ -240,21 +236,21 @@ class SchemaDefDataPrep(object):
         return schemaDataDictList, containerNameList, rejectLocatorObjList
 
     def process(self, containerList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, useNameFlag=True, collectionName=None):
-        """ Return a dictionary of loadable data for each table defined in the current schema
-            definition object.   Data are extracted from all files in the input container list,
-            and this is added in single schema instance such that data from multiple files are appended to a
-            one collection of tables.  The organization of the loadable data is controlled by the style preference:
+        """Return a dictionary of loadable data for each table defined in the current schema
+        definition object.   Data are extracted from all files in the input container list,
+        and this is added in single schema instance such that data from multiple files are appended to a
+        one collection of tables.  The organization of the loadable data is controlled by the style preference:
 
-            Returns: schemaDataDict, containerNameList
+        Returns: schemaDataDict, containerNameList
 
-                 For styleType settings:
+             For styleType settings:
 
-                     rowwise_by_id:      dict[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
-                     rowwise_by_name:    dict[<tableName>] = [ row1Dict[attributeName]=value,  row2dict[], .. ]
-                     rowwise_no_name:    dict[<tableName>] = {'attributes': [atName1, atName2,... ], 'data' : [[val1, val2, .. ],[val1, val2,... ]]}
-                     columnwise_by_name: dict[<tableName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
+                 rowwise_by_id:      dict[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
+                 rowwise_by_name:    dict[<tableName>] = [ row1Dict[attributeName]=value,  row2dict[], .. ]
+                 rowwise_no_name:    dict[<tableName>] = {'attributes': [atName1, atName2,... ], 'data' : [[val1, val2, .. ],[val1, val2,... ]]}
+                 columnwise_by_name: dict[<tableName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
 
-                filterTypes: "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
+            filterTypes: "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
 
 
         """
@@ -264,24 +260,24 @@ class SchemaDefDataPrep(object):
         return schemaDataDict, containerNameList
 
     def processDocuments(self, containerList, styleType="rowwise_by_id", filterType="none", dataSelectors=None, sliceFilter=None, useNameFlag=True, collectionName=None):
-        """ Return a list of dictionaries of loadable data for each table defined in the current schema
-            definition object.   Data are extracted from the each input container, and each data
-            set is stored in a separate schema instance (document).  The organization of the loadable
-            data is controlled by the style preference:
+        """Return a list of dictionaries of loadable data for each table defined in the current schema
+        definition object.   Data are extracted from the each input container, and each data
+        set is stored in a separate schema instance (document).  The organization of the loadable
+        data is controlled by the style preference:
 
-            Returns: schemaDataDictList, containerNameList
+        Returns: schemaDataDictList, containerNameList
 
-                 For styleType settings:
+             For styleType settings:
 
-                     rowwise_by_id:      dict[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
-                     rowwise_by_name:    dict[<tableName>] = [ row1Dict[attributeName]=value,  row2dict[], .. ]
-                     rowwise_no_name:    dict[<tableName>] = {'attributes': [atName1, atName2,... ], 'data' : [[val1, val2, .. ],[val1, val2,... ]]}
-                     columnwise_by_name: dict[<tableName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
+                 rowwise_by_id:      dict[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
+                 rowwise_by_name:    dict[<tableName>] = [ row1Dict[attributeName]=value,  row2dict[], .. ]
+                 rowwise_no_name:    dict[<tableName>] = {'attributes': [atName1, atName2,... ], 'data' : [[val1, val2, .. ],[val1, val2,... ]]}
+                 columnwise_by_name: dict[<tableName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
 
-            filterTypes:  "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
-            sliceFilter: name of slice filter
-            useNameFlag: use container name rather than container UID as a unique identifier
-            collectionName:  name target collection for the processed documents
+        filterTypes:  "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates"
+        sliceFilter: name of slice filter
+        useNameFlag: use container name rather than container UID as a unique identifier
+        collectionName:  name target collection for the processed documents
         """
         schemaDataDictList = []
         containerIdList = []
@@ -316,8 +312,7 @@ class SchemaDefDataPrep(object):
         return schemaDataDictList, containerIdList, rejectIdList
 
     def addDocumentPrivateAttributes(self, docList, collectionName, styleType="rowwise_by_name"):
-        """ For the input collection, add private document attributes to the input document list.
-        """
+        """For the input collection, add private document attributes to the input document list."""
         if styleType not in ["rowwise_by_name", "rowwise_by_name_with_cardinality"]:
             logger.error("Unsupported document style %s", styleType)
             return docList
@@ -350,8 +345,7 @@ class SchemaDefDataPrep(object):
         return docList
 
     def addDocumentSubCategoryAggregates(self, docList, collectionName, styleType="rowwise_by_name", removeSubCategoryPrefix=True):
-        """ For the input collection, add subcategory aggregates to the input document list.
-        """
+        """For the input collection, add subcategory aggregates to the input document list."""
         if styleType not in ["rowwise_by_name", "rowwise_by_name_with_cardinality"]:
             logger.error("Unsupported document style %s", styleType)
             return docList
@@ -464,12 +458,12 @@ class SchemaDefDataPrep(object):
         return docList
 
     def __fetch(self, locatorObjList, filterType, dataSelectors=None, useNameFlag=True):
-        """ Internal method to create loadable data corresponding to the table schema definition
-            from the input list of data files.
+        """Internal method to create loadable data corresponding to the table schema definition
+        from the input list of data files.
 
-            Returns: dicitonary d[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
-                                and
-                     container name list. []
+        Returns: dicitonary d[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
+                            and
+                 container name list. []
 
         """
         startTime = time.time()
@@ -511,13 +505,13 @@ class SchemaDefDataPrep(object):
         return schemaDataDictF, containerIdList, rejectLocatorObjList
 
     def __process(self, containerList, filterType, dataSelectors=None, useNameFlag=True):
-        """ Internal method to create loadable data corresponding to the table schema definition
-            from the input container list.
+        """Internal method to create loadable data corresponding to the table schema definition
+        from the input container list.
 
-            Returns: dictionary d[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
-                                and
-                     suceessfully processed container id list. []
-                     list of rejected containers ids. []
+        Returns: dictionary d[<tableId>] = [ row1Dict[attributeId]=value,  row2dict[], .. ]
+                            and
+                 suceessfully processed container id list. []
+                 list of rejected containers ids. []
 
         """
         startTime = time.time()
@@ -556,11 +550,11 @@ class SchemaDefDataPrep(object):
         return schemaDataDictF, containerIdList, rejectIdList
 
     def __testdataSelectors(self, container, dataSelectors):
-        """ Test the if the input container satisfies the input content/data selectors.
+        """Test the if the input container satisfies the input content/data selectors.
 
-            Selection content must exist in the input container with the specified value.
+        Selection content must exist in the input container with the specified value.
 
-            Return:  True fo sucess or False otherwise
+        Return:  True fo sucess or False otherwise
         """
         if not dataSelectors:
             return True
@@ -603,9 +597,7 @@ class SchemaDefDataPrep(object):
                     logger.debug("+SchemaDefLoader(load) %r maximum width %r", k, v)
 
     def __evalMapFunction(self, dataContainer, rowDList, attributeId, functionName, functionArgs=None):
-        """ Evaluate dynamic schema methods on the input data container.
-
-        """
+        """Evaluate dynamic schema methods on the input data container."""
         # logger.debug("Evaluating function %s on attribute %s" % (functionName, attributeId))
         _ = functionArgs
         fn = functionName.lower()
@@ -637,12 +629,12 @@ class SchemaDefDataPrep(object):
 
     def __mapData(self, containerList, schemaDataDict, filterType="none"):
         """
-           Process instance data in the input container list and map these data to the
-           table schema definitions to the current selected table list.
+        Process instance data in the input container list and map these data to the
+        table schema definitions to the current selected table list.
 
-           Returns: mapped data as a list of dictionaries with attribute Id key for
-                    each schema table.  Data are appended to any existing table in
-                    the input dictionary.
+        Returns: mapped data as a list of dictionaries with attribute Id key for
+                 each schema table.  Data are appended to any existing table in
+                 the input dictionary.
 
 
         """
@@ -692,13 +684,13 @@ class SchemaDefDataPrep(object):
         return schemaDataDict
 
     def __mapInstanceCategory(self, tObj, categoryName, myContainer, filterType):
-        """ Extract data from the input instance category and map these data to the organization
-            in the input table schema definition object.
+        """Extract data from the input instance category and map these data to the organization
+        in the input table schema definition object.
 
-            No merging is performed by this method.
+        No merging is performed by this method.
 
-            Return a list of dictionaries with schema attribute Id keys containing data
-            mapped from the input instance category.
+        Return a list of dictionaries with schema attribute Id keys containing data
+        mapped from the input instance category.
         """
         #
         _ = filterType
@@ -715,14 +707,14 @@ class SchemaDefDataPrep(object):
         return retList
 
     def __mapInstanceCategoryList(self, tObj, categoryNameList, myContainer, filterType):
-        """ Extract data from the input instance categories and map these data to the organization
-            in the input table schema definition object.
+        """Extract data from the input instance categories and map these data to the organization
+        in the input table schema definition object.
 
-            Data from contributing categories is merged using attributes specified in
-            the merging index for the input table.
+        Data from contributing categories is merged using attributes specified in
+        the merging index for the input table.
 
-            Return a list of dictionaries with schema attribute Id keys containing data
-            mapped from the input instance category.
+        Return a list of dictionaries with schema attribute Id keys containing data
+        mapped from the input instance category.
         """
         # Consider mD as orderdict
         _ = filterType

@@ -32,7 +32,17 @@ logger = logging.getLogger(__name__)
 
 class DocumentLoader(object):
     def __init__(
-        self, cfgOb, cachePath, resourceName="MONGO_DB", numProc=4, chunkSize=15, documentLimit=None, verbose=False, readBackCheck=False, maxStepLength=2000, schemaRebuildFlag=False,
+        self,
+        cfgOb,
+        cachePath,
+        resourceName="MONGO_DB",
+        numProc=4,
+        chunkSize=15,
+        documentLimit=None,
+        verbose=False,
+        readBackCheck=False,
+        maxStepLength=2000,
+        schemaRebuildFlag=False,
     ):
         self.__verbose = verbose
         #
@@ -56,10 +66,10 @@ class DocumentLoader(object):
         #
 
     def load(self, databaseName, collectionName, loadType="full", documentList=None, indexAttributeList=None, keyNames=None, schemaLevel="full", addValues=None):
-        """  Driver method for loading MongoDb content -
+        """Driver method for loading MongoDb content -
 
 
-            loadType:     "full" or "replace"
+        loadType:     "full" or "replace"
 
         """
         try:
@@ -140,8 +150,7 @@ class DocumentLoader(object):
         return False
 
     def loadWorker(self, dataList, procName, optionsD, workingDir):
-        """ Multi-proc worker method for MongoDb document loading -
-        """
+        """Multi-proc worker method for MongoDb document loading -"""
         try:
             startTime = self.__begin(message=procName)
             readBackCheck = optionsD["readBackCheck"]
@@ -192,8 +201,7 @@ class DocumentLoader(object):
         logger.debug("Completed %s at %s (%.4f seconds)", message, ts, delta)
 
     def __createCollection(self, dbName, collectionName, indexAttributeNames=None, checkExists=False, bsonSchema=None):
-        """Create database and collection and optionally a primary index -
-        """
+        """Create database and collection and optionally a primary index -"""
         try:
             logger.debug("Create database %s collection %s", dbName, collectionName)
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
@@ -215,9 +223,7 @@ class DocumentLoader(object):
         return False
 
     def __removeCollection(self, dbName, collectionName):
-        """Drop collection within database
-
-        """
+        """Drop collection within database"""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
@@ -328,8 +334,7 @@ class DocumentLoader(object):
         return tuple(rL)
 
     def __getKeyValue(self, dct, keyName):
-        """  Return the value of the corresponding key expressed in dot notation in the input dictionary object (nested).
-        """
+        """Return the value of the corresponding key expressed in dot notation in the input dictionary object (nested)."""
         try:
             kys = keyName.split(".")
             for key in kys:

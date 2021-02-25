@@ -30,8 +30,7 @@ logger = logging.getLogger(__name__)
 
 class Connection(object):
 
-    """ Class to encapsulate Crate RDBMS DBI connection.
-    """
+    """Class to encapsulate Crate RDBMS DBI connection."""
 
     def __init__(self, cfgOb=None, infoD=None, resourceName=None, sectionName="site_info_configuration", verbose=False):
         self.__verbose = verbose
@@ -115,9 +114,9 @@ class Connection(object):
         #
 
     def connect(self):
-        """ Create a database connection and return a connection object.
+        """Create a database connection and return a connection object.
 
-            Returns None on failure
+        Returns None on failure
         """
         #
         crateHost = "{host}:{port}".format(host=self.__dbHost, port=self.__dbPort)
@@ -139,8 +138,7 @@ class Connection(object):
         return self.__dbcon
 
     def close(self):
-        """ Close any open database connection.
-        """
+        """Close any open database connection."""
         if self.__dbcon is not None:
             try:
                 self.__dbcon.close()

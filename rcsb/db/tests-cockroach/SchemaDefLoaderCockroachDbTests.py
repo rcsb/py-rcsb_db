@@ -43,7 +43,7 @@ from rcsb.db.cockroach.Connection import Connection
 
 #
 from rcsb.db.sql.SqlGen import SqlGenAdmin
-from rcsb.db.utils.RepositoryProvider import RepositoryProvider
+from rcsb.utils.repository.RepositoryProvider import RepositoryProvider
 from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
@@ -102,8 +102,7 @@ class CockroachDbLoaderCockroachDbTests(unittest.TestCase):
             self.fail()
 
     def testSchemaCreate(self):
-        """  Create table schema (live) for BIRD, chemical component, and PDBx data.
-        """
+        """Create table schema (live) for BIRD, chemical component, and PDBx data."""
         try:
             sd, _, _, _ = self.__schP.getSchemaInfo("bird")
             ret = self.__schemaCreate(schemaDefObj=sd)
@@ -122,8 +121,7 @@ class CockroachDbLoaderCockroachDbTests(unittest.TestCase):
             self.fail()
 
     def testSchemaRemove(self):
-        """  Remove table schema (live) for BIRD, chemical component, and PDBx data.
-        """
+        """Remove table schema (live) for BIRD, chemical component, and PDBx data."""
         try:
             sd, _, _, _ = self.__schP.getSchemaInfo("bird")
             ret = self.__schemaRemove(schemaDefObj=sd)
@@ -232,8 +230,7 @@ class CockroachDbLoaderCockroachDbTests(unittest.TestCase):
             self.fail()
 
     def __schemaCreateSQL(self, schemaDefObj):
-        """Test case -  create table schema using schema definition
-        """
+        """Test case -  create table schema using schema definition"""
         sqlL = []
         try:
             tableIdList = schemaDefObj.getTableIdList()
@@ -250,8 +247,7 @@ class CockroachDbLoaderCockroachDbTests(unittest.TestCase):
         return sqlL
 
     def __schemaCreate(self, schemaDefObj):
-        """Test case -  create table schema using schema definition
-        """
+        """Test case -  create table schema using schema definition"""
         ret = 0
         try:
             tableIdList = schemaDefObj.getTableIdList()
@@ -277,8 +273,7 @@ class CockroachDbLoaderCockroachDbTests(unittest.TestCase):
             self.fail()
 
     def __schemaRemove(self, schemaDefObj):
-        """Test case -  remove table schema using schema definition
-        """
+        """Test case -  remove table schema using schema definition"""
         ret = 0
         try:
             dbName = schemaDefObj.getVersionedDatabaseName()

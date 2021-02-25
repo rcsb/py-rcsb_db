@@ -30,7 +30,7 @@ from rcsb.db.mysql.Connection import Connection
 from rcsb.db.mysql.MyDbUtil import MyDbQuery
 from rcsb.db.mysql.SchemaDefLoader import SchemaDefLoader
 from rcsb.db.sql.SqlGen import SqlGenAdmin
-from rcsb.db.utils.RepositoryProvider import RepositoryProvider
+from rcsb.utils.repository.RepositoryProvider import RepositoryProvider
 from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
@@ -72,8 +72,7 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def __schemaCreate(self, schemaDefObj):
-        """ Create table schema using schema definition
-        """
+        """Create table schema using schema definition"""
         try:
             tableIdList = schemaDefObj.getSchemaIdList()
             sqlGen = SqlGenAdmin(self.__verbose)
@@ -98,8 +97,7 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
 
     # ------------- - -------------------------------------------------------------------------------------------
     def testSchemaCreate(self):
-        """  Create table schema for BIRD, chemical component, and PDBx data.
-        """
+        """Create table schema for BIRD, chemical component, and PDBx data."""
         cD = self.__schP.makeSchemaDef("bird", dataTyping="SQL", saveSchema=True)
         sd = SchemaDefAccess(cD)
         self.__schemaCreate(sd)

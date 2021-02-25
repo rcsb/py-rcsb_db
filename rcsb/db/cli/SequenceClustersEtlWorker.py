@@ -26,30 +26,30 @@ logger = logging.getLogger(__name__)
 
 
 class SequenceClustersEtlWorker(object):
-    """ Prepare and load sequence cluster data.
+    """Prepare and load sequence cluster data.
 
-        Note: relevant configuration options -
+     Note: relevant configuration options -
 
-       site_info:
-        'RCSB_SEQUENCE_CLUSTER_DATA_PATH': ...
+    site_info:
+     'RCSB_SEQUENCE_CLUSTER_DATA_PATH': ...
 
-       entity_sequence_clusters:
-        DATABASE_NAME: sequence_clusters
-        DATABASE_VERSION_STRING: v5
-        COLLECTION_ENTITY_MEMBERS: entity_members
-        COLLECTION_ENTITY_MEMBERS_INDEX: data_set_id,entry_id,entity_id
-        COLLECTION_CLUSTER_MEMBERS: cluster_members
-        COLLECTION_CLUSTER_MEMBERS_INDEX: data_set_id,identity,cluster_id
-        COLLECTION_VERSION_STRING: v0_1
-        ENTITY_SCHEMA_NAME: rcsb_entity_sequence_cluster_entity_list
-        CLUSTER_SCHEMA_NAME: rcsb_entity_sequence_cluster_identifer_list
-        SEQUENCE_IDENTITY_LEVELS: 100,95,90,70,50,30
-        COLLECTION_CLUSTER_PROVENANCE: cluster_provenance
-        PROVENANCE_KEY_NAME: rcsb_entity_sequence_cluster_prov
-        PROVENANCE_INFO_LOCATOR: provenance/rcsb_extend_provenance_info.json
+    entity_sequence_clusters:
+     DATABASE_NAME: sequence_clusters
+     DATABASE_VERSION_STRING: v5
+     COLLECTION_ENTITY_MEMBERS: entity_members
+     COLLECTION_ENTITY_MEMBERS_INDEX: data_set_id,entry_id,entity_id
+     COLLECTION_CLUSTER_MEMBERS: cluster_members
+     COLLECTION_CLUSTER_MEMBERS_INDEX: data_set_id,identity,cluster_id
+     COLLECTION_VERSION_STRING: v0_1
+     ENTITY_SCHEMA_NAME: rcsb_entity_sequence_cluster_entity_list
+     CLUSTER_SCHEMA_NAME: rcsb_entity_sequence_cluster_identifer_list
+     SEQUENCE_IDENTITY_LEVELS: 100,95,90,70,50,30
+     COLLECTION_CLUSTER_PROVENANCE: cluster_provenance
+     PROVENANCE_KEY_NAME: rcsb_entity_sequence_cluster_prov
+     PROVENANCE_INFO_LOCATOR: provenance/rcsb_extend_provenance_info.json
 
 
-        """
+    """
 
     def __init__(self, cfgOb, workPath=None, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False):
         self.__cfgOb = cfgOb
@@ -101,8 +101,7 @@ class SequenceClustersEtlWorker(object):
         return False
 
     def __extract(self, dataSetId, dataLocator, levels):
-        """ Extract sequence cluster data set  (mmseq2 or blastclust organization)
-        """
+        """Extract sequence cluster data set  (mmseq2 or blastclust organization)"""
         try:
             cdp = ClusterDataPrep(workPath=self.__cachePath, entitySchemaName=self.__entitySchemaName, clusterSchemaName=self.__clusterSchemaName)
             _, docBySequenceD, docByClusterD = cdp.extract(dataSetId, clusterSetLocator=dataLocator, levels=levels, clusterType="entity")
@@ -113,8 +112,7 @@ class SequenceClustersEtlWorker(object):
         return {}, {}
 
     def __fetchProvenance(self):
-        """ Fetching a provenance dictionary content.
-        """
+        """Fetching a provenance dictionary content."""
         try:
             provKeyName = self.__cfgOb.get("PROVENANCE_KEY_NAME", sectionName=self.__sectionCluster, default="rcsb_entity_sequence_cluster_prov")
             provU = ProvenanceProvider(self.__cfgOb, self.__cachePath, useCache=True)
@@ -125,8 +123,7 @@ class SequenceClustersEtlWorker(object):
         return {}
 
     def etl(self, dataSetId, dataLocator=None, loadType="full"):
-        """ Prepare and load sequence cluster data by entity and by cluster identifer.
-        """
+        """Prepare and load sequence cluster data by entity and by cluster identifer."""
         try:
             self.__statusList = []
             desp = DataExchangeStatus()

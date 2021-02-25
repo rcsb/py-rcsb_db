@@ -117,8 +117,7 @@ class PdbxLoaderTests(unittest.TestCase):
             self.__pdbxLoaderWrapper(**ld)
 
     def __pdbxLoaderWrapper(self, **kwargs):
-        """ Wrapper for PDBx loader modue
-        """
+        """Wrapper for PDBx loader modue"""
         try:
             logger.info("Loading %s", kwargs["databaseName"])
             mw = PdbxLoader(

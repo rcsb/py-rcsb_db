@@ -25,8 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class SliceValues(object):
-    """Iterator class for parent slice values.
-    """
+    """Iterator class for parent slice values."""
 
     def __init__(self, schemaDataDictById, schemaDefObj, sliceFilter):
         self.__sD = schemaDefObj
@@ -98,8 +97,7 @@ class SliceValues(object):
 
 class SchemaDefReShape(object):
 
-    """Companion class to reshape data objects produced by SchemaDefDataPrep()
-    """
+    """Companion class to reshape data objects produced by SchemaDefDataPrep()"""
 
     def __init__(self, schemaDefAccessObj, workPath=None, verbose=True):
         self.__verbose = verbose
@@ -109,13 +107,11 @@ class SchemaDefReShape(object):
         #
 
     def applyShape(self, schemaDataDictById, styleType="rowwise_by_name", collectionName=None):
-        """
-        """
+        """"""
         return self.__reshapeSchemaData(schemaDataDictById, styleType=styleType, collectionName=collectionName)
 
     def applySlicedShape(self, schemaDataDictById, styleType="rowwise_by_name", sliceFilter=None, collectionName=None):
-        """
-        """
+        """"""
         rL = []
         if sliceFilter:
             rL = []
@@ -146,16 +142,16 @@ class SchemaDefReShape(object):
         return rL
 
     def __reshapeSlicedSchemaData(self, schemaDataDictById, sliceFilter, sliceValues, sliceIndex, styleType="rowwise_by_name", collectionName=None):
-        """  Reorganize and rename input table data object according to the input style preference:
+        """Reorganize and rename input table data object according to the input style preference:
 
-             Input: schemaDataDictById  (styleType="rowwise_by_id")
-                                         dict[<schemaId>]   = [ row1asDict[attributeId]=value,  row2asDict[attribute]=value, .. ]
+               Input: schemaDataDictById  (styleType="rowwise_by_id")
+                                           dict[<schemaId>]   = [ row1asDict[attributeId]=value,  row2asDict[attribute]=value, .. ]
 
-             Output: rowwise_by_name:     dict[<schemaObjName>] = [ row1Dict[attributeName]=value,  row2dict[], .. ]
-                     rowwise_no_name:    dict[<schemaObjName>] = {'attributes': [atName1, atName2,... ], 'data' : [[val1, val2, .. ],[val1, val2,... ]]}
-                     columnwise_by_name: dict[<schemaObjName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
-      rowwise_by_name_with_cardinality:  same as rowwise_byName with special handing of tables with unit cardinality
-                                                          dict[<schemaObjName>] = row1Dict[attributeName]=value (singleton row)
+               Output: rowwise_by_name:     dict[<schemaObjName>] = [ row1Dict[attributeName]=value,  row2dict[], .. ]
+                       rowwise_no_name:    dict[<schemaObjName>] = {'attributes': [atName1, atName2,... ], 'data' : [[val1, val2, .. ],[val1, val2,... ]]}
+                       columnwise_by_name: dict[<schemaObjName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
+        rowwise_by_name_with_cardinality:  same as rowwise_byName with special handing of tables with unit cardinality
+                                                            dict[<schemaObjName>] = row1Dict[attributeName]=value (singleton row)
         """
         rD = {}
         try:
@@ -179,8 +175,7 @@ class SchemaDefReShape(object):
         return rD
 
     def __inSlice(self, schemaId, sliceIndex, rowD, parentVals):
-        """ Test if the child values in the input row dictionary equal the corresponding input parents values
-        """
+        """Test if the child values in the input row dictionary equal the corresponding input parents values"""
         ok = True
         try:
             if schemaId in sliceIndex:
@@ -344,16 +339,16 @@ class SchemaDefReShape(object):
 
     #
     def __reshapeSchemaData(self, schemaDataDictById, styleType="rowwise_by_name", collectionName=None):
-        """  Reorganize and rename input table data object according to the input style preference:
+        """Reorganize and rename input table data object according to the input style preference:
 
-             Input: schemaDataDictById  (styleType="rowwise_by_id")
-                                         dict[<schemaId>]   = [ row1asDict[attributeId]=value,  row2asDict[attribute]=value, .. ]
+               Input: schemaDataDictById  (styleType="rowwise_by_id")
+                                           dict[<schemaId>]   = [ row1asDict[attributeId]=value,  row2asDict[attribute]=value, .. ]
 
-             Output: rowwise_by_name:    dict[<schemaObjName>] = [ row1Dict[attributeName]=value,  row2dict[], .. ]
-                     rowwise_no_name:    dict[<schemaObjName>] = {'attributes': [atName1, atName2,... ], 'data' : [[val1, val2, .. ],[val1, val2,... ]]}
-                     columnwise_by_name: dict[<schemaObjName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
-      rowwise_by_name_with_cardinality:  same as rowwise_byName with special handing of tables with unit cardinality
-                                                          dict[<schemaObjName>] = row1Dict[attributeName]=value (singleton row)
+               Output: rowwise_by_name:    dict[<schemaObjName>] = [ row1Dict[attributeName]=value,  row2dict[], .. ]
+                       rowwise_no_name:    dict[<schemaObjName>] = {'attributes': [atName1, atName2,... ], 'data' : [[val1, val2, .. ],[val1, val2,... ]]}
+                       columnwise_by_name: dict[<schemaObjName>] = {'atName': [val1, val2,... ], atName2: [val1,val2, ... ], ...}
+        rowwise_by_name_with_cardinality:  same as rowwise_byName with special handing of tables with unit cardinality
+                                                            dict[<schemaObjName>] = row1Dict[attributeName]=value (singleton row)
         """
         rD = {}
         try:

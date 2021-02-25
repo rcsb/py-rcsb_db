@@ -47,8 +47,7 @@ class ConnectionBaseTests(unittest.TestCase):
         logger.debug("Completed at %s (%.4f seconds)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testCreateConnection(self):
-        """Test case -  connection creation
-        """
+        """Test case -  connection creation"""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 self.assertNotEqual(client, None)
@@ -57,8 +56,7 @@ class ConnectionBaseTests(unittest.TestCase):
             self.fail()
 
     def testCreateMultipleConnections(self):
-        """Test case -  multiple connection creation
-        """
+        """Test case -  multiple connection creation"""
         try:
             for _ in range(25):
                 with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:

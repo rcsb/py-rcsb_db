@@ -36,8 +36,7 @@ logger = logging.getLogger(__name__)
 
 class MyDbAdapter(object):
 
-    """ Database adapter for managing simple access and persistance queries using a MySQL relational database store.
-    """
+    """Database adapter for managing simple access and persistance queries using a MySQL relational database store."""
 
     def __init__(self, schemaDefObj, cfgOb=None, verbose=False):
         self.__verbose = verbose
@@ -72,9 +71,9 @@ class MyDbAdapter(object):
         return cObj.getClientConnection()
 
     def _open(self, dbServer=None, dbHost=None, dbName=None, dbUser=None, dbPw=None, dbSocket=None, dbPort=None):
-        """  Open a connection to the data base server hosting WF status and tracking data -
+        """Open a connection to the data base server hosting WF status and tracking data -
 
-             Internal configuration details will be used if these are not externally supplied.
+        Internal configuration details will be used if these are not externally supplied.
         """
         infoD = {}
         infoD["DB_HOST"] = dbHost if dbHost is not None else self.__cfgOb.get("SITE_DB_HOST_NAME")
@@ -90,8 +89,7 @@ class MyDbAdapter(object):
         return self.__dbCon is not None
 
     def _close(self):
-        """  Close connection to the data base server hosting WF status and tracking data -
-        """
+        """Close connection to the data base server hosting WF status and tracking data -"""
         if self.__dbCon is not None:
             self.__close(self.__cObj)
             self.__dbCon = None
@@ -101,8 +99,7 @@ class MyDbAdapter(object):
         self.__debug = flag
 
     def _setDataStore(self, dataStoreName):
-        """  Set/reassign the database for all subsequent transactions.
-        """
+        """Set/reassign the database for all subsequent transactions."""
         self.__databaseName = dataStoreName
 
     def _getParameterDefaultValues(self, contextId):
@@ -112,33 +109,33 @@ class MyDbAdapter(object):
             return {}
 
     def _setParameterDefaultValues(self, contextId, valueD):
-        """  Set the optional lookup dictionary of default values for unspecified parameters...
+        """Set the optional lookup dictionary of default values for unspecified parameters...
 
-             valueD = { 'paramName1': <default value1>,  'paramName2' : <default value2>, ...  }
+        valueD = { 'paramName1': <default value1>,  'paramName2' : <default value2>, ...  }
         """
         self.__defaultD[contextId] = copy.deepcopy(valueD)
         return True
 
     def _setAttributeParameterMap(self, tableId, mapL):
-        """  Set list of correspondences between method parameters and table attribute IDs.
+        """Set list of correspondences between method parameters and table attribute IDs.
 
-             These correspondences are used to map key-value parameter pairs to their associated table attribute values.
+        These correspondences are used to map key-value parameter pairs to their associated table attribute values.
 
-             mapL=[ (atId1,paramName1),(atId2,paramName2),... ]
+        mapL=[ (atId1,paramName1),(atId2,paramName2),... ]
         """
         self.__attributeParameterMap[tableId] = mapL
         return True
 
     def _getDefaultAttributeParameterMap(self, tableId):
-        """ Return default attributeId parameter name mappings for the input tableId.
+        """Return default attributeId parameter name mappings for the input tableId.
 
-             mapL=[ (atId1,paramName1),(atId2,paramName2),... ]
+        mapL=[ (atId1,paramName1),(atId2,paramName2),... ]
         """
         return self.__sD.getDefaultAttributeParameterMap(tableId)
 
     def _getAttributeParameterMap(self, tableId):
         """
-           For the input table return the method keyword argument name to table attribute mapping -
+        For the input table return the method keyword argument name to table attribute mapping -
         """
         if tableId is not None and tableId in self.__attributeParameterMap:
             return self.__attributeParameterMap[tableId]
@@ -147,8 +144,8 @@ class MyDbAdapter(object):
 
     def _getConstraintParameterMap(self, tableId):
         """
-           For the input table return the method keyword argument name to table attribute mapping for
-           those attributes that serve as constraints for update transactions -
+        For the input table return the method keyword argument name to table attribute mapping for
+        those attributes that serve as constraints for update transactions -
 
         """
         if tableId is not None and tableId in self.__attributeConstraintParameterMap:
@@ -157,19 +154,18 @@ class MyDbAdapter(object):
             return []
 
     def _setConstraintParameterMap(self, tableId, mapL):
-        """  Set list of correspondences between method parameters and table attribute IDs to be used as
-             contraints in update operations.
+        """Set list of correspondences between method parameters and table attribute IDs to be used as
+        contraints in update operations.
 
-             These correspondences are used to map key-value paramter pairs to their associated table attribute values.
+        These correspondences are used to map key-value paramter pairs to their associated table attribute values.
 
-             mapL=[ (atId1,paramName1),(atId2,paramName2),... ]
+        mapL=[ (atId1,paramName1),(atId2,paramName2),... ]
         """
         self.__attributeConstraintParameterMap[tableId] = mapL
         return True
 
     def _createSchema(self):
-        """ Create table schema using the current class schema definition
-        """
+        """Create table schema using the current class schema definition"""
         if self.__debug:
             startTime = time.time()
             logger.info("Starting at %s", time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -208,17 +204,17 @@ class MyDbAdapter(object):
         return ret
 
     def _getSecondsSinceEpoch(self):
-        """  Return number of seconds since the epoch at the precision of the local installation.
-             Typically a floating point value with microsecond precision.
+        """Return number of seconds since the epoch at the precision of the local installation.
+        Typically a floating point value with microsecond precision.
 
-             This is used as the default time reference (e.g. timestamp) for monitoring task requests.
+        This is used as the default time reference (e.g. timestamp) for monitoring task requests.
         """
         return time.time()
 
     def _insertRequest(self, tableId, contextId, **kwargs):
-        """ Insert into the input table using the keyword value pairs provided as input arguments -
+        """Insert into the input table using the keyword value pairs provided as input arguments -
 
-            The contextId controls the handling default values for unspecified parameters.
+        The contextId controls the handling default values for unspecified parameters.
         """
         startTime = time.time()
         if self.__debug:
@@ -277,9 +273,9 @@ class MyDbAdapter(object):
         return ret
 
     def _updateRequest(self, tableId, contextId, **kwargs):
-        """  Update the input table using the keyword value pairs provided as input arguments -
+        """Update the input table using the keyword value pairs provided as input arguments -
 
-             The contextId controls the handling default values for unspecified parameters.
+        The contextId controls the handling default values for unspecified parameters.
 
         """
         startTime = time.time()
@@ -340,8 +336,8 @@ class MyDbAdapter(object):
         return ret
 
     def _select(self, tableId, **kwargs):
-        """ Construct a selection query for input table and optional constraints provided as keyword value pairs in the
-            input arguments.  Return a list of dictionaries of these query details including all table attributes.
+        """Construct a selection query for input table and optional constraints provided as keyword value pairs in the
+        input arguments.  Return a list of dictionaries of these query details including all table attributes.
         """
         startTime = time.time()
         if self.__debug:
@@ -411,8 +407,7 @@ class MyDbAdapter(object):
         return rdList
 
     def _deleteRequest(self, tableId, **kwargs):
-        """ Delete from input table records identified by the keyword value pairs provided as input arguments -
-        """
+        """Delete from input table records identified by the keyword value pairs provided as input arguments -"""
         startTime = time.time()
         if self.__debug:
             logger.info("Starting at %s", time.strftime("%Y %m %d %H:%M:%S", time.localtime()))

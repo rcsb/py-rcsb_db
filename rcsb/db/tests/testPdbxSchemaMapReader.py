@@ -62,8 +62,7 @@ class PdbxSchemaMapReaderTests(unittest.TestCase):
         self.__readMap(self.__pathPdbxSchemaMapFile, os.path.join(HERE, "test-output", "pdbx-def.out"))
 
     def __readMap(self, mapFilePath, defFilePath):
-        """Test case -  read input schema map file and write python schema def data structure -
-        """
+        """Test case -  read input schema map file and write python schema def data structure -"""
         try:
             smr = PdbxSchemaMapReader(verbose=self.__verbose)
             smr.read(mapFilePath)

@@ -32,8 +32,7 @@ logger = logging.getLogger(__name__)
 
 class CockroachDbQuery(object):
 
-    """ Parameterized SQL queries using Python DBI protocol...
-    """
+    """Parameterized SQL queries using Python DBI protocol..."""
 
     def __init__(self, dbcon, verbose=True):
         self.__dbcon = dbcon
@@ -45,10 +44,10 @@ class CockroachDbQuery(object):
         self.__warningAction = "default"
 
     def sqlTemplateCommandMany(self, sqlTemplate, valueLists=None, pageSize=100):
-        """  Execute a batch sql commands followed by a single commit. Commands are
-             are describe in a template with an associated list of values.
+        """Execute a batch sql commands followed by a single commit. Commands are
+        are describe in a template with an associated list of values.
 
-                psycopg2.extras.execute_batch(cur, sql, argslist, page_size=100)
+           psycopg2.extras.execute_batch(cur, sql, argslist, page_size=100)
 
         """
         try:
@@ -73,11 +72,11 @@ class CockroachDbQuery(object):
         return False
 
     def sqlTemplateCommand(self, sqlTemplate=None, valueList=None):
-        """  Execute sql template command with associated value list.
+        """Execute sql template command with associated value list.
 
-             Insert one row -
+        Insert one row -
 
-             Errors and warnings that generate exceptions are caught by this method.
+        Errors and warnings that generate exceptions are caught by this method.
         """
         valueList = valueList if valueList else []
         try:
@@ -97,15 +96,15 @@ class CockroachDbQuery(object):
         return False
 
     def sqlTemplateCommandList(self, sqlTemplateValueList=None):
-        """  Execute sql template command with associated value list.
+        """Execute sql template command with associated value list.
 
-             Input -
+        Input -
 
-             sqlTemplateValueList [(sqlTemplate,vList), (sqlTemplate, vlist), ... ]
+        sqlTemplateValueList [(sqlTemplate,vList), (sqlTemplate, vlist), ... ]
 
-             Insert on row -
+        Insert on row -
 
-             Errors and warnings that generate exceptions are caught by this method.
+        Errors and warnings that generate exceptions are caught by this method.
         """
         vL = []
         iFail = 0
@@ -141,7 +140,7 @@ class CockroachDbQuery(object):
         return ii - iFail + 1
 
     def sqlCommandList(self, sqlCommandList):
-        """  Execute the input list of SQL commands catching exceptions from the server.
+        """Execute the input list of SQL commands catching exceptions from the server.
 
 
         The treatment of warning is controlled by a prior setting of self.setWarnings("error"|"ignore"|"default")
@@ -171,8 +170,7 @@ class CockroachDbQuery(object):
         return False
 
     def sqlCommand(self, queryString):
-        """   Execute SQL command catching exceptions returning no data from the server.
-        """
+        """Execute SQL command catching exceptions returning no data from the server."""
         try:
             curs = self.__dbcon.cursor()
             curs.execute(queryString)
@@ -193,8 +191,7 @@ class CockroachDbQuery(object):
         return []
 
     def __fetchIter(self, cursor, rowSize=1000):
-        """ Chunked iterator to manage results fetches to mysql server
-        """
+        """Chunked iterator to manage results fetches to mysql server"""
         while True:
             results = cursor.fetchmany(rowSize)
             if not results:
@@ -203,8 +200,7 @@ class CockroachDbQuery(object):
                 yield result
 
     def selectRows(self, queryString):
-        """ Execute SQL command and return list of lists for the result set.
-        """
+        """Execute SQL command and return list of lists for the result set."""
         rowList = []
         try:
             curs = self.__dbcon.cursor()
@@ -236,8 +232,7 @@ class CockroachDbQuery(object):
         return []
 
     def simpleQuery(self, selectList=None, fromList=None, condition="", orderList=None, returnObj=None):
-        """
-        """
+        """"""
         #
         selectList = selectList if selectList else []
         fromList = fromList if fromList else []

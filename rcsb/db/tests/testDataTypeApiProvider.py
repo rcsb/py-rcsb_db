@@ -51,8 +51,7 @@ class DataTypeApiProviderTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testApplicationProvider(self):
-        """Test case - get application data type API
-        """
+        """Test case - get application data type API"""
         try:
             dta = DataTypeApiProvider(self.__cfgOb, self.__cachePath, useCache=False)
             for appName in ["ANY", "SQL", "JSON", "BSON"]:
@@ -64,8 +63,7 @@ class DataTypeApiProviderTests(unittest.TestCase):
             self.fail()
 
     def testCoverageProvider(self):
-        """Test case - get application data type API
-        """
+        """Test case - get application data type API"""
         try:
             dta = DataTypeApiProvider(self.__cfgOb, self.__cachePath, useCache=False)
             for schemaName in ["pdbx_core", "chem_comp_core", "bird_chem_comp_core"]:
