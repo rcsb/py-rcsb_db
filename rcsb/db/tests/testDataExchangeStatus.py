@@ -45,8 +45,7 @@ class DataExchangeStatusTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testCreateStatusRecord(self):
-        """ Verify time stamp operations.
-        """
+        """Verify time stamp operations."""
         try:
             dL = []
             desp = DataExchangeStatus()

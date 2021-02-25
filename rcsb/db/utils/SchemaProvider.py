@@ -36,15 +36,15 @@ logger = logging.getLogger(__name__)
 
 
 class SchemaProvider(SingletonClass):
-    """ A collection of schema build and caching methods.
+    """A collection of schema build and caching methods.
 
-        Static cache worflow:
+    Static cache worflow:
 
-            <authorative source>  <--   <cache dir>  <-  client API
+        <authorative source>  <--   <cache dir>  <-  client API
 
-        Compute workflow:
+    Compute workflow:
 
-        <dependent resource files, config file, dictionaries> -> [schema builder] --> <schema def> --> <Json schema>
+    <dependent resource files, config file, dictionaries> -> [schema builder] --> <schema def> --> <Json schema>
 
     """
 
@@ -224,15 +224,15 @@ class SchemaProvider(SingletonClass):
 
     def __getSchemaDefLocator(self, databaseName, dataTyping="ANY"):
         """Internal method returning schema definition path for the input content type and application.
-           Defines schema definition naming convention -
+        Defines schema definition naming convention -
 
-           Args:
-            databaseName (str): schema name (e.g. pdbx, bird, chem_comp, ...)
-            dataTyping (str, optional): Application name for the target schema (e.g. ANY, SQL, ...)
+        Args:
+         databaseName (str): schema name (e.g. pdbx, bird, chem_comp, ...)
+         dataTyping (str, optional): Application name for the target schema (e.g. ANY, SQL, ...)
 
-            Returns:
+         Returns:
 
-             str: schema definition file locator
+          str: schema definition file locator
 
         """
         schemaLocator = None
@@ -246,17 +246,17 @@ class SchemaProvider(SingletonClass):
 
     def __getJsonSchemaLocator(self, databaseName, collectionName, encodingType="BSON", level="full"):
         """Internal method returning JSON schema path for the input collection data type convention and level.
-           Defines the JSON/BSON schema naming convention -
+        Defines the JSON/BSON schema naming convention -
 
-           Args:
-            databaseName (str): database name in the document store
-            collectionName (str): collection name in document store
-            encodingType (str, optional): data type convention (BSON|JSON)
-            level (str, optional): Completeness of the schema (e.g. min or full)
+        Args:
+         databaseName (str): database name in the document store
+         collectionName (str): collection name in document store
+         encodingType (str, optional): data type convention (BSON|JSON)
+         level (str, optional): Completeness of the schema (e.g. min or full)
 
-            Returns:
+         Returns:
 
-            str: schema file locator
+         str: schema file locator
 
         """
         schemaLocator = None
@@ -363,9 +363,7 @@ class SchemaProvider(SingletonClass):
         return schemaDef
 
     def schemaCompare(self, orgD, newD):
-        """ Compute the difference of nested dictionaries.
-
-        """
+        """Compute the difference of nested dictionaries."""
         fOrgD = self.__flatten(orgD)
         fNewD = self.__flatten(newD)
         if len(fOrgD) != len(fNewD):

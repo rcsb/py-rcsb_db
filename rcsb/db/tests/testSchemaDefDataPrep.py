@@ -39,12 +39,12 @@ import unittest
 from jsondiff import diff
 
 from mmcif.api.DictMethodRunner import DictMethodRunner
-from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
+from rcsb.utils.dictionary.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
 from rcsb.db.define.SchemaDefAccess import SchemaDefAccess
-from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
+from rcsb.utils.dictionary.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.processors.DataTransformFactory import DataTransformFactory
 from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
-from rcsb.db.utils.RepositoryProvider import RepositoryProvider
+from rcsb.utils.repository.RepositoryProvider import RepositoryProvider
 from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
@@ -84,7 +84,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__chemCompMockLen = 24
-        self.__pdbxMockLen = 87
+        self.__pdbxMockLen = 89
         # removes timestamped data items to allow diffs.)
         excludeExtras = ["rcsb_load_status"]
         # excludeExtras = []

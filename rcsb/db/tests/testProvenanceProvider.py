@@ -115,8 +115,7 @@ class ProvenanceProviderTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testPrefetchProvenance(self):
-        """ Test case for pre-fetching cached provenance dictionary content.
-        """
+        """Test case for pre-fetching cached provenance dictionary content."""
         try:
             provU = ProvenanceProvider(self.__cfgOb, self.__cachePath)
             pD = provU.fetch()
@@ -127,8 +126,7 @@ class ProvenanceProviderTests(unittest.TestCase):
             self.fail()
 
     def testStore(self):
-        """ Test case for storing a provenance dictionary content.
-        """
+        """Test case for storing a provenance dictionary content."""
         try:
             provU = ProvenanceProvider(self.__cfgOb, self.__cachePath, useCache=False)
             pD = {self.__provKeyName: self.__provInfoL}
@@ -140,8 +138,7 @@ class ProvenanceProviderTests(unittest.TestCase):
             self.fail()
 
     def testFetch(self):
-        """ Test case for fetching a provenance dictionary content.
-        """
+        """Test case for fetching a provenance dictionary content."""
         try:
             provU = ProvenanceProvider(self.__cfgOb, self.__cachePath, useCache=False)
             pD = {self.__provKeyName: self.__provInfoL}
@@ -156,8 +153,7 @@ class ProvenanceProviderTests(unittest.TestCase):
             self.fail()
 
     def testUpdate(self):
-        """ Test case for updating a provenance dictionary content.
-        """
+        """Test case for updating a provenance dictionary content."""
         try:
             provU = ProvenanceProvider(self.__cfgOb, self.__cachePath, useCache=False)
             pD = {self.__provKeyName: self.__provInfoL}

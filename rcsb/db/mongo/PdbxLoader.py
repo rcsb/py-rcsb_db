@@ -53,14 +53,14 @@ import bson
 from jsonschema import Draft4Validator
 from jsonschema import FormatChecker
 from mmcif.api.DictMethodRunner import DictMethodRunner
-from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
-from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
+from rcsb.utils.dictionary.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
+from rcsb.utils.dictionary.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.mongo.Connection import Connection
 from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
 from rcsb.db.processors.DataTransformFactory import DataTransformFactory
 from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
-from rcsb.db.utils.RepositoryProvider import RepositoryProvider
+from rcsb.utils.repository.RepositoryProvider import RepositoryProvider
 from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
 
@@ -76,7 +76,7 @@ class PdbxLoaderWorker(object):
         self.__resourceName = resourceName
 
     def loadWorker(self, dataList, procName, optionsD, workingDir):
-        """ Multi-proc worker method for MongoDb loading -
+        """Multi-proc worker method for MongoDb loading -
 
         successList, resultList, diagList=workerFunc(runList=nextList,procName, optionsD, workingDir)
 
@@ -249,9 +249,7 @@ class PdbxLoaderWorker(object):
         return True
 
     def __purgeDocuments(self, databaseName, collectionName, cardinalIdL):
-        """Purge documents from collection within database with cardinal identifiers in cardinalIdL.
-
-        """
+        """Purge documents from collection within database with cardinal identifiers in cardinalIdL."""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
@@ -290,8 +288,7 @@ class PdbxLoaderWorker(object):
         logger.debug("Completed %s at %s (%.4f seconds)", message, ts, delta)
 
     def __createCollection(self, databaseName, collectionName, indexDL=None, bsonSchema=None):
-        """Create database and collection and optionally a set of indices -
-        """
+        """Create database and collection and optionally a set of indices -"""
         try:
             logger.debug("Create database %s collection %s", databaseName, collectionName)
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
@@ -311,9 +308,7 @@ class PdbxLoaderWorker(object):
         return False
 
     def __removeCollection(self, databaseName, collectionName):
-        """Drop collection within database
-
-        """
+        """Drop collection within database"""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
@@ -332,8 +327,8 @@ class PdbxLoaderWorker(object):
         return False
 
     def __pruneBySize(self, dList, limitMB=15.9):
-        """ For the input list of objects (dictionaries).objects
-            Return a pruned list satisfying the input total object size limit -
+        """For the input list of objects (dictionaries).objects
+        Return a pruned list satisfying the input total object size limit -
 
         """
         oL = []
@@ -459,8 +454,7 @@ class PdbxLoaderWorker(object):
         return tuple(rL)
 
     def __getKeyValue(self, dct, keyName):
-        """  Return the value of the corresponding key expressed in dot notation in the input dictionary object (nested).
-        """
+        """Return the value of the corresponding key expressed in dot notation in the input dictionary object (nested)."""
         try:
             kys = keyName.split(".")
             for key in kys:
@@ -491,7 +485,7 @@ class PdbxLoader(object):
         useSchemaCache=True,
         rebuildSchemaFlag=False,
     ):
-        """  Worker methods for loading primary data content following mapping conventions in external schema definitions.
+        """Worker methods for loading primary data content following mapping conventions in external schema definitions.
 
         Args:
             cfgOb (object): ConfigInfo() instance
@@ -707,7 +701,12 @@ class PdbxLoader(object):
                 logger.info("Completed loading %s with status %r loaded %d paths", databaseName, ok, numPaths)
             else:
                 logger.info(
-                    "Completed loading %s with status %r failure count %d of %d paths: %r", databaseName, ok, len(failList), numPaths, [os.path.basename(pth) for pth in failedPathList],
+                    "Completed loading %s with status %r failure count %d of %d paths: %r",
+                    databaseName,
+                    ok,
+                    len(failList),
+                    numPaths,
+                    [os.path.basename(pth) for pth in failedPathList],
                 )
             #
             return ok
@@ -720,7 +719,7 @@ class PdbxLoader(object):
         return self.__statusList
 
     def loadWorker(self, dataList, procName, optionsD, workingDir):
-        """ Multi-proc worker method for MongoDb loading -
+        """Multi-proc worker method for MongoDb loading -
 
         successList, resultList, diagList=workerFunc(runList=nextList,procName, optionsD, workingDir)
 
@@ -1057,8 +1056,7 @@ class PdbxLoader(object):
         logger.debug("Completed %s at %s (%.4f seconds)", message, ts, delta)
 
     def __createCollection(self, databaseName, collectionName, indexDL=None, bsonSchema=None):
-        """Create database and collection and optionally a set of indices -
-        """
+        """Create database and collection and optionally a set of indices -"""
         try:
             logger.debug("Create database %s collection %s", databaseName, collectionName)
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
@@ -1078,8 +1076,7 @@ class PdbxLoader(object):
         return False
 
     def __updateCollectionSchema(self, databaseName, collectionName, bsonSchema=None, validationLevel="strict", validationAction="error"):
-        """Update validation schema for the input collection -
-        """
+        """Update validation schema for the input collection -"""
         try:
             logger.debug("Updating validatio for schema database %s collection %s", databaseName, collectionName)
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
@@ -1096,9 +1093,7 @@ class PdbxLoader(object):
         return False
 
     def __removeCollection(self, databaseName, collectionName):
-        """Drop collection within database
-
-        """
+        """Drop collection within database"""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
@@ -1117,9 +1112,7 @@ class PdbxLoader(object):
         return False
 
     def __purgeDocuments(self, databaseName, collectionName, cardinalIdL):
-        """Purge documents from collection within database with cardinal identifiers in cardinalIdL.
-
-        """
+        """Purge documents from collection within database with cardinal identifiers in cardinalIdL."""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
@@ -1133,8 +1126,8 @@ class PdbxLoader(object):
         return False
 
     def __pruneBySize(self, dList, limitMB=15.9):
-        """ For the input list of objects (dictionaries).objects
-            Return a pruned list satisfying the input total object size limit -
+        """For the input list of objects (dictionaries).objects
+        Return a pruned list satisfying the input total object size limit -
 
         """
         oL = []
@@ -1262,8 +1255,7 @@ class PdbxLoader(object):
         return tuple(rL)
 
     def __getKeyValue(self, dct, keyName):
-        """  Return the value of the corresponding key expressed in dot notation in the input dictionary object (nested).
-        """
+        """Return the value of the corresponding key expressed in dot notation in the input dictionary object (nested)."""
         try:
             kys = keyName.split(".")
             for key in kys:

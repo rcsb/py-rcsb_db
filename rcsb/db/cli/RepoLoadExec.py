@@ -30,7 +30,7 @@ import logging
 import os
 import sys
 
-from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
+from rcsb.utils.dictionary.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.mongo.PdbxLoader import PdbxLoader
 from rcsb.utils.config.ConfigUtil import ConfigUtil
@@ -55,8 +55,7 @@ def loadStatus(statusList, cfgOb, cachePath, readBackCheck=True):
 
 
 def buildResourceCache(cfgOb, configName, cachePath, rebuildCache=False):
-    """Generate and cache resource dependencies.
-    """
+    """Generate and cache resource dependencies."""
     ret = False
     try:
         rp = DictMethodResourceProvider(cfgOb, configName=configName, cachePath=cachePath)

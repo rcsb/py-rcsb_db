@@ -30,108 +30,108 @@ logger = logging.getLogger(__name__)
 
 class QueryDirectives(object):
 
-    """ Process query directives and generate SQL instructions.
+    """Process query directives and generate SQL instructions.
 
-       mini- SQL Query API token stream.
+     mini- SQL Query API token stream.
 
-       Ordered selection list:
+     Ordered selection list:
 
-       SELECT_ITEM:<ordinal>:ITEM:<tableId.columnId>
-       SELECT_ITEM:<ordinal>:ITEM:DOM_REF:<dom_form_element_id_name>
+     SELECT_ITEM:<ordinal>:ITEM:<tableId.columnId>
+     SELECT_ITEM:<ordinal>:ITEM:DOM_REF:<dom_form_element_id_name>
 
-       tableId.columnId as defined in the supporting schema definition.
+     tableId.columnId as defined in the supporting schema definition.
 
-       Example:
+     Example:
 
-       SELECT_ITEM:1:ITEM:DOM_REF:xtype
-       SELECT_ITEM:2:ITEM:DOM_REF:ytype
+     SELECT_ITEM:1:ITEM:DOM_REF:xtype
+     SELECT_ITEM:2:ITEM:DOM_REF:ytype
 
-       Query conditions:
+     Query conditions:
 
-       Conditions for single values (ordered):
+     Conditions for single values (ordered):
 
-       VALUE_CONDITION:<ordinal>:LOP:<logical conjunction (pre)>:ITEM:<tableId.columnId>:COP:<comparsion operator>:VALUE:<value>
-       VALUE_CONDITION:<ordinal>:LOP:<logical conjunction (pre)>:ITEM:<tableId.columnId>:COP:<comparsion operator>:VALUE:DOM_REF:<dom_form_id_name>
+     VALUE_CONDITION:<ordinal>:LOP:<logical conjunction (pre)>:ITEM:<tableId.columnId>:COP:<comparsion operator>:VALUE:<value>
+     VALUE_CONDITION:<ordinal>:LOP:<logical conjunction (pre)>:ITEM:<tableId.columnId>:COP:<comparsion operator>:VALUE:DOM_REF:<dom_form_id_name>
 
-       < comparison operator > in ['EQ', 'NE', 'GE', 'GT', 'LT', 'LE', 'LIKE', 'NOT LIKE']
+     < comparison operator > in ['EQ', 'NE', 'GE', 'GT', 'LT', 'LE', 'LIKE', 'NOT LIKE']
 
-       Examples:
+     Examples:
 
-       VALUE_CONDITION:1:LOP:AND:ITEM:pdbx_webselect.crystal_twin:COP:GT:VALUE:DOM_REF:twin
-       VALUE_CONDITION:2:LOP:AND:ITEM:pdbx_webselect.entry_type:COP:EQ:VALUE:DOM_REF:molecular_type
-       VALUE_CONDITION:3:LOP:AND:ITEM:pdbx_webselect.space_group_name_H_M:COP:EQ:VALUE:DOM_REF:spaceg
-       VALUE_CONDITION:4:LOP:AND:ITEM:pdbx_webselect.refinement_software:COP:LIKE:VALUE:DOM_REF:software
+     VALUE_CONDITION:1:LOP:AND:ITEM:pdbx_webselect.crystal_twin:COP:GT:VALUE:DOM_REF:twin
+     VALUE_CONDITION:2:LOP:AND:ITEM:pdbx_webselect.entry_type:COP:EQ:VALUE:DOM_REF:molecular_type
+     VALUE_CONDITION:3:LOP:AND:ITEM:pdbx_webselect.space_group_name_H_M:COP:EQ:VALUE:DOM_REF:spaceg
+     VALUE_CONDITION:4:LOP:AND:ITEM:pdbx_webselect.refinement_software:COP:LIKE:VALUE:DOM_REF:software
 
-       VALUE_CONDITION:5:LOP:AND:ITEM:pdbx_webselect.date_of_RCSB_release:COP:GE:VALUE:DOM_REF:date1
-       VALUE_CONDITION:6:LOP:AND:ITEM:pdbx_webselect.date_of_RCSB_release:COP:LE:VALUE:DOM_REF:date2
+     VALUE_CONDITION:5:LOP:AND:ITEM:pdbx_webselect.date_of_RCSB_release:COP:GE:VALUE:DOM_REF:date1
+     VALUE_CONDITION:6:LOP:AND:ITEM:pdbx_webselect.date_of_RCSB_release:COP:LE:VALUE:DOM_REF:date2
 
-      Conditions for multiple values (ordered):
+    Conditions for multiple values (ordered):
 
-       VALUE_LIST_CONDITION:<ordinal>:LOP:<logical conjunction (pre)>:ITEM:<tableId.columnId>:COP:<comparsion operator>:
-               VALUE_LOP:<logical conjunction>:VALUE_LIST:<value>
-       VALUE_LIST_CONDITION:<ordinal>:LOP:<logical conjunction (pre)>:ITEM:<tableId.columnId>:COP:<comparsion operator>:
-               VALUE_LOP:<logical conjunction>:VALUE_LIST:DOM_REF:<dom_form_id_name>
+     VALUE_LIST_CONDITION:<ordinal>:LOP:<logical conjunction (pre)>:ITEM:<tableId.columnId>:COP:<comparsion operator>:
+             VALUE_LOP:<logical conjunction>:VALUE_LIST:<value>
+     VALUE_LIST_CONDITION:<ordinal>:LOP:<logical conjunction (pre)>:ITEM:<tableId.columnId>:COP:<comparsion operator>:
+             VALUE_LOP:<logical conjunction>:VALUE_LIST:DOM_REF:<dom_form_id_name>
 
-       < comparison operator > in ['EQ', 'NE', 'GE', 'GT', 'LT', 'LE', 'LIKE', 'NOT LIKE']
+     < comparison operator > in ['EQ', 'NE', 'GE', 'GT', 'LT', 'LE', 'LIKE', 'NOT LIKE']
 
-       Examples:
+     Examples:
 
-       VALUE_LIST_CONDITION:1:LOP:AND:ITEM:pdbx_webselect.entry_type:COP:EQ:VALUE_LOP:OR:VALUE_LIST:DOM_REF:molecular_type
+     VALUE_LIST_CONDITION:1:LOP:AND:ITEM:pdbx_webselect.entry_type:COP:EQ:VALUE_LOP:OR:VALUE_LIST:DOM_REF:molecular_type
 
-       Value condition(s) with indirect reference
+     Value condition(s) with indirect reference
 
-       VALUE_KEYED_CONDITION:<ordinal>:LOP:<logical conjunction>:CONDITION_LIST_ID:<supporting_condition_list_id>:VALUE:<value>
-       VALUE_KEYED_CONDITION:<ordinal>:LOP:<logical conjunction>:CONDITION_LIST_ID:<supporting_condition_list_id>:VALUE:DOM_REF:<dom_form_id_name>
+     VALUE_KEYED_CONDITION:<ordinal>:LOP:<logical conjunction>:CONDITION_LIST_ID:<supporting_condition_list_id>:VALUE:<value>
+     VALUE_KEYED_CONDITION:<ordinal>:LOP:<logical conjunction>:CONDITION_LIST_ID:<supporting_condition_list_id>:VALUE:DOM_REF:<dom_form_id_name>
 
-       Example:
+     Example:
 
-       VALUE_KEYED_CONDITION:15:LOP:AND:CONDITION_LIST_ID:1:VALUE:DOM_REF:solution
+     VALUE_KEYED_CONDITION:15:LOP:AND:CONDITION_LIST_ID:1:VALUE:DOM_REF:solution
 
-       Value condition list:
+     Value condition list:
 
-          Key values from VALUE_KEY_CONDIION declared as a set of VALUE_CONDITIONS.  This provides the
-          means to associate a more complex query condition with a single input key value.
+        Key values from VALUE_KEY_CONDIION declared as a set of VALUE_CONDITIONS.  This provides the
+        means to associate a more complex query condition with a single input key value.
 
-       Example:
+     Example:
 
-       CONDITION_LIST:1:KEY:mr:LOP:OR:ITEM:pdbx_webselect.method_to_determine_struct:COP:LIKE:VALUE:%MR%
-       CONDITION_LIST:1:KEY:mr:LOP:OR:ITEM:pdbx_webselect.method_to_determine_struct:COP:LIKE:VALUE:%MOLECULAR REPLACEMENT%
+     CONDITION_LIST:1:KEY:mr:LOP:OR:ITEM:pdbx_webselect.method_to_determine_struct:COP:LIKE:VALUE:%MR%
+     CONDITION_LIST:1:KEY:mr:LOP:OR:ITEM:pdbx_webselect.method_to_determine_struct:COP:LIKE:VALUE:%MOLECULAR REPLACEMENT%
 
-       CONDITION_LIST:1:KEY:sad:LOP:OR:ITEM:pdbx_webselect.method_to_determine_struct:COP:LIKE:VALUE:%SAD%
-       CONDITION_LIST:1:KEY:sad:LOP:OR:ITEM:pdbx_webselect.method_to_determine_struct:COP:LIKE:VALUE:%MAD%
+     CONDITION_LIST:1:KEY:sad:LOP:OR:ITEM:pdbx_webselect.method_to_determine_struct:COP:LIKE:VALUE:%SAD%
+     CONDITION_LIST:1:KEY:sad:LOP:OR:ITEM:pdbx_webselect.method_to_determine_struct:COP:LIKE:VALUE:%MAD%
 
-       CONDITION_LIST:1:KEY:other:LOP:AND:ITEM:pdbx_webselect.method_to_determine_struct:COP:NOT LIKE:VALUE:%MR%
-       CONDITION_LIST:1:KEY:other:LOP:AND:ITEM:pdbx_webselect.method_to_determine_struct:COP:NOT LIKE:VALUE:%MOLECULAR REPLACEMENT%
-       CONDITION_LIST:1:KEY:other:LOP:AND:ITEM:pdbx_webselect.method_to_determine_struct:COP:NOT LIKE:VALUE:%SAD%
-       CONDITION_LIST:1:KEY:other:LOP:AND:ITEM:pdbx_webselect.method_to_determine_struct:COP:NOT LIKE:VALUE:%MAD%
+     CONDITION_LIST:1:KEY:other:LOP:AND:ITEM:pdbx_webselect.method_to_determine_struct:COP:NOT LIKE:VALUE:%MR%
+     CONDITION_LIST:1:KEY:other:LOP:AND:ITEM:pdbx_webselect.method_to_determine_struct:COP:NOT LIKE:VALUE:%MOLECULAR REPLACEMENT%
+     CONDITION_LIST:1:KEY:other:LOP:AND:ITEM:pdbx_webselect.method_to_determine_struct:COP:NOT LIKE:VALUE:%SAD%
+     CONDITION_LIST:1:KEY:other:LOP:AND:ITEM:pdbx_webselect.method_to_determine_struct:COP:NOT LIKE:VALUE:%MAD%
 
-       Join condition (ordered):
+     Join condition (ordered):
 
-       JOIN_CONDITION:<ordinal>:LOP:<logical conjunction (pre)>:L_ITEM:<tableId.columnId>:COP:<comparsion operator>:R_ITEM:<value>
-       JOIN_CONDITION:<ordinal>:LOP:<logical conjunction (pre)>:L_ITEM:DOM_REF:<dom_form_id_name>:COP:<comparsion operator>:R_ITEM:DOM_REF:<dom_form_id_name>
+     JOIN_CONDITION:<ordinal>:LOP:<logical conjunction (pre)>:L_ITEM:<tableId.columnId>:COP:<comparsion operator>:R_ITEM:<value>
+     JOIN_CONDITION:<ordinal>:LOP:<logical conjunction (pre)>:L_ITEM:DOM_REF:<dom_form_id_name>:COP:<comparsion operator>:R_ITEM:DOM_REF:<dom_form_id_name>
 
-        Example:
+      Example:
 
-        JOIN_CONDITION:1:LOP:AND:L_ITEM:pdbx_database_related.structure_id:COP:EQ:R_ITEM:entry.id
+      JOIN_CONDITION:1:LOP:AND:L_ITEM:pdbx_database_related.structure_id:COP:EQ:R_ITEM:entry.id
 
 
-       Sort order list:
+     Sort order list:
 
-       ORDER_ITEM:1:ITEM:<tableId.columnId>:SORT_ORDER:<ASC,DESC>
-       ORDER_ITEM:1:ITEM:DOM_REF:<dom_form_element_id_name>:SORT_ORDER:<ASC,DESC>
+     ORDER_ITEM:1:ITEM:<tableId.columnId>:SORT_ORDER:<ASC,DESC>
+     ORDER_ITEM:1:ITEM:DOM_REF:<dom_form_element_id_name>:SORT_ORDER:<ASC,DESC>
 
-       Example:
+     Example:
 
-       ORDER_ITEM:1:ITEM:DOM_REF:xtype
-       ORDER_ITEM:2:ITEM:DOM_REF:ytype
+     ORDER_ITEM:1:ITEM:DOM_REF:xtype
+     ORDER_ITEM:2:ITEM:DOM_REF:ytype
 
 
     """
 
     def __init__(self, schemaDefObj, verbose=False):
-        """  Input:
+        """Input:
 
-             schemaDefObj =  is instance of class derived from SchemaDefBase().
+        schemaDefObj =  is instance of class derived from SchemaDefBase().
 
         """
         self.__sD = schemaDefObj
@@ -142,9 +142,7 @@ class QueryDirectives(object):
         self.__orgSelectCount = 0
 
     def build(self, queryDirL=None, domD=None, appendValueConditonsToSelect=False, queryDirSeparator=":", domRefSeparator="|"):
-        """ Build SQL instructure from the input list of query directives and dictionary or dom references.
-
-        """
+        """Build SQL instructure from the input list of query directives and dictionary or dom references."""
         queryDirL = queryDirL if queryDirL else []
         domD = domD if domD else {}
         if self.__verbose:
@@ -173,13 +171,11 @@ class QueryDirectives(object):
         return sqlS
 
     def getAttributeSelectList(self):
-        """  Return the current list of [(tableId,attributeId),...] in query order -
-        """
+        """Return the current list of [(tableId,attributeId),...] in query order -"""
         return self.__selectTupList, self.__orgSelectCount
 
     def __getTokenD(self, tL, index, nPairs):
-        """  Return a dictionary of token and value pairs in the input list starting at tL[index].
-        """
+        """Return a dictionary of token and value pairs in the input list starting at tL[index]."""
         tD = {}
         try:
             i1 = index
@@ -198,8 +194,8 @@ class QueryDirectives(object):
 
     def __parseTokenList(self, qdL, appendValueConditonsToSelect=False):
         """
-            Parse input list of tokens and return dictionaries of instructions (selections, conditions, sorting order)
-            for input to the SQL query generator.
+        Parse input list of tokens and return dictionaries of instructions (selections, conditions, sorting order)
+        for input to the SQL query generator.
         """
         try:
             selectD = {}
@@ -463,14 +459,14 @@ class QueryDirectives(object):
         return sqlS
 
     def __queryDirSub(self, inpQueryDirList, domD=None, domRefSeparator="|"):
-        """  Substitute DOM references into the input query directive list -
+        """Substitute DOM references into the input query directive list -
 
-             Substitions:
-                            DOM_REF    -> domD[DOM_REF value]
-                            DOM_REF_#  -> str(domD[DOM_REF value]).split(domRefSeparator)[#] (# = 0,1,2,...)
+        Substitions:
+                       DOM_REF    -> domD[DOM_REF value]
+                       DOM_REF_#  -> str(domD[DOM_REF value]).split(domRefSeparator)[#] (# = 0,1,2,...)
 
-                            Note -- DOM_REF_1 DOM_REF_2  allows a single dom element name to carry
-                                    multiple correlated values as in a "select" (e.g. dom-ref -> myselect = "value1|value2")
+                       Note -- DOM_REF_1 DOM_REF_2  allows a single dom element name to carry
+                               multiple correlated values as in a "select" (e.g. dom-ref -> myselect = "value1|value2")
 
         """
         domD = domD if domD else {}

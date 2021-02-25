@@ -87,11 +87,11 @@ site_info_configuration:
   # Helper class binding and mappings
   #
   DICT_METHOD_HELPER_MODULE_PATH_MAP:
-    rcsb.db.helpers.DictMethodEntryHelper: rcsb.db.helpers.DictMethodEntryHelper
-    rcsb.db.helpers.DictMethodChemRefHelper: rcsb.db.helpers.DictMethodChemRefHelper
-    rcsb.db.helpers.DictMethodEntityHelper: rcsb.db.helpers.DictMethodEntityHelper
-    rcsb.db.helpers.DictMethodAssemblyHelper: rcsb.db.helpers.DictMethodAssemblyHelper
-    rcsb.db.helpers.DictMethodEntityInstanceHelper: rcsb.db.helpers.DictMethodEntityInstanceHelper
+    rcsb.utils.dictionary.DictMethodEntryHelper: rcsb.utils.dictionary.DictMethodEntryHelper
+    rcsb.utils.dictionary.DictMethodChemRefHelper: rcsb.utils.dictionary.DictMethodChemRefHelper
+    rcsb.utils.dictionary.DictMethodEntityHelper: rcsb.utils.dictionary.DictMethodEntityHelper
+    rcsb.utils.dictionary.DictMethodAssemblyHelper: rcsb.utils.dictionary.DictMethodAssemblyHelper
+    rcsb.utils.dictionary.DictMethodEntityInstanceHelper: rcsb.utils.dictionary.DictMethodEntityInstanceHelper
   # ------ ------ ------ ------ ------ ------ ------ -------
   # ADDED rcsb.db V0.966 Source dictionary locators -
   #
@@ -212,11 +212,11 @@ site_info_remote_configuration:
   # Helper class binding and mappings
   #
   DICT_METHOD_HELPER_MODULE_PATH_MAP:
-    rcsb.db.helpers.DictMethodEntryHelper: rcsb.db.helpers.DictMethodEntryHelper
-    rcsb.db.helpers.DictMethodChemRefHelper: rcsb.db.helpers.DictMethodChemRefHelper
-    rcsb.db.helpers.DictMethodEntityHelper: rcsb.db.helpers.DictMethodEntityHelper
-    rcsb.db.helpers.DictMethodAssemblyHelper: rcsb.db.helpers.DictMethodAssemblyHelper
-    rcsb.db.helpers.DictMethodEntityInstanceHelper: rcsb.db.helpers.DictMethodEntityInstanceHelper
+    rcsb.utils.dictionary.DictMethodEntryHelper: rcsb.utils.dictionary.DictMethodEntryHelper
+    rcsb.utils.dictionary.DictMethodChemRefHelper: rcsb.utils.dictionary.DictMethodChemRefHelper
+    rcsb.utils.dictionary.DictMethodEntityHelper: rcsb.utils.dictionary.DictMethodEntityHelper
+    rcsb.utils.dictionary.DictMethodAssemblyHelper: rcsb.utils.dictionary.DictMethodAssemblyHelper
+    rcsb.utils.dictionary.DictMethodEntityInstanceHelper: rcsb.utils.dictionary.DictMethodEntityInstanceHelper
   #
   # ADDED rcsb.db V0.966 Source dictionary locators -
   #

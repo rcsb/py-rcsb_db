@@ -96,9 +96,9 @@ class ConnectionBase(object):
             logger.exception("Failing with %s", str(e))
 
     def openConnection(self):
-        """ Create a database connection and store a connection object.
+        """Create a database connection and store a connection object.
 
-            Returns True for success or False otherwise
+        Returns True for success or False otherwise
         """
         #
         if self.__dbClient is not None:
@@ -137,13 +137,11 @@ class ConnectionBase(object):
         return False
 
     def getClientConnection(self):
-        """ Return an instance of a connected client.
-        """
+        """Return an instance of a connected client."""
         return self.__dbClient
 
     def closeConnection(self):
-        """ Close db session
-        """
+        """Close db session"""
         if self.__dbClient is not None:
             self.__dbClient.close()
             self.__dbClient = None

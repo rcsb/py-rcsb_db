@@ -290,3 +290,8 @@
  28-Jan-2021  V1.657 RSRCC -> RSCC
  29-Jan-2021  V1.658 Expose OpenEye SMILES descriptors as RCSB descriptors
  30-Jan-2021  V1.659 Update rcsb.utils.taxonomy dependency to add fallback capability
+ 12-Feb-2021  V1.660 Add ligand validation score and generation category rcsb_nonpolymer_instance_validation_score
+ 15-Feb-2021  V1.661 Split out dictionary methods repository tools into rcsb.utils.dictionary and rcsb.utils.repository
+ 21-Feb-2021  V1.662 Integrating latest rcsb.utils.dictionary and rcsb.utils.repository.
+ 22-Feb-2021  V1.663 Further integration adjustments for rcsb.utils.dictionary.
+ 25-Feb-2021  V1.664 Update dependencies and pipeline config

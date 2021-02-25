@@ -28,7 +28,7 @@ import time
 import unittest
 
 from rcsb.db.define.ContentDefinition import ContentDefinition
-from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
+from rcsb.utils.dictionary.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
 from rcsb.db.helpers.ContentDefinitionHelper import ContentDefinitionHelper
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
@@ -66,8 +66,7 @@ class ContentDefinitionTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testDefaults(self):
-        """ Test the default case of using only dictionary content.
-        """
+        """Test the default case of using only dictionary content."""
         try:
             dictApi = self.__dP.getApiByLocators(dictLocators=[self.__pathPdbxDictionaryFile])
             ok = dictApi.testCache()
@@ -82,9 +81,7 @@ class ContentDefinitionTests(unittest.TestCase):
             self.fail()
 
     def testHelper(self):
-        """ Test the dictionary content supplemented by helper function
-
-        """
+        """Test the dictionary content supplemented by helper function"""
         try:
             cH = ContentDefinitionHelper(cfgOb=self.__cfgOb)
             dictApi = self.__dP.getApiByLocators(dictLocators=[self.__pathPdbxDictionaryFile])
@@ -105,9 +102,7 @@ class ContentDefinitionTests(unittest.TestCase):
             self.fail()
 
     def testExtensionWithHelper(self):
-        """ Test the dictionary content supplemented by helper function
-
-        """
+        """Test the dictionary content supplemented by helper function"""
         try:
             cH = ContentDefinitionHelper(cfgOb=self.__cfgOb)
             dictApi = self.__dP.getApiByLocators(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile])
@@ -128,9 +123,7 @@ class ContentDefinitionTests(unittest.TestCase):
             self.fail()
 
     def testRepoWithHelper(self):
-        """ Test the dictionary content supplemented by helper function for auxiliary schema
-
-        """
+        """Test the dictionary content supplemented by helper function for auxiliary schema"""
         try:
             cH = ContentDefinitionHelper(cfgOb=self.__cfgOb)
             dictApi = self.__dP.getApiByLocators(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile, self.__pathVrptDictionaryFile])

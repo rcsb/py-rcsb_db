@@ -65,7 +65,7 @@ class DataExchangeStatusLoaderTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testLoadExchangeStatus(self):
-        """ Test case - load data exchange status objects.
+        """Test case - load data exchange status objects.
 
         [data_exchange]
         DATABASE_NAME=data_exchange

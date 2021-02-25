@@ -43,13 +43,13 @@ import os
 import time
 
 from mmcif.api.DictMethodRunner import DictMethodRunner
-from rcsb.db.define.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
-from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
+from rcsb.utils.dictionary.DictionaryApiProviderWrapper import DictionaryApiProviderWrapper
+from rcsb.utils.dictionary.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.mysql.MyDbUtil import MyDbQuery
 from rcsb.db.processors.DataTransformFactory import DataTransformFactory
 from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb.db.sql.SqlGen import SqlGenAdmin
-from rcsb.db.utils.RepositoryProvider import RepositoryProvider
+from rcsb.utils.repository.RepositoryProvider import RepositoryProvider
 
 logger = logging.getLogger(__name__)
 #
@@ -57,8 +57,7 @@ logger = logging.getLogger(__name__)
 
 class SchemaDefLoader(object):
 
-    """ Map PDBx/mmCIF instance data to SQL loadable data using external schema definition.
-    """
+    """Map PDBx/mmCIF instance data to SQL loadable data using external schema definition."""
 
     def __init__(self, cfgOb, schemaDefObj, cfgSectionName="site_info_configuration", dbCon=None, cachePath=".", workPath=".", cleanUp=False, warnings="default", verbose=True):
         self.__verbose = verbose
@@ -102,36 +101,36 @@ class SchemaDefLoader(object):
             return False
 
     def setDelimiters(self, colSep=None, rowSep=None):
-        """  Set column and row delimiters for intermediate data files used for
-             batch-file loading operations.
+        """Set column and row delimiters for intermediate data files used for
+        batch-file loading operations.
         """
         self.__colSep = colSep if colSep is not None else "&##&\t"
         self.__rowSep = rowSep if rowSep is not None else "$##$\n"
         return True
 
     def load(self, inputPathList=None, containerList=None, loadType="batch-file", deleteOpt=None, tableIdSkipD=None):
-        """ Load data for each table defined in the current schema definition object.
-            Data are extracted from the input file list.
+        """Load data for each table defined in the current schema definition object.
+        Data are extracted from the input file list.
 
-            Data source options:
+        Data source options:
 
-              inputPathList = [<full path of target input file>, ....]
+          inputPathList = [<full path of target input file>, ....]
 
-            or
+        or
 
-              containerList = [ data container, ...]
+          containerList = [ data container, ...]
 
 
-            loadType  =  ['batch-file' | 'batch-insert']
-            deleteOpt = 'selected' | 'all'
+        loadType  =  ['batch-file' | 'batch-insert']
+        deleteOpt = 'selected' | 'all'
 
-            tableIdSkipD - searchable container with tableIds to be skipped on loading -
+        tableIdSkipD - searchable container with tableIds to be skipped on loading -
 
-            Loading is performed using the current database server connection.
+        Loading is performed using the current database server connection.
 
-            Intermediate data files for 'batch-file' loading are created in the current working path.
+        Intermediate data files for 'batch-file' loading are created in the current working path.
 
-            Returns True for success or False otherwise.
+        Returns True for success or False otherwise.
 
         """
         tableIdSkipD = tableIdSkipD if tableIdSkipD is not None else {}
@@ -177,12 +176,12 @@ class SchemaDefLoader(object):
             pass
 
     def makeLoadFilesMulti(self, dataList, procName, optionsD, workingDir):
-        """ Create a loadable data file for each table defined in the current schema
-            definition object.   Data is extracted from the input file list.
+        """Create a loadable data file for each table defined in the current schema
+        definition object.   Data is extracted from the input file list.
 
-            Load files are creating in the current working path.
+        Load files are creating in the current working path.
 
-            Return the containerNames for the input path list, and path list for load files that are created.
+        Return the containerNames for the input path list, and path list for load files that are created.
 
         """
         _ = workingDir
@@ -196,12 +195,12 @@ class SchemaDefLoader(object):
         return dataList, r1, r2, []
 
     def makeLoadFiles(self, inputPathList, append=False, partName="1", exportFormat="tdd"):
-        """ Create a loadable data file for each table defined in the current schema
-            definition object.   Data is extracted from the input file list.
+        """Create a loadable data file for each table defined in the current schema
+        definition object.   Data is extracted from the input file list.
 
-            Load files are created in the current working path.
+        Load files are created in the current working path.
 
-            Return the containerNames for the input path list, and path list for load files that are created.
+        Return the containerNames for the input path list, and path list for load files that are created.
 
         """
         cL = self.__rpP.getContainerList(inputPathList)
@@ -216,9 +215,7 @@ class SchemaDefLoader(object):
             return [], []
 
     def __exportCsv(self, tableDict, append=False, partName="1"):
-        """
-
-        """
+        """"""
         modeOpt = "a" if append else "w"
 
         exportList = []
@@ -258,18 +255,18 @@ class SchemaDefLoader(object):
         return exportList
 
     def loadBatchFiles(self, loadList=None, containerNameList=None, deleteOpt=None):
-        """ Load data for each table defined in the current schema definition object using
+        """Load data for each table defined in the current schema definition object using
 
-            Data source options:
+        Data source options:
 
-              loadList = [(tableId, <full path of load file), ....]
-              containerNameList = [ data namecontainer, ...]
+          loadList = [(tableId, <full path of load file), ....]
+          containerNameList = [ data namecontainer, ...]
 
-            deleteOpt = 'selected' | 'all','truncate'
+        deleteOpt = 'selected' | 'all','truncate'
 
-            Loading is performed using the current database server connection.
+        Loading is performed using the current database server connection.
 
-            Returns True for success or False otherwise.
+        Returns True for success or False otherwise.
 
         """
         #
@@ -302,9 +299,7 @@ class SchemaDefLoader(object):
         return ret
 
     def __getSqlDeleteList(self, tableId, containerNameList=None, deleteOpt="all"):
-        """ Return the SQL delete commands for the input table and container name list.
-
-        """
+        """Return the SQL delete commands for the input table and container name list."""
         databaseName = self.__sD.getDatabaseName()
         sqlGen = SqlGenAdmin(self.__verbose)
 
@@ -323,11 +318,11 @@ class SchemaDefLoader(object):
         return sqlDeleteList
 
     def __batchFileImport(self, tableId, tableLoadPath, sqlFilePath=None, containerNameList=None, deleteOpt="all"):
-        """ Batch load the input table using data in the input loadable data file.
+        """Batch load the input table using data in the input loadable data file.
 
-            if sqlFilePath is provided then any generated SQL commands are preserved in this file.
+        if sqlFilePath is provided then any generated SQL commands are preserved in this file.
 
-            deleteOpt None|'selected'| 'all' or 'truncate'
+        deleteOpt None|'selected'| 'all' or 'truncate'
         """
         startTime = time.time()
         databaseName = self.__sD.getDatabaseName()
@@ -373,15 +368,15 @@ class SchemaDefLoader(object):
         return self.__batchInsertImport(tableId, rowList=rowList, containerNameList=containerNameList, deleteOpt=deleteOpt)
 
     def __batchInsertImport(self, tableId, rowList=None, containerNameList=None, deleteOpt="selected"):
-        """ Load the input table using batch inserts of the input list of dictionaries (i.e. d[attributeId]=value).
+        """Load the input table using batch inserts of the input list of dictionaries (i.e. d[attributeId]=value).
 
-            The containerNameList corresponding to the data within loadable data in rowList can be provided
-            if 'selected' deletions are to performed prior to the the batch data inserts.
+        The containerNameList corresponding to the data within loadable data in rowList can be provided
+        if 'selected' deletions are to performed prior to the the batch data inserts.
 
-            deleteOpt = ['selected','all'] where 'selected' deletes rows corresponding to the input container
-                        list before insert.   The 'all' options truncates the table prior to insert.
+        deleteOpt = ['selected','all'] where 'selected' deletes rows corresponding to the input container
+                    list before insert.   The 'all' options truncates the table prior to insert.
 
-                        Deletions are performed in the absence of loadable data.
+                    Deletions are performed in the absence of loadable data.
 
         """
         startTime = time.time()
@@ -429,8 +424,8 @@ class SchemaDefLoader(object):
         return ret
 
     def __deleteFromTable(self, tableIdList, deleteValue):
-        """  Delete data from the input table list where the schema table delete attribute
-             has the input value "deleteValue".
+        """Delete data from the input table list where the schema table delete attribute
+        has the input value "deleteValue".
 
         """
         databaseName = self.__sD.getDatabaseName()

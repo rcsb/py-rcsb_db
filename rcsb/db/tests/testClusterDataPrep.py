@@ -63,8 +63,7 @@ class ClusterDataPrepTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testExtract(self):
-        """ Test extraction on an example sequence cluster data set.
-        """
+        """Test extraction on an example sequence cluster data set."""
         try:
             cdp = ClusterDataPrep(workPath=self.__workPath)
             cifD, docBySequenceD, docByClusterD = cdp.extract(self.__dataSetId, clusterSetLocator=self.__pathClusterData, levels=self.__levels, clusterType="entity")
@@ -77,8 +76,7 @@ class ClusterDataPrepTests(unittest.TestCase):
 
     @unittest.skip("Disable sequence cluster troubleshooting test")
     def testExtractAndSerialize(self):
-        """ Test extraction on an example sequence cluster data set.
-        """
+        """Test extraction on an example sequence cluster data set."""
         try:
             cdp = ClusterDataPrep(workPath=self.__workPath)
             cifD, docBySequenceD, docByClusterD = cdp.extract(self.__dataSetId, clusterSetLocator=self.__pathClusterData, levels=self.__levels, clusterType="entity")

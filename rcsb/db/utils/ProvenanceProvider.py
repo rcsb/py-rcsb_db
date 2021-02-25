@@ -29,8 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class ProvenanceProvider(SingletonClass):
-    """ Utilities to access and update provenance details.
-    """
+    """Utilities to access and update provenance details."""
 
     def __init__(self, cfgOb, cachePath, useCache=True, **kwargs):
         """Utilities to access and update provenance details.

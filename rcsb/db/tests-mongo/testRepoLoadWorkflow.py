@@ -66,8 +66,7 @@ class RepoLoadWorkflowTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testReourceCacheWorkflow(self):
-        """Test resource cache rebuild
-        """
+        """Test resource cache rebuild"""
         #
         try:
             ok = RepoLoadWorkflow(**self.__commonD).buildResourceCache(rebuildCache=True)

@@ -39,9 +39,7 @@ logger = logging.getLogger(__name__)
 
 
 class DataTransformInfo(object):
-    """ Map transformation attribute filter names to data transformation filter implementations.
-
-    """
+    """Map transformation attribute filter names to data transformation filter implementations."""
 
     def __init__(self):
         # mapD {<external attribute filter name>: <implementation names>, ...}
@@ -68,11 +66,11 @@ class DataTransformInfo(object):
 
 class DataTransformFactory(object):
     """Factory for functional elements of the transformations between input data and
-        and loadable data using specifications from the schema map definition.
+    and loadable data using specifications from the schema map definition.
 
-        input string value -> (Null Handling -> cast type ->)
+    input string value -> (Null Handling -> cast type ->)
 
-        input string iterable value ->
+    input string iterable value ->
 
 
     """
@@ -98,10 +96,10 @@ class DataTransformFactory(object):
         self.__nullValueD = {"string": "", "integer": r"\N", "float": r"\N", "date": r"\N", "datetime": r"\N"}
 
     def __build(self):
-        """ Internal method that stores transformations for each table so that these may
-            be later repeatedly applied to a data stream.
+        """Internal method that stores transformations for each table so that these may
+         be later repeatedly applied to a data stream.
 
-           fD[tableId]'atFuncD'] -> {atId1: [f1,f2,.. ], atId2: [f1,f2,...], ...}
+        fD[tableId]'atFuncD'] -> {atId1: [f1,f2,.. ], atId2: [f1,f2,...], ...}
         """
         fD = {}
         for tableId in self.__sD.getSchemaIdList():
@@ -190,12 +188,12 @@ class DataTransformFactory(object):
 
     def processRecord(self, tableId, row, attributeNameList, containerName=None):
         """
-            Input row data (list) ordered according to the input attribute names list.
+        Input row data (list) ordered according to the input attribute names list.
 
-            Processing respects various null handling policies.
+        Processing respects various null handling policies.
 
 
-            return   d[atId]=rowdata for the input row list
+        return   d[atId]=rowdata for the input row list
 
         """
         # get the transform object for the current table
@@ -246,12 +244,12 @@ class DataTransformFactory(object):
 
 
 class DataTransform(object):
-    """ Factory for functional elements of the transformations between input data and
-        and loadable data using specifications from the schema map definition.
+    """Factory for functional elements of the transformations between input data and
+    and loadable data using specifications from the schema map definition.
 
-        input string value -> (Null Handling -> cast type ->)
+    input string value -> (Null Handling -> cast type ->)
 
-        input string iterable value ->
+    input string iterable value ->
     """
 
     def __init__(self, tObj):
@@ -269,7 +267,7 @@ class DataTransform(object):
 
     def normalizeEnum(self, trfTup):
         """
-            Return:  TrfValue tuple
+        Return:  TrfValue tuple
         """
         if trfTup.isNull:
             return trfTup
@@ -286,7 +284,7 @@ class DataTransform(object):
 
     def castStringX(self, trfTup):
         """
-            Return:  TrfValue tuple
+        Return:  TrfValue tuple
         """
         if trfTup.isNull:
             return trfTup
@@ -297,7 +295,7 @@ class DataTransform(object):
 
     def castString(self, trfTup):
         """
-            Return:  TrfValue tuple
+        Return:  TrfValue tuple
         """
         if trfTup.isNull:
             return trfTup
@@ -307,7 +305,7 @@ class DataTransform(object):
 
     def castIterableString(self, trfTup):
         """
-            Return:  TrfValue tuple
+        Return:  TrfValue tuple
         """
         if trfTup.isNull:
             return trfTup
@@ -318,7 +316,7 @@ class DataTransform(object):
 
     def castInteger(self, trfTup):
         """
-            Return:  TrfValue tuple
+        Return:  TrfValue tuple
         """
         if trfTup.isNull:
             return trfTup
@@ -328,7 +326,7 @@ class DataTransform(object):
 
     def castIterableInteger(self, trfTup):
         """
-            Return:  TrfValue tuple
+        Return:  TrfValue tuple
         """
         if trfTup.isNull:
             return trfTup
@@ -340,7 +338,7 @@ class DataTransform(object):
 
     def castFloat(self, trfTup):
         """
-            Return:  TrfValue tuple
+        Return:  TrfValue tuple
         """
         if trfTup.isNull:
             return trfTup
@@ -350,7 +348,7 @@ class DataTransform(object):
 
     def castIterableFloat(self, trfTup):
         """
-            Return:  TrfValue tuple
+        Return:  TrfValue tuple
         """
         # logger.info(">> atId %r value %r delimiter %r", trfTup.atId, trfTup.value, self.__tObj.getIterableSeparator(trfTup.atId))
         if trfTup.isNull:
@@ -362,9 +360,9 @@ class DataTransform(object):
         return TrfValue(vL, trfTup.atId, trfTup.origLength, False)
 
     def castDateToObj(self, trfTup):
-        """ Cast the input date (optional time) string (yyyy-mm-dd:hh::mm:ss) to a Python DateTime object -
+        """Cast the input date (optional time) string (yyyy-mm-dd:hh::mm:ss) to a Python DateTime object -
 
-            Return:  TrfValue tuple
+        Return:  TrfValue tuple
         """
         if trfTup.isNull:
             return trfTup
@@ -375,9 +373,9 @@ class DataTransform(object):
         return TrfValue(dateutil.parser.parse(tv), trfTup.atId, origLength, False)
 
     def castDateTimeToIsoDate(self, trfTup):
-        """ Cast the input date (optional time) string (yyyy-mm-dd:hh::mm:ss) to a Python DateTime object -
+        """Cast the input date (optional time) string (yyyy-mm-dd:hh::mm:ss) to a Python DateTime object -
 
-            Return:  TrfValue tuple
+        Return:  TrfValue tuple
         """
         if trfTup.isNull:
             return trfTup
@@ -390,9 +388,9 @@ class DataTransform(object):
         return TrfValue(tS, trfTup.atId, origLength, False)
 
     def castDateToIsoDate(self, trfTup):
-        """ Cast the input date (optional time) string (yyyy-mm-dd:hh::mm:ss) to a Python DateTime object -
+        """Cast the input date (optional time) string (yyyy-mm-dd:hh::mm:ss) to a Python DateTime object -
 
-            Return:  TrfValue tuple
+        Return:  TrfValue tuple
         """
         if trfTup.isNull:
             return trfTup
@@ -405,9 +403,9 @@ class DataTransform(object):
         return TrfValue(tS[:10], trfTup.atId, origLength, False)
 
     def castDateToString(self, trfTup):
-        """ Cast the input date (optional time) string (yyyy-mm-dd:hh::mm:ss) as a string unchanged -
+        """Cast the input date (optional time) string (yyyy-mm-dd:hh::mm:ss) as a string unchanged -
 
-            Return:  TrfValue tuple
+        Return:  TrfValue tuple
         """
         if trfTup.isNull:
             return trfTup
@@ -417,9 +415,9 @@ class DataTransform(object):
         return TrfValue(trfTup.value, trfTup.atId, origLength, False)
 
     def stripWhiteSpace(self, trfTup):
-        """ Remove all white space from the input value.
+        """Remove all white space from the input value.
 
-            Return:  ReturnValue tuple
+        Return:  ReturnValue tuple
         """
         if trfTup.isNull:
             return trfTup
@@ -427,27 +425,27 @@ class DataTransform(object):
         return TrfValue(value, trfTup.atId, trfTup.origLength, False)
 
     def truncateString(self, trfTup):
-        """ Truncate string value to maximum length setting.
+        """Truncate string value to maximum length setting.
 
-            Return:  ReturnValue tuple
+        Return:  ReturnValue tuple
         """
         if trfTup.isNull:
             return trfTup
         return TrfValue(trfTup.value[: self.__tObj.getAttributeWidth(trfTup.atId)], trfTup.atId, trfTup.origLength, False)
 
     def translateXMLCharRefs(self, trfTup):
-        """ Convert XML Character references to unicode.
+        """Convert XML Character references to unicode.
 
-            Return:  ReturnValue tuple
+        Return:  ReturnValue tuple
         """
         if trfTup.isNull:
             return trfTup
         return TrfValue(unescapeXmlCharRef(trfTup.value), trfTup.atId, trfTup.origLength, False)
 
     def translateXMLCharRefsIt(self, trfTup):
-        """ Convert XML Character references to unicode.
+        """Convert XML Character references to unicode.
 
-            Return:  ReturnValue tuple
+        Return:  ReturnValue tuple
         """
         if trfTup.isNull:
             return trfTup

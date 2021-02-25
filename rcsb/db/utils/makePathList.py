@@ -18,8 +18,7 @@ logger = logging.getLogger()
 
 
 def makePdbxPathList(fp, cachePath=".", skipFile=None):
-    """ Return the list of pdbx file paths in the current repository.
-    """
+    """Return the list of pdbx file paths in the current repository."""
 
     try:
         skipD = {}

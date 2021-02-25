@@ -38,8 +38,8 @@ class DataTypeInstanceInfo(object):
 
     def __setup(self, filePath):
         """
-           Read the output serialized by ScanRepoUtil() -
-           tD[category] -> d[atName]->{minWidth: , maxWidth:, minPrec:, maxPrec: , count}
+        Read the output serialized by ScanRepoUtil() -
+        tD[category] -> d[atName]->{minWidth: , maxWidth:, minPrec:, maxPrec: , count}
         """
         try:
             if not filePath:

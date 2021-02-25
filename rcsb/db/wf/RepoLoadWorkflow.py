@@ -17,7 +17,7 @@ import os
 
 from rcsb.db.cli.RepoHoldingsEtlWorker import RepoHoldingsEtlWorker
 from rcsb.db.cli.SequenceClustersEtlWorker import SequenceClustersEtlWorker
-from rcsb.db.helpers.DictMethodResourceProvider import DictMethodResourceProvider
+from rcsb.utils.dictionary.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.mongo.PdbxLoader import PdbxLoader
 from rcsb.db.utils.TimeUtil import TimeUtil
@@ -138,7 +138,14 @@ class RepoLoadWorkflow(object):
             okS = self.loadStatus(cw.getLoadStatus(), readBackCheck=readBackCheck)
         elif op == "etl-repository-holdings" and dbType == "mongo":
             rhw = RepoHoldingsEtlWorker(
-                self.__cfgOb, sandboxPath, self.__cachePath, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=self.__debugFlag, readBackCheck=readBackCheck,
+                self.__cfgOb,
+                sandboxPath,
+                self.__cachePath,
+                numProc=numProc,
+                chunkSize=chunkSize,
+                documentLimit=documentLimit,
+                verbose=self.__debugFlag,
+                readBackCheck=readBackCheck,
             )
             ok = rhw.load(dataSetId, loadType=loadType)
             okS = self.loadStatus(rhw.getLoadStatus(), readBackCheck=readBackCheck)
@@ -161,8 +168,7 @@ class RepoLoadWorkflow(object):
         return ret
 
     def buildResourceCache(self, rebuildCache=False):
-        """Generate and cache resource dependencies.
-        """
+        """Generate and cache resource dependencies."""
         ret = False
         try:
             useCache = not rebuildCache

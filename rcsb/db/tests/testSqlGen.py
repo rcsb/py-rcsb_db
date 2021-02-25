@@ -76,8 +76,7 @@ class SqlGenTests(unittest.TestCase):
         return aObj
 
     def __testSchemaCreate(self, sD):
-        """Test case -  create table schema using input schema definition as an example
-        """
+        """Test case -  create table schema using input schema definition as an example"""
 
         try:
             tableIdList = sD.getSchemaIdList()
@@ -94,8 +93,7 @@ class SqlGenTests(unittest.TestCase):
             self.fail()
 
     def __testImportExport(self, sD):
-        """Test case -  import and export commands --
-        """
+        """Test case -  import and export commands --"""
 
         try:
             databaseName = sD.getDatabaseName()
@@ -115,8 +113,7 @@ class SqlGenTests(unittest.TestCase):
             self.fail()
 
     def __testSelectionAndConditions(self, sD):
-        """Test case -  selection everything for a simple condition-
-        """
+        """Test case -  selection everything for a simple condition-"""
         try:
             # get delete attribute -
             #

@@ -173,9 +173,7 @@ class ClusterDataPrep(object):
         return cifD, docBySequenceD, docByClusterD
 
     def __makeIdDict(self, clusterD):
-        """ Internal method returning the dictionary d[sequence_id] = cluster_id
-
-        """
+        """Internal method returning the dictionary d[sequence_id] = cluster_id"""
         idD = {}
         for k, vL in clusterD.items():
             for tid in vL:
