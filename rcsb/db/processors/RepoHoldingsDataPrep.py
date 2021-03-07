@@ -99,12 +99,14 @@ class RepoHoldingsDataPrep(object):
             for sId in tD["id_codes_superseded"]:
                 replacedByD[sId.strip().upper()] = entryId.strip().upper()
         #
+        logger.debug("replacedbyD (%d) rmvD (%d) currentD (%d) retD (%d)", len(replacedByD), len(rmvD), len(currentD), len(retD))
         for entryId in rmvD:
             if entryId in currentD:
                 continue
             tId = entryId
             if tId in replacedByD:
-                while tId in replacedByD:
+                while tId in replacedByD and tId != replacedByD[tId]:
+                    logger.debug("tId %r replacedByD[tId] %r", tId, replacedByD[tId])
                     tId = replacedByD[tId]
                 if tId in currentD:
                     retD[entryId] = {"status": "REMOVED", "status_code": "OBS", "id_code_replaced_by_latest": tId}
