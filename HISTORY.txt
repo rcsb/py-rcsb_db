@@ -296,3 +296,4 @@
  22-Feb-2021  V1.663 Further integration adjustments for rcsb.utils.dictionary.
  25-Feb-2021  V1.664 Update dependencies and pipeline config
   7-Mar-2021  V1.666 Handle inconsistent superseding data in repository holdings.
+ 12-Mar-2021  V1.667 Add separate processing of pdb-format update list inventory.

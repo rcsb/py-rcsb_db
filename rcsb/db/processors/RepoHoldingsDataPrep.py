@@ -99,14 +99,16 @@ class RepoHoldingsDataPrep(object):
             for sId in tD["id_codes_superseded"]:
                 replacedByD[sId.strip().upper()] = entryId.strip().upper()
         #
-        logger.debug("replacedbyD (%d) rmvD (%d) currentD (%d) retD (%d)", len(replacedByD), len(rmvD), len(currentD), len(retD))
+        logger.info("replacedbyD (%d) rmvD (%d) currentD (%d) retD (%d)", len(replacedByD), len(rmvD), len(currentD), len(retD))
         for entryId in rmvD:
             if entryId in currentD:
                 continue
             tId = entryId
             if tId in replacedByD:
+                if tId == replacedByD[tId]:
+                    logger.info("Inconsistent obsolete entry info for %r", tId)
                 while tId in replacedByD and tId != replacedByD[tId]:
-                    logger.debug("tId %r replacedByD[tId] %r", tId, replacedByD[tId])
+                    # logger.debug("tId %r replacedByD[tId] %r", tId, replacedByD[tId])
                     tId = replacedByD[tId]
                 if tId in currentD:
                     retD[entryId] = {"status": "REMOVED", "status_code": "OBS", "id_code_replaced_by_latest": tId}
@@ -389,9 +391,10 @@ class RepoHoldingsDataPrep(object):
         dirPath = dirPath if dirPath else self.__sandboxPath
         try:
             updateTypeList = ["all"]
-            contentTypeList = ["pdb", "mr", "cs", "sf", "nef", "nmr-str"]
+            contentTypeList = ["pdb", "pdb-format", "mr", "cs", "sf", "nef", "nmr-str"]
             contentNameD = {
                 "pdb": "coordinates",
+                "pdb-format": "PDB format coordinates",
                 "mr": "NMR restraints",
                 "cs": "NMR chemical shifts",
                 "sf": "structure factors",
@@ -481,14 +484,13 @@ class RepoHoldingsDataPrep(object):
                 if entryId in obsD:
                     continue
                 rD[entryId] = []
-                if "coordinates" in dD and entryId in bundleD:
+                if entryId in bundleD:
                     rD[entryId].append("entry PDB bundle")
+                if "coordinates" in dD:
                     rD[entryId].append("entry mmCIF")
                     rD[entryId].append("entry PDBML")
-                else:
+                if "PDB format coordinates" in dD:
                     rD[entryId].append("entry PDB")
-                    rD[entryId].append("entry mmCIF")
-                    rD[entryId].append("entry PDBML")
                 if entryId in assemD:
                     if entryId in bundleD:
                         rD[entryId].append("assembly mmCIF")
