@@ -498,7 +498,7 @@ class RepoHoldingsDataPrep(object):
                         rD[entryId].append("assembly PDB")
                 #
                 for cType in dD:
-                    if cType not in ["coordinates", "NMR restraints"]:
+                    if cType not in ["coordinates", "PDB format coordinates", "NMR restraints"]:
                         rD[entryId].append(cType)
                     if cType == "NMR restraints":
                         rD[entryId].append("NMR restraints V1")
