@@ -144,6 +144,7 @@ class ContentDefinition(object):
             self.__sliceParentFiltersD = {}
             self.__sliceUnitCardinalityD = {}
             self.__sliceCategoryExtrasD = {}
+            embeddedIterableD = {}
             logger.warning("Missing dictionary helper method or schema %r", databaseName)
 
         #
