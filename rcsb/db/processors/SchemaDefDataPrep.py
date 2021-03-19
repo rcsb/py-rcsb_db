@@ -31,6 +31,7 @@
 #       5-Feb-2019  jdw generalize locatorList to locatorObjList and associated dependent changes,
 #                       and add __mergeContainers() -
 #      22-Sep-2019  jdw use sorted order of table objects within documents
+#      16-Mar-2021  jdw add support for embedded iterables within subcategory aggregates.
 #
 #
 ##
@@ -354,6 +355,7 @@ class SchemaDefDataPrep(object):
             scAgL = self.__sD.getSubCategoryAggregates(collectionName)
             if scAgL:
                 scAgD = {}
+                emIterableD = {}
                 logger.debug("%s processing subcategory aggregates %r", collectionName, scAgL)
                 for scAg in scAgL:
                     scD = {}
@@ -362,7 +364,14 @@ class SchemaDefDataPrep(object):
                         atIdL = self.__sD.getSubCategoryAttributeIdList(sId, scAg)
                         scD[self.__sD.getSchemaName(sId)] = [self.__sD.getAttributeName(sId, atId) for atId in atIdL]
                     scAgD[scAg] = scD
+                    #
+                    for sId in sIdL:
+                        atIdL = self.__sD.getSubCategoryAttributeIdList(sId, scAg)
+                        for atId in atIdL:
+                            if self.__sD.isAttributeEmbeddedIterable(sId, atId):
+                                emIterableD[(self.__sD.getSchemaName(sId), self.__sD.getAttributeName(sId, atId))] = self.__sD.getAttributeEmbeddedIterableSeparator(sId, atId)
                 logger.debug("%s subcategory aggregate name dictionary %r", collectionName, scAgD)
+                logger.debug("%s emIterableD %r", collectionName, emIterableD)
                 #
                 for doc in docList:
                     for scAg, scD in scAgD.items():
@@ -387,7 +396,6 @@ class SchemaDefDataPrep(object):
                                             dD = {}
                                             for atName in atNameL:
                                                 cAtName = atName.replace(scAg + "_", "") if removeSubCategoryPrefix else atName
-                                                # dD[cAtName] = rowD[atName]
                                                 # JDW filter missing values -
                                                 if not rowD[atName] or rowD[atName] in [".", "?"]:
                                                     continue
@@ -407,7 +415,12 @@ class SchemaDefDataPrep(object):
                                                     # JDW filter missing values
                                                     if not rowD[atName][ii] or rowD[atName][ii] in [".", "?"]:
                                                         continue
-                                                    dD[cAtName] = rowD[atName][ii]
+                                                    # handle embedded iterable
+                                                    if (sName, atName) in emIterableD:
+                                                        dD[cAtName] = rowD[atName][ii].split(emIterableD[(sName, atName)])
+                                                        # logger.debug("(list) sName %r scAg %r cAtName %r atName %r value %r", sName, scAg, cAtName, atName, dD[cAtName])
+                                                    else:
+                                                        dD[cAtName] = rowD[atName][ii]
                                                 rL.append(dD)
                                             rowD[scAg] = rL
                                         #
@@ -442,7 +455,11 @@ class SchemaDefDataPrep(object):
                                                 # JDW filter missing values
                                                 if not doc[sName][atName][ii] or doc[sName][atName][ii] in [".", "?"]:
                                                     continue
-                                                dD[cAtName] = doc[sName][atName][ii]
+                                                logger.debug("(dict) sName %r scAg %r cAtName %r atName %r", sName, scAg, cAtName, atName)
+                                                if (sName, atName) in emIterableD:
+                                                    dD[cAtName] = doc[sName][atName][ii].split(emIterableD[(sName, atName)])
+                                                else:
+                                                    dD[cAtName] = doc[sName][atName][ii]
                                             rL.append(dD)
                                         doc[sName][scAg] = rL
                                     #

@@ -17,6 +17,8 @@
 #       11-Mar-2019 jdw  add getSubCategories(), getAttributeSubCategories(), getSubCategoryAggregates(),
 #                        getSubCategoryAggregatesUnitCardinality(), getSubCategorySchemaIdList(),
 #                        getSubCategoryAttributeIdList()
+#       16-Mar-2021 jdw add getAttributeEmbeddedIterableSeparator() and isAttributeEmbeddedIterable(),
+#                           getEmbeddedIterableSeparator() and isEmbeddedIterable()
 ##
 """
 Schema defintion accessors.
@@ -286,6 +288,18 @@ class SchemaDefAccess(object):
             return self.__schemaDefDict[schemaId]["ATTRIBUTES"][attributeId]
         except Exception:
             return None
+
+    def getAttributeEmbeddedIterableSeparator(self, schemaId, attributeId):
+        try:
+            return self.__schemaDefDict[schemaId]["ATTRIBUTE_INFO"][attributeId]["EMBEDDED_ITERABLE_DELIMITER"]
+        except Exception:
+            return None
+
+    def isAttributeEmbeddedIterable(self, schemaId, attributeId):
+        try:
+            return self.__schemaDefDict[schemaId]["ATTRIBUTE_INFO"][attributeId]["EMBEDDED_ITERABLE_DELIMITER"] is not None
+        except Exception:
+            return False
 
     def getSchemaIdList(self):
         return list(self.__schemaDefDict.keys())
@@ -784,6 +798,12 @@ class SchemaDef(object):
         except Exception:
             return False
 
+    def isEmbeddedIterable(self, attributeId):
+        try:
+            return self.__tD["ATTRIBUTE_INFO"][attributeId]["EMBEDDED_ITERABLE_DELIMITER"] is not None
+        except Exception:
+            return False
+
     def isOtherAttributeType(self, attributeId):
         """Get the list of attributes that have no assigned instance mapping."""
         try:
@@ -797,10 +817,16 @@ class SchemaDef(object):
         except Exception:
             return None
 
+    def getEmbeddedIterableSeparator(self, attributeId):
+        try:
+            return self.__tD["ATTRIBUTE_INFO"][attributeId]["EMBEDDED_ITERABLE_DELIMITER"]
+        except Exception:
+            return None
+
     def __isStringType(self, sqlType):
         """Return if input type corresponds to a common SQL string data type."""
         try:
-            return sqlType.upper() in ["VARCHAR", "CHAR", "TEXT", "MEDIUMTEXT", "LONGTEXT"]
+            return sqlType.upper() in ["VARCHAR", "CHAR", "TEXT", "MEDIUMTEXT", "LONGTEXT", "ANY"]
         except Exception:
             return False
 

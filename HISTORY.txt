@@ -297,3 +297,5 @@
  25-Feb-2021  V1.664 Update dependencies and pipeline config
   7-Mar-2021  V1.666 Handle inconsistent superseding data in repository holdings.
  12-Mar-2021  V1.667 Add separate processing of pdb-format update list inventory.
+ 18-Mar-2021  V1.668 Add support for embedded iterables within subcategory aggregates, add additional_properties
+                     feature categories.

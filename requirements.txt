@@ -7,14 +7,14 @@ jsondiff >= 1.2.0
 strict-rfc3339
 mysqlclient >= 1.3.12
 pymongo >= 3.7.0
-mmcif >= 0.57
+mmcif >= 0.61
 rcsb.utils.config >= 0.35
-rcsb.utils.io >= 0.97
+rcsb.utils.io >= 1.00
 rcsb.utils.multiproc >= 0.17
 rcsb.utils.chemref >= 0.68
 scandir; python_version < "3.0"
 configparser; python_version < "3.0"
-rcsb.utils.dictionary >= 0.22
+rcsb.utils.dictionary >= 0.24
 rcsb.utils.repository >= 0.12
 #
 SQLAlchemy; sys_platform == 'linux'

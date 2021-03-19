@@ -65,7 +65,9 @@ class SchemaDefBuild(object):
         self.__cfgOb = cfgOb
         self.__databaseName = databaseName
         self.__cachePath = cachePath if cachePath else "."
-        self.__includeContentClasses = includeContentClasses if includeContentClasses else ["GENERATED_CONTENT", "EVOLVING_CONTENT", "CONSOLIDATED_BIRD_CONTENT", "INTEGRATED_CONTENT"]
+        self.__includeContentClasses = (
+            includeContentClasses if includeContentClasses else ["GENERATED_CONTENT", "EVOLVING_CONTENT", "CONSOLIDATED_BIRD_CONTENT", "INTEGRATED_CONTENT"]
+        )
         #
         self.__contentDefHelper = self.__cfgOb.getHelper("CONTENT_DEF_HELPER_MODULE", sectionName=configName, cfgOb=self.__cfgOb)
         self.__documentDefHelper = self.__cfgOb.getHelper("DOCUMENT_DEF_HELPER_MODULE", sectionName=configName, cfgOb=self.__cfgOb)
@@ -388,6 +390,7 @@ class SchemaDefBuild(object):
                             "APP_TYPE": revAppType,
                             "WIDTH": revAppWidth,
                             "ITERABLE_DELIMITER": fD["ITERABLE_DELIMITER"],
+                            "EMBEDDED_ITERABLE_DELIMITER": fD["EMBEDDED_ITERABLE_DELIMITER"],
                             "FILTER_TYPES": fD["FILTER_TYPES"],
                             "IS_CHAR_TYPE": fD["IS_CHAR_TYPE"],
                             "ENUMERATION": fD["ENUMS"],
@@ -802,7 +805,9 @@ class SchemaDefBuild(object):
                                                 {"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"], "context_attributes": vvDL}
                                             ]
                                         else:
-                                            subCatPropD[subCategory]["rcsb_nested_indexing_context"] = [{"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"]}]
+                                            subCatPropD[subCategory]["rcsb_nested_indexing_context"] = [
+                                                {"category_name": tD["CONTEXT_NAME"], "category_path": tD["FIRST_CONTEXT_PATH"]}
+                                            ]
                                     else:
                                         subCatPropD[subCategory]["rcsb_nested_indexing"] = True
             #
@@ -1048,8 +1053,6 @@ class SchemaDefBuild(object):
             elif appType in ["number", "integer", "int", "double"]:
                 atPropD = {typeKey: appType}
                 #
-
-                #
                 if "bounds" in enforceOpts:
                     if jsonSpecDraft in ["3", "4"]:
                         if "MIN_VALUE" in fD:
@@ -1071,6 +1074,12 @@ class SchemaDefBuild(object):
                             atPropD["maximum"] = fD["MAX_VALUE"]
                         elif "MAX_VALUE_EXCLUSIVE" in fD:
                             atPropD["exclusiveMaximum"] = fD["MAX_VALUE_EXCLUSIVE"]
+            elif appType.startswith("any"):
+                logger.debug("Processing special type %s", appType)
+                if dataTypingU == "BSON":
+                    atPropD = {typeKey: "array", "items": {"anyOf": [{typeKey: "string"}, {typeKey: "int"}, {typeKey: "double"}]}}
+                else:
+                    atPropD = {typeKey: "array", "items": {"anyOf": [{typeKey: "string"}, {typeKey: "integer"}, {typeKey: "number"}]}}
             else:
                 atPropD = {typeKey: appType}
 
@@ -1119,7 +1128,7 @@ class SchemaDefBuild(object):
         return atPropD
 
     def __subCategoryTest(self, filterList, atSubCategoryList):
-        """Return true if any element of filter list in atSubCategoryList"""
+        """Return true if any element of filter list is in atSubCategoryList"""
         if not filterList or not atSubCategoryList:
             return False
         for subCat in filterList:

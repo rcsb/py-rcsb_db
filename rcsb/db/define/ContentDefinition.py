@@ -123,10 +123,14 @@ class ContentDefinition(object):
             #
             self.__categoryFeatures = {catName: self.__getCategoryFeatures(catName, unitCardinalityList, subCategoryD) for catName in self.__categoryList}
             iTypeCodes = contentDefHelper.getTypeCodes("iterable")
+            emiTypeCodes = contentDefHelper.getTypeCodes("embedded_iterable")
+            logger.debug("emiTypeCodes %r", emiTypeCodes)
             iQueryStrings = contentDefHelper.getQueryStrings("iterable")
             logger.debug("iterable types %r iterable query %r", iTypeCodes, iQueryStrings)
             iterableD = self.__getIterables(iTypeCodes, iQueryStrings, contentDefHelper)
+            embeddedIterableD = self.__getEmbeddedIterables(emiTypeCodes)
             logger.debug("iterableD %r", iterableD.items())
+            logger.debug("embeddedIterableD %r", embeddedIterableD.items())
             dataSelectFilterD = contentDefHelper.getDatabaseSelectionFilters(databaseName)
             itemTransformD = contentDefHelper.getItemTransformD()
             logger.debug("itemTransformD %r", itemTransformD.items())
@@ -144,7 +148,9 @@ class ContentDefinition(object):
 
         #
         self.__methodD = self.__getMethodInfo()
-        self.__attributeFeatures = OrderedDict({catName: self.__getAttributeFeatures(catName, iterableD, itemTransformD, self.__methodD) for catName in self.__categoryList})
+        self.__attributeFeatures = OrderedDict(
+            {catName: self.__getAttributeFeatures(catName, iterableD, embeddedIterableD, itemTransformD, self.__methodD) for catName in self.__categoryList}
+        )
         self.__attributeDataTypeD = OrderedDict({catName: self.__getAttributeTypeD(catName) for catName in self.__categoryList})
         self.__dataSelectFilterD = dataSelectFilterD
         self.__sliceD = self.__getSliceChildren(self.__sliceParentItemsD)
@@ -255,6 +261,21 @@ class ContentDefinition(object):
                     if qs in description:
                         itD[(catName, atName)] = dictHelper.getDelimiter(catName, atName)
         logger.debug("iterableD: %r", list(itD.items()))
+        return itD
+
+    def __getEmbeddedIterables(self, iTypeCodes):
+        itD = OrderedDict()
+        #
+        typD = {d["TYPE_CODE"]: d["DELIMITER"] for d in iTypeCodes}
+
+        for catName in self.__categoryList:
+            for atName in self.__categorySchema[catName]:
+                typeCode = self.__dApi.getTypeCode(catName, atName)
+                typeCodeAlt = self.__dApi.getTypeCodeAlt(catName, atName)
+                if typeCode in typD or typeCodeAlt in typD:
+                    itD[(catName, atName)] = typD[typeCode]
+                    continue
+        logger.debug("embedded iterableD: %r", list(itD.items()))
         return itD
 
     def __getMethodInfo(self):
@@ -480,7 +501,7 @@ class ContentDefinition(object):
             rL.append({"CATEGORY": catName, "ATTRIBUTE": atName})
         return rL
 
-    def __getAttributeFeatures(self, catName, iterableD, itemTransformD, methodD):
+    def __getAttributeFeatures(self, catName, iterableD, embeddedIterableD, itemTransformD, methodD):
         """
         Args:
             catName (string): Category name
@@ -516,6 +537,7 @@ class ContentDefinition(object):
                 "DESCRIPTION_ANNOTATED": [],
                 "IS_KEY": False,
                 "ITERABLE_DELIMITER": None,
+                "EMBEDDED_ITERABLE_DELIMITER": None,
                 "FILTER_TYPES": [],
                 "IS_CHAR_TYPE": False,
                 "METHODS": [],
@@ -561,6 +583,7 @@ class ContentDefinition(object):
             fD["IS_CHAR_TYPE"] = str(pType).lower() in ["char", "uchar"]
             #
             fD["ITERABLE_DELIMITER"] = iterableD[(catName, atName)] if (catName, atName) in iterableD else None
+            fD["EMBEDDED_ITERABLE_DELIMITER"] = embeddedIterableD[(catName, atName)] if (catName, atName) in embeddedIterableD else None
             #
             fD["FILTER_TYPES"] = itemTransformD[(catName, "__all__")] if (catName, "__all__") in itemTransformD else []
             fD["FILTER_TYPES"] = itemTransformD[(catName, atName)] if (catName, atName) in itemTransformD else fD["FILTER_TYPES"]
