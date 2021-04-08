@@ -299,3 +299,4 @@
  12-Mar-2021  V1.667 Add separate processing of pdb-format update list inventory.
  18-Mar-2021  V1.668 Add support for embedded iterables within subcategory aggregates, add additional_properties
                      feature categories.
+  7-Apr-2021  V1.669 Updates for corrections in DictionaryAPI() method name getFullDescendentList()

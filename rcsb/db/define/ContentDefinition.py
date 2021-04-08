@@ -10,7 +10,7 @@
 #  10-Jun-2018 jdw move the base table definitions in terms of content classes
 #  16-Jun-2018 jdw standardize method name for getAttributeDataTypeD()
 #  26-Nov-2018 jdw turn down boundary value level to standard ddl values
-#   3-Feb-2019 jdw get all child items using self.__dApi.getFullDecendentList()
+#   3-Feb-2019 jdw get all child items using self.__dApi.getFullDescendentList()
 #  31-Mar-2019 jdw include parent details in __getAttributeFeatures()
 #   6-Jun-2019 jdw take dictionary API as an argument.
 #  22-Aug-2019 jdw unify naming conventions dictSubset->databaseName and *ForSubset() -> *ForDatabase()
@@ -192,7 +192,7 @@ class ContentDefinition(object):
         return {}
 
     def __getContentClasses(self, catName, atName=None, wildCardAtName="__all__"):
-        """Return a list of contexts for input categpry and optional attribute.
+        """Return a list of contexts for input category and optional attribute.
 
         Handle the special case of unspecified attributes interpreted as wildcard.
 
@@ -227,7 +227,7 @@ class ContentDefinition(object):
                 sD[parentCategoryName] = [{"PARENT_CATEGORY_NAME": parentCategoryName, "PARENT_ATTRIBUTE_NAME": parentAttributeName, "CHILD_ATTRIBUTE_NAME": parentAttributeName}]
                 #
                 # childItems = self.__dApi.getFullChildList(parentCategoryName, parentAttributeName)
-                childItems = self.__dApi.getFullDecendentList(parentCategoryName, parentAttributeName)
+                childItems = self.__dApi.getFullDescendentList(parentCategoryName, parentAttributeName)
                 # logger.info("Slice parent %s %s  %r" % (parentCategoryName, parentAttributeName, childItems))
                 for childItem in childItems:
                     atName = CifName.attributePart(childItem)
@@ -238,7 +238,7 @@ class ContentDefinition(object):
                     if catName not in sD:
                         sD[catName] = []
                     sD[catName].append({"PARENT_CATEGORY_NAME": parentCategoryName, "PARENT_ATTRIBUTE_NAME": parentAttributeName, "CHILD_ATTRIBUTE_NAME": atName})
-                # Sort the list of dicationaries for each category
+                # Sort the list of dictionaries for each category
                 for catName in sD:
                     sD[catName] = sorted(sD[catName], key=lambda k: (k["PARENT_CATEGORY_NAME"], k["PARENT_ATTRIBUTE_NAME"], k["CHILD_ATTRIBUTE_NAME"]))
 
@@ -511,7 +511,7 @@ class ContentDefinition(object):
             itemTransformD (dict): dictionary of data transform filters  itd[(catName,atName)] = [f1,f2,...]
 
         Returns:
-            dict: attribure features
+            dict: attribute features
 
 
              cL = self.getCategoryContextList(catName)
