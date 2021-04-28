@@ -34,7 +34,7 @@
                      make audit_authors an iterable type in categories rcsb_repository_holdings_transferred,
                      rcsb_repository_holdings_insilico_models, and rcsb_repository_holdings_unreleased,
                      verify data types in sequence cluster collections.
-13-Nov-2018    V0.26 Add chemical component and bird chemical compoment core collections with convenience
+13-Nov-2018    V0.26 Add chemical component and bird chemical component core collections with convenience
                    categories rcsb_chem_comp_info, rcsb_chem_comp_synonyms, rcsb_chem_comp_descriptor,
                    and rcsb_chem_comp_target. Add convenience category rcsb_entry_info in pdbx_core core_entry
                    collection.  Include correspondence details for DrugBank and CCDC/CSD.
@@ -61,14 +61,14 @@
                and drugbank_target, add method rcsb_add_bird_entity_identifiers, add  _rcsb_entry_info.solvent_entity_count
                and adjust counts to include solvent.  Add consolidated loader for BIRD data, add loader for DrugBank
                corresponding data from rcsb.utils.chemref.    Add CLI option for loading integrated chemical reference data.
-               Move time consuming schema validation tests to seperate subdirectory.  Add mandatory option for injected
+               Move time consuming schema validation tests to separate subdirectory.  Add mandatory option for injected
                private keys.  Resolve schema loading issues with current chemical component and BIRD definitions.
  12-Dec-2018   V0.34 Add rcsb_entity_id identifiers in categories struct_ref_seq and struct_ref_seq_dif.Add category rcsb_entity_poly_info
-               as the basis for a new core collection core_entity_monomer. Adjust logic for reporting assembly format availibility.
+               as the basis for a new core collection core_entity_monomer. Adjust logic for reporting assembly format availability.
  13-Dec-2018   V0.35 Add ihm_dev collection and support for I/HM repository model files
  18-Dec-2018   V0.36 Add _entity_poly.rcsb_prd_id and configuration to include private key for BIRD identifier in the core_entity collection.'
   7-Jan-2019   V0.37 Simplify and consolidate site specific configuration options, streamline cli scripts, and consolidate common
-               schema access and building methods in SchemDefUtil() (feature branch configpath)
+               schema access and building methods in SchemaDefUtil() (feature branch configpath)
   9-Jan-2019   V0.38 Introduce a new data transformation filter for XML character references and miscellaneous related changes.
  10-Jan-2019   V0.39 Adjustments to improve diagnostics relative remaining data issues observed loading latest data files, and
                tuning of classification for RCSB candidate assemblies.
@@ -84,7 +84,7 @@
   3-Mar-2019   V0.46 move validation analysis tools, EntityInstanceExtractor.py and related tests to package rcsb.utils.anal.
                Change helper criteria for identifying chemical component objects and warn for missing chem_comp_atom category cases.
                Change release filter for chem_comp_* collection to allow only status codes 'REL' and 'REF_ONLY' -
- 14-Mar-2019   V0.47 Additonal dictionary content and helper method support for -
+ 14-Mar-2019   V0.47 Additional dictionary content and helper method support for -
                 _entity.rcsb_macromolecular_names_combined,   _rcsb_entry_info.software_programs_combined,
                 _rcsb_entity_container_identifiers.chem_comp_ligand, _rcsb_entity_container_identifiers.chem_comp_monomers,
 
@@ -112,8 +112,8 @@
  17-Mar-2019   V0.48 adding subcategory aggregate rcsb_macromolecular_names_combined
  24-Mar-2019   V0.49 address missing category issues in chemical reference data collections, various changes to
                address schema validation exceptions introduced by additionalProperties: False.  Add consolidated
-               EC item.   Extend taxonomy lineaage to include leaf node.
- 24-Mar-2019   V0.50 temporary adjustment for error handing for obsolete taxonony ids.
+               EC item.   Extend taxonomy lineage to include leaf node.
+ 24-Mar-2019   V0.50 temporary adjustment for error handing for obsolete taxonomy ids.
  25-Mar-2019   V0.51 remap merged taxons and adjust exception handling for taxonomy lineage generation
  31-Mar-2019   V0.52 block_attributes: REF_PARENT_CATEGORY_NAME: REF_PARENT_ATTRIBUTE_NAME: to provide parent details for synthetic key
                add 'addParentRefs' in enforceOpts to write relative $ref properties to describe parent relationships.
@@ -144,7 +144,7 @@
   4-May-2019  V0.61 extend content in and categories rcsb_entity_instance_domain_scop
                     rcsb_entity_instance_domain_cath to support slicing
  18-May-2019  V0.62 add rcsb_assembly_info category to the core_assembly
-                    adjust classificatoin of ternary complexes extending enumeration for _rcsb_entry_info.selected_polymer_entity_types
+                    adjust classification of ternary complexes extending enumeration for _rcsb_entry_info.selected_polymer_entity_types
                     add new classifier _rcsb_entry_info.na_polymer_entity_types
                     and removed _rcsb_entry_info.nonpolymer_ligand_entity_count
  20-May-2019  V0.63 Category rcsb_prot_sec_struct_info added to core_entity_instance and prune primary secondary structure
@@ -157,7 +157,7 @@
                     schema evolution. Add new helper methods for sites and connections and revise helper
                     methods for all entity and instance features.
  10-Sep-2019  V0.67 Adding extended metadata types, AtcProvider() and SiftsSummaryProvider().
- 19-Sep-2019  V0.68 Eliminate private keys, revise/extend interenal schema metadata, purge schema,
+ 19-Sep-2019  V0.68 Eliminate private keys, revise/extend internal schema metadata, purge schema,
                     add polymer alignment methods.
  24-Sep-2019  V0.69 Add additional polymer_instance features and new polymer_instance_validations methods.
  25-Sep-2019  V0.70 Incorporate RCSB extensions in 'min' schemas add single collection specific identifiers core collections
@@ -165,7 +165,7 @@
  25-Sep-2019  V0.71 Adjustments for edge cases and enums after full-load tests
  29-Sep-2019  V0.72 Further adjustments for edge cases and enums after full-load tests
  29-Sep-2019  V0.73 Parallelize merging content types in RepositoryProvider()
- 29-Sep-2019  V0.74 Cleaning up more edge cases with missing or misorganized data
+ 29-Sep-2019  V0.74 Cleaning up more edge cases with missing or disorganized data
   6-Oct-2019  V0.75 Reorganize feature value within feature range and position subcategories
   7-Oct-2019  V0.76 Tweak sequence reference processing to better cope with inconsistencies and missing data.
   8-Oct-2019  V0.77 Upversion schema after successful build
@@ -177,7 +177,7 @@
  17-Oct-2019  V0.82 Preserve annotations on self-referenced sequences for now/shift ATC depth
  19-Oct-2019  V0.83 Strip missing/empty values from subcategory aggregates/handle missing accession codes on struct_ref_seq records
  19-Oct-2019  V0.84 Abandon reliance on ref_id/align_id consistency in struct_ref_* categories.
- 20-Oct-2019  V0.85 Update type, coverage and configuration for latest IHM dictioanry update
+ 20-Oct-2019  V0.85 Update type, coverage and configuration for latest IHM dictionary update
  23-Oct-2019  V0.86 Add nesting property to objects with unit cardinality,
                     don't propagate exact-match/suggest search contexts to full-text
  25-Oct-2019  V0.87 Address a couple of anomalous sequence accession code issues and sync up mock repos
@@ -192,7 +192,7 @@
  10-Dec-2019  V0.94  Adding aggregation of gene names, related annotation lineage, fixed miscellaneous counting issues
  14-Dec-2019  V0.941 Reorganize repository holdings collections
  15-Dec-2019  V0.942 Suppress SIFTS with primary data loading
- 16-Dec-2019  V0.943 Extend normalizeCsvToList() to handle more inconsisent cases.
+ 16-Dec-2019  V0.943 Extend normalizeCsvToList() to handle more inconsistent cases.
  16-Dec-2019  V0.944 Add workflow module and tests to facilitate Luigi integration.
  23-Dec-2019  V0.945 Add consolidated EC processing and disable auto search context filters
  04-Jan-2020  V0.946 Add support for rcsb_polymer_entity.rcsb_enzyme_class_combined_depth, set single process cache management on loading
@@ -215,14 +215,14 @@
   9-Feb-2020  V0.962 Cleanup combined software program list, separate tests to detect schema differences, add support for
                      schema updates to existing collections, update schema update CLI with compare methods.
  11-Feb-2020  V0.963 Expose upsertFlag on mongo update method wrapper.
- 12-Feb-2020  V0.964 Extend entity and entity instance annotations with convalent linkage details
+ 12-Feb-2020  V0.964 Extend entity and entity instance annotations with covalent linkage details
  12-Feb-2020  V0.965 Add model_ids to entry_container_identifiers and update dependencies
  14-Feb-2020  V0.966 Add MongoDb maintenance operations, point example config to development branch assets, update enums with
                      BIRD_MOLECULE_NAME.
  19-Feb-2020  V0.967 Initialize zero values for feature counts and coverage
  26-Feb-2020  V0.968 Add missing provenance source for rcsb_chem_comp_synonyms, filter case duplicates for taxonomy common
                      names, entity descriptions, and gene names.
-  5-Mar-2020  V0.969 Allow category nested contexts and remote tests for uniprot-core
+  5-Mar-2020  V0.969 Allow category nested contexts and remote tests for Uniprot-core
  17-Mar-2020  V0.970 Add separate primary citation category and offset for zero based sequence database references
  24-Mar-2020  V0.971 Add support for rcsb_chem_comp_annotation and various fixes for schema builder.
  27-Mar-2020  V0.972 Add support for rcsb_repository_holdings_removed.repository_content_types
@@ -246,7 +246,7 @@
   3-Jun-2020  V0.990 Updating dependencies for rcsb.utils.validation and validation test conditions.
   4-Jun-2020  V0.991 Adding new flag for prerelease sequence availability
   5-Jun-2020  V0.992 Adding support for new enum DDL attributes.
- 12-Jun-2020  V0.993 Adjustments to the labeling of site, occupancy and oberserved features
+ 12-Jun-2020  V0.993 Adjustments to the labeling of site, occupancy and observed features
  17-Jun-2020  V0.994 Adjustments rcsb_repository_holdings_unreleased_entry collection
  18-Jun-2020  V0.995 Adding entity taxonomy count.
  25-Jun-2020  V0.996 Adding schema validation to automatically follow on from any load failures in mongo/PdbxLoader()
@@ -300,3 +300,4 @@
  18-Mar-2021  V1.668 Add support for embedded iterables within subcategory aggregates, add additional_properties
                      feature categories.
   7-Apr-2021  V1.669 Updates for corrections in DictionaryAPI() method name getFullDescendentList()
+ 28-Apr-2021  V1.670 Add content type for mmCIF format validation data

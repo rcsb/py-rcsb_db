@@ -438,12 +438,15 @@ class RepoHoldingsDataPrep(object):
             vList = self.__mU.doImport(fp, "list")
             valD = {}
             valImageD = {}
+            valCifD = {}
             for line in vList:
                 fields = line.split("\t")
                 entryId = fields[0].strip().upper()
                 imageFlag = fields[1].strip().upper()
                 valD[entryId] = True
                 valImageD[entryId] = imageFlag == "Y"
+                if len(fields) > 2:
+                    valCifD[entryId] = fields[2].strip().upper() == "Y"
             #
             #
             fp = os.path.join(dirPath, "status", "entries_without_polymers.tsv")
@@ -510,6 +513,8 @@ class RepoHoldingsDataPrep(object):
                     rD[entryId].append("validation report")
                 if entryId in valImageD:
                     rD[entryId].append("validation slider image")
+                if entryId in valCifD:
+                    rD[entryId].append("validation data mmCIF")
                 if entryId in edD:
                     rD[entryId].append("2fo-fc Map")
                     rD[entryId].append("fo-fc Map")
