@@ -69,7 +69,7 @@ setup(
         "rcsb.utils.io >= 1.00",
         "rcsb.utils.config >= 0.35",
         "rcsb.utils.multiproc >= 0.17",
-        "rcsb.utils.chemref >= 0.68",
+        "rcsb.utils.chemref >= 0.70",
         "rcsb.utils.dictionary >= 0.24",
         "rcsb.utils.repository >= 0.12",
         "SQLAlchemy; sys_platform == 'linux'",
