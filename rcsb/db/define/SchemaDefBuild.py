@@ -515,7 +515,7 @@ class SchemaDefBuild(object):
         return name
 
     # -------------------------- ------------- ------------- ------------- ------------- ------------- -------------
-    def __getAmmendedAttributeFeatures(self, collectionName, catName, documentDefHelper):
+    def __getAmendedAttributeFeatures(self, collectionName, catName, documentDefHelper):
         #
         useDefaultBrief = False
         aD = self.__contentInfo.getAttributeFeatures(catName)
@@ -558,7 +558,7 @@ class SchemaDefBuild(object):
                 logger.warning("UNKNOWN type for %s %s %s", catName, atName, tt)
                 return False
 
-            logger.info("--SCONTEXT %s %s - %s.%s", collectionName, sC, catName, atName)
+            logger.info("--SEARCH CONTEXT %s %s - %s.%s", collectionName, sC, catName, atName)
         return True
 
     def __createJsonLikeSchema(
@@ -697,7 +697,7 @@ class SchemaDefBuild(object):
             # -------- ---------- ------------ -------- ---------- ------------ -------- ---------- ------------
             #
             # aD = self.__contentInfo.getAttributeFeatures(catName)
-            aD = self.__getAmmendedAttributeFeatures(collectionName, catName, documentDefHelper)
+            aD = self.__getAmendedAttributeFeatures(collectionName, catName, documentDefHelper)
             #
             if cfD["IS_MANDATORY"]:
                 mandatoryCategoryL.append(catName)
@@ -787,7 +787,7 @@ class SchemaDefBuild(object):
                                         if "CONTEXT_ATTRIBUTE_VALUES" in tD and tD["CONTEXT_ATTRIBUTE_VALUES"]:
                                             vvDL = []
                                             for cavD in tD["CONTEXT_ATTRIBUTE_VALUES"]:
-                                                vvD = {"context_value": cavD["CONTEXT_VALUE"], "search_paths": cavD["SEARCH_PATHS"]}
+                                                vvD = {"context_value": cavD["CONTEXT_VALUE"]}
                                                 #
                                                 if "ATTRIBUTES" in cavD:
                                                     aL = []
@@ -946,18 +946,21 @@ class SchemaDefBuild(object):
                 "category_path": "rcsb_polymer_entity_annotation.type"
                 "context_attributes": [
                     {
-                        "context_value": 'vxxxxx',
-                        "search_paths": [ 'p1', 'p2', 'p3']
+                        "context_value": 'value',
+                        "attributes": [
+                        {
+                           "examples": [
+                              "xxxxx",
+                              "yyyyy"
+                           ],
+                           "path": "xxxx"
+                        },
                     }
                 ]
                 }
             ]
 
-                 CONTEXT_ATTRIBUTE_VALUES:
-                    - CONTEXT_VALUE: a_value
-                      SEARCH_PATHS:
-                      - a.b
-                      - c.d
+
         """
         if documentDefHelper.isCategoryNested(collectionName, catName):
             tD = documentDefHelper.getCategoryNestedContext(collectionName, catName)
@@ -967,7 +970,7 @@ class SchemaDefBuild(object):
                 if "CONTEXT_ATTRIBUTE_VALUES" in tD and tD["CONTEXT_ATTRIBUTE_VALUES"]:
                     vDL = []
                     for cavD in tD["CONTEXT_ATTRIBUTE_VALUES"]:
-                        vD = {"context_value": cavD["CONTEXT_VALUE"], "search_paths": cavD["SEARCH_PATHS"]}
+                        vD = {"context_value": cavD["CONTEXT_VALUE"]}
                         if "ATTRIBUTES" in cavD:
                             aL = []
                             for atD in cavD["ATTRIBUTES"]:
@@ -996,7 +999,7 @@ class SchemaDefBuild(object):
                 logger.debug("Subcategory membership %r %r", pathList, itemSubCategoryList)
                 refD["_attribute_groups"] = itemSubCategoryList
         except Exception as e:
-            logger.excepion("Failing with pathList %r %s" % (pathList, str(e)))
+            logger.exception("Failing with pathList %r %s", pathList, str(e))
         return refD
 
     def __testSuppressRelation(self, fD, suppressRelations):

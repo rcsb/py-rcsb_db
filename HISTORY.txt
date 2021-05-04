@@ -301,3 +301,4 @@
                      feature categories.
   7-Apr-2021  V1.669 Updates for corrections in DictionaryAPI() method name getFullDescendentList()
  28-Apr-2021  V1.670 Add content type for mmCIF format validation data
+  4-May-2021  V1.671 Remove deprecated schema attribute rcsb_nested_indexing_context.context_attributes.search_paths
