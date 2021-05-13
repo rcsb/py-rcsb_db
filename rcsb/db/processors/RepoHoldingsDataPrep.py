@@ -511,9 +511,9 @@ class RepoHoldingsDataPrep(object):
                 #
                 if entryId in valD:
                     rD[entryId].append("validation report")
-                if entryId in valImageD:
+                if entryId in valImageD and valImageD[entryId]:
                     rD[entryId].append("validation slider image")
-                if entryId in valCifD:
+                if entryId in valCifD and valCifD[entryId]:
                     rD[entryId].append("validation data mmCIF")
                 if entryId in edD:
                     rD[entryId].append("2fo-fc Map")
