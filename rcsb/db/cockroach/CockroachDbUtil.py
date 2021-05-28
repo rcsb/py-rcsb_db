@@ -232,7 +232,7 @@ class CockroachDbQuery(object):
         return []
 
     def simpleQuery(self, selectList=None, fromList=None, condition="", orderList=None, returnObj=None):
-        """"""
+        """ """
         #
         selectList = selectList if selectList else []
         fromList = fromList if fromList else []

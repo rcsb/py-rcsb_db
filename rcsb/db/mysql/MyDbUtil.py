@@ -276,7 +276,7 @@ class MyDbQuery(object):
         return []
 
     def simpleQuery(self, selectList, fromList, condition="", orderList=None, returnObj=None):
-        """"""
+        """ """
         #
         oL = orderList if orderList else []
         retObj = returnObj if returnObj else []

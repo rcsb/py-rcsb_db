@@ -317,28 +317,28 @@ class DataTypeApplicationInfo(object):
         return (retDataType, retDataWidth)
 
     def hasType(self, cifType):
-        """"""
+        """ """
         try:
             return cifType in self.__dtmD
         except Exception:
             return False
 
     def getAppTypeName(self, cifType, default=None):
-        """"""
+        """ """
         try:
             return self.__dtmD[cifType]["app_type_code"]
         except Exception:
             return default
 
     def getAppTypeDefaultWidth(self, cifType, default=None):
-        """"""
+        """ """
         try:
             return self.__dtmD[cifType]["app_width_default"]
         except Exception:
             return default
 
     def getAppTypeDefaultPrecision(self, cifType, default=None):
-        """"""
+        """ """
         try:
             return self.__dtmD[cifType]["app_precision_default"]
         except Exception:

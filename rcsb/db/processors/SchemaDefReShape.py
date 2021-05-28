@@ -107,11 +107,11 @@ class SchemaDefReShape(object):
         #
 
     def applyShape(self, schemaDataDictById, styleType="rowwise_by_name", collectionName=None):
-        """"""
+        """ """
         return self.__reshapeSchemaData(schemaDataDictById, styleType=styleType, collectionName=collectionName)
 
     def applySlicedShape(self, schemaDataDictById, styleType="rowwise_by_name", sliceFilter=None, collectionName=None):
-        """"""
+        """ """
         rL = []
         if sliceFilter:
             rL = []

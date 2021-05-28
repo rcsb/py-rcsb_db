@@ -49,7 +49,7 @@ class Connection(ConnectionBase):
         #
 
     def assignResource(self, resourceName=None, sectionName=None):
-        """"""
+        """ """
         #
         defaultPort = 3306
         dbServer = "mysql"

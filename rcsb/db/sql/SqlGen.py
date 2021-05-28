@@ -542,7 +542,7 @@ class SqlGenAdmin(object):
         return oL
 
     def exportTable(self, databaseName, tableDefObj, exportPath, withDoubleQuotes=False):
-        """"""
+        """ """
         tableName = tableDefObj.getName()
         aNames = tableDefObj.getAttributeNameList()
         #
@@ -656,7 +656,7 @@ class SqlGenQuery(object):
         return True
 
     def getSql(self):
-        """"""
+        """ """
         return self.__makeSql()
 
     def __makeSql(self):

@@ -491,7 +491,7 @@ class MongoDbUtil(object):
         return 0
 
     def distinct(self, databaseName, collectionName, ky):
-        """ Return a list of distinct values for the input key in the collection. """
+        """Return a list of distinct values for the input key in the collection."""
         rL = []
         try:
             clt = self.__mgObj[databaseName].get_collection(collectionName)

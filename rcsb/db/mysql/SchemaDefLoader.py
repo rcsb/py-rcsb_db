@@ -215,7 +215,7 @@ class SchemaDefLoader(object):
             return [], []
 
     def __exportCsv(self, tableDict, append=False, partName="1"):
-        """"""
+        """ """
         modeOpt = "a" if append else "w"
 
         exportList = []
