@@ -70,7 +70,7 @@ setup(
         "rcsb.utils.config >= 0.35",
         "rcsb.utils.multiproc >= 0.17",
         "rcsb.utils.chemref >= 0.70",
-        "rcsb.utils.dictionary >= 0.29",
+        "rcsb.utils.dictionary >= 0.32",
         "rcsb.utils.repository >= 0.12",
         "SQLAlchemy; sys_platform == 'linux'",
         "psycopg2-binary",
