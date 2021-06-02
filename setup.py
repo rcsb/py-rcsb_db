@@ -20,6 +20,13 @@ thisPackage = "rcsb.db"
 with open("rcsb/db/cli/__init__.py", "r") as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE).group(1)
 
+# Load packages from requirements*.txt
+with open("requirements.txt", "r") as ifh:
+    packagesRequired = [ln.strip() for ln in ifh.readlines()]
+
+with open("README.md", "r") as ifh:
+    longDescription = ifh.read()
+
 if not version:
     raise RuntimeError("Cannot find version information")
 
@@ -27,14 +34,14 @@ setup(
     name=thisPackage,
     version=version,
     description="RCSB Python Database Access and Loading Utility Classes",
-    long_description="See:  README.md",
+    long_description=longDescription,
     author="John Westbrook",
     author_email="john.westbrook@rcsb.org",
     url="https://github.com/rcsb/py-rcsb_db",
     #
     license="Apache 2.0",
     classifiers=(
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         # 'Development Status :: 5 - Production/Stable',
         "Intended Audience :: Developers",
         "Natural Language :: English",
@@ -53,29 +60,7 @@ setup(
         ]
     },
     #
-    install_requires=[
-        "future",
-        "six",
-        "python-dateutil",
-        "pytz",
-        "jsondiff >= 1.2.0",
-        "jsonschema >= 2.6.0",
-        "strict-rfc3339",
-        "mysqlclient >= 1.3.12",
-        "pymongo >= 3.7.0",
-        "mmcif >= 0.63",
-        'scandir; python_version < "3.0"',
-        # 'configparser; python_version < "3.0"',
-        "rcsb.utils.io >= 1.00",
-        "rcsb.utils.config >= 0.35",
-        "rcsb.utils.multiproc >= 0.17",
-        "rcsb.utils.chemref >= 0.70",
-        "rcsb.utils.dictionary >= 0.34",
-        "rcsb.utils.repository >= 0.12",
-        "SQLAlchemy; sys_platform == 'linux'",
-        "psycopg2-binary",
-        "crate",
-    ],
+    install_requires=packagesRequired,
     packages=find_packages(exclude=["rcsb.db.tests", "rcsb.db.tests-*", "tests.*"]),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:
