@@ -34,6 +34,7 @@ setup(
     name=thisPackage,
     version=version,
     description="RCSB Python Database Access and Loading Utility Classes",
+    long_description_content_type="text/markdown",
     long_description=longDescription,
     author="John Westbrook",
     author_email="john.westbrook@rcsb.org",
