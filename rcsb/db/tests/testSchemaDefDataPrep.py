@@ -84,7 +84,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__fTypeRow = "drop-empty-attributes|drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__fTypeCol = "drop-empty-tables|skip-max-width|convert-iterables|normalize-enums|translateXMLCharRefs"
         self.__chemCompMockLen = 24
-        self.__pdbxMockLen = 89
+        self.__pdbxMockLen = 30
         # removes timestamped data items to allow diffs.)
         excludeExtras = ["rcsb_load_status"]
         # excludeExtras = []
@@ -134,7 +134,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "filterType": self.__fTypeRow,
                 "styleType": "rowwise_by_name",
                 "mergeContentTypes": None,
-                "rejectLength": 5,
+                "rejectLength": 0,
             },
         ]
         #
@@ -145,7 +145,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "filterType": self.__fTypeRow,
                 "styleType": "rowwise_by_name_with_cardinality",
                 "mergeContentTypes": ["vrpt"],
-                "rejectLength": 5,
+                "rejectLength": 0,
                 "excludeExtras": excludeExtras,
             },
             {
@@ -154,7 +154,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "filterType": self.__fTypeRow,
                 "styleType": "rowwise_by_name_with_cardinality",
                 "mergeContentTypes": None,
-                "rejectLength": 5,
+                "rejectLength": 0,
                 "excludeExtras": excludeExtras,
             },
             {
@@ -175,7 +175,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "filterType": self.__fTypeRow,
                 "styleType": "rowwise_by_name_with_cardinality",
                 "mergeContentTypes": ["vrpt"],
-                "rejectLength": 5,
+                "rejectLength": 0,
                 "excludeExtras": excludeExtras,
             },
         ]
@@ -235,8 +235,8 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             self.assertEqual(len(inputPathList), mockLength)
             tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType=styleType, filterType=filterType, dataSelectors=dataSelectors)
             logger.debug("For %s mock length %d reject length %d length of tddl list %d\n", contentType, mockLength, rejectLength, len(tableDataDictList))
-            self.assertEqual(len(tableDataDictList), mockLength - rejectLength)
-            self.assertEqual(len(containerNameList), mockLength - rejectLength)
+            self.assertGreaterEqual(len(tableDataDictList), mockLength - rejectLength)
+            self.assertGreaterEqual(len(containerNameList), mockLength - rejectLength)
 
             if rejectList:
                 logger.debug("For %s rejecting components %r", contentType, rejectList)

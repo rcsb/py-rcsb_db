@@ -306,3 +306,4 @@
  27-May-2021  V1.674 Update dependencies to rcsb.utils.dictionary
   2-Jun-2021  V1.675 Update dependencies to rcsb.utils.dictionary and diagnostic output
   3-Jun-2021  V1.676 Setting long description format to markdown - update pipeline config again
+  5-Jun-2021  V1.677 Prune test cases
