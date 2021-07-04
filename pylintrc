@@ -143,7 +143,9 @@ disable=missing-docstring,
         deprecated-sys-function,
         exception-escape,
         comprehension-escape,
-        W0238
+        W0238,
+        W0621
+
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
