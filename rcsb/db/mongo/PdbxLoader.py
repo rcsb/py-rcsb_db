@@ -578,7 +578,7 @@ class PdbxLoader(object):
             startTime = self.__begin(message="loading operation")
             #
             modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=self.__sectionName)
-            dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)
+            dP = DictionaryApiProviderWrapper(self.__cachePath, cfgOb=self.__cfgOb, useCache=True)
             dictApi = dP.getApiByName(databaseName)
             # ---
             dmrP = DictMethodResourceProvider(self.__cfgOb, cachePath=self.__cachePath)

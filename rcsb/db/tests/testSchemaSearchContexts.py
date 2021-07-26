@@ -55,7 +55,7 @@ class SchemaSearchContextsTests(unittest.TestCase):
         # self.__mU = MarshalUtil()
         #
         self.__cachePath = os.path.join(TOPDIR, "CACHE")
-        self.__dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)
+        self.__dP = DictionaryApiProviderWrapper(self.__cachePath, cfgob=self.__cfgOb, configName=configName, useCache=True)
 
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))

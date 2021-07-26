@@ -72,7 +72,7 @@ class SchemaDefBuild(object):
         #
         self.__dtP = DataTypeApiProvider(self.__cfgOb, cachePath, useCache=True)
         #
-        dP = DictionaryApiProviderWrapper(cfgOb, self.__cachePath, useCache=True)
+        dP = DictionaryApiProviderWrapper(self.__cachePath, cfgOb=cfgOb, configName=configName, useCache=True)
         dictApi = dP.getApiByName(databaseName)
         self.__contentInfo = ContentDefinition(dictApi, contentDefHelper=self.__contentDefHelper, databaseName=databaseName)
         #

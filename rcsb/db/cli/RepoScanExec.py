@@ -52,7 +52,7 @@ def scanRepo(
     try:
         #
         # configName = cfgOb.getDefaultSectionName()
-        dP = DictionaryApiProviderWrapper(cfgOb, cachePath, useCache=True)
+        dP = DictionaryApiProviderWrapper(cachePath, cfgOb=cfgOb, useCache=True)
         dictApi = dP.getApiByName(contentType)
         ###
         categoryList = sorted(dictApi.getCategoryList())

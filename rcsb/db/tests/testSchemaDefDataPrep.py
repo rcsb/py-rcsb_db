@@ -296,7 +296,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             inputPathList = self.__rpP.getLocatorObjList(contentType=contentType, mergeContentTypes=mergeContentTypes)
             sd, _, collectionNameList, _ = self.__schP.getSchemaInfo(databaseName=contentType, dataTyping="ANY")
             #
-            dP = DictionaryApiProviderWrapper(self.__cfgOb, self.__cachePath, useCache=True)
+            dP = DictionaryApiProviderWrapper(self.__cachePath, cfgOb=self.__cfgOb, configName=self.__configName, useCache=True)
             dictApi = dP.getApiByName(contentType)
             #
             rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, siftsAbbreviated="TEST")
