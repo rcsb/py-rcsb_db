@@ -22,7 +22,6 @@ import platform
 import resource
 import time
 import unittest
-from numpy import True_
 
 from rcsb.utils.dictionary.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
