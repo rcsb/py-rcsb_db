@@ -50,18 +50,14 @@ class DictMethodResourceProviderFixture(unittest.TestCase):
     def tearDown(self):
         unitS = "MB" if platform.system() == "Darwin" else "GB"
         rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        logger.info("Maximum resident memory size %.4f %s", rusageMax / 10 ** 6, unitS)
+        logger.info("Maximum resident memory size %.4f %s", rusageMax / 1.0e6, unitS)
         endTime = time.time()
         logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testRecoverResourceCache(self):
-        """Fixture - reload and check resource caches
-
-        TOTAL - Maximum resident memory size 7902.0442 MB
-        SIFTS(2.9499 secs/1115.558 MB)
-        """
+        """Fixture - reload and check resource caches"""
         try:
-            rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, restoreUseGit=False, restoreUseStash=False)
+            rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, restoreUseGit=True, restoreUseStash=False)
             ret = rp.cacheResources(useCache=True)
             self.assertTrue(ret)
         except Exception as e:
