@@ -25,6 +25,7 @@ __license__ = "Apache 2.0"
 import glob
 import logging
 import os
+import platform
 import time
 import unittest
 
@@ -55,6 +56,8 @@ def chunkList(seq, size):
 
 class SchemaDataPrepValidateTests(unittest.TestCase):
     def setUp(self):
+        self.__isMac = platform.system() == "Darwin"
+        self.__excludeType = None if self.__isMac else "optional"
         self.__numProc = 2
         # self.__fileLimit = 200
         self.__fileLimit = None
@@ -226,7 +229,14 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             #
             dP = DictionaryApiProviderWrapper(self.__cachePath, cfgOb=self.__cfgOb, configName=self.__configName, useCache=True)
             dictApi = dP.getApiByName(databaseName)
-            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, siftsAbbreviated="TEST")
+            rP = DictMethodResourceProvider(
+                self.__cfgOb,
+                configName=self.__configName,
+                cachePath=self.__cachePath,
+                restoreUseStash=False,
+                restoreUseGit=True,
+                providerTypeExclude=self.__excludeType,
+            )
             dmh = DictMethodRunner(dictApi, modulePathMap=self.__modulePathMap, resourceProvider=rP)
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=self.__fTypeRow)

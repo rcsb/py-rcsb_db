@@ -545,6 +545,9 @@ class PdbxLoader(object):
         updateSchemaOnReplace=True,
         validateFailures=True,
         reloadPartial=True,
+        providerTypeExclude=None,
+        restoreUseGit=True,
+        restoreUseStash=True,
     ):
         """Driver method for loading PDBx/mmCIF content into the Mongo document store.
 
@@ -564,6 +567,9 @@ class PdbxLoader(object):
             updateSchemaOnReplace (bool, optional): Update validation schema for loadType == 'replace'
             validateFailures (bool, optional): output validation report on load failures
             reloadPartial (bool, optional): on load failures attempt reload of partial objects.
+            providerTypeExclude (str, optional): exclude dictionary method provider by type name. Defaults to None.
+            restoreUseStash (bool, optional): restore cache resources using stash storage.  Defaults to True.
+            restoreUseGit (bool, optional): restore cache resources using git storage.  Defaults to True.
         Returns:
             bool: True on success or False otherwise
 
@@ -581,7 +587,9 @@ class PdbxLoader(object):
             dP = DictionaryApiProviderWrapper(self.__cachePath, cfgOb=self.__cfgOb, useCache=True)
             dictApi = dP.getApiByName(databaseName)
             # ---
-            dmrP = DictMethodResourceProvider(self.__cfgOb, cachePath=self.__cachePath)
+            dmrP = DictMethodResourceProvider(
+                self.__cfgOb, cachePath=self.__cachePath, restoreUseStash=restoreUseStash, restoreUseGit=restoreUseGit, providerTypeExclude=providerTypeExclude
+            )
             # Cache dependencies in serial mode.
             ok = dmrP.cacheResources(useCache=True)
             if not ok:

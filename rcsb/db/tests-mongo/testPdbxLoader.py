@@ -29,6 +29,7 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+import platform
 import time
 import unittest
 
@@ -52,6 +53,8 @@ class PdbxLoaderTests(unittest.TestCase):
     def setUp(self):
         #
         #
+        self.__isMac = platform.system() == "Darwin"
+        self.__excludeType = None if self.__isMac else "optional"
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
         configName = "site_info_configuration"
@@ -148,6 +151,9 @@ class PdbxLoaderTests(unittest.TestCase):
                 mergeContentTypes=kwargs["mergeContentTypes"],
                 useNameFlag=False,
                 updateSchemaOnReplace=kwargs["updateSchemaOnReplace"],
+                restoreUseStash=False,
+                restoreUseGit=True,
+                providerTypeExclude=self.__excludeType,
             )
             self.assertEqual(ok, kwargs["status"])
             ok = self.__loadStatus(mw.getLoadStatus())

@@ -32,6 +32,7 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+import platform
 import pprint
 import time
 import unittest
@@ -64,6 +65,8 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__verbose = True
 
     def setUp(self):
+        self.__isMac = platform.system() == "Darwin"
+        self.__excludeType = None if self.__isMac else "optional"
         self.__numProc = 2
         self.__fileLimit = 100
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
@@ -232,7 +235,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             #
 
             logger.debug("For %s mock length %d length of path list %d\n", contentType, mockLength, len(inputPathList))
-            self.assertEqual(len(inputPathList), mockLength)
+            self.assertGreaterEqual(len(inputPathList), mockLength)
             tableDataDictList, containerNameList, rejectList = sdp.fetchDocuments(inputPathList, styleType=styleType, filterType=filterType, dataSelectors=dataSelectors)
             logger.debug("For %s mock length %d reject length %d length of tddl list %d\n", contentType, mockLength, rejectLength, len(tableDataDictList))
             self.assertGreaterEqual(len(tableDataDictList), mockLength - rejectLength)
@@ -299,7 +302,14 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             dP = DictionaryApiProviderWrapper(self.__cachePath, cfgOb=self.__cfgOb, configName=self.__configName, useCache=True)
             dictApi = dP.getApiByName(contentType)
             #
-            rP = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, siftsAbbreviated="TEST")
+            rP = DictMethodResourceProvider(
+                self.__cfgOb,
+                configName=self.__configName,
+                cachePath=self.__cachePath,
+                restoreUseStash=False,
+                restoreUseGit=True,
+                providerTypeExclude=self.__excludeType,
+            )
             dmh = DictMethodRunner(dictApi, modulePathMap=self.__modulePathMap, resourceProvider=rP)
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=filterType)

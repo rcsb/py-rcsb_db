@@ -22,6 +22,7 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+import platform
 import time
 import unittest
 
@@ -47,6 +48,8 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
         self.__verbose = True
 
     def setUp(self):
+        self.__isMac = platform.system() == "Darwin"
+        self.__excludeType = None if self.__isMac else "optional"
         self.__verbose = True
         #
         fileLimit = 100
@@ -121,7 +124,17 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
             #
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = SchemaDefLoader(
-                    self.__cfgOb, schemaDefObj=sd, dbCon=client, cachePath=self.__cachePath, workPath=self.__workPath, cleanUp=False, warnings="error", verbose=self.__verbose
+                    self.__cfgOb,
+                    schemaDefObj=sd,
+                    dbCon=client,
+                    cachePath=self.__cachePath,
+                    workPath=self.__workPath,
+                    cleanUp=False,
+                    warnings="error",
+                    verbose=self.__verbose,
+                    restoreUseStash=False,
+                    restoreUseGit=True,
+                    providerTypeExclude=self.__excludeType,
                 )
                 ok = sdl.load(inputPathList=inputPathList, loadType="batch-file")
                 self.assertTrue(ok)
@@ -140,7 +153,17 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
             #
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = SchemaDefLoader(
-                    self.__cfgOb, schemaDefObj=sd, dbCon=client, cachePath=self.__cachePath, workPath=self.__workPath, cleanUp=False, warnings="error", verbose=self.__verbose
+                    self.__cfgOb,
+                    schemaDefObj=sd,
+                    dbCon=client,
+                    cachePath=self.__cachePath,
+                    workPath=self.__workPath,
+                    cleanUp=False,
+                    warnings="error",
+                    verbose=self.__verbose,
+                    restoreUseStash=False,
+                    restoreUseGit=True,
+                    providerTypeExclude=self.__excludeType,
                 )
                 sdl.load(inputPathList=inputPathList, loadType="batch-file")
                 #
@@ -164,7 +187,17 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
             inputPathList = self.__rpP.getLocatorObjList(contentType="chem_comp")
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = SchemaDefLoader(
-                    self.__cfgOb, schemaDefObj=sd, dbCon=client, cachePath=self.__cachePath, workPath=self.__workPath, cleanUp=False, warnings="error", verbose=self.__verbose
+                    self.__cfgOb,
+                    schemaDefObj=sd,
+                    dbCon=client,
+                    cachePath=self.__cachePath,
+                    workPath=self.__workPath,
+                    cleanUp=False,
+                    warnings="error",
+                    verbose=self.__verbose,
+                    restoreUseStash=False,
+                    restoreUseGit=True,
+                    providerTypeExclude=self.__excludeType,
                 )
                 ok = sdl.load(inputPathList=inputPathList, loadType="batch-file")
                 self.assertTrue(ok)
@@ -183,7 +216,17 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
             logger.debug("Input path list %r", inputPathList)
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 sdl = SchemaDefLoader(
-                    self.__cfgOb, schemaDefObj=sd, dbCon=client, cachePath=self.__cachePath, workPath=self.__workPath, cleanUp=False, warnings="error", verbose=self.__verbose
+                    self.__cfgOb,
+                    schemaDefObj=sd,
+                    dbCon=client,
+                    cachePath=self.__cachePath,
+                    workPath=self.__workPath,
+                    cleanUp=False,
+                    warnings="error",
+                    verbose=self.__verbose,
+                    restoreUseStash=False,
+                    restoreUseGit=True,
+                    providerTypeExclude=self.__excludeType,
                 )
                 ok = sdl.load(inputPathList=inputPathList, loadType="batch-insert", deleteOpt="all")
                 self.assertTrue(ok)

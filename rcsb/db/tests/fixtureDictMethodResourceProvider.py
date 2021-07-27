@@ -4,7 +4,7 @@
 # Version: 0.001
 #
 # Update:
-
+#  27-Jul-2021 exclude optional providers
 ##
 """
 Fixture for setting up cached resources for dictionary method helpers
@@ -56,7 +56,9 @@ class DictMethodResourceProviderFixture(unittest.TestCase):
     def testRecoverResourceCache(self):
         """Fixture - reload and check resource caches"""
         try:
-            rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, restoreUseGit=True, restoreUseStash=False)
+            rp = DictMethodResourceProvider(
+                self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, restoreUseGit=True, restoreUseStash=False, providerTypeExclude="optional"
+            )
             ret = rp.cacheResources(useCache=True)
             self.assertTrue(ret)
         except Exception as e:

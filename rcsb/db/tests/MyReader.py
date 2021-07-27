@@ -1,5 +1,5 @@
 ##
-# File MyReader.pu
+# File MyReader.py
 #
 #
 ##
@@ -19,7 +19,7 @@ class MyReader(object):
         pass
 
     def readTestFile(self, filePath):
-        """Read input and retun a list of dictionaries."""
+        """Read input and return a list of dictionaries."""
         cL = []
         try:
             mU = MarshalUtil()

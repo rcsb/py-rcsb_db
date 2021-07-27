@@ -309,3 +309,4 @@
   5-Jun-2021  V1.677 Prune test cases
  10-Jun-2021  V1.679 Update dependencies to rcsb.utils.dictionary
  26-Jul-2021  V1.680 Update dependencies to rcsb.utils.dictionary, pipeline configuration, and example configuration
+ 27-Jul-2021  V1.681 Add support for provider exclusion filters to reduce test resource burden
