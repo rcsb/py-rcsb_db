@@ -10,6 +10,8 @@
 #   28-Jul-2020 - Add stash server options
 #   29-Oct-2020 - add REFERENCE_SEQUENCE_ALIGNMENTS: PDB to site_info_configuration
 #   11-Dec-2020 - add alternate pw for mysql
+#   19-Jul-2021 - add git stash configuration
+#   24-Jul-2021 - adjust stash mock configuration
 ---
 DEFAULT: {}
 ##
@@ -110,16 +112,24 @@ site_info_configuration:
   DOCUMENT_DEF_HELPER_MODULE: rcsb.db.helpers.DocumentDefinitionHelper
   CONFIG_APPEND_LOCATOR_PATHS:
     - https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/config/exdb-config-schema.yml
-# ------ ------ ------ ------ ------ ------ ------ ------ ------
-#  Added V1.001 for stash storage server
-#  -- This is a placeholder configuration to support remote testing --
-#  local|server
+  # ------ ------ ------ ------ ------ ------ ------ ------ ------
+  #
+  # Mock stash configuration to support remote testing in local mode (no stash server urls)
+  #
   STASH_MODE: local
   STASH_LOCAL_BASE_PATH: stash-storage
+  _STASH_SERVER_BASE_PATH: KBrait4Y1emyzYNohVRpr3cTbX9ndqnVHb3+yq2Qh/gTuWKZB5Yhx1m7ILizrh64qyKXKRXAHQg1eearDgugYA==
+  # STASH_SERVER_URL:
+  # STASH_SERVER_FALLBACK_URL:
   #
-  STASH_SERVER_URL: https://raw.githubusercontent.com
-  STASH_SERVER_FALLBACK_URL: https://raw.githubusercontent.com
-  _STASH_SERVER_BASE_PATH: bIo7kGc2w6Oel0QNr7Pc/4bFfDQayhPxddnGHynP6yudxc44QYuAFoTFdOqY2ZzsM2DEk56r26MfG66bEQ42lp38guy837xwzN1Vgu+r9zvAm11HXEA=
+  # Stash Git configuration to development branch -
+  _STASH_GIT_ACCESS_TOKEN: rRMGO5TdNUJN7sFaUpb2vzvvY4JB8brYV3Z6d/FOUeG1KT3qlkwIBQiTcs/NxM83kVvmcbT7yPvGaIqRiMqz6NfWjZmuo8M1H49JN3qr/n4=
+  _STASH_GIT_SERVER_HOST: +Z7i537J9Kn04akYHfq0voqz/qgQYAVJGgskkLCZGKsuvm//gMZ8M8QugEi5tY8vhek=
+  _STASH_GIT_RAW_SERVER_HOST: T0KhaquEzqDT3BWlG4WJbdi0EUsn11eS9fSIL+VbVG8mIQxmgCLRR+yjiZ+fJraeXC3FgGQBND73/dnEpcV/bL8=
+  STASH_GIT_REPOSITORY_PATH: rcsb/py-rcsb_exdb_assets_stash.git
+  STASH_GIT_REPOSITORY_BRANCH: development
+  STASH_GIT_REPOSITORY_MAX_SIZE_MB: 50
+  #
   REFERENCE_SEQUENCE_ALIGNMENTS: PDB
 ##
 site_info_remote_configuration:
@@ -235,10 +245,10 @@ site_info_remote_configuration:
   DOCUMENT_DEF_HELPER_MODULE: rcsb.db.helpers.DocumentDefinitionHelper
   CONFIG_APPEND_LOCATOR_PATHS:
     - https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/config/exdb-config-schema.yml
-#
-# ------ ------ ------ ------ ------ ------ ------ ------ ------
-#  Added V1.001 for stash storage server
-# local|server
+  #
+  # ------ ------ ------ ------ ------ ------ ------ ------ ------
+  #  Added V1.001 for stash storage server
+  # local|server
   STASH_MODE: server
   STASH_LOCAL_BASE_PATH: stash-storage
   #
@@ -247,4 +257,12 @@ site_info_remote_configuration:
   _STASH_AUTH_USERNAME: 4Thjq6SFXelrqhyawXGkwNHQ2MJQRGjHpedv4mhpRlmIc7muS7YrlSQpS3Rao7EFskrZ
   _STASH_AUTH_PASSWORD: FAQNnkUD6mjGTWeciRE7yQZu4/txndI6f4LBnGvmAbMT2/ndsmQ+xcUb7ShDnMhdurMbkH4i
   _STASH_SERVER_BASE_PATH: 9Hdw+MvKcF+zwv4yr+n61fYuVey6nTu7JRMpFbDuSjqVDYQEh8NCS23GpJJJMDKVIw==
-#
+  #
+  # Stash Git configuration to development branch -
+  _STASH_GIT_ACCESS_TOKEN: rRMGO5TdNUJN7sFaUpb2vzvvY4JB8brYV3Z6d/FOUeG1KT3qlkwIBQiTcs/NxM83kVvmcbT7yPvGaIqRiMqz6NfWjZmuo8M1H49JN3qr/n4=
+  _STASH_GIT_SERVER_HOST: +Z7i537J9Kn04akYHfq0voqz/qgQYAVJGgskkLCZGKsuvm//gMZ8M8QugEi5tY8vhek=
+  _STASH_GIT_RAW_SERVER_HOST: T0KhaquEzqDT3BWlG4WJbdi0EUsn11eS9fSIL+VbVG8mIQxmgCLRR+yjiZ+fJraeXC3FgGQBND73/dnEpcV/bL8=
+  STASH_GIT_REPOSITORY_PATH: rcsb/py-rcsb_exdb_assets_stash.git
+  STASH_GIT_REPOSITORY_BRANCH: development
+  STASH_GIT_REPOSITORY_MAX_SIZE_MB: 50
+  #

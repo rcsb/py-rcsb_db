@@ -54,25 +54,14 @@ class DictMethodResourceProviderFixture(unittest.TestCase):
         endTime = time.time()
         logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    def qtestBuildResourceCache(self):
-        """Fixture - generate and check resource caches"""
-        try:
-            rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, siftsAbbreviated="TEST")
-            # ret = rp.cacheResources(useCache=False)
-            ret = rp.cacheResources(useCache=True_)
-            self.assertTrue(ret)
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-            self.fail()
-
     def testRecoverResourceCache(self):
-        """Fixture - generate and check resource caches
+        """Fixture - reload and check resource caches
 
         TOTAL - Maximum resident memory size 7902.0442 MB
         SIFTS(2.9499 secs/1115.558 MB)
         """
         try:
-            rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
+            rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, restoreUseGit=False, restoreUseStash=False)
             ret = rp.cacheResources(useCache=True)
             self.assertTrue(ret)
         except Exception as e:
@@ -82,7 +71,6 @@ class DictMethodResourceProviderFixture(unittest.TestCase):
 
 def dictMethodResourceProviderSuite():
     suiteSelect = unittest.TestSuite()
-    # suiteSelect.addTest(DictMethodResourceProviderFixture("testBuildResourceCache"))
     suiteSelect.addTest(DictMethodResourceProviderFixture("testRecoverResourceCache"))
     return suiteSelect
 
