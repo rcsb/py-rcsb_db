@@ -21,6 +21,8 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+import platform
+import resource
 import time
 import unittest
 
@@ -35,6 +37,8 @@ TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
 class RepoLoadWorkflowTests(unittest.TestCase):
+    skipFull = platform.system() != "Darwin"
+
     def __init__(self, methodName="runTest"):
         super(RepoLoadWorkflowTests, self).__init__(methodName)
         self.__verbose = True
@@ -65,6 +69,7 @@ class RepoLoadWorkflowTests(unittest.TestCase):
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
+    @unittest.skipIf(skipFull, "Long and redundant test")
     def testReourceCacheWorkflow(self):
         """Test resource cache rebuild"""
         #
@@ -75,6 +80,7 @@ class RepoLoadWorkflowTests(unittest.TestCase):
             logger.exception("Failing with %s", str(e))
             self.fail()
 
+    @unittest.skipIf(skipFull, "Long and redundant test")
     def testPdbxLoaderWorkflow(self):
         #
         try:

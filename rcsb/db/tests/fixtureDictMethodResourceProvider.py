@@ -20,6 +20,7 @@ import logging
 import os
 import platform
 import resource
+from shutil import unregister_archive_format
 import time
 import unittest
 
@@ -36,6 +37,8 @@ TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 class DictMethodResourceProviderFixture(unittest.TestCase):
     def setUp(self):
+        self.__isMac = platform.system() == "Darwin"
+        self.__excludeType = None if self.__isMac else "optional"
         self.__cachePath = os.path.join(TOPDIR, "CACHE")
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
@@ -57,7 +60,12 @@ class DictMethodResourceProviderFixture(unittest.TestCase):
         """Fixture - reload and check resource caches"""
         try:
             rp = DictMethodResourceProvider(
-                self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath, restoreUseGit=True, restoreUseStash=False, providerTypeExclude="optional"
+                self.__cfgOb,
+                configName=self.__configName,
+                cachePath=self.__cachePath,
+                restoreUseGit=True,
+                restoreUseStash=False,
+                providerTypeExclude=self.__excludeType,
             )
             ret = rp.cacheResources(useCache=True)
             self.assertTrue(ret)

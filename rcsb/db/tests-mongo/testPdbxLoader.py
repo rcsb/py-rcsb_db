@@ -30,6 +30,7 @@ __license__ = "Apache 2.0"
 import logging
 import os
 import platform
+import resource
 import time
 import unittest
 
@@ -93,34 +94,37 @@ class PdbxLoaderTests(unittest.TestCase):
                 "collectionNameList": None,
                 "loadType": "full",
                 "mergeContentTypes": ["vrpt"],
-                "validationLevel": "min",
+                "validationLevel": "full",
                 "updateSchemaOnReplace": False,
                 "status": True,
             },
-            {
-                "databaseName": "pdbx_core",
-                "collectionNameList": None,
-                "loadType": "replace",
-                "mergeContentTypes": ["vrpt"],
-                "validationLevel": "full",
-                "updateSchemaOnReplace": True,
-                "status": True,
-            },
-        ]
+            # {
+            #    "databaseName": "pdbx_core",
+            #    "collectionNameList": None,
+            #    "loadType": "replace",
+            #    "mergeContentTypes": ["vrpt"],
+            #    "validationLevel": "full",
+            #    "updateSchemaOnReplace": True,
+            #    "status": True,
+            # },
+        ]  #
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
     def tearDown(self):
+        unitS = "MB" if platform.system() == "Darwin" else "GB"
+        rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        logger.info("Maximum resident memory size %.4f %s", rusageMax / 1.0e6, unitS)
         endTime = time.time()
-        logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+        logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testPdbxLoader(self):
         for ld in self.__ldList:
             self.__pdbxLoaderWrapper(**ld)
 
     def __pdbxLoaderWrapper(self, **kwargs):
-        """Wrapper for PDBx loader modue"""
+        """Wrapper for PDBx loader module"""
         try:
             logger.info("Loading %s", kwargs["databaseName"])
             mw = PdbxLoader(

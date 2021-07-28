@@ -310,3 +310,4 @@
  10-Jun-2021  V1.679 Update dependencies to rcsb.utils.dictionary
  26-Jul-2021  V1.680 Update dependencies to rcsb.utils.dictionary, pipeline configuration, and example configuration
  27-Jul-2021  V1.681 Add support for provider exclusion filters to reduce test resource burden
+ 28-Jul-2021  V1.682 Adjustments for API extensions in DictMethodResourceProvider() and further culling of redundant unittests
