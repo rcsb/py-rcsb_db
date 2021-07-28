@@ -20,7 +20,6 @@ import logging
 import os
 import platform
 import resource
-from shutil import unregister_archive_format
 import time
 import unittest
 
