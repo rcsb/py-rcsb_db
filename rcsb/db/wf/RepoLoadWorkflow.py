@@ -172,9 +172,16 @@ class RepoLoadWorkflow(object):
         ret = False
         try:
             useCache = not rebuildCache
-            logger.info("Cache setting useCache is %r", useCache)
-            rp = DictMethodResourceProvider(self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
-            ret = rp.cacheResources(useCache=useCache)
+            rP = DictMethodResourceProvider(
+                self.__cfgOb,
+                configName=self.__configName,
+                cachePath=self.__cachePath,
+                restoreUseStash=True,
+                restoreUseGit=True,
+                providerTypeExclude=None,
+            )
+            ret = rP.cacheResources(useCache=useCache, doBackup=False, useStash=False, useGit=False)
+            logger.info("useCache %r cache reload status (%r)", useCache, ret)
 
         except Exception as e:
             logger.exception("Failing with %s", str(e))
