@@ -195,7 +195,7 @@ def main():
     elif args.scan_entry_data:
         contentType = "pdbx"
 
-    elif args.scan_entry_data:
+    elif args.scan_obsolete_entry_data:
         contentType = "pdbx_obsolete"
 
     elif args.scan_ihm_dev:

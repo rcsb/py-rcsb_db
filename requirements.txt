@@ -15,7 +15,7 @@ rcsb.utils.chemref >= 0.78
 scandir; python_version < "3.0"
 configparser; python_version < "3.0"
 rcsb.utils.dictionary >= 0.59
-rcsb.utils.repository >= 0.16
+rcsb.utils.repository >= 0.18
 #
 SQLAlchemy; sys_platform == 'linux'
 # For crate and cockroach -

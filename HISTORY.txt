@@ -5,7 +5,7 @@
                metadata and targeted helper functions.
 20-Jul-2018    V0.13 overhaul static schema management
 28-Jul-2018    V0.14 corrections for selection and type filters and object size pruning
-20-Aug-2018.   V0.15 added sliced collections (e.g. entity or cannonical identifier),
+20-Aug-2018.   V0.15 added sliced collections (e.g. entity or canonical identifier),
                JSON schema description of collections, sfx/xfel examples, dictionary
                methods implemented in helper classes, and incremental repository metadata
                updates.
@@ -197,7 +197,7 @@
  23-Dec-2019  V0.945 Add consolidated EC processing and disable auto search context filters
  04-Jan-2020  V0.946 Add support for rcsb_polymer_entity.rcsb_enzyme_class_combined_depth, set single process cache management on loading
  08-Jan-2020  V0.947 Add checks for missing entity gene names
- 10-Jan-2020  V0.949 Update dependencides for rcsb.utils.struct
+ 10-Jan-2020  V0.949 Update dependencies for rcsb.utils.struct
  20-Jan-2020  V0.950 pre-beta-rev-v1 - reorganizing assembly and feature categories, standardize on provenance_source, update enums
  25-Jan-2020  V0.951 nested schema extension adjustments
  27-Jan-2020  V0.952 configuration update updating ExDb collection names
@@ -313,3 +313,4 @@
  28-Jul-2021  V1.682 Adjustments for API extensions in DictMethodResourceProvider() and further culling of redundant unittests
  29-Jul-2021  V1.683 Adjustments for API extensions in RepoLoadWorkflow() and  dependency updates
   1-Aug-2021  V1.684 Add support for embedded iterables in json schema generation and support scanning obsolete entries.
+  1-Aug-2021  V1.685 Adjust argument processing in RepoScanExec.py and update dependencies
