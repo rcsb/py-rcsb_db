@@ -12,6 +12,7 @@
 #   11-Dec-2020 - add alternate pw for mysql
 #   19-Jul-2021 - add git stash configuration
 #   24-Jul-2021 - adjust stash mock configuration
+#    1-Aug-2021 - add PDBX_OBSOLETE_REPO_PATH
 ---
 DEFAULT: {}
 ##
@@ -46,6 +47,7 @@ site_info_configuration:
   BIRD_CHEM_COMP_REPO_PATH: MOCK_BIRD_CC_REPO
   CHEM_COMP_REPO_PATH: MOCK_CHEM_COMP_REPO
   PDBX_REPO_PATH: MOCK_PDBX_SANDBOX
+  PDBX_OBSOLETE_REPO_PATH: MOCK_PDBX_SANDBOX
   RCSB_EXCHANGE_SANDBOX_PATH: MOCK_EXCHANGE_SANDBOX
   IHM_DEV_REPO_PATH: MOCK_IHM_REPO
   VRPT_REPO_PATH: MOCK_VALIDATION_REPORTS
@@ -181,6 +183,7 @@ site_info_remote_configuration:
   CHEM_COMP_REPO_PATH: /net/data/components/ligand-dict-v3
   # PDBX_REPO_PATH: /net/beta_data/mmcif-pdbx-load-v5.0
   PDBX_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/data/structures/divided/mmCIF
+  PDBX_OBSOLETE_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/data/structures/obsolete/mmCIF
   RCSB_EXCHANGE_SANDBOX_PATH: /net/sandbox_v5/ftp-v5.0-support
   IHM_DEV_REPO_PATH: ../py-rcsb_db/rcsb/mock-data/MOCK_IHM_REPOMOCK_IHM_REPO
   VRPT_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/validation_reports

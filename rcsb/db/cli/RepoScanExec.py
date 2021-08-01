@@ -8,6 +8,7 @@
 # 28-Jun-2018 jdw update ScanRepoUtil prototype with workPath
 #  3-Jul-2018 jdw update to latest ScanRepoUtil() prototype
 # 20-Aug-2018 jdw engage incremental repository scan mode.
+#  1-Aug-2021 jdw add scan_obsolete_entry_data option
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -95,6 +96,7 @@ def main():
     group.add_argument("--scan_bird_ref", default=False, action="store_true", help="Scan Bird reference definitions (public subset)")
     group.add_argument("--scan_bird_family_ref", default=False, action="store_true", help="Scan Bird Family reference definitions (public subset)")
     group.add_argument("--scan_entry_data", default=False, action="store_true", help="Scan PDB entry data (current released subset)")
+    group.add_argument("--scan_obsolete_entry_data", default=False, action="store_true", help="Scan obsolete PDB entry data")
     group.add_argument("--scan_ihm_dev", default=False, action="store_true", help="Scan PDBDEV I/HM entry data (current released subset)")
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
@@ -128,7 +130,7 @@ def main():
     try:
         if os.access(configPath, os.R_OK):
             os.environ["DBLOAD_CONFIG_PATH"] = configPath
-            logger.info("Using configuation path %s (%s)", configPath, configName)
+            logger.info("Using configuration path %s (%s)", configPath, configName)
         else:
             logger.error("Missing or access issue with config file %r", configPath)
             exit(1)
@@ -192,6 +194,9 @@ def main():
 
     elif args.scan_entry_data:
         contentType = "pdbx"
+
+    elif args.scan_entry_data:
+        contentType = "pdbx_obsolete"
 
     elif args.scan_ihm_dev:
         contentType = "ihm_dev"

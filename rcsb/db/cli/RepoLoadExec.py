@@ -58,8 +58,8 @@ def buildResourceCache(cfgOb, configName, cachePath, rebuildCache=False):
     """Generate and cache resource dependencies."""
     ret = False
     try:
-        rp = DictMethodResourceProvider(cfgOb, configName=configName, cachePath=cachePath)
-        ret = rp.cacheResources(useCache=not rebuildCache)
+        rp = DictMethodResourceProvider(cfgOb, configName=configName, cachePath=cachePath, restoreUseStash=True, restoreUseGit=True, providerTypeExclude=None)
+        ret = rp.cacheResources(useCache=not rebuildCache, doBackup=False)
     except Exception as e:
         logger.exception("Failing with %s", str(e))
     return ret

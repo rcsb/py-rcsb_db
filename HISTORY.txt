@@ -312,3 +312,4 @@
  27-Jul-2021  V1.681 Add support for provider exclusion filters to reduce test resource burden
  28-Jul-2021  V1.682 Adjustments for API extensions in DictMethodResourceProvider() and further culling of redundant unittests
  29-Jul-2021  V1.683 Adjustments for API extensions in RepoLoadWorkflow() and  dependency updates
+  1-Aug-2021  V1.684 Add support for embedded iterables in json schema generation and support scanning obsolete entries.

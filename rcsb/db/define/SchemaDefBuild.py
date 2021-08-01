@@ -765,7 +765,16 @@ class SchemaDefBuild(object):
                             reqL.append(schemaAttributeName)
                         #
                         atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, dtInstInfo, jsonSpecDraft, enforceOpts, suppressRelations, addRcsbExtensions)
-                        scD["properties"][schemaAttributeName] = atPropD
+                        # --- replace
+                        # scD["properties"][schemaAttributeName] = atPropD
+                        # --- with adding general support for embedded iterable
+                        delimiter = fD["EMBEDDED_ITERABLE_DELIMITER"]
+                        if delimiter:
+                            logger.debug("embedded iterable %r %r (%r)", catName, atName, subCategory)
+                            scD["properties"][schemaAttributeName] = {typeKey: "array", "items": atPropD, "uniqueItems": False}
+                        else:
+                            scD["properties"][schemaAttributeName] = atPropD
+                        ## ---
                         if exportSearchContext:
                             self.__exportSearchContext(collectionName, catName, atName, atPropD)
 
@@ -1074,11 +1083,18 @@ class SchemaDefBuild(object):
                         elif "MAX_VALUE_EXCLUSIVE" in fD:
                             atPropD["exclusiveMaximum"] = fD["MAX_VALUE_EXCLUSIVE"]
             elif appType.startswith("any"):
-                logger.debug("Processing special type %s", appType)
+                # ---
+                # logger.debug("Processing special type %s", appType)
+                # if dataTypingU == "BSON":
+                #    atPropD = {typeKey: "array", "items": {"anyOf": [{typeKey: "string"}, {typeKey: "int"}, {typeKey: "double"}]}}
+                # else:
+                #    atPropD = {typeKey: "array", "items": {"anyOf": [{typeKey: "string"}, {typeKey: "integer"}, {typeKey: "number"}]}}
+                # ---
                 if dataTypingU == "BSON":
-                    atPropD = {typeKey: "array", "items": {"anyOf": [{typeKey: "string"}, {typeKey: "int"}, {typeKey: "double"}]}}
+                    atPropD = {"anyOf": [{typeKey: "string"}, {typeKey: "int"}, {typeKey: "double"}]}
                 else:
-                    atPropD = {typeKey: "array", "items": {"anyOf": [{typeKey: "string"}, {typeKey: "integer"}, {typeKey: "number"}]}}
+                    atPropD = {"anyOf": [{typeKey: "string"}, {typeKey: "integer"}, {typeKey: "number"}]}
+                #
             else:
                 atPropD = {typeKey: appType}
 
