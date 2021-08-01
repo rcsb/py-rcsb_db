@@ -774,7 +774,7 @@ class SchemaDefBuild(object):
                             scD["properties"][schemaAttributeName] = {typeKey: "array", "items": atPropD, "uniqueItems": False}
                         else:
                             scD["properties"][schemaAttributeName] = atPropD
-                        ## ---
+                        # ---
                         if exportSearchContext:
                             self.__exportSearchContext(collectionName, catName, atName, atPropD)
 
