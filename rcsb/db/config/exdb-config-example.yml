@@ -13,6 +13,7 @@
 #   19-Jul-2021 - add git stash configuration
 #   24-Jul-2021 - adjust stash mock configuration
 #    1-Aug-2021 - add PDBX_OBSOLETE_REPO_PATH
+#    2-Aug-2021 - make git local storage on the testing branch in the site_info_configuration section
 ---
 DEFAULT: {}
 ##
@@ -124,12 +125,12 @@ site_info_configuration:
   # STASH_SERVER_URL:
   # STASH_SERVER_FALLBACK_URL:
   #
-  # Stash Git configuration to development branch -
+  # Stash Git configuration to testing branch -
   _STASH_GIT_ACCESS_TOKEN: rRMGO5TdNUJN7sFaUpb2vzvvY4JB8brYV3Z6d/FOUeG1KT3qlkwIBQiTcs/NxM83kVvmcbT7yPvGaIqRiMqz6NfWjZmuo8M1H49JN3qr/n4=
   _STASH_GIT_SERVER_HOST: +Z7i537J9Kn04akYHfq0voqz/qgQYAVJGgskkLCZGKsuvm//gMZ8M8QugEi5tY8vhek=
   _STASH_GIT_RAW_SERVER_HOST: T0KhaquEzqDT3BWlG4WJbdi0EUsn11eS9fSIL+VbVG8mIQxmgCLRR+yjiZ+fJraeXC3FgGQBND73/dnEpcV/bL8=
   STASH_GIT_REPOSITORY_PATH: rcsb/py-rcsb_exdb_assets_stash.git
-  STASH_GIT_REPOSITORY_BRANCH: development
+  STASH_GIT_REPOSITORY_BRANCH: testing
   STASH_GIT_REPOSITORY_MAX_SIZE_MB: 50
   #
   REFERENCE_SEQUENCE_ALIGNMENTS: PDB
