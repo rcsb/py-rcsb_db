@@ -241,7 +241,7 @@ class SchemaDefLoader(object):
             attributeNameList = tObj.getAttributeNameList()
             #
             fn = os.path.join(self.__workPath, tableId + "-" + partName + ".csv")
-            with open(fn, modeOpt, newline="") as ofh:
+            with open(fn, modeOpt, newline="", encoding="utf-8") as ofh:
                 csvWriter = csv.writer(ofh)
                 csvWriter.writerow(attributeNameList)
                 for rD in rowList:
@@ -260,7 +260,7 @@ class SchemaDefLoader(object):
             #
             if rowList:
                 fn = os.path.join(self.__workPath, tableId + "-" + partName + ".tdd")
-                ofh = open(fn, modeOpt)
+                ofh = open(fn, modeOpt, encoding="utf-8")
                 for rD in rowList:
                     # logger.info("%r" % colSep.join([str(rD[aId]) for aId in schemaAttributeIdList]))
                     ofh.write("%s%s" % (colSep.join([str(rD[aId]) for aId in schemaAttributeIdList]), rowSep))
@@ -363,7 +363,7 @@ class SchemaDefLoader(object):
 
         if sqlFilePath is not None:
             try:
-                with open(sqlFilePath, "w") as ofh:
+                with open(sqlFilePath, "w", encoding="utf-8") as ofh:
                     ofh.write("%s" % "\n".join(sqlCommandList))
             except Exception:
                 pass

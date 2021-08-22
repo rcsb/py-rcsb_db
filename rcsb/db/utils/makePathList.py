@@ -23,13 +23,13 @@ def makePdbxPathList(fp, cachePath=".", skipFile=None):
     try:
         skipD = {}
         if skipFile and os.access(skipFile, "r"):
-            with open(skipFile, "r") as ifh:
+            with open(skipFile, "r", encoding="utf-8") as ifh:
                 for line in ifh:
                     idcode = str(line[:-1]).strip().lower() + ".cif"
                     skipD[idcode] = idcode
             logger.info("Skip list length %d", len(skipD))
         #
-        with open(fp, "w") as ofh:
+        with open(fp, "w", encoding="utf-8") as ofh:
             for root, _, files in scandir.walk(cachePath, topdown=False):
                 if "REMOVE" in root:
                     continue

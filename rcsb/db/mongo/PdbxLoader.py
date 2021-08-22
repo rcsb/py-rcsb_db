@@ -267,7 +267,7 @@ class PdbxLoaderWorker(object):
 
     def __writePathList(self, filePath, pathList):
         try:
-            with open(filePath, "w") as ofh:
+            with open(filePath, "w", encoding="utf-8") as ofh:
                 for pth in pathList:
                     ofh.write("%s\n" % pth)
             return True
@@ -1043,7 +1043,7 @@ class PdbxLoader(object):
 
     def __writePathList(self, filePath, pathList):
         try:
-            with open(filePath, "w") as ofh:
+            with open(filePath, "w", encoding="utf-8") as ofh:
                 for pth in pathList:
                     ofh.write("%s\n" % pth)
             return True

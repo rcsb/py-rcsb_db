@@ -69,7 +69,7 @@ class PdbxSchemaMapReaderTests(unittest.TestCase):
             sd = smr.makeSchemaDef()
             # sOut=json.dumps(sd,sort_keys=True,indent=3)
             sOut = pprint.pformat(sd, indent=1, width=120)
-            with open(defFilePath, "w") as ofh:
+            with open(defFilePath, "w", encoding="utf-8") as ofh:
                 ofh.write("\n%s\n" % sOut)
         except Exception as e:
             logger.exception("Failing with %s", str(e))

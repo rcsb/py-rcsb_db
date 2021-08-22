@@ -17,14 +17,14 @@ from setuptools import setup
 packages = []
 thisPackage = "rcsb.db"
 
-with open("rcsb/db/cli/__init__.py", "r") as fd:
+with open("rcsb/db/cli/__init__.py", "r", encoding="utf-8") as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE).group(1)
 
 # Load packages from requirements*.txt
-with open("requirements.txt", "r") as ifh:
+with open("requirements.txt", "r", encoding="utf-8") as ifh:
     packagesRequired = [ln.strip() for ln in ifh.readlines()]
 
-with open("README.md", "r") as ifh:
+with open("README.md", "r", encoding="utf-8") as ifh:
     longDescription = ifh.read()
 
 if not version:

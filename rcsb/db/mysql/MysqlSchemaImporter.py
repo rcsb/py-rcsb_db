@@ -28,7 +28,7 @@ class MysqlSchemaImporter(object):
 
     def __import(self, filePath):
         colDataList = []
-        ifh = open(filePath, "r")
+        ifh = open(filePath, "r", encoding="utf-8")
         for line in ifh:
             if line is not None and line:
                 fields = str(line[:-1]).split("\t")

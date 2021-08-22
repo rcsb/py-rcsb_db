@@ -216,7 +216,7 @@ class PdbxSchemaMapReader(object):
         try:
             #
             myContainerList = []
-            ifh = open(schemaMapFile, "r")
+            ifh = open(schemaMapFile, "r", encoding="utf-8")
             pRd = PdbxReader(ifh)
             pRd.read(myContainerList)
             ifh.close()
