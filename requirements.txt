@@ -14,7 +14,7 @@ rcsb.utils.multiproc >= 0.18
 rcsb.utils.chemref >= 0.79
 scandir; python_version < "3.0"
 configparser; python_version < "3.0"
-rcsb.utils.dictionary >= 0.63
+rcsb.utils.dictionary >= 0.67
 rcsb.utils.repository >= 0.18
 #
 SQLAlchemy; sys_platform == 'linux'

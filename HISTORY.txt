@@ -315,3 +315,4 @@
   1-Aug-2021  V1.684 Add support for embedded iterables in json schema generation and support scanning obsolete entries.
   1-Aug-2021  V1.685 Adjust argument processing in RepoScanExec.py and update dependencies
   3-Aug-2021  V1.686 Update configuration example and dependencies
+ 25-Aug-2021  V1.687 Update dependencies
