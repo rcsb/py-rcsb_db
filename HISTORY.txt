@@ -316,3 +316,4 @@
   1-Aug-2021  V1.685 Adjust argument processing in RepoScanExec.py and update dependencies
   3-Aug-2021  V1.686 Update configuration example and dependencies
  25-Aug-2021  V1.687 Update dependencies
+ 26-Aug-2021  V1.688 Update dependencies
