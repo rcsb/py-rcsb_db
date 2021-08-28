@@ -682,7 +682,7 @@ class PdbxLoader(object):
                 mpu.setOptions(optionsD=optD)
                 mpu.set(workerObj=self, workerMethod="loadWorker")
                 ok, failListT, _, _ = mpu.runMulti(dataList=subList, numProc=numProc, numResults=1, chunkSize=chunkSize)
-                logger.info("Completed outer subtask %d of %d (status=%r) length %d failures (%d) %r", ii + 1, len(subLists), len(subList), ok, len(failListT), failListT)
+                logger.info("Completed outer subtask %d of %d (status=%r) length %d failures (%d) %r", ii + 1, len(subLists), ok, len(subList), len(failListT), failListT)
                 failList.extend(failListT)
             failList = list(set(failList))
             if failList:
