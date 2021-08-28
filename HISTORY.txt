@@ -317,3 +317,4 @@
   3-Aug-2021  V1.686 Update configuration example and dependencies
  25-Aug-2021  V1.687 Update dependencies
  26-Aug-2021  V1.688 Update dependencies
+ 28-Aug-2021  V1.689 Extend failure reporting for mongo PdbxLoader()

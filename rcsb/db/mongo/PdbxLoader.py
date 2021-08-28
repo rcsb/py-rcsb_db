@@ -674,7 +674,7 @@ class PdbxLoader(object):
             #
             failList = []
             for ii, subList in enumerate(subLists):
-                logger.info("Running outer subtask %d of %d length %d", ii + 1, len(subLists), len(subList))
+                logger.info("Starting outer subtask %d of %d length %d", ii + 1, len(subLists), len(subList))
                 #
                 # pdbxLoaderWorker = PdbxLoaderWorker(self.__cfgOb, self.__rpP, self.__dmh, self.__resourceName)
                 mpu = MultiProcUtil(verbose=True)
@@ -682,10 +682,11 @@ class PdbxLoader(object):
                 mpu.setOptions(optionsD=optD)
                 mpu.set(workerObj=self, workerMethod="loadWorker")
                 ok, failListT, _, _ = mpu.runMulti(dataList=subList, numProc=numProc, numResults=1, chunkSize=chunkSize)
-                logger.info("Completed outer subtask %d of %d length %d with failure count %d status %r", ii + 1, len(subLists), len(subList), len(failListT), ok)
+                logger.info("Completed outer subtask %d of %d (status=%r) length %d failures (%d) %r", ii + 1, len(subLists), len(subList), ok, len(failListT), failListT)
                 failList.extend(failListT)
             failList = list(set(failList))
-            logger.debug("Failing path list %r", failList)
+            if failList:
+                logger.info("Full failed path list %r", failList)
             #
             failedPathList = self.__rpP.getLocatorPaths(failList, locatorIndex=0)
             if failedFilePath and failedPathList:
