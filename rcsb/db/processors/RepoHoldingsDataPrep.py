@@ -353,8 +353,8 @@ class RepoHoldingsDataPrep(object):
                 "nmr-str": "Combined NMR data (NMR-STAR)",
             }
             #
-            uD = {}
             for updateType in updateTypeList:
+                uD = {}
                 for contentType in contentTypeList:
                     fp = os.path.join(dirPath, "update-lists", updateType + "-" + contentType)
                     if not self.__mU.exists(fp):
@@ -363,9 +363,7 @@ class RepoHoldingsDataPrep(object):
                     #
                     for entryId in entryIdL:
                         entryId = entryId.strip().upper()
-                        if entryId not in uD:
-                            uD[entryId] = []
-                        uD[entryId].append(contentNameD[contentType])
+                        uD.setdefault(entryId, []).append(contentNameD[contentType])
                 for entryId in uD:
                     uType = "removed" if updateType == "obsolete" else updateType
                     # retD[entryId] = {"update_id": updateId, "entry_id": entryId, "update_type": uType, "repository_content_types": uD[entryId]}
