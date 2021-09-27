@@ -111,19 +111,23 @@ class RepoHoldingsRemoteLoaderTests(unittest.TestCase):
             logger.info("databaseName %r", databaseName)
             addValues = None
             #
+            maxDoc = 5
             dList = rhdp.getHoldingsRemovedEntry(updateId=self.__updateId)
+            dList = dList[:maxDoc] if maxDoc else dList
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_REMOVED", sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
             logger.info("Collection %r length %d load status %r", collectionName, len(dList), ok)
             self.assertTrue(ok)
             #
             dList = rhdp.getHoldingsUnreleasedEntry(updateId=self.__updateId)
+            dList = dList[:maxDoc] if maxDoc else dList
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UNRELEASED", sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
             logger.info("Collection %r length %d load status %r", collectionName, len(dList), ok)
             self.assertTrue(ok)
             #
             dList = rhdp.getHoldingsUpdateEntry(updateId=self.__updateId)
+            dList = dList[:maxDoc] if maxDoc else dList
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UPDATE", sectionName=sectionName)
             logger.info("collectionName %r", collectionName)
             ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
@@ -131,12 +135,14 @@ class RepoHoldingsRemoteLoaderTests(unittest.TestCase):
             self.assertTrue(ok)
             #
             dList = rhdp.getHoldingsCurrentEntry(updateId=self.__updateId)
+            dList = dList[:maxDoc] if maxDoc else dList
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_CURRENT", sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
             logger.info("Collection %r length %d load status %r", collectionName, len(dList), ok)
             self.assertTrue(ok)
             #
             dList = rhdp.getHoldingsCombinedEntry(updateId=self.__updateId)
+            dList = dList[:maxDoc] if maxDoc else dList
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_COMBINED", sectionName=sectionName)
             ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
             logger.info("Collection %r length %d load status %r", collectionName, len(dList), ok)

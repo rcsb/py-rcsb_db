@@ -66,8 +66,8 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
         self.__cachePath = os.path.join(TOPDIR, "CACHE")
         self.__readBackCheck = True
         self.__numProc = 2
-        self.__chunkSize = 10
-        self.__fileLimit = 30
+        self.__chunkSize = 5
+        self.__fileLimit = 5
         self.__documentStyle = "rowwise_by_name_with_cardinality"
         self.__ldList = [
             # {"databaseName": "chem_comp_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min"},

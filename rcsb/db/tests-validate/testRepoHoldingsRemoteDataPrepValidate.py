@@ -48,7 +48,6 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
         configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=self.__pathConfig, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
         self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=True)
-        self.__sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=configName)
         #
         self.__mU = MarshalUtil(workPath=self.__cachePath)
 
@@ -59,6 +58,7 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
+    @unittest.skip("Troubleshooting test")
     def testValidateOptsStrict(self):
         updateId = self.__updateId
         schemaLevel = "full"
@@ -66,6 +66,7 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
         logger.info("Total validation errors schema level %s : %d", schemaLevel, eCount)
         self.assertTrue(eCount <= 1)
 
+    @unittest.skip("Troubleshooting test")
     def testValidateOptsMin(self):
         updateId = self.__updateId
         schemaLevel = "min"

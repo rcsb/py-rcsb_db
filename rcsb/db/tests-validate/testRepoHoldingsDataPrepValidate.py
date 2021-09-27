@@ -66,6 +66,7 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
         logger.info("Total validation errors schema level %s : %d", schemaLevel, eCount)
         self.assertTrue(eCount <= 1)
 
+    @unittest.skip("Troubleshooting test")
     def testValidateOptsMin(self):
         updateId = self.__updateId
         schemaLevel = "min"

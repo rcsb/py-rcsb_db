@@ -47,6 +47,8 @@ TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
 class PdbxLoaderTests(unittest.TestCase):
+    loadLocal = False
+
     def __init__(self, methodName="runTest"):
         super(PdbxLoaderTests, self).__init__(methodName)
         self.__verbose = True
@@ -119,6 +121,7 @@ class PdbxLoaderTests(unittest.TestCase):
         endTime = time.time()
         logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
+    @unittest.skipUnless(loadLocal, "Skip local load test")
     def testPdbxLoader(self):
         for ld in self.__ldList:
             self.__pdbxLoaderWrapper(**ld)
