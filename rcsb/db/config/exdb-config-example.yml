@@ -14,6 +14,7 @@
 #   24-Jul-2021 - adjust stash mock configuration
 #    1-Aug-2021 - add PDBX_OBSOLETE_REPO_PATH
 #    2-Aug-2021 - make git local storage on the testing branch in the site_info_configuration section
+#   16-Sep-2021 - Add PDB_REPO_URL and PDBDEV_REPO_URL items
 ---
 DEFAULT: {}
 ##
@@ -58,6 +59,11 @@ site_info_configuration:
   #
   RCSB_SEQUENCE_CLUSTER_DATA_PATH: cluster_data/mmseqs_clusters_current
   SIFTS_SUMMARY_DATA_PATH: sifts-summary
+  #
+  # ---------
+  PDB_REPO_URL: https://ftp.wwpdb.org/pub
+  PDBDEV_REPO_URL: https://pdb-dev.wwpdb.org
+  # ---------
   # -------------------------------------------------------------------------------------------
   #   -- Below are common across current deployments -
   #
@@ -194,6 +200,9 @@ site_info_remote_configuration:
   #
   RCSB_SEQUENCE_CLUSTER_DATA_PATH: /net/users/update/Data/sequence-clusters/current-mmseqs
   SIFTS_SUMMARY_DATA_PATH: /net/data-remote/ebi/sifts/flatfiles/csv
+  # ----
+  PDB_REPO_URL: https://ftp.wwpdb.org/pub
+  PDBDEV_REPO_URL: https://pdb-dev.wwpdb.org
   # -------------------------------------------------------------------------------------------
   #   -- Options below in this section are common across current deployments -
   #

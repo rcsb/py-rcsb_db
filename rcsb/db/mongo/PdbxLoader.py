@@ -484,6 +484,7 @@ class PdbxLoader(object):
         maxStepLength=2000,
         useSchemaCache=True,
         rebuildSchemaFlag=False,
+        discoveryMode="remote",
     ):
         """Worker methods for loading primary data content following mapping conventions in external schema definitions.
 
@@ -517,9 +518,10 @@ class PdbxLoader(object):
         self.__useSchemaCache = useSchemaCache
         self.__rebuildSchemaFlag = rebuildSchemaFlag
         self.__mpFormat = "[%(levelname)s] %(asctime)s %(processName)s-%(module)s.%(funcName)s: %(message)s"
+        self.__discoveryMode = discoveryMode
         #
         self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=self.__useSchemaCache, rebuildFlag=self.__rebuildSchemaFlag)
-        self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath)
+        self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath, discoveryMode=self.__discoveryMode)
         #
         self.__statusList = []
         #

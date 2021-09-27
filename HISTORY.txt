@@ -321,3 +321,4 @@
  28-Aug-2021  V1.690 Further adjustments in reporting for MongoDb PdbxLoader()
  10-Sep-2021  V1.691 Update dependencies for rcsb.utils.dictionary and rcsb.utils.io
  23-Sep-2021  V1.692 Simplify updates to RepoHoldingsDataPrep() for the update collection
+ 27-Sep-2021  V1.693 Add RepoHoldingsRemoteDataPrep and support for RepositoryProvider discoveryMode="remote"

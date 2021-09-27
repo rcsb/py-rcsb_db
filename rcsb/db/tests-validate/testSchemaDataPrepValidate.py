@@ -59,8 +59,10 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__isMac = platform.system() == "Darwin"
         self.__excludeType = None if self.__isMac else "optional"
         self.__numProc = 2
-        # self.__fileLimit = 200
-        self.__fileLimit = None
+        # self.__fileLimit = None
+        self.__fileLimit = 20
+        self.__discoveryMode = "remote"
+        #
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         self.__cachePath = os.path.join(TOPDIR, "CACHE")
         self.__configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
@@ -70,7 +72,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__mU = MarshalUtil(workPath=self.__cachePath)
 
         self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=True)
-        self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath)
+        self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath, discoveryMode=self.__discoveryMode)
         #
         self.__birdRepoPath = self.__cfgOb.getPath("BIRD_REPO_PATH", sectionName=configName)
         #
@@ -109,6 +111,10 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         }
 
         self.__databaseNameD = {
+            "bird_chem_comp_core": ["bird_chem_comp_core"],
+        }
+        self.__databaseNameDx = {
+            "bird_chem_comp_core": ["bird_chem_comp_core"],
             "pdbx_core": [
                 "pdbx_core_polymer_entity_instance",
                 "pdbx_core_polymer_entity",
@@ -119,7 +125,6 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                 "pdbx_core_polymer_entity_instance",
                 "pdbx_core_branched_entity_instance",
             ],
-            "bird_chem_comp_core": ["bird_chem_comp_core"],
         }
         self.__mergeContentTypeD = {"pdbx_core": ["vrpt"]}
         # self.__databaseNameD = {"chem_comp_core": ["chem_comp_core"], "bird_chem_comp_core": ["bird_chem_comp_core"]}

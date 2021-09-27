@@ -7,6 +7,7 @@
 #  15-Jul-2018 jdw split out to separate module and add status tracking
 #  26-Nov-2018 jdw add COLLECTION_HOLDINGS_PRERELEASE
 #  14-Dec-2019 jdw reorganize and consolidate repository_holdings collections
+#  25-Sep-2021 jdw substitute RepoHoldingsRemoteDataPrep() for data processing
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -18,7 +19,9 @@ import logging
 
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
-from rcsb.db.processors.RepoHoldingsDataPrep import RepoHoldingsDataPrep
+from rcsb.db.processors.RepoHoldingsRemoteDataPrep import RepoHoldingsRemoteDataPrep
+
+# from rcsb.db.processors.RepoHoldingsDataPrep import RepoHoldingsDataPrep
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +81,9 @@ class RepoHoldingsEtlWorker(object):
 
             sectionName = "repository_holdings_configuration"
 
-            rhdp = RepoHoldingsDataPrep(cfgOb=self.__cfgOb, sandboxPath=self.__sandboxPath, cachePath=self.__cachePath, filterType=self.__filterType)
+            # rhdp = RepoHoldingsDataPrep(cfgOb=self.__cfgOb, sandboxPath=self.__sandboxPath, cachePath=self.__cachePath, filterType=self.__filterType)
+            #
+            rhdp = RepoHoldingsRemoteDataPrep(self.__cachePath, filterType=self.__filterType)
             #
             dl = DocumentLoader(
                 self.__cfgOb,
