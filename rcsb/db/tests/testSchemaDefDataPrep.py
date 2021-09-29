@@ -69,7 +69,6 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__isMac = platform.system() == "Darwin"
         self.__excludeType = None if self.__isMac else "optional"
         self.__numProc = 2
-        self.__fileLimit = 100
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         self.__cachePath = os.path.join(TOPDIR, "CACHE")
         self.__outputPath = os.path.join(HERE, "test-output")
@@ -80,7 +79,8 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         self.__configName = configName
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         self.__mU = MarshalUtil(workPath=self.__cachePath)
-
+        self.__discoveryMode = self.__cfgOb.get("DISCOVERY_MODE", sectionName=configName, default="local")
+        self.__fileLimit = 100 if self.__discoveryMode == "local" else 10
         self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=True)
         self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath)
         #
@@ -153,15 +153,6 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "excludeExtras": excludeExtras,
             },
             {
-                "contentType": "pdbx_core",
-                "mockLength": self.__pdbxMockLen,
-                "filterType": self.__fTypeRow,
-                "styleType": "rowwise_by_name_with_cardinality",
-                "mergeContentTypes": None,
-                "rejectLength": 0,
-                "excludeExtras": excludeExtras,
-            },
-            {
                 "contentType": "bird_chem_comp_core",
                 "mockLength": self.__chemCompMockLen,
                 "filterType": self.__fTypeRow,
@@ -200,18 +191,26 @@ class SchemaDefDataPrepTests(unittest.TestCase):
 
     def testSimpleSchemaDefDataPrep(self):
         for tcD in self.__simpleTestCaseList:
-            self.__simpleSchemaDataPrep(
-                tcD["contentType"], tcD["filterType"], tcD["styleType"], tcD["mockLength"], rejectLength=tcD["rejectLength"], mergeContentTypes=tcD["mergeContentTypes"]
-            )
+            rejectLength = 0 if self.__discoveryMode == "remote" else tcD["rejectLength"]
+            mockLength = self.__fileLimit if self.__discoveryMode == "remote" else tcD["mockLength"]
+            if tcD["contentType"] == "bird_chem_comp_core" and self.__discoveryMode == "remote":
+                logger.info("Skipping %r in discovery mode %r", tcD["contentType"], self.__discoveryMode)
+                continue
+            self.__simpleSchemaDataPrep(tcD["contentType"], tcD["filterType"], tcD["styleType"], mockLength, rejectLength=rejectLength, mergeContentTypes=tcD["mergeContentTypes"])
 
     def testFullSchemaDefDataPrep(self):
         for tcD in self.__fullTestCaseList:
+            rejectLength = 0 if self.__discoveryMode == "remote" else tcD["rejectLength"]
+            mockLength = self.__fileLimit if self.__discoveryMode == "remote" else tcD["mockLength"]
+            if tcD["contentType"] == "bird_chem_comp_core" and self.__discoveryMode == "remote":
+                logger.info("Skipping %r in discovery mode %r", tcD["contentType"], self.__discoveryMode)
+                continue
             self.__fullSchemaDataPrep(
                 tcD["contentType"],
                 tcD["filterType"],
                 tcD["styleType"],
-                tcD["mockLength"],
-                rejectLength=tcD["rejectLength"],
+                mockLength,
+                rejectLength=rejectLength,
                 mergeContentTypes=tcD["mergeContentTypes"],
                 excludeExtras=tcD["excludeExtras"],
             )
