@@ -360,7 +360,7 @@ class SchemaDefBuild(object):
                 if not fD["IS_KEY"]:
                     appType = dtAppInfo.getAppTypeName(fD["TYPE_CODE"])
                     if not appType:
-                        logger.error("Missing data type mapping for %s %s", catName, atName)
+                        logger.error("Missing application data type mapping for %s %s (%r)", catName, atName, fD["TYPE_CODE"])
                     appWidth = dtAppInfo.getAppTypeDefaultWidth(fD["TYPE_CODE"])
                     instWidth = dtInstInfo.getMaxWidth(catName, atName)
                     revAppType, revAppWidth = dtAppInfo.updateCharType(fD["IS_KEY"], appType, instWidth, appWidth, bufferPercent=20.0)

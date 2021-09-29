@@ -159,6 +159,15 @@ class SchemaDefBuildTests(unittest.TestCase):
                     for level in self.__validationLevels:
                         self.__schP.makeSchema(databaseName, collectionName, encodingType=schemaType, level=level, saveSchema=True, extraOpts="addParentRefs|addPrimaryKey")
 
+    @unittest.skip("Troubleshooting test")
+    def testGetCollectionObjects(self):
+        sP = os.path.join(self.__cachePath, "json_schema_definitions", "json-full-db-pdbx_core-col-pdbx_core_nonpolymer_entity.json")
+        mU = MarshalUtil()
+        sD = mU.doImport(sP, fmt="json")
+        logger.info("kys %r", list(sD.keys()))
+        for ky in sD["properties"]:
+            logger.info(" - %s", ky)
+
 
 def schemaBuildSuite():
     suiteSelect = unittest.TestSuite()

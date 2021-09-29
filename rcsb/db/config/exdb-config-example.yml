@@ -15,6 +15,8 @@
 #    1-Aug-2021 - add PDBX_OBSOLETE_REPO_PATH
 #    2-Aug-2021 - make git local storage on the testing branch in the site_info_configuration section
 #   16-Sep-2021 - Add PDB_REPO_URL and PDBDEV_REPO_URL items
+#   28-Sep-2021 - Add MA_DICT_LOCATOR item
+#   29-Sep-2021 - Add DISCOVERY_MODE to control remote and local data access
 ---
 DEFAULT: {}
 ##
@@ -60,11 +62,12 @@ site_info_configuration:
   RCSB_SEQUENCE_CLUSTER_DATA_PATH: cluster_data/mmseqs_clusters_current
   SIFTS_SUMMARY_DATA_PATH: sifts-summary
   #
-  # ---------
+  # --------- Configuration for remote and local data access ----
+  DISCOVERY_MODE: remote
   PDB_REPO_URL: https://ftp.wwpdb.org/pub
   PDBDEV_REPO_URL: https://pdb-dev.wwpdb.org
   # ---------
-  # -------------------------------------------------------------------------------------------
+  #
   #   -- Below are common across current deployments -
   #
   # Supporting and integrated resource data cache directory names
@@ -112,6 +115,8 @@ site_info_configuration:
   FLR_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/flr-extension.dic
   VRPT_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/vrpt_mmcif_ext.dic
   VRPT_DICT_MAPPING_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/vrpt_dictmap.json
+  #
+  MA_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/mmcif_ma.dic
   # ------ ------ ------ ------ ------ ------ ------ ------ ------
   # Added in rcsb.db V0.966 - Data type details and type mapping
   APP_DATA_TYPE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/data_type_and_coverage/app_data_type_mapping.cif
@@ -200,9 +205,13 @@ site_info_remote_configuration:
   #
   RCSB_SEQUENCE_CLUSTER_DATA_PATH: /net/users/update/Data/sequence-clusters/current-mmseqs
   SIFTS_SUMMARY_DATA_PATH: /net/data-remote/ebi/sifts/flatfiles/csv
-  # ----
+  #
+  # --------- Configuration for remote and local data access ----
+  #
+  DISCOVERY_MODE: remote
   PDB_REPO_URL: https://ftp.wwpdb.org/pub
   PDBDEV_REPO_URL: https://pdb-dev.wwpdb.org
+  #
   # -------------------------------------------------------------------------------------------
   #   -- Options below in this section are common across current deployments -
   #
@@ -249,6 +258,8 @@ site_info_remote_configuration:
   FLR_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/flr-extension.dic
   VRPT_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/vrpt_mmcif_ext.dic
   VRPT_DICT_MAPPING_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/vrpt_dictmap.json
+  #
+  MA_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/mmcif_ma.dic
   #
   # Added in rcsb.db V0.966 - Data type details and type mapping
   APP_DATA_TYPE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/data_type_and_coverage/app_data_type_mapping.cif

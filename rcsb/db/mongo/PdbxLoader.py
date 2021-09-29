@@ -484,7 +484,6 @@ class PdbxLoader(object):
         maxStepLength=2000,
         useSchemaCache=True,
         rebuildSchemaFlag=False,
-        discoveryMode="remote",
     ):
         """Worker methods for loading primary data content following mapping conventions in external schema definitions.
 
@@ -511,6 +510,7 @@ class PdbxLoader(object):
         self.__chunkSize = max(chunkSize, 1)
         #
         self.__cfgOb = cfgOb
+        self.__cfgSectionName = self.__cfgOb.getDefaultSectionName()
         self.__resourceName = resourceName
         #
         self.__readBackCheck = readBackCheck
@@ -518,14 +518,14 @@ class PdbxLoader(object):
         self.__useSchemaCache = useSchemaCache
         self.__rebuildSchemaFlag = rebuildSchemaFlag
         self.__mpFormat = "[%(levelname)s] %(asctime)s %(processName)s-%(module)s.%(funcName)s: %(message)s"
-        self.__discoveryMode = discoveryMode
+        #
         #
         self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=self.__useSchemaCache, rebuildFlag=self.__rebuildSchemaFlag)
-        self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath, discoveryMode=self.__discoveryMode)
+        self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath)
         #
         self.__statusList = []
         #
-        self.__sectionName = "site_info_configuration"
+
         self.__dmh = None
         #
 
@@ -585,7 +585,7 @@ class PdbxLoader(object):
             logger.info("Beginning load operation (%r) for database %s", loadType, databaseName)
             startTime = self.__begin(message="loading operation")
             #
-            modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=self.__sectionName)
+            modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=self.__cfgSectionName)
             dP = DictionaryApiProviderWrapper(self.__cachePath, cfgOb=self.__cfgOb, useCache=True)
             dictApi = dP.getApiByName(databaseName)
             # ---

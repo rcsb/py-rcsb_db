@@ -139,7 +139,6 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
                 maxStepLength=2000,
                 useSchemaCache=True,
                 rebuildSchemaFlag=False,
-                discoveryMode="remote",
             )
             ok = mw.load(
                 kwargs["databaseName"],

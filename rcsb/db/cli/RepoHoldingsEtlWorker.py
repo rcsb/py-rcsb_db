@@ -19,6 +19,7 @@ import logging
 
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
+from rcsb.db.processors.RepoHoldingsDataPrep import RepoHoldingsDataPrep
 from rcsb.db.processors.RepoHoldingsRemoteDataPrep import RepoHoldingsRemoteDataPrep
 
 # from rcsb.db.processors.RepoHoldingsDataPrep import RepoHoldingsDataPrep
@@ -31,6 +32,7 @@ class RepoHoldingsEtlWorker(object):
 
     def __init__(self, cfgOb, sandboxPath, cachePath, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False):
         self.__cfgOb = cfgOb
+        self.__cfgSectionName = self.__cfgOb.getDefaultSectionName()
         self.__sandboxPath = sandboxPath
         self.__cachePath = cachePath
         self.__readBackCheck = readBackCheck
@@ -79,11 +81,11 @@ class RepoHoldingsEtlWorker(object):
             desp = DataExchangeStatus()
             statusStartTimestamp = desp.setStartTime()
 
-            sectionName = "repository_holdings_configuration"
-
-            # rhdp = RepoHoldingsDataPrep(cfgOb=self.__cfgOb, sandboxPath=self.__sandboxPath, cachePath=self.__cachePath, filterType=self.__filterType)
-            #
-            rhdp = RepoHoldingsRemoteDataPrep(self.__cachePath, filterType=self.__filterType)
+            discoveryMode = self.__cfgOb.get("DISCOVERY_MODE", sectionName=self.__cfgSectionName, default="local")
+            if discoveryMode == "local":
+                rhdp = RepoHoldingsDataPrep(cfgOb=self.__cfgOb, sandboxPath=self.__sandboxPath, cachePath=self.__cachePath, filterType=self.__filterType)
+            else:
+                rhdp = RepoHoldingsRemoteDataPrep(self.__cachePath, filterType=self.__filterType)
             #
             dl = DocumentLoader(
                 self.__cfgOb,
@@ -96,6 +98,7 @@ class RepoHoldingsEtlWorker(object):
                 readBackCheck=self.__readBackCheck,
             )
             #
+            sectionName = "repository_holdings_configuration"
             databaseName = self.__cfgOb.get("DATABASE_NAME", sectionName=sectionName)
             # collectionVersion = self.__cfgOb.get("COLLECTION_VERSION_STRING", sectionName=sectionName)
             # addValues = {"_schema_version": collectionVersion}

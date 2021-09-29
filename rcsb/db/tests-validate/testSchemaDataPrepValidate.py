@@ -8,6 +8,7 @@
 #  7-Sep-2018 jdw add multi-level (strict/min) validation tests
 # 29-Sep-2018 jdw add plugin for extended checks of JSON Schema formats.
 # 31-Mar-2019 jdw add option to validate  'addParentRefs'
+# 29-Sep-2021 jdw discovery mode is a property of RepositoryProvider() and set in configuration
 #
 ##
 """
@@ -61,7 +62,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__numProc = 2
         # self.__fileLimit = None
         self.__fileLimit = 20
-        self.__discoveryMode = "remote"
+
         #
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         self.__cachePath = os.path.join(TOPDIR, "CACHE")
@@ -72,7 +73,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.__mU = MarshalUtil(workPath=self.__cachePath)
 
         self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=True)
-        self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath, discoveryMode=self.__discoveryMode)
+        self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath)
         #
         self.__birdRepoPath = self.__cfgOb.getPath("BIRD_REPO_PATH", sectionName=configName)
         #
