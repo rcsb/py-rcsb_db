@@ -670,7 +670,15 @@ class PdbxLoader(object):
                 subLists = [locatorObjList]
             #
             if subLists:
-                logger.info("Starting load of %s (%r) using numProc %d outer subtask count %d subtask length %d", databaseName, loadType, numProc, len(subLists), len(subLists[0]))
+                logger.info(
+                    "Starting load of %s (%r) using %d processor for total count %d outer subtask count %d subtask length %d",
+                    databaseName,
+                    loadType,
+                    numProc,
+                    numPaths,
+                    len(subLists),
+                    len(subLists[0]),
+                )
             else:
                 logger.error("Path partitioning fails for %s (%r) using numProc %d", databaseName, loadType, numProc)
             #

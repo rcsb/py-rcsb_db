@@ -89,6 +89,18 @@ class SchemaDefBuildTests(unittest.TestCase):
             logger.exception("Failing with %s", str(e))
             self.fail()
 
+    def testBuildSchemaDefsCompModel(self):
+        try:
+            for databaseName in ["pdbx_comp_model_core"]:
+                for dataTyping in self.__dataTypingList:
+                    logger.debug("Building schema %s with types %s", databaseName, dataTyping)
+                    self.__schP.makeSchemaDef(databaseName, dataTyping=dataTyping, saveSchema=self.__saveSchema)
+                    if self.__compareDefSchema:
+                        self.__schP.schemaDefCompare(databaseName, dataTyping)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+            self.fail()
+
     def testBuildCollectionSchema(self):
         schemaDifPathList = []
         for databaseName in self.__databaseNameList:
