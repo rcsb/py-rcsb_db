@@ -325,3 +325,4 @@
  29-Sep-2021  V1.694 Make discovery mode an internal configuration property of RepositoryProvider()
   8-Oct-2021  V1.695 Pass configuration URLs to RepositoryHoldingsRemoteDataPrep() and
                      added support for building computed models schema
+ 16-Oct-2021  V1.696 Add validation and loading tests for computed models

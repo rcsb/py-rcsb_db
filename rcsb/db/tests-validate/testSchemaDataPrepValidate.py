@@ -113,7 +113,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         }
 
         self.__databaseNameD = {
-            # "bird_chem_comp_core": ["bird_chem_comp_core"],
+            "bird_chem_comp_core": ["bird_chem_comp_core"],
             "pdbx_core": [
                 "pdbx_core_polymer_entity_instance",
                 "pdbx_core_polymer_entity",
