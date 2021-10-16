@@ -101,12 +101,12 @@ class ContentDefinition(object):
             for sliceName, pDL in self.__sliceParentItemsD.items():
                 logger.debug("Slicename %s parents %r", sliceName, pDL)
                 #
-                # Some categories are include in a slice even if they are unconnected to the slice parent.
+                # Some categories are included in a slice even if they are unconnected to the slice parent.
                 self.__sliceCategoryExtrasD[sliceName] = contentDefHelper.getSliceCategoryExtras(databaseName, sliceName)
-                logger.debug("Slice extra categories %r", self.__sliceCategoryExtrasD[sliceName])
+                logger.debug("Slice %s extra categories %r", sliceName, self.__sliceCategoryExtrasD[sliceName])
                 #
                 self.__sliceUnitCardinalityD[sliceName] = self.__getUnitCardinalityCategories(pDL)
-                logger.debug("Slice Unit cardinality categories %r", self.__sliceUnitCardinalityD[sliceName])
+                logger.debug("Slicename %s unit cardinality categories %r", sliceName, self.__sliceUnitCardinalityD[sliceName])
                 #
                 self.__sliceUnitCardinalityD[sliceName].extend(contentDefHelper.getSliceCardinalityCategoryExtras(databaseName, sliceName))
                 logger.debug("Slicename %s unit cardinality categories %r", sliceName, self.__sliceUnitCardinalityD[sliceName])

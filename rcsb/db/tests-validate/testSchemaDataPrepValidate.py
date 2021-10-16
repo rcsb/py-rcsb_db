@@ -41,6 +41,7 @@ from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb.utils.repository.RepositoryProvider import RepositoryProvider
 from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
+from rcsb.utils.io.FileUtil import FileUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
@@ -112,7 +113,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         }
 
         self.__databaseNameD = {
-            "bird_chem_comp_core": ["bird_chem_comp_core"],
+            # "bird_chem_comp_core": ["bird_chem_comp_core"],
             "pdbx_core": [
                 "pdbx_core_polymer_entity_instance",
                 "pdbx_core_polymer_entity",
@@ -122,6 +123,17 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                 "pdbx_core_branched_entity",
                 "pdbx_core_polymer_entity_instance",
                 "pdbx_core_branched_entity_instance",
+            ],
+        }
+        self.__databaseNameModelD = {
+            "pdbx_comp_model_core": [
+                "pdbx_comp_model_core_entry",
+                "pdbx_comp_model_core_assembly",
+                "pdbx_comp_model_core_polymer_entity",
+                "pdbx_comp_model_core_polymer_entity_instance",
+                "pdbx_comp_model_core_nonpolymer_entity",
+                "pdbx_comp_model_core_branched_entity",
+                "pdbx_comp_model_core_branched_entity_instance",
             ],
         }
         self.__mergeContentTypeD = {"pdbx_core": ["vrpt"]}
@@ -136,6 +148,17 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
+    def __modelFixture(self):
+        fU = FileUtil()
+        modelSourcePath = os.path.join(self.__mockTopPath, "AF")
+        for iPath in glob.iglob(os.path.join(modelSourcePath, "*.cif.gz")):
+            fn = os.path.basename(iPath)
+            uId = fn.split("-")[1]
+            h2 = uId[-2:]
+            h1 = uId[-4:-2]
+            oPath = os.path.join(self.__cachePath, "AlphaFold", h1, h2, fn)
+            fU.put(iPath, oPath)
+
     def testValidateOptsRepo(self):
         # schemaLevel = "min"
         schemaLevel = "full"
@@ -145,6 +168,14 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         # expected errors
         # pdbx_core_entry (3JWB) path deque(['reflns_shell', 0, 'Rmerge_I_obs']) error: 33.9 is greater than or equal to the maximum of 10.0
         self.assertLessEqual(eCount, 2)
+
+    def testValidateModels(self):
+        self.__modelFixture()
+        schemaLevel = "full"
+        inputPathList = None
+        eCount = self.__testValidateOpts(databaseNameD=self.__databaseNameModelD, inputPathList=inputPathList, schemaLevel=schemaLevel, mergeContentTypeD=self.__mergeContentTypeD)
+        logger.info("Total validation errors schema level %s : %d", schemaLevel, eCount)
+        self.assertLessEqual(eCount, 0)
 
     @unittest.skip("Disable troubleshooting test")
     def testValidateOptsList(self):
@@ -259,6 +290,8 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             sdp.setSchemaIdExcludeList(tableIdExcludeList)
             sdp.setSchemaIdIncludeList(tableIdIncludeList)
             #
+            logger.debug("%s (%r) exclude list %r", collectionName, sliceFilter, tableIdExcludeList)
+            logger.debug("%s (%r) include list %r", collectionName, sliceFilter, tableIdIncludeList)
             docList, containerNameList, _ = sdp.processDocuments(
                 containerList, styleType=styleType, filterType=self.__fTypeRow, dataSelectors=["PUBLIC_RELEASE"], sliceFilter=sliceFilter, collectionName=collectionName
             )
@@ -286,6 +319,12 @@ def schemaValidateSuite():
     return suiteSelect
 
 
+def schemaValidateModelsSuite():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateModels"))
+    return suiteSelect
+
+
 def schemaIhmValidateSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(SchemaDataPrepValidateTests("testValidateOptsIhmList"))
@@ -294,8 +333,13 @@ def schemaIhmValidateSuite():
 
 
 if __name__ == "__main__":
-    mySuite = schemaValidateSuite()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
+    doModels = True
+    if doModels:
+        mySuite = schemaValidateModelsSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
+    else:
+        mySuite = schemaValidateSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)
 
-    mySuite = schemaIhmValidateSuite()
-    unittest.TextTestRunner(verbosity=2).run(mySuite)
+        mySuite = schemaIhmValidateSuite()
+        unittest.TextTestRunner(verbosity=2).run(mySuite)

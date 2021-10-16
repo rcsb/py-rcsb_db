@@ -289,7 +289,15 @@ class SchemaDefDataPrep(object):
             if not schemaDataDictById:
                 continue
             #
-            logger.debug("Reshape container %s for collection %s using slice filter %s", container.getName(), collectionName, sliceFilter)
+            logger.debug(
+                "Reshape container %s for collection %s using slice filter %s schemaDataDictById (%d) rL (%d)",
+                container.getName(),
+                collectionName,
+                sliceFilter,
+                len(schemaDataDictById),
+                len(rL),
+            )
+            logger.debug("schemaDataDictById.keys() %r", list(schemaDataDictById.keys()))
             sddL = self.__reShape.applySlicedShape(schemaDataDictById, styleType=styleType, sliceFilter=sliceFilter, collectionName=collectionName)
             if not sddL:
                 logger.debug("No result on reshaping container %s collection %s slice filter %s", container.getName(), collectionName, sliceFilter)
@@ -339,7 +347,8 @@ class SchemaDefDataPrep(object):
                                 doc[pName] = doc[catName][atName]
                             else:
                                 if isMandatory:
-                                    logger.info("Skipping private key for %s %s %s %r %r", collectionName, catName, atName, pdk, list(doc.items())[:5])
+                                    # logger.info("Skipping private key for %s %s %s %r %r", collectionName, catName, atName, pdk, list(doc.items())[:5])
+                                    logger.info("Skipping private key for %s %s %s %r %r", collectionName, catName, atName, pdk, list(doc.items()))
         except Exception as e:
             logger.exception("Failing with %s : %r", str(e), list(doc.items())[:5])
         #

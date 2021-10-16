@@ -20,6 +20,7 @@
 #    8-Oct-2021 - Add fallback url for PDB repository content PDB_REPO_FALLBACK_URL
 #                 Make dictionaries point to the new dictionary asset layout
 #                 and deprecate REPO_UTIL_CACHE_DIR
+#   12-Oct-2021 - Add method class mapping for rcsb.utils.dictionary.DictMethodCompModelHelper
 # --
 ---
 DEFAULT: {}
@@ -111,6 +112,7 @@ site_info_configuration:
     rcsb.utils.dictionary.DictMethodEntityHelper: rcsb.utils.dictionary.DictMethodEntityHelper
     rcsb.utils.dictionary.DictMethodAssemblyHelper: rcsb.utils.dictionary.DictMethodAssemblyHelper
     rcsb.utils.dictionary.DictMethodEntityInstanceHelper: rcsb.utils.dictionary.DictMethodEntityInstanceHelper
+    rcsb.utils.dictionary.DictMethodCompModelHelper: rcsb.utils.dictionary.DictMethodCompModelHelper
   # ------ ------ ------ ------ ------ ------ ------ -------
   # Make dictionaries point to the new dictionary asset layout  -
   #
@@ -256,6 +258,7 @@ site_info_remote_configuration:
     rcsb.utils.dictionary.DictMethodEntityHelper: rcsb.utils.dictionary.DictMethodEntityHelper
     rcsb.utils.dictionary.DictMethodAssemblyHelper: rcsb.utils.dictionary.DictMethodAssemblyHelper
     rcsb.utils.dictionary.DictMethodEntityInstanceHelper: rcsb.utils.dictionary.DictMethodEntityInstanceHelper
+    rcsb.utils.dictionary.DictMethodCompModelHelper: rcsb.utils.dictionary.DictMethodCompModelHelper
   #
   # Make dictionaries point to the new dictionary asset layout  -
   #

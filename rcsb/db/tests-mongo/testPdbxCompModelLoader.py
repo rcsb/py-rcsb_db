@@ -26,7 +26,7 @@ __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
-import glob
+
 import logging
 import os
 import platform
@@ -37,7 +37,7 @@ import unittest
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.mongo.PdbxLoader import PdbxLoader
 from rcsb.utils.config.ConfigUtil import ConfigUtil
-from rcsb.utils.io.FileUtil import FileUtil
+from rcsb.utils.insilico3d.AlphaFoldModelProvider import AlphaFoldModelProvider
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()
@@ -48,8 +48,7 @@ TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 
 class PdbxLoaderTests(unittest.TestCase):
-    loadLocal = False
-    loadModels = True
+    loadLocal = True
 
     def __init__(self, methodName="runTest"):
         super(PdbxLoaderTests, self).__init__(methodName)
@@ -60,10 +59,10 @@ class PdbxLoaderTests(unittest.TestCase):
         #
         self.__isMac = platform.system() == "Darwin"
         self.__excludeType = None if self.__isMac else "optional"
-        self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
+        mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
         configName = "site_info_configuration"
-        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=self.__mockTopPath)
+        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
         #
         self.__resourceName = "MONGO_DB"
         self.__failedFilePath = os.path.join(HERE, "test-output", "failed-list.txt")
@@ -74,36 +73,6 @@ class PdbxLoaderTests(unittest.TestCase):
         self.__fileLimit = None
         self.__documentStyle = "rowwise_by_name_with_cardinality"
         self.__ldList = [
-            # {"databaseName": "chem_comp_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min"},
-            {
-                "databaseName": "bird_chem_comp_core",
-                "collectionNameList": None,
-                "loadType": "full",
-                "mergeContentTypes": None,
-                "validationLevel": "full",
-                "updateSchemaOnReplace": False,
-                "status": True,
-            },
-            {
-                "databaseName": "bird_chem_comp_core",
-                "collectionNameList": None,
-                "loadType": "replace",
-                "mergeContentTypes": None,
-                "validationLevel": "full",
-                "updateSchemaOnReplace": True,
-                "status": True,
-            },
-            {
-                "databaseName": "pdbx_core",
-                "collectionNameList": None,
-                "loadType": "full",
-                "mergeContentTypes": ["vrpt"],
-                "validationLevel": "full",
-                "updateSchemaOnReplace": False,
-                "status": True,
-            },
-        ]
-        self.__ldModelList = [
             {
                 "databaseName": "pdbx_comp_model_core",
                 "collectionNameList": None,
@@ -125,27 +94,15 @@ class PdbxLoaderTests(unittest.TestCase):
         endTime = time.time()
         logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    def __modelFixture(self):
-        fU = FileUtil()
-        modelSourcePath = os.path.join(self.__mockTopPath, "AF")
-        for iPath in glob.iglob(os.path.join(modelSourcePath, "*.cif.gz")):
-            fn = os.path.basename(iPath)
-            uId = fn.split("-")[1]
-            h2 = uId[-2:]
-            h1 = uId[-4:-2]
-            oPath = os.path.join(self.__cachePath, "AlphaFold", h1, h2, fn)
-            fU.put(iPath, oPath)
-
     @unittest.skipUnless(loadLocal, "Skip local load test")
     def testPdbxLoader(self):
         for ld in self.__ldList:
             self.__pdbxLoaderWrapper(**ld)
 
-    @unittest.skipUnless(loadModels, "Skip model load test")
-    def testPdbxCompModelLoader(self):
-        self.__modelFixture()
-        for ld in self.__ldModelList:
-            self.__pdbxLoaderWrapper(**ld)
+    def testFetchModels(self):
+        aFMP = AlphaFoldModelProvider(cachePath=self.__cachePath, useCache=True, alphaFoldRequestedSpeciesFileList=["UP000000805_243232_METJA.tar"])
+        ok = aFMP.testCache()
+        self.assertTrue(ok)
 
     def __pdbxLoaderWrapper(self, **kwargs):
         """Wrapper for PDBx loader module"""

@@ -116,11 +116,12 @@ class SchemaDefReShape(object):
         if sliceFilter:
             rL = []
             sliceIndex = self.__sD.getSliceIndex(sliceFilter)
-            logger.debug("Slice index %r", sliceIndex)
+            logger.debug("StyleType %r Slice index %r", styleType, sliceIndex)
             #
             #
             sliceValues = SliceValues(schemaDataDictById, self.__sD, sliceFilter)
             if sliceValues.isEmpty():
+                logger.debug("No slice values (%r)", sliceFilter)
                 return rL
             #
             flagNew = True
@@ -464,12 +465,15 @@ class SchemaDefReShape(object):
         #
         attributeExcludeD = self.__sD.getCollectionExcludedAttributes(collectionName, asSchemaIds=True)
         schemaIdExtraL = self.__sD.getSliceExtraSchemaIds(sliceFilter)
-        # logger.info("Schema Id extras %r" % schemaIdExtraL)
+        # JDW
+        logger.debug("Schema Id extras %r", schemaIdExtraL)
+
         #
-        for schemaId in schemaDataDictById:
-            # sliceIndex = {'schemaId0': {(pCat0,pAt0): chAt0,  (pCat1,pAt1): chAt1}, ... }, ... }
-            if schemaId in sliceIndex:
-                logger.debug("SLICE %s - schemaId %s -> %r", sliceFilter, schemaId, sliceIndex[schemaId])
+        if debug:
+            for schemaId in schemaDataDictById:
+                # sliceIndex = {'schemaId0': {(pCat0,pAt0): chAt0,  (pCat1,pAt1): chAt1}, ... }, ... }
+                if schemaId in sliceIndex:
+                    logger.debug("SLICE %s - schemaId %s -> %r", sliceFilter, schemaId, sliceIndex[schemaId])
         #
         # Build  value -> parent attributes dictionary -
         #
