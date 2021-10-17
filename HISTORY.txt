@@ -327,3 +327,5 @@
                      added support for building computed models schema
  16-Oct-2021  V1.696 Add validation and loading tests for computed models
  17-Oct-2021  V1.697 Standardize path details for computed models
+ 17-Oct-2021  V1.698 Change the path hierarchy for computed models
+
