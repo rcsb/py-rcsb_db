@@ -133,7 +133,7 @@ class PdbxLoaderTests(unittest.TestCase):
             uId = fn.split("-")[1]
             h2 = uId[-2:]
             h1 = uId[-4:-2]
-            oPath = os.path.join(self.__cachePath, "AlphaFold", h1, h2, fn)
+            oPath = os.path.join(self.__cachePath, "computed-models", h1, h2, fn)
             fU.put(iPath, oPath)
 
     @unittest.skipUnless(loadLocal, "Skip local load test")
