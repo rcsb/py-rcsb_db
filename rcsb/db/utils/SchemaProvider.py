@@ -333,6 +333,20 @@ class SchemaProvider(SingletonClass):
         return sObj
 
     def makeSchema(self, databaseName, collectionName, encodingType="BSON", level="full", saveSchema=False, extraOpts=None):
+        """Create the JSON or BSON schema file for a given database and collection (i.e., the files under, 'json_schema_definitions')
+        
+        Args:
+            databaseName (str): database name (e.g., 'pdbx_comp_model_core')
+            collectionName (str): collection name in document store (e.g., 'pdbx_comp_model_core_entry')
+            encodingType (str, optional): data type convention (BSON|JSON)
+            level (str, optional): Completeness of the schema (e.g. min or full)
+            saveSchema (bool, optional): whether to save the schema to jsonSchemaCachePath or not (default False)
+            extraOpts (str, optional): extra schema construction options
+
+        Returns:
+            dict: JSON or BSON schema
+
+        """
         try:
             smb = SchemaDefBuild(databaseName, self.__cfgOb, cachePath=self.__cachePath)
             #
@@ -349,6 +363,17 @@ class SchemaProvider(SingletonClass):
         return cD
 
     def makeSchemaDef(self, databaseName, dataTyping="ANY", saveSchema=False):
+        """Create the schema definition file for a given database (i.e., the files under 'schema_definitions')
+        
+        Args:
+            databaseName (str): database name (e.g., 'pdbx_comp_model_core')
+            dataTyping (str, optional): Application name for the target schema (e.g. ANY, SQL, ...)
+            saveSchema (bool, optional): whether to save the schema to schemaCachePath or not (default False)
+
+        Returns:
+            dict: schema definition dictionary
+
+        """
         schemaDef = None
         try:
             smb = SchemaDefBuild(databaseName, self.__cfgOb, cachePath=self.__cachePath)
