@@ -170,6 +170,7 @@ class PdbxLoaderTests(unittest.TestCase):
                 collectionLoadList=kwargs["collectionNameList"],
                 loadType=kwargs["loadType"],
                 inputPathList=None,
+                inputIdCodeList=None,
                 styleType=self.__documentStyle,
                 dataSelectors=["PUBLIC_RELEASE"],
                 failedFilePath=self.__failedFilePath,
@@ -213,6 +214,7 @@ class PdbxLoaderTests(unittest.TestCase):
 def mongoLoadPdbxSuite():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(PdbxLoaderTests("testPdbxLoader"))
+    suiteSelect.addTest(PdbxLoaderTests("testPdbxCompModelLoader"))
     return suiteSelect
 
 

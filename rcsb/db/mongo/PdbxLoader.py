@@ -28,6 +28,7 @@
 #                      support locator object lists.
 #      6-Aug-2019 jdw  Add schema generation option and move dictionary API instantiation into load() method.
 #     18-May-2020 jdw  Add brute force document purging for loadType=replace
+#     10-Jan-2022 dwp  Add support for loading id code lists for mongo PdbxLoader() (preliminary); Done by JDW on 18-Oct-2021, but not pushed.
 #
 ##
 """
@@ -535,6 +536,7 @@ class PdbxLoader(object):
         collectionLoadList=None,
         loadType="full",
         inputPathList=None,
+        inputIdCodeList=None,
         styleType="rowwise_by_name",
         dataSelectors=None,
         failedFilePath=None,
@@ -558,6 +560,7 @@ class PdbxLoader(object):
             collectionLoadList (list, optional): list of collection names in this schema to load (default is load all collections)
             loadType (str, optional): mode of loading 'full' (bulk delete then bulk insert) or 'replace'
             inputPathList (list, optional): Data file path list (if not provided the full repository will be scanned)
+            inputIdCodeList (list, optional): ID Code list (remote discovery mode) (if not provided the full repository will be scanned)
             styleType (str, optional): one of 'rowwise_by_name', 'columnwise_by_name', 'rowwise_no_name', 'rowwise_by_name_with_cardinality'
             dataSelectors (list, optional): selector names defined for this schema (e.g. PUBLIC_RELEASE)
             failedFilePath (str, optional): Path to hold file paths for load failures
@@ -599,7 +602,7 @@ class PdbxLoader(object):
                 return ok
             # ---
             self.__dmh = DictMethodRunner(dictApi, modulePathMap=modulePathMap, resourceProvider=dmrP)
-            locatorObjList = self.__rpP.getLocatorObjList(contentType=databaseName, inputPathList=inputPathList, mergeContentTypes=mergeContentTypes)
+            locatorObjList = self.__rpP.getLocatorObjList(contentType=databaseName, inputPathList=inputPathList, inputIdCodeList=inputIdCodeList, mergeContentTypes=mergeContentTypes)
             logger.info("Loading database %s (%r) with path length %d", databaseName, loadType, len(locatorObjList))
             #
             if saveInputFileListPath:

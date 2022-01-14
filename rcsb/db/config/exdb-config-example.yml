@@ -21,6 +21,7 @@
 #                 Make dictionaries point to the new dictionary asset layout
 #                 and deprecate REPO_UTIL_CACHE_DIR
 #   12-Oct-2021 - Add method class mapping for rcsb.utils.dictionary.DictMethodCompModelHelper
+#   13-Jan-2022 - Add PDBX_COMP_MODEL_SANDBOX_PATH
 # --
 ---
 DEFAULT: {}
@@ -58,6 +59,7 @@ site_info_configuration:
   PDBX_REPO_PATH: MOCK_PDBX_SANDBOX
   PDBX_OBSOLETE_REPO_PATH: MOCK_PDBX_SANDBOX
   RCSB_EXCHANGE_SANDBOX_PATH: MOCK_EXCHANGE_SANDBOX
+  PDBX_COMP_MODEL_SANDBOX_PATH: MOCK_COMP_MODEL_SANDBOX
   IHM_DEV_REPO_PATH: MOCK_IHM_REPO
   VRPT_REPO_PATH: MOCK_VALIDATION_REPORTS
   VRPT_REPO_PATH_ENV: VRPT_REPO_PATH_ALT
@@ -205,6 +207,7 @@ site_info_remote_configuration:
   PDBX_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/data/structures/divided/mmCIF
   PDBX_OBSOLETE_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/data/structures/obsolete/mmCIF
   RCSB_EXCHANGE_SANDBOX_PATH: /net/sandbox_v5/ftp-v5.0-support
+  # PDBX_COMP_MODEL_SANDBOX_PATH: MOCK_COMP_MODEL_SANDBOX
   IHM_DEV_REPO_PATH: ../py-rcsb_db/rcsb/mock-data/MOCK_IHM_REPOMOCK_IHM_REPO
   VRPT_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/validation_reports
   VRPT_REPO_PATH_ENV: VRPT_REPO_PATH_ALT

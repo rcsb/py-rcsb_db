@@ -97,6 +97,7 @@ def main():
     group.add_argument("--scan_bird_family_ref", default=False, action="store_true", help="Scan Bird Family reference definitions (public subset)")
     group.add_argument("--scan_entry_data", default=False, action="store_true", help="Scan PDB entry data (current released subset)")
     group.add_argument("--scan_obsolete_entry_data", default=False, action="store_true", help="Scan obsolete PDB entry data")
+    group.add_argument("--scan_comp_model_data", default=False, action="store_true", help="Scan computational model files (mock-data subset)")
     group.add_argument("--scan_ihm_dev", default=False, action="store_true", help="Scan PDBDEV I/HM entry data (current released subset)")
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
@@ -197,6 +198,9 @@ def main():
 
     elif args.scan_obsolete_entry_data:
         contentType = "pdbx_obsolete"
+
+    elif args.scan_comp_model_data:
+        contentType = "pdbx_comp_model_core"
 
     elif args.scan_ihm_dev:
         contentType = "ihm_dev"
