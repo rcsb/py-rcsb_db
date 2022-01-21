@@ -28,7 +28,7 @@
 #                      support locator object lists.
 #      6-Aug-2019 jdw  Add schema generation option and move dictionary API instantiation into load() method.
 #     18-May-2020 jdw  Add brute force document purging for loadType=replace
-#     10-Jan-2022 dwp  Add support for loading id code lists for mongo PdbxLoader() (preliminary); Done by JDW on 18-Oct-2021, but not pushed.
+#     10-Jan-2022 dwp  Add support for loading id code lists for mongo PdbxLoader() (preliminary)
 #
 ##
 """
