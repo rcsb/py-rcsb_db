@@ -19,6 +19,7 @@
 #                        getSubCategoryAttributeIdList()
 #       16-Mar-2021 jdw add getAttributeEmbeddedIterableSeparator() and isAttributeEmbeddedIterable(),
 #                           getEmbeddedIterableSeparator() and isEmbeddedIterable()
+#       28-Feb-2022 bv  add method getSubCategoryAggregatesMandatory()
 ##
 """
 Schema defintion accessors.
@@ -256,6 +257,17 @@ class SchemaDefAccess(object):
             for dD in self.__documentDefDict["COLLECTION_SUB_CATEGORY_AGGREGATES"][collectionName]:
                 if subCategoryName == dD["NAME"]:
                     return dD["HAS_UNIT_CARDINALITY"]
+        except Exception:
+            return False
+
+    def getSubCategoryAggregatesMandatory(self, collectionName, subCategoryName):
+        """Return if the input subcategory is mandatory."""
+        try:
+            for dD in self.__documentDefDict["COLLECTION_SUB_CATEGORY_AGGREGATES"][collectionName]:
+                if subCategoryName == dD["NAME"] and dD["MANDATORY"]:
+                    return dD["MANDATORY"]
+                else:
+                    return False
         except Exception:
             return False
 
