@@ -15,6 +15,8 @@
 #   6-Jun-2019 jdw take dictionary API as an argument.
 #  22-Aug-2019 jdw unify naming conventions dictSubset->databaseName and *ForSubset() -> *ForDatabase()
 #   5-Sep-2019 jdw add extended DDL metadata.
+#  24-Jan-2022 dwp Exclude all categories beginning with "ma_" from being mandatory
+#                  (temporarily hardcoded here until new configuration file section added to achieve same effect)
 #
 #
 ##
@@ -672,7 +674,12 @@ class ContentDefinition(object):
         cD["KEY_ATTRIBUTES"] = [CifName.attributePart(keyItem) for keyItem in self.__getCategoryKeysWithReplacement(catName)]
         cD["UNIT_CARDINALITY"] = catName in unitCardinalityList
         cD["CONTENT_CLASSES"] = self.__getContentClasses(catName)
-        cD["IS_MANDATORY"] = True if str(self.__dApi.getCategoryMandatoryCode(catName)).lower() == "yes" else False
+        #
+        # Exclude all categories beginning with "ma_" from being mandatory
+        # (temporarily hardcoded here until new configuration file section added to achieve same effect)
+        cD["IS_MANDATORY"] = True if str(self.__dApi.getCategoryMandatoryCode(catName)).lower() == "yes" and not catName.startswith("ma_") else False
+        # cD["IS_MANDATORY"] = True if str(self.__dApi.getCategoryMandatoryCode(catName)).lower() == "yes" else False
+        #
         cD["SUB_CATEGORIES"] = subCategoryD[catName] if catName in subCategoryD else []
         #
         return cD

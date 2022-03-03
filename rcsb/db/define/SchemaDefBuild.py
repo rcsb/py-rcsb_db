@@ -698,7 +698,8 @@ class SchemaDefBuild(object):
             aD = self.__getAmendedAttributeFeatures(collectionName, catName, documentDefHelper)
             #
             if cfD["IS_MANDATORY"]:
-                mandatoryCategoryL.append(catName)
+                if catName != "ma_data":
+                    mandatoryCategoryL.append(catName)
             #
             isUnitCard = True if ("UNIT_CARDINALITY" in cfD and cfD["UNIT_CARDINALITY"]) else False
             if sliceFilter and sliceFilter in sliceCardD:

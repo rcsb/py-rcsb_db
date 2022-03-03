@@ -94,7 +94,7 @@ class RepoHoldingsRemoteLoaderTests(unittest.TestCase):
         """
         try:
             sectionName = "repository_holdings_configuration"
-            rhdp = RepoHoldingsRemoteDataPrep(self.__cachePath, filterType=self.__filterType)
+            rhdp = RepoHoldingsRemoteDataPrep(cachePath=self.__cachePath, filterType=self.__filterType)
             #
             dl = DocumentLoader(
                 self.__cfgOb,
