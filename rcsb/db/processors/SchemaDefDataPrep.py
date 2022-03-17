@@ -426,7 +426,14 @@ class SchemaDefDataPrep(object):
                                                         continue
                                                     # handle embedded iterable
                                                     if (sName, atName) in emIterableD:
-                                                        dD[cAtName] = rowD[atName][ii].split(emIterableD[(sName, atName)])
+                                                        if atName == "feature_positions_values":
+                                                            valL = str(rowD[atName][ii]).split(emIterableD[(sName, atName)])
+                                                            newL = []
+                                                            for val in valL:
+                                                                newL.append(float(val))
+                                                            dD[cAtName] = newL
+                                                        else:
+                                                            dD[cAtName] = rowD[atName][ii].split(emIterableD[(sName, atName)])
                                                         # logger.debug("(list) sName %r scAg %r cAtName %r atName %r value %r", sName, scAg, cAtName, atName, dD[cAtName])
                                                     else:
                                                         dD[cAtName] = rowD[atName][ii]
