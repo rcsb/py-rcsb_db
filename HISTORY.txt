@@ -332,4 +332,3 @@
   5-Jan-2022  V1.700 Add pdbx_comp_model_core database to CLI commands, and
                      Add support for loading id code lists for mongo PdbxLoader() (preliminary)
                      Exclude 'ma_' categories from being declared as mandatory
- 28-Mar-2022  V1.701 Resolve build issues
