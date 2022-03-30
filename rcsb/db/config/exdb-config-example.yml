@@ -70,7 +70,6 @@ site_info_configuration:
   SIFTS_SUMMARY_DATA_PATH: sifts-summary
   #
   # --------- Configuration for remote and local data access ----
-  # DISCOVERY_MODE: local
   DISCOVERY_MODE: remote
   PDB_REPO_URL: https://ftp.wwpdb.org/pub
   PDB_REPO_FALLBACK_URL: https://ftp.wwpdb.org/pub
@@ -119,26 +118,14 @@ site_info_configuration:
   # ------ ------ ------ ------ ------ ------ ------ -------
   # Make dictionaries point to the new dictionary asset layout  -
   #
-  ## FOR TESTING ONLY:
-  PDBX_DICT_LOCATOR: /Users/dennis/rcsb/py-rcsb_exdb_assets/dictionary_files/reference/mmcif_pdbx_v5_next.dic
-  RCSB_DICT_LOCATOR: /Users/dennis/rcsb/py-rcsb_exdb_assets/dictionary_files/dist/rcsb_mmcif_ext.dic
-  RCSB_COMP_MODEL_DICT_LOCATOR: /Users/dennis/rcsb/py-rcsb_exdb_assets/dictionary_files/dist/rcsb_mmcif_comp_model_ext.dic
-  FLR_DICT_LOCATOR: /Users/dennis/rcsb/py-rcsb_exdb_assets/dictionary_files/reference/flr-extension.dic
-  VRPT_DICT_LOCATOR: /Users/dennis/rcsb/py-rcsb_exdb_assets/dictionary_files/reference/vrpt_mmcif_ext.dic
-  VRPT_DICT_MAPPING_LOCATOR: /Users/dennis/rcsb/py-rcsb_exdb_assets/dictionary_files/reference/vrpt_dictmap.json
-  IHMDEV_DICT_LOCATOR: /Users/dennis/rcsb/py-rcsb_exdb_assets/dictionary_files/reference/ihm-extension.dic
-  MA_DICT_LOCATOR: /Users/dennis/rcsb/py-rcsb_exdb_assets/dictionary_files/reference/mmcif_ma.dic
-  #
-  ## FOR PRODUCTION:
-  # PDBX_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/mmcif_pdbx_v5_next.dic
-  # RCSB_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/dist/rcsb_mmcif_ext.dic
-  # RCSB_COMP_MODEL_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/dist/rcsb_mmcif_comp_model_ext.dic
-  # FLR_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/flr-extension.dic
-  # VRPT_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/vrpt_mmcif_ext.dic
-  # VRPT_DICT_MAPPING_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/vrpt_dictmap.json
-  # IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/ihm-extension.dic
-  # MA_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/mmcif_ma.dic
-  #
+  PDBX_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/mmcif_pdbx_v5_next.dic
+  RCSB_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/dist/rcsb_mmcif_ext.dic
+  RCSB_COMP_MODEL_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/dist/rcsb_mmcif_comp_model_ext.dic
+  FLR_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/flr-extension.dic
+  VRPT_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/vrpt_mmcif_ext.dic
+  VRPT_DICT_MAPPING_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/vrpt_dictmap.json
+  IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/ihm-extension.dic
+  MA_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/mmcif_ma.dic
   ## Previously pointed to 'dictionary_files/reference', but point to authoritative source instead to ensure most recent version is used
   # IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/ihmwg/IHM-dictionary/master/ihm-extension.dic
   # MA_DICT_LOCATOR: https://raw.githubusercontent.com/ihmwg/MA-dictionary/master/mmcif_ma.dic
@@ -147,18 +134,12 @@ site_info_configuration:
   # Added in rcsb.db V0.966 - Data type details and type mapping
   APP_DATA_TYPE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/data_type_and_coverage/app_data_type_mapping.cif
   #
-  # FOR TESTING ONLY:
-  INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH: /Users/dennis/rcsb/py-rcsb_exdb_assets/data_type_and_coverage
-  # FOR PRODUCTION:
-  # INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/data_type_and_coverage
+  INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/data_type_and_coverage
   #
   CONTENT_DEF_HELPER_MODULE: rcsb.db.helpers.ContentDefinitionHelper
   DOCUMENT_DEF_HELPER_MODULE: rcsb.db.helpers.DocumentDefinitionHelper
   CONFIG_APPEND_LOCATOR_PATHS:
-    # FOR TESTING ONLY:
-    - /Users/dennis/rcsb/py-rcsb_exdb_assets/config/exdb-config-schema.yml
-    # FOR PRODUCTION:
-    # - https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/config/exdb-config-schema.yml
+    - https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/config/exdb-config-schema.yml
   #
   # ------ ------ ------ ------ ------ ------ ------ ------ ------
   #
@@ -189,8 +170,7 @@ site_info_remote_configuration:
   #     dev: 128.6.158.254
   # staging: 128.6.159.43
   #
-  # MONGO_DB_HOST: 128.6.158.254
-  MONGO_DB_HOST: localhost
+  MONGO_DB_HOST: 128.6.158.254
   MONGO_DB_PORT: "27017"
   _MONGO_DB_USER_NAME: vknsNHfQ1nyy5w1vsfP4fbOp1iPxD3K5yZmNFsJDqTRl+87zicTLa9lkHG5uReM=
   _MONGO_DB_PASSWORD: wfm/FNyhON/AGaJfLhL5ZA0ObAVU0DZ0sICB2eemS8GFfAOZvo3Y/vXTkjLayViwppj2MQ==
@@ -232,7 +212,7 @@ site_info_remote_configuration:
   PDBX_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/data/structures/divided/mmCIF
   PDBX_OBSOLETE_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/data/structures/obsolete/mmCIF
   RCSB_EXCHANGE_SANDBOX_PATH: /net/sandbox_v5/ftp-v5.0-support
-  # PDBX_COMP_MODEL_SANDBOX_PATH: MOCK_COMP_MODEL_SANDBOX
+  PDBX_COMP_MODEL_SANDBOX_PATH: ../py-rcsb_db/rcsb/mock-data/MOCK_COMP_MODEL_SANDBOX
   IHM_DEV_REPO_PATH: ../py-rcsb_db/rcsb/mock-data/MOCK_IHM_REPOMOCK_IHM_REPO
   VRPT_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/validation_reports
   VRPT_REPO_PATH_ENV: VRPT_REPO_PATH_ALT
