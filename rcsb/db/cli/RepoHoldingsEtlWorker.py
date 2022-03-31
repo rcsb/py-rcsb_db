@@ -98,7 +98,7 @@ class RepoHoldingsEtlWorker(object):
             if discoveryMode == "local":
                 rhdp = RepoHoldingsDataPrep(cfgOb=self.__cfgOb, sandboxPath=self.__sandboxPath, cachePath=self.__cachePath, filterType=self.__filterType)
             else:
-                rhdp = RepoHoldingsRemoteDataPrep(self.__cachePath, **kwD)
+                rhdp = RepoHoldingsRemoteDataPrep(cachePath=self.__cachePath, **kwD)
             #
             dl = DocumentLoader(
                 self.__cfgOb,

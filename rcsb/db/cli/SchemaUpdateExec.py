@@ -7,6 +7,7 @@
 #  Updates:
 #   13-Dec-2018 jdw add Drugbank and I/HM schema options
 #    7-Jan-2019 jdw overhaul
+#   23-Nov-2021 dwp Add pdbx_comp_model_core
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -44,6 +45,7 @@ def main():
 
     parser.add_argument("--update_pdbx", default=False, action="store_true", help="Update schema for PDBx entry data")
     parser.add_argument("--update_pdbx_core", default=False, action="store_true", help="Update schema for PDBx core entry/entity data")
+    parser.add_argument("--update_pdbx_comp_model_core", default=False, action="store_true", help="Update schema for PDBx computational model core entry/entity data")
     #
     parser.add_argument("--update_repository_holdings", default=False, action="store_true", help="Update schema for repository holdings")
     parser.add_argument("--update_entity_sequence_clusters", default=False, action="store_true", help="Update schema for entity sequence clusters")
@@ -123,6 +125,9 @@ def main():
 
     if args.update_pdbx_core:
         databaseNameList.append("pdbx_core")
+
+    if args.update_pdbx_comp_model_core:
+        databaseNameList.append("pdbx_comp_model_core")
 
     if args.update_repository_holdings:
         databaseNameList.append("repository_holdings")

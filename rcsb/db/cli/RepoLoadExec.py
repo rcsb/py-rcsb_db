@@ -19,6 +19,7 @@
 #     3-Dec-2018 - jdw add options to load specific core collections.
 #    12-Dec-2018 - jdw add core_entity_monomer collection support
 #    13-Dec-2018 - jdw add I/HM schema support
+#    23-Nov-2021 - dwp Add pdbx_comp_model_core
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -87,6 +88,17 @@ def main():
     parser.add_argument("--load_pdbx_core_entity", default=False, action="store_true", help="Load PDBx core entity (current released subset)")
     parser.add_argument("--load_pdbx_core_entity_monomer", default=False, action="store_true", help="Load PDBx core entity monomer (current released subset)")
     parser.add_argument("--load_pdbx_core_assembly", default=False, action="store_true", help="Load PDBx core assembly (current released subset)")
+    #
+    parser.add_argument("--load_pdbx_comp_model_core", default=False, action="store_true", help="Load all PDBx computational model core collections (current released subset)")
+    # Add these specific flags in later:
+    # parser.add_argument("--load_pdbx_comp_model_core_merge", default=False, action="store_true",
+    #                     help="Load all PDBx computational model core collections with merged content (current released subset)")
+    # parser.add_argument("--load_pdbx_comp_model_core_entry", default=False, action="store_true", help="Load PDBx computational model core entry (current released subset)")
+    # parser.add_argument("--load_pdbx_comp_model_core_entity", default=False, action="store_true", help="Load PDBx computational model core entity (current released subset)")
+    # parser.add_argument("--load_pdbx_comp_model_core_entity_monomer", default=False, action="store_true",
+    #                     help="Load PDBx computational model core entity monomer (current released subset)")
+    # parser.add_argument("--load_pdbx_comp_model_core_assembly", default=False, action="store_true", help="Load PDBx computational model core assembly (current released subset)")
+    #
     parser.add_argument("--load_ihm_dev", default=False, action="store_true", help="Load I/HM DEV model data (current released subset)")
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
@@ -210,7 +222,7 @@ def main():
             readBackCheck=readBackCheck,
             rebuildSchemaFlag=rebuildSchemaFlag,
         )
-
+        #
         if args.load_chem_comp_ref:
             ok = mw.load(
                 "chem_comp",
@@ -224,7 +236,7 @@ def main():
                 validationLevel=schemaLevel,
             )
             okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
-
+        #
         if args.load_chem_comp_core_ref:
             ok = mw.load(
                 "chem_comp_core",
@@ -238,7 +250,7 @@ def main():
                 validationLevel=schemaLevel,
             )
             okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
-
+        #
         if args.load_bird_chem_comp_ref:
             ok = mw.load(
                 "bird_chem_comp",
@@ -252,7 +264,7 @@ def main():
                 validationLevel=schemaLevel,
             )
             okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
-
+        #
         if args.load_bird_chem_comp_core_ref:
             ok = mw.load(
                 "bird_chem_comp_core",
@@ -266,7 +278,7 @@ def main():
                 validationLevel=schemaLevel,
             )
             okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
-
+        #
         if args.load_bird_ref:
             ok = mw.load(
                 "bird",
@@ -280,7 +292,7 @@ def main():
                 validationLevel=schemaLevel,
             )
             okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
-
+        #
         if args.load_bird_family_ref:
             ok = mw.load(
                 "bird_family",
@@ -294,7 +306,7 @@ def main():
                 validationLevel=schemaLevel,
             )
             okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
-
+        #
         if args.load_entry_data:
             ok = mw.load(
                 "pdbx",
@@ -308,7 +320,7 @@ def main():
                 validationLevel=schemaLevel,
             )
             okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
-
+        #
         if args.load_pdbx_core:
             ok = mw.load(
                 "pdbx_core",
@@ -382,7 +394,7 @@ def main():
                 validationLevel=schemaLevel,
             )
             okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
-
+        #
         if args.load_pdbx_core_assembly:
             ok = mw.load(
                 "pdbx_core",
@@ -397,7 +409,21 @@ def main():
                 validationLevel=schemaLevel,
             )
             okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
-
+        #
+        if args.load_pdbx_comp_model_core:
+            ok = mw.load(
+                "pdbx_comp_model_core",
+                loadType=loadType,
+                inputPathList=inputPathList,
+                styleType=args.document_style,
+                dataSelectors=["PUBLIC_RELEASE"],
+                failedFilePath=failedFilePath,
+                saveInputFileListPath=saveInputFileListPath,
+                pruneDocumentSize=pruneDocumentSize,
+                validationLevel=schemaLevel,
+            )
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
+        #
         if args.load_ihm_dev:
             ok = mw.load(
                 "ihm_dev",

@@ -122,7 +122,7 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
         """Test loading and processing operations for legacy holdings and status data."""
         rL = []
         try:
-            rhdp = RepoHoldingsRemoteDataPrep(self.__cachePath)
+            rhdp = RepoHoldingsRemoteDataPrep(cachePath=self.__cachePath)
             if collectionName == "repository_holdings_update_entry":
                 rL = rhdp.getHoldingsUpdateEntry(updateId=updateId)
                 self.assertGreaterEqual(len(rL), 10)

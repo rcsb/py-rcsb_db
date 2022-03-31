@@ -23,6 +23,7 @@
 # 30-Apr-2020 jdw new NMR content types and support for config option RCSB_EDMAP_LIST_PATH
 # 23-Oct-2020 jdw add getHoldingsCombined()
 # 21-Sep-2021 jdw overhaul using new resource files and with support for remote access
+#  4-Feb-2022 dwp Further overhaul for using new resource files and support for remote access
 ##
 
 __docformat__ = "restructuredtext en"
@@ -46,12 +47,13 @@ logger = logging.getLogger(__name__)
 class RepoHoldingsRemoteDataPrep(object):
     """Assemble repository current and update content holdings."""
 
-    def __init__(self, cachePath, **kwargs):
+    def __init__(self, cachePath=None, useCache=False, **kwargs):
         # filterType is passed along in kwargs to these supporting classes -
         # self.__filterType = kwargs.get("filterType", "")
         # self.__assignDates = "assign-dates" in self.__filterType
         #
-        useCache = False
+        self.__cfgOb = kwargs.get("cfgOb", None)
+        #
         self.__chP = CurrentHoldingsProvider(cachePath, useCache, **kwargs)
         self.__uphP = UpdateHoldingsProvider(cachePath, useCache, **kwargs)
         self.__unhP = UnreleasedHoldingsProvider(cachePath, useCache, **kwargs)

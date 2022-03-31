@@ -48,35 +48,35 @@ class RepoHoldingsDataPrepTests(unittest.TestCase):
         self.__sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=configName)
         #
         self.__startTime = time.time()
-        logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
+        logger.info("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
     def tearDown(self):
         endTime = time.time()
-        logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+        logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testProcessLegacyFiles(self):
         """Test loading and processing operations for repository holdings and status echange data."""
         try:
             rhdp = RepoHoldingsDataPrep(cfgOb=self.__cfgOb, sandboxPath=self.__sandboxPath, cachePath=self.__cachePath)
             rL = rhdp.getHoldingsUpdateEntry(updateId=self.__updateId)
-            logger.debug("update data length %r", len(rL))
+            logger.info("update data length %r", len(rL))
             self.assertGreaterEqual(len(rL), 10)
             #
             rL = rhdp.getHoldingsCurrentEntry(updateId=self.__updateId)
             self.assertGreaterEqual(len(rL), 10)
-            logger.debug("holdings data length %r", len(rL))
+            logger.info("holdings data length %r", len(rL))
             #
             rL = rhdp.getHoldingsUnreleasedEntry(updateId=self.__updateId)
             self.assertGreaterEqual(len(rL), 10)
-            logger.debug("unreleased data length %r", len(rL))
+            logger.info("unreleased data length %r", len(rL))
             #
             rL = rhdp.getHoldingsRemovedEntry(updateId=self.__updateId)
             self.assertGreaterEqual(len(rL), 10)
-            logger.debug("unreleased data length %r", len(rL))
+            logger.info("removed data length %r", len(rL))
 
             rL = rhdp.getHoldingsCombinedEntry(updateId=self.__updateId)
             self.assertGreaterEqual(len(rL), 10)
-            logger.debug("combined data length %r", len(rL))
+            logger.info("combined data length %r", len(rL))
             #
         except Exception as e:
             logger.exception("Failing with %s", str(e))
