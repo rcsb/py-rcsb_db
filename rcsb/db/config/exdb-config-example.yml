@@ -71,6 +71,7 @@ site_info_configuration:
   SIFTS_SUMMARY_DATA_PATH: sifts-summary
   #
   # --------- Configuration for remote and local data access ----
+  # DISCOVERY_MODE: local
   DISCOVERY_MODE: remote
   PDB_REPO_URL: https://ftp.wwpdb.org/pub
   PDB_REPO_FALLBACK_URL: https://ftp.wwpdb.org/pub
@@ -171,7 +172,8 @@ site_info_remote_configuration:
   #     dev: 128.6.158.254
   # staging: 128.6.159.43
   #
-  MONGO_DB_HOST: 128.6.158.254
+  # MONGO_DB_HOST: 128.6.158.254
+  MONGO_DB_HOST: localhost
   MONGO_DB_PORT: "27017"
   _MONGO_DB_USER_NAME: vknsNHfQ1nyy5w1vsfP4fbOp1iPxD3K5yZmNFsJDqTRl+87zicTLa9lkHG5uReM=
   _MONGO_DB_PASSWORD: wfm/FNyhON/AGaJfLhL5ZA0ObAVU0DZ0sICB2eemS8GFfAOZvo3Y/vXTkjLayViwppj2MQ==
