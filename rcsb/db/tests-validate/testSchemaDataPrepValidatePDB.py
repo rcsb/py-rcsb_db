@@ -188,7 +188,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         if not inputPathList:
             return True
         #databaseNameD = {"pdbx_core": ["pdbx_core_entity", "pdbx_core_entry", "pdbx_core_entity_instance", "pdbx_core_entity_instance_validation"]}
-        databaseNameD = {"pdbx_core": ["pdbx_core_entry"]}
+        databaseNameD = {"pdbx_core": ["pdbx_core_entry", "pdbx_core_assembly"]}
         eCount = self.__testValidateOpts(databaseNameD=databaseNameD, inputPathList=inputPathList, schemaLevel=schemaLevel, mergeContentTypeD=self.__mergeContentTypeD)
         logger.info("Total validation errors schema level %s : %d", schemaLevel, eCount)
         #for ii, subList in enumerate(chunkList(inputPathList[::-1], 40)):

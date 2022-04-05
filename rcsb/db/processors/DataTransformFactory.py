@@ -12,6 +12,7 @@
 #                 Refactor time critical sections of processRecords()
 #                 to minimize costly functon calls for simple casts.
 # 24-Mar-2019 jdw adjust null value filtering
+#  4-Apr-2022  bv handle embedded iterable float values in 'castIterableFloat' method
 ##
 """
 Factory for functional elements of the transformations between input data and
@@ -356,7 +357,11 @@ class DataTransform(object):
         if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == ""):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
         # vL = [float(v.strip()) for v in str(trfTup.value).split(self.__tObj.getIterableSeparator(trfTup.atId))]
-        vL = [float(v.strip()) if v.strip() not in [".", "?"] else None for v in str(trfTup.value).split(self.__tObj.getIterableSeparator(trfTup.atId))]
+        if not self.__tObj.isEmbeddedIterable(trfTup.atId):
+            vL = [float(v.strip()) if v.strip() not in [".", "?"] else None for v in str(trfTup.value).split(self.__tObj.getIterableSeparator(trfTup.atId))]
+        else:
+            vL = [v.strip() if v.strip() not in [".", "?"] else None for v in str(trfTup.value).split(self.__tObj.getIterableSeparator(trfTup.atId))]
+
         return TrfValue(vL, trfTup.atId, trfTup.origLength, False)
 
     def castDateToObj(self, trfTup):
