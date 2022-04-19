@@ -699,7 +699,6 @@ class SchemaDefBuild(object):
             aD = self.__getAmendedAttributeFeatures(collectionName, catName, documentDefHelper)
             #
             if cfD["IS_MANDATORY"]: 
-                # if catName != "ma_data":
                 if not catName.startswith("ma_"):
                     mandatoryCategoryL.append(catName)
             #

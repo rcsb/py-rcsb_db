@@ -418,6 +418,7 @@ class SchemaDefDataPrep(object):
                                             # all members of the the subcategory must be list type -
                                             atLenL = [len(rowD[atName]) for atName in atNameL]
                                             atLen = min(atLenL)
+                                            # logger.info("%s %s %r Candidate list row is %r", scAg, sName, atNameL, rowD)
                                             # copy all of the data to the new aggregate object
                                             rL = []
                                             for ii in range(atLen):
@@ -434,7 +435,7 @@ class SchemaDefDataPrep(object):
                                                             dD[cAtName] = [float(val) for val in str(rowD[atName][ii]).split(emIterableD[(sName, atName)])]
                                                         else:
                                                             dD[cAtName] = rowD[atName][ii].split(emIterableD[(sName, atName)])
-                                                        # logger.info("(list) sName %r scAg %r cAtName %r atName %r value %r", sName, scAg, cAtName, atName, dD[cAtName])
+                                                        # logger.debug("(list) sName %r scAg %r cAtName %r atName %r value %r", sName, scAg, cAtName, atName, dD[cAtName])
                                                     else:
                                                         dD[cAtName] = rowD[atName][ii]
                                                 rL.append(dD)

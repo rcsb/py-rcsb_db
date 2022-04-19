@@ -144,7 +144,7 @@ class PdbxLoaderTests(unittest.TestCase):
 
     @unittest.skipUnless(loadModels, "Skip model load test")
     def testPdbxCompModelLoader(self):
-        self.__modelFixture()
+        self.__modelFixture()  # Comment out for manual testing
         for ld in self.__ldModelList:
             self.__pdbxLoaderWrapper(**ld)
 
@@ -163,7 +163,8 @@ class PdbxLoaderTests(unittest.TestCase):
                 readBackCheck=self.__readBackCheck,
                 maxStepLength=2000,
                 useSchemaCache=True,
-                rebuildSchemaFlag=False,
+                # rebuildSchemaFlag=False,  # This doesn't work for testing, I think because it's probably copying old schema files from remote repo and using those
+                rebuildSchemaFlag=True,
             )
             ok = mw.load(
                 kwargs["databaseName"],

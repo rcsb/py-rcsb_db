@@ -329,5 +329,6 @@
  17-Oct-2021  V1.697 Standardize path details for computed models
  17-Oct-2021  V1.698 Change the path hierarchy for computed models
  16-Dec-2021  V1.699 Enforce pymongo version 3.12.0; latest release (4.0) results in self.__dbClient not being created successfully
-  5-Jan-2022  V1.700 Add pdbx_comp_model_core database to CLI commands, and
+ 30-Mar-2022  V1.700 Add pdbx_comp_model_core database to CLI commands, and
                      Add support for loading id code lists for mongo PdbxLoader() (preliminary)
+                     Exclude 'ma_' categories from being declared as mandatory
