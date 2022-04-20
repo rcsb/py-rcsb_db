@@ -25,6 +25,7 @@
 #                 to describe parent relationships
 #  3-Apr-2019 jdw add experimental primary key property controlled by 'addPrimaryKey'
 # 22-Aug-2019 jdw DictInfo() replaced with new ContentInfo()
+# 28-Feb-2022 bv add support for mandatory sub-categories in json schema
 ##
 """
 Integrate dictionary metadata and file based (type/coverage) into internal and JSON/BSON schema defintions.
@@ -740,6 +741,7 @@ class SchemaDefBuild(object):
             #
 
             subCatPropD = {}
+            scMandatory = None
             if subCategoryAggregates:
                 logger.debug("%s %s %s subcategories %r", databaseName, collectionName, catName, cfD["SUB_CATEGORIES"])
                 for subCategory in subCategoryAggregates:
@@ -749,6 +751,7 @@ class SchemaDefBuild(object):
                     reqL = []
                     scD = {typeKey: "object", "properties": {}, "additionalProperties": False}
                     scHasUnitCard = documentDefHelper.getSubCategoryAggregateUnitCardinality(collectionName, subCategory)
+                    scMandatory = documentDefHelper.getSubCategoryAggregateMandatory(collectionName, subCategory)
                     for atName in sorted(atNameList):
                         fD = aD[atName]
                         #
@@ -782,6 +785,8 @@ class SchemaDefBuild(object):
                     if scD["properties"]:
                         if reqL:
                             scD["required"] = reqL
+                        if scMandatory and "mandatoryAttributes" in enforceOpts:
+                            pD.setdefault("required", []).append(subCategory)
                         if scHasUnitCard:
                             subCatPropD[subCategory] = scD
                         else:
