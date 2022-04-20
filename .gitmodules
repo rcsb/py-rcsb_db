@@ -1,0 +1,3 @@
+[submodule "rcsb/mock-data"]
+	path = rcsb/mock-data
+	url = https://github.com/rcsb/py-rcsb_mock-data.git
