@@ -1,0 +1,158 @@
+data_PRD_000154
+#
+_pdbx_reference_molecule.prd_id                      PRD_000154
+_pdbx_reference_molecule.name                        "MINI-GRAMICIDIN A DIMER"
+_pdbx_reference_molecule.represent_as                polymer
+_pdbx_reference_molecule.type                        Polypeptide
+_pdbx_reference_molecule.type_evidence_code          ?
+_pdbx_reference_molecule.class                       Antibiotic
+_pdbx_reference_molecule.class_evidence_code         ?
+_pdbx_reference_molecule.formula                     "C168 H226 N32 O26"
+_pdbx_reference_molecule.formula_weight              3109.791
+_pdbx_reference_molecule.chem_comp_id                ?
+_pdbx_reference_molecule.release_status              REL
+_pdbx_reference_molecule.replaces                    ?
+_pdbx_reference_molecule.replaced_by                 ?
+_pdbx_reference_molecule.compound_details
+;GRAMICIDIN IS A HETEROGENEOUS MIXTURE OF SEVERAL COMPOUNDS
+INCLUDING GRAMICIDIN A, B AND C WHICH ARE OBTAINED FROM
+BACILLUS BREVIS AND CALLED COLLECTIVELY GRAMICIDIN D
+HERE, A MODIFIDED GRAMICIDIN A IS REPRESENTED BY TWO SEQUENCES
+(SEQRES) AND ONE HET (SIN)
+;
+
+_pdbx_reference_molecule.description
+;THE N-TERMINI OF THE TWO IDENTICAL PEPTIDES, EACH
+A TRUNCATED GRAMICIDIN A WERE LINKED BY A SUCCINIC
+ACID IN A HEAD-TO-HEAD MANNER.
+;
+
+_pdbx_reference_molecule.representative_PDB_id_code  1kqe
+##
+loop_
+_pdbx_reference_entity_list.prd_id
+_pdbx_reference_entity_list.ref_entity_id
+_pdbx_reference_entity_list.component_id
+_pdbx_reference_entity_list.type
+_pdbx_reference_entity_list.details
+PRD_000154  1  1  polymer      "CHAIN A PEPTIDE LIKE SEQUENCE RESIDUES 5 TO 16"  
+PRD_000154  1  2  polymer      "CHAIN A PEPTIDE LIKE SEQUENCE RESIDUES 5 TO 16"  
+PRD_000154  2  3  non-polymer  "SUCCINIC ACID"                                   
+##
+_pdbx_reference_entity_nonpoly.prd_id         PRD_000154
+_pdbx_reference_entity_nonpoly.ref_entity_id  2
+_pdbx_reference_entity_nonpoly.name           "SUCCINIC ACID"
+_pdbx_reference_entity_nonpoly.chem_comp_id   SIN
+##
+loop_
+_pdbx_reference_entity_link.prd_id
+_pdbx_reference_entity_link.link_id
+_pdbx_reference_entity_link.link_class
+_pdbx_reference_entity_link.ref_entity_id_1
+_pdbx_reference_entity_link.entity_seq_num_1
+_pdbx_reference_entity_link.comp_id_1
+_pdbx_reference_entity_link.atom_id_1
+_pdbx_reference_entity_link.ref_entity_id_2
+_pdbx_reference_entity_link.entity_seq_num_2
+_pdbx_reference_entity_link.comp_id_2
+_pdbx_reference_entity_link.atom_id_2
+_pdbx_reference_entity_link.value_order
+_pdbx_reference_entity_link.component_1
+_pdbx_reference_entity_link.component_2
+_pdbx_reference_entity_link.details
+PRD_000154  1  PN  1  1  ALA  N  2  ?  SIN  C4  sing  1  3  ?  
+PRD_000154  2  PN  1  1  ALA  N  2  ?  SIN  C1  sing  2  3  ?  
+##
+loop_
+_pdbx_reference_entity_poly_link.prd_id
+_pdbx_reference_entity_poly_link.ref_entity_id
+_pdbx_reference_entity_poly_link.link_id
+_pdbx_reference_entity_poly_link.atom_id_1
+_pdbx_reference_entity_poly_link.comp_id_1
+_pdbx_reference_entity_poly_link.entity_seq_num_1
+_pdbx_reference_entity_poly_link.atom_id_2
+_pdbx_reference_entity_poly_link.comp_id_2
+_pdbx_reference_entity_poly_link.entity_seq_num_2
+_pdbx_reference_entity_poly_link.value_order
+_pdbx_reference_entity_poly_link.component_id
+PRD_000154  1   1  C  ALA   1  N  DVA   2  sing  1  
+PRD_000154  1   2  C  DVA   2  N  VAL   3  sing  1  
+PRD_000154  1   3  C  VAL   3  N  DVA   4  sing  1  
+PRD_000154  1   4  C  DVA   4  N  TRP   5  sing  1  
+PRD_000154  1   5  C  TRP   5  N  DLE   6  sing  1  
+PRD_000154  1   6  C  DLE   6  N  TRP   7  sing  1  
+PRD_000154  1   7  C  TRP   7  N  DLE   8  sing  1  
+PRD_000154  1   8  C  DLE   8  N  TRP   9  sing  1  
+PRD_000154  1   9  C  TRP   9  N  DLE  10  sing  1  
+PRD_000154  1  10  C  DLE  10  N  TRP  11  sing  1  
+PRD_000154  1  11  C  TRP  11  N  ETA  12  sing  1  
+PRD_000154  1  12  C  ALA   1  N  DVA   2  sing  2  
+PRD_000154  1  13  C  DVA   2  N  VAL   3  sing  2  
+PRD_000154  1  14  C  VAL   3  N  DVA   4  sing  2  
+PRD_000154  1  15  C  DVA   4  N  TRP   5  sing  2  
+PRD_000154  1  16  C  TRP   5  N  DLE   6  sing  2  
+PRD_000154  1  17  C  DLE   6  N  TRP   7  sing  2  
+PRD_000154  1  18  C  TRP   7  N  DLE   8  sing  2  
+PRD_000154  1  19  C  DLE   8  N  TRP   9  sing  2  
+PRD_000154  1  20  C  TRP   9  N  DLE  10  sing  2  
+PRD_000154  1  21  C  DLE  10  N  TRP  11  sing  2  
+PRD_000154  1  22  C  TRP  11  N  ETA  12  sing  2  
+##
+_pdbx_reference_entity_poly.prd_id         PRD_000154
+_pdbx_reference_entity_poly.ref_entity_id  1
+_pdbx_reference_entity_poly.db_code        NOR00243
+_pdbx_reference_entity_poly.db_name        NOR
+_pdbx_reference_entity_poly.type           peptide-like
+##
+_pdbx_reference_entity_sequence.prd_id            PRD_000154
+_pdbx_reference_entity_sequence.ref_entity_id     1
+_pdbx_reference_entity_sequence.type              peptide-like
+_pdbx_reference_entity_sequence.NRP_flag          Y
+_pdbx_reference_entity_sequence.one_letter_codes  AVVVWLWLWLWX
+##
+loop_
+_pdbx_reference_entity_poly_seq.prd_id
+_pdbx_reference_entity_poly_seq.ref_entity_id
+_pdbx_reference_entity_poly_seq.num
+_pdbx_reference_entity_poly_seq.mon_id
+_pdbx_reference_entity_poly_seq.parent_mon_id
+_pdbx_reference_entity_poly_seq.hetero
+_pdbx_reference_entity_poly_seq.observed
+PRD_000154  1   1  ALA  ALA  N  Y  
+PRD_000154  1   2  DVA  VAL  N  Y  
+PRD_000154  1   3  VAL  VAL  N  Y  
+PRD_000154  1   4  DVA  VAL  N  Y  
+PRD_000154  1   5  TRP  TRP  N  Y  
+PRD_000154  1   6  DLE  LEU  N  Y  
+PRD_000154  1   7  TRP  TRP  N  Y  
+PRD_000154  1   8  DLE  LEU  N  Y  
+PRD_000154  1   9  TRP  TRP  N  Y  
+PRD_000154  1  10  DLE  LEU  N  Y  
+PRD_000154  1  11  TRP  TRP  N  Y  
+PRD_000154  1  12  ETA  ?    N  Y  
+##
+_pdbx_reference_entity_src_nat.prd_id               PRD_000154
+_pdbx_reference_entity_src_nat.ref_entity_id        1
+_pdbx_reference_entity_src_nat.ordinal              1
+_pdbx_reference_entity_src_nat.taxid                1393
+_pdbx_reference_entity_src_nat.organism_scientific  "bacillus brevis"
+_pdbx_reference_entity_src_nat.source               ?
+_pdbx_reference_entity_src_nat.source_id            ?
+_pdbx_reference_entity_src_nat.atcc                 ?
+_pdbx_reference_entity_src_nat.db_code              NOR00245
+_pdbx_reference_entity_src_nat.db_name              Norine
+##
+#
+loop_
+_pdbx_prd_audit.prd_id
+_pdbx_prd_audit.date
+_pdbx_prd_audit.processing_site
+_pdbx_prd_audit.action_type
+_pdbx_prd_audit.annotator
+_pdbx_prd_audit.details
+PRD_000154	2012-02-10	RCSB	"Create molecule"	Kim	?	
+PRD_000154	2012-07-09	PDBe	"Other modification"	SS	"Updated class and type."	
+PRD_000154	2012-12-12	RCSB	"Initial release"	?	?	
+PRD_000154	2013-06-03	RCSB	"Other modification"	CS	"update _pdbx_reference_entity_poly.db_name and/or _pdbx_reference_entity_poly.db_code"	
+PRD_000154	2017-05-04	RCSB	"Other modification"	CS	"Remove white space in name, description, or compound_details"
+#

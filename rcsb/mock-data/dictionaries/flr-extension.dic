@@ -1,0 +1,2984 @@
+# -------------------------------------------------------------------------------------------------------------------------
+#
+#  File: flr-extension.dic
+#  Date:25-MAY-2018
+#
+#  Dictionary extension for Fluorescence/FRET-based structural models.
+#
+# -------------------------------------------------------------------------------------------------------------------------
+
+data_flr-extension.dic
+
+    _datablock.id                          flr-extension.dic
+    _datablock.description
+;
+     This data block holds the extension dictionary for Fluorescence / FRET-based structural models.
+     This extension is based on the PDBx/mmCIF dictionary and the IHM-dictionary.
+     This resource is actively developed and maintained in a github repository available at
+     https://github.com/ihmwg/FLR-dictionary.
+;
+
+    _dictionary.title           flr-extension.dic
+    _dictionary.datablock_id    flr-extension.dic
+    _dictionary.version         0.000
+#
+     loop_
+    _dictionary_history.version
+    _dictionary_history.update
+    _dictionary_history.revision
+
+  0.000   2018-05-25
+;
+  Changes (bv/cah/tp/md/cams/jdw)
+  + Release as initial version 0.000
+;
+
+####################
+## FLR_INSTRUMENT ##
+####################
+
+save_flr_instrument
+    _category.description
+;              Data items in the FLR_INSTRUMENT category records the
+               details of the instrument.
+;
+    _category.id                  flr_instrument
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_instrument.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_instrument
+     save_
+
+save__flr_instrument.id
+    _item_description.description
+;     A unique identifier for the instrument.
+;
+    _item.name                  '_flr_instrument.id'
+    _item.category_id             flr_instrument
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_instrument.details
+    _item_description.description
+;     Details about the instrument.
+;
+    _item.name                  '_flr_instrument.details'
+    _item.category_id             flr_instrument
+    _item.mandatory_code          no
+    _item_type.code               text
+     save_
+
+#####################
+## FLR_EXP_SETTING ##
+#####################
+
+save_flr_exp_setting
+    _category.description
+;              Data items in the FLR_EXP_SETTING category records the
+               details of the experimental settings.
+;
+    _category.id                  flr_exp_setting
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_exp_setting.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_exp_setting
+     save_
+
+save__flr_exp_setting.id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_exp_setting.id'
+    _item.category_id             flr_exp_setting
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_exp_setting.details
+    _item_description.description
+;     Details about the experimental settings.
+;
+    _item.name                  '_flr_exp_setting.details'
+    _item.category_id             flr_exp_setting
+    _item.mandatory_code          no
+    _item_type.code               text
+     save_
+
+####################
+## FLR_EXPERIMENT ##
+####################
+
+save_flr_experiment
+    _category.description
+;              Data items in the FLR_EXPERIMENT category records the
+               details of the fluorescence experiment.
+;
+    _category.id                  flr_experiment
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_experiment.ordinal_id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_experiment
+     save_
+
+save__flr_experiment.ordinal_id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_experiment.ordinal_id'
+    _item.category_id             flr_experiment
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_experiment.id
+    _item_description.description
+;     A unique identifier for the experiment.
+;
+    _item.name                  '_flr_experiment.id'
+    _item.category_id             flr_experiment
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_experiment.instrument_id
+    _item_description.description
+;     An identifier for the instrument used in the experiment.
+;
+    _item.name                  '_flr_experiment.instrument_id'
+    _item.category_id             flr_experiment
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_experiment.instrument_id'
+    _item_linked.parent_name    '_flr_instrument.id'
+     save_
+
+save__flr_experiment.exp_setting_id
+    _item_description.description
+;     An identifier for the experimental setup.
+;
+    _item.name                  '_flr_experiment.exp_setting_id'
+    _item.category_id             flr_experiment
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_experiment.exp_setting_id'
+    _item_linked.parent_name    '_flr_exp_setting.id'
+     save_
+
+save__flr_experiment.sample_id
+    _item_description.description
+;     An identifier for the sample with all the probes attached.
+;
+    _item.name                  '_flr_experiment.sample_id'
+    _item.category_id             flr_experiment
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_experiment.sample_id'
+    _item_linked.parent_name    '_flr_sample_probe_details.sample_id'
+     save_
+
+save__flr_experiment.details
+    _item_description.description
+;     Additional details about the experiment.
+;
+    _item.name                  '_flr_experiment.details'
+    _item.category_id             flr_experiment
+    _item.mandatory_code          no
+    _item_type.code               text
+     save_
+
+#########################
+## FLR_ENTITY_ASSEMBLY ##
+#########################
+
+save_flr_entity_assembly
+    _category.description
+;              Data items in the FLR_ENTITY_ASSEMBLY category records the
+               details of the components in the entity assembly.
+;
+    _category.id                  flr_entity_assembly
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_entity_assembly.ordinal_id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_entity_assembly
+     save_
+
+save__flr_entity_assembly.ordinal_id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_entity_assembly.ordinal_id'
+    _item.category_id             flr_entity_assembly
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_entity_assembly.assembly_id
+    _item_description.description
+;     An identifier for the entity assembly.
+;
+    _item.name                  '_flr_entity_assembly.assembly_id'
+    _item.category_id             flr_entity_assembly
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_entity_assembly.entity_id
+    _item_description.description
+;     An identifier for the entity.
+;
+    _item.name                  '_flr_entity_assembly.entity_id'
+    _item.category_id             flr_entity_assembly
+    _item.mandatory_code          yes
+    _item_type.code               code
+    _item_linked.child_name     '_flr_entity_assembly.entity_id'
+    _item_linked.parent_name    '_entity.id'
+     save_
+
+save__flr_entity_assembly.num_copies
+    _item_description.description
+;     The number of copies/instances of the entity in the assembly.
+;
+    _item.name                  '_flr_entity_assembly.num_copies'
+    _item.category_id             flr_entity_assembly
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_entity_assembly.entity_description
+    _item_description.description
+;     The description of the entity.
+;
+    _item.name                  '_flr_entity_assembly.entity_description'
+    _item.category_id             flr_entity_assembly
+    _item.mandatory_code          no
+    _item_type.code               line
+    _item_linked.child_name     '_flr_entity_assembly.entity_description'
+    _item_linked.parent_name    '_entity.pdbx_description'
+     save_
+
+##########################
+## FLR_SAMPLE_CONDITION ##
+##########################
+
+save_flr_sample_condition
+    _category.description
+;              Data items in the FLR_SAMPLE_CONDITION category records the
+               details of the sample conditions.
+;
+    _category.id                  flr_sample_condition
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_sample_condition.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_sample_condition
+     save_
+
+save__flr_sample_condition.id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_sample_condition.id'
+    _item.category_id             flr_sample_condition
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_sample_condition.details
+    _item_description.description
+;     Details about the sample conditions.
+;
+    _item.name                  '_flr_sample_condition.details'
+    _item.category_id             flr_sample_condition
+    _item.mandatory_code          no
+    _item_type.code               text
+     save_
+
+############
+# FLR_SAMPLE
+############
+
+save_flr_sample
+    _category.description
+;              Data items in the FLR_SAMPLE category records the
+               details of the sample in the Fluorescence experiment.
+;
+    _category.id                  flr_sample
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_sample.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+    #...abbreviated...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_sample
+     save_
+
+save__flr_sample.id
+    _item_description.description
+;     An identifier for the experimental sample.
+;
+    _item.name                  '_flr_sample.id'
+    _item.category_id             flr_sample
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_sample.sample_description
+    _item_description.description
+;     An author provided description for the sample.
+;
+    _item.name                  '_flr_sample.sample_description'
+    _item.category_id             flr_sample
+    _item.mandatory_code          no
+    _item_type.code               line
+     save_
+
+save__flr_sample.sample_details
+    _item_description.description
+;     Additional details about the sample.
+;
+    _item.name                  '_flr_sample.sample_details'
+    _item.category_id             flr_sample
+    _item.mandatory_code          no
+    _item_type.code               text
+     save_
+
+save__flr_sample.num_of_probes
+    _item_description.description
+;     Number of probes in the sample.
+;
+    _item.name                  '_flr_sample.num_of_probes'
+    _item.category_id             flr_sample
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_sample.solvent_phase
+    _item_description.description
+;     The phase of the solvent.
+;
+    _item.name                  '_flr_sample.solvent_phase'
+    _item.category_id             flr_sample
+    _item.mandatory_code          yes
+    _item_type.code               code
+    loop_
+    _item_enumeration.value
+    _item_enumeration.detail
+    'liquid'        'Freely diffusing molecules in solution'
+    'vitrified'     'Molecules in vitrified solution'
+    'other'         'Other'
+     save_
+
+save__flr_sample.sample_condition_id
+    _item_description.description
+;     The id corresponding to the sample condition.
+;
+    _item.name                  '_flr_sample.sample_condition_id'
+    _item.category_id             flr_sample
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_sample.sample_condition_id'
+    _item_linked.parent_name    '_flr_sample_condition.id'
+    save_
+
+save__flr_sample.entity_assembly_id
+    _item_description.description
+;     This data item is a pointer to _flr_entity_assembly.assembly_id
+      in the FLR_ENTITY_ASSEMBLY category.
+;
+    _item.name                  '_flr_sample.entity_assembly_id'
+    _item.category_id             flr_sample
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_sample.entity_assembly_id'
+    _item_linked.parent_name    '_flr_entity_assembly.assembly_id'
+    save_
+
+####################
+## FLR_PROBE_LIST ##
+####################
+
+save_flr_probe_list
+    _category.description
+;              Data items in the FLR_PROBE_LIST category records the
+               list of the fluorescent probes used as probes in the experiment.
+;
+    _category.id                  flr_probe_list
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_probe_list.probe_id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_probe_list
+     save_
+
+save__flr_probe_list.probe_id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_probe_list.probe_id'
+    _item.category_id             flr_probe_list
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_probe_list.chromophore_name
+    _item_description.description
+;     Author provided name for the chromophore.
+;
+    _item.name                  '_flr_probe_list.chromophore_name'
+    _item.category_id             flr_probe_list
+    _item.mandatory_code          no
+    _item_type.code               line
+     save_
+
+save__flr_probe_list.reactive_probe_flag
+    _item_description.description
+;     Indicate whether the probe has a reactive form.
+;
+    _item.name                  '_flr_probe_list.reactive_probe_flag'
+    _item.category_id             flr_probe_list
+    _item.mandatory_code          yes
+    _item_type.code               code
+    loop_
+    _item_enumeration.value
+    "yes"
+    "no"
+     save_
+
+save__flr_probe_list.reactive_probe_name
+    _item_description.description
+;     Author provided name for the reactive_probe, if applicable.
+;
+    _item.name                  '_flr_probe_list.reactive_probe_name'
+    _item.category_id             flr_probe_list
+    _item.mandatory_code          no
+    _item_type.code               line
+     save_
+
+save__flr_probe_list.probe_origin
+    _item_description.description
+;     The origin of the probe.
+;
+    _item.name                  '_flr_probe_list.probe_origin'
+    _item.category_id             flr_probe_list
+    _item.mandatory_code          yes
+    _item_type.code               code
+    loop_
+    _item_enumeration.value
+    _item_enumeration.detail
+    'intrinsic'     'a probe which is an instrinsic part of the biomolecule; eg: Tryptophan or Flavins or metals in EPR'
+    'extrinsic'     'a probe that has been synthetically introduced for carrying out the experiment; eg: organic probe Alexa 488 or MANT-ATP'
+     save_
+
+save__flr_probe_list.probe_link_type
+    _item_description.description
+;     The type of link between the probe and the biomolecule.
+;
+    _item.name                  '_flr_probe_list.probe_link_type'
+    _item.category_id             flr_probe_list
+    _item.mandatory_code          yes
+    _item_type.code               code
+    loop_
+    _item_enumeration.value
+    _item_enumeration.detail
+    'covalent'   'a probe which is covalently linked to the biomolecule; eg: Tryptophan in proteins or Alexa 488'
+    'ligand'     'a probe that is not covalently linked to the biomolecule; eg: Flavins, MANT-ATP'
+     save_
+
+##############################
+## FLR_SAMPLE_PROBE_DETAILS ##
+##############################
+
+save_flr_sample_probe_details
+    _category.description
+;              Data items in the FLR_SAMPLE_PROBE_DETAILS category records the
+               details of the various fluorescent probes present in the different
+               samples in the experiment.
+;
+    _category.id                  flr_sample_probe_details
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_sample_probe_details.sample_probe_id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_sample_probe_details
+     save_
+
+save__flr_sample_probe_details.sample_probe_id
+    _item_description.description
+;     A unique identifier for the probe in the sample.
+;
+    _item.name                  '_flr_sample_probe_details.sample_probe_id'
+    _item.category_id             flr_sample_probe_details
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_sample_probe_details.sample_id
+    _item_description.description
+;     An identifier for the sample.
+;
+    _item.name                  '_flr_sample_probe_details.sample_id'
+    _item.category_id             flr_sample_probe_details
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_sample_probe_details.sample_id'
+    _item_linked.parent_name    '_flr_sample.id'
+     save_
+
+save__flr_sample_probe_details.probe_id
+    _item_description.description
+;     An identifier for the probe.
+;
+    _item.name                  '_flr_sample_probe_details.probe_id'
+    _item.category_id             flr_sample_probe_details
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_sample_probe_details.probe_id'
+    _item_linked.parent_name    '_flr_probe_list.probe_id'
+     save_
+
+save__flr_sample_probe_details.poly_probe_position_id
+    _item_description.description
+;     An identifier for the position in the polymeric entity where the probe
+      is attached.
+;
+    _item.name                  '_flr_sample_probe_details.poly_probe_position_id'
+    _item.category_id             flr_sample_probe_details
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_sample_probe_details.poly_probe_position_id'
+    _item_linked.parent_name    '_flr_poly_probe_position.id'
+     save_
+
+save__flr_sample_probe_details.fluorophore_type
+    _item_description.description
+;     The type of fluorophore.
+;
+    _item.name                  '_flr_sample_probe_details.fluorophore_type'
+    _item.category_id             flr_sample_probe_details
+    _item.mandatory_code          yes
+    _item_type.code               code
+    loop_
+    _item_enumeration.value
+    'donor'
+    'acceptor'
+    'unspecified'
+     save_
+
+save__flr_sample_probe_details.description
+    _item_description.description
+;     Author provided description for the probe in the sample.
+;
+    _item.name                  '_flr_sample_probe_details.description'
+    _item.category_id             flr_sample_probe_details
+    _item.mandatory_code          no
+    _item_type.code               text
+     save_
+
+#############################
+## FLR_CHEMICAL_DESCRIPTOR ##
+#############################
+
+save_flr_chemical_descriptor
+    _category.description
+;              Data items in the FLR_CHEMICAL_DESCRIPTOR category records the
+               details of the chemical descriptors of various chromophores,
+               reactive probes, probe-polymer conjugates, modified residues etc.
+;
+    _category.id                  flr_chemical_descriptor
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_chemical_descriptor.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_chemical_descriptor
+     save_
+
+save__flr_chemical_descriptor.id
+    _item_description.description
+;     An identifier for the chemical descriptor.
+;
+    _item.name                  '_flr_chemical_descriptor.id'
+    _item.category_id             flr_chemical_descriptor
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_chemical_descriptor.chem_comp_id
+    _item_description.description
+;     An identifier for the chemical component, if available.
+;
+    _item.name                  '_flr_chemical_descriptor.chem_comp_id'
+    _item.category_id             flr_chemical_descriptor
+    _item.mandatory_code          no
+    _item_type.code               ucode
+    _item_linked.child_name     '_flr_chemical_descriptor.chem_comp_id'
+    _item_linked.parent_name    '_chem_comp.id'
+     save_
+
+save__flr_chemical_descriptor.chemical_name
+    _item_description.description
+;     The chemical name of the probe.
+;
+    _item.name                  '_flr_chemical_descriptor.chemical_name'
+    _item.category_id             flr_chemical_descriptor
+    _item.mandatory_code          no
+    _item_type.code               line
+     save_
+
+save__flr_chemical_descriptor.common_name
+    _item_description.description
+;     The common name of the probe.
+;
+    _item.name                  '_flr_chemical_descriptor.common_name'
+    _item.category_id             flr_chemical_descriptor
+    _item.mandatory_code          no
+    _item_type.code               line
+     save_
+
+save__flr_chemical_descriptor.auth_name
+    _item_description.description
+;     The author-provided name of the probe.
+;
+    _item.name                  '_flr_chemical_descriptor.auth_name'
+    _item.category_id             flr_chemical_descriptor
+    _item.mandatory_code          yes
+    _item_type.code               line
+     save_
+
+save__flr_chemical_descriptor.smiles
+    _item_description.description
+;     The smile string of the probe.
+;
+    _item.name                  '_flr_chemical_descriptor.smiles'
+    _item.category_id             flr_chemical_descriptor
+    _item.mandatory_code          no
+    _item_type.code               line
+     save_
+
+save__flr_chemical_descriptor.smiles_canonical
+    _item_description.description
+;     The canonical smile string of the probe.
+;
+    _item.name                  '_flr_chemical_descriptor.smiles_canonical'
+    _item.category_id             flr_chemical_descriptor
+    _item.mandatory_code          no
+    _item_type.code               line
+     save_
+
+save__flr_chemical_descriptor.inchi
+    _item_description.description
+;     The IUPAC INCHI descriptor of the probe.
+;
+    _item.name                  '_flr_chemical_descriptor.inchi'
+    _item.category_id             flr_chemical_descriptor
+    _item.mandatory_code          no
+    _item_type.code               line
+     save_
+
+save__flr_chemical_descriptor.inchi_key
+    _item_description.description
+;     The hashed INCHI key of the probe.
+;
+    _item.name                  '_flr_chemical_descriptor.inchi_key'
+    _item.category_id             flr_chemical_descriptor
+    _item.mandatory_code          no
+    _item_type.code               line
+     save_
+
+##########################
+## FLR_PROBE_DESCRIPTOR ##
+##########################
+
+save_flr_probe_descriptor
+    _category.description
+;              Data items in the FLR_PROBE_DESCRIPTOR category records the
+               details of the chemical descriptors of the fluorescent probes
+	       used in the experiment.
+;
+    _category.id                  flr_probe_descriptor
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_probe_descriptor.probe_id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_probe_descriptor
+     save_
+
+save__flr_probe_descriptor.probe_id
+    _item_description.description
+;     An identifier for the probe, whose reactive form is described.
+;
+    _item.name                  '_flr_probe_descriptor.probe_id'
+    _item.category_id             flr_probe_descriptor
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_probe_descriptor.probe_id'
+    _item_linked.parent_name    '_flr_probe_list.probe_id'
+     save_
+
+save__flr_probe_descriptor.reactive_probe_chem_descriptor_id
+    _item_description.description
+;     The identifier for the chemical descriptor of the reactive probe.
+;
+    _item.name                  '_flr_probe_descriptor.reactive_probe_chem_descriptor_id'
+    _item.category_id             flr_probe_descriptor
+    _item.mandatory_code          no
+    _item_type.code               int
+    _item_linked.child_name     '_flr_probe_descriptor.reactive_probe_chem_descriptor_id'
+    _item_linked.parent_name    '_flr_chemical_descriptor.id'
+     save_
+
+save__flr_probe_descriptor.chromophore_center_atom
+    _item_description.description
+;     The atom closest to the geometric center of the chromophore.
+;
+    _item.name                  '_flr_probe_descriptor.chromophore_center_atom'
+    _item.category_id             flr_probe_descriptor
+    _item.mandatory_code          no
+    _item_type.code               code
+    loop_
+    _item_examples.case
+    'give an example'
+     save_
+
+save__flr_probe_descriptor.chromophore_chem_descriptor_id
+    _item_description.description
+;     An identifier to the chemical descriptor of the chromophore.
+;
+    _item.name                  '_flr_probe_descriptor.chromophore_chem_descriptor_id'
+    _item.category_id             flr_probe_descriptor
+    _item.mandatory_code          no
+    _item_type.code               int
+    _item_linked.child_name     '_flr_probe_descriptor.chromophore_chem_descriptor_id'
+    _item_linked.parent_name    '_flr_chemical_descriptor.id'
+     save_
+
+#############################
+## FLR_POLY_PROBE_POSITION ##
+#############################
+
+save_flr_poly_probe_position
+    _category.description
+;              Data items in the FLR_POLY_PROBE_POSITION category records the
+               details of the positions in a polymeric entity labeled with a probe.
+;
+    _category.id                  flr_poly_probe_position
+    _category.mandatory_code      no
+    _category_key.name          '_flr_poly_probe_position.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_poly_probe_position
+     save_
+
+save__flr_poly_probe_position.id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_poly_probe_position.id'
+    _item.category_id             flr_poly_probe_position
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_poly_probe_position.entity_id
+    _item_description.description
+;     A unique identifier for the entity with the probe.
+;
+    _item.name                  '_flr_poly_probe_position.entity_id'
+    _item.category_id             flr_poly_probe_position
+    _item.mandatory_code          yes
+    _item_type.code               code
+    _item_linked.child_name       '_flr_poly_probe_position.entity_id'
+    _item_linked.parent_name      '_entity_poly_seq.entity_id'
+     save_
+
+save__flr_poly_probe_position.entity_description
+    _item_description.description
+;     Description of the entity.
+;
+    _item.name                  '_flr_poly_probe_position.entity_description'
+    _item.category_id             flr_poly_probe_position
+    _item.mandatory_code          no
+    _item_type.code               line
+    _item_linked.child_name       '_flr_poly_probe_position.entity_description'
+    _item_linked.parent_name      '_entity.pdbx_description'
+     save_
+
+save__flr_poly_probe_position.seq_id
+    _item_description.description
+;     The sequence index of the residue with the probe.
+;
+    _item.name                  '_flr_poly_probe_position.seq_id'
+    _item.category_id             flr_poly_probe_position
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name       '_flr_poly_probe_position.seq_id'
+    _item_linked.parent_name      '_entity_poly_seq.num'
+     save_
+
+save__flr_poly_probe_position.comp_id
+    _item_description.description
+;     The component identifier of the residue with the probe.
+;
+    _item.name                  '_flr_poly_probe_position.comp_id'
+    _item.category_id             flr_poly_probe_position
+    _item.mandatory_code          yes
+    _item_type.code               ucode
+    _item_linked.child_name       '_flr_poly_probe_position.comp_id'
+    _item_linked.parent_name      '_entity_poly_seq.mon_id'
+     save_
+
+save__flr_poly_probe_position.atom_id
+    _item_description.description
+;     The atom identifier of the residue component where the probe is attached.
+      This can be the C-beta atom in the amino acid or the C5 atom in the
+      pyrimidine ring.
+;
+    _item.name                  '_flr_poly_probe_position.atom_id'
+    _item.category_id             flr_poly_probe_position
+    _item.mandatory_code          no
+    _item_type.code               atcode
+    _item_linked.child_name       '_flr_poly_probe_position.atom_id'
+    _item_linked.parent_name      '_chem_comp_atom.atom_id'
+     save_
+
+save__flr_poly_probe_position.mutation_flag
+    _item_description.description
+;    A flag to indicate whether the residue has an engineered mutation or not.
+;
+    _item.name                  '_flr_poly_probe_position.mutation_flag'
+    _item.category_id             flr_poly_probe_position
+    _item.mandatory_code          yes
+    _item_type.code               code
+    loop_
+    _item_enumeration.value
+    "yes"
+    "no"
+     save_
+
+save__flr_poly_probe_position.modification_flag
+    _item_description.description
+;    A flag to indicate whether the residue is chemically modified or not.
+;
+    _item.name                  '_flr_poly_probe_position.modification_flag'
+    _item.category_id             flr_poly_probe_position
+    _item.mandatory_code          yes
+    _item_type.code               code
+    loop_
+    _item_enumeration.value
+    "yes"
+    "no"
+     save_
+
+save__flr_poly_probe_position.auth_name
+    _item_description.description
+;    An author provided name for the position in the polymer where the probe is attached.
+;
+    _item.name                  '_flr_poly_probe_position.auth_name'
+    _item.category_id             flr_poly_probe_position
+    _item.mandatory_code          no
+    _item_type.code               line
+     save_
+
+#####################################
+## FLR_POLY_PROBE_POSITION_MUTATED ##
+#####################################
+
+save_flr_poly_probe_position_mutated
+    _category.description
+;              Data items in the FLR_POLY_PROBE_POSITION_MUTATED category records the
+               details of the chemical descriptors of the mutated amino acid or
+               nucleotide residues in the polymeric entity where the fluorescent probe
+               is attached.
+;
+    _category.id                  flr_poly_probe_position_mutated
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_poly_probe_position_mutated.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_poly_probe_position_mutated
+     save_
+
+save__flr_poly_probe_position_mutated.id
+    _item_description.description
+;     An identifier for the mutated position, which is labeled.
+;
+    _item.name                  '_flr_poly_probe_position_mutated.id'
+    _item.category_id             flr_poly_probe_position_mutated
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_poly_probe_position_mutated.id'
+    _item_linked.parent_name    '_flr_poly_probe_position.id'
+     save_
+
+save__flr_poly_probe_position_mutated.chem_comp_id
+    _item_description.description
+;     The chemical component identifier of the mutated residue where the probe is attached.
+;
+    _item.name                  '_flr_poly_probe_position_mutated.chem_comp_id'
+    _item.category_id             flr_poly_probe_position_mutated
+    _item.mandatory_code          yes
+    _item_type.code               ucode
+    _item_linked.child_name     '_flr_poly_probe_position_mutated.chem_comp_id'
+    _item_linked.parent_name    '_chem_comp.id'
+    loop_
+    _item_examples.case
+    'CYS'
+    'TRP'
+     save_
+
+save__flr_poly_probe_position_mutated.atom_id
+    _item_description.description
+;     The atom identifier of the mutated residue component where the probe is attached.
+;
+    _item.name                  '_flr_poly_probe_position_mutated.atom_id'
+    _item.category_id             flr_poly_probe_position_mutated
+    _item.mandatory_code          no
+    _item_type.code               atcode
+    _item_linked.child_name     '_flr_poly_probe_position_mutated.atom_id'
+    _item_linked.parent_name    '_chem_comp_atom.atom_id'
+     save_
+
+######################################
+## FLR_POLY_PROBE_POSITION_MODIFIED ##
+######################################
+
+save_flr_poly_probe_position_modified
+    _category.description
+;              Data items in the FLR_POLY_PROBE_POSITION_MODIFIED category records the
+               details of the chemical descriptors of the modified amino acid or
+               nucleotide residues in the polymeric entity where the fluorescent probe
+               is attached.
+;
+    _category.id                  flr_poly_probe_position_modified
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_poly_probe_position_modified.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_poly_probe_position_modified
+     save_
+
+save__flr_poly_probe_position_modified.id
+    _item_description.description
+;     An identifier for the modified position, which is labeled.
+;
+    _item.name                  '_flr_poly_probe_position_modified.id'
+    _item.category_id             flr_poly_probe_position_modified
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_poly_probe_position_modified.id'
+    _item_linked.parent_name    '_flr_poly_probe_position.id'
+     save_
+
+save__flr_poly_probe_position_modified.chem_descriptor_id
+    _item_description.description
+;     An identifier to the chemical descriptor of the modified residue.
+;
+    _item.name                  '_flr_poly_probe_position_modified.chem_descriptor_id'
+    _item.category_id             flr_poly_probe_position_modified
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_poly_probe_position_modified.chem_descriptor_id'
+    _item_linked.parent_name    '_flr_chemical_descriptor.id'
+     save_
+
+save__flr_poly_probe_position_modified.atom_id
+    _item_description.description
+;     The atom identifier of the modified residue component where the probe is attached.
+;
+    _item.name                  '_flr_poly_probe_position_modified.atom_id'
+    _item.category_id             flr_poly_probe_position_modified
+    _item.mandatory_code          no
+    _item_type.code               code
+     save_
+
+##############################
+## FLR_POLY_PROBE_CONJUGATE ##
+##############################
+
+save_flr_poly_probe_conjugate
+    _category.description
+;              Data items in the FLR_POLY_PROBE_CONJUGATE category records the
+               details of the probes attached to each position in the polymeric
+               entities.
+;
+    _category.id                  flr_poly_probe_conjugate
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_poly_probe_conjugate.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_poly_probe_conjugate
+     save_
+
+save__flr_poly_probe_conjugate.id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_poly_probe_conjugate.id'
+    _item.category_id             flr_poly_probe_conjugate
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_poly_probe_conjugate.sample_probe_id
+    _item_description.description
+;     An identifier for the probe in the sample.
+;
+    _item.name                  '_flr_poly_probe_conjugate.sample_probe_id'
+    _item.category_id             flr_poly_probe_conjugate
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_poly_probe_conjugate.sample_probe_id'
+    _item_linked.parent_name    '_flr_sample_probe_details.sample_probe_id'
+     save_
+
+save__flr_poly_probe_conjugate.chem_descriptor_id
+    _item_description.description
+;     The chemical descriptor of the polymeric residue conjugate with the probe.
+;
+    _item.name                  '_flr_poly_probe_conjugate.chem_descriptor_id'
+    _item.category_id             flr_poly_probe_conjugate
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_poly_probe_conjugate.chem_descriptor_id'
+    _item_linked.parent_name    '_flr_chemical_descriptor.id'
+     save_
+
+save__flr_poly_probe_conjugate.ambiguous_stoichiometry_flag
+    _item_description.description
+;    Indicate whether there is ambiguity regarding the stoichiometry of the labeled site.
+;
+    _item.name                  '_flr_poly_probe_conjugate.ambiguous_stoichiometry_flag'
+    _item.category_id             flr_poly_probe_conjugate
+    _item.mandatory_code          yes
+    _item_type.code               code
+    loop_
+    _item_enumeration.value
+    "yes"
+    "no"
+     save_
+
+save__flr_poly_probe_conjugate.probe_stoichiometry
+    _item_description.description
+;    The stoichiometry of the probe labeling site, if known.
+;
+    _item.name                  '_flr_poly_probe_conjugate.probe_stoichiometry'
+    _item.category_id             flr_poly_probe_conjugate
+    _item.mandatory_code          no
+    _item_type.code               float
+     save_
+
+#########################
+## FLR_PEAK_ASSIGNMENT ##
+#########################
+
+save_flr_peak_assignment
+    _category.description
+;              Data items in the FLR_PEAK_ASSIGNMENT category records the
+               details of the peak assignment.
+;
+    _category.id                  flr_peak_assignment
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_peak_assignment.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_peak_assignment
+     save_
+
+save__flr_peak_assignment.id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_peak_assignment.id'
+    _item.category_id             flr_peak_assignment
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_peak_assignment.method_name
+    _item_description.description
+;     The name of the peak assignment method.
+;
+    _item.name                  '_flr_peak_assignment.method_name'
+    _item.category_id             flr_peak_assignment
+    _item.mandatory_code          yes
+    _item_type.code               line
+    loop_
+    _item_examples.case
+    'Population'
+    'Mg titration'
+    'Geometric consideration'
+    'Mg titration and geometric consideration'
+     save_
+
+save__flr_peak_assignment.details
+    _item_description.description
+;     Additional details regarding the peak assignment.
+;
+    _item.name                  '_flr_peak_assignment.details'
+    _item.category_id             flr_peak_assignment
+    _item.mandatory_code          no
+    _item_type.code               text
+     save_
+
+#############################
+## FLR_FRET_FORSTER_RADIUS ##
+#############################
+
+save_flr_fret_forster_radius
+    _category.description
+;              Data items in the FLR_FRET_FORSTER_RADIUS category records the
+               details of the Forster radii of reactive probe pairs in a
+               FRET experiment.
+;
+    _category.id                  flr_fret_forster_radius
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_fret_forster_radius.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_fret_forster_radius
+     save_
+
+save__flr_fret_forster_radius.id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_fret_forster_radius.id'
+    _item.category_id             flr_fret_forster_radius
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_fret_forster_radius.donor_probe_id
+    _item_description.description
+;     An identifier for the donor in the FRET probe pair.
+;
+    _item.name                  '_flr_fret_forster_radius.donor_probe_id'
+    _item.category_id             flr_fret_forster_radius
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_forster_radius.donor_probe_id'
+    _item_linked.parent_name    '_flr_probe_list.probe_id'
+     save_
+
+save__flr_fret_forster_radius.acceptor_probe_id
+    _item_description.description
+;     An identifier for the acceptor in the FRET probe pair.
+;
+    _item.name                  '_flr_fret_forster_radius.acceptor_probe_id'
+    _item.category_id             flr_fret_forster_radius
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_forster_radius.acceptor_probe_id'
+    _item_linked.parent_name    '_flr_probe_list.probe_id'
+     save_
+
+save__flr_fret_forster_radius.forster_radius
+    _item_description.description
+;     The Forster radius corresponding to the FRET probe pair.
+;
+    _item.name                  '_flr_fret_forster_radius.forster_radius'
+    _item.category_id             flr_fret_forster_radius
+    _item.mandatory_code          yes
+    _item_type.code               float
+     save_
+
+save__flr_fret_forster_radius.reduced_forster_radius
+    _item_description.description
+;     The reduced Forster radius corresponding to the FRET probe pair.
+      The reduced Forster radius does not depend upon the quantum
+      yield of the donor.
+;
+    _item.name                  '_flr_fret_forster_radius.reduced_forster_radius'
+    _item.category_id             flr_fret_forster_radius
+    _item.mandatory_code          yes
+    _item_type.code               float
+     save_
+
+#####################################
+## FLR_FRET_CALIBRATION_PARAMETERS ##
+#####################################
+
+save_flr_fret_calibration_parameters
+    _category.description
+;              Data items in the FLR_FRET_CALIBRATION_PARAMETERS category
+               record the details of the calibration parameters used in
+               analyzing the results of the FRET experiment.
+;
+    _category.id                  flr_fret_calibration_parameters
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_fret_calibration_parameters.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_fret_calibration_parameters
+     save_
+
+save__flr_fret_calibration_parameters.id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_fret_calibration_parameters.id'
+    _item.category_id             flr_fret_calibration_parameters
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_fret_calibration_parameters.phi_acceptor
+    _item_description.description
+;     The acceptor fluorescence quantum yield, phi_acceptor.
+;
+    _item.name                  '_flr_fret_calibration_parameters.phi_acceptor'
+    _item.category_id             flr_fret_calibration_parameters
+    _item.mandatory_code          yes
+    _item_type.code               float
+     save_
+
+save__flr_fret_calibration_parameters.alpha
+    _item_description.description
+;     Alpha (in percentage) is the crosstalk factor determined as
+      the ratio between donor photons detected in the red channels
+      and those detected in the green channels for the donor-only
+      labeled sample.
+;
+    _item.name                  '_flr_fret_calibration_parameters.alpha'
+    _item.category_id             flr_fret_calibration_parameters
+    _item.mandatory_code          yes
+    _item_type.code               float
+     save_
+
+save__flr_fret_calibration_parameters.alpha_sd
+    _item_description.description
+;     The standard deviation of the alpha value.
+;
+    _item.name                  '_flr_fret_calibration_parameters.alpha_sd'
+    _item.category_id             flr_fret_calibration_parameters
+    _item.mandatory_code          no
+    _item_type.code               float
+     save_
+
+save__flr_fret_calibration_parameters.gG_gR_ratio
+    _item_description.description
+;     gG/gR is that ratio of the detection efficiencies in the
+      green and red channels.
+;
+    _item.name                  '_flr_fret_calibration_parameters.gG_gR_ratio'
+    _item.category_id             flr_fret_calibration_parameters
+    _item.mandatory_code          yes
+    _item_type.code               float
+     save_
+
+save__flr_fret_calibration_parameters.beta
+    _item_description.description
+;     Normalization of excitation intensities and cross-sections of
+      sigma values of donor and acceptor. This is relevant for
+      Pulse Interleaved Excitation (PIE) experiments. 
+;
+    _item.name                  '_flr_fret_calibration_parameters.beta'
+    _item.category_id             flr_fret_calibration_parameters
+    _item.mandatory_code          no
+    _item_type.code               float
+     save_
+
+save__flr_fret_calibration_parameters.gamma
+    _item_description.description
+;     Normalization of effective fluorescence quantum yields and detection
+      efficiencies.
+;
+    _item.name                  '_flr_fret_calibration_parameters.gamma'
+    _item.category_id             flr_fret_calibration_parameters
+    _item.mandatory_code          yes
+    _item_type.code               float
+     save_
+
+save__flr_fret_calibration_parameters.delta
+    _item_description.description
+;     Direct acceptor excitation by the donor excitation laser
+      (lower wavelength).
+;
+    _item.name                  '_flr_fret_calibration_parameters.delta'
+    _item.category_id             flr_fret_calibration_parameters
+    _item.mandatory_code          yes
+    _item_type.code               float
+     save_
+
+save__flr_fret_calibration_parameters.a_b
+    _item_description.description
+;     a_b is the fraction of molecules in the bright state and is used
+      in the computation of the gamma value in
+      _flr_fret_calibration_parameters.gamma. 
+;
+    _item.name                  '_flr_fret_calibration_parameters.a_b'
+    _item.category_id             flr_fret_calibration_parameters
+    _item.mandatory_code          yes
+    _item_type.code               float
+     save_
+
+#######################
+## FLR_FRET_ANALYSIS ##
+#######################
+
+save_flr_fret_analysis
+    _category.description
+;              Data items in the FLR_FRET_ANALYSIS category records the
+               details of the FRET analysis.
+;
+    _category.id                  flr_fret_analysis
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_fret_analysis.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_fret_analysis
+     save_
+
+save__flr_fret_analysis.id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_fret_analysis.id'
+    _item.category_id             flr_fret_analysis
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_fret_analysis.experiment_id
+    _item_description.description
+;     An identifier for the experiment.
+;
+    _item.name                  '_flr_fret_analysis.experiment_id'
+    _item.category_id             flr_fret_analysis
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_analysis.experiment_id'
+    _item_linked.parent_name    '_flr_experiment.id'
+     save_
+
+save__flr_fret_analysis.sample_probe_id_1
+    _item_description.description
+;     An identifier for the first probe in the FRET pair.
+;
+    _item.name                  '_flr_fret_analysis.sample_probe_id_1'
+    _item.category_id             flr_fret_analysis
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_analysis.sample_probe_id_1'
+    _item_linked.parent_name    '_flr_sample_probe_details.sample_probe_id'
+     save_
+
+save__flr_fret_analysis.sample_probe_id_2
+    _item_description.description
+;     An identifier for the second probe in the FRET pair.
+;
+    _item.name                  '_flr_fret_analysis.sample_probe_id_2'
+    _item.category_id             flr_fret_analysis
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_analysis.sample_probe_id_2'
+    _item_linked.parent_name    '_flr_sample_probe_details.sample_probe_id'
+     save_
+
+save__flr_fret_analysis.forster_radius_id
+    _item_description.description
+;    An identifier corresponding to the Forster radius of the
+     FRET pair.
+;
+    _item.name                  '_flr_fret_analysis.forster_radius_id'
+    _item.category_id             flr_fret_analysis
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_analysis.forster_radius_id'
+    _item_linked.parent_name    '_flr_fret_forster_radius.id'
+     save_
+
+save__flr_fret_analysis.calibration_parameters_id
+    _item_description.description
+;     An identifier pointing to the calibration parameters used in the
+      FRET analysis.
+;
+    _item.name                  '_flr_fret_analysis.calibration_parameters_id'
+    _item.category_id             flr_fret_analysis
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_analysis.calibration_parameters_id'
+    _item_linked.parent_name    '_flr_fret_calibration_parameters.id'
+     save_
+
+save__flr_fret_analysis.chi_square_reduced
+    _item_description.description
+;    The reduced chi-square value.
+;
+    _item.name                  '_flr_fret_analysis.chi_square_reduced'
+    _item.category_id             flr_fret_analysis
+    _item.mandatory_code          yes
+    _item_type.code               float
+     save_
+
+save__flr_fret_analysis.method_name
+    _item_description.description
+;    The name of the analysis method.
+;
+    _item.name                  '_flr_fret_analysis.method_name'
+    _item.category_id             flr_fret_analysis
+    _item.mandatory_code          no
+    _item_type.code               line
+    loop_
+    _item_examples.case
+    'PDA'
+     save_
+
+save__flr_fret_analysis.dataset_list_id
+    _item_description.description
+;    An identifier to the external dataset that contains information
+     regarding the primary results of the FRET experiment.
+;
+    _item.name                  '_flr_fret_analysis.dataset_list_id'
+    _item.category_id             flr_fret_analysis
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_analysis.dataset_list_id'
+    _item_linked.parent_name    '_ihm_dataset_list.id'
+     save_
+
+save__flr_fret_analysis.external_file_id
+    _item_description.description
+;    An identifier to the external file that contains information
+     regarding the primary results of the FRET experiment.
+;
+    _item.name                  '_flr_fret_analysis.external_file_id'
+    _item.category_id             flr_fret_analysis
+    _item.mandatory_code          no
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_analysis.external_file_id'
+    _item_linked.parent_name    '_ihm_external_files.id'
+     save_
+
+save__flr_fret_analysis.software_id
+    _item_description.description
+;    An identifier to the software used in the FRET analysis.
+;
+    _item.name                  '_flr_fret_analysis.software_id'
+    _item.category_id             flr_fret_analysis
+    _item.mandatory_code          no
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_analysis.software_id'
+    _item_linked.parent_name    '_software.pdbx_ordinal'
+     save_
+
+#################################
+## FLR_FRET_DISTANCE_RESTRAINT ##
+#################################
+
+save_flr_fret_distance_restraint
+    _category.description
+;              Data items in the FLR_FRET_DISTANCE_RESTRAINT category records
+               the details of the distance restraints derived from the FRET
+               experiments.
+;
+    _category.id                  flr_fret_distance_restraint
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_fret_distance_restraint.ordinal_id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_fret_distance_restraint
+     save_
+
+save__flr_fret_distance_restraint.ordinal_id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_fret_distance_restraint.ordinal_id'
+    _item.category_id             flr_fret_distance_restraint
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_fret_distance_restraint.id
+    _item_description.description
+;     A unique identifier for the FRET distance restraint.
+;
+    _item.name                  '_flr_fret_distance_restraint.id'
+    _item.category_id             flr_fret_distance_restraint
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_fret_distance_restraint.group_id
+    _item_description.description
+;     An identifier to group the distance restraints.
+;
+    _item.name                  '_flr_fret_distance_restraint.group_id'
+    _item.category_id             flr_fret_distance_restraint
+    _item.mandatory_code          no
+    _item_type.code               int
+     save_
+
+save__flr_fret_distance_restraint.sample_probe_id_1
+    _item_description.description
+;     An identifier for the first probe in the distance restraint.
+;
+    _item.name                  '_flr_fret_distance_restraint.sample_probe_id_1'
+    _item.category_id             flr_fret_distance_restraint
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_distance_restraint.sample_probe_id_1'
+    _item_linked.parent_name    '_flr_sample_probe_details.sample_probe_id'
+     save_
+
+save__flr_fret_distance_restraint.sample_probe_id_2
+    _item_description.description
+;     An identifier for the second probe in the distance restraint.
+;
+    _item.name                  '_flr_fret_distance_restraint.sample_probe_id_2'
+    _item.category_id             flr_fret_distance_restraint
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_distance_restraint.sample_probe_id_2'
+    _item_linked.parent_name    '_flr_sample_probe_details.sample_probe_id'
+     save_
+
+save__flr_fret_distance_restraint.state_id
+    _item_description.description
+;     An identifier to the state, in case of multi-state modeling.
+;
+    _item.name                  '_flr_fret_distance_restraint.state_id'
+    _item.category_id             flr_fret_distance_restraint
+    _item.mandatory_code          no
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_distance_restraint.state_id'
+    _item_linked.parent_name    '_ihm_multi_state_modeling.state_id'
+     save_
+
+save__flr_fret_distance_restraint.analysis_id
+    _item_description.description
+;     An identifier to FRET analysis parameters.
+;
+    _item.name                  '_flr_fret_distance_restraint.analysis_id'
+    _item.category_id             flr_fret_distance_restraint
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_distance_restraint.analysis_id'
+    _item_linked.parent_name    '_flr_fret_analysis.id'
+     save_
+
+save__flr_fret_distance_restraint.distance
+    _item_description.description
+;     The distance derived from the FRET experiment in Angstroms.
+;
+    _item.name                  '_flr_fret_distance_restraint.distance'
+    _item.category_id             flr_fret_distance_restraint
+    _item.mandatory_code          yes
+    _item_type.code               float
+    _item_units.code              angstroms
+     save_
+
+save__flr_fret_distance_restraint.distance_error_plus
+    _item_description.description
+;     Positive distance error in Angstroms.
+;
+    _item.name                  '_flr_fret_distance_restraint.distance_error_plus'
+    _item.category_id             flr_fret_distance_restraint
+    _item.mandatory_code          no
+    _item_type.code               float
+    _item_units.code              angstroms
+     save_
+
+save__flr_fret_distance_restraint.distance_error_minus
+    _item_description.description
+;     Negative distance error in Angstroms.
+;
+    _item.name                  '_flr_fret_distance_restraint.distance_error_minus'
+    _item.category_id             flr_fret_distance_restraint
+    _item.mandatory_code          no
+    _item_type.code               float
+    _item_units.code              angstroms
+     save_
+
+save__flr_fret_distance_restraint.distance_type
+    _item_description.description
+;     The type of distance.
+      If probe models are known, all distance types are inter-related and can be
+      inter-converted using a conversion function.
+;
+    _item.name                  '_flr_fret_distance_restraint.distance_type'
+    _item.category_id             flr_fret_distance_restraint
+    _item.mandatory_code          yes
+    _item_type.code               code
+    loop_
+    _item_enumeration.value
+    _item_enumeration.detail
+    '<R_DA>'    'mean donor acceptor distance obtained by fluorescence lifetime measurements'
+    '<R_DA>_E'  'FRET averaged donor acceptor distance obtained by intensity based measurements'
+    'R_mp'      'distance between mean positions of the probe obtained from the probe models; required for geometric modeling'
+     save_
+
+save__flr_fret_distance_restraint.population_fraction
+    _item_description.description
+;     The population fraction corresponding to the distance restraint.
+;
+    _item.name                  '_flr_fret_distance_restraint.population_fraction'
+    _item.category_id             flr_fret_distance_restraint
+    _item.mandatory_code          no
+    _item_type.code               float
+     save_
+
+save__flr_fret_distance_restraint.peak_assignment_id
+    _item_description.description
+;     An identifier to peak assignment.
+;
+    _item.name                  '_flr_fret_distance_restraint.peak_assignment_id'
+    _item.category_id             flr_fret_distance_restraint
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_distance_restraint.peak_assignment_id'
+    _item_linked.parent_name    '_flr_peak_assignment.id'
+     save_
+
+#############################
+## FLR_FRET_MODEL_DISTANCE ##
+#############################
+
+save_flr_fret_model_distance
+    _category.description
+;              Data items in the FLR_FRET_MODEL_DISTANCE category records the
+               details of the FRET-derived distances satisfied or violated in
+               the structural model.
+;
+    _category.id                  flr_fret_model_distance
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_fret_model_distance.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_fret_model_distance
+     save_
+
+save__flr_fret_model_distance.id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_fret_model_distance.id'
+    _item.category_id             flr_fret_model_distance
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_fret_model_distance.restraint_id
+    _item_description.description
+;     An identifier for the distance restraint.
+;
+    _item.name                  '_flr_fret_model_distance.restraint_id'
+    _item.category_id             flr_fret_model_distance
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_model_distance.restraint_id'
+    _item_linked.parent_name    '_flr_fret_distance_restraint.id'
+     save_
+
+save__flr_fret_model_distance.model_id
+    _item_description.description
+;     An identifier for the structural model.
+;
+    _item.name                  '_flr_fret_model_distance.model_id'
+    _item.category_id             flr_fret_model_distance
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_model_distance.model_id'
+    _item_linked.parent_name    '_ihm_model_list.model_id'
+     save_
+
+save__flr_fret_model_distance.distance
+    _item_description.description
+;     The distance in the structural model.
+;
+    _item.name                  '_flr_fret_model_distance.distance'
+    _item.category_id             flr_fret_model_distance
+    _item.mandatory_code          yes
+    _item_type.code               float
+    _item_units.code              angstroms
+     save_
+
+save__flr_fret_model_distance.distance_deviation
+    _item_description.description
+;     The deviation of the distance in the structural model compared to
+      the experimentally derived distance.
+;
+    _item.name                  '_flr_fret_model_distance.distance_deviation'
+    _item.category_id             flr_fret_model_distance
+    _item.mandatory_code          no
+    _item_type.code               float
+    _item_units.code              angstroms
+     save_
+
+############################
+## FLR_FRET_MODEL_QUALITY ##
+############################
+
+save_flr_fret_model_quality
+    _category.description
+;              Data items in the FLR_FRET_MODEL_QUALITY category records the
+               details of the global quality estimation of the structural
+               model.
+;
+    _category.id                  flr_fret_model_quality
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_fret_model_quality.model_id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_fret_model_quality
+     save_
+
+save__flr_fret_model_quality.model_id
+    _item_description.description
+;     An identifier to the structural model.
+;
+    _item.name                  '_flr_fret_model_quality.model_id'
+    _item.category_id             flr_fret_model_quality
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_model_quality.model_id'
+    _item_linked.parent_name    '_ihm_model_list.model_id'
+     save_
+
+save__flr_fret_model_quality.chi_square_reduced
+    _item_description.description
+;     The reduced chi-square value.
+;
+    _item.name                  '_flr_fret_model_quality.chi_square_reduced'
+    _item.category_id             flr_fret_model_quality
+    _item.mandatory_code          yes
+    _item_type.code               float
+     save_
+
+save__flr_fret_model_quality.dataset_group_id
+    _item_description.description
+;     An identifier to the input dataset group.
+;
+    _item.name                  '_flr_fret_model_quality.dataset_group_id'
+    _item.category_id             flr_fret_model_quality
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_fret_model_quality.dataset_group_id'
+    _item_linked.parent_name    '_ihm_dataset_group.group_id'
+     save_
+
+save__flr_fret_model_quality.method
+    _item_description.description
+;     The model quality assessment method.
+;
+    _item.name                  '_flr_fret_model_quality.method'
+    _item.category_id             flr_fret_model_quality
+    _item.mandatory_code          yes
+    _item_type.code               line
+     save_
+
+save__flr_fret_model_quality.details
+    _item_description.description
+;     Additional details regarding the model quality assessment.
+;
+    _item.name                  '_flr_fret_model_quality.details'
+    _item.category_id             flr_fret_model_quality
+    _item.mandatory_code          no
+    _item_type.code               text
+     save_
+
+##############################
+## FLR_FPS_GLOBAL_PARAMETER ##
+##############################
+
+save_flr_FPS_global_parameter
+    _category.description
+;              Data items in the FLR_FPS_GLOBAL_PARAMETER category records the
+               details of the global parameter settings in the FPS modeling
+               software.
+;
+    _category.id                  flr_FPS_global_parameter
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_FPS_global_parameter.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_FPS_global_parameter
+     save_
+
+save__flr_FPS_global_parameter.id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_FPS_global_parameter.id'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_FPS_global_parameter.forster_radius_id
+    _item_description.description
+;     An identifier pointing to the Forster radius of the FRET pair.
+      Used for the calculation of the FRET efficiency and for the
+      conversion between Rmp and RDA.
+;
+    _item.name                  '_flr_FPS_global_parameter.forster_radius_id'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          no
+    _item_type.code               int
+    _item_linked.child_name     '_flr_FPS_global_parameter.forster_radius_id'
+    _item_linked.parent_name    '_flr_fret_forster_radius.id'
+     save_
+
+save__flr_FPS_global_parameter.conversion_function_polynom_order
+    _item_description.description
+;     The order of the polynomial in the conversion function.
+      Used for the conversion between Rmp and RDA (not used for screening).
+;
+    _item.name                  '_flr_FPS_global_parameter.conversion_function_polynom_order'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_FPS_global_parameter.repetition
+    _item_description.description
+;    Number of runs.
+;
+    _item.name                  '_flr_FPS_global_parameter.repetition'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_FPS_global_parameter.AV_grid_rel
+    _item_description.description
+;    Spacing of the 3D grid (relative to the smallest dye or
+     linker dimension).
+;
+    _item.name                  '_flr_FPS_global_parameter.AV_grid_rel'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          yes
+    _item_type.code               float
+    loop_
+    _item_range.minimum
+    _item_range.maximum
+        0.0   0.0
+        0.0   1.0
+        1.0   1.0
+     save_
+
+save__flr_FPS_global_parameter.AV_min_grid_A
+    _item_description.description
+;    Minimal spacing of the grid in Angstroms.
+;
+    _item.name                  '_flr_FPS_global_parameter.AV_min_grid_A'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          yes
+    _item_type.code               float
+    _item_units.code              angstroms
+     save_
+
+save__flr_FPS_global_parameter.AV_allowed_sphere
+    _item_description.description
+;    Radius around the attachment atom for which clashes with the
+     rest of the biomolecule are ignored.
+;
+    _item.name                  '_flr_FPS_global_parameter.AV_allowed_sphere'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          yes
+    _item_type.code               float
+     save_
+
+save__flr_FPS_global_parameter.AV_search_nodes
+    _item_description.description
+;    Number of grid points from the positions within the allowed
+     sphere radius, which are not considered for clashes.
+;
+    _item.name                  '_flr_FPS_global_parameter.AV_search_nodes'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_FPS_global_parameter.AV_E_samples_k
+    _item_description.description
+;    Number (in thousands) of random distances chosen from the two
+     Accessible Volumes (AVs) for the calculation of the mean FRET efficiency.
+;
+    _item.name                  '_flr_FPS_global_parameter.AV_E_samples_k'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_FPS_global_parameter.sim_viscosity_adjustment
+    _item_description.description
+;     Damping rate during the docking or refinement.
+;
+    _item.name                  '_flr_FPS_global_parameter.sim_viscosity_adjustment'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          no
+    _item_type.code               float
+     save_
+
+save__flr_FPS_global_parameter.sim_dt_adjustment
+    _item_description.description
+;    Simulation time step.
+;
+    _item.name                  '_flr_FPS_global_parameter.sim_dt_adjustment'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          no
+    _item_type.code               float
+     save_
+
+save__flr_FPS_global_parameter.sim_max_iter_k
+    _item_description.description
+;    Number of steps per repetition (in thousands).
+;
+    _item.name                  '_flr_FPS_global_parameter.sim_max_iter_k'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          no
+    _item_type.code               int
+     save_
+
+save__flr_FPS_global_parameter.sim_max_force
+    _item_description.description
+;    Maximal force allowed.
+;
+    _item.name                  '_flr_FPS_global_parameter.sim_max_force'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          no
+    _item_type.code               float
+     save_
+
+save__flr_FPS_global_parameter.sim_clash_tolerance_A
+    _item_description.description
+;    Allowed overlap of atoms in angstroms.
+;
+    _item.name                  '_flr_FPS_global_parameter.sim_clash_tolerance_A'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          no
+    _item_type.code               float
+    _item_units.code              angstroms
+     save_
+
+save__flr_FPS_global_parameter.sim_reciprocal_kT
+    _item_description.description
+;    1/kT value used for Monte-Carlo sampling.
+;
+    _item.name                  '_flr_FPS_global_parameter.sim_reciprocal_kT'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          no
+    _item_type.code               float
+     save_
+
+save__flr_FPS_global_parameter.sim_clash_potential
+    _item_description.description
+;    The potential used for the penalty of an overlap.
+;
+    _item.name                  '_flr_FPS_global_parameter.sim_clash_potential'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          no
+    _item_type.code               line
+     save_
+
+save__flr_FPS_global_parameter.convergence_E
+    _item_description.description
+;    Energy (in units internal to FPS).
+;
+    _item.name                  '_flr_FPS_global_parameter.convergence_E'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          no
+    _item_type.code               float
+     save_
+
+save__flr_FPS_global_parameter.convergence_K
+    _item_description.description
+;    Sum of all spring constants.
+;
+    _item.name                  '_flr_FPS_global_parameter.convergence_K'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          no
+    _item_type.code               float
+     save_
+
+save__flr_FPS_global_parameter.convergence_F
+    _item_description.description
+;    Total force (derived from violated constraints) acting on a subunit
+     (in units internal to FPS).
+;
+    _item.name                  '_flr_FPS_global_parameter.convergence_F'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          no
+    _item_type.code               float
+     save_
+
+save__flr_FPS_global_parameter.convergence_T
+    _item_description.description
+;    Total torque vector (in units internal to FPS).
+;
+    _item.name                  '_flr_FPS_global_parameter.convergence_T'
+    _item.category_id             flr_FPS_global_parameter
+    _item.mandatory_code          no
+    _item_type.code               float
+     save_
+
+######################
+## FLR_FPS_MODELING ##
+######################
+
+save_flr_FPS_modeling
+    _category.description
+;              Data items in the FLR_FPS_MODELING category records the
+               details of the structure modeling carried out using the
+               FPS software.
+;
+    _category.id                  flr_FPS_modeling
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_FPS_modeling.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_FPS_modeling
+     save_
+
+save__flr_FPS_modeling.id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_FPS_modeling.id'
+    _item.category_id             flr_FPS_modeling
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_FPS_modeling.ihm_modeling_protocol_ordinal_id
+    _item_description.description
+;     An identifier pointing to the _ihm_modeling_protocol.ordinal_id.
+;
+    _item.name                  '_flr_FPS_modeling.ihm_modeling_protocol_ordinal_id'
+    _item.category_id             flr_FPS_modeling
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_FPS_modeling.restraint_group_id
+    _item_description.description
+;     An identifier pointing to the set of FRET-based distance restraints
+      used in the modeling.
+;
+    _item.name                  '_flr_FPS_modeling.restraint_group_id'
+    _item.category_id             flr_FPS_modeling
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_FPS_modeling.restraint_group_id'
+    _item_linked.parent_name    '_flr_fret_distance_restraint.group_id'
+     save_
+
+save__flr_FPS_modeling.global_parameter_id
+    _item_description.description
+;     An identifier pointing to the global parameters used in the modeling.
+;
+    _item.name                  '_flr_FPS_modeling.global_parameter_id'
+    _item.category_id             flr_FPS_modeling
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_FPS_modeling.global_parameter_id'
+    _item_linked.parent_name    '_flr_FPS_global_parameter.id'
+     save_
+
+save__flr_FPS_modeling.probe_modeling_method
+    _item_description.description
+;     The FPS probe modeling method.
+;
+    _item.name                  '_flr_FPS_modeling.probe_modeling_method'
+    _item.category_id             flr_FPS_modeling
+    _item.mandatory_code          yes
+    _item_type.code               line
+    loop_
+    _item_enumeration.value
+    'AV1'     'Accessible volume with one radius'
+    'AV3'     'Accessible volume with three radii'
+    'MPP'     'Mean probe position'
+     save_
+
+save__flr_FPS_modeling.details
+    _item_description.description
+;     Additional details regarding FPS modeling.
+;
+    _item.name                  '_flr_FPS_modeling.details'
+    _item.category_id             flr_FPS_modeling
+    _item.mandatory_code          no
+    _item_type.code               text
+     save_
+
+#########################
+## FLR_FPS_AV_MODELING ##
+#########################
+
+save_flr_FPS_AV_modeling
+    _category.description
+;              Data items in the FLR_FPS_AV_MODELING category records the
+               details of the accessible volume-based modeling of the probe
+               carried out using the FPS software.
+;
+    _category.id                  flr_FPS_AV_modeling
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_FPS_AV_modeling.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_FPS_AV_modeling
+     save_
+
+save__flr_FPS_AV_modeling.id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_FPS_AV_modeling.id'
+    _item.category_id             flr_FPS_AV_modeling
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_FPS_AV_modeling.sample_probe_id
+    _item_description.description
+;     An identifier pointing to the sample probe position.
+;
+    _item.name                  '_flr_FPS_AV_modeling.sample_probe_id'
+    _item.category_id             flr_FPS_AV_modeling
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_FPS_AV_modeling.sample_probe_id'
+    _item_linked.parent_name    '_flr_sample_probe_details.sample_probe_id'
+     save_
+
+save__flr_FPS_AV_modeling.FPS_modeling_id
+    _item_description.description
+;     An identifier pointing to the FPS modeling.
+;
+    _item.name                  '_flr_FPS_AV_modeling.FPS_modeling_id'
+    _item.category_id             flr_FPS_AV_modeling
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_FPS_AV_modeling.FPS_modeling_id'
+    _item_linked.parent_name    '_flr_FPS_modeling.id'
+     save_
+
+save__flr_FPS_AV_modeling.parameter_id
+    _item_description.description
+;     An identifier pointing to the FPS accessible volume parameters.
+;
+    _item.name                  '_flr_FPS_AV_modeling.parameter_id'
+    _item.category_id             flr_FPS_AV_modeling
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_FPS_AV_modeling.parameter_id'
+    _item_linked.parent_name    '_flr_FPS_AV_parameter.id'
+     save_
+
+##########################
+## FLR_FPS_AV_PARAMETER ##
+##########################
+
+save_flr_FPS_AV_parameter
+    _category.description
+;              Data items in the FLR_FPS_AV_PARAMETER category records the
+               details of the parameters corresponding to the accessible
+               volume based modeling of the probe.
+;
+    _category.id                  flr_FPS_AV_parameter
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_FPS_AV_parameter.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_FPS_AV_parameter
+     save_
+
+save__flr_FPS_AV_parameter.id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_FPS_AV_parameter.id'
+    _item.category_id             flr_FPS_AV_parameter
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_FPS_AV_parameter.num_linker_atoms
+    _item_description.description
+;     The number of linker atoms in the probe.
+      The number of linker atoms is counted starting from the atom specified
+      by one of the following data items (whichever is relevant in the
+      particular scenario) and ending with the point of attachment in the
+      fluorophore.
+      _flr_poly_probe_position.atom_id
+      _flr_poly_probe_position_mutated.atom_id
+      _flr_poly_probe_position_modified.atom_id
+      The linker also includes the reactive group of the fluorophore and any
+      modifications carried out to introduce a spacer and/or an internal
+      linker within the probe.
+;
+    _item.name                  '_flr_FPS_AV_parameter.num_linker_atoms'
+    _item.category_id             flr_FPS_AV_parameter
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_FPS_AV_parameter.linker_length
+    _item_description.description
+;     Length of the linker in Angstroms. The length of the linker is defined
+      as the length of the vector from the point of attachment on the biomolecule
+      to the center atom of the fluorophore. The center atom of the fluorophore
+      is identified in the _flr_chromophore.center_atom data item.
+      The point of attachment in the biomolecule is specified by one of the
+      following data items (whichever is relevant).
+      _flr_poly_probe_position.atom_id
+      _flr_poly_probe_position_mutated.atom_id
+      _flr_poly_probe_position_modified.atom_id
+;
+    _item.name                  '_flr_FPS_AV_parameter.linker_length'
+    _item.category_id             flr_FPS_AV_parameter
+    _item.mandatory_code          yes
+    _item_type.code               float
+    _item_units.code              angstroms
+     save_
+
+save__flr_FPS_AV_parameter.linker_width
+    _item_description.description
+;     Width of the linker in Angstroms.
+;
+    _item.name                  '_flr_FPS_AV_parameter.linker_width'
+    _item.category_id             flr_FPS_AV_parameter
+    _item.mandatory_code          yes
+    _item_type.code               float
+    _item_units.code              angstroms
+     save_
+
+save__flr_FPS_AV_parameter.probe_radius_1
+    _item_description.description
+;     Transverse equatorial radius 1 of the triaxial ellipsoid probe.
+;
+         _item.name                  '_flr_FPS_AV_parameter.probe_radius_1'
+         _item.category_id             flr_FPS_AV_parameter
+         _item.mandatory_code          yes
+         _item_type.code               float
+         _item_units.code              angstroms
+          save_
+
+save__flr_FPS_AV_parameter.probe_radius_2
+    _item_description.description
+;     Transverse equatorial radius 2 of the triaxial ellipsoid probe.
+;
+         _item.name                  '_flr_FPS_AV_parameter.probe_radius_2'
+         _item.category_id             flr_FPS_AV_parameter
+         _item.mandatory_code          yes
+         _item_type.code               float
+         _item_units.code              angstroms
+          save_
+
+save__flr_FPS_AV_parameter.probe_radius_3
+    _item_description.description
+;     Conjugate polar radius of the triaxial ellipsoid probe.
+;
+         _item.name                  '_flr_FPS_AV_parameter.probe_radius_3'
+         _item.category_id             flr_FPS_AV_parameter
+         _item.mandatory_code          yes
+         _item_type.code               float
+         _item_units.code              angstroms
+          save_
+
+#################################
+## FLR_FPS_MEAN_PROBE_POSITION ##
+#################################
+
+save_flr_FPS_mean_probe_position
+    _category.description
+;              Data items in the FLR_FPS_MEAN_PROBE_POSITION category records the
+               details of the mean probe positions used in the FPS modeling.
+;
+    _category.id                  flr_FPS_mean_probe_position
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_FPS_mean_probe_position.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_FPS_mean_probe_position
+     save_
+
+save__flr_FPS_mean_probe_position.id
+    _item_description.description
+;     A unique identifier for the mean probe position.
+;
+    _item.name                  '_flr_FPS_mean_probe_position.id'
+    _item.category_id             flr_FPS_mean_probe_position
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_FPS_mean_probe_position.sample_probe_id
+    _item_description.description
+;     An identifier pointing to the sample probe position.
+;
+    _item.name                  '_flr_FPS_mean_probe_position.sample_probe_id'
+    _item.category_id             flr_FPS_mean_probe_position
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_FPS_mean_probe_position.sample_probe_id'
+    _item_linked.parent_name    '_flr_sample_probe_details.sample_probe_id'
+     save_
+
+save__flr_FPS_mean_probe_position.mpp_xcoord
+    _item_description.description
+;    The X coordinate of the mean probe position.
+;
+    _item.name                  '_flr_FPS_mean_probe_position.mpp_xcoord'
+    _item.category_id             flr_FPS_mean_probe_position
+    _item.mandatory_code          yes
+    _item_type.code               float
+     save_
+
+save__flr_FPS_mean_probe_position.mpp_ycoord
+    _item_description.description
+;     The Y coordinate of the mean probe position.
+;
+    _item.name                  '_flr_FPS_mean_probe_position.mpp_ycoord'
+    _item.category_id             flr_FPS_mean_probe_position
+    _item.mandatory_code          yes
+    _item_type.code               float
+     save_
+
+save__flr_FPS_mean_probe_position.mpp_zcoord
+    _item_description.description
+;     The Z coordinate of the mean probe position.
+;
+    _item.name                  '_flr_FPS_mean_probe_position.mpp_zcoord'
+    _item.category_id             flr_FPS_mean_probe_position
+    _item.mandatory_code          yes
+    _item_type.code               float
+     save_
+
+###############################
+## FLR_FPS_MPP_ATOM_POSITION ##
+###############################
+
+save_flr_FPS_MPP_atom_position
+    _category.description
+;              Data items in the FLR_FPS_MPP_ATOM_POSITION category records the
+               details of the atom positions corresponding to the mean probe
+               position-based modeling of the probe.
+;
+    _category.id                  flr_FPS_MPP_atom_position
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_FPS_MPP_atom_position.id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_FPS_MPP_atom_position
+     save_
+
+save__flr_FPS_MPP_atom_position.id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_FPS_MPP_atom_position.id'
+    _item.category_id             flr_FPS_MPP_atom_position
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_FPS_MPP_atom_position.group_id
+    _item_description.description
+;     An identifier to group a set of related atom positions.
+      If atom positions need not be grouped, then
+      _flr_FPS_MPP_atom_position.group_id is the same as
+      _flr_FPS_MPP_atom_position.id.
+;
+    _item.name                  '_flr_FPS_MPP_atom_position.group_id'
+    _item.category_id             flr_FPS_MPP_atom_position
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_FPS_MPP_atom_position.entity_id
+    _item_description.description
+;     The identifier pointing to the molecular entity.
+;
+    _item.name                  '_flr_FPS_MPP_atom_position.entity_id'
+    _item.category_id             flr_FPS_MPP_atom_position
+    _item.mandatory_code          yes
+    _item_type.code               code
+    _item_linked.child_name     '_flr_FPS_MPP_atom_position.entity_id'
+    _item_linked.parent_name    '_entity.id'
+     save_
+
+save__flr_FPS_MPP_atom_position.seq_id
+    _item_description.description
+;     The identifier pointing to the sequence index in the polymeric entity.
+;
+    _item.name                  '_flr_FPS_MPP_atom_position.seq_id'
+    _item.category_id             flr_FPS_MPP_atom_position
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_FPS_MPP_atom_position.seq_id'
+    _item_linked.parent_name    '_entity_poly_seq.num'
+     save_
+
+save__flr_FPS_MPP_atom_position.comp_id
+    _item_description.description
+;     The identifier pointing to the chemical component in the polymeric entity.
+;
+    _item.name                  '_flr_FPS_MPP_atom_position.comp_id'
+    _item.category_id             flr_FPS_MPP_atom_position
+    _item.mandatory_code          yes
+    _item_type.code               ucode
+    _item_linked.child_name     '_flr_FPS_MPP_atom_position.comp_id'
+    _item_linked.parent_name    '_entity_poly_seq.mon_id'
+     save_
+
+save__flr_FPS_MPP_atom_position.atom_id
+    _item_description.description
+;     The identifier pointing to the atom identifier of the chemical component
+      in the polymeric entity.
+;
+    _item.name                  '_flr_FPS_MPP_atom_position.atom_id'
+    _item.category_id             flr_FPS_MPP_atom_position
+    _item.mandatory_code          yes
+    _item_type.code               atcode
+    _item_linked.child_name     '_flr_FPS_MPP_atom_position.atom_id'
+    _item_linked.parent_name    '_chem_comp_atom.atom_id'
+     save_
+
+save__flr_FPS_MPP_atom_position.asym_id
+    _item_description.description
+;     The identifier pointing to the asym/strand.
+;
+    _item.name                  '_flr_FPS_MPP_atom_position.asym_id'
+    _item.category_id             flr_FPS_MPP_atom_position
+    _item.mandatory_code          yes
+    _item_type.code               code
+    _item_linked.child_name     '_flr_FPS_MPP_atom_position.asym_id'
+    _item_linked.parent_name    '_struct_asym.id'
+     save_
+
+save__flr_FPS_MPP_atom_position.xcoord
+    _item_description.description
+;     The X coordinate of the atom position.
+;
+    _item.name                  '_flr_FPS_MPP_atom_position.xcoord'
+    _item.category_id             flr_FPS_MPP_atom_position
+    _item.mandatory_code          yes
+    _item_type.code               float
+     save_
+
+save__flr_FPS_MPP_atom_position.ycoord
+    _item_description.description
+;     The Y coordinate of the atom position.
+;
+    _item.name                  '_flr_FPS_MPP_atom_position.ycoord'
+    _item.category_id             flr_FPS_MPP_atom_position
+    _item.mandatory_code          yes
+    _item_type.code               float
+     save_
+
+save__flr_FPS_MPP_atom_position.zcoord
+    _item_description.description
+;     The Z coordinate of the atom position.
+;
+    _item.name                  '_flr_FPS_MPP_atom_position.zcoord'
+    _item.category_id             flr_FPS_MPP_atom_position
+    _item.mandatory_code          yes
+    _item_type.code               float
+     save_
+
+##########################
+## FLR_FPS_MPP_MODELING ##
+##########################
+
+save_flr_FPS_MPP_modeling
+    _category.description
+;              Data items in the FLR_FPS_MPP_MODELING category records the
+               details of the mean probe position-based modeling carried
+               out using the FPS software.
+;
+    _category.id                  flr_FPS_MPP_modeling
+    _category.mandatory_code      no
+     loop_
+    _category_key.name          '_flr_FPS_MPP_modeling.ordinal_id'
+
+    loop_
+    _category_group.id           'inclusive_group'
+                                 'flr_group'
+    loop_
+    _category_examples.detail
+    _category_examples.case
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+    Example 1 -
+;
+;
+
+        # ... abbreviated ...
+;
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   _pdbx_category_context.type         CONTRIBUTED
+   _pdbx_category_context.category_id  flr_FPS_MPP_modeling
+     save_
+
+save__flr_FPS_MPP_modeling.ordinal_id
+    _item_description.description
+;     A unique identifier for the category.
+;
+    _item.name                  '_flr_FPS_MPP_modeling.ordinal_id'
+    _item.category_id             flr_FPS_MPP_modeling
+    _item.mandatory_code          yes
+    _item_type.code               int
+     save_
+
+save__flr_FPS_MPP_modeling.FPS_modeling_id
+    _item_description.description
+;     An identifier pointing to the FPS modeling.
+;
+    _item.name                  '_flr_FPS_MPP_modeling.FPS_modeling_id'
+    _item.category_id             flr_FPS_MPP_modeling
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_FPS_MPP_modeling.FPS_modeling_id'
+    _item_linked.parent_name    '_flr_FPS_modeling.id'
+     save_
+
+save__flr_FPS_MPP_modeling.mpp_id
+    _item_description.description
+;     An identifier pointing to the mean probe position (mpp).
+;
+    _item.name                  '_flr_FPS_MPP_modeling.mpp_id'
+    _item.category_id             flr_FPS_MPP_modeling
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_FPS_MPP_modeling.mpp_id'
+    _item_linked.parent_name    '_flr_FPS_mean_probe_position.id'
+     save_
+
+save__flr_FPS_MPP_modeling.mpp_atom_position_group_id
+    _item_description.description
+;     An identifier pointing to the group of atom positions
+      corresponding to the mean probe position (mpp).
+;
+    _item.name                  '_flr_FPS_MPP_modeling.mpp_atom_position_group_id'
+    _item.category_id             flr_FPS_MPP_modeling
+    _item.mandatory_code          yes
+    _item_type.code               int
+    _item_linked.child_name     '_flr_FPS_MPP_modeling.mpp_atom_position_group_id'
+    _item_linked.parent_name    '_flr_FPS_MPP_atom_position.id'
+     save_

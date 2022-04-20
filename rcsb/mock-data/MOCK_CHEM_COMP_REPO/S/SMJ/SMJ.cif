@@ -1,0 +1,287 @@
+data_SMJ
+# 
+_chem_comp.id                                    SMJ 
+_chem_comp.name                                  "(5S,8R,11S)-14-[4-(benzyloxy)-4-oxobutanoyl]-8-(2-carboxyethyl)-5-(carboxymethyl)-11-(1-methylethyl)-3,6,9,12-tetraoxo-1-phenyl-2-oxa-4,7,10,13,14-pentaazahexadecan-16-oic acid" 
+_chem_comp.type                                  peptide-like 
+_chem_comp.pdbx_type                             HETAIN 
+_chem_comp.formula                               "C35 H43 N5 O14" 
+_chem_comp.mon_nstd_parent_comp_id               ? 
+_chem_comp.pdbx_synonyms                         ? 
+_chem_comp.pdbx_formal_charge                    0 
+_chem_comp.pdbx_initial_date                     2009-04-14 
+_chem_comp.pdbx_modified_date                    2011-08-06 
+_chem_comp.pdbx_ambiguous_flag                   N 
+_chem_comp.pdbx_release_status                   REF_ONLY 
+_chem_comp.pdbx_replaced_by                      ? 
+_chem_comp.pdbx_replaces                         ? 
+_chem_comp.formula_weight                        757.741 
+_chem_comp.one_letter_code                       ? 
+_chem_comp.three_letter_code                     SMJ 
+_chem_comp.pdbx_model_coordinates_details        "not provided" 
+_chem_comp.pdbx_model_coordinates_missing_flag   N 
+_chem_comp.pdbx_ideal_coordinates_details        Corina 
+_chem_comp.pdbx_ideal_coordinates_missing_flag   N 
+_chem_comp.pdbx_model_coordinates_db_code        2C2M 
+_chem_comp.pdbx_subcomponent_list                "PHQ ASP GLU VAL MX4" 
+_chem_comp.pdbx_processing_site                  RCSB 
+# 
+loop_
+_chem_comp_atom.comp_id 
+_chem_comp_atom.atom_id 
+_chem_comp_atom.alt_atom_id 
+_chem_comp_atom.type_symbol 
+_chem_comp_atom.charge 
+_chem_comp_atom.pdbx_align 
+_chem_comp_atom.pdbx_aromatic_flag 
+_chem_comp_atom.pdbx_leaving_atom_flag 
+_chem_comp_atom.pdbx_stereo_config 
+_chem_comp_atom.model_Cartn_x 
+_chem_comp_atom.model_Cartn_y 
+_chem_comp_atom.model_Cartn_z 
+_chem_comp_atom.pdbx_model_Cartn_x_ideal 
+_chem_comp_atom.pdbx_model_Cartn_y_ideal 
+_chem_comp_atom.pdbx_model_Cartn_z_ideal 
+_chem_comp_atom.pdbx_component_atom_id 
+_chem_comp_atom.pdbx_component_comp_id 
+_chem_comp_atom.pdbx_ordinal 
+SMJ C1   C1  C 0 1 N N N 41.274 28.200 21.860 6.592   -1.012 0.492  C1   PHQ 1  
+SMJ O1   O1  O 0 1 N N N 40.121 27.815 21.689 5.897   -1.957 0.175  O1   PHQ 2  
+SMJ O2   O2  O 0 1 N N N 42.185 28.484 20.879 7.836   -0.893 -0.009 O2   PHQ 3  
+SMJ C2   C2  C 0 1 N N N 41.743 28.313 19.503 8.281   -1.931 -0.921 C2   PHQ 4  
+SMJ C3   C3  C 0 1 Y N N 42.820 28.657 18.457 9.687   -1.633 -1.375 C3   PHQ 5  
+SMJ C4   C4  C 0 1 Y N N 42.461 28.524 17.060 10.763  -2.122 -0.658 C4   PHQ 6  
+SMJ C5   C5  C 0 1 Y N N 43.419 28.836 16.022 12.053  -1.848 -1.074 C5   PHQ 7  
+SMJ C6   C6  C 0 1 Y N N 44.747 29.284 16.376 12.266  -1.085 -2.207 C6   PHQ 8  
+SMJ C7   C7  C 0 1 Y N N 45.121 29.419 17.768 11.190  -0.595 -2.923 C7   PHQ 9  
+SMJ C8   C8  C 0 1 Y N N 44.163 29.109 18.808 9.900   -0.873 -2.510 C8   PHQ 10 
+SMJ N    N1  N 0 1 N N N 41.730 28.936 22.868 6.115   -0.079 1.340  N    ASP 11 
+SMJ CA   C9  C 0 1 N N S 41.062 29.000 24.164 4.726   -0.149 1.800  CA   ASP 12 
+SMJ C    C10 C 0 1 N N N 40.540 30.394 24.493 3.829   0.530  0.796  C    ASP 13 
+SMJ O    O3  O 0 1 N N N 41.113 31.401 24.078 4.304   1.023  -0.205 O    ASP 14 
+SMJ CB   C11 C 0 1 N N N 42.009 28.545 25.279 4.600   0.554  3.153  CB   ASP 15 
+SMJ CG   C12 C 0 1 N N N 42.361 27.077 25.184 5.417   -0.186 4.181  CG   ASP 16 
+SMJ OD1  O4  O 0 1 N N N 41.433 26.255 25.060 5.953   -1.230 3.890  OD1  ASP 17 
+SMJ OD2  O5  O 0 1 N N N 43.562 26.743 25.241 5.548   0.313  5.420  OD2  ASP 18 
+SMJ N1   N2  N 0 1 N N N 39.439 30.435 25.235 2.500   0.588  1.011  N    GLU 19 
+SMJ CA1  C13 C 0 1 N N S 38.827 31.686 25.661 1.629   1.248  0.035  CA   GLU 20 
+SMJ C9   C14 C 0 1 N N N 38.499 31.513 27.142 0.376   1.725  0.723  C    GLU 21 
+SMJ O3   O7  O 0 1 N N N 38.363 30.387 27.617 0.225   1.533  1.911  O    GLU 22 
+SMJ CB1  C15 C 0 1 N N N 37.544 31.967 24.865 1.259   0.257  -1.070 CB   GLU 23 
+SMJ CG1  C16 C 0 1 N N N 37.731 31.987 23.346 2.517   -0.132 -1.849 CG   GLU 24 
+SMJ CD   C17 C 0 1 N N N 36.509 32.512 22.598 2.152   -1.107 -2.938 CD   GLU 25 
+SMJ OE1  O8  O 0 1 N N N 35.383 32.043 22.865 1.004   -1.456 -3.077 OE1  GLU 26 
+SMJ OE2  O9  O 0 1 N N N 36.678 33.394 21.731 3.103   -1.589 -3.753 OE2  GLU 27 
+SMJ N2   N3  N 0 1 N N N 38.380 32.619 27.871 -0.578  2.365  0.018  N    VAL 28 
+SMJ CA2  C18 C 0 1 N N S 38.074 32.550 29.296 -1.796  2.829  0.686  CA   VAL 29 
+SMJ CC   C19 C 0 1 N N N 36.639 32.960 29.586 -2.913  2.934  -0.321 C    VAL 30 
+SMJ O4   O11 O 0 1 N N N 35.889 33.310 28.677 -2.660  2.956  -1.507 O    VAL 31 
+SMJ CB2  C20 C 0 1 N N N 39.023 33.449 30.117 -1.544  4.202  1.312  CB   VAL 32 
+SMJ CG11 C21 C 0 0 N N N 40.457 32.974 29.950 -0.477  4.077  2.402  CG1  VAL 33 
+SMJ CG2  C22 C 0 1 N N N 38.886 34.899 29.670 -1.059  5.173  0.233  CG2  VAL 34 
+SMJ C21  C23 C 0 1 N N N 35.305 34.534 32.207 -5.691  0.650  -0.184 C2   MX4 35 
+SMJ C31  C24 C 0 1 N N N 34.576 35.851 32.401 -6.673  -0.459 -0.565 C3   MX4 36 
+SMJ C41  C25 C 0 1 N N N 34.464 36.598 31.099 -6.384  -1.690 0.255  C4   MX4 37 
+SMJ O5   O13 O 0 1 N N N 34.177 36.091 30.008 -5.484  -1.680 1.061  O5   MX4 38 
+SMJ O6   O14 O 0 1 N N N 34.735 37.906 31.347 -7.125  -2.796 0.090  O6   MX4 39 
+SMJ C71  C26 C 0 1 N N N 34.332 33.369 32.085 -5.981  1.881  -1.004 C7   MX4 40 
+SMJ O8   O15 O 0 1 N N N 33.283 33.351 32.740 -6.884  1.872  -1.813 O8   MX4 41 
+SMJ N9   N4  N 0 1 N N N 34.689 32.322 31.229 -5.236  2.992  -0.838 N9   MX4 42 
+SMJ C10  C27 C 0 1 N N N 33.834 31.138 31.074 -5.517  4.189  -1.635 C10  MX4 43 
+SMJ C12  C28 C 0 1 Y N N 35.221 41.235 29.739 -7.391  -5.989 -0.399 C12  MX4 44 
+SMJ C13  C29 C 0 1 Y N N 35.529 42.553 30.173 -8.246  -7.034 -0.694 C13  MX4 45 
+SMJ C14  C30 C 0 1 Y N N 35.639 42.854 31.552 -9.432  -7.174 0.001  C14  MX4 46 
+SMJ C15  C31 C 0 1 Y N N 35.438 41.835 32.513 -9.763  -6.269 0.992  C15  MX4 47 
+SMJ C16  C32 C 0 1 Y N N 35.127 40.509 32.093 -8.908  -5.223 1.287  C16  MX4 48 
+SMJ C17  C33 C 0 1 Y N N 35.015 40.193 30.694 -7.722  -5.083 0.592  C17  MX4 49 
+SMJ C18  C34 C 0 1 N N N 33.250 30.995 29.682 -6.515  5.053  -0.908 C18  MX4 50 
+SMJ C91  C35 C 0 1 N N N 34.683 38.797 30.223 -6.790  -3.944 0.914  C9   MX4 51 
+SMJ O19  O16 O 0 1 N N N 33.010 31.868 28.866 -6.946  4.706  0.166  O19  MX4 52 
+SMJ N16  N5  N 0 1 N N N 35.873 32.334 30.459 -4.192  3.003  0.097  N16  MX4 53 
+SMJ O20  O17 O 0 1 N N N 32.977 29.700 29.392 -6.924  6.210  -1.453 O20  MX4 54 
+SMJ H21  H2  H 0 1 N N N 41.458 27.260 19.365 8.261   -2.895 -0.412 H21  PHQ 55 
+SMJ H22  H3  H 0 1 N N N 40.905 29.008 19.344 7.619   -1.963 -1.786 H22  PHQ 56 
+SMJ H41  H4  H 0 1 N N N 41.470 28.189 16.791 10.597  -2.719 0.226  H41  PHQ 57 
+SMJ H51  H5  H 0 1 N N N 43.142 28.734 14.983 12.893  -2.230 -0.514 H51  PHQ 58 
+SMJ H61  H6  H 0 1 N N N 45.461 29.518 15.601 13.273  -0.870 -2.531 H61  PHQ 59 
+SMJ H71  H7  H 0 1 N N N 46.115 29.751 18.031 11.357  0.002  -3.808 H71  PHQ 60 
+SMJ H81  H8  H 0 1 N N N 44.442 29.212 19.846 9.060   -0.494 -3.072 H81  PHQ 61 
+SMJ H    H9  H 0 1 N N N 42.566 29.468 22.733 6.691   0.639  1.646  H    ASP 62 
+SMJ HA   H11 H 0 1 N N N 40.197 28.324 24.098 4.430   -1.193 1.904  HA   ASP 63 
+SMJ HB2  H12 H 0 1 N N N 42.938 29.130 25.206 4.966   1.577  3.066  HB2  ASP 64 
+SMJ HB3  H13 H 0 1 N N N 41.495 28.704 26.239 3.555   0.567  3.460  HB3  ASP 65 
+SMJ HD2  H14 H 0 1 N N N 43.632 25.798 25.176 6.081   -0.198 6.045  HD2  ASP 66 
+SMJ H1   H16 H 0 1 N N N 39.014 29.573 25.512 2.120   0.193  1.811  H    GLU 67 
+SMJ HA1  H18 H 0 1 N N N 39.505 32.535 25.490 2.151   2.100  -0.400 HA   GLU 68 
+SMJ HB21 H19 H 0 0 N N N 36.819 31.175 25.105 0.816   -0.634 -0.626 HB2  GLU 69 
+SMJ HB31 H20 H 0 0 N N N 37.207 32.973 25.155 0.541   0.720  -1.747 HB3  GLU 70 
+SMJ HG2  H21 H 0 1 N N N 38.585 32.640 23.112 2.959   0.760  -2.293 HG2  GLU 71 
+SMJ HG3  H22 H 0 1 N N N 37.896 30.949 23.021 3.235   -0.594 -1.172 HG3  GLU 72 
+SMJ HE2  H23 H 0 1 N N N 35.841 33.621 21.343 2.821   -2.213 -4.437 HE2  GLU 73 
+SMJ H2   H25 H 0 1 N N N 38.502 33.511 27.436 -0.457  2.519  -0.932 H    VAL 74 
+SMJ HA2  H27 H 0 1 N N N 38.213 31.500 29.593 -2.075  2.120  1.466  HA   VAL 75 
+SMJ HB   H28 H 0 1 N N N 38.751 33.384 31.181 -2.468  4.578  1.750  HB   VAL 76 
+SMJ HG11 H29 H 0 0 N N N 40.684 32.859 28.880 0.448   3.702  1.964  HG11 VAL 77 
+SMJ HG12 H30 H 0 0 N N N 41.142 33.713 30.392 -0.297  5.056  2.848  HG12 VAL 78 
+SMJ HG13 H31 H 0 0 N N N 40.584 32.006 30.457 -0.822  3.386  3.171  HG13 VAL 79 
+SMJ HG21 H32 H 0 0 N N N 38.853 35.554 30.553 -0.183  4.756  -0.264 HG21 VAL 80 
+SMJ HG22 H33 H 0 0 N N N 39.748 35.172 29.043 -1.852  5.329  -0.498 HG22 VAL 81 
+SMJ HG23 H34 H 0 0 N N N 37.958 35.018 29.091 -0.797  6.126  0.693  HG23 VAL 82 
+SMJ H2C1 H36 H 0 0 N N N 35.904 34.593 31.286 -5.800  0.885  0.875  H2C1 MX4 83 
+SMJ H2C2 H37 H 0 0 N N N 35.944 34.360 33.085 -4.672  0.316  -0.378 H2C2 MX4 84 
+SMJ H3C1 H38 H 0 0 N N N 33.566 35.648 32.786 -7.692  -0.124 -0.370 H3C1 MX4 85 
+SMJ H3C2 H39 H 0 0 N N N 35.144 36.467 33.114 -6.564  -0.693 -1.623 H3C2 MX4 86 
+SMJ H101 H40 H 0 0 N N N 34.442 30.246 31.285 -4.595  4.749  -1.788 H101 MX4 87 
+SMJ H102 H41 H 0 0 N N N 32.991 31.250 31.772 -5.928  3.894  -2.601 H102 MX4 88 
+SMJ H12  H42 H 0 1 N N N 35.142 41.021 28.683 -6.462  -5.882 -0.939 H12  MX4 89 
+SMJ H13  H43 H 0 1 N N N 35.681 43.334 29.442 -7.987  -7.741 -1.468 H13  MX4 90 
+SMJ H14  H44 H 0 1 N N N 35.876 43.859 31.870 -10.101 -7.990 -0.230 H14  MX4 91 
+SMJ H15  H45 H 0 1 N N N 35.520 42.062 33.566 -10.691 -6.378 1.535  H15  MX4 92 
+SMJ H16  H46 H 0 1 N N N 34.974 39.735 32.831 -9.167  -4.516 2.061  H16  MX4 93 
+SMJ H9C1 H47 H 0 0 N N N 35.412 38.479 29.463 -5.762  -4.247 0.713  H9C1 MX4 94 
+SMJ H9C2 H48 H 0 0 N N N 33.676 38.782 29.780 -6.891  -3.678 1.966  H9C2 MX4 95 
+SMJ H162 H50 H 0 0 N N N 36.346 31.479 30.673 -4.391  3.060  1.045  H162 MX4 96 
+SMJ H20  H51 H 0 1 N N N 32.605 29.642 28.520 -7.565  6.730  -0.950 H20  MX4 97 
+# 
+loop_
+_chem_comp_bond.comp_id 
+_chem_comp_bond.atom_id_1 
+_chem_comp_bond.atom_id_2 
+_chem_comp_bond.value_order 
+_chem_comp_bond.pdbx_aromatic_flag 
+_chem_comp_bond.pdbx_stereo_config 
+_chem_comp_bond.pdbx_ordinal 
+SMJ C1   O1   DOUB N N 1  
+SMJ C1   O2   SING N N 2  
+SMJ O2   C2   SING N N 3  
+SMJ C2   C3   SING N N 4  
+SMJ C2   H21  SING N N 5  
+SMJ C2   H22  SING N N 6  
+SMJ C3   C4   DOUB Y N 7  
+SMJ C3   C8   SING Y N 8  
+SMJ C4   C5   SING Y N 9  
+SMJ C4   H41  SING N N 10 
+SMJ C5   C6   DOUB Y N 11 
+SMJ C5   H51  SING N N 12 
+SMJ C6   C7   SING Y N 13 
+SMJ C6   H61  SING N N 14 
+SMJ C7   C8   DOUB Y N 15 
+SMJ C7   H71  SING N N 16 
+SMJ C8   H81  SING N N 17 
+SMJ N    CA   SING N N 18 
+SMJ N    H    SING N N 19 
+SMJ CA   C    SING N N 20 
+SMJ CA   CB   SING N N 21 
+SMJ CA   HA   SING N N 22 
+SMJ C    O    DOUB N N 23 
+SMJ CB   CG   SING N N 24 
+SMJ CB   HB2  SING N N 25 
+SMJ CB   HB3  SING N N 26 
+SMJ CG   OD1  DOUB N N 27 
+SMJ CG   OD2  SING N N 28 
+SMJ OD2  HD2  SING N N 29 
+SMJ N1   CA1  SING N N 30 
+SMJ N1   H1   SING N N 31 
+SMJ CA1  C9   SING N N 32 
+SMJ CA1  CB1  SING N N 33 
+SMJ CA1  HA1  SING N N 34 
+SMJ C9   O3   DOUB N N 35 
+SMJ CB1  CG1  SING N N 36 
+SMJ CB1  HB21 SING N N 37 
+SMJ CB1  HB31 SING N N 38 
+SMJ CG1  CD   SING N N 39 
+SMJ CG1  HG2  SING N N 40 
+SMJ CG1  HG3  SING N N 41 
+SMJ CD   OE1  DOUB N N 42 
+SMJ CD   OE2  SING N N 43 
+SMJ OE2  HE2  SING N N 44 
+SMJ N2   CA2  SING N N 45 
+SMJ N2   H2   SING N N 46 
+SMJ CA2  CC   SING N N 47 
+SMJ CA2  CB2  SING N N 48 
+SMJ CA2  HA2  SING N N 49 
+SMJ CC   O4   DOUB N N 50 
+SMJ CB2  CG11 SING N N 51 
+SMJ CB2  CG2  SING N N 52 
+SMJ CB2  HB   SING N N 53 
+SMJ CG11 HG11 SING N N 54 
+SMJ CG11 HG12 SING N N 55 
+SMJ CG11 HG13 SING N N 56 
+SMJ CG2  HG21 SING N N 57 
+SMJ CG2  HG22 SING N N 58 
+SMJ CG2  HG23 SING N N 59 
+SMJ C21  C31  SING N N 60 
+SMJ C21  C71  SING N N 61 
+SMJ C21  H2C1 SING N N 62 
+SMJ C21  H2C2 SING N N 63 
+SMJ C31  C41  SING N N 64 
+SMJ C31  H3C1 SING N N 65 
+SMJ C31  H3C2 SING N N 66 
+SMJ C41  O5   DOUB N N 67 
+SMJ C41  O6   SING N N 68 
+SMJ O6   C91  SING N N 69 
+SMJ C71  O8   DOUB N N 70 
+SMJ C71  N9   SING N N 71 
+SMJ N9   C10  SING N N 72 
+SMJ N9   N16  SING N N 73 
+SMJ C10  C18  SING N N 74 
+SMJ C10  H101 SING N N 75 
+SMJ C10  H102 SING N N 76 
+SMJ C12  C13  DOUB Y N 77 
+SMJ C12  C17  SING Y N 78 
+SMJ C12  H12  SING N N 79 
+SMJ C13  C14  SING Y N 80 
+SMJ C13  H13  SING N N 81 
+SMJ C14  C15  DOUB Y N 82 
+SMJ C14  H14  SING N N 83 
+SMJ C15  C16  SING Y N 84 
+SMJ C15  H15  SING N N 85 
+SMJ C16  C17  DOUB Y N 86 
+SMJ C16  H16  SING N N 87 
+SMJ C17  C91  SING N N 88 
+SMJ C18  O19  DOUB N N 89 
+SMJ C18  O20  SING N N 90 
+SMJ C91  H9C1 SING N N 91 
+SMJ C91  H9C2 SING N N 92 
+SMJ N16  H162 SING N N 93 
+SMJ O20  H20  SING N N 94 
+SMJ C1   N    SING N N 95 
+SMJ C    N1   SING N N 96 
+SMJ C9   N2   SING N N 97 
+SMJ CC   N16  SING N N 98 
+# 
+loop_
+_pdbx_chem_comp_descriptor.comp_id 
+_pdbx_chem_comp_descriptor.type 
+_pdbx_chem_comp_descriptor.program 
+_pdbx_chem_comp_descriptor.program_version 
+_pdbx_chem_comp_descriptor.descriptor 
+SMJ SMILES           ACDLabs 10.04 "O=C(OCc1ccccc1)CCC(=O)N(NC(=O)C(NC(=O)C(NC(=O)C(NC(=O)OCc2ccccc2)CC(=O)O)CCC(=O)O)C(C)C)CC(=O)O" 
+SMJ SMILES_CANONICAL CACTVS  3.352 "CC(C)[C@H](NC(=O)[C@H](CCC(O)=O)NC(=O)[C@H](CC(O)=O)NC(=O)OCc1ccccc1)C(=O)NN(CC(O)=O)C(=O)CCC(=O)OCc2ccccc2" 
+SMJ SMILES           CACTVS  3.352 "CC(C)[CH](NC(=O)[CH](CCC(O)=O)NC(=O)[CH](CC(O)=O)NC(=O)OCc1ccccc1)C(=O)NN(CC(O)=O)C(=O)CCC(=O)OCc2ccccc2" 
+SMJ InChI            InChI   1.03  
+;InChI=1S/C35H43N5O14/c1-21(2)31(34(51)39-40(18-29(46)47)26(41)14-16-30(48)53-19-22-9-5-3-6-10-22)38-32(49)24(13-15-27(42)43)36-33(50)25(17-28(44)45)37-35(52)54-20-23-11-7-4-8-12-23/h3-12,21,24-25,31H,13-20H2,1-2H3,(H,36,50)(H,37,52)(H,38,49)(H,39,51)(H,42,43)(H,44,45)(H,46,47)/t24-,25-,31-/m0/s1
+;
+SMJ InChIKey         InChI   1.03  FQWQWWLJENCPGF-WBXFWKJNSA-N 
+# 
+loop_
+_pdbx_chem_comp_identifier.comp_id 
+_pdbx_chem_comp_identifier.type 
+_pdbx_chem_comp_identifier.program 
+_pdbx_chem_comp_identifier.program_version 
+_pdbx_chem_comp_identifier.identifier 
+SMJ "SYSTEMATIC NAME" ACDLabs              10.04 "(5S,8R,11S)-14-[4-(benzyloxy)-4-oxobutanoyl]-8-(2-carboxyethyl)-5-(carboxymethyl)-11-(1-methylethyl)-3,6,9,12-tetraoxo-1-phenyl-2-oxa-4,7,10,13,14-pentaazahexadecan-16-oic acid" 
+SMJ "SYSTEMATIC NAME" "OpenEye OEToolkits" 1.6.1 
+"(4S)-5-[[(2S)-1-[2-(carboxymethyl)-2-(4-oxo-4-phenylmethoxy-butanoyl)hydrazinyl]-3-methyl-1-oxo-butan-2-yl]amino]-4-[[(2S)-4-hydroxy-4-oxo-2-phenylmethoxycarbonylamino-butanoyl]amino]-5-oxo-pentanoic acid" 
+# 
+loop_
+_pdbx_chem_comp_audit.comp_id 
+_pdbx_chem_comp_audit.action_type 
+_pdbx_chem_comp_audit.date 
+_pdbx_chem_comp_audit.processing_site 
+_pdbx_chem_comp_audit.annotator 
+_pdbx_chem_comp_audit.details 
+SMJ "Create component"     2009-04-14 RCSB ?  ?                                                     
+SMJ "Modify aromatic_flag" 2011-06-04 RCSB ?  ?                                                     
+SMJ "Modify descriptor"    2011-06-04 RCSB ?  ?                                                     
+SMJ "Other modification"   2011-08-06 RCSB CS "peptide-like ligand remediation, update to REF_ONLY" 
+# 

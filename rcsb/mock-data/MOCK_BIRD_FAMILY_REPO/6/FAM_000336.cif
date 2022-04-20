@@ -1,0 +1,75 @@
+data_FAM_000336
+#
+
+_pdbx_reference_molecule_family.family_prd_id   FAM_000336
+_pdbx_reference_molecule_family.name            "X-Pro-Aminomethyl-benzenecarboximidamide-containing inhibitor"
+_pdbx_reference_molecule_family.release_status  REL
+_pdbx_reference_molecule_family.replaces        ?
+_pdbx_reference_molecule_family.replaced_by     ?
+#   #
+loop_
+_pdbx_reference_molecule_list.family_prd_id
+_pdbx_reference_molecule_list.prd_id
+FAM_000336  PRD_001087  
+FAM_000336  PRD_001100  
+FAM_000336  PRD_001101  
+FAM_000336  PRD_000806  
+FAM_000336  PRD_000877  
+FAM_000336  PRD_000900  
+#   #
+loop_
+_pdbx_reference_molecule_synonyms.family_prd_id
+_pdbx_reference_molecule_synonyms.prd_id
+_pdbx_reference_molecule_synonyms.chem_comp_id
+_pdbx_reference_molecule_synonyms.ordinal
+_pdbx_reference_molecule_synonyms.source
+_pdbx_reference_molecule_synonyms.name
+FAM_000336  PRD_001087  S28  1  PDB      MI328        
+FAM_000336  PRD_001100  S29  2  PDB      MI329        
+FAM_000336  PRD_001101  S54  3  PDB      MI354        
+FAM_000336  PRD_000806  S00  4  PDB      MI003        
+FAM_000336  PRD_000877  BJA  5  PDB      MI001        
+FAM_000336  PRD_000877  BJA  6  PubChem  SureCN49084  
+FAM_000336  PRD_000900  TIF  7  PDB      MI353        
+#   #
+loop_
+_pdbx_reference_molecule_annotation.family_prd_id
+_pdbx_reference_molecule_annotation.prd_id
+_pdbx_reference_molecule_annotation.ordinal
+_pdbx_reference_molecule_annotation.source
+_pdbx_reference_molecule_annotation.type
+_pdbx_reference_molecule_annotation.text
+FAM_000336  PRD_001087  1  DOI:10.2210/pdb3rlw/pdb  Function  "inhibitor of Thrombin, EC: 3.4.21.5"  
+FAM_000336  PRD_001100  2  DOI:10.2210/pdb3rly/pdb  Function  "inhibitor of Thrombin, EC: 3.4.21.5"  
+FAM_000336  PRD_001101  3  DOI:10.2210/pdb3rm0/pdb  Function  "inhibitor of Thrombin, EC: 3.4.21.5"  
+FAM_000336  PRD_000806  4  DOI:10.2210/pdb3rm2/pdb  Function  "inhibitor of Thrombin, EC: 3.4.21.5"  
+FAM_000336  PRD_000877  5  DOI:10.2210/pdb3u98/pdb  Function  "inhibitor of Thrombin, EC: 3.4.21.5"  
+FAM_000336  PRD_000900  6  DOI:10.2210/pdb3uwj/pdb  Function  "inhibitor of Thrombin, EC: 3.4.21.5"  
+#   #
+loop_
+_pdbx_reference_molecule_features.family_prd_id
+_pdbx_reference_molecule_features.prd_id
+_pdbx_reference_molecule_features.ordinal
+_pdbx_reference_molecule_features.source_ordinal
+_pdbx_reference_molecule_features.source
+_pdbx_reference_molecule_features.type
+_pdbx_reference_molecule_features.value
+FAM_000336  PRD_001087  1  1  PubChem  External_Reference_ID  56947156  
+FAM_000336  PRD_001100  2  1  PubChem  External_Reference_ID  56947157  
+FAM_000336  PRD_001101  3  1  PubChem  External_Reference_ID  56673691  
+FAM_000336  PRD_000806  4  1  PubChem  External_Reference_ID  46899736  
+FAM_000336  PRD_000877  5  1  PubChem  External_Reference_ID  46899577  
+#   #
+loop_
+_pdbx_family_prd_audit.family_prd_id
+_pdbx_family_prd_audit.date
+_pdbx_family_prd_audit.processing_site
+_pdbx_family_prd_audit.action_type
+_pdbx_family_prd_audit.annotator
+_pdbx_family_prd_audit.details
+FAM_000336  2012-09-12  RCSB  "Create family"                 MRS  ?  
+FAM_000336  2012-09-12  RCSB  "Other modification"            MRS  "Add PRD_001100"  
+FAM_000336  2012-09-12  RCSB  "Other modification"            MRS  "Add PRD_001101"  
+FAM_000336  2013-08-30  RCSB  "Other modification"            SD   "Add PRD_000806, PRD_000877 and PRD_000900 from FAM_001026, since sequence match, add annotations"  
+FAM_000336  2013-08-30  RCSB  "Modify family classification"  SD   "Biologically interesting bit is the presence of aminomethyl-benzenecarboximidamide group (00S), sequence match PMS-X-PRO-00S"  
+##

@@ -1,0 +1,67 @@
+data_FAM_000391
+#
+
+_pdbx_reference_molecule_family.family_prd_id   FAM_000391
+_pdbx_reference_molecule_family.name            "Vinyl sulfone inhibitor with P1 position benzylamine"
+_pdbx_reference_molecule_family.release_status  REL
+_pdbx_reference_molecule_family.replaces        ?
+_pdbx_reference_molecule_family.replaced_by     ?
+#   #
+loop_
+_pdbx_reference_molecule_list.family_prd_id
+_pdbx_reference_molecule_list.prd_id
+FAM_000391  PRD_000979  
+FAM_000391  PRD_000992  
+FAM_000391  PRD_000993  
+#   #
+loop_
+_pdbx_reference_molecule_synonyms.family_prd_id
+_pdbx_reference_molecule_synonyms.prd_id
+_pdbx_reference_molecule_synonyms.chem_comp_id
+_pdbx_reference_molecule_synonyms.ordinal
+_pdbx_reference_molecule_synonyms.source
+_pdbx_reference_molecule_synonyms.name
+FAM_000391  PRD_000979  1G1  1  PDB  "vinyl sulfone LU102"  
+FAM_000391  PRD_000992  1G5  2  PDB  "vinyl sulfone LU122"  
+FAM_000391  PRD_000993  1G6  3  PDB  "vinyl sulfone LU112"  
+#   #
+loop_
+_pdbx_reference_molecule_annotation.family_prd_id
+_pdbx_reference_molecule_annotation.prd_id
+_pdbx_reference_molecule_annotation.ordinal
+_pdbx_reference_molecule_annotation.source
+_pdbx_reference_molecule_annotation.type
+_pdbx_reference_molecule_annotation.text
+FAM_000391  PRD_000979  1  PMID:23320547  Function  "inhibitor of 20S proteasome"  
+FAM_000391  PRD_000992  2  PMID:23320547  Function  "inhibitor of 20S proteasome"  
+FAM_000391  PRD_000993  3  PMID:23320547  Function  "inhibitor of 20S proteasome"  
+#   #
+loop_
+_pdbx_reference_molecule_features.family_prd_id
+_pdbx_reference_molecule_features.prd_id
+_pdbx_reference_molecule_features.ordinal
+_pdbx_reference_molecule_features.source_ordinal
+_pdbx_reference_molecule_features.source
+_pdbx_reference_molecule_features.type
+_pdbx_reference_molecule_features.value
+FAM_000391  PRD_000979  1  1  PubChem  External_Reference_ID  70680738  
+FAM_000391  PRD_000992  2  1  PubChem  External_Reference_ID  70680739  
+FAM_000391  PRD_000993  3  1  PubChem  External_Reference_ID  70680740  
+#
+_pdbx_reference_molecule_details.family_prd_id  FAM_000391
+_pdbx_reference_molecule_details.ordinal        1
+_pdbx_reference_molecule_details.source         PubMed
+_pdbx_reference_molecule_details.source_id      23320547
+_pdbx_reference_molecule_details.text           "Proteasomes degrade the majority of proteins in mammalian cells by a concerted action of three distinct pairs of active sites. The chymotrypsin-like sites are targets of antimyeloma agents bortezomib and carfilzomib. Inhibitors of the trypsin-like site sensitize multiple myeloma cells to these agents. Here we describe systematic effort to develop inhibitors with improved potency and cell permeability, yielding azido-Phe-Leu-Leu-4-aminomethyl-Phe-methyl vinyl sulfone (4a, LU-102), and a fluorescent activity-based probe for this site. X-ray structures of 4a and related inhibitors complexed with yeast proteasomes revealed the structural basis for specificity. Nontoxic to myeloma cells when used as a single agent, 4a sensitized them to bortezomib and carfilzomib. This sensitizing effect was much stronger than the synergistic effects of histone acetylase inhibitors or additive effects of doxorubicin and dexamethasone, raising the possibility that combinations of inhibitors of the trypsin-like site with bortezomib or carfilzomib would have stronger antineoplastic activity than combinations currently used clinically. (Abstract)"
+#   #
+loop_
+_pdbx_family_prd_audit.family_prd_id
+_pdbx_family_prd_audit.date
+_pdbx_family_prd_audit.processing_site
+_pdbx_family_prd_audit.action_type
+_pdbx_family_prd_audit.annotator
+_pdbx_family_prd_audit.details
+FAM_000391  2013-01-22  RCSB  "Create family"                 BH  ?  
+FAM_000391  2013-01-22  RCSB  "Other modification"            BH  "Add PRD_000992, Add PRD_000993"  
+FAM_000391  2013-09-05  RCSB  "Modify family classification"  SD  "Biologically interesting residue is IG3 - covalently links to the target enzyme"  
+##

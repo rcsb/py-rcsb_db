@@ -1,0 +1,27 @@
+data_UVL
+# 
+_chem_comp.id                                    UVL
+_chem_comp.name                                  "UNVALIDATED LIGAND FOR SMS" 
+_chem_comp.type                                  "NON-POLYMER" 
+_chem_comp.pdbx_type                             HETAI
+_chem_comp.formula                               X 
+_chem_comp.mon_nstd_parent_comp_id               ? 
+_chem_comp.pdbx_synonyms                         ? 
+_chem_comp.pdbx_formal_charge                    0 
+_chem_comp.pdbx_initial_date                     2010-10-01
+_chem_comp.pdbx_modified_date                    2010-10-01 
+_chem_comp.pdbx_ambiguous_flag                   Y 
+_chem_comp.pdbx_release_status                   HOLD 
+_chem_comp.pdbx_replaced_by                      ? 
+_chem_comp.pdbx_replaces                         ? 
+_chem_comp.formula_weight                        ?
+_chem_comp.one_letter_code                       ? 
+_chem_comp.three_letter_code                     UVL
+_chem_comp.pdbx_model_coordinates_details        ? 
+_chem_comp.pdbx_model_coordinates_missing_flag   Y
+_chem_comp.pdbx_ideal_coordinates_details        ? 
+_chem_comp.pdbx_ideal_coordinates_missing_flag   Y 
+_chem_comp.pdbx_model_coordinates_db_code        ? 
+_chem_comp.pdbx_processing_site                  PDBJ 
+# 
+# 

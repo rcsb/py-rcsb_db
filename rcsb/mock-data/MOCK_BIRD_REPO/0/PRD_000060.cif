@@ -1,0 +1,42 @@
+data_PRD_000060
+#
+#
+_pdbx_reference_molecule.prd_id                      PRD_000060
+_pdbx_reference_molecule.name                        (2R,3R,4R,5S)-2-(HYDROXYMETHYL)-1-NONYLPIPERIDINE-3,4,5-TRIOL
+_pdbx_reference_molecule.represent_as                "single molecule"
+_pdbx_reference_molecule.type                        "Imino Sugar"
+_pdbx_reference_molecule.type_evidence_code          ?
+_pdbx_reference_molecule.class                       Antibiotic
+_pdbx_reference_molecule.class_evidence_code         ?
+_pdbx_reference_molecule.formula                     "C15 H31 N O4"
+_pdbx_reference_molecule.formula_weight              289.411
+_pdbx_reference_molecule.chem_comp_id                NND
+_pdbx_reference_molecule.release_status              WAIT
+_pdbx_reference_molecule.replaces                    ?
+_pdbx_reference_molecule.replaced_by                 ?
+_pdbx_reference_molecule.compound_details            ?
+_pdbx_reference_molecule.description                 ?
+_pdbx_reference_molecule.representative_PDB_id_code  2v3e
+##
+_pdbx_reference_entity_list.prd_id         PRD_000060
+_pdbx_reference_entity_list.ref_entity_id  1
+_pdbx_reference_entity_list.component_id   1
+_pdbx_reference_entity_list.type           non-polymer
+_pdbx_reference_entity_list.details        N-NONYL-DEOXYNOJIRIMYCIN
+##
+_pdbx_reference_entity_nonpoly.prd_id         PRD_000060
+_pdbx_reference_entity_nonpoly.ref_entity_id  1
+_pdbx_reference_entity_nonpoly.name           N-NONYL-DEOXYNOJIRIMYCIN
+_pdbx_reference_entity_nonpoly.chem_comp_id   NND
+##
+loop_
+_pdbx_prd_audit.prd_id
+_pdbx_prd_audit.date
+_pdbx_prd_audit.processing_site
+_pdbx_prd_audit.action_type
+_pdbx_prd_audit.annotator
+_pdbx_prd_audit.details
+PRD_000060  2012-02-01  RCSB  "Create molecule"     Kim  ?                          
+PRD_000060  2012-07-09  PDBe  "Other modification"  SS   "Updated class and type."  
+PRD_000060  2013-05-01  RCSB  "Modify audit"        CS   "Internal review"          
+##
