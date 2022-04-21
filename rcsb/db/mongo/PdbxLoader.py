@@ -796,6 +796,13 @@ class PdbxLoader(object):
                     compModelInternalId = compModelIdMapD.get(sourceId, sourceId)
                     if sourceId == compModelInternalId:
                         logger.warning("Unable to map computed-model sourceId (%s) to internal identifier. Will use original source ID as internal ID (rcsb_id).", sourceId)
+                    if eObj.hasAttribute("rcsb_comp_model_id"):
+                        logger.error(
+                            "Computed-model of sourceId (%s) already has attribute 'entry.rcsb_comp_model_id' of %r. Will attempt to overwrite with mapped value %s.",
+                            sourceId,
+                            eObj.getValue("rcsb_comp_model_id", 0),
+                            compModelInternalId
+                        )
                     eObj.appendAttribute("rcsb_comp_model_id")
                     eObj.setValue(compModelInternalId, "rcsb_comp_model_id")
                 # -- Apply methods to each container
