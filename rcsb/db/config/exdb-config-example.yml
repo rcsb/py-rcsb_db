@@ -21,8 +21,9 @@
 #                 Make dictionaries point to the new dictionary asset layout
 #                 and deprecate REPO_UTIL_CACHE_DIR
 #   12-Oct-2021 - Add method class mapping for rcsb.utils.dictionary.DictMethodCompModelHelper
-#   13-Jan-2022 - Add PDBX_COMP_MODEL_SANDBOX_PATH
-#   30-Mar-2022 - Change RCSB_EDMAP_LIST_PATH and SIFTS_SUMMARY_DATA_PATH to HTTP 
+#   13-Jan-2022 - Add PDBX_COMP_MODEL_REPO_PATH
+#   30-Mar-2022 - Change RCSB_EDMAP_LIST_PATH and SIFTS_SUMMARY_DATA_PATH to HTTP
+#   18-Apr-2022 - Add PDBX_COMP_MODEL_CACHE_LIST_PATH to point to list of all computed-model files in storage
 # --
 ---
 DEFAULT: {}
@@ -60,12 +61,13 @@ site_info_configuration:
   PDBX_REPO_PATH: MOCK_PDBX_SANDBOX
   PDBX_OBSOLETE_REPO_PATH: MOCK_PDBX_SANDBOX
   RCSB_EXCHANGE_SANDBOX_PATH: MOCK_EXCHANGE_SANDBOX
-  PDBX_COMP_MODEL_SANDBOX_PATH: MOCK_COMP_MODEL_SANDBOX
+  PDBX_COMP_MODEL_REPO_PATH: MOCK_COMP_MODEL_REPO
   IHM_DEV_REPO_PATH: MOCK_IHM_REPO
   VRPT_REPO_PATH: MOCK_VALIDATION_REPORTS
   VRPT_REPO_PATH_ENV: VRPT_REPO_PATH_ALT
   #
   RCSB_EDMAP_LIST_PATH: MOCK_EXCHANGE_SANDBOX/status/edmaps.json
+  PDBX_COMP_MODEL_CACHE_LIST_PATH: MOCK_COMP_MODEL_REPO/computed-models-cache.json  # Store as compresed pickle later
   #
   RCSB_SEQUENCE_CLUSTER_DATA_PATH: cluster_data/mmseqs_clusters_current
   SIFTS_SUMMARY_DATA_PATH: sifts-summary
@@ -213,12 +215,13 @@ site_info_remote_configuration:
   PDBX_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/data/structures/divided/mmCIF
   PDBX_OBSOLETE_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/data/structures/obsolete/mmCIF
   RCSB_EXCHANGE_SANDBOX_PATH: /net/sandbox_v5/ftp-v5.0-support
-  PDBX_COMP_MODEL_SANDBOX_PATH: ../py-rcsb_db/rcsb/mock-data/MOCK_COMP_MODEL_SANDBOX
+  PDBX_COMP_MODEL_REPO_PATH: http://computed-models-internal-east.rcsb.org
   IHM_DEV_REPO_PATH: ../py-rcsb_db/rcsb/mock-data/MOCK_IHM_REPOMOCK_IHM_REPO
   VRPT_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/validation_reports
   VRPT_REPO_PATH_ENV: VRPT_REPO_PATH_ALT
   #
   RCSB_EDMAP_LIST_PATH: http://workflow-east.rcsb.org/data/edmaps/edmaps.json
+  PDBX_COMP_MODEL_CACHE_LIST_PATH: http://computed-models-internal-east.rcsb.org/computed-models-cache.json  # Store as compresed pickle later
   #
   RCSB_SEQUENCE_CLUSTER_DATA_PATH: /net/users/update/Data/sequence-clusters/current-mmseqs
   SIFTS_SUMMARY_DATA_PATH: http://workflow-east.rcsb.org/data/sifts/pub/databases/msd/sifts/flatfiles/csv
