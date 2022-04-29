@@ -83,21 +83,21 @@ class DocumentDefinitionHelper(object):
 
     def getExcluded(self, collectionName):
         """For input collection, return the list of excluded schema identifiers."""
-        includeL = []
-        try:
-            includeL = [tS.upper() for tS in self.__cfgD["document_collection_content_filters"][collectionName]["EXCLUDE"]]
-        except Exception as e:
-            logger.debug("Collection %s failing with %s", collectionName, str(e))
-        return includeL
-
-    def getIncluded(self, collectionName):
-        """For input collection, return the list of included schema identifiers."""
         excludeL = []
         try:
-            excludeL = [tS.upper() for tS in self.__cfgD["document_collection_content_filters"][collectionName]["INCLUDE"]]
+            excludeL = [tS.upper() for tS in self.__cfgD["document_collection_content_filters"][collectionName]["EXCLUDE"]]
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
         return excludeL
+
+    def getIncluded(self, collectionName):
+        """For input collection, return the list of included schema identifiers."""
+        includeL = []
+        try:
+            includeL = [tS.upper() for tS in self.__cfgD["document_collection_content_filters"][collectionName]["INCLUDE"]]
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return includeL
 
     def getSliceFilter(self, collectionName):
         """For input collection, return an optional slice filter or None."""
