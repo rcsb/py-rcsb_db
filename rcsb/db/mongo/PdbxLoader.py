@@ -29,6 +29,7 @@
 #      6-Aug-2019 jdw  Add schema generation option and move dictionary API instantiation into load() method.
 #     18-May-2020 jdw  Add brute force document purging for loadType=replace
 #     10-Jan-2022 dwp  Add support for loading id code lists for mongo PdbxLoader() (preliminary)
+#     29-Apr-2022 dwp  Add support for handling and making use of internal computed-model identifiers
 #
 ##
 """
@@ -605,7 +606,8 @@ class PdbxLoader(object):
             locatorObjList = self.__rpP.getLocatorObjList(contentType=databaseName, inputPathList=inputPathList, inputIdCodeList=inputIdCodeList, mergeContentTypes=mergeContentTypes)
             logger.info("Loading database %s (%r) with path length %d", databaseName, loadType, len(locatorObjList))
             #
-            compModelIdMapD = self.__rpP.getCompModelIdMap() if databaseName in ["pdbx_comp_model_core"] else None
+            mcP = dmrP.getResource("ModelCacheProvider instance")
+            compModelIdMapD = mcP.getCompModelIdMap() if databaseName in ["pdbx_comp_model_core"] else None
             #
             if saveInputFileListPath:
                 self.__writePathList(saveInputFileListPath, self.__rpP.getLocatorPaths(locatorObjList))
@@ -788,14 +790,17 @@ class PdbxLoader(object):
                     cIdD[cId] = locatorObj
                     containerList.extend(cL)
             #
+            # -- Apply methods to each container
             for container in containerList:
-                # -- Assign temporary attribute with internal identifier for computed models
+                # -- Assign temporary attribute with internal identifier for computed models (only used for instance-level identifiers,
+                #    which relies on DictMethodCommonUtils and thus doesn't have access to the DictMethodResourceProvider object, and thus neither the ModelCacheProvider)
                 if databaseName in ["pdbx_comp_model_core"]:
                     eObj = container.getObj("entry")
                     sourceId = eObj.getValue("id", 0)
-                    compModelInternalId = compModelIdMapD.get(sourceId, sourceId)
-                    if sourceId == compModelInternalId:
-                        logger.warning("Unable to map computed-model sourceId (%s) to internal identifier. Will use original source ID as internal ID (rcsb_id).", sourceId)
+                    compModelInternalId = compModelIdMapD.get(sourceId, None)
+                    if not compModelInternalId:
+                        logger.warning("Unable to map computed-model sourceId (%s) to internal identifier. Skipping container.", sourceId)
+                        continue
                     if eObj.hasAttribute("rcsb_comp_model_id"):
                         logger.error(
                             "Computed-model of sourceId (%s) already has attribute 'entry.rcsb_comp_model_id' of %r. Will attempt to overwrite with mapped value %s.",
