@@ -67,7 +67,7 @@ site_info_configuration:
   VRPT_REPO_PATH_ENV: VRPT_REPO_PATH_ALT
   #
   RCSB_EDMAP_LIST_PATH: MOCK_EXCHANGE_SANDBOX/status/edmaps.json
-  PDBX_COMP_MODEL_CACHE_LIST_PATH: MOCK_COMP_MODEL_REPO/computed-models-cache.json  # Store as compresed pickle later
+  PDBX_COMP_MODEL_CACHE_LIST_PATH: MOCK_COMP_MODEL_REPO/holdings/computed-models-holdings.json.gz
   #
   RCSB_SEQUENCE_CLUSTER_DATA_PATH: cluster_data/mmseqs_clusters_current
   SIFTS_SUMMARY_DATA_PATH: sifts-summary
@@ -221,7 +221,7 @@ site_info_remote_configuration:
   VRPT_REPO_PATH_ENV: VRPT_REPO_PATH_ALT
   #
   RCSB_EDMAP_LIST_PATH: http://workflow-east.rcsb.org/data/edmaps/edmaps.json
-  PDBX_COMP_MODEL_CACHE_LIST_PATH: http://computed-models-internal-east.rcsb.org/computed-models-cache.json  # Store as compresed pickle later
+  PDBX_COMP_MODEL_CACHE_LIST_PATH: http://computed-models-internal-east.rcsb.org/holdings/computed-models-holdings.json.gz
   #
   RCSB_SEQUENCE_CLUSTER_DATA_PATH: /net/users/update/Data/sequence-clusters/current-mmseqs
   SIFTS_SUMMARY_DATA_PATH: http://workflow-east.rcsb.org/data/sifts/pub/databases/msd/sifts/flatfiles/csv
