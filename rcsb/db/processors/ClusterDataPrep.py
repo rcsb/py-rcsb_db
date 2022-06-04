@@ -6,6 +6,7 @@
 # Update:
 #    24-Jun-2018 jdw update organization of extracted data sets
 #     6-Jul-2018 jdw harmonize naming with extension dictionary
+#     1-Jun-2022 dwp Expect argument clusterFileNameTemplate to be passed in from luigi configuration
 #
 ##
 

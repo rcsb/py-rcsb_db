@@ -334,4 +334,5 @@
                      Exclude 'ma_' categories from being declared as mandatory
  20-Apr-2022  V1.701 Adding support for computed-model loading;
                      Updates to handle comp model local and global scores, as well as internal identifiers;
-                     Add testRepoHoldingsRemoteDataPrep test case
+                     Add testRepoHoldingsRemoteDataPrep test case;
+                     Enable use of cluster filename template configuration passed in by Luigi

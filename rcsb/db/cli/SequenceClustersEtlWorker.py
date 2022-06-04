@@ -8,6 +8,7 @@
 #  15-Jul-2018 jdw split out to separate module and add status tracking
 #  28-Oct-2018 jdw adjustments for new configuration organization
 #   4-Jan-2019 jdw differentiate site and application config sections for provenance.
+#   1-Jun-2022 dwp Add clusterFileNameTemplate input argument
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -51,7 +52,7 @@ class SequenceClustersEtlWorker(object):
 
     """
 
-    def __init__(self, cfgOb, workPath=None, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False):
+    def __init__(self, cfgOb, workPath=None, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False, clusterFileNameTemplate=None):
         self.__cfgOb = cfgOb
         self.__cachePath = workPath
         self.__readBackCheck = readBackCheck
@@ -60,6 +61,7 @@ class SequenceClustersEtlWorker(object):
         self.__documentLimit = documentLimit
         self.__resourceName = "MONGO_DB"
         self.__verbose = verbose
+        self.__clusterFileNameTemplate = clusterFileNameTemplate
         #
         self.__sectionCluster = "entity_sequence_clusters_configuration"
         self.__clusterDataPath = self.__cfgOb.getPath("RCSB_SEQUENCE_CLUSTER_DATA_PATH", sectionName=self.__cfgOb.getDefaultSectionName())
@@ -103,7 +105,12 @@ class SequenceClustersEtlWorker(object):
     def __extract(self, dataSetId, dataLocator, levels):
         """Extract sequence cluster data set  (mmseq2 or blastclust organization)"""
         try:
-            cdp = ClusterDataPrep(workPath=self.__cachePath, entitySchemaName=self.__entitySchemaName, clusterSchemaName=self.__clusterSchemaName)
+            cdp = ClusterDataPrep(
+                workPath=self.__cachePath,
+                entitySchemaName=self.__entitySchemaName,
+                clusterSchemaName=self.__clusterSchemaName,
+                clusterFileNameTemplate=self.__clusterFileNameTemplate,
+            )
             _, docBySequenceD, docByClusterD = cdp.extract(dataSetId, clusterSetLocator=dataLocator, levels=levels, clusterType="entity")
             return docBySequenceD, docByClusterD
         except Exception as e:
