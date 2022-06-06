@@ -15,7 +15,7 @@
 #  13-Mar-2019 jdw add getCollectionVersion() and getCollectionInfo() and remove getCollections().
 #   6-Sep-2019 jdw incorporate search type and brief descriptions
 #  23-Oct-2019 jdw add collection subcategory nested property support
-#
+#  28-Feb-2022 bv add method getSubCategoryAggregateMandatory()
 ##
 """
 Inject additional document information into a schema definition.
@@ -83,21 +83,21 @@ class DocumentDefinitionHelper(object):
 
     def getExcluded(self, collectionName):
         """For input collection, return the list of excluded schema identifiers."""
-        includeL = []
-        try:
-            includeL = [tS.upper() for tS in self.__cfgD["document_collection_content_filters"][collectionName]["EXCLUDE"]]
-        except Exception as e:
-            logger.debug("Collection %s failing with %s", collectionName, str(e))
-        return includeL
-
-    def getIncluded(self, collectionName):
-        """For input collection, return the list of included schema identifiers."""
         excludeL = []
         try:
-            excludeL = [tS.upper() for tS in self.__cfgD["document_collection_content_filters"][collectionName]["INCLUDE"]]
+            excludeL = [tS.upper() for tS in self.__cfgD["document_collection_content_filters"][collectionName]["EXCLUDE"]]
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
         return excludeL
+
+    def getIncluded(self, collectionName):
+        """For input collection, return the list of included schema identifiers."""
+        includeL = []
+        try:
+            includeL = [tS.upper() for tS in self.__cfgD["document_collection_content_filters"][collectionName]["INCLUDE"]]
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return includeL
 
     def getSliceFilter(self, collectionName):
         """For input collection, return an optional slice filter or None."""
@@ -195,6 +195,18 @@ class DocumentDefinitionHelper(object):
                 for dD in self.__cfgD["collection_subcategory_aggregates"][collectionName]:
                     if dD["NAME"] == subCategoryName:
                         ret = dD["HAS_UNIT_CARDINALITY"]
+                        break
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return ret
+
+    def getSubCategoryAggregateMandatory(self, collectionName, subCategoryName):
+        ret = False
+        try:
+            if collectionName in self.__cfgD["collection_subcategory_aggregates"]:
+                for dD in self.__cfgD["collection_subcategory_aggregates"][collectionName]:
+                    if dD["NAME"] == subCategoryName:
+                        ret = dD["MANDATORY"]
                         break
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))

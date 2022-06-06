@@ -6,6 +6,7 @@
 # Update:
 #    24-Jun-2018 jdw update organization of extracted data sets
 #     6-Jul-2018 jdw harmonize naming with extension dictionary
+#     1-Jun-2022 dwp Expect argument clusterFileNameTemplate to be passed in from luigi configuration
 #
 ##
 
@@ -139,7 +140,7 @@ class ClusterDataPrep(object):
         #
         cL = []
         for seqId, memberTup in rD.items():
-            seqIdL = seqId.split("_")
+            seqIdL = seqId.rsplit("_", 1)
             dD = {"data_set_id": dataSetId, "entry_id": seqIdL[0], clusterTypeKey: seqIdL[1]}
             mL = []
             for ii, cId in enumerate(memberTup):
@@ -155,7 +156,7 @@ class ClusterDataPrep(object):
                 dD = {"data_set_id": dataSetId, "identity": int(level), "cluster_id": cId}
                 tL = []
                 for seqId in mL:
-                    seqIdL = seqId.split("_")
+                    seqIdL = seqId.rsplit("_", 1)
                     tL.append({"entry_id": seqIdL[0], clusterTypeKey: seqIdL[1]})
                 dD["sequence_membership"] = tL
                 cL.append(dD)
@@ -165,7 +166,7 @@ class ClusterDataPrep(object):
         cL = []
         for ii, level in enumerate(levelList):
             for ky, cTup in rD.items():
-                seqIdL = ky.split("_")
+                seqIdL = ky.rsplit("_", 1)
                 dD = {"data_set_id": dataSetId, "entry_id": seqIdL[0], clusterTypeKey: seqIdL[1], "identity": int(level), "cluster_id": int(cTup[ii])}
                 cL.append(dD)
         cifD[schemaNameMembership] = cL

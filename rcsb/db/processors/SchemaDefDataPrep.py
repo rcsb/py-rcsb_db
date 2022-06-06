@@ -32,7 +32,7 @@
 #                       and add __mergeContainers() -
 #      22-Sep-2019  jdw use sorted order of table objects within documents
 #      16-Mar-2021  jdw add support for embedded iterables within subcategory aggregates.
-#
+#       4-Apr-2022   bv handle embedded iterable float values in 'addDocumentSubCategoryAggregates' method
 #
 ##
 """
@@ -365,6 +365,7 @@ class SchemaDefDataPrep(object):
             if scAgL:
                 scAgD = {}
                 emIterableD = {}
+                isFloatD = {}
                 logger.debug("%s processing subcategory aggregates %r", collectionName, scAgL)
                 for scAg in scAgL:
                     scD = {}
@@ -376,9 +377,12 @@ class SchemaDefDataPrep(object):
                     #
                     for sId in sIdL:
                         atIdL = self.__sD.getSubCategoryAttributeIdList(sId, scAg)
+                        schemaObj = self.__sD.getSchemaObject(sId)
                         for atId in atIdL:
                             if self.__sD.isAttributeEmbeddedIterable(sId, atId):
                                 emIterableD[(self.__sD.getSchemaName(sId), self.__sD.getAttributeName(sId, atId))] = self.__sD.getAttributeEmbeddedIterableSeparator(sId, atId)
+                            if schemaObj.isAttributeFloatType(atId):
+                                isFloatD[(self.__sD.getSchemaName(sId), self.__sD.getAttributeName(sId, atId))] = True
                 logger.debug("%s subcategory aggregate name dictionary %r", collectionName, scAgD)
                 logger.debug("%s emIterableD %r", collectionName, emIterableD)
                 #
@@ -426,7 +430,11 @@ class SchemaDefDataPrep(object):
                                                         continue
                                                     # handle embedded iterable
                                                     if (sName, atName) in emIterableD:
-                                                        dD[cAtName] = rowD[atName][ii].split(emIterableD[(sName, atName)])
+                                                        # handle embedded iterable float
+                                                        if (sName, atName) in isFloatD:
+                                                            dD[cAtName] = [float(val) for val in str(rowD[atName][ii]).split(emIterableD[(sName, atName)])]
+                                                        else:
+                                                            dD[cAtName] = rowD[atName][ii].split(emIterableD[(sName, atName)])
                                                         # logger.debug("(list) sName %r scAg %r cAtName %r atName %r value %r", sName, scAg, cAtName, atName, dD[cAtName])
                                                     else:
                                                         dD[cAtName] = rowD[atName][ii]

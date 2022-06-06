@@ -41,7 +41,7 @@ from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb.utils.repository.RepositoryProvider import RepositoryProvider
 from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.config.ConfigUtil import ConfigUtil
-from rcsb.utils.io.FileUtil import FileUtil
+# from rcsb.utils.io.FileUtil import FileUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
@@ -148,17 +148,17 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    def __modelFixture(self):
-        fU = FileUtil()
-        modelSourcePath = os.path.join(self.__mockTopPath, "AF")
-        for iPath in glob.iglob(os.path.join(modelSourcePath, "*.cif.gz")):
-            fn = os.path.basename(iPath)
-            uId = fn.split("-")[1]
-            h3 = uId[-2:]
-            h2 = uId[-4:-2]
-            h1 = uId[-6:-4]
-            oPath = os.path.join(self.__cachePath, "computed-models", h1, h2, h3, fn)
-            fU.put(iPath, oPath)
+    # def __modelFixture(self):
+    #     fU = FileUtil()
+    #     modelSourcePath = os.path.join(self.__mockTopPath, "AF")
+    #     for iPath in glob.iglob(os.path.join(modelSourcePath, "*.cif.gz")):
+    #         fn = os.path.basename(iPath)
+    #         uId = fn.split("-")[1]
+    #         h3 = uId[-2:]
+    #         h2 = uId[-4:-2]
+    #         h1 = uId[-6:-4]
+    #         oPath = os.path.join(self.__cachePath, "computed-models", h1, h2, h3, fn)
+    #         fU.put(iPath, oPath)
 
     def testValidateOptsRepo(self):
         # schemaLevel = "min"
@@ -171,7 +171,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         self.assertLessEqual(eCount, 2)
 
     def testValidateModels(self):
-        self.__modelFixture()
+        # self.__modelFixture()
         schemaLevel = "full"
         inputPathList = None
         eCount = self.__testValidateOpts(databaseNameD=self.__databaseNameModelD, inputPathList=inputPathList, schemaLevel=schemaLevel, mergeContentTypeD=self.__mergeContentTypeD)

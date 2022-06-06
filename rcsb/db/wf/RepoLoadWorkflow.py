@@ -5,6 +5,7 @@
 #  Workflow wrapper  --  repository database loading utilities --
 #
 #  Updates:
+#   1-Jun-2022 dwp Add clusterFileNameTemplate to load method kwargs
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -68,6 +69,7 @@ class RepoLoadWorkflow(object):
             loadType = kwargs.get("loadType", "full")  # or replace
             updateSchemaOnReplace = kwargs.get("updateSchemaOnReplace", True)
             pruneDocumentSize = float(kwargs.get("pruneDocumentSize")) if "pruneDocumentSize" in kwargs else None
+            clusterFileNameTemplate = kwargs.get("clusterFileNameTemplate", None)
 
             # "Document organization (rowwise_by_name_with_cardinality|rowwise_by_name|columnwise_by_name|rowwise_by_id|rowwise_no_name",
             documentStyle = kwargs.get("documentStyle", "rowwise_by_name_with_cardinality")
@@ -132,7 +134,14 @@ class RepoLoadWorkflow(object):
                 logger.exception("Operation %r database %r failing with %s", op, databaseName, str(e))
         elif op == "etl-entity-sequence-clusters" and dbType == "mongo":
             cw = SequenceClustersEtlWorker(
-                self.__cfgOb, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=self.__debugFlag, readBackCheck=readBackCheck, workPath=self.__cachePath
+                self.__cfgOb,
+                numProc=numProc,
+                chunkSize=chunkSize,
+                documentLimit=documentLimit,
+                verbose=self.__debugFlag,
+                readBackCheck=readBackCheck,
+                workPath=self.__cachePath,
+                clusterFileNameTemplate=clusterFileNameTemplate,
             )
             ok = cw.etl(dataSetId, seqDataLocator, loadType=loadType)
             okS = self.loadStatus(cw.getLoadStatus(), readBackCheck=readBackCheck)
