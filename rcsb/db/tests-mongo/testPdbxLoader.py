@@ -47,7 +47,7 @@ TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 class PdbxLoaderTests(unittest.TestCase):
     loadLocal = False
-    loadModels = True
+    loadModels = False
 
     def __init__(self, methodName="runTest"):
         super(PdbxLoaderTests, self).__init__(methodName)
