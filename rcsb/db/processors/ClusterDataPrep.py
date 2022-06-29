@@ -62,7 +62,8 @@ class ClusterDataPrep(object):
         self.__entityAttributeName = kwargs.get("entityAttributeName", "entity_id")
         self.__instanceAttributeName = kwargs.get("instanceAttributeName", "instance_id")
         # Just a note for the assumned naming conventions clusters-by-%(clusterType)s-%(level)s.txt of the cluster data files
-        self.__clusterFileNameTemplate = kwargs.get("clusterFileNameTemplate ", "clusters-by-%(clusterType)s-%(level)s.txt")
+        clusterFileNameTemplate = kwargs.get("clusterFileNameTemplate", None)
+        self.__clusterFileNameTemplate = clusterFileNameTemplate if clusterFileNameTemplate else "clusters-by-%(clusterType)s-%(level)s.txt"
 
     def extract(self, dataSetId, clusterSetLocator, levels, clusterType="entity"):
         """Extract cluster membership details from an RSCB sequence cluster data set.   Data are
