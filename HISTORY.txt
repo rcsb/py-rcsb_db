@@ -336,4 +336,4 @@
                      Updates to handle comp model local and global scores, as well as internal identifiers;
                      Add testRepoHoldingsRemoteDataPrep test case;
                      Enable use of cluster filename template configuration passed in by Luigi
- 29-Jun-2022  V1.702 Remove uneeded custom-support for computed-model identifiers (will now use the internally-modified entry.id)
+ 29-Jun-2022  V1.702 Remove unnecessary custom handling of computed-model identifiers (will now use the internally-modified entry.id)
