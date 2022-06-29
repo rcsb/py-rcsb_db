@@ -30,6 +30,7 @@
 #     18-May-2020 jdw  Add brute force document purging for loadType=replace
 #     10-Jan-2022 dwp  Add support for loading id code lists for mongo PdbxLoader() (preliminary)
 #     29-Apr-2022 dwp  Add support for handling and making use of internal computed-model identifiers
+#     29-Jun-2022 dwp  Remove uneeded custom-support for computed-model identifiers (will now use the internally-modified entry.id)
 #
 ##
 """
@@ -810,6 +811,7 @@ class PdbxLoader(object):
                 #         )
                 #     eObj.appendAttribute("rcsb_comp_model_id")
                 #     eObj.setValue(compModelInternalId, "rcsb_comp_model_id")
+                #
                 # -- Apply methods to each container
                 if self.__dmh:
                     self.__dmh.apply(container)
