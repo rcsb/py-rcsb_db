@@ -30,6 +30,7 @@
 #     18-May-2020 jdw  Add brute force document purging for loadType=replace
 #     10-Jan-2022 dwp  Add support for loading id code lists for mongo PdbxLoader() (preliminary)
 #     29-Apr-2022 dwp  Add support for handling and making use of internal computed-model identifiers
+#     29-Jun-2022 dwp  Remove uneeded custom-support for computed-model identifiers (will now use the internally-modified entry.id)
 #
 ##
 """
@@ -606,9 +607,6 @@ class PdbxLoader(object):
             locatorObjList = self.__rpP.getLocatorObjList(contentType=databaseName, inputPathList=inputPathList, inputIdCodeList=inputIdCodeList, mergeContentTypes=mergeContentTypes)
             logger.info("Loading database %s (%r) with path length %d", databaseName, loadType, len(locatorObjList))
             #
-            mcP = dmrP.getResource("ModelCacheProvider instance")
-            compModelIdMapD = mcP.getCompModelIdMap() if databaseName in ["pdbx_comp_model_core"] else None
-            #
             if saveInputFileListPath:
                 self.__writePathList(saveInputFileListPath, self.__rpP.getLocatorPaths(locatorObjList))
                 logger.info("Saving %d paths in %s", len(locatorObjList), saveInputFileListPath)
@@ -630,7 +628,6 @@ class PdbxLoader(object):
             optD["validationLevel"] = validationLevel
             optD["validateFailures"] = validateFailures
             optD["reloadPartial"] = reloadPartial
-            optD["compModelIdMapD"] = compModelIdMapD
             # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             #
 
@@ -771,7 +768,6 @@ class PdbxLoader(object):
             validationLevel = optionsD["validationLevel"]
             validateFailures = optionsD["validateFailures"]
             reloadPartial = optionsD["reloadPartial"]
-            compModelIdMapD = optionsD["compModelIdMapD"]
             #
             sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=workingDir, verbose=self.__verbose)
             # -------------------------------------------
@@ -792,25 +788,6 @@ class PdbxLoader(object):
             #
             # -- Apply methods to each container
             for container in containerList:
-                # -- Assign temporary attribute with internal identifier for computed models (only used for instance-level identifiers,
-                #    which relies on DictMethodCommonUtils and thus doesn't have access to the DictMethodResourceProvider object, and thus neither the ModelCacheProvider)
-                if databaseName in ["pdbx_comp_model_core"]:
-                    eObj = container.getObj("entry")
-                    sourceId = eObj.getValue("id", 0)
-                    compModelInternalId = compModelIdMapD.get(sourceId, None)
-                    if not compModelInternalId:
-                        logger.warning("Unable to map computed-model sourceId (%s) to internal identifier. Skipping container.", sourceId)
-                        continue
-                    if eObj.hasAttribute("rcsb_comp_model_id"):
-                        logger.error(
-                            "Computed-model of sourceId (%s) already has attribute 'entry.rcsb_comp_model_id' of %r. Will attempt to overwrite with mapped value %s.",
-                            sourceId,
-                            eObj.getValue("rcsb_comp_model_id", 0),
-                            compModelInternalId
-                        )
-                    eObj.appendAttribute("rcsb_comp_model_id")
-                    eObj.setValue(compModelInternalId, "rcsb_comp_model_id")
-                # -- Apply methods to each container
                 if self.__dmh:
                     self.__dmh.apply(container)
                 else:
