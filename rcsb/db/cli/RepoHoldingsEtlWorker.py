@@ -119,30 +119,30 @@ class RepoHoldingsEtlWorker(object):
             #
             dList = rhdp.getHoldingsUpdateEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UPDATE", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            ok1 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            self.__updateStatus(updateId, databaseName, collectionName, ok1, statusStartTimestamp)
             #
             dList = rhdp.getHoldingsCurrentEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_CURRENT", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
-
+            ok2 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            self.__updateStatus(updateId, databaseName, collectionName, ok2, statusStartTimestamp)
+            #
             dList = rhdp.getHoldingsUnreleasedEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UNRELEASED", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            ok3 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            self.__updateStatus(updateId, databaseName, collectionName, ok3, statusStartTimestamp)
             #
             dList = rhdp.getHoldingsRemovedEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_REMOVED", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            ok4 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            self.__updateStatus(updateId, databaseName, collectionName, ok4, statusStartTimestamp)
             #
             dList = rhdp.getHoldingsCombinedEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_COMBINED", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            ok5 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            self.__updateStatus(updateId, databaseName, collectionName, ok5, statusStartTimestamp)
             #
-            return True
+            return ok1 and ok2 and ok3 and ok4 and ok5
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return False
