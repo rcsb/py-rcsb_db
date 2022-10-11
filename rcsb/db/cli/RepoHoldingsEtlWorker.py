@@ -8,6 +8,7 @@
 #  26-Nov-2018 jdw add COLLECTION_HOLDINGS_PRERELEASE
 #  14-Dec-2019 jdw reorganize and consolidate repository_holdings collections
 #  25-Sep-2021 jdw substitute RepoHoldingsRemoteDataPrep() for data processing
+#  11-Oct-2022 dwp Update success/failure catching logic
 #
 ##
 __docformat__ = "restructuredtext en"
