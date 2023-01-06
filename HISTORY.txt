@@ -337,3 +337,4 @@
                      Add testRepoHoldingsRemoteDataPrep test case;
                      Enable use of cluster filename template configuration passed in by Luigi
  29-Jun-2022  V1.702 Remove unnecessary custom handling of computed-model identifiers (will now use the internally-modified entry.id)
+ 23-Dec-2022  V1.703 Configuration changes to support tox 4
