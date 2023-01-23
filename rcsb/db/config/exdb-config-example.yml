@@ -121,17 +121,17 @@ site_info_configuration:
   # ------ ------ ------ ------ ------ ------ ------ -------
   # Make dictionaries point to the new dictionary asset layout  -
   #
-  PDBX_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/mmcif_pdbx_v5_next.dic
+  PDBX_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/dev-schema-updates-bv/dictionary_files/reference/mmcif_pdbx_v5_next.dic
   RCSB_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/dist/rcsb_mmcif_ext.dic
   RCSB_COMP_MODEL_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/dist/rcsb_mmcif_comp_model_ext.dic
   FLR_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/flr-extension.dic
   VRPT_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/vrpt_mmcif_ext.dic
   VRPT_DICT_MAPPING_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/vrpt_dictmap.json
   IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/ihm-extension.dic
-  MA_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/mmcif_ma.dic
+  MA_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/dev-schema-updates-bv/dictionary_files/reference/mmcif_ma_ext.dic
   ## Previously pointed to 'dictionary_files/reference', but point to authoritative source instead to ensure most recent version is used
   # IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/ihmwg/IHM-dictionary/master/ihm-extension.dic
-  # MA_DICT_LOCATOR: https://raw.githubusercontent.com/ihmwg/MA-dictionary/master/mmcif_ma.dic
+  # MA_DICT_LOCATOR: https://raw.githubusercontent.com/ihmwg/ModelCIF/master/dist/mmcif_ma_ext.dic
   #
   # ------ ------ ------ ------ ------ ------ ------ ------ ------
   # Added in rcsb.db V0.966 - Data type details and type mapping
@@ -274,17 +274,17 @@ site_info_remote_configuration:
   #
   # Make dictionaries point to the new dictionary asset layout  -
   #
-  PDBX_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/mmcif_pdbx_v5_next.dic
+  PDBX_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/dev-schema-updates-bv/dictionary_files/reference/mmcif_pdbx_v5_next.dic
   RCSB_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/dist/rcsb_mmcif_ext.dic
   RCSB_COMP_MODEL_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/dist/rcsb_mmcif_comp_model_ext.dic
   FLR_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/flr-extension.dic
   VRPT_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/vrpt_mmcif_ext.dic
   VRPT_DICT_MAPPING_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/vrpt_dictmap.json
   IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/ihm-extension.dic
-  MA_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionary_files/reference/mmcif_ma.dic
+  MA_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/dev-schema-updates-bv/dictionary_files/reference/mmcif_ma_ext.dic
   ## Previously pointed to 'dictionary_files/reference', but point to authoritative source instead to ensure most recent version is used
   # IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/ihmwg/IHM-dictionary/master/ihm-extension.dic
-  # MA_DICT_LOCATOR: https://raw.githubusercontent.com/ihmwg/MA-dictionary/master/mmcif_ma.dic
+  # MA_DICT_LOCATOR: https://raw.githubusercontent.com/ihmwg/ModelCIF/master/dist/mmcif_ma_ext.dic
   #
   # Added in rcsb.db V0.966 - Data type details and type mapping
   APP_DATA_TYPE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/data_type_and_coverage/app_data_type_mapping.cif
