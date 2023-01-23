@@ -12,7 +12,7 @@
 #  29-Sep-2018 jdw make JSON date and datetime type explicit in JSON
 #  12-Oct-2018 jdw unsuppress datetime mapping
 #   7-Jan-2019 jdw applicationName->dataTyping
-#
+#  23-Jan-2023  bv Add uchar5 cifType to handle updates to _chem_comp.three_letter_code
 ##
 """
 Manage mapping of default application data type to dictionary data types.
@@ -48,6 +48,7 @@ class DataTypeApplicationInfo(object):
         "idname",
         "any",
         "yyyy-mm-dd",
+        "uchar5",
         "uchar3",
         "uchar1",
         "symop",
@@ -101,6 +102,7 @@ class DataTypeApplicationInfo(object):
         "char",
         "char",
         "char",
+        "char",
         "datetime",
         "char",
         "char",
@@ -146,6 +148,7 @@ class DataTypeApplicationInfo(object):
         "80",
         "255",
         "15",
+        "6",
         "4",
         "2",
         "10",
@@ -191,6 +194,7 @@ class DataTypeApplicationInfo(object):
         "0",
         "0",
         "6",
+        "0",
         "0",
         "0",
         "0",
