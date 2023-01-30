@@ -337,4 +337,5 @@
                      Add testRepoHoldingsRemoteDataPrep test case;
                      Enable use of cluster filename template configuration passed in by Luigi
  29-Jun-2022  V1.702 Remove unnecessary custom handling of computed-model identifiers (will now use the internally-modified entry.id)
- 11-Oct-2022  V1.703 Update success/failure catching logic in RepoHoldingsEtlWorker; Add more logging information
+ 23-Dec-2022  V1.703 Configuration changes to support tox 4
+ 26-Jan-2023  V1.704 Update MA_DICT_LOCATOR path in exdb-config-example.yml and add uchar5 to DataTypeApplicationInfo.py
