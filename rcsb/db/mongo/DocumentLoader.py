@@ -115,7 +115,7 @@ class DocumentLoader(object):
                 logger.debug("Collection %s create status %r", collectionName, ok)
                 # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             numDocs = len(docList)
-            logger.debug("Processing %d total documents", numDocs)
+            logger.info("Processing %d total documents", numDocs)
             numProc = min(numProc, numDocs)
             maxStepLength = self.__maxStepLength
             if numDocs > maxStepLength:
@@ -136,8 +136,8 @@ class DocumentLoader(object):
                 mpu.set(workerObj=self, workerMethod="loadWorker")
                 ok, failListT, _, _ = mpu.runMulti(dataList=subList, numProc=numProc, numResults=1, chunkSize=chunkSize)
                 failList.extend(failListT)
-            logger.debug("Completed load with failing document list %r", failList)
-            logger.debug("Document list length %d failed load list length %d", len(docList), len(failList))
+            logger.info("Completed load with failing document list %r", failList)
+            logger.info("Document list length %d failed load list length %d", len(docList), len(failList))
             #
 
             self.__end(startTime, "loading operation with status " + str(ok))
