@@ -65,7 +65,6 @@ class RepoLoadWorkflow(object):
             failedFilePath = kwargs.get("failFileListPath", None)
             loadFileListPath = kwargs.get("loadFileListPath", None)
             inputIdCodeList = kwargs.get("inputIdCodeList", None)
-            skipPurge = kwargs.get("skipPurge", False)
             saveInputFileListPath = kwargs.get("saveFileListPath", None)
             schemaLevel = kwargs.get("schemaLevel", "min") if kwargs.get("schemaLevel") in ["min", "full"] else "min"
             loadType = kwargs.get("loadType", "full")  # or replace
@@ -123,7 +122,6 @@ class RepoLoadWorkflow(object):
                     loadType=loadType,
                     inputPathList=inputPathList,
                     inputIdCodeList=inputIdCodeList,
-                    skipPurge=skipPurge,
                     styleType=documentStyle,
                     dataSelectors=["PUBLIC_RELEASE"],
                     failedFilePath=failedFilePath,
