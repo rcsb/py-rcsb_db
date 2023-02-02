@@ -6,6 +6,8 @@
 #
 #  Updates:
 #   1-Jun-2022 dwp Add clusterFileNameTemplate to load method kwargs
+#   2-Feb-2023 dwp Add removeAndRecreateDbCollections method for wiping a database without involving any data loading;
+#                  Add support for inputIdCodeList
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -203,7 +205,6 @@ class RepoLoadWorkflow(object):
             logger.error("Unsupported operation %r - exiting", op)
             return False
         try:
-            # readBackCheck = kwargs.get("readBackCheck", False)
             schemaLevel = kwargs.get("schemaLevel", "min") if kwargs.get("schemaLevel") in ["min", "full"] else "min"
             dbType = kwargs.get("dbType", "mongo")
             #
