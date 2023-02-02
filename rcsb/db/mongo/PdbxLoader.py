@@ -539,6 +539,7 @@ class PdbxLoader(object):
         loadType="full",
         inputPathList=None,
         inputIdCodeList=None,
+        skipPurge=False,
         styleType="rowwise_by_name",
         dataSelectors=None,
         failedFilePath=None,
@@ -563,6 +564,7 @@ class PdbxLoader(object):
             loadType (str, optional): mode of loading 'full' (bulk delete then bulk insert) or 'replace'
             inputPathList (list, optional): Data file path list (if not provided the full repository will be scanned)
             inputIdCodeList (list, optional): ID Code list (remote discovery mode) (if not provided the full repository will be scanned)
+            skipPurge (bool, optional): Whether or not to skip the process of checking for and purging pre-existing documents
             styleType (str, optional): one of 'rowwise_by_name', 'columnwise_by_name', 'rowwise_no_name', 'rowwise_by_name_with_cardinality'
             dataSelectors (list, optional): selector names defined for this schema (e.g. PUBLIC_RELEASE)
             failedFilePath (str, optional): Path to hold file paths for load failures
@@ -617,6 +619,7 @@ class PdbxLoader(object):
             #
             optD = {}
             optD["databaseName"] = databaseName
+            optD["skipPurge"] = skipPurge
             optD["styleType"] = styleType
             optD["filterType"] = filterType
             optD["readBackCheck"] = self.__readBackCheck
@@ -753,6 +756,7 @@ class PdbxLoader(object):
         try:
             startTime = self.__begin(message=procName)
             # Recover common options
+            skipPurge = optionsD["skipPurge"]
             styleType = optionsD["styleType"]
             filterType = optionsD["filterType"]
             readBackCheck = optionsD["readBackCheck"]
@@ -794,10 +798,11 @@ class PdbxLoader(object):
                     logger.debug("%s No dynamic method handler for ", procName)
             # -----
             if loadType != "full":
-                for collectionName in collectionNameList:
-                    logger.debug("Purging objects from %s for %d containers", collectionName, len(cNameL))
-                    ok = self.__purgeDocuments(databaseName, collectionName, cNameL)
-                    logger.debug("%s %s - loadType %r cNameL %r (%r)", databaseName, collectionName, loadType, cNameL, ok)
+                if not skipPurge:
+                    for collectionName in collectionNameList:
+                        logger.debug("Purging objects from %s for %d containers", collectionName, len(cNameL))
+                        ok = self.__purgeDocuments(databaseName, collectionName, cNameL)
+                        logger.debug("%s %s - loadType %r cNameL %r (%r)", databaseName, collectionName, loadType, cNameL, ok)
                     # --
             # -----
             failContainerIdS = set()
