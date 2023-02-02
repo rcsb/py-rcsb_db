@@ -1294,3 +1294,67 @@ class PdbxLoader(object):
             logger.error("Failing for key %r with %s", keyName, str(e))
 
         return None
+
+    def removeAndRecreateDbCollections(
+        self,
+        databaseName,
+        collectionLoadList=None,
+        validationLevel="min",
+        providerTypeExclude=None,
+        restoreUseGit=True,
+        restoreUseStash=True,
+    ):
+        """Remove and recreate collections for input database.
+
+        Args:
+            databaseName (str): A content datbase schema (e.g. 'bird','bird_family','bird_chem_comp', chem_comp', 'pdbx', 'pdbx_core')
+            collectionLoadList (list, optional): list of collection names in this schema to load (default is load all collections)
+            validationLevel (str, optional): Completeness of json/bson metadata schema bound to each collection (e.g. 'min', 'full' or None)
+            providerTypeExclude (str, optional): exclude dictionary method provider by type name. Defaults to None.
+            restoreUseGit (bool, optional): restore cache resources using git storage.  Defaults to True.
+            restoreUseStash (bool, optional): restore cache resources using stash storage.  Defaults to True.
+        Returns:
+            bool: True on success or False otherwise
+
+        """
+        try:
+            #
+            logger.info("Beginning wiping of database %s", databaseName)
+            #
+            modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=self.__cfgSectionName)
+            dP = DictionaryApiProviderWrapper(self.__cachePath, cfgOb=self.__cfgOb, useCache=True)
+            dictApi = dP.getApiByName(databaseName)
+            # ---
+            dmrP = DictMethodResourceProvider(
+                self.__cfgOb, cachePath=self.__cachePath, restoreUseStash=restoreUseStash, restoreUseGit=restoreUseGit, providerTypeExclude=providerTypeExclude
+            )
+            # Cache dependencies in serial mode.
+            ok = dmrP.cacheResources(useCache=True)
+            if not ok:
+                logger.error("Checking cached resource dependencies failed - wiping of %s", databaseName)
+                return ok
+            # ---
+            self.__dmh = DictMethodRunner(dictApi, modulePathMap=modulePathMap, resourceProvider=dmrP)
+            #
+            # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
+            #
+            _, _, fullCollectionNameList, docIndexD = self.__schP.getSchemaInfo(databaseName, dataTyping="ANY")
+
+            collectionNameList = collectionLoadList if collectionLoadList else fullCollectionNameList
+
+            for collectionName in collectionNameList:
+                logger.info("Removing and recreating database %s collection %s", databaseName, collectionName)
+                self.__removeCollection(databaseName, collectionName)
+                indexDL = docIndexD[collectionName] if collectionName in docIndexD else []
+                bsonSchema = None
+                if validationLevel and validationLevel in ["min", "full"]:
+                    bsonSchema = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="BSON", level=validationLevel)
+                ok = self.__createCollection(databaseName, collectionName, indexDL=indexDL, bsonSchema=bsonSchema)
+                logger.debug("Collection create return status %r", ok)
+            #
+            # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
+            return ok
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+
+        return False

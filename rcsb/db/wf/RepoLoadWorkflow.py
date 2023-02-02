@@ -64,6 +64,7 @@ class RepoLoadWorkflow(object):
             documentLimit = int(kwargs.get("documentLimit")) if "documentLimit" in kwargs else None
             failedFilePath = kwargs.get("failFileListPath", None)
             loadFileListPath = kwargs.get("loadFileListPath", None)
+            inputIdCodeList = kwargs.get("inputIdCodeList", None)
             saveInputFileListPath = kwargs.get("saveFileListPath", None)
             schemaLevel = kwargs.get("schemaLevel", "min") if kwargs.get("schemaLevel") in ["min", "full"] else "min"
             loadType = kwargs.get("loadType", "full")  # or replace
@@ -120,6 +121,7 @@ class RepoLoadWorkflow(object):
                     collectionLoadList=collectionNameList,
                     loadType=loadType,
                     inputPathList=inputPathList,
+                    inputIdCodeList=inputIdCodeList,
                     styleType=documentStyle,
                     dataSelectors=["PUBLIC_RELEASE"],
                     failedFilePath=failedFilePath,
@@ -195,3 +197,40 @@ class RepoLoadWorkflow(object):
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return ret
+
+    def removeAndRecreateDbCollections(self, op, **kwargs):
+        if op not in ["pdbx-db-wiper"]:
+            logger.error("Unsupported operation %r - exiting", op)
+            return False
+        try:
+            # readBackCheck = kwargs.get("readBackCheck", False)
+            schemaLevel = kwargs.get("schemaLevel", "min") if kwargs.get("schemaLevel") in ["min", "full"] else "min"
+            dbType = kwargs.get("dbType", "mongo")
+            #
+            databaseName = kwargs.get("databaseName", None)
+            databaseNameList = self.__cfgOb.get("DATABASE_NAMES_ALL", sectionName="database_catalog_configuration").split(",")
+            collectionNameList = kwargs.get("collectionNameList", None)
+            #
+        except Exception as e:
+            logger.exception("Argument and configuration processing failing with %s", str(e))
+            return False
+        #
+        if op == "pdbx-db-wiper" and dbType == "mongo" and databaseName in databaseNameList:
+            try:
+                mw = PdbxLoader(
+                    self.__cfgOb,
+                    self.__cachePath,
+                    resourceName="MONGO_DB",
+                    verbose=self.__debugFlag,
+                )
+                ok = mw.removeAndRecreateDbCollections(
+                    databaseName,
+                    collectionLoadList=collectionNameList,
+                    validationLevel=schemaLevel,
+                )
+            except Exception as e:
+                logger.exception("Operation %r database %r failing with %s", op, databaseName, str(e))
+
+        logger.info("Completed operation %r with status %r", op, ok)
+
+        return ok
