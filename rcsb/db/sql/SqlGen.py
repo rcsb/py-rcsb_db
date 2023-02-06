@@ -17,6 +17,7 @@
 #  5-Jan-2018 jdw add default replication factor for crate -
 # 20-Jun-2018 jdw adjustments for dynamic schema generation
 #  7-Jul-2018 jdw update for new schema def prototypes
+#  6-Feb-2023 dwp fix pylint issues
 #
 #
 ##
@@ -330,13 +331,14 @@ class SqlGenAdmin(object):
                 sW = "%-s(%d,%d)" % (sqlType, width, precision)
                 tS = "%-40s %-16s  %s" % (name, sW, notNull)
             else:
-                pass
+                tS = None
             #
             # if ii < len(attributeIdList) -1:
             #    oL.append(tS+",")
             # else:
             #    oL.append(tS)
-            oL.append(tS + ",")
+            if tS:
+                oL.append(tS + ",")
 
         if pkL:
             oL.append("PRIMARY KEY (%s)" % (",".join(pkL)))
@@ -389,13 +391,14 @@ class SqlGenAdmin(object):
                 sW = "%-s(%d,%d)" % (sqlType, width, precision)
                 tS = "%-40s %-16s  %s" % (name, sW, notNull)
             else:
-                pass
+                tS = None
             #
             # if ii < len(attributeIdList) -1:
             #    oL.append(tS+",")
             # else:
             #    oL.append(tS)
-            oL.append(tS + ",")
+            if tS:
+                oL.append(tS + ",")
 
         if pkL:
             oL.append("PRIMARY KEY (%s)" % (",".join(pkL)))
@@ -466,9 +469,10 @@ class SqlGenAdmin(object):
                 # sW = "%-s(%d,%d)" % (sqlType, width, precision)
                 # tS = "%-40s %-16s  %s" % (name, sW, notNull)
             else:
-                pass
+                tS = None
             #
-            oL.append(tS + ",")
+            if tS:
+                oL.append(tS + ",")
 
         tL = self.__createTableIndicesCrate(tableDefObj)
         for tV in tL:
