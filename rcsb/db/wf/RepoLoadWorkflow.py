@@ -216,7 +216,7 @@ class RepoLoadWorkflow(object):
             logger.exception("Argument and configuration processing failing with %s", str(e))
             return False
         #
-        if op == "pdbx-db-wiper" and dbType == "mongo" and databaseName in databaseNameList:
+        if dbType == "mongo" and databaseName in databaseNameList:
             try:
                 mw = PdbxLoader(
                     self.__cfgOb,

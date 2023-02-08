@@ -1319,28 +1319,9 @@ class PdbxLoader(object):
 
         """
         try:
-            #
             logger.info("Beginning wiping of database %s", databaseName)
-            #
-            modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=self.__cfgSectionName)
-            dP = DictionaryApiProviderWrapper(self.__cachePath, cfgOb=self.__cfgOb, useCache=True)
-            dictApi = dP.getApiByName(databaseName)
-            # ---
-            dmrP = DictMethodResourceProvider(
-                self.__cfgOb, cachePath=self.__cachePath, restoreUseStash=restoreUseStash, restoreUseGit=restoreUseGit, providerTypeExclude=providerTypeExclude
-            )
-            # Cache dependencies in serial mode.
-            ok = dmrP.cacheResources(useCache=True)
-            if not ok:
-                logger.error("Checking cached resource dependencies failed - wiping of %s", databaseName)
-                return ok
-            # ---
-            self.__dmh = DictMethodRunner(dictApi, modulePathMap=modulePathMap, resourceProvider=dmrP)
-            #
-            # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
-            #
-            _, _, fullCollectionNameList, docIndexD = self.__schP.getSchemaInfo(databaseName, dataTyping="ANY")
 
+            _, _, fullCollectionNameList, docIndexD = self.__schP.getSchemaInfo(databaseName, dataTyping="ANY")
             collectionNameList = collectionLoadList if collectionLoadList else fullCollectionNameList
 
             for collectionName in collectionNameList:
@@ -1353,7 +1334,6 @@ class PdbxLoader(object):
                 ok = self.__createCollection(databaseName, collectionName, indexDL=indexDL, bsonSchema=bsonSchema)
                 logger.debug("Collection create return status %r", ok)
             #
-            # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             return ok
         except Exception as e:
             logger.exception("Failing with %s", str(e))
