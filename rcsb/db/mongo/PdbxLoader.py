@@ -639,6 +639,13 @@ class PdbxLoader(object):
 
             collectionNameList = collectionLoadList if collectionLoadList else fullCollectionNameList
 
+            # Move "entry" collection to the end of the list so that if it fails midload, we can determine which entities/assemblies/etc. need reloading based on entry collection
+            colL = collectionNameList
+            for col in colL:
+                if "core_entry" in col.lower():
+                    collectionNameList.append(collectionNameList.pop(collectionNameList.index(col)))
+            logger.info("COLLECTION NAME LIST: %r", collectionNameList)
+
             for collectionName in collectionNameList:
                 if loadType == "full":
                     self.__removeCollection(databaseName, collectionName)
