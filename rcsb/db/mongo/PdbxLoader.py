@@ -636,11 +636,10 @@ class PdbxLoader(object):
             chunkSize = self.__chunkSize if locatorObjList and self.__chunkSize < len(locatorObjList) else 0
             #
             sd, _, fullCollectionNameList, docIndexD = self.__schP.getSchemaInfo(databaseName, dataTyping="ANY")
-
             collectionNameList = collectionLoadList if collectionLoadList else fullCollectionNameList
 
             # Move "entry" collection to the end of the list so that if it fails midload, we can determine which entities/assemblies/etc. need reloading based on entry collection
-            colL = collectionNameList
+            colL = [c for c in collectionNameList]
             for col in colL:
                 if "core_entry" in col.lower():
                     collectionNameList.append(collectionNameList.pop(collectionNameList.index(col)))
@@ -1303,24 +1302,13 @@ class PdbxLoader(object):
 
         return None
 
-    def removeAndRecreateDbCollections(
-        self,
-        databaseName,
-        collectionLoadList=None,
-        validationLevel="min",
-        providerTypeExclude=None,
-        restoreUseGit=True,
-        restoreUseStash=True,
-    ):
+    def removeAndRecreateDbCollections(self, databaseName, collectionLoadList=None, validationLevel="min"):
         """Remove and recreate collections for input database.
 
         Args:
             databaseName (str): A content datbase schema (e.g. 'bird','bird_family','bird_chem_comp', chem_comp', 'pdbx', 'pdbx_core')
             collectionLoadList (list, optional): list of collection names in this schema to load (default is load all collections)
             validationLevel (str, optional): Completeness of json/bson metadata schema bound to each collection (e.g. 'min', 'full' or None)
-            providerTypeExclude (str, optional): exclude dictionary method provider by type name. Defaults to None.
-            restoreUseGit (bool, optional): restore cache resources using git storage.  Defaults to True.
-            restoreUseStash (bool, optional): restore cache resources using stash storage.  Defaults to True.
         Returns:
             bool: True on success or False otherwise
 
