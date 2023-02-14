@@ -285,6 +285,7 @@ class RepoHoldingsDataPrep(object):
                 #
                 auditAuthors = [t.strip() for t in fields[5].split(";")]
                 repId = None
+                repName = None
                 if entryId in trD:
                     repName = "Model Archive"
                     repId = trD[entryId]

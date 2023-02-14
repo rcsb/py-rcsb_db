@@ -31,6 +31,7 @@
 #     10-Jan-2022 dwp  Add support for loading id code lists for mongo PdbxLoader() (preliminary)
 #     29-Apr-2022 dwp  Add support for handling and making use of internal computed-model identifiers
 #     29-Jun-2022 dwp  Remove uneeded custom-support for computed-model identifiers (will now use the internally-modified entry.id)
+#      2-Feb-2023 dwp  Add removeAndRecreateDbCollections method for wiping a database without involving any data loading
 #
 ##
 """
@@ -635,8 +636,14 @@ class PdbxLoader(object):
             chunkSize = self.__chunkSize if locatorObjList and self.__chunkSize < len(locatorObjList) else 0
             #
             sd, _, fullCollectionNameList, docIndexD = self.__schP.getSchemaInfo(databaseName, dataTyping="ANY")
-
             collectionNameList = collectionLoadList if collectionLoadList else fullCollectionNameList
+
+            # Move "entry" collection to the end of the list so that if it fails midload, we can determine which entities/assemblies/etc. need reloading based on entry collection
+            colL = [c for c in collectionNameList]
+            for col in colL:
+                if "core_entry" in col.lower():
+                    collectionNameList.append(collectionNameList.pop(collectionNameList.index(col)))
+            logger.info("COLLECTION NAME LIST: %r", collectionNameList)
 
             for collectionName in collectionNameList:
                 if loadType == "full":
@@ -1294,3 +1301,36 @@ class PdbxLoader(object):
             logger.error("Failing for key %r with %s", keyName, str(e))
 
         return None
+
+    def removeAndRecreateDbCollections(self, databaseName, collectionLoadList=None, validationLevel="min"):
+        """Remove and recreate collections for input database.
+
+        Args:
+            databaseName (str): A content datbase schema (e.g. 'bird','bird_family','bird_chem_comp', chem_comp', 'pdbx', 'pdbx_core')
+            collectionLoadList (list, optional): list of collection names in this schema to load (default is load all collections)
+            validationLevel (str, optional): Completeness of json/bson metadata schema bound to each collection (e.g. 'min', 'full' or None)
+        Returns:
+            bool: True on success or False otherwise
+
+        """
+        try:
+            logger.info("Beginning wiping of database %s", databaseName)
+
+            _, _, fullCollectionNameList, docIndexD = self.__schP.getSchemaInfo(databaseName, dataTyping="ANY")
+            collectionNameList = collectionLoadList if collectionLoadList else fullCollectionNameList
+
+            for collectionName in collectionNameList:
+                logger.info("Removing and recreating database %s collection %s", databaseName, collectionName)
+                self.__removeCollection(databaseName, collectionName)
+                indexDL = docIndexD[collectionName] if collectionName in docIndexD else []
+                bsonSchema = None
+                if validationLevel and validationLevel in ["min", "full"]:
+                    bsonSchema = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="BSON", level=validationLevel)
+                ok = self.__createCollection(databaseName, collectionName, indexDL=indexDL, bsonSchema=bsonSchema)
+                logger.debug("Collection create return status %r", ok)
+            #
+            return ok
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+
+        return False
