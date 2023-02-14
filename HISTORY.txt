@@ -340,4 +340,4 @@
  23-Dec-2022  V1.703 Configuration changes to support tox 4
  26-Jan-2023  V1.704 Update MA_DICT_LOCATOR path in exdb-config-example.yml and add uchar5 to DataTypeApplicationInfo.py
  30-Jan-2023  V1.705 Update requirements (pin SQLAlchemy)
-  8-Feb-2023  V1.706 Updates to PdbxLoader and RepoLoadWorkflow to support resumability of core data loading tasks
+ 14-Feb-2023  V1.706 Updates to PdbxLoader and RepoLoadWorkflow to support resumability of core data loading tasks
