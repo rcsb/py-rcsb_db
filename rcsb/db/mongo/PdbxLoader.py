@@ -545,6 +545,7 @@ class PdbxLoader(object):
         failedFilePath=None,
         saveInputFileListPath=None,
         pruneDocumentSize=None,
+        forcePurge=False,
         logSize=False,
         validationLevel="min",
         mergeContentTypes=None,
@@ -568,7 +569,8 @@ class PdbxLoader(object):
             dataSelectors (list, optional): selector names defined for this schema (e.g. PUBLIC_RELEASE)
             failedFilePath (str, optional): Path to hold file paths for load failures
             saveInputFileListPath (list, optional): List of files
-            pruneDocumentSize (bool, optional): iteratively remove large elements from a collection to satisfy size limits
+            pruneDocumentSize (float, optional): iteratively remove large elements from a collection to satisfy size limits
+            forcePurge (bool, optional): perform an *additional*-round of purging of all pre-existing documents for loadType != "full" (default False)
             logSize (bool, optional): Compute and log bson serialized object size
             validationLevel (str, optional): Completeness of json/bson metadata schema bound to each collection (e.g. 'min', 'full' or None)
             useNameFlag (bool, optional): Use container name as unique identifier otherwise use UID property.
@@ -625,6 +627,7 @@ class PdbxLoader(object):
             optD["loadType"] = loadType
             optD["logSize"] = logSize
             optD["pruneDocumentSize"] = pruneDocumentSize
+            optD["forcePurge"] = forcePurge
             optD["useNameFlag"] = useNameFlag
             optD["validationLevel"] = validationLevel
             optD["validateFailures"] = validateFailures
@@ -643,7 +646,7 @@ class PdbxLoader(object):
             for col in colL:
                 if "core_entry" in col.lower():
                     collectionNameList.append(collectionNameList.pop(collectionNameList.index(col)))
-            logger.info("COLLECTION NAME LIST: %r", collectionNameList)
+            logger.info("collectionNameList: %r", collectionNameList)
 
             for collectionName in collectionNameList:
                 if loadType == "full":
@@ -699,7 +702,7 @@ class PdbxLoader(object):
                 logger.info("Starting outer subtask %d of %d length %d", ii + 1, len(subLists), len(subList))
                 #
                 # Note: Looks like John was eventually trying to move this to a separate multiproc worker class,
-                #   like how it's done for other pieces of code (e.g., see rcsb.utils.insilico3d.ModelReorganizer).    
+                #       like how it's done for other pieces of code (e.g., see rcsb.utils.insilico3d.ModelReorganizer).
                 # pdbxLoaderWorker = PdbxLoaderWorker(self.__cfgOb, self.__rpP, self.__dmh, self.__resourceName)
                 # 
                 mpu = MultiProcUtil(verbose=True)
@@ -771,6 +774,7 @@ class PdbxLoader(object):
             loadType = optionsD["loadType"]
             databaseName = optionsD["databaseName"]
             pruneDocumentSize = optionsD["pruneDocumentSize"]
+            forcePurge = optionsD["forcePurge"]
             sd = optionsD["schemaDefAccess"]
             dtf = optionsD["dataTransformFactory"]
             collectionNameList = optionsD["collectionNameList"]
@@ -803,9 +807,9 @@ class PdbxLoader(object):
                 else:
                     logger.debug("%s No dynamic method handler for ", procName)
             # -----
-            # Skip the force purge for "pdbx_core" and "pdbx_comp_model_core" DBs, since documents are deleted more efficiently in deleteList() call below (via __loadDocuments)
-            # Note that this might not even be necessary--i.e., can possibly comment out this entire block--but, haven't tested the other non-pdbx DB use cases enough to verify 
-            if loadType != "full" and "pdbx" not in databaseName.lower():
+            # Skip the force purge if forcePurge == False (default), since documents are deleted more efficiently in deleteList() call below (via __loadDocuments)
+            # Note: might be able to even comment this entire block out, but leaving here temporariliy in case we discover a reason to keep it (DWP 02/2023)
+            if loadType != "full" and forcePurge:
                 for collectionName in collectionNameList:
                     logger.debug("Purging objects from %s for %d containers", collectionName, len(cNameL))
                     ok = self.__purgeDocuments(databaseName, collectionName, cNameL)
