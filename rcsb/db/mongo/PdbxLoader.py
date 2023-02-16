@@ -698,7 +698,10 @@ class PdbxLoader(object):
             for ii, subList in enumerate(subLists):
                 logger.info("Starting outer subtask %d of %d length %d", ii + 1, len(subLists), len(subList))
                 #
+                # Note: Looks like John was eventually trying to move this to a separate multiproc worker class,
+                #   like how it's done for other pieces of code (e.g., see rcsb.utils.insilico3d.ModelReorganizer).    
                 # pdbxLoaderWorker = PdbxLoaderWorker(self.__cfgOb, self.__rpP, self.__dmh, self.__resourceName)
+                # 
                 mpu = MultiProcUtil(verbose=True)
                 mpu.setWorkingDir(self.__cachePath)
                 mpu.setOptions(optionsD=optD)
@@ -800,7 +803,9 @@ class PdbxLoader(object):
                 else:
                     logger.debug("%s No dynamic method handler for ", procName)
             # -----
-            if loadType != "full":
+            # Skip the force purge for "pdbx_core" and "pdbx_comp_model_core" DBs, since documents are deleted more efficiently in deleteList() call below (via __loadDocuments)
+            # Note that this might not even be necessary--i.e., can possibly comment out this entire block--but, haven't tested the other non-pdbx DB use cases enough to verify 
+            if loadType != "full" and "pdbx" not in databaseName.lower():
                 for collectionName in collectionNameList:
                     logger.debug("Purging objects from %s for %d containers", collectionName, len(cNameL))
                     ok = self.__purgeDocuments(databaseName, collectionName, cNameL)
@@ -889,7 +894,7 @@ class PdbxLoader(object):
                     #  -- Try and repair failDocIdS --
                     #
                     if reloadPartial:
-                        logger.debug("Attempting corrections on documents %r", failDocIdS)
+                        logger.info("Attempting corrections on documents %r", failDocIdS)
                         fList = self.__validateAndFix(databaseName, collectionName, fList, docIdL, schemaLevel=validationLevel)
 
                         fOk, _, failDocIdS = self.__loadDocuments(
@@ -1145,6 +1150,7 @@ class PdbxLoader(object):
 
     def __purgeDocuments(self, databaseName, collectionName, cardinalIdL):
         """Purge documents from collection within database with cardinal identifiers in cardinalIdL."""
+        # DWP 02/2023 - This method of purging/deleting documents is very slow, presumably due to the use of regex for searching
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
@@ -1232,8 +1238,6 @@ class PdbxLoader(object):
                     successDocIdS = sIdS
                 # enumerate the failures
                 failDocIdS = inputDocIdS - successDocIdS
-                #
-
                 #
                 if readBackCheck:
                     # build an index of the input document list
