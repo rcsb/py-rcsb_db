@@ -99,13 +99,13 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
                 "status": True,
             },
             {
-               "databaseName": "pdbx_core",
-               "collectionNameList": None,
-               "loadType": "replace",
-               "mergeContentTypes": ["vrpt"],
-               "validationLevel": "full",
-               "updateSchemaOnReplace": True,
-               "status": True,
+                "databaseName": "pdbx_core",
+                "collectionNameList": None,
+                "loadType": "replace",
+                "mergeContentTypes": ["vrpt"],
+                "validationLevel": "full",
+                "updateSchemaOnReplace": True,
+                "status": True,
             },
         ]
         #

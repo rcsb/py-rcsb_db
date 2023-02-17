@@ -705,7 +705,7 @@ class PdbxLoader(object):
                 # Note: Looks like John was eventually trying to move this to a separate multiproc worker class,
                 #       like how it's done for other pieces of code (e.g., see rcsb.utils.insilico3d.ModelReorganizer).
                 # pdbxLoaderWorker = PdbxLoaderWorker(self.__cfgOb, self.__rpP, self.__dmh, self.__resourceName)
-                # 
+                #
                 mpu = MultiProcUtil(verbose=True)
                 mpu.setWorkingDir(self.__cachePath)
                 mpu.setOptions(optionsD=optD)
@@ -1155,7 +1155,7 @@ class PdbxLoader(object):
 
     def __purgeDocuments(self, databaseName, collectionName, cardinalIdL):
         """Purge documents from collection within database with cardinal identifiers in cardinalIdL."""
-        # DWP 02/2023 - This method of purging/deleting documents is very slow, presumably due to the use of regex for searching
+        # DWP 02/2023 - This method of purging/deleting documents is very slow, presumably due to the use of case-insensitive regex for searching
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
