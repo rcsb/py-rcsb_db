@@ -341,3 +341,4 @@
  26-Jan-2023  V1.704 Update MA_DICT_LOCATOR path in exdb-config-example.yml and add uchar5 to DataTypeApplicationInfo.py
  30-Jan-2023  V1.705 Update requirements (pin SQLAlchemy)
  14-Feb-2023  V1.706 Updates to PdbxLoader and RepoLoadWorkflow to support resumability of core data loading tasks
+ 21-Feb-2023  V1.707 Updates to PdbxLoader and RepoLoadWorkflow to skip brute force document purge by default

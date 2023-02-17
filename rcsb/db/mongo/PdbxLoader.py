@@ -32,6 +32,7 @@
 #     29-Apr-2022 dwp  Add support for handling and making use of internal computed-model identifiers
 #     29-Jun-2022 dwp  Remove uneeded custom-support for computed-model identifiers (will now use the internally-modified entry.id)
 #      2-Feb-2023 dwp  Add removeAndRecreateDbCollections method for wiping a database without involving any data loading
+#     21-Feb-2023 dwp  Add forcePurge flag and set default to False, to skip brute force document purge since documents are deleted more efficiently in a downstream step
 #
 ##
 """
@@ -808,7 +809,7 @@ class PdbxLoader(object):
                     logger.debug("%s No dynamic method handler for ", procName)
             # -----
             # Skip the force purge if forcePurge == False (default), since documents are deleted more efficiently in deleteList() call below (via __loadDocuments)
-            # Note: might be able to even comment this entire block out, but leaving here temporariliy in case we discover a reason to keep it (DWP 02/2023)
+            # Note: might be able to even comment this entire block out, but leaving here temporarily in case we discover a reason to keep it (DWP 02/2023)
             if loadType != "full" and forcePurge:
                 for collectionName in collectionNameList:
                     logger.debug("Purging objects from %s for %d containers", collectionName, len(cNameL))
