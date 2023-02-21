@@ -72,7 +72,7 @@ class RepoLoadWorkflow(object):
             loadType = kwargs.get("loadType", "full")  # or replace
             updateSchemaOnReplace = kwargs.get("updateSchemaOnReplace", True)
             pruneDocumentSize = float(kwargs.get("pruneDocumentSize")) if "pruneDocumentSize" in kwargs else None
-            forcePurge = kwargs.get("forcePurge", False)
+            # forcePurge = kwargs.get("forcePurge", False)
             clusterFileNameTemplate = kwargs.get("clusterFileNameTemplate", None)
 
             # "Document organization (rowwise_by_name_with_cardinality|rowwise_by_name|columnwise_by_name|rowwise_by_id|rowwise_no_name",
@@ -130,7 +130,7 @@ class RepoLoadWorkflow(object):
                     failedFilePath=failedFilePath,
                     saveInputFileListPath=saveInputFileListPath,
                     pruneDocumentSize=pruneDocumentSize,
-                    forcePurge=forcePurge,
+                    # forcePurge=forcePurge,
                     validationLevel=schemaLevel,
                     mergeContentTypes=["vrpt"] if mergeValidationReports else None,
                     updateSchemaOnReplace=updateSchemaOnReplace,
