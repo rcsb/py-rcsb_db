@@ -32,7 +32,7 @@
 #     29-Apr-2022 dwp  Add support for handling and making use of internal computed-model identifiers
 #     29-Jun-2022 dwp  Remove uneeded custom-support for computed-model identifiers (will now use the internally-modified entry.id)
 #      2-Feb-2023 dwp  Add removeAndRecreateDbCollections method for wiping a database without involving any data loading
-#     22-Feb-2023 dwp  Use case-sensitive brute force document purge
+#     22-Feb-2023 dwp  Use case-sensitivity for brute force document purge
 #
 ##
 """
@@ -546,7 +546,6 @@ class PdbxLoader(object):
         failedFilePath=None,
         saveInputFileListPath=None,
         pruneDocumentSize=None,
-        # forcePurge=False,
         logSize=False,
         validationLevel="min",
         mergeContentTypes=None,
@@ -571,7 +570,6 @@ class PdbxLoader(object):
             failedFilePath (str, optional): Path to hold file paths for load failures
             saveInputFileListPath (list, optional): List of files
             pruneDocumentSize (float, optional): iteratively remove large elements from a collection to satisfy size limits
-            # forcePurge (bool, optional): perform an *additional*-round of purging of all pre-existing documents for loadType != "full" (default False)
             logSize (bool, optional): Compute and log bson serialized object size
             validationLevel (str, optional): Completeness of json/bson metadata schema bound to each collection (e.g. 'min', 'full' or None)
             useNameFlag (bool, optional): Use container name as unique identifier otherwise use UID property.
@@ -628,7 +626,6 @@ class PdbxLoader(object):
             optD["loadType"] = loadType
             optD["logSize"] = logSize
             optD["pruneDocumentSize"] = pruneDocumentSize
-            # optD["forcePurge"] = forcePurge
             optD["useNameFlag"] = useNameFlag
             optD["validationLevel"] = validationLevel
             optD["validateFailures"] = validateFailures
@@ -775,7 +772,6 @@ class PdbxLoader(object):
             loadType = optionsD["loadType"]
             databaseName = optionsD["databaseName"]
             pruneDocumentSize = optionsD["pruneDocumentSize"]
-            # forcePurge = optionsD["forcePurge"]
             sd = optionsD["schemaDefAccess"]
             dtf = optionsD["dataTransformFactory"]
             collectionNameList = optionsD["collectionNameList"]
@@ -808,9 +804,7 @@ class PdbxLoader(object):
                 else:
                     logger.debug("%s No dynamic method handler for ", procName)
             # -----
-            # Skip the force purge if forcePurge == False (default), since documents are deleted more efficiently in deleteList() call below (via __loadDocuments)
-            # Note: might be able to even comment this entire block out, but leaving here temporarily in case we discover a reason to keep it (DWP 02/2023)
-            # if loadType != "full" and forcePurge:
+            # Perform force purge of existing documents based on regex. Also note that another deletion is performed by deleteList() below (via __loadDocuments)
             if loadType != "full":
                 for collectionName in collectionNameList:
                     logger.debug("Purging objects from %s for %d containers", collectionName, len(cNameL))
@@ -1156,7 +1150,6 @@ class PdbxLoader(object):
 
     def __purgeDocuments(self, databaseName, collectionName, cardinalIdL):
         """Purge documents from collection within database with cardinal identifiers in cardinalIdL."""
-        # DWP 02/2023 - This method of purging/deleting documents is very slow, presumably due to the use of case-insensitive regex for searching
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
