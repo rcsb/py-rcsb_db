@@ -32,6 +32,7 @@
 #     29-Apr-2022 dwp  Add support for handling and making use of internal computed-model identifiers
 #     29-Jun-2022 dwp  Remove uneeded custom-support for computed-model identifiers (will now use the internally-modified entry.id)
 #      2-Feb-2023 dwp  Add removeAndRecreateDbCollections method for wiping a database without involving any data loading
+#     22-Feb-2023 dwp  Use case-sensitivity for brute force document purge
 #
 ##
 """
@@ -259,7 +260,7 @@ class PdbxLoaderWorker(object):
                 mg = MongoDbUtil(client)
                 for cardId in cardinalIdL:
                     # selectD = {"rcsb_id": "/%s/" % cardId} # this filter did not work
-                    selectD = {"rcsb_id": {"$regex": "^%s" % cardId.upper(), "$options": "i"}}  # case-insensitive
+                    selectD = {"rcsb_id": {"$regex": "^%s" % cardId.upper()}}  # case-sensitive (avoid case-insensitive -- very slow performance)
                     dCount = mg.delete(databaseName, collectionName, selectD)
                     logger.debug("Remove %d objects in database %s collection %s selection %r", dCount, databaseName, collectionName, selectD)
             return True
@@ -568,7 +569,7 @@ class PdbxLoader(object):
             dataSelectors (list, optional): selector names defined for this schema (e.g. PUBLIC_RELEASE)
             failedFilePath (str, optional): Path to hold file paths for load failures
             saveInputFileListPath (list, optional): List of files
-            pruneDocumentSize (bool, optional): iteratively remove large elements from a collection to satisfy size limits
+            pruneDocumentSize (float, optional): iteratively remove large elements from a collection to satisfy size limits
             logSize (bool, optional): Compute and log bson serialized object size
             validationLevel (str, optional): Completeness of json/bson metadata schema bound to each collection (e.g. 'min', 'full' or None)
             useNameFlag (bool, optional): Use container name as unique identifier otherwise use UID property.
@@ -643,7 +644,7 @@ class PdbxLoader(object):
             for col in colL:
                 if "core_entry" in col.lower():
                     collectionNameList.append(collectionNameList.pop(collectionNameList.index(col)))
-            logger.info("COLLECTION NAME LIST: %r", collectionNameList)
+            logger.info("collectionNameList: %r", collectionNameList)
 
             for collectionName in collectionNameList:
                 if loadType == "full":
@@ -698,7 +699,10 @@ class PdbxLoader(object):
             for ii, subList in enumerate(subLists):
                 logger.info("Starting outer subtask %d of %d length %d", ii + 1, len(subLists), len(subList))
                 #
+                # Note: Looks like John was eventually trying to move this to a separate multiproc worker class,
+                #       like how it's done for other pieces of code (e.g., see rcsb.utils.insilico3d.ModelReorganizer).
                 # pdbxLoaderWorker = PdbxLoaderWorker(self.__cfgOb, self.__rpP, self.__dmh, self.__resourceName)
+                #
                 mpu = MultiProcUtil(verbose=True)
                 mpu.setWorkingDir(self.__cachePath)
                 mpu.setOptions(optionsD=optD)
@@ -800,6 +804,7 @@ class PdbxLoader(object):
                 else:
                     logger.debug("%s No dynamic method handler for ", procName)
             # -----
+            # Perform force purge of existing documents based on regex. Also note that another deletion is performed by deleteList() below (via __loadDocuments)
             if loadType != "full":
                 for collectionName in collectionNameList:
                     logger.debug("Purging objects from %s for %d containers", collectionName, len(cNameL))
@@ -889,7 +894,7 @@ class PdbxLoader(object):
                     #  -- Try and repair failDocIdS --
                     #
                     if reloadPartial:
-                        logger.debug("Attempting corrections on documents %r", failDocIdS)
+                        logger.info("Attempting corrections on documents %r", failDocIdS)
                         fList = self.__validateAndFix(databaseName, collectionName, fList, docIdL, schemaLevel=validationLevel)
 
                         fOk, _, failDocIdS = self.__loadDocuments(
@@ -1149,7 +1154,7 @@ class PdbxLoader(object):
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
                 for cardId in cardinalIdL:
-                    selectD = {"rcsb_id": {"$regex": "^%s" % cardId.upper(), "$options": "i"}}  # case-insensitive
+                    selectD = {"rcsb_id": {"$regex": "^%s" % cardId.upper()}}  # case-sensitive (avoid case-insensitive -- very slow performance)
                     dCount = mg.delete(databaseName, collectionName, selectD)
                     logger.debug("Remove %d objects in database %s collection %s selection %r", dCount, databaseName, collectionName, selectD)
             return True
@@ -1232,8 +1237,6 @@ class PdbxLoader(object):
                     successDocIdS = sIdS
                 # enumerate the failures
                 failDocIdS = inputDocIdS - successDocIdS
-                #
-
                 #
                 if readBackCheck:
                     # build an index of the input document list

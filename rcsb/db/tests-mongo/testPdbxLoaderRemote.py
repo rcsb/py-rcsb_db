@@ -98,16 +98,16 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
                 "updateSchemaOnReplace": False,
                 "status": True,
             },
-            # {
-            #    "databaseName": "pdbx_core",
-            #    "collectionNameList": None,
-            #    "loadType": "replace",
-            #    "mergeContentTypes": ["vrpt"],
-            #    "validationLevel": "full",
-            #    "updateSchemaOnReplace": True,
-            #    "status": True,
-            # },
-        ]  #
+            {
+                "databaseName": "pdbx_core",
+                "collectionNameList": None,
+                "loadType": "replace",
+                "mergeContentTypes": ["vrpt"],
+                "validationLevel": "full",
+                "updateSchemaOnReplace": True,
+                "status": True,
+            },
+        ]
         #
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
