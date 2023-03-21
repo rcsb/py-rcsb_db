@@ -497,12 +497,12 @@ site_info_configuration:
   CITATION_REFERENCE_CACHE_DIR: cit_ref
   #
   #
-  PROVENANCE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/provenance/rcsb_extend_provenance_info.json
+  PROVENANCE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/provenance/rcsb_extend_provenance_info.json
   PROVENANCE_INFO_CACHE_DIR: provenance
   #
-  SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/schema_definitions
+  SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/schema_definitions
   SCHEMA_DEFINITION_CACHE_DIR: schema_definitions
-  JSON_SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/json_schema_definitions
+  JSON_SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/json_schema_definitions
   JSON_SCHEMA_DEFINITION_CACHE_DIR: json_schema_definitions
   #
   # Helper class binding and mappings
@@ -516,21 +516,21 @@ site_info_configuration:
   # ------ ------ ------ ------ ------ ------ ------ -------
   # ADDED rcsb.db V0.966 Source dictionary locators -
   #
-  PDBX_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/mmcif_pdbx_v5_next.dic
-  RCSB_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/rcsb_mmcif_ext_v1.dic
-  IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/ihm-extension.dic
-  FLR_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/flr-extension.dic
-  VRPT_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/vrpt_mmcif_ext.dic
-  VRPT_DICT_MAPPING_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/dictionaries/vrpt_dictmap.json
+  PDBX_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/reference/mmcif_pdbx_v5_next.dic
+  RCSB_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/dist/rcsb_mmcif_ext.dic
+  IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_file/reference/ihm-extension.dic
+  FLR_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/reference/flr-extension.dic
+  VRPT_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/reference/vrpt_mmcif_ext.dic
+  VRPT_DICT_MAPPING_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/reference/vrpt_dictmap.json
   # ------ ------ ------ ------ ------ ------ ------ ------ ------
   # Added in rcsb.db V0.966 - Data type details and type mapping
-  APP_DATA_TYPE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/data_type_and_coverage/app_data_type_mapping.cif
-  INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/data_type_and_coverage
+  APP_DATA_TYPE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/data_type_and_coverage/app_data_type_mapping.cif
+  INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/data_type_and_coverage
   #
   CONTENT_DEF_HELPER_MODULE: rcsb.db.helpers.ContentDefinitionHelper
   DOCUMENT_DEF_HELPER_MODULE: rcsb.db.helpers.DocumentDefinitionHelper
   CONFIG_APPEND_LOCATOR_PATHS:
-    - https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/development/config/exdb-config-schema.yml
+    - https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/config/exdb-config-schema.yml
 # ------ ------ ------ ------ ------ ------ ------ ------ ------
 #  Added V1.001 for stash storage server
 #  -- This is a placeholder configuration to support remote testing --
