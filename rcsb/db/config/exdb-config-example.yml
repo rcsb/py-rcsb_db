@@ -24,6 +24,7 @@
 #   13-Jan-2022 - Add PDBX_COMP_MODEL_REPO_PATH
 #   30-Mar-2022 - Change RCSB_EDMAP_LIST_PATH and SIFTS_SUMMARY_DATA_PATH to HTTP
 #   18-Apr-2022 - Add PDBX_COMP_MODEL_CACHE_LIST_PATH to point to list of all computed-model files in storage
+#   22-Mar-2023 - Update references to py-rcsb_exdb_assets master branch
 # --
 ---
 DEFAULT: {}
