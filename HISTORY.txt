@@ -342,3 +342,4 @@
  30-Jan-2023  V1.705 Update requirements (pin SQLAlchemy)
  14-Feb-2023  V1.706 Updates to PdbxLoader and RepoLoadWorkflow to support resumability of core data loading tasks
  22-Feb-2023  V1.707 Updates to PdbxLoader to use case-sensitivity for brute force document purge
+ 06-Apr-2023  V1.708 Add support for entity_id_list cifType in DataTypeApplicationInfo
