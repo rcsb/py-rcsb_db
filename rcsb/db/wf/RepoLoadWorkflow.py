@@ -8,6 +8,7 @@
 #   1-Jun-2022 dwp Add clusterFileNameTemplate to load method kwargs
 #   2-Feb-2023 dwp Add removeAndRecreateDbCollections method for wiping a database without involving any data loading;
 #                  Add support for inputIdCodeList
+#  26-Apr-2023 dwp Add regexPurge flag to control running regexp purge step during document load (with default set to False)
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -72,6 +73,7 @@ class RepoLoadWorkflow(object):
             loadType = kwargs.get("loadType", "full")  # or replace
             updateSchemaOnReplace = kwargs.get("updateSchemaOnReplace", True)
             pruneDocumentSize = float(kwargs.get("pruneDocumentSize")) if "pruneDocumentSize" in kwargs else None
+            regexPurge = kwargs.get("regexPurge", False)
             clusterFileNameTemplate = kwargs.get("clusterFileNameTemplate", None)
 
             # "Document organization (rowwise_by_name_with_cardinality|rowwise_by_name|columnwise_by_name|rowwise_by_id|rowwise_no_name",
@@ -129,6 +131,7 @@ class RepoLoadWorkflow(object):
                     failedFilePath=failedFilePath,
                     saveInputFileListPath=saveInputFileListPath,
                     pruneDocumentSize=pruneDocumentSize,
+                    regexPurge=regexPurge,
                     validationLevel=schemaLevel,
                     mergeContentTypes=["vrpt"] if mergeValidationReports else None,
                     updateSchemaOnReplace=updateSchemaOnReplace,
