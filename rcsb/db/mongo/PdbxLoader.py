@@ -33,6 +33,7 @@
 #     29-Jun-2022 dwp  Remove uneeded custom-support for computed-model identifiers (will now use the internally-modified entry.id)
 #      2-Feb-2023 dwp  Add removeAndRecreateDbCollections method for wiping a database without involving any data loading
 #     22-Feb-2023 dwp  Use case-sensitivity for brute force document purge
+#     25-Apr-2023 dwp  Fix regex document purge
 #
 ##
 """
@@ -260,7 +261,7 @@ class PdbxLoaderWorker(object):
                 mg = MongoDbUtil(client)
                 for cardId in cardinalIdL:
                     # selectD = {"rcsb_id": "/%s/" % cardId} # this filter did not work
-                    selectD = {"rcsb_id": {"$regex": "^%s" % cardId.upper()}}  # case-sensitive (avoid case-insensitive -- very slow performance)
+                    selectD = {"rcsb_id": {"$regex": "^%s([._-]|$)" % cardId.upper()}}  # case-sensitive (avoid case-insensitive -- very slow performance)
                     dCount = mg.delete(databaseName, collectionName, selectD)
                     logger.debug("Remove %d objects in database %s collection %s selection %r", dCount, databaseName, collectionName, selectD)
             return True
@@ -1154,7 +1155,7 @@ class PdbxLoader(object):
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
                 for cardId in cardinalIdL:
-                    selectD = {"rcsb_id": {"$regex": "^%s" % cardId.upper()}}  # case-sensitive (avoid case-insensitive -- very slow performance)
+                    selectD = {"rcsb_id": {"$regex": "^%s([._-]|$)" % cardId.upper()}}  # case-sensitive (avoid case-insensitive -- very slow performance)
                     dCount = mg.delete(databaseName, collectionName, selectD)
                     logger.debug("Remove %d objects in database %s collection %s selection %r", dCount, databaseName, collectionName, selectD)
             return True
