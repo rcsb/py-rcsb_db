@@ -344,3 +344,4 @@
  22-Feb-2023  V1.707 Updates to PdbxLoader to use case-sensitivity for brute force document purge
  06-Apr-2023  V1.708 Add support for entity_id_list cifType in DataTypeApplicationInfo
  26-Apr-2023  V1.709 Fix document pre-purge regex during load, and add regexPurge flag to control running that step
+  8-May-2023  V1.710 Fix error handling in PdbxLoader to cause failure when documents fail to load

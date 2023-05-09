@@ -34,6 +34,7 @@
 #      2-Feb-2023 dwp  Add removeAndRecreateDbCollections method for wiping a database without involving any data loading
 #     22-Feb-2023 dwp  Use case-sensitivity for brute force document purge
 #     26-Apr-2023 dwp  Fix regex document purge, and add regexPurge flag to control running that step (with default set to skip it)
+#      8-May-2023 dwp  Fix error handling in PdbxLoader to cause failure when documents fail to load
 #
 ##
 """
@@ -720,8 +721,13 @@ class PdbxLoader(object):
                 mpu.setWorkingDir(self.__cachePath)
                 mpu.setOptions(optionsD=optD)
                 mpu.set(workerObj=self, workerMethod="loadWorker")
-                ok, failListT, _, _ = mpu.runMulti(dataList=subList, numProc=numProc, numResults=1, chunkSize=chunkSize)
+                ok, failListT, resultList, _ = mpu.runMulti(dataList=subList, numProc=numProc, numResults=1, chunkSize=chunkSize)
                 logger.info("Completed outer subtask %d of %d (status=%r) length %d failures (%d) %r", ii + 1, len(subLists), ok, len(subList), len(failListT), failListT)
+                # Note: 'resultList' is the 'retList' returned from loadWorker method below, BUT NESTED WITHIN AN ADDITIONAL LIST!
+                #       (i.e., resultList = [retList])
+                if len(resultList) > 0:
+                    logger.debug("resultList[0] length (%d), first item: %r", len(resultList[0]), resultList[0][0])
+                #
                 failList.extend(failListT)
             failList = list(set(failList))
             if failList:
@@ -773,6 +779,18 @@ class PdbxLoader(object):
 
         locatorObjList -> containerList -> docList  ->|LOAD|<-  .... return success locatorObjList
 
+        Args:
+            dataList (list): list of items to work on
+            procName (str): worker process name
+            optionsD (dict): dictionary of additional options that worker can access
+            workingDir (str): path to working directory
+
+        Returns:
+            successList (list): list of input data items that were successfully processed (items must be in same format as input
+                                dataList in order for MultiProc to properly generate failList returned by mpu.runMulti(...))
+            retList (list): list of all processed items, both successes and failures (items can be in any format you wish, e.g., (cId, locatorObj, ok));
+                            Note that this gets assigned to the variable, 'resultList', returned by mpu.runMulti(...) call above
+            diagList (list): list of unique diagnostics (usually left empty)
         """
         try:
             startTime = self.__begin(message=procName)
@@ -802,6 +820,10 @@ class PdbxLoader(object):
             cIdD = {}
             cNameL = []
             containerList = []
+            successList = []
+            retList = []
+            diagList = []
+
             for locatorObj in dataList:
                 # JDW
                 cL = self.__rpP.getContainerList([locatorObj])
@@ -931,7 +953,7 @@ class PdbxLoader(object):
                 failPathList = list(set(failPathList))
                 #
                 if failPathList:
-                    logger.debug("%s %s/%s worker load failures %r", procName, databaseName, collectionName, [os.path.basename(pth) for pth in failPathList if pth is not None])
+                    logger.error("%s %s/%s worker load failures %r", procName, databaseName, collectionName, [os.path.basename(pth) for pth in failPathList if pth is not None])
                 if rejectPathList:
                     logger.debug("%s %s/%s worker load rejected %r", procName, databaseName, collectionName, [os.path.basename(pth) for pth in rejectPathList])
             #
@@ -941,8 +963,11 @@ class PdbxLoader(object):
             #
             #  cIdD[cId] = locatorObj
             # ----
-            retList = [locatorObj for cId, locatorObj in cIdD.items() if cId not in failContainerIdS]
-            logger.debug("%s %s load worker returns  successes %d rejects %d failures %d", procName, databaseName, len(retList), len(rejectContainerIdS), len(failContainerIdS))
+            successList = [locatorObj for cId, locatorObj in cIdD.items() if cId not in failContainerIdS]
+            logger.debug("%s %s load worker returns  successes %d rejects %d failures %d", procName, databaseName, len(successList), len(rejectContainerIdS), len(failContainerIdS))
+            #
+            retList = [(cId, locatorObj, True) for cId, locatorObj in cIdD.items() if cId not in failContainerIdS]
+            retList += [(cId, locatorObj, False) for cId, locatorObj in cIdD.items() if cId in failContainerIdS]
             #
             if cardinalIdFailS:
                 # remove all collection objects related to a load failure
@@ -952,7 +977,8 @@ class PdbxLoader(object):
             #
             ok = len(failContainerIdS) == 0
             self.__end(startTime, procName + " with status " + str(ok))
-            return retList, [], []
+
+            return successList, retList, diagList
 
         except Exception as e:
             # logger.error("Failing for dataList %r" % dataList)
@@ -965,14 +991,13 @@ class PdbxLoader(object):
     #
     def __validateAndFix(self, databaseName, collectionName, dList, docIdL, schemaLevel="full"):
         """[summary]
-
         Args:
-            databaseName ([type]): [description]
-            collectionName ([type]): [description]
-            dList ([type]): [description]
-            docIdL ([type]): [description]
-            schemaLevel (str, optional): [description]. Defaults to "full".
-
+            databaseName (str): Target database name
+            collectionName (str): Target collection name
+            dList (list): document list
+            docIdL (list): list of key document attributes required to uniquely identify a document in a given collection
+                           (from SchemaDefAccess.getDocumentKeyAttributeNames())
+            schemaLevel (str, optional): Completeness of json/bson metadata schema bound to each collection (e.g. 'min', 'full' or None); Defaults to "full"
         Returns:
             (list):  updated document list (remediated for validation issues)
         """
@@ -993,6 +1018,7 @@ class PdbxLoader(object):
             logger.info("Checking %r with schema %s collection %s document (%d)", cN, databaseName, collectionName, ii + 1)
             updL = []
             try:
+                failFlag = False
                 for error in sorted(valInfo.iter_errors(dD), key=str):
                     #
                     # Filter and cleanup artifacts -
@@ -1016,9 +1042,10 @@ class PdbxLoader(object):
                             updL.append(cN)
                     #
             except Exception as e:
+                failFlag = True
                 logger.exception("Validation updating processing error %s", str(e))
             #
-            if updL:
+            if not failFlag:
                 rList.append(dD)
         #
         logger.info("Corrected document count (%d) %r", len(updL), updL)
