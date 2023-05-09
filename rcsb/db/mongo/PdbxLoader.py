@@ -34,7 +34,7 @@
 #      2-Feb-2023 dwp  Add removeAndRecreateDbCollections method for wiping a database without involving any data loading
 #     22-Feb-2023 dwp  Use case-sensitivity for brute force document purge
 #     26-Apr-2023 dwp  Fix regex document purge, and add regexPurge flag to control running that step (with default set to skip it)
-#      8-May-2023 dwp  Fix __validateAndFix method to also handle documents that don't have any validation issues
+#      8-May-2023 dwp  Fix error handling in PdbxLoader to cause failure when documents fail to load
 #
 ##
 """
@@ -932,7 +932,7 @@ class PdbxLoader(object):
                 failPathList = list(set(failPathList))
                 #
                 if failPathList:
-                    logger.debug("%s %s/%s worker load failures %r", procName, databaseName, collectionName, [os.path.basename(pth) for pth in failPathList if pth is not None])
+                    logger.error("%s %s/%s worker load failures %r", procName, databaseName, collectionName, [os.path.basename(pth) for pth in failPathList if pth is not None])
                 if rejectPathList:
                     logger.debug("%s %s/%s worker load rejected %r", procName, databaseName, collectionName, [os.path.basename(pth) for pth in rejectPathList])
             #
@@ -953,7 +953,7 @@ class PdbxLoader(object):
             #
             ok = len(failContainerIdS) == 0
             self.__end(startTime, procName + " with status " + str(ok))
-            return retList, [], []
+            return retList, list(cardinalIdFailS), []
 
         except Exception as e:
             # logger.error("Failing for dataList %r" % dataList)
@@ -992,11 +992,8 @@ class PdbxLoader(object):
         for ii, dD in enumerate(dList):
             cN = self.__getKeyValues(dD, docIdL)
             logger.info("Checking %r with schema %s collection %s document (%d)", cN, databaseName, collectionName, ii + 1)
-            fixNeeded = True
             updL = []
             try:
-                if len(sorted(valInfo.iter_errors(dD), key=str)) == 0:
-                    fixNeeded = False
                 for error in sorted(valInfo.iter_errors(dD), key=str):
                     #
                     # Filter and cleanup artifacts -
@@ -1022,10 +1019,7 @@ class PdbxLoader(object):
             except Exception as e:
                 logger.exception("Validation updating processing error %s", str(e))
             #
-            if fixNeeded and updL:
-                rList.append(dD)
-            elif not fixNeeded:
-                rList.append(dD)
+            rList.append(dD)
         #
         logger.info("Corrected document count (%d) %r", len(updL), updL)
         return rList
