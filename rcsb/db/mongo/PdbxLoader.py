@@ -34,6 +34,7 @@
 #      2-Feb-2023 dwp  Add removeAndRecreateDbCollections method for wiping a database without involving any data loading
 #     22-Feb-2023 dwp  Use case-sensitivity for brute force document purge
 #     26-Apr-2023 dwp  Fix regex document purge, and add regexPurge flag to control running that step (with default set to skip it)
+#      8-May-2023 dwp  Fix __validateAndFix method to also handle documents that don't have any validation issues
 #
 ##
 """
@@ -991,8 +992,11 @@ class PdbxLoader(object):
         for ii, dD in enumerate(dList):
             cN = self.__getKeyValues(dD, docIdL)
             logger.info("Checking %r with schema %s collection %s document (%d)", cN, databaseName, collectionName, ii + 1)
+            fixNeeded = True
             updL = []
             try:
+                if len(sorted(valInfo.iter_errors(dD), key=str)) == 0:
+                    fixNeeded = False
                 for error in sorted(valInfo.iter_errors(dD), key=str):
                     #
                     # Filter and cleanup artifacts -
@@ -1018,7 +1022,9 @@ class PdbxLoader(object):
             except Exception as e:
                 logger.exception("Validation updating processing error %s", str(e))
             #
-            if updL:
+            if fixNeeded and updL:
+                rList.append(dD)
+            elif not fixNeeded:
                 rList.append(dD)
         #
         logger.info("Corrected document count (%d) %r", len(updL), updL)
