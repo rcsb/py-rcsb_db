@@ -75,8 +75,8 @@ site_info_configuration:
   #
   # --------- Configuration for remote and local data access ----
   DISCOVERY_MODE: remote
-  PDB_REPO_URL: https://ftp.wwpdb.org/pub
-  PDB_REPO_FALLBACK_URL: https://ftp.wwpdb.org/pub
+  PDB_REPO_URL: https://files.wwpdb.org/pub
+  PDB_REPO_FALLBACK_URL: https://files.wwpdb.org/pub
   PDBDEV_REPO_URL: https://pdb-dev.wwpdb.org
   # ---------
   #
@@ -230,8 +230,8 @@ site_info_remote_configuration:
   # --------- Configuration for remote and local data access ----
   #
   DISCOVERY_MODE: remote
-  PDB_REPO_URL: https://ftp.wwpdb.org/pub
-  PDB_REPO_FALLBACK_URL: https://ftp.wwpdb.org/pub
+  PDB_REPO_URL: https://files.wwpdb.org/pub
+  PDB_REPO_FALLBACK_URL: https://files.wwpdb.org/pub
   PDBDEV_REPO_URL: https://pdb-dev.wwpdb.org
   #
   # -------------------------------------------------------------------------------------------
