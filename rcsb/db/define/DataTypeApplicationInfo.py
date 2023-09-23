@@ -13,7 +13,8 @@
 #  12-Oct-2018 jdw unsuppress datetime mapping
 #   7-Jan-2019 jdw applicationName->dataTyping
 #  23-Jan-2023  bv Add uchar5 cifType to handle updates to _chem_comp.three_letter_code
-#   6-Apr-2023  bv Add entity_id_list cifType to handle _pdbx_initial_refinement_model.entity_id_list
+#   6-Apr-2023  bv Add entity_id_list_cifType to handle _pdbx_initial_refinement_model.entity_id_list
+#  23-Sep-2023  bv Add pdb_id_u_cifType to handle _em_3d_fitting_list.pdb_entry_id
 ##
 """
 Manage mapping of default application data type to dictionary data types.
@@ -73,6 +74,7 @@ class DataTypeApplicationInfo(object):
         "positive_int",
         "emd_id",
         "pdb_id",
+        "pdb_id_u",
         "point_group",
         "point_group_helical",
         "boolean",
@@ -136,6 +138,7 @@ class DataTypeApplicationInfo(object):
         "char",
         "char",
         "char",
+        "char",
         "",
     ]
 
@@ -177,6 +180,7 @@ class DataTypeApplicationInfo(object):
         "20",
         "20",
         "20",
+        "20",
         "5",
         "80",
         "20",
@@ -198,6 +202,7 @@ class DataTypeApplicationInfo(object):
         "0",
         "0",
         "6",
+        "0",
         "0",
         "0",
         "0",
