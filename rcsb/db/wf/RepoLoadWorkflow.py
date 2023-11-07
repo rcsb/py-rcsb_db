@@ -9,6 +9,7 @@
 #   2-Feb-2023 dwp Add removeAndRecreateDbCollections method for wiping a database without involving any data loading;
 #                  Add support for inputIdCodeList
 #  26-Apr-2023 dwp Add regexPurge flag to control running regexp purge step during document load (with default set to False)
+#   7-Nov-2023 dwp Add maxStepLength parameter
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -63,6 +64,7 @@ class RepoLoadWorkflow(object):
             readBackCheck = kwargs.get("readBackCheck", False)
             numProc = int(kwargs.get("numProc", 1))
             chunkSize = int(kwargs.get("chunkSize", 10))
+            maxStepLength = int(kwargs.get("maxStepLength", 2000))
             fileLimit = int(kwargs.get("fileLimit")) if "fileLimit" in kwargs else None
             documentLimit = int(kwargs.get("documentLimit")) if "documentLimit" in kwargs else None
             failedFilePath = kwargs.get("failFileListPath", None)
@@ -116,6 +118,7 @@ class RepoLoadWorkflow(object):
                     resourceName="MONGO_DB",
                     numProc=numProc,
                     chunkSize=chunkSize,
+                    maxStepLength=maxStepLength,
                     fileLimit=fileLimit,
                     verbose=self.__debugFlag,
                     readBackCheck=readBackCheck,

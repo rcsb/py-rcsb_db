@@ -347,3 +347,4 @@
   8-May-2023  V1.710 Fix error handling in PdbxLoader to cause failure when documents fail to load
  19-May-2023  V1.711 Update DNS to PDB archive
  23-Sep-2023  V1.712 Add support for pdb_id_u cifType in DataTypeApplicationInfo
+  6-Nov-2023  V1.713 Add maxStepLength argument to RepoLoadWorkflow
