@@ -26,6 +26,7 @@
 #  3-Apr-2019 jdw add experimental primary key property controlled by 'addPrimaryKey'
 # 22-Aug-2019 jdw DictInfo() replaced with new ContentInfo()
 # 28-Feb-2022 bv add support for mandatory sub-categories in json schema
+# 21-Nov-2022 bv add support in json schema for min and unique items for sub-categories and iterable attributes
 ##
 """
 Integrate dictionary metadata and file based (type/coverage) into internal and JSON/BSON schema defintions.
@@ -742,6 +743,7 @@ class SchemaDefBuild(object):
 
             subCatPropD = {}
             scMandatory = None
+            scMinUniqueItems = {}
             if subCategoryAggregates:
                 logger.debug("%s %s %s subcategories %r", databaseName, collectionName, catName, cfD["SUB_CATEGORIES"])
                 for subCategory in subCategoryAggregates:
@@ -752,6 +754,7 @@ class SchemaDefBuild(object):
                     scD = {typeKey: "object", "properties": {}, "additionalProperties": False}
                     scHasUnitCard = documentDefHelper.getSubCategoryAggregateUnitCardinality(collectionName, subCategory)
                     scMandatory = documentDefHelper.getSubCategoryAggregateMandatory(collectionName, subCategory)
+                    scMinUniqueItems = documentDefHelper.getSubCategoryAggregateMinUniqueItems(collectionName, subCategory)
                     for atName in sorted(atNameList):
                         fD = aD[atName]
                         #
@@ -790,7 +793,10 @@ class SchemaDefBuild(object):
                         if scHasUnitCard:
                             subCatPropD[subCategory] = scD
                         else:
-                            subCatPropD[subCategory] = {typeKey: "array", "items": scD, "uniqueItems": False}
+                            if scMinUniqueItems:
+                                subCatPropD[subCategory] = {typeKey: "array", "items": scD, "minItems": scMinUniqueItems["minItems"], "uniqueItems": scMinUniqueItems["uniqueItems"]}
+                            else:
+                                subCatPropD[subCategory] = {typeKey: "array", "items": scD, "uniqueItems": False}
                             if dataTypingU == "JSON" and addRcsbExtensions:
                                 if documentDefHelper.isSubCategoryNested(collectionName, catName, subCategory):
                                     tD = documentDefHelper.getSubCategoryNestedContext(collectionName, catName, subCategory)
@@ -849,7 +855,11 @@ class SchemaDefBuild(object):
 
                 delimiter = fD["ITERABLE_DELIMITER"]
                 if delimiter:
-                    pD["properties"][schemaAttributeName] = {typeKey: "array", "items": atPropD, "uniqueItems": False}
+                    atIterMd = documentDefHelper.getIterableAttributeMetadata(collectionName, catName, atName)
+                    if atIterMd:
+                        pD["properties"][schemaAttributeName] = {typeKey: "array", "items": atPropD, "minItems": atIterMd["minItems"], "uniqueItems": atIterMd["uniqueItems"]}
+                    else:
+                        pD["properties"][schemaAttributeName] = {typeKey: "array", "items": atPropD, "uniqueItems": False}
                 else:
                     pD["properties"][schemaAttributeName] = atPropD
 
