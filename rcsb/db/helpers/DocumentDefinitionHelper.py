@@ -219,9 +219,7 @@ class DocumentDefinitionHelper(object):
             if collectionName in self.__cfgD["collection_subcategory_aggregates"]:
                 for dD in self.__cfgD["collection_subcategory_aggregates"][collectionName]:
                     if dD["NAME"] == subCategoryName:
-                        mValue = dD["MIN_ITEMS"]
-                        uValue = dD["UNIQUE_ITEMS"]
-                        pD = {"minItems": mValue, "uniqueItems": uValue}
+                        pD = {"minItems": dD["MIN_ITEMS"], "uniqueItems": dD["UNIQUE_ITEMS"]}
                         break
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
@@ -249,14 +247,12 @@ class DocumentDefinitionHelper(object):
         pD = {}
         try:
             # get atrribute metadata --
-            for clName, tDL in self.__cfgD["collection_iterable_attribute_metadata"].items():
-                if clName == collectionName:
-                    for tD in tDL:
-                        ff = str(tD["ATTRIBUTE_NAME"]).split(".")
-                        mValue = tD["MIN_ITEMS"]
-                        uValue = tD["UNIQUE_ITEMS"]
-                        if ff[0] == catName and ff[1] == atName:
-                            pD = {"minItems": mValue, "uniqueItems": uValue}
+            tDL = self.__cfgD["collection_iterable_attribute_metadata"].get(collectionName, None)
+            if tDL:
+                for tD in tDL:
+                    ff = str(tD["ATTRIBUTE_NAME"]).split(".")
+                    if ff[0] == catName and ff[1] == atName:
+                        pD = {"minItems": tD["MIN_ITEMS"], "uniqueItems": tD["UNIQUE_ITEMS"]}
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return pD
