@@ -16,6 +16,7 @@
 #   6-Sep-2019 jdw incorporate search type and brief descriptions
 #  23-Oct-2019 jdw add collection subcategory nested property support
 #  28-Feb-2022 bv add method getSubCategoryAggregateMandatory()
+#  21-Nov-2022 bv add methods getIterableAttributeMetadata() and getSubCategoryAggregateMinUniqueItems()
 ##
 """
 Inject additional document information into a schema definition.
@@ -212,6 +213,18 @@ class DocumentDefinitionHelper(object):
             logger.debug("Collection %s failing with %s", collectionName, str(e))
         return ret
 
+    def getSubCategoryAggregateMinUniqueItems(self, collectionName, subCategoryName):
+        pD = {}
+        try:
+            if collectionName in self.__cfgD["collection_subcategory_aggregates"]:
+                for dD in self.__cfgD["collection_subcategory_aggregates"][collectionName]:
+                    if dD["NAME"] == subCategoryName:
+                        pD = {"minItems": dD["MIN_ITEMS"], "uniqueItems": dD["UNIQUE_ITEMS"]}
+                        break
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return pD
+
     def getSubCategoryAggregateFeatures(self, collectionName):
         ret = []
         try:
@@ -219,6 +232,30 @@ class DocumentDefinitionHelper(object):
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
         return ret
+
+    def getIterableAttributeMetadata(self, collectionName, catName, atName):
+        """
+        Get metadata for iterable attributes (attribute types - scsv, csv, vbsv)
+        Example:
+
+            collection_iterable_attribute_metadata:
+                drugbank_core:
+                    - ATTRIBUTE_NAME: drugbank_info.drug_groups
+                    MIN_ITEMS: 1
+                    UNIQUE_ITEMS: TRUE
+        """
+        pD = {}
+        try:
+            # get atrribute metadata --
+            tDL = self.__cfgD["collection_iterable_attribute_metadata"].get(collectionName, None)
+            if tDL:
+                for tD in tDL:
+                    ff = str(tD["ATTRIBUTE_NAME"]).split(".")
+                    if ff[0] == catName and ff[1] == atName:
+                        pD = {"minItems": tD["MIN_ITEMS"], "uniqueItems": tD["UNIQUE_ITEMS"]}
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return pD
 
     def getRetainSingletonObjects(self, collectionName):
         """By default singleton objects are expanded in global scope.  To avoid

@@ -348,3 +348,4 @@
  19-May-2023  V1.711 Update DNS to PDB archive
  23-Sep-2023  V1.712 Add support for pdb_id_u cifType in DataTypeApplicationInfo
   6-Nov-2023  V1.713 Add maxStepLength argument to RepoLoadWorkflow
+ 21-Nov-2023  V1.714 Add support in json schema for min and unique items for sub-categories and iterable attributes
