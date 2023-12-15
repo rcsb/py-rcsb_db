@@ -10,7 +10,6 @@
 #                  Add support for inputIdCodeList
 #  26-Apr-2023 dwp Add regexPurge flag to control running regexp purge step during document load (with default set to False)
 #   7-Nov-2023 dwp Add maxStepLength parameter
-#  28-Nov-2023  bv Change default setting to false for merging validation reports
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -86,9 +85,7 @@ class RepoLoadWorkflow(object):
             databaseName = kwargs.get("databaseName", None)
             databaseNameList = self.__cfgOb.get("DATABASE_NAMES_ALL", sectionName="database_catalog_configuration").split(",")
             collectionNameList = kwargs.get("collectionNameList", None)
-            # BV: Changing the default to false for merging validation reports
-            #     Change back to true when validation data loading from mmCIF is implemented
-            mergeValidationReports = kwargs.get("mergeValidationReports", False)
+            mergeValidationReports = kwargs.get("mergeValidationReports", True)
             #
             tU = TimeUtil()
             dataSetId = kwargs.get("dataSetId") if "dataSetId" in kwargs else tU.getCurrentWeekSignature()
