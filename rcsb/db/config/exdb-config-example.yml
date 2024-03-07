@@ -25,6 +25,7 @@
 #   30-Mar-2022 - Change RCSB_EDMAP_LIST_PATH and SIFTS_SUMMARY_DATA_PATH to HTTP
 #   18-Apr-2022 - Add PDBX_COMP_MODEL_CACHE_LIST_PATH to point to list of all computed-model files in storage
 #   22-Mar-2023 - Update references to py-rcsb_exdb_assets master branch
+#    7-Mar-2024 - Update config settings for computed model holdings
 # --
 ---
 DEFAULT: {}
@@ -68,7 +69,7 @@ site_info_configuration:
   VRPT_REPO_PATH_ENV: VRPT_REPO_PATH_ALT
   #
   RCSB_EDMAP_LIST_PATH: MOCK_EXCHANGE_SANDBOX/status/edmaps.json
-  PDBX_COMP_MODEL_CACHE_LIST_PATH: MOCK_COMP_MODEL_REPO/holdings/computed-models-holdings.json.gz
+  PDBX_COMP_MODEL_HOLDINGS_LIST_PATH: MOCK_COMP_MODEL_REPO/holdings/computed-models-holdings-list.json
   #
   RCSB_SEQUENCE_CLUSTER_DATA_PATH: cluster_data/mmseqs_clusters_current
   SIFTS_SUMMARY_DATA_PATH: sifts-summary
@@ -171,10 +172,7 @@ site_info_remote_configuration:
   CONFIG_SUPPORT_TOKEN: CONFIG_SUPPORT_TOKEN_ENV
   #
   # Database server connection details:
-  #     dev: 128.6.158.254
-  # staging: 128.6.159.43
-  #
-  MONGO_DB_HOST: 128.6.158.254
+  MONGO_DB_HOST: localhost
   MONGO_DB_PORT: "27017"
   _MONGO_DB_USER_NAME: vknsNHfQ1nyy5w1vsfP4fbOp1iPxD3K5yZmNFsJDqTRl+87zicTLa9lkHG5uReM=
   _MONGO_DB_PASSWORD: wfm/FNyhON/AGaJfLhL5ZA0ObAVU0DZ0sICB2eemS8GFfAOZvo3Y/vXTkjLayViwppj2MQ==
@@ -216,13 +214,13 @@ site_info_remote_configuration:
   PDBX_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/data/structures/divided/mmCIF
   PDBX_OBSOLETE_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/data/structures/obsolete/mmCIF
   RCSB_EXCHANGE_SANDBOX_PATH: /net/sandbox_v5/ftp-v5.0-support
-  PDBX_COMP_MODEL_REPO_PATH: http://computed-models-internal-east.rcsb.org
+  PDBX_COMP_MODEL_REPO_PATH: http://computed-models-internal-coast.rcsb.org
   IHM_DEV_REPO_PATH: ../py-rcsb_db/rcsb/mock-data/MOCK_IHM_REPOMOCK_IHM_REPO
   VRPT_REPO_PATH: /net/ftp_tree_v5/ftp-v5.0/pdb/validation_reports
   VRPT_REPO_PATH_ENV: VRPT_REPO_PATH_ALT
   #
   RCSB_EDMAP_LIST_PATH: http://workflow-east.rcsb.org/data/edmaps/edmaps.json
-  PDBX_COMP_MODEL_CACHE_LIST_PATH: http://computed-models-internal-east.rcsb.org/holdings/computed-models-holdings.json.gz
+  PDBX_COMP_MODEL_HOLDINGS_LIST_PATH: http://computed-models-internal-coast.rcsb.org/holdings/computed-models-holdings-list.json
   #
   RCSB_SEQUENCE_CLUSTER_DATA_PATH: /net/users/update/Data/sequence-clusters/current-mmseqs
   SIFTS_SUMMARY_DATA_PATH: http://workflow-east.rcsb.org/data/sifts/pub/databases/msd/sifts/flatfiles/csv
