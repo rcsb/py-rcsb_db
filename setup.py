@@ -58,7 +58,7 @@ setup(
             "repo_scan_cli=rcsb.db.cli.RepoScanExec:main",
             "schema_update_cli=rcsb.db.cli.SchemaUpdateExec:main",
             "etl_exec_cli=rcsb.db.cli.ETLExec:main",
-            "seq_clustering_cli=rcsb.db.cli.MmseqsSequenceClusters:main"
+            "seq_clustering_cli=rcsb.db.cli.MmseqsSequenceClustersExec:main"
         ]
     },
     #
