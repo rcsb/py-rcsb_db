@@ -218,6 +218,13 @@ class PdbxLoader(object):
                 self.__writePathList(saveInputFileListPath, self.__rpP.getLocatorPaths(locatorObjList))
                 logger.info("Saving %d paths in %s", len(locatorObjList), saveInputFileListPath)
             # ---
+            # Don't load resource providers which are irrelevant to 'pdbx_core' or 'pdbx_comp_model_core'
+            if not providerTypeExclude:
+                if databaseName == "pdbx_core":
+                    providerTypeExclude = "pdbx_comp_model_core"
+                if databaseName == "pdbx_comp_model_core":
+                    providerTypeExclude = "pdbx_core"
+            #
             modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=self.__cfgSectionName)
             dP = DictionaryApiProviderWrapper(self.__cachePath, cfgOb=self.__cfgOb, useCache=True)
             dictApi = dP.getApiByName(databaseName)
@@ -422,6 +429,7 @@ class PdbxLoader(object):
             collectionName = None
             cIdD = {}
             cNameL = []
+            cL = []
             containerList = []
             successList = []
             retList = []
@@ -429,13 +437,14 @@ class PdbxLoader(object):
             readFailL = []
             purgeL = []
 
-            for locatorObj in dataList:
+            for locatorObj in dataList:  # len(dataList) is of size chunkSize
                 cL = self.__rpP.getContainerList([locatorObj])
                 if cL:
                     cNameL.append(cL[0].getName().upper().strip())
                     cId = cL[0].getName() if useNameFlag else cL[0].getProp("uid")
                     cIdD[cId] = locatorObj
                     containerList.extend(cL)
+                    cL = []
                 else:
                     cName = self.__getContainerName(locatorObj)
                     if cName:
@@ -569,6 +578,7 @@ class PdbxLoader(object):
                 if rejectPathList:
                     logger.debug("%s %s/%s worker load rejected %r", procName, databaseName, collectionName, [os.path.basename(pth) for pth in rejectPathList])
             #
+            containerList = []
             # -------------------------
             #  failContainerIdS = set()
             #  rejectContainerIdS = set()
