@@ -36,6 +36,9 @@
 #     26-Apr-2023 dwp  Fix regex document purge, and add regexPurge flag to control running that step (with default set to skip it)
 #      8-May-2023 dwp  Fix error handling in PdbxLoader to cause failure when documents fail to load
 #      7-Nov-2023 dwp  Remove unused redundant PdbxLoaderWorker code (already present in PdbxLoader)
+#     19-Mar-2024 dwp  Add additional quality assurance measure to catch and cleanup pre-loaded documents in which one or more related
+#                      containers fails to be read properly (incl. validation reports);
+#                      Begin adding code to support weekly update workflow CLI requirements
 #
 ##
 """
@@ -174,6 +177,7 @@ class PdbxLoader(object):
             regexPurge (bool, optional): perform an additional regex-based round of purging of all pre-existing documents for loadType != "full" (default False)
             logSize (bool, optional): Compute and log bson serialized object size
             validationLevel (str, optional): Completeness of json/bson metadata schema bound to each collection (e.g. 'min', 'full' or None)
+            mergeContentTypes (list, optional): repository content types to combined with the primary content type (e.g., ["vrpt"])
             useNameFlag (bool, optional): Use container name as unique identifier otherwise use UID property.
             updateSchemaOnReplace (bool, optional): Update validation schema for loadType == 'replace'
             validateFailures (bool, optional): output validation report on load failures
@@ -194,6 +198,26 @@ class PdbxLoader(object):
             logger.info("Beginning load operation (%r) for database %s", loadType, databaseName)
             startTime = self.__begin(message="loading operation")
             #
+            # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
+            # if databaseName in ["pdbx_core", "pdbx_comp_model_core"]:
+            #     totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=databaseName + "_entry")
+            #     subsetIdsAlreadyLoaded = list(set(totalIdsAlreadyLoaded).intersection(set(inputIdCodeList)))  # Get the list of IDs from only the given sublist that are already loaded
+            #     idCodesToLoadL = list(set(inputIdCodeList) ^ set(subsetIdsAlreadyLoaded))  # Get a list of the delta between the two lists—-i.e., the entry IDs needed to be loaded
+            #     logger.info(
+            #         "Total # IDs already loaded %d, # IDs provided as input %d (of which %d are already loaded), # IDs to load for current iteration %d",
+            #         len(totalIdsAlreadyLoaded),
+            #         len(inputIdCodeList),
+            #         len(subsetIdsAlreadyLoaded),
+            #         len(idCodesToLoadL)
+            #     )
+            #
+            locatorObjList = self.__rpP.getLocatorObjList(contentType=databaseName, inputPathList=inputPathList, inputIdCodeList=inputIdCodeList, mergeContentTypes=mergeContentTypes)
+            logger.info("Loading database %s (%r) with path length %d", databaseName, loadType, len(locatorObjList))
+            #
+            if saveInputFileListPath:
+                self.__writePathList(saveInputFileListPath, self.__rpP.getLocatorPaths(locatorObjList))
+                logger.info("Saving %d paths in %s", len(locatorObjList), saveInputFileListPath)
+            # ---
             modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=self.__cfgSectionName)
             dP = DictionaryApiProviderWrapper(self.__cachePath, cfgOb=self.__cfgOb, useCache=True)
             dictApi = dP.getApiByName(databaseName)
@@ -208,12 +232,6 @@ class PdbxLoader(object):
                 return ok
             # ---
             self.__dmh = DictMethodRunner(dictApi, modulePathMap=modulePathMap, resourceProvider=dmrP)
-            locatorObjList = self.__rpP.getLocatorObjList(contentType=databaseName, inputPathList=inputPathList, inputIdCodeList=inputIdCodeList, mergeContentTypes=mergeContentTypes)
-            logger.info("Loading database %s (%r) with path length %d", databaseName, loadType, len(locatorObjList))
-            #
-            if saveInputFileListPath:
-                self.__writePathList(saveInputFileListPath, self.__rpP.getLocatorPaths(locatorObjList))
-                logger.info("Saving %d paths in %s", len(locatorObjList), saveInputFileListPath)
             #
             filterType = "drop-empty-attributes|drop-empty-tables|skip-max-width|assign-dates|convert-iterables|normalize-enums|translateXMLCharRefs"
             if styleType in ["columnwise_by_name", "rowwise_no_name"]:
@@ -408,15 +426,34 @@ class PdbxLoader(object):
             successList = []
             retList = []
             diagList = []
+            readFailL = []
+            purgeL = []
 
             for locatorObj in dataList:
-                # JDW
                 cL = self.__rpP.getContainerList([locatorObj])
                 if cL:
                     cNameL.append(cL[0].getName().upper().strip())
                     cId = cL[0].getName() if useNameFlag else cL[0].getProp("uid")
                     cIdD[cId] = locatorObj
                     containerList.extend(cL)
+                else:
+                    cName = self.__getContainerName(locatorObj)
+                    if cName:
+                        readFailL.append(cName)
+            #
+            # -----
+            # Perform force purge of existing documents based on regex. Also note that another deletion is performed by deleteList() below (via __loadDocuments)
+            # This is run if regexPurge == True OR if the import of a locatorObj failed above (if readFailL > 0).
+            # By default regexPurge == False, since other deletion step is more efficient (based on container identifiers)
+            if loadType != "full" and (regexPurge or readFailL):
+                if regexPurge:
+                    purgeL = [cN for cN in cNameL]
+                if readFailL:
+                    purgeL += [cN for cN in readFailL if cN not in purgeL]
+                for collectionName in collectionNameList:
+                    logger.info("Purging objects from %s for %d containers", collectionName, len(purgeL))
+                    ok = self.__purgeDocuments(databaseName, collectionName, cNameL)
+                    logger.info("%s %s - loadType %r purgeL %r (%r)", databaseName, collectionName, loadType, purgeL, ok)
             #
             # -- Apply methods to each container
             for container in containerList:
@@ -424,16 +461,6 @@ class PdbxLoader(object):
                     self.__dmh.apply(container)
                 else:
                     logger.debug("%s No dynamic method handler for ", procName)
-            # -----
-            # Perform force purge of existing documents based on regex. Also note that another deletion is performed by deleteList() below (via __loadDocuments)
-            # This is skipped if regexPurge == False (default), since other deletion step is more efficient (based on container identifiers)
-            # Note: might be able to even comment this entire block out, but leaving here temporariliy in case we discover a reason to keep it (DWP 04/2023)
-            if loadType != "full" and regexPurge:
-                for collectionName in collectionNameList:
-                    logger.debug("Purging objects from %s for %d containers", collectionName, len(cNameL))
-                    ok = self.__purgeDocuments(databaseName, collectionName, cNameL)
-                    logger.debug("%s %s - loadType %r cNameL %r (%r)", databaseName, collectionName, loadType, cNameL, ok)
-                    # --
             # -----
             failContainerIdS = set()
             rejectContainerIdS = set()
@@ -696,7 +723,25 @@ class PdbxLoader(object):
         logger.info("%s maximum document size loaded %.4f MB", procName, maxDocumentMegaBytes)
         return True
 
-    #
+    def __getContainerName(self, locatorObj):
+        cName = None
+        try:
+            if isinstance(locatorObj, str):
+                locator = locatorObj
+            elif isinstance(locatorObj, (list, tuple)) and locatorObj:
+                dD = locatorObj[0]
+                locator = dD["locator"]
+            else:
+                logger.warning("non-comforming locator object %r", locatorObj)
+                return cName
+            #
+            fName = os.path.basename(locator)
+            cName = fName.split(".")[0].upper()
+        #
+        except Exception as e:
+            logger.exception("Failing to determine container name for %r with %s", locatorObj, str(e))
+        #
+        return cName
 
     def __writePathList(self, filePath, pathList):
         try:
@@ -794,6 +839,22 @@ class PdbxLoader(object):
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return False
+
+    def __getLoadedRcsbIdList(self, databaseName, collectionName):
+        """Get list of all loaded 'rcsb_id' values in the given database and collection"""
+        loadedRcsbIdL = []
+        try:
+            #
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                selectL = ["rcsb_id"]
+                queryD = {}
+                loadedDocL = mg.fetch(databaseName, collectionName, selectL, queryD=queryD, suppressId=True)
+                logger.info("Number of entries already loaded to database %s collection %s: %r", databaseName, collectionName, len(loadedDocL))
+                loadedRcsbIdL = [docD["rcsb_id"] for docD in loadedDocL]
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return loadedRcsbIdL
 
     def __pruneBySize(self, dList, limitMB=15.9):
         """For the input list of objects (dictionaries).objects
