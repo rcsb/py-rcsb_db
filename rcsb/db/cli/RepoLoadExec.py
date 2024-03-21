@@ -20,6 +20,7 @@
 #    12-Dec-2018 - jdw add core_entity_monomer collection support
 #    13-Dec-2018 - jdw add I/HM schema support
 #    23-Nov-2021 - dwp Add pdbx_comp_model_core
+#    19-Mar-2024 - dwp Updating arguments and making compatible with luigi workflow
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -42,6 +43,26 @@ TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logger = logging.getLogger()
+
+"""
+# Example pdbx_core run command:
+
+# Must export environmental variables first!
+export CONFIG_SUPPORT_TOKEN_ENV=...
+export OE_LICENSE=...
+export NLTK_DATA=...
+
+exdb_repo_load_cli --load_pdbx_core \
+--load_type replace  \
+--config_path /opt/etl-scratch/config/exdb-loader-config.yml \
+--config_name site_info_remote_configuration \
+--num_proc 6  \
+--chunk_size 25  \
+--max_step_length 500 \
+--load_id_list_path "/opt/etl-scratch/work-dir/load_file_lists/pdbx_core_ids-1.txt" \
+--cache_path "/opt/etl-scratch/data/CACHE" \
+--schema_level min
+"""
 
 
 def loadStatus(statusList, cfgOb, cachePath, readBackCheck=True):
@@ -71,39 +92,36 @@ def main():
     #
     defaultConfigName = "site_info_configuration"
     #
-    parser.add_argument("--full", default=False, action="store_true", help="Fresh full load in a new tables/collections")
-    parser.add_argument("--replace", default=False, action="store_true", help="Load with replacement in an existing table/collection (default)")
+    parser.add_argument(
+        "--load_type",
+        default="replace",
+        help="Type of load ('replace' for incremental and multi-worker load, 'full' for complete and fresh single-worker load)",
+        choices=["replace", "full"],
+    )
     #
+    # -- Most common load types
+    parser.add_argument("--load_bird_chem_comp_core_ref", default=False, action="store_true", help="Load Bird Chemical Component Core reference definitions (public subset)")
+    parser.add_argument("--load_pdbx_core", default=False, action="store_true", help="Load all PDBx core collections (current released subset)")
+    parser.add_argument("--load_pdbx_comp_model_core", default=False, action="store_true", help="Load all CSM core collections (current released subset)")
+    #
+    # -- Less common load types
     parser.add_argument("--load_chem_comp_ref", default=False, action="store_true", help="Load Chemical Component reference definitions (public subset)")
     parser.add_argument("--load_chem_comp_core_ref", default=False, action="store_true", help="Load Chemical Component Core reference definitions (public subset)")
     parser.add_argument("--load_bird_chem_comp_ref", default=False, action="store_true", help="Load Bird Chemical Component reference definitions (public subset)")
-    parser.add_argument("--load_bird_chem_comp_core_ref", default=False, action="store_true", help="Load Bird Chemical Component Core reference definitions (public subset)")
     parser.add_argument("--load_bird_ref", default=False, action="store_true", help="Load Bird reference definitions (public subset)")
     parser.add_argument("--load_bird_family_ref", default=False, action="store_true", help="Load Bird Family reference definitions (public subset)")
     parser.add_argument("--load_entry_data", default=False, action="store_true", help="Load PDBx entry data (current released subset)")
-    parser.add_argument("--load_pdbx_core", default=False, action="store_true", help="Load all PDBx core collections (current released subset)")
     parser.add_argument("--load_pdbx_core_merge", default=False, action="store_true", help="Load all PDBx core collections with merged content (current released subset)")
     #
     parser.add_argument("--load_pdbx_core_entry", default=False, action="store_true", help="Load PDBx core entry (current released subset)")
     parser.add_argument("--load_pdbx_core_entity", default=False, action="store_true", help="Load PDBx core entity (current released subset)")
     parser.add_argument("--load_pdbx_core_entity_monomer", default=False, action="store_true", help="Load PDBx core entity monomer (current released subset)")
     parser.add_argument("--load_pdbx_core_assembly", default=False, action="store_true", help="Load PDBx core assembly (current released subset)")
-    #
-    parser.add_argument("--load_pdbx_comp_model_core", default=False, action="store_true", help="Load all PDBx computational model core collections (current released subset)")
-    # Add these specific flags in later:
-    # parser.add_argument("--load_pdbx_comp_model_core_merge", default=False, action="store_true",
-    #                     help="Load all PDBx computational model core collections with merged content (current released subset)")
-    # parser.add_argument("--load_pdbx_comp_model_core_entry", default=False, action="store_true", help="Load PDBx computational model core entry (current released subset)")
-    # parser.add_argument("--load_pdbx_comp_model_core_entity", default=False, action="store_true", help="Load PDBx computational model core entity (current released subset)")
-    # parser.add_argument("--load_pdbx_comp_model_core_entity_monomer", default=False, action="store_true",
-    #                     help="Load PDBx computational model core entity monomer (current released subset)")
-    # parser.add_argument("--load_pdbx_comp_model_core_assembly", default=False, action="store_true", help="Load PDBx computational model core assembly (current released subset)")
-    #
     parser.add_argument("--load_ihm_dev", default=False, action="store_true", help="Load I/HM DEV model data (current released subset)")
     #
+    # -- Other important arguments
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
     parser.add_argument("--config_name", default=defaultConfigName, help="Configuration section name")
-
     parser.add_argument("--db_type", default="mongo", help="Database server type (default=mongo)")
 
     parser.add_argument(
@@ -114,14 +132,19 @@ def main():
     parser.add_argument("--read_back_check", default=False, action="store_true", help="Perform read back check on all documents")
     parser.add_argument("--schema_level", default=None, help="Schema validation level (full|min default=None)")
     #
+    parser.add_argument("--load_id_list_path", default=None, help="Input file containing the list of IDs to load in the current iteration by a single worker")
+    parser.add_argument("--complete_id_list_path", default=None, help="File containing the complete list of ALL IDs that will be loaded (e.g., by multiple workers)")
     parser.add_argument("--load_file_list_path", default=None, help="Input file containing load file path list (override automatic repository scan)")
     parser.add_argument("--fail_file_list_path", default=None, help="Output file containing file paths that fail to load")
     parser.add_argument("--save_file_list_path", default=None, help="Save repo file paths from automatic file system scan in this path")
 
     parser.add_argument("--num_proc", default=2, help="Number of processes to execute (default=2)")
     parser.add_argument("--chunk_size", default=10, help="Number of files loaded per process")
+    parser.add_argument("--max_step_length", default=500, help="Maximum subList size (default=500)")
     parser.add_argument("--file_limit", default=None, help="Load file limit for testing")
     parser.add_argument("--prune_document_size", default=None, help="Prune large documents to this size limit (MB)")
+    parser.add_argument("--regex_purge", default=False, help="Perform an additional regex-based purge of all pre-existing documents for loadType != 'full' (default False)")
+    parser.add_argument("--merge_validation_reports", default=True, help="Merge validation report data with the primary content type")
     parser.add_argument("--debug", default=False, action="store_true", help="Turn on verbose logging")
     parser.add_argument("--mock", default=False, action="store_true", help="Use MOCK repository configuration for testing")
     parser.add_argument("--cache_path", default=None, help="Cache path for resource files")
@@ -169,14 +192,17 @@ def main():
         readBackCheck = args.read_back_check
         numProc = int(args.num_proc)
         chunkSize = int(args.chunk_size)
+        maxStepLength = int(args.max_step_length)
         fileLimit = int(args.file_limit) if args.file_limit else None
         failedFilePath = args.fail_file_list_path
-        fPath = args.load_file_list_path
+        idListPath = args.load_id_list_path
+        completeIdListPath = args.complete_id_list_path
+        fileListPath = args.load_file_list_path
         schemaLevel = args.schema_level if args.schema_level in ["min", "full", "minimum"] else None
-        loadType = "full" if args.full else "replace"
-        loadType = "replace" if args.replace else "full"
+        loadType = args.load_type
         saveInputFileListPath = args.save_file_list_path
         pruneDocumentSize = float(args.prune_document_size) if args.prune_document_size else None
+        mergeContentTypes = ["vrpt"] if args.merge_validation_reports else None
         cachePath = args.cache_path if args.cache_path else "."
         cachePath = os.path.abspath(cachePath)
         rebuildCache = args.rebuild_cache if args.rebuild_cache else False
@@ -201,15 +227,34 @@ def main():
     # ----------------------- - ----------------------- - ----------------------- - ----------------------- - ----------------------- -
     # Read any input path lists -
     #
-    inputPathList = None
-    if fPath:
-        mu = MarshalUtil(workPath=cachePath)
-        inputPathList = mu.doImport(fPath, fmt="list")
-        if not inputPathList:
-            logger.error("Missing or empty input file path list %s", fPath)
+    mu = MarshalUtil(workPath=cachePath)
+    #
+    inputIdList = None
+    if idListPath:
+        inputIdList = mu.doImport(idListPath, fmt="list")
+        if not inputIdList:
+            logger.error("Missing or empty input ID list %s", idListPath)
             exit(1)
     #
+    completeIdList = None
+    if completeIdListPath:
+        completeIdList = mu.doImport(completeIdListPath, fmt="list")
+        if not completeIdList:
+            logger.error("Missing or empty input ID list %s", completeIdListPath)
+            exit(1)
+    #
+    inputPathList = None
+    if fileListPath:
+        inputPathList = mu.doImport(fileListPath, fmt="list")
+        if not inputPathList:
+            logger.error("Missing or empty input file path list %s", fileListPath)
+            exit(1)
     ##
+    # if inputIdList and completeIdList:
+    #     ...
+
+    # ----------------------- - ----------------------- - ----------------------- - ----------------------- - ----------------------- -
+    # Construct and run the appropriate loader
     if args.db_type == "mongo":
         mw = PdbxLoader(
             cfgOb,
@@ -217,12 +262,67 @@ def main():
             resourceName="MONGO_DB",
             numProc=numProc,
             chunkSize=chunkSize,
+            maxStepLength=maxStepLength,
             fileLimit=fileLimit,
             verbose=debugFlag,
             readBackCheck=readBackCheck,
             rebuildSchemaFlag=rebuildSchemaFlag,
         )
         #
+        # --- Most common arguments: load_pdbx_core, load_pdbx_comp_model_core, load_bird_chem_comp_core_ref
+        if args.load_pdbx_core:
+            ok = mw.load(
+                "pdbx_core",
+                loadType=loadType,
+                inputPathList=inputPathList,
+                inputIdCodeList=inputIdList,
+                styleType=args.document_style,
+                dataSelectors=["PUBLIC_RELEASE"],
+                failedFilePath=failedFilePath,
+                saveInputFileListPath=saveInputFileListPath,
+                pruneDocumentSize=pruneDocumentSize,
+                regexPurge=args.regex_purge,
+                validationLevel=schemaLevel,
+                mergeContentTypes=mergeContentTypes,
+            )
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
+        #
+        if args.load_pdbx_comp_model_core:
+            ok = mw.load(
+                "pdbx_comp_model_core",
+                loadType=loadType,
+                inputPathList=inputPathList,
+                inputIdCodeList=inputIdList,
+                styleType=args.document_style,
+                dataSelectors=["PUBLIC_RELEASE"],
+                failedFilePath=failedFilePath,
+                saveInputFileListPath=saveInputFileListPath,
+                pruneDocumentSize=pruneDocumentSize,
+                regexPurge=args.regex_purge,
+                validationLevel=schemaLevel,
+                mergeContentTypes=mergeContentTypes,
+            )
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
+        #
+        if args.load_bird_chem_comp_core_ref:
+            ok = mw.load(
+                "bird_chem_comp_core",
+                loadType=loadType,
+                inputPathList=inputPathList,
+                inputIdCodeList=inputIdList,
+                styleType=args.document_style,
+                dataSelectors=["PUBLIC_RELEASE"],
+                failedFilePath=failedFilePath,
+                saveInputFileListPath=saveInputFileListPath,
+                pruneDocumentSize=pruneDocumentSize,
+                regexPurge=args.regex_purge,
+                validationLevel=schemaLevel,
+                mergeContentTypes=mergeContentTypes,
+            )
+            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
+        # ---
+        #
+        # --- Other, less common types
         if args.load_chem_comp_ref:
             ok = mw.load(
                 "chem_comp",
@@ -265,20 +365,6 @@ def main():
             )
             okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
         #
-        if args.load_bird_chem_comp_core_ref:
-            ok = mw.load(
-                "bird_chem_comp_core",
-                loadType=loadType,
-                inputPathList=inputPathList,
-                styleType=args.document_style,
-                dataSelectors=["PUBLIC_RELEASE"],
-                failedFilePath=failedFilePath,
-                saveInputFileListPath=saveInputFileListPath,
-                pruneDocumentSize=pruneDocumentSize,
-                validationLevel=schemaLevel,
-            )
-            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
-        #
         if args.load_bird_ref:
             ok = mw.load(
                 "bird",
@@ -310,20 +396,6 @@ def main():
         if args.load_entry_data:
             ok = mw.load(
                 "pdbx",
-                loadType=loadType,
-                inputPathList=inputPathList,
-                styleType=args.document_style,
-                dataSelectors=["PUBLIC_RELEASE"],
-                failedFilePath=failedFilePath,
-                saveInputFileListPath=saveInputFileListPath,
-                pruneDocumentSize=pruneDocumentSize,
-                validationLevel=schemaLevel,
-            )
-            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
-        #
-        if args.load_pdbx_core:
-            ok = mw.load(
-                "pdbx_core",
                 loadType=loadType,
                 inputPathList=inputPathList,
                 styleType=args.document_style,
@@ -399,20 +471,6 @@ def main():
             ok = mw.load(
                 "pdbx_core",
                 collectionLoadList=["pdbx_core_assembly"],
-                loadType=loadType,
-                inputPathList=inputPathList,
-                styleType=args.document_style,
-                dataSelectors=["PUBLIC_RELEASE"],
-                failedFilePath=failedFilePath,
-                saveInputFileListPath=saveInputFileListPath,
-                pruneDocumentSize=pruneDocumentSize,
-                validationLevel=schemaLevel,
-            )
-            okS = loadStatus(mw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
-        #
-        if args.load_pdbx_comp_model_core:
-            ok = mw.load(
-                "pdbx_comp_model_core",
                 loadType=loadType,
                 inputPathList=inputPathList,
                 styleType=args.document_style,
