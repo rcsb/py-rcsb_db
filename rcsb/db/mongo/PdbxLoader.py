@@ -39,6 +39,7 @@
 #     19-Mar-2024 dwp  Add additional quality assurance measure to catch and cleanup pre-loaded documents in which one or more related
 #                      containers fails to be read properly (incl. validation reports);
 #                      Begin adding code to support weekly update workflow CLI requirements
+#     26-Mar-2024 dwp  Add arguments and logic to support CLI usage from weekly-update workflow
 #
 ##
 """
@@ -156,10 +157,12 @@ class PdbxLoader(object):
         useNameFlag=True,
         updateSchemaOnReplace=True,
         validateFailures=True,
+        rebuildCache=False,
         reloadPartial=True,
         providerTypeExclude=None,
         restoreUseGit=True,
         restoreUseStash=True,
+        forceReload=False,
     ):
         """Driver method for loading PDBx/mmCIF content into the Mongo document store.
 
@@ -181,10 +184,12 @@ class PdbxLoader(object):
             useNameFlag (bool, optional): Use container name as unique identifier otherwise use UID property.
             updateSchemaOnReplace (bool, optional): Update validation schema for loadType == 'replace'
             validateFailures (bool, optional): output validation report on load failures
+            rebuildCache (bool, optional): whether to force rebuild of all cache resources (default is False, to just check them)
             reloadPartial (bool, optional): on load failures attempt reload of partial objects.
             providerTypeExclude (str, optional): exclude dictionary method provider by type name. Defaults to None.
             restoreUseStash (bool, optional): restore cache resources using stash storage.  Defaults to True.
             restoreUseGit (bool, optional): restore cache resources using git storage.  Defaults to True.
+            forceReload (bool, optional): Force re-load of provided ID list (i.e., don't just load delta; useful for manual/test runs)
         Returns:
             bool: True on success or False otherwise
 
@@ -199,19 +204,32 @@ class PdbxLoader(object):
             startTime = self.__begin(message="loading operation")
             #
             # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
-            # if databaseName in ["pdbx_core", "pdbx_comp_model_core"]:
-            #     totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=databaseName + "_entry")
-            #     subsetIdsAlreadyLoaded = list(set(totalIdsAlreadyLoaded).intersection(set(inputIdCodeList)))  # Get the list of IDs from only the given sublist that are already loaded
-            #     idCodesToLoadL = list(set(inputIdCodeList) ^ set(subsetIdsAlreadyLoaded))  # Get a list of the delta between the two lists—-i.e., the entry IDs needed to be loaded
-            #     logger.info(
-            #         "Total # IDs already loaded %d, # IDs provided as input %d (of which %d are already loaded), # IDs to load for current iteration %d",
-            #         len(totalIdsAlreadyLoaded),
-            #         len(inputIdCodeList),
-            #         len(subsetIdsAlreadyLoaded),
-            #         len(idCodesToLoadL)
-            #     )
+            idCodesToLoadL = inputIdCodeList
+            if databaseName in ["pdbx_core", "pdbx_comp_model_core"]:
+                totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=databaseName + "_entry")
+                # Get the list of IDs from only the given sublist that are already loaded
+                subsetIdsAlreadyLoaded = list(set(totalIdsAlreadyLoaded).intersection(set(inputIdCodeList)))
+                if not forceReload:
+                    # Get a list of the delta between the two lists—-i.e., the entry IDs needed to be loaded
+                    idCodesToLoadL = list(set(inputIdCodeList) ^ set(subsetIdsAlreadyLoaded))
+                else:
+                    idCodesToLoadL = inputIdCodeList
+                logger.info(
+                    "Total # IDs already loaded %d, # IDs provided as input %d (of which %d are already loaded), # IDs to load for current iteration %d",
+                    len(totalIdsAlreadyLoaded),
+                    len(inputIdCodeList),
+                    len(subsetIdsAlreadyLoaded),
+                    len(idCodesToLoadL)
+                )
+                # Check if all entries are already loaded, and if so, exit here.
+                if len(idCodesToLoadL) == 0:
+                    logger.info("All entries for current iteration already loaded. Skipping re-load.")
+                    return True
+                #
+                if len(idCodesToLoadL) < 100:
+                    logger.info("List of entries to load: %r", idCodesToLoadL)
             #
-            locatorObjList = self.__rpP.getLocatorObjList(contentType=databaseName, inputPathList=inputPathList, inputIdCodeList=inputIdCodeList, mergeContentTypes=mergeContentTypes)
+            locatorObjList = self.__rpP.getLocatorObjList(contentType=databaseName, inputPathList=inputPathList, inputIdCodeList=idCodesToLoadL, mergeContentTypes=mergeContentTypes)
             logger.info("Loading database %s (%r) with path length %d", databaseName, loadType, len(locatorObjList))
             #
             if saveInputFileListPath:
@@ -233,7 +251,8 @@ class PdbxLoader(object):
                 self.__cfgOb, cachePath=self.__cachePath, restoreUseStash=restoreUseStash, restoreUseGit=restoreUseGit, providerTypeExclude=providerTypeExclude
             )
             # Cache dependencies in serial mode.
-            ok = dmrP.cacheResources(useCache=True)
+            useCacheInCheck = not rebuildCache
+            ok = dmrP.cacheResources(useCache=useCacheInCheck)
             if not ok:
                 logger.error("Checking cached resource dependencies failed - %s load (%r) aborted", databaseName, loadType)
                 return ok
@@ -351,6 +370,22 @@ class PdbxLoader(object):
             ok = len(failList) == 0
             self.__end(startTime, "Loading operation completed with status " + str(ok))
             #
+            # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
+            if databaseName in ["pdbx_core", "pdbx_comp_model_core"]:
+                totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=databaseName + "_entry")
+                # Get the list of IDs from only the given sublist that are already loaded
+                subsetIdsAlreadyLoaded = list(set(totalIdsAlreadyLoaded).intersection(set(inputIdCodeList)))
+                idCodesNotLoadedL = list(set(inputIdCodeList) ^ set(subsetIdsAlreadyLoaded))
+                ok2 = len(idCodesNotLoadedL) == 0
+                if not ok2:
+                    logger.error(
+                        "%d entries were NOT loaded in current iteration (%d out of input %d were loaded)",
+                        len(idCodesNotLoadedL),
+                        len(subsetIdsAlreadyLoaded),
+                        len(inputIdCodeList),
+                    )
+                ok = ok2 and ok
+
             # Create the status objects for the current operations
             # ----
             sFlag = "Y" if ok else "N"
@@ -364,7 +399,7 @@ class PdbxLoader(object):
             if ok:
                 logger.info("Completed loading %s with status %r loaded %d paths", databaseName, ok, numPaths)
             else:
-                logger.info(
+                logger.error(
                     "Completed loading %s with status %r failure count %d of %d paths: %r",
                     databaseName,
                     ok,
@@ -372,6 +407,7 @@ class PdbxLoader(object):
                     numPaths,
                     [os.path.basename(pth) for pth in failedPathList],
                 )
+                # raise ValueError("Failed loading %s - Check log for more details" % databaseName)
             #
             return ok
         except Exception as e:
@@ -1035,8 +1071,64 @@ class PdbxLoader(object):
                     bsonSchema = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="BSON", level=validationLevel)
                 ok = self.__createCollection(databaseName, collectionName, indexDL=indexDL, bsonSchema=bsonSchema)
                 logger.debug("Collection create return status %r", ok)
+                colIdL = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=collectionName)
+                ok = len(colIdL) == 0 and ok
+                logger.info("Collection wipe and create return status %r", ok)
             #
             return ok
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+
+        return False
+
+    def loadCompleteCheck(
+        self,
+        databaseName,
+        completeIdCodeList=None,
+        completeIdCodeCount=None,
+    ):
+        """Driver method for checking if DB loading is complete (following the execution of the individual sublist tasks).
+
+        Args:
+            databaseName (str): A content datbase schema (e.g. 'pdbx_core', 'pdbx_comp_model_core)
+            completeIdCodeList (list, optional): Complete list of ID codes that should be loaded by the end of all sublist loader tasks
+            completeIdCodeCount (int, optional): Number of total ID codes that should be loaded by the end of all sublist loader tasks
+        Returns:
+            bool: True on success or False otherwise
+        """
+        try:
+            logger.info("Beginning load completeness check for database %s", databaseName)
+            if databaseName not in ["pdbx_core", "pdbx_comp_model_core"]:
+                logger.error("Unsupported database for completed load checking %s", databaseName)
+                return False
+            # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
+            totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=databaseName + "_entry")
+            if completeIdCodeList:
+                # Get the list of IDs from only the given sublist that are already loaded
+                subsetIdsAlreadyLoaded = list(set(totalIdsAlreadyLoaded).intersection(set(completeIdCodeList)))
+                # Get a list of the delta between the two lists—-i.e., the entry IDs needed to be loaded
+                idsNotLoaded = list(set(completeIdCodeList) ^ set(subsetIdsAlreadyLoaded))
+                logger.info(
+                    "Total # IDs already loaded %d, total # IDs for complete load %d (of which %d are already loaded), # IDs to load for current iteration %d",
+                    len(totalIdsAlreadyLoaded),
+                    len(completeIdCodeList),
+                    len(subsetIdsAlreadyLoaded),
+                    len(idsNotLoaded)
+                )
+                # Check if all entries are already loaded, and if so, exit here.
+                if len(idsNotLoaded) == 0:
+                    logger.info("All entries have been loaded (%r entries)", len(completeIdCodeList))
+                    return True
+                else:
+                    logger.error("Not all entries have been loaded (missing %r entries)", len(idsNotLoaded))
+            elif completeIdCodeCount:
+                numIdsNotLoaded = completeIdCodeCount - len(totalIdsAlreadyLoaded)
+                if numIdsNotLoaded == 0:
+                    logger.info("All entries have been loaded (%r entries)", completeIdCodeCount)
+                    return True
+                else:
+                    logger.error("Not all entries have been loaded (missing %r entries)", numIdsNotLoaded)
+
         except Exception as e:
             logger.exception("Failing with %s", str(e))
 
