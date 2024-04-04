@@ -9,6 +9,7 @@
 #  28-Oct-2018 jdw adjustments for new configuration organization
 #   4-Jan-2019 jdw differentiate site and application config sections for provenance.
 #   1-Jun-2022 dwp Add clusterFileNameTemplate input argument
+#   4-Apr-2023 dwp Add maxStepLength input argument (the larger the length, the faster the load)
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -52,12 +53,13 @@ class SequenceClustersEtlWorker(object):
 
     """
 
-    def __init__(self, cfgOb, workPath=None, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False, clusterFileNameTemplate=None):
+    def __init__(self, cfgOb, workPath=None, numProc=2, chunkSize=100, maxStepLength=40000, readBackCheck=False, documentLimit=None, verbose=False, clusterFileNameTemplate=None):
         self.__cfgOb = cfgOb
         self.__cachePath = workPath
         self.__readBackCheck = readBackCheck
         self.__numProc = numProc
         self.__chunkSize = chunkSize
+        self.__maxStepLength = maxStepLength
         self.__documentLimit = documentLimit
         self.__resourceName = "MONGO_DB"
         self.__verbose = verbose
@@ -144,6 +146,7 @@ class SequenceClustersEtlWorker(object):
                 self.__resourceName,
                 numProc=self.__numProc,
                 chunkSize=self.__chunkSize,
+                maxStepLength=self.__maxStepLength,
                 documentLimit=self.__documentLimit,
                 verbose=self.__verbose,
                 readBackCheck=self.__readBackCheck,

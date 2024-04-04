@@ -87,6 +87,7 @@ class DocumentLoader(object):
             #
             docList = documentList[: self.__documentLimit] if self.__documentLimit else documentList
             logger.debug("Full document list length %d limit %r", len(documentList), self.__documentLimit)
+            logger.info("Loading documents with numProc %r chunkSize %r maxStepLength %r", self.__numProc, self.__chunkSize, self.__maxStepLength)
             numProc = self.__numProc
             chunkSize = self.__chunkSize if docList and self.__chunkSize < len(docList) else 0
             #

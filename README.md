@@ -64,8 +64,19 @@ install this system.   Once HomeBrew is installed, you can further install the
 are required to support the ExDB  tools.  HomeBrew also provides a variety of options for
 managing a [Python virtual environments](https://gist.github.com/Geoyi/f55ed54d24cc9ff1c14bd95fac21c042).
 
+### Configuration File
+
+RCSB/PDB repository path details are stored as configuration options.
+An example configuration file included in this package is viewable under `rcsb/db/config`: [exdb-config-example.yml](https://github.com/rcsb/py-rcsb_db/blob/master/rcsb/db/config/exdb-config-example.yml). This example references dictionary resources and mock repository data
+provided in the package in `rcsb/mock-data/*`. The `site_info_configuration` section
+in this file provides database server connection details and common path details.
+This is followed by sections specifying the dictionaries, helper functions, and
+configuration used to define the schema for the each supported content type
+(e.g., pdbx_core, chem_comp_core, bird_chem_comp_core,.. ).
+
 ### Command Line Interfaces
 
+#### Schema File Generation
 A convenience CLI `schema_update_cli` is provided for generating operational schema from
 PDBx/mmCIF dictionary metadata.  Schema are encoded for the ExDB  API (rcsb), and
 for the document schema encoded in JSON and BSON formats.  The latter schema can be used to
@@ -142,6 +153,8 @@ ________________________________________________________________________________
 
 ```
 
+##### Example Usage
+
 For example, the following command will generate the JSON and BSON schema for the collections in the
 pdbx_core schema.
 
@@ -154,6 +167,8 @@ schema_update_cli  --mock --schema_types json,bson \
                    --config_name site_info_configuration
 ```
 
+#### ExDB Loading
+
 A convenience CLI `exdb_repo_load_cli` is provided to support loading PDB repositories
 containing entry and chemical reference data content types in the form of document collections
 compatible with MongoDB.
@@ -161,23 +176,17 @@ compatible with MongoDB.
 ```bash
 exdb_repo_load_cli --help
 
-usage: exdb_repo_load_cli [-h] [--full] [--replace] [--load_chem_comp_ref]
-                          [--load_chem_comp_core_ref]
-                          [--load_bird_chem_comp_ref]
-                          [--load_bird_chem_comp_core_ref] [--load_bird_ref]
-                          [--load_bird_family_ref] [--load_entry_data]
-                          [--load_pdbx_core] [--load_pdbx_core_merge]
-                          [--load_pdbx_core_entry] [--load_pdbx_core_entity]
-                          [--load_pdbx_core_entity_monomer]
-                          [--load_pdbx_core_assembly] [--load_ihm_dev]
+usage: exdb_repo_load_cli [-h] [--op OP_TYPE] [--load_type LOAD_TYPE]
+                          [--database DATABASE_NAME]
                           [--config_path CONFIG_PATH]
                           [--config_name CONFIG_NAME] [--db_type DB_TYPE]
+                          [--num_proc NUM_PROC] [--chunk_size CHUNK_SIZE]
                           [--document_style DOCUMENT_STYLE]
-                          [--read_back_check] [--schema_level SCHEMA_LEVEL]
+                          [--disable_read_back_check] [--schema_level SCHEMA_LEVEL]
+                          [--load_id_list_path LOAD_ID_LIST_PATH]
                           [--load_file_list_path LOAD_FILE_LIST_PATH]
                           [--fail_file_list_path FAIL_FILE_LIST_PATH]
                           [--save_file_list_path SAVE_FILE_LIST_PATH]
-                          [--num_proc NUM_PROC] [--chunk_size CHUNK_SIZE]
                           [--file_limit FILE_LIMIT]
                           [--prune_document_size PRUNE_DOCUMENT_SIZE]
                           [--debug] [--mock] [--cache_path CACHE_PATH]
@@ -186,76 +195,144 @@ usage: exdb_repo_load_cli [-h] [--full] [--replace] [--load_chem_comp_ref]
 
 optional arguments:
   -h, --help            show this help message and exit
-  --full                Fresh full load in a new tables/collections
-  --replace             Load with replacement in an existing table/collection
-                        (default)
-  --load_chem_comp_ref  Load Chemical Component reference definitions (public
-                        subset)
-  --load_chem_comp_core_ref
-                        Load Chemical Component Core reference definitions
-                        (public subset)
-  --load_bird_chem_comp_ref
-                        Load Bird Chemical Component reference definitions
-                        (public subset)
-  --load_bird_chem_comp_core_ref
-                        Load Bird Chemical Component Core reference
-                        definitions (public subset)
-  --load_bird_ref       Load Bird reference definitions (public subset)
-  --load_bird_family_ref
-                        Load Bird Family reference definitions (public subset)
-  --load_entry_data     Load PDBx entry data (current released subset)
-  --load_pdbx_core      Load all PDBx core collections (current released
-                        subset)
-  --load_pdbx_core_merge
-                        Load all PDBx core collections with merged content
-                        (current released subset)
-  --load_pdbx_core_entry
-                        Load PDBx core entry (current released subset)
-  --load_pdbx_core_entity
-                        Load PDBx core entity (current released subset)
-  --load_pdbx_core_entity_monomer
-                        Load PDBx core entity monomer (current released
-                        subset)
-  --load_pdbx_core_assembly
-                        Load PDBx core assembly (current released subset)
-  --load_ihm_dev        Load I/HM DEV model data (current released subset)
+  --op {pdbx-loader,build-resource-cache,pdbx-db-wiper,pdbx-id-list-splitter,pdbx-loader-check,etl-entity-sequence-clusters,etl-repository-holdings}
+                        Loading operation to perform
+  --load_type {replace,full}
+                        Type of load ('replace' for incremental and
+                        multi-worker load, 'full' for complete and
+                        fresh single-worker load)
+  --database {pdbx_core,pdbx_comp_model_core,bird_chem_comp_core,chem_comp,chem_comp_core,bird_chem_comp,bird,bird_family,ihm_dev}
+                        Database to load (most common choices are:
+                        'pdbx_core', 'pdbx_comp_model_core', or
+                        'bird_chem_comp_core')
   --config_path CONFIG_PATH
                         Path to configuration options file
   --config_name CONFIG_NAME
                         Configuration section name
-  --db_type DB_TYPE     Database server type (default=mongo)
   --document_style DOCUMENT_STYLE
-                        Document organization (rowwise_by_name_with_cardinalit
-                        y|rowwise_by_name|columnwise_by_name|rowwise_by_id|row
-                        wise_no_name
-  --read_back_check     Perform read back check on all documents
-  --schema_level SCHEMA_LEVEL
-                        Schema validation level (full|min default=None)
-  --load_file_list_path LOAD_FILE_LIST_PATH
-                        Input file containing load file path list (override
-                        automatic repository scan)
-  --fail_file_list_path FAIL_FILE_LIST_PATH
-                        Output file containing file paths that fail to load
-  --save_file_list_path SAVE_FILE_LIST_PATH
-                        Save repo file paths from automatic file system scan
-                        in this path
+                        Document organization (rowwise_by_name_with_c
+                        ardinality|rowwise_by_name|columnwise_by_name
+                        |rowwise_by_id|rowwise_no_name)
+  --cache_path CACHE_PATH
+                        Cache path for resource files
   --num_proc NUM_PROC   Number of processes to execute (default=2)
   --chunk_size CHUNK_SIZE
                         Number of files loaded per process
+  --max_step_length MAX_STEP_LENGTH
+                        Maximum subList size (default=500)
+  --schema_level SCHEMA_LEVEL
+                        Schema validation level (full|min)
+  --collection_list COLLECTION_LIST
+                        Specific collections to load
+  --load_id_list_path LOAD_ID_LIST_PATH
+                        Input file containing the list of IDs to load
+                        in the current iteration by a single worker
+  --holdings_file_path HOLDINGS_FILE_PATH
+                        File containing the complete list of all IDs
+                        (or holdings files) that will be loaded
+  --load_file_list_path LOAD_FILE_LIST_PATH
+                        Input file containing load file path list
+                        (override automatic repository scan)
+  --fail_file_list_path FAIL_FILE_LIST_PATH
+                        Output file containing file paths that fail
+                        to load
+  --save_file_list_path SAVE_FILE_LIST_PATH
+                        Save repo file paths from automatic file
+                        system scan in this path
+  --load_file_list_dir LOAD_FILE_LIST_DIR
+                        Directory path for storing load file lists
+  --num_sublists NUM_SUBLISTS
+                        Number of sublists to create/load for the
+                        associated database
+  --force_reload        Force re-load of provided ID list (i.e.,
+                        don't just load delta; useful for manual/test
+                        runs).
+  --provider_type_exclude PROVIDER_TYPE_EXCLUDE
+                        Resource provider types to exclude
+  --db_type DB_TYPE     Database server type (default=mongo)
   --file_limit FILE_LIMIT
                         Load file limit for testing
   --prune_document_size PRUNE_DOCUMENT_SIZE
                         Prune large documents to this size limit (MB)
+  --regex_purge         Perform additional regex-based purge of all
+                        pre-existing documents for loadType != 'full'
+  --data_selectors  [ ...]
+                        Data selectors, space-separated.
+  --disable_read_back_check
+                        Disable read back check on all documents
+  --disable_merge_validation_reports
+                        Disable merging of validation report data
+                        with the primary content type
   --debug               Turn on verbose logging
   --mock                Use MOCK repository configuration for testing
-  --cache_path CACHE_PATH
-                        Cache path for resource files
   --rebuild_cache       Rebuild cached resource files
   --rebuild_schema      Rebuild schema on-the-fly if not cached
   --vrpt_repo_path VRPT_REPO_PATH
                         Path to validation report repository
 ________________________________________________________________________________
 ```
+
+##### Example Usage
+The following commands demonstrate how each type of operation (`--op`) is used for loading of PDB repository data to ExDB. For all commands, the following environmental variables must first be set:
+
+```bash
+export CONFIG_SUPPORT_TOKEN_ENV=personal_token_used_for_decrypting_config_variables
+export OE_LICENSE=/path/to/oe_license.txt
+export NLTK_DATA=/path/to/nltk_data
+```
+
+`--op build-resource-cache` - Build the external resource cache that will be used for and integrated with the loading of PDB structure data.
+```bash
+exdb_repo_load_cli --op "build-resource-cache" \
+--config_path "/opt/etl-scratch/config/exdb-loader-config.yml" \
+--config_name "site_info_remote_configuration" \
+--num_proc 6  \
+--cache_path "/opt/etl-scratch/data/CACHE" \
+
+```
+
+`--op pdbx-id-list-splitter` - Split the full list of input IDs into smaller, equally-sized sublists.
+```bash
+exdb_repo_load_cli --op "pdbx-id-list-splitter" \
+--database "pdbx_core" \
+--config_path "/opt/etl-scratch/config/exdb-loader-config.yml" \
+--config_name "site_info_remote_configuration" \
+--cache_path "/opt/etl-scratch/data/CACHE" \
+--load_file_list_dir "/opt/etl-scratch/work-dir/load_file_lists" \
+--holdings_file_path "https://files.wwpdb.org/pub/pdb/holdings/released_structures_last_modified_dates.json.gz" \
+--num_sublists 10 \
+
+```
+
+`--op pdbx-loader` - Load a list of entry IDs to ExDB.
+```bash
+exdb_repo_load_cli --op "pdbx-loader" \
+--database "pdbx_core" \
+--load_type replace  \
+--config_path /opt/etl-scratch/config/exdb-loader-config.yml \
+--config_name site_info_remote_configuration \
+--num_proc 8  \
+--chunk_size 5  \
+--max_step_length 500 \
+--load_id_list_path "/opt/etl-scratch/work-dir/load_file_lists/pdbx_core_ids-1.txt" \
+--cache_path "/opt/etl-scratch/data/CACHE" \
+
+```
+
+`--op pdbx-loader-check` - Check the resulting ExDB database to confirm that all expected documents were loaded.
+```bash
+exdb_repo_load_cli --op "pdbx-loader-check" \
+--database "pdbx_core" \
+--config_path "/opt/etl-scratch/config/exdb-loader-config.yml" \
+--config_name "site_info_remote_configuration" \
+--cache_path "/opt/etl-scratch/data/CACHE" \
+--load_file_list_dir "/opt/etl-scratch/work-dir/load_file_lists" \
+--holdings_file_path "https://files.wwpdb.org/pub/pdb/holdings/released_structures_last_modified_dates.json.gz" \
+--num_sublists 10 \
+
+```
+
+#### Repository Scanning
 
 Part of the schema definition process supported by this module involves refining
 the dictionary metadata with more specific data typing and coverage details.
@@ -327,6 +404,7 @@ ________________________________________________________________________________
 
 ```
 
+#### ETL Processing
 The following CLI provides a preliminary access to ETL functions for processing
 derived content types such as sequence comparative data.
 
@@ -381,7 +459,9 @@ ________________________________________________________________________________
 
 ```
 
-### Examples
+### Additional Examples
+
+(*Note: The examples below are outdated and may not function as described. They are only kept here for historical reference.*)
 
 If you are working in the source repository, then you can run the CLI commands in the following manner.
 The following examples load data in the mock repositories in source distribution assuming you have a local
@@ -394,7 +474,7 @@ For instance, to perform a fresh/full load of all of the chemical component defi
 
 ```bash
 
-cd rcsb/db/scripts
+cd rcsb/db/cli
 python RepoLoadExec.py --full  --load_chem_comp_ref  \
                       --config_path ../config/exdb-config-example.yml \
                       --config_name site_info_configuration \
@@ -407,7 +487,7 @@ this same data.
 
 ```bash
 
-cd rcsb/db/scripts
+cd rcsb/db/cli
 python RepoLoadExec.py  --mock --full  --load_entry_data \
                      --config_path ../config/exdb-config-example.yml \
                      --config_name site_info_configuration \
@@ -419,128 +499,4 @@ python RepoLoadExec.py --mock --replace  --load_entry_data \
                       --config_name site_info_configuration \
                       --load_file_list_path  LATEST_PDBX_LOAD_LIST.txt \
                       --fail_file_list_path failed-entry-path-list.txt
-```
-
-### Configuration Example
-
-RCSB/PDB repository path details are stored as configuration options.
-An example configuration file included in this package is shown below.
-This example is references dictionary resources and mock repository data
-provided in the package in `rcsb/mock-data/*`. Example configuration details are
-stored in rcsb/db/config/exdb-config-example.yml.The `site_info_configuration` section
-in this file provides database server connection details and common path details.
-This is followed by sections specifying the dictionaries, helper functions, and
-configuration used to define the schema for the each supported content type
-(e.g., pdbx_core, chem_comp_core, bird_chem_comp_core,.. ).
-
-```yaml
-site_info_configuration:
-  # Site specific path and server configuration options - (REFERENCING DEVELOPMENT RESOURCES)
-  #
-  CONFIG_SUPPORT_TOKEN: CONFIG_SUPPORT_TOKEN_ENV
-  #
-  # Database server connection details
-  #
-  MONGO_DB_HOST: localhost
-  MONGO_DB_PORT: "27017"
-  _MONGO_DB_USER_NAME: ""
-  _MONGO_DB_PASSWORD: ""
-  MYSQL_DB_HOST_NAME: localhost
-  MYSQL_DB_PORT_NUMBER: "3306"
-  _MYSQL_DB_USER_NAME: wrIzBGtCsQmkjc7tbEPQ3oEaOnpvivXaKcQsvXD6kn4KHMvA7LCL4O9GlAI=
-  _MYSQL_DB_PASSWORD: qXPp32Z6DhNVMwo9fQIK5+KB13c1Jd43E3Bn6LmJcSyXc0NAt4H/hwo/xglYpmELV5Vqaw==
-  _MYSQL_DB_PASSWORD_ALT: s6mNxq3FIwZLrLiIeHpDZQcuVxfQqrR3gA+dEMOGgHwsjrJV5da08H74RmnNRus74Q==
-  MYSQL_DB_DATABASE_NAME: mysql
-  CRATE_DB_HOST: localhost
-  CRATE_DB_PORT: "4200"
-  COCKROACH_DB_HOST: localhost
-  COCKROACH_DB_PORT: "26257"
-  COCKROACH_DB_NAME: system
-  _COCKROACH_DB_USER_NAME: HR2ez8iLbEpvN+hXKIQS3qa6/QpiFRpf/WvrfHiwfjcL09E+iWTQJhsxTsw=
-  #
-  # Primary repository data and related computed repository data paths
-  #
-  BIRD_REPO_PATH: MOCK_BIRD_REPO
-  BIRD_FAMILY_REPO_PATH: MOCK_BIRD_FAMILY_REPO
-  BIRD_CHEM_COMP_REPO_PATH: MOCK_BIRD_CC_REPO
-  CHEM_COMP_REPO_PATH: MOCK_CHEM_COMP_REPO
-  PDBX_REPO_PATH: MOCK_PDBX_SANDBOX
-  RCSB_EXCHANGE_SANDBOX_PATH: MOCK_EXCHANGE_SANDBOX
-  IHM_DEV_REPO_PATH: MOCK_IHM_REPO
-  VRPT_REPO_PATH: MOCK_VALIDATION_REPORTS
-  VRPT_REPO_PATH_ENV: VRPT_REPO_PATH_ALT
-  #
-  RCSB_EDMAP_LIST_PATH: MOCK_EXCHANGE_SANDBOX/status/edmaps.json
-  #
-  RCSB_SEQUENCE_CLUSTER_DATA_PATH: cluster_data/mmseqs_clusters_current
-  SIFTS_SUMMARY_DATA_PATH: sifts-summary
-  # -------------------------------------------------------------------------------------------
-  #   -- Below are common across current deployments -
-  #
-  # Supporting and integrated resource data cache directory names
-  #
-  #DRUGBANK_CACHE_DIR: DrugBank
-  _DRUGBANK_AUTH_USERNAME: 0qrpNd4OhGuVsJqEpcsAVEovZ0hl6QkgxmbTy3bPssd06Z9tuM6bJqgsWwmFCd0JnjIMIEWyKPMmF1pI5g==
-  _DRUGBANK_AUTH_PASSWORD: lA/K132i8DOtLdMHfm3gpNqprZ6ABKjsCRxfcXIMnxpKQzBv/B6dmC7x1vRO86JhqdT0b84=
-  DRUGBANK_MOCK_URL_TARGET: DrugBank/full_database.zip
-  #
-  #ATC_CACHE_DIR: atc
-  #CHEM_COMP_CACHE_DIR: chem_comp
-  NCBI_TAXONOMY_CACHE_DIR: NCBI
-  ENZYME_CLASSIFICATION_CACHE_DIR: ec
-  STRUCT_DOMAIN_CLASSIFICATION_CACHE_DIR: domains_struct
-  SIFTS_SUMMARY_CACHE_DIR: sifts_summary
-  DICTIONARY_CACHE_DIR: dictionaries
-  DATA_TYPE_INFO_CACHE_DIR: data_type_and_coverage
-  REPO_UTIL_CACHE_DIR: repo_util
-  EXDB_CACHE_DIR: exdb
-  CITATION_REFERENCE_CACHE_DIR: cit_ref
-  #
-  #
-  PROVENANCE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/provenance/rcsb_extend_provenance_info.json
-  PROVENANCE_INFO_CACHE_DIR: provenance
-  #
-  SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/schema_definitions
-  SCHEMA_DEFINITION_CACHE_DIR: schema_definitions
-  JSON_SCHEMA_DEFINITION_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/json_schema_definitions
-  JSON_SCHEMA_DEFINITION_CACHE_DIR: json_schema_definitions
-  #
-  # Helper class binding and mappings
-  #
-  DICT_METHOD_HELPER_MODULE_PATH_MAP:
-    rcsb.utils.dictionary.DictMethodEntryHelper: rcsb.utils.dictionary.DictMethodEntryHelper
-    rcsb.utils.dictionary.DictMethodChemRefHelper: rcsb.utils.dictionary.DictMethodChemRefHelper
-    rcsb.utils.dictionary.DictMethodEntityHelper: rcsb.utils.dictionary.DictMethodEntityHelper
-    rcsb.utils.dictionary.DictMethodAssemblyHelper: rcsb.utils.dictionary.DictMethodAssemblyHelper
-    rcsb.utils.dictionary.DictMethodEntityInstanceHelper: rcsb.utils.dictionary.DictMethodEntityInstanceHelper
-  # ------ ------ ------ ------ ------ ------ ------ -------
-  # ADDED rcsb.db V0.966 Source dictionary locators -
-  #
-  PDBX_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/reference/mmcif_pdbx_v5_next.dic
-  RCSB_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/dist/rcsb_mmcif_ext.dic
-  IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/reference/ihm-extension.dic
-  FLR_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/reference/flr-extension.dic
-  VRPT_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/reference/vrpt_mmcif_ext.dic
-  VRPT_DICT_MAPPING_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/reference/vrpt_dictmap.json
-  # ------ ------ ------ ------ ------ ------ ------ ------ ------
-  # Added in rcsb.db V0.966 - Data type details and type mapping
-  APP_DATA_TYPE_INFO_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/data_type_and_coverage/app_data_type_mapping.cif
-  INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/data_type_and_coverage
-  #
-  CONTENT_DEF_HELPER_MODULE: rcsb.db.helpers.ContentDefinitionHelper
-  DOCUMENT_DEF_HELPER_MODULE: rcsb.db.helpers.DocumentDefinitionHelper
-  CONFIG_APPEND_LOCATOR_PATHS:
-    - https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/config/exdb-config-schema.yml
-# ------ ------ ------ ------ ------ ------ ------ ------ ------
-#  Added V1.001 for stash storage server
-#  -- This is a placeholder configuration to support remote testing --
-#  local|server
-  STASH_MODE: local
-  STASH_LOCAL_BASE_PATH: stash-storage
-  #
-  STASH_SERVER_URL: https://raw.githubusercontent.com
-  STASH_SERVER_FALLBACK_URL: https://raw.githubusercontent.com
-  _STASH_SERVER_BASE_PATH: bIo7kGc2w6Oel0QNr7Pc/4bFfDQayhPxddnGHynP6yudxc44QYuAFoTFdOqY2ZzsM2DEk56r26MfG66bEQ42lp38guy837xwzN1Vgu+r9zvAm11HXEA=
-  REFERENCE_SEQUENCE_ALIGNMETS: PDB
-##
 ```

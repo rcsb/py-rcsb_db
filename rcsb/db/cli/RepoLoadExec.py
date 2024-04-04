@@ -36,74 +36,12 @@ import sys
 
 from rcsb.db.wf.RepoLoadWorkflow import RepoLoadWorkflow
 from rcsb.utils.config.ConfigUtil import ConfigUtil
-# from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s", stream=sys.stdout)
 logger = logging.getLogger()
-
-"""
-# Example usage #
-
-# Must export environmental variables first!
-
-export CONFIG_SUPPORT_TOKEN_ENV=...
-export OE_LICENSE=...
-export NLTK_DATA=...
-
-
-# Example pdbx_core load command:
-exdb_repo_load_cli --op "pdbx-loader" \
---database "pdbx_core" \
---load_type replace  \
---config_path /opt/etl-scratch/config/exdb-loader-config.yml \
---config_name site_info_remote_configuration \
---num_proc 8  \
---chunk_size 5  \
---max_step_length 1000 \
---load_id_list_path "/opt/etl-scratch/work-dir/load_file_lists/pdbx_core_ids-1.txt" \
---cache_path "/opt/etl-scratch/data/CACHE" \
-
-# Example build-resource-cache command:
-exdb_repo_load_cli --op "build-resource-cache" \
---config_path "/opt/etl-scratch/config/exdb-loader-config.yml" \
---config_name "site_info_remote_configuration" \
---num_proc 6  \
---chunk_size 25  \
---cache_path "/opt/etl-scratch/data/CACHE" \
-
-# Example of pdbx-id-list-splitter (pdbx_core):
-exdb_repo_load_cli --op "pdbx-id-list-splitter" \
---database "pdbx_core" \
---config_path "/opt/etl-scratch/config/exdb-loader-config.yml" \
---config_name "site_info_remote_configuration" \
---cache_path "/opt/etl-scratch/data/CACHE" \
---load_file_list_dir "/opt/etl-scratch/work-dir/load_file_lists" \
---holdings_file_path "http://prereleaseftp-east.rcsb.org/pdb/holdings/released_structures_last_modified_dates.json.gz" \
---num_sublists 10 \
-
-# Example of pdbx-id-list-splitter (pdbx_comp_model_core):
-exdb_repo_load_cli --op "pdbx-id-list-splitter" \
---database "pdbx_comp_model_core" \
---config_path "/opt/etl-scratch/config/exdb-loader-config.yml" \
---config_name "site_info_remote_configuration" \
---cache_path "/opt/etl-scratch/data/CACHE" \
---load_file_list_dir "/opt/etl-scratch/work-dir/load_file_lists" \
---num_sublists 10 \
-
-# Example of pdbx-loader-check (pdbx_core):
-exdb_repo_load_cli --op "pdbx-loader-check" \
---database "pdbx_core" \
---config_path "/opt/etl-scratch/config/exdb-loader-config.yml" \
---config_name "site_info_remote_configuration" \
---cache_path "/opt/etl-scratch/data/CACHE" \
---load_file_list_dir "/opt/etl-scratch/work-dir/load_file_lists" \
---holdings_file_path "http://prereleaseftp-east.rcsb.org/pdb/holdings/released_structures_last_modified_dates.json.gz" \
---num_sublists 10 \
-
-"""
 
 
 def main():

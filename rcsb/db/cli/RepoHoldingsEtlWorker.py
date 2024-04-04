@@ -8,6 +8,7 @@
 #  26-Nov-2018 jdw add COLLECTION_HOLDINGS_PRERELEASE
 #  14-Dec-2019 jdw reorganize and consolidate repository_holdings collections
 #  25-Sep-2021 jdw substitute RepoHoldingsRemoteDataPrep() for data processing
+#   4-Apr-2023 dwp Add maxStepLength input argument
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -29,7 +30,7 @@ logger = logging.getLogger(__name__)
 class RepoHoldingsEtlWorker(object):
     """Prepare and load repository holdings and repository update data."""
 
-    def __init__(self, cfgOb, sandboxPath, cachePath, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False):
+    def __init__(self, cfgOb, sandboxPath, cachePath, numProc=2, chunkSize=10, maxStepLength=4000, readBackCheck=False, documentLimit=None, verbose=False):
         self.__cfgOb = cfgOb
         self.__cfgSectionName = self.__cfgOb.getDefaultSectionName()
         self.__sandboxPath = sandboxPath
@@ -37,6 +38,7 @@ class RepoHoldingsEtlWorker(object):
         self.__readBackCheck = readBackCheck
         self.__numProc = numProc
         self.__chunkSize = chunkSize
+        self.__maxStepLength = maxStepLength
         self.__documentLimit = documentLimit
         self.__resourceName = "MONGO_DB"
         self.__filterType = "assign-dates"
@@ -106,6 +108,7 @@ class RepoHoldingsEtlWorker(object):
                 self.__resourceName,
                 numProc=self.__numProc,
                 chunkSize=self.__chunkSize,
+                maxStepLength=self.__maxStepLength,
                 documentLimit=self.__documentLimit,
                 verbose=self.__verbose,
                 readBackCheck=self.__readBackCheck,
