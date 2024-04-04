@@ -107,6 +107,7 @@ def main():
     parser.add_argument("--rebuild_cache", default=False, action="store_true", help="Rebuild cached resource files")
     parser.add_argument("--rebuild_schema", default=False, action="store_true", help="Rebuild schema on-the-fly if not cached")
     parser.add_argument("--vrpt_repo_path", default=None, help="Path to validation report repository")
+    parser.add_argument("--cluster_filename_template", default=None, help="Filename template for cluster files (e.g., clusters-by-entity-90.txt)")
     args = parser.parse_args()
     #
     try:
@@ -125,15 +126,14 @@ def main():
     #
     okR = False
     rlWf = RepoLoadWorkflow(**commonD)
-    if op == "pdbx-loader":
+    if op in ["pdbx-loader", "etl-entity-sequence-clusters", "etl-repository-holdings"]:
         okR = rlWf.load(op, **loadD)
     #
     elif op == "build-resource-cache":
         okR = rlWf.buildResourceCache(rebuildCache=True, providerTypeExclude=loadD["providerTypeExclude"]) and okR
     #
     elif op == "pdbx-id-list-splitter":
-        okR = rlWf.splitIdList(**loadD)
-        # okR = rlWf.splitIdList(op, **loadD)
+        okR = rlWf.splitIdList(op, **loadD)
     #
     elif op == "pdbx-db-wiper":
         okR = rlWf.removeAndRecreateDbCollections(op, **loadD)
@@ -141,8 +141,7 @@ def main():
     elif op == "pdbx-loader-check":
         okR = rlWf.loadCompleteCheck(op, **loadD)
     #
-    else:  # ["etl-entity-sequence-clusters", "etl-repository-holdings"]
-        # TO DO: Add support for remaining op types
+    else:
         logger.error("Unsupported op %r", op)
 
     logger.info("Operation %r completed with status %r", op, okR)
@@ -234,6 +233,7 @@ def processArguments(args):
         "dataSelectors": dataSelectors,
         "mergeValidationReports": not args.disable_merge_validation_reports,
         "providerTypeExclude": args.provider_type_exclude,
+        "clusterFileNameTemplate": args.cluster_filename_template,
         "rebuildCache": args.rebuild_cache,
         "forceReload": args.force_reload,
     }

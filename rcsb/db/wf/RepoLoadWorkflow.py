@@ -277,7 +277,11 @@ class RepoLoadWorkflow(object):
 
         return ok
 
-    def splitIdList(self, **kwargs):
+    def splitIdList(self, op, **kwargs):
+        if op not in ["pdbx-id-list-splitter"]:
+            logger.error("Unsupported operation %r - exiting", op)
+            return False
+
         databaseName = kwargs.get("databaseName")
         holdingsFilePath = kwargs.get("holdingsFilePath", None)  # For CSMs: http://computed-models-internal-%s.rcsb.org/staging/holdings/computed-models-holdings-list.json
         loadFileListDir = kwargs.get("loadFileListDir")  # ExchangeDbConfig().loadFileListsDir
