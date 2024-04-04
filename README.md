@@ -291,6 +291,16 @@ exdb_repo_load_cli --op "build-resource-cache" \
 
 ```
 
+`--op pdbx-db-wiper` - Wipe the pre-existing database (and all of its collections).
+```bash
+exdb_repo_load_cli --op "pdbx-db-wiper" \
+--database "pdbx_core" \
+--config_path "/opt/etl-scratch/config/exdb-loader-config.yml" \
+--config_name "site_info_remote_configuration" \
+--cache_path "/opt/etl-scratch/data/CACHE" \
+
+```
+
 `--op pdbx-id-list-splitter` - Split the full list of input IDs into smaller, equally-sized sublists.
 ```bash
 exdb_repo_load_cli --op "pdbx-id-list-splitter" \
