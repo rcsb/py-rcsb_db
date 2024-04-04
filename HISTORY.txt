@@ -352,4 +352,4 @@
  15-Dec-2023  V1.715 Revert setting for mergeValidationReports
  19-Mar-2024  V1.716 Add quality check to PdbxLoader to ensure validation report data are loaded along with the primary data;
                      Begin updating PdbxLoader and RepoLoadEx to support weekly update workflow CLI requirements
-
+ 03-Apr-2024  V1.717 Add int_list cifType to DataTypeApplicationInfo
