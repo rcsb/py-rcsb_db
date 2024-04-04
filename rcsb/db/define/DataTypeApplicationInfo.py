@@ -15,6 +15,7 @@
 #  23-Jan-2023  bv Add uchar5 cifType to handle updates to _chem_comp.three_letter_code
 #   6-Apr-2023  bv Add entity_id_list cifType to handle _pdbx_initial_refinement_model.entity_id_list
 #  23-Sep-2023  bv Add pdb_id_u cifType to handle _em_3d_fitting_list.pdb_entry_id
+#  03-Apr-2024  bv Add int_list cifType to handle _pdbx_item_type.code for _pdbx_initial_refinement_model.entity_id_list
 ##
 """
 Manage mapping of default application data type to dictionary data types.
@@ -69,6 +70,7 @@ class DataTypeApplicationInfo(object):
         "point_symmetry",
         "id_list",
         "entity_id_list",
+        "int_list"
         "4x3_matrix",
         "non_negative_int",
         "positive_int",
@@ -115,6 +117,7 @@ class DataTypeApplicationInfo(object):
         "char",
         "char",
         "datetime",
+        "char",
         "char",
         "char",
         "char",
@@ -173,6 +176,7 @@ class DataTypeApplicationInfo(object):
         "80",
         "100",
         "100",
+        "100",
         "10",
         "10",
         "10",
@@ -202,6 +206,7 @@ class DataTypeApplicationInfo(object):
         "0",
         "0",
         "6",
+        "0",
         "0",
         "0",
         "0",
