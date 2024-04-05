@@ -21,18 +21,20 @@
 #    13-Dec-2018 - jdw add I/HM schema support
 #    23-Nov-2021 - dwp Add pdbx_comp_model_core
 #    19-Mar-2024 - dwp Updating arguments and making compatible with luigi workflow
-#    26-Mar-2024 - dwp Change arguments and execution structure to make more flexible;
-#                      Add arguments and logic to support CLI usage from weekly-update workflow
+#     5-Apr-2024 - dwp Change arguments and execution structure to make more flexible;
+#                      Add arguments and logic to support CLI usage from weekly-update workflow;
+#                      Add support for logging output to a specific file
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
-import argparse
-import logging
 import os
 import sys
+import argparse
+import logging
+# from logging.handlers import TimedRotatingFileHandler
 
 from rcsb.db.wf.RepoLoadWorkflow import RepoLoadWorkflow
 from rcsb.utils.config.ConfigUtil import ConfigUtil
@@ -40,7 +42,7 @@ from rcsb.utils.config.ConfigUtil import ConfigUtil
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s", stream=sys.stdout)
+# logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s", stream=sys.stdout)
 logger = logging.getLogger()
 
 
@@ -108,6 +110,8 @@ def main():
     parser.add_argument("--rebuild_schema", default=False, action="store_true", help="Rebuild schema on-the-fly if not cached")
     parser.add_argument("--vrpt_repo_path", default=None, help="Path to validation report repository")
     parser.add_argument("--cluster_filename_template", default=None, help="Filename template for cluster files (e.g., clusters-by-entity-90.txt)")
+    parser.add_argument("--log_file_path", default=None, help="Path to runtime log file output.")
+    #
     args = parser.parse_args()
     #
     try:
@@ -152,9 +156,26 @@ def main():
 
 
 def processArguments(args):
+    logFilePath = args.log_file_path
     debugFlag = args.debug
     if debugFlag:
         logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
+    #
+    if logFilePath:
+        logDir = os.path.dirname(logFilePath)
+        if not os.path.isdir(logDir):
+            os.makedirs(logDir)
+        # handler = TimedRotatingFileHandler(filename=logFilePath, when="midnight", interval=1, backupCount=5)
+        handler = logging.FileHandler(logFilePath, mode="a")
+        if debugFlag:
+            handler.setLevel(logging.DEBUG)
+        else:
+            handler.setLevel(logging.INFO)
+        formatter = logging.Formatter("%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
     #
     # Configuration Details
     configPath = args.config_path
