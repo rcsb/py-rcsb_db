@@ -34,7 +34,6 @@ import os
 import sys
 import argparse
 import logging
-# from logging.handlers import TimedRotatingFileHandler
 
 from rcsb.db.wf.RepoLoadWorkflow import RepoLoadWorkflow
 from rcsb.utils.config.ConfigUtil import ConfigUtil
@@ -134,7 +133,7 @@ def main():
         okR = rlWf.load(op, **loadD)
     #
     elif op == "build-resource-cache":
-        okR = rlWf.buildResourceCache(rebuildCache=True, providerTypeExclude=loadD["providerTypeExclude"]) and okR
+        okR = rlWf.buildResourceCache(rebuildCache=True, providerTypeExclude=loadD["providerTypeExclude"])
     #
     elif op == "pdbx-id-list-splitter":
         okR = rlWf.splitIdList(op, **loadD)
@@ -167,7 +166,6 @@ def processArguments(args):
         logDir = os.path.dirname(logFilePath)
         if not os.path.isdir(logDir):
             os.makedirs(logDir)
-        # handler = TimedRotatingFileHandler(filename=logFilePath, when="midnight", interval=1, backupCount=5)
         handler = logging.FileHandler(logFilePath, mode="a")
         if debugFlag:
             handler.setLevel(logging.DEBUG)

@@ -204,7 +204,7 @@ class PdbxLoader(object):
             startTime = self.__begin(message="loading operation")
             #
             # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
-            idCodesToLoadL = inputIdCodeList
+            inputIdCodeList = inputIdCodeList if inputIdCodeList else []
             if databaseName in ["pdbx_core", "pdbx_comp_model_core"]:
                 totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=databaseName + "_entry")
                 # Get the list of IDs from only the given sublist that are already loaded
@@ -229,6 +229,9 @@ class PdbxLoader(object):
                 if len(idCodesToLoadL) < 100:
                     logger.info("List of entries to load: %r", idCodesToLoadL)
             #
+            else:
+                # For "bird_chem_comp_core":
+                idCodesToLoadL = inputIdCodeList
             locatorObjList = self.__rpP.getLocatorObjList(contentType=databaseName, inputPathList=inputPathList, inputIdCodeList=idCodesToLoadL, mergeContentTypes=mergeContentTypes)
             logger.info("Loading database %s (%r) with path length %d", databaseName, loadType, len(locatorObjList))
             #

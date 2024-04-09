@@ -353,4 +353,4 @@
  19-Mar-2024  V1.716 Add quality check to PdbxLoader to ensure validation report data are loaded along with the primary data;
                      Begin updating PdbxLoader and RepoLoadEx to support weekly update workflow CLI requirements
  03-Apr-2024  V1.717 Add int_list cifType to DataTypeApplicationInfo
- 04-Apr-2024  V1.718 Update RepoLoadExec CLI and RepoLoadWorkflow to support CLI usage from weekly-update workflow
+ 09-Apr-2024  V1.718 Update RepoLoadExec CLI and RepoLoadWorkflow to support CLI usage from weekly-update workflow
