@@ -164,31 +164,31 @@ class RepoHoldingsEtlWorker(object):
         Compare the document counts of the pdbx_core and repository holdings collections.
         """
         ok = True
-        pdbxCoreEntryCount = 0
-        repoHoldingsCurrentEntryCount = 0
-        repoHoldingsCombinedEntryCount = 0
-        combinedHoldingsExpectedCount = 0
 
-        pdbxCoreEntryCount = self.__countUniqueLoadedRcsbId("pdbx_core", "pdbx_core_entry")
+        pdbxCoreEntryL = self.__getUniqueLoadedRcsbId("pdbx_core", "pdbx_core_entry")
 
-        repoHoldingsCurrentEntryCount = self.__countUniqueLoadedRcsbId("repository_holdings", "repository_holdings_current_entry")
-        repoHoldingsCombinedEntryCount = self.__countUniqueLoadedRcsbId("repository_holdings", "repository_holdings_combined_entry")
-        repoHoldingsRemovedEntryCount = self.__countUniqueLoadedRcsbId("repository_holdings", "repository_holdings_removed_entry")
-        repoHoldingsUnreleasedEntryCount = self.__countUniqueLoadedRcsbId("repository_holdings", "repository_holdings_unreleased_entry")
+        repoHoldingsCurrentEntryL = self.__getUniqueLoadedRcsbId("repository_holdings", "repository_holdings_current_entry")
+        repoHoldingsCombinedEntryL = self.__getUniqueLoadedRcsbId("repository_holdings", "repository_holdings_combined_entry")
+        repoHoldingsRemovedEntryL = self.__getUniqueLoadedRcsbId("repository_holdings", "repository_holdings_removed_entry")
+        repoHoldingsUnreleasedEntryL = self.__getUniqueLoadedRcsbId("repository_holdings", "repository_holdings_unreleased_entry")
 
-        combinedHoldingsExpectedCount = repoHoldingsCurrentEntryCount + repoHoldingsRemovedEntryCount + repoHoldingsUnreleasedEntryCount
+        combinedHoldingsExpectedCount = len(repoHoldingsCurrentEntryL) + len(repoHoldingsRemovedEntryL) + len(repoHoldingsUnreleasedEntryL)
 
-        if pdbxCoreEntryCount != repoHoldingsCurrentEntryCount:
+        if len(pdbxCoreEntryL) != len(repoHoldingsCurrentEntryL):
             logger.error(
-                "The total entries in the collections of core entry (%r) and current repository holdings (%r) differ.",
-                pdbxCoreEntryCount,
-                repoHoldingsCurrentEntryCount
+                "The total entries in the collections of core entry (%d) and current repository holdings (%d) differ.",
+                len(pdbxCoreEntryL),
+                len(repoHoldingsCurrentEntryL)
             )
+            delta = list(set(pdbxCoreEntryL) ^ set(repoHoldingsCurrentEntryL))
+            logger.error("List delta is of length %r", len(delta))
+            if len(delta) > 0 and len(delta) < 10000:
+                logger.error("Delta entry ID list: %r", delta)
             ok = False
-        if repoHoldingsCombinedEntryCount != combinedHoldingsExpectedCount:
+        if len(repoHoldingsCombinedEntryL) != combinedHoldingsExpectedCount:
             logger.error(
-                "The total entries in repoHoldingsCombinedEntryCount (%r) and combinedHoldingsExpectedCount (%r) differ.",
-                repoHoldingsCombinedEntryCount,
+                "The total entries in repoHoldingsCombinedEntryL (%d) and combinedHoldingsExpectedCount (%d) differ.",
+                len(repoHoldingsCombinedEntryL),
                 combinedHoldingsExpectedCount
             )
             ok = False
@@ -198,8 +198,8 @@ class RepoHoldingsEtlWorker(object):
 
         return ok
 
-    def __countUniqueLoadedRcsbId(self, databaseName, collectionName):
-        """Get the count of unique loaded 'rcsb_id' values in the given database and collection"""
+    def __getUniqueLoadedRcsbId(self, databaseName, collectionName):
+        """Get the list of unique loaded 'rcsb_id' values in the given database and collection"""
         loadedRcsbIdL = []
         try:
             #
@@ -209,8 +209,8 @@ class RepoHoldingsEtlWorker(object):
                 queryD = {}
                 loadedDocL = mg.fetch(databaseName, collectionName, selectL, queryD=queryD, suppressId=True)
                 loadedRcsbIdL = [docD["rcsb_id"] for docD in loadedDocL]
-                numLoaded = len(set(loadedRcsbIdL))
-                logger.info("Number of entries loaded to database %s collection %s: %r", databaseName, collectionName, numLoaded)
+                loadedRcsbIdL = list(set(loadedRcsbIdL))
+                logger.info("Number of entries loaded to database %s collection %s: %r", databaseName, collectionName, len(loadedRcsbIdL))
         except Exception as e:
             logger.exception("Failing with %s", str(e))
-        return numLoaded
+        return loadedRcsbIdL
