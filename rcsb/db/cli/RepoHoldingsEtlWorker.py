@@ -165,12 +165,12 @@ class RepoHoldingsEtlWorker(object):
         """
         ok = True
 
-        pdbxCoreEntryL = self.__getUniqueLoadedRcsbId("pdbx_core", "pdbx_core_entry")
+        pdbxCoreEntryL = self.__getUniqueLoadedRcsbIds("pdbx_core", "pdbx_core_entry")
 
-        repoHoldingsCurrentEntryL = self.__getUniqueLoadedRcsbId("repository_holdings", "repository_holdings_current_entry")
-        repoHoldingsCombinedEntryL = self.__getUniqueLoadedRcsbId("repository_holdings", "repository_holdings_combined_entry")
-        repoHoldingsRemovedEntryL = self.__getUniqueLoadedRcsbId("repository_holdings", "repository_holdings_removed_entry")
-        repoHoldingsUnreleasedEntryL = self.__getUniqueLoadedRcsbId("repository_holdings", "repository_holdings_unreleased_entry")
+        repoHoldingsCurrentEntryL = self.__getUniqueLoadedRcsbIds("repository_holdings", "repository_holdings_current_entry")
+        repoHoldingsCombinedEntryL = self.__getUniqueLoadedRcsbIds("repository_holdings", "repository_holdings_combined_entry")
+        repoHoldingsRemovedEntryL = self.__getUniqueLoadedRcsbIds("repository_holdings", "repository_holdings_removed_entry")
+        repoHoldingsUnreleasedEntryL = self.__getUniqueLoadedRcsbIds("repository_holdings", "repository_holdings_unreleased_entry")
 
         combinedHoldingsExpectedCount = len(repoHoldingsCurrentEntryL) + len(repoHoldingsRemovedEntryL) + len(repoHoldingsUnreleasedEntryL)
 
@@ -198,7 +198,7 @@ class RepoHoldingsEtlWorker(object):
 
         return ok
 
-    def __getUniqueLoadedRcsbId(self, databaseName, collectionName):
+    def __getUniqueLoadedRcsbIds(self, databaseName, collectionName):
         """Get the list of unique loaded 'rcsb_id' values in the given database and collection"""
         loadedRcsbIdL = []
         try:
