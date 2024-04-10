@@ -8,6 +8,8 @@
 #  26-Nov-2018 jdw add COLLECTION_HOLDINGS_PRERELEASE
 #  14-Dec-2019 jdw reorganize and consolidate repository_holdings collections
 #  25-Sep-2021 jdw substitute RepoHoldingsRemoteDataPrep() for data processing
+#   4-Apr-2023 dwp Add maxStepLength input argument; update success/failure catching logic;
+#                  add final verification step to ensure all entries were loaded
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -22,6 +24,8 @@ from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
 from rcsb.db.processors.RepoHoldingsDataPrep import RepoHoldingsDataPrep
 from rcsb.db.processors.RepoHoldingsRemoteDataPrep import RepoHoldingsRemoteDataPrep
+from rcsb.db.mongo.Connection import Connection
+from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +33,7 @@ logger = logging.getLogger(__name__)
 class RepoHoldingsEtlWorker(object):
     """Prepare and load repository holdings and repository update data."""
 
-    def __init__(self, cfgOb, sandboxPath, cachePath, numProc=2, chunkSize=10, readBackCheck=False, documentLimit=None, verbose=False):
+    def __init__(self, cfgOb, sandboxPath, cachePath, numProc=2, chunkSize=10, maxStepLength=4000, readBackCheck=False, documentLimit=None, verbose=False):
         self.__cfgOb = cfgOb
         self.__cfgSectionName = self.__cfgOb.getDefaultSectionName()
         self.__sandboxPath = sandboxPath
@@ -37,6 +41,7 @@ class RepoHoldingsEtlWorker(object):
         self.__readBackCheck = readBackCheck
         self.__numProc = numProc
         self.__chunkSize = chunkSize
+        self.__maxStepLength = maxStepLength
         self.__documentLimit = documentLimit
         self.__resourceName = "MONGO_DB"
         self.__filterType = "assign-dates"
@@ -106,6 +111,7 @@ class RepoHoldingsEtlWorker(object):
                 self.__resourceName,
                 numProc=self.__numProc,
                 chunkSize=self.__chunkSize,
+                maxStepLength=self.__maxStepLength,
                 documentLimit=self.__documentLimit,
                 verbose=self.__verbose,
                 readBackCheck=self.__readBackCheck,
@@ -119,33 +125,92 @@ class RepoHoldingsEtlWorker(object):
             #
             dList = rhdp.getHoldingsUpdateEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UPDATE", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            ok1 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            self.__updateStatus(updateId, databaseName, collectionName, ok1, statusStartTimestamp)
             #
             dList = rhdp.getHoldingsCurrentEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_CURRENT", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            ok2 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            self.__updateStatus(updateId, databaseName, collectionName, ok2, statusStartTimestamp)
 
             dList = rhdp.getHoldingsUnreleasedEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UNRELEASED", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            ok3 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            self.__updateStatus(updateId, databaseName, collectionName, ok3, statusStartTimestamp)
             #
             dList = rhdp.getHoldingsRemovedEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_REMOVED", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            ok4 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            self.__updateStatus(updateId, databaseName, collectionName, ok4, statusStartTimestamp)
             #
             dList = rhdp.getHoldingsCombinedEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_COMBINED", sectionName=sectionName)
-            ok = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok, statusStartTimestamp)
+            ok5 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            self.__updateStatus(updateId, databaseName, collectionName, ok5, statusStartTimestamp)
             #
-            return True
+            ok6 = self.verifyCompleteLoad()
+            logger.info("Verification of complete load status %r", ok6)
+            #
+            return ok1 and ok2 and ok3 and ok4 and ok5 and ok6
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return False
 
     def getLoadStatus(self):
         return self.__statusList
+
+    def verifyCompleteLoad(self):
+        """
+        Compare the document counts of the pdbx_core and repository holdings collections.
+        """
+        ok = True
+
+        pdbxCoreEntryL = self.__getUniqueLoadedRcsbIds("pdbx_core", "pdbx_core_entry")
+
+        repoHoldingsCurrentEntryL = self.__getUniqueLoadedRcsbIds("repository_holdings", "repository_holdings_current_entry")
+        repoHoldingsCombinedEntryL = self.__getUniqueLoadedRcsbIds("repository_holdings", "repository_holdings_combined_entry")
+        repoHoldingsRemovedEntryL = self.__getUniqueLoadedRcsbIds("repository_holdings", "repository_holdings_removed_entry")
+        repoHoldingsUnreleasedEntryL = self.__getUniqueLoadedRcsbIds("repository_holdings", "repository_holdings_unreleased_entry")
+
+        combinedHoldingsExpectedCount = len(repoHoldingsCurrentEntryL) + len(repoHoldingsRemovedEntryL) + len(repoHoldingsUnreleasedEntryL)
+
+        if len(pdbxCoreEntryL) != len(repoHoldingsCurrentEntryL):
+            logger.error(
+                "The total entries in the collections of core entry (%d) and current repository holdings (%d) differ.",
+                len(pdbxCoreEntryL),
+                len(repoHoldingsCurrentEntryL)
+            )
+            delta = list(set(pdbxCoreEntryL) ^ set(repoHoldingsCurrentEntryL))
+            logger.error("List delta is of length %r", len(delta))
+            if len(delta) > 0 and len(delta) < 10000:
+                logger.error("Delta entry ID list: %r", delta)
+            ok = False
+        if len(repoHoldingsCombinedEntryL) != combinedHoldingsExpectedCount:
+            logger.error(
+                "The total entries in repoHoldingsCombinedEntryL (%d) and combinedHoldingsExpectedCount (%d) differ.",
+                len(repoHoldingsCombinedEntryL),
+                combinedHoldingsExpectedCount
+            )
+            ok = False
+
+        if not ok:
+            raise ValueError("Data Errors found in ExchangeDB loading")
+
+        return ok
+
+    def __getUniqueLoadedRcsbIds(self, databaseName, collectionName):
+        """Get the list of unique loaded 'rcsb_id' values in the given database and collection"""
+        loadedRcsbIdL = []
+        try:
+            #
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                selectL = ["rcsb_id"]
+                queryD = {}
+                loadedDocL = mg.fetch(databaseName, collectionName, selectL, queryD=queryD, suppressId=True)
+                loadedRcsbIdL = [docD["rcsb_id"] for docD in loadedDocL]
+                loadedRcsbIdL = list(set(loadedRcsbIdL))
+                logger.info("Number of entries loaded to database %s collection %s: %r", databaseName, collectionName, len(loadedRcsbIdL))
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return loadedRcsbIdL

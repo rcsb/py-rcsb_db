@@ -10,6 +10,7 @@
 #                  Add support for inputIdCodeList
 #  26-Apr-2023 dwp Add regexPurge flag to control running regexp purge step during document load (with default set to False)
 #   7-Nov-2023 dwp Add maxStepLength parameter
+#  26-Mar-2024 dwp Add arguments and methods to support CLI usage from weekly-update workflow
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -19,6 +20,8 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+import random
+import math
 
 from rcsb.db.cli.RepoHoldingsEtlWorker import RepoHoldingsEtlWorker
 from rcsb.db.cli.SequenceClustersEtlWorker import SequenceClustersEtlWorker
@@ -61,31 +64,43 @@ class RepoLoadWorkflow(object):
             logger.error("Unsupported operation %r - exiting", op)
             return False
         try:
-            readBackCheck = kwargs.get("readBackCheck", False)
-            numProc = int(kwargs.get("numProc", 1))
-            chunkSize = int(kwargs.get("chunkSize", 10))
-            maxStepLength = int(kwargs.get("maxStepLength", 2000))
-            fileLimit = int(kwargs.get("fileLimit")) if "fileLimit" in kwargs else None
-            documentLimit = int(kwargs.get("documentLimit")) if "documentLimit" in kwargs else None
-            failedFilePath = kwargs.get("failFileListPath", None)
-            loadFileListPath = kwargs.get("loadFileListPath", None)
-            inputIdCodeList = kwargs.get("inputIdCodeList", None)
-            saveInputFileListPath = kwargs.get("saveFileListPath", None)
-            schemaLevel = kwargs.get("schemaLevel", "min") if kwargs.get("schemaLevel") in ["min", "full"] else "min"
-            loadType = kwargs.get("loadType", "full")  # or replace
-            updateSchemaOnReplace = kwargs.get("updateSchemaOnReplace", True)
-            pruneDocumentSize = float(kwargs.get("pruneDocumentSize")) if "pruneDocumentSize" in kwargs else None
-            regexPurge = kwargs.get("regexPurge", False)
-            clusterFileNameTemplate = kwargs.get("clusterFileNameTemplate", None)
-
-            # "Document organization (rowwise_by_name_with_cardinality|rowwise_by_name|columnwise_by_name|rowwise_by_id|rowwise_no_name",
-            documentStyle = kwargs.get("documentStyle", "rowwise_by_name_with_cardinality")
-            dbType = kwargs.get("dbType", "mongo")
-            #
             databaseName = kwargs.get("databaseName", None)
             databaseNameList = self.__cfgOb.get("DATABASE_NAMES_ALL", sectionName="database_catalog_configuration").split(",")
             collectionNameList = kwargs.get("collectionNameList", None)
+            loadType = kwargs.get("loadType", "replace")  # or "full"
+            dbType = kwargs.get("dbType", "mongo")
+            #
+            numProc = int(kwargs.get("numProc", 1))
+            chunkSize = int(kwargs.get("chunkSize", 10))
+            maxStepLength = int(kwargs.get("maxStepLength", 500))
+            fileLimit = kwargs.get("fileLimit", None)
+            fileLimit = int(fileLimit) if fileLimit else None
+            readBackCheck = kwargs.get("readBackCheck", True)
+            rebuildSchemaFlag = kwargs.get("rebuildSchemaFlag", False)
+            documentLimit = kwargs.get("documentLimit", None)
+            documentLimit = int(documentLimit) if documentLimit else None
+            failedFilePath = kwargs.get("failedFilePath", None)
+            loadIdListPath = kwargs.get("loadIdListPath", None)
+            # inputIdCodeList = kwargs.get("inputIdCodeList", None)
+            loadFileListPath = kwargs.get("loadFileListPath", None)
+            saveInputFileListPath = kwargs.get("saveInputFileListPath", None)
+            schemaLevel = kwargs.get("schemaLevel", "min") if kwargs.get("schemaLevel") in ["min", "full"] else "min"
+            updateSchemaOnReplace = kwargs.get("updateSchemaOnReplace", True)
+            pruneDocumentSize = kwargs.get("pruneDocumentSize", None)
+            pruneDocumentSize = float(pruneDocumentSize) if pruneDocumentSize else None
+            regexPurge = kwargs.get("regexPurge", False)
+            providerTypeExclude = kwargs.get("providerTypeExclude", None)
+            clusterFileNameTemplate = kwargs.get("clusterFileNameTemplate", None)
+            #
+            # "Document organization (rowwise_by_name_with_cardinality|rowwise_by_name|columnwise_by_name|rowwise_by_id|rowwise_no_name",
+            documentStyle = kwargs.get("documentStyle", "rowwise_by_name_with_cardinality")
+            dataSelectors = kwargs.get("dataSelectors", ["PUBLIC_RELEASE"])
+            #
             mergeValidationReports = kwargs.get("mergeValidationReports", True)
+            mergeContentTypes = ["vrpt"] if mergeValidationReports else None
+            #
+            rebuildCache = kwargs.get("rebuildCache", False)
+            forceReload = kwargs.get("forceReload", False)
             #
             tU = TimeUtil()
             dataSetId = kwargs.get("dataSetId") if "dataSetId" in kwargs else tU.getCurrentWeekSignature()
@@ -100,8 +115,14 @@ class RepoLoadWorkflow(object):
         if op == "pdbx-loader" and dbType == "mongo" and databaseName in databaseNameList:
             okS = True
             try:
-                inputPathList = None
-                if loadFileListPath:
+                inputPathList, inputIdCodeList = None, None
+                if loadIdListPath:
+                    mu = MarshalUtil(workPath=self.__cachePath)
+                    inputIdCodeList = mu.doImport(loadIdListPath, fmt="list")
+                    if not inputIdCodeList:
+                        logger.error("Operation %r missing or empty input file path list %s - exiting", op, loadIdListPath)
+                        return False
+                elif loadFileListPath:
                     mu = MarshalUtil(workPath=self.__cachePath)
                     inputPathList = mu.doImport(loadFileListPath, fmt="list")
                     if not inputPathList:
@@ -122,6 +143,7 @@ class RepoLoadWorkflow(object):
                     fileLimit=fileLimit,
                     verbose=self.__debugFlag,
                     readBackCheck=readBackCheck,
+                    rebuildSchemaFlag=rebuildSchemaFlag,
                 )
                 ok = mw.load(
                     databaseName,
@@ -130,14 +152,17 @@ class RepoLoadWorkflow(object):
                     inputPathList=inputPathList,
                     inputIdCodeList=inputIdCodeList,
                     styleType=documentStyle,
-                    dataSelectors=["PUBLIC_RELEASE"],
+                    dataSelectors=dataSelectors,
                     failedFilePath=failedFilePath,
                     saveInputFileListPath=saveInputFileListPath,
                     pruneDocumentSize=pruneDocumentSize,
                     regexPurge=regexPurge,
                     validationLevel=schemaLevel,
-                    mergeContentTypes=["vrpt"] if mergeValidationReports else None,
+                    mergeContentTypes=mergeContentTypes,
+                    providerTypeExclude=providerTypeExclude,
                     updateSchemaOnReplace=updateSchemaOnReplace,
+                    rebuildCache=rebuildCache,
+                    forceReload=forceReload,
                 )
                 okS = self.loadStatus(mw.getLoadStatus(), readBackCheck=readBackCheck)
             except Exception as e:
@@ -147,6 +172,7 @@ class RepoLoadWorkflow(object):
                 self.__cfgOb,
                 numProc=numProc,
                 chunkSize=chunkSize,
+                maxStepLength=maxStepLength,
                 documentLimit=documentLimit,
                 verbose=self.__debugFlag,
                 readBackCheck=readBackCheck,
@@ -162,6 +188,7 @@ class RepoLoadWorkflow(object):
                 self.__cachePath,
                 numProc=numProc,
                 chunkSize=chunkSize,
+                maxStepLength=maxStepLength,
                 documentLimit=documentLimit,
                 verbose=self.__debugFlag,
                 readBackCheck=readBackCheck,
@@ -186,10 +213,18 @@ class RepoLoadWorkflow(object):
             logger.exception("Failing with %s", str(e))
         return ret
 
-    def buildResourceCache(self, rebuildCache=False):
+    def buildResourceCache(self, rebuildCache=False, providerTypeExclude=None):
         """Generate and cache resource dependencies."""
         ret = False
         try:
+            # First make sure the CACHE directory exists
+            if not os.path.isdir(self.__cachePath):
+                logger.info("Cache directory %s doesn't exist. Creating it", self.__cachePath)
+                os.makedirs(self.__cachePath)
+            else:
+                logger.info("Cache directory %s already exists.", self.__cachePath)
+
+            # Now build the cache
             useCache = not rebuildCache
             rP = DictMethodResourceProvider(
                 self.__cfgOb,
@@ -197,7 +232,7 @@ class RepoLoadWorkflow(object):
                 cachePath=self.__cachePath,
                 restoreUseStash=True,
                 restoreUseGit=True,
-                providerTypeExclude=None,
+                providerTypeExclude=providerTypeExclude,
             )
             ret = rP.cacheResources(useCache=useCache, doBackup=False, useStash=False, useGit=False)
             logger.info("useCache %r cache reload status (%r)", useCache, ret)
@@ -241,3 +276,168 @@ class RepoLoadWorkflow(object):
         logger.info("Completed operation %r with status %r", op, ok)
 
         return ok
+
+    def splitIdList(self, op, **kwargs):
+        if op not in ["pdbx-id-list-splitter"]:
+            logger.error("Unsupported operation %r - exiting", op)
+            return False
+
+        databaseName = kwargs.get("databaseName")
+        holdingsFilePath = kwargs.get("holdingsFilePath", None)  # For CSMs: http://computed-models-internal-%s.rcsb.org/staging/holdings/computed-models-holdings-list.json
+        loadFileListDir = kwargs.get("loadFileListDir")  # ExchangeDbConfig().loadFileListsDir
+        loadFileListPrefix = databaseName + "_ids"  # pdbx_core_ids or pdbx_comp_model_core_ids
+        numSublistFiles = kwargs.get("numSublistFiles")  # ExchangeDbConfig().pdbxCoreNumberSublistFiles
+        #
+        mU = MarshalUtil(workPath=self.__cachePath)
+        #
+        if databaseName == "pdbx_core":
+            # Get list of ALL entries to be loaded for the current update cycle
+            if not holdingsFilePath:
+                holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb/holdings/released_structures_last_modified_dates.json.gz")
+            holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
+            idL = [k.upper() for k in holdingsFileD]
+            logger.info("Total number of entries to load: %d (obtained from file: %s)", len(idL), holdingsFilePath)
+            random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
+            filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFilePath)
+
+        elif databaseName == "pdbx_comp_model_core":
+            filePathMappingD = {}
+            if holdingsFilePath:
+                holdingsFileBaseDir = os.path.dirname(os.path.dirname(holdingsFilePath))
+            else:
+                holdingsFilePath = self.__cfgOb.getPath("PDBX_COMP_MODEL_HOLDINGS_LIST_PATH", sectionName=self.__configName)
+                holdingsFileBaseDir = self.__cfgOb.getPath("PDBX_COMP_MODEL_REPO_PATH", sectionName=self.__configName)
+            holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
+            #
+            if len(holdingsFileD) == 1:
+                # Split up single holdings file into multiple sub-lists
+                holdingsFile = os.path.join(holdingsFileBaseDir, list(holdingsFileD.keys())[0])
+                hD = mU.doImport(holdingsFile, fmt="json")
+                idL = [k.upper() for k in hD]
+                logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
+                filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFile)
+            #
+            elif len(holdingsFileD) > 1:
+                # Create one sub-list for each holdings file
+                mU = MarshalUtil()
+                index = 1
+                for hF, count in holdingsFileD.items():
+                    holdingsFile = os.path.join(holdingsFileBaseDir, hF)
+                    hD = mU.doImport(holdingsFile, fmt="json")
+                    idL = [k.upper() for k in hD]
+                    logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
+                    #
+                    fPath = os.path.join(loadFileListDir, f"{loadFileListPrefix}-{index}.txt")
+                    ok = mU.doExport(fPath, idL, fmt="list")
+                    if not ok:
+                        raise ValueError("Failed to export id list %r" % fPath)
+                    filePathMappingD.update({str(index): {"filePath": fPath, "numModels": count, "sourceFile": holdingsFile}})
+                    index += 1
+                #
+                mappingFilePath = os.path.join(loadFileListDir, loadFileListPrefix + "_mapping.json")
+                ok = mU.doExport(mappingFilePath, filePathMappingD, fmt="json", indent=4)
+
+            else:
+                logger.error("Unsupported database for ID list splitting %s", databaseName)
+                return False
+
+        # Do one last santity check
+        ok = filePathMappingD is not None
+        outfilePathL = [v["filePath"] for k, v in filePathMappingD.items()]
+        for oPath in outfilePathL:
+            ok = (os.path.exists(oPath) and os.path.isfile(oPath)) and ok
+            if not ok:
+                logger.error("Entry ID loading sublist file does not exist: %r", oPath)
+
+        return ok
+
+    def splitIdListAndWriteToFiles(self, inputList, nFiles, outfileDir, outfilePrefix, sourceFile):
+        """Split input ID list into equally distributed sublists of size nFiles.
+
+        Write files to the given outfileDir and outfilePrefix.
+
+        Returns:
+            list: list of output file paths
+        """
+        sublistSize = math.ceil(len(inputList) / nFiles)
+
+        # Split the input list into n sublists
+        sublists = [inputList[i: i + sublistSize] for i in range(0, len(inputList), sublistSize)]
+
+        # Write each sublist to a separate file
+        filePathMappingD = {}
+        for idx, sublist in enumerate(sublists):
+            index = idx + 1
+            filePath = os.path.join(outfileDir, f"{outfilePrefix}-{index}.txt")
+            with open(filePath, "w", encoding="utf-8") as file:
+                # Write each string on its own line in the file
+                for string in sublist:
+                    file.write(f"{string}\n")
+            filePathMappingD.update({str(index): {"filePath": filePath, "numModels": len(sublist), "sourceFile": sourceFile}})
+
+        mappingFilePath = os.path.join(outfileDir, outfilePrefix + "_mapping.json")
+        mU = MarshalUtil()
+        ok = mU.doExport(mappingFilePath, filePathMappingD, fmt="json", indent=4)
+        if not ok:
+            raise ValueError("Failed to export mappingFilePath %r" % mappingFilePath)
+
+        return filePathMappingD
+
+    def loadCompleteCheck(self, op, **kwargs):
+        if op not in ["pdbx-loader-check"]:
+            logger.error("Unsupported operation %r - exiting", op)
+            return False
+        try:
+            databaseName = kwargs.get("databaseName", None)
+            holdingsFilePath = kwargs.get("holdingsFilePath", None)
+            completeIdCodeList, completeIdCodeCount = self.__getCompleteIdListCount(databaseName, holdingsFilePath)
+            if not (completeIdCodeList or completeIdCodeCount):
+                logger.error("Failed to get completeIdCodeList and completeIdCodeCount for database %r", databaseName)
+                return False
+            #
+        except Exception as e:
+            logger.exception("Argument and configuration processing failing with %s", str(e))
+            return False
+        #
+        try:
+            mw = PdbxLoader(
+                self.__cfgOb,
+                self.__cachePath,
+                resourceName="MONGO_DB",
+                verbose=self.__debugFlag,
+            )
+            ok = mw.loadCompleteCheck(
+                databaseName,
+                completeIdCodeList=completeIdCodeList,
+                completeIdCodeCount=completeIdCodeCount,
+            )
+        except Exception as e:
+            logger.exception("Operation %r database %r failing with %s", op, databaseName, str(e))
+
+        logger.info("Completed operation %r with status %r", op, ok)
+
+        return ok
+
+    def __getCompleteIdListCount(self, databaseName, holdingsFilePath):
+        mU = MarshalUtil(workPath=self.__cachePath)
+        #
+        if databaseName == "pdbx_core":
+            # Get list of ALL entries to be loaded for the current update cycle
+            if not holdingsFilePath:
+                holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb/holdings/released_structures_last_modified_dates.json.gz")
+            holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
+            idL = [k.upper() for k in holdingsFileD]
+            logger.info("Total number of entries to load: %d (obtained from file: %s)", len(idL), holdingsFilePath)
+            return idL, len(idL)
+
+        elif databaseName == "pdbx_comp_model_core":
+            if not holdingsFilePath:
+                holdingsFilePath = self.__cfgOb.getPath("PDBX_COMP_MODEL_HOLDINGS_LIST_PATH", sectionName=self.__configName)
+            holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
+            # Don't return the actual CSM file list since it will be unmanageable upon scaling
+            return None, sum(holdingsFileD.values())
+
+        else:
+            logger.error("Unsupported database for completed load checking %s", databaseName)
+
+        return None, None
