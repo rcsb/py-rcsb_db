@@ -115,7 +115,7 @@ def main():
         op, commonD, loadD = processArguments(args)
     except Exception as e:
         logger.exception("Argument processing problem %s", str(e))
-        raise ValueError("Argument processing problem")
+        raise ValueError("Argument processing problem") from e
     #
     #
     # Log input arguments
