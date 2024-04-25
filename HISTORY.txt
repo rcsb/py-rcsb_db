@@ -354,3 +354,4 @@
                      Begin updating PdbxLoader and RepoLoadEx to support weekly update workflow CLI requirements
  03-Apr-2024  V1.717 Add int_list cifType to DataTypeApplicationInfo
  09-Apr-2024  V1.718 Update RepoLoadExec CLI and RepoLoadWorkflow to support CLI usage from weekly-update workflow
+ 25-Apr-2024  V1.719 Updates to CLI utilities
