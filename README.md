@@ -195,7 +195,7 @@ usage: exdb_repo_load_cli [-h] [--op OP_TYPE] [--load_type LOAD_TYPE]
 
 optional arguments:
   -h, --help            show this help message and exit
-  --op {pdbx-loader,build-resource-cache,pdbx-db-wiper,pdbx-id-list-splitter,pdbx-loader-check,etl-entity-sequence-clusters,etl-repository-holdings}
+  --op {pdbx_loader,build_resource_cache,pdbx_db_wiper,pdbx_id_list_splitter,pdbx_loader_check,etl_entity_sequence_clusters,etl_repository_holdings}
                         Loading operation to perform
   --load_type {replace,full}
                         Type of load ('replace' for incremental and
@@ -281,9 +281,9 @@ export OE_LICENSE=/path/to/oe_license.txt
 export NLTK_DATA=/path/to/nltk_data
 ```
 
-`--op build-resource-cache` - Build the external resource cache that will be used for and integrated with the loading of PDB structure data.
+`--op build_resource_cache` - Build the external resource cache that will be used for and integrated with the loading of PDB structure data.
 ```bash
-exdb_repo_load_cli --op "build-resource-cache" \
+exdb_repo_load_cli --op "build_resource_cache" \
 --config_path "/opt/etl-scratch/config/exdb-loader-config.yml" \
 --config_name "site_info_remote_configuration" \
 --num_proc 6  \
@@ -291,9 +291,9 @@ exdb_repo_load_cli --op "build-resource-cache" \
 
 ```
 
-`--op pdbx-db-wiper` - Wipe the pre-existing database (and all of its collections).
+`--op pdbx_db_wiper` - Wipe the pre-existing database (and all of its collections).
 ```bash
-exdb_repo_load_cli --op "pdbx-db-wiper" \
+exdb_repo_load_cli --op "pdbx_db_wiper" \
 --database "pdbx_core" \
 --config_path "/opt/etl-scratch/config/exdb-loader-config.yml" \
 --config_name "site_info_remote_configuration" \
@@ -301,9 +301,9 @@ exdb_repo_load_cli --op "pdbx-db-wiper" \
 
 ```
 
-`--op pdbx-id-list-splitter` - Split the full list of input IDs into smaller, equally-sized sublists.
+`--op pdbx_id_list_splitter` - Split the full list of input IDs into smaller, equally-sized sublists.
 ```bash
-exdb_repo_load_cli --op "pdbx-id-list-splitter" \
+exdb_repo_load_cli --op "pdbx_id_list_splitter" \
 --database "pdbx_core" \
 --config_path "/opt/etl-scratch/config/exdb-loader-config.yml" \
 --config_name "site_info_remote_configuration" \
@@ -314,9 +314,9 @@ exdb_repo_load_cli --op "pdbx-id-list-splitter" \
 
 ```
 
-`--op pdbx-loader` - Load a list of entry IDs to ExDB.
+`--op pdbx_loader` - Load a list of entry IDs to ExDB.
 ```bash
-exdb_repo_load_cli --op "pdbx-loader" \
+exdb_repo_load_cli --op "pdbx_loader" \
 --database "pdbx_core" \
 --load_type replace  \
 --config_path /opt/etl-scratch/config/exdb-loader-config.yml \
@@ -329,9 +329,9 @@ exdb_repo_load_cli --op "pdbx-loader" \
 
 ```
 
-`--op pdbx-loader-check` - Check the resulting ExDB database to confirm that all expected documents were loaded.
+`--op pdbx_loader_check` - Check the resulting ExDB database to confirm that all expected documents were loaded.
 ```bash
-exdb_repo_load_cli --op "pdbx-loader-check" \
+exdb_repo_load_cli --op "pdbx_loader_check" \
 --database "pdbx_core" \
 --config_path "/opt/etl-scratch/config/exdb-loader-config.yml" \
 --config_name "site_info_remote_configuration" \

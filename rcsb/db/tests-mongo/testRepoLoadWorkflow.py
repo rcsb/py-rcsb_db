@@ -92,7 +92,7 @@ class RepoLoadWorkflowTests(unittest.TestCase):
             self.assertTrue(ok)
             for ld in self.__ldList:
                 ld.update(self.__loadCommonD)
-                ok = rlWf.load("pdbx-loader", **ld)
+                ok = rlWf.load("pdbx_loader", **ld)
                 self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
@@ -112,10 +112,10 @@ class RepoLoadWorkflowTests(unittest.TestCase):
             ok = rlWf.buildResourceCache(rebuildCache=False)
             self.assertTrue(ok)
             #
-            ok = rlWf.load("etl-repository-holdings", **etlCommonD)
+            ok = rlWf.load("etl_repository_holdings", **etlCommonD)
             self.assertTrue(ok)
             #
-            ok = rlWf.load("etl-entity-sequence-clusters", **etlCommonD)
+            ok = rlWf.load("etl_entity_sequence_clusters", **etlCommonD)
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
