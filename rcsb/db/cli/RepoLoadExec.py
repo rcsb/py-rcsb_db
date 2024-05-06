@@ -32,6 +32,7 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 import os
+import sys
 import argparse
 import logging
 
@@ -113,9 +114,9 @@ def main():
     #
     try:
         op, commonD, loadD = processArguments(args)
-    except Exception as e:
-        logger.exception("Argument processing problem %s", str(e))
-        raise ValueError("Argument processing problem") from e
+    except Exception as err:
+        logger.exception("Argument processing problem %s", str(err))
+        raise ValueError("Argument processing problem") from err
     #
     #
     # Log input arguments
@@ -262,4 +263,4 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         logger.exception("Run failed %s", str(e))
-        exit(1)
+        sys.exit(1)
