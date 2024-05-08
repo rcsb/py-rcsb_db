@@ -24,6 +24,7 @@
 #     5-Apr-2024 - dwp Change arguments and execution structure to make more flexible;
 #                      Add arguments and logic to support CLI usage from weekly-update workflow;
 #                      Add support for logging output to a specific file
+#    25-Apr-2024 - dwp Add support for remote config file loading; use underscores instead of hyphens for arg choices
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -48,14 +49,12 @@ logger = logging.getLogger()
 def main():
     parser = argparse.ArgumentParser()
     #
-    # defaultConfigName = "site_info_configuration"
-    #
     parser.add_argument(
         "--op",
         default=None,
         required=True,
         help="Loading operation to perform",
-        choices=["pdbx-loader", "build-resource-cache", "pdbx-db-wiper", "pdbx-id-list-splitter", "pdbx-loader-check", "etl-entity-sequence-clusters", "etl-repository-holdings"]
+        choices=["pdbx_loader", "build_resource_cache", "pdbx_db_wiper", "pdbx_id_list_splitter", "pdbx_loader_check", "etl_entity_sequence_clusters", "etl_repository_holdings"]
     )
     #
     parser.add_argument(
@@ -115,53 +114,51 @@ def main():
     #
     try:
         op, commonD, loadD = processArguments(args)
-    except Exception as e:
-        logger.exception("Argument processing problem %s", str(e))
-        parser.print_help(sys.stderr)
-        exit(1)
+    except Exception as err:
+        logger.exception("Argument processing problem %s", str(err))
+        raise ValueError("Argument processing problem") from err
+    #
     #
     # Log input arguments
     loadLogD = {k: v for d in [commonD, loadD] for k, v in d.items() if k != "inputIdCodeList"}
     logger.info("running load op %r on loadLogD %r:", op, loadLogD)
-
-    # ----------------------- - ----------------------- - ----------------------- - ----------------------- - ----------------------- -
-    # Run the operation
     #
+    # Run the operation
     okR = False
     rlWf = RepoLoadWorkflow(**commonD)
-    if op in ["pdbx-loader", "etl-entity-sequence-clusters", "etl-repository-holdings"]:
+    if op in ["pdbx_loader", "etl_entity_sequence_clusters", "etl_repository_holdings"]:
         okR = rlWf.load(op, **loadD)
     #
-    elif op == "build-resource-cache":
+    elif op == "build_resource_cache":
         okR = rlWf.buildResourceCache(rebuildCache=True, providerTypeExclude=loadD["providerTypeExclude"])
     #
-    elif op == "pdbx-id-list-splitter":
+    elif op == "pdbx_id_list_splitter":
         okR = rlWf.splitIdList(op, **loadD)
     #
-    elif op == "pdbx-db-wiper":
+    elif op == "pdbx_db_wiper":
         okR = rlWf.removeAndRecreateDbCollections(op, **loadD)
     #
-    elif op == "pdbx-loader-check":
+    elif op == "pdbx_loader_check":
         okR = rlWf.loadCompleteCheck(op, **loadD)
     #
     else:
         logger.error("Unsupported op %r", op)
-
+    #
     logger.info("Operation %r completed with status %r", op, okR)
-
+    #
     if not okR:
         logger.error("Operation %r failed with status %r", op, okR)
-        exit(1)
+        raise ValueError("Operation %r failed" % op)
 
 
 def processArguments(args):
+    # Logging details
     logFilePath = args.log_file_path
     debugFlag = args.debug
     if debugFlag:
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
-    #
     if logFilePath:
         logDir = os.path.dirname(logFilePath)
         if not os.path.isdir(logDir):
@@ -175,37 +172,38 @@ def processArguments(args):
         handler.setFormatter(formatter)
         logger.addHandler(handler)
     #
-    # Configuration Details
+    # Configuration details
     configPath = args.config_path
     configName = args.config_name
-    if not configPath:
-        configPath = os.getenv("DBLOAD_CONFIG_PATH", None)
-    try:
-        if os.access(configPath, os.R_OK):
-            os.environ["DBLOAD_CONFIG_PATH"] = configPath
-            logger.info("Using configuation path %s (%s)", configPath, configName)
-        else:
-            logger.error("Missing or access issue with config file %r", configPath)
-            exit(1)
-        mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data") if args.mock else None
-        cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
-        if args.vrpt_repo_path:
-            vrptPath = args.vrpt_repo_path
-            if not os.access(vrptPath, os.R_OK):
-                logger.error("Unreadable validation report repository path %r", vrptPath)
-            envName = cfgOb.get("VRPT_REPO_PATH_ENV", sectionName=configName)
-            os.environ[envName] = vrptPath
-            logger.info("Using alternate validation report path %s", os.getenv(envName))
-    except Exception as e:
-        logger.error("Missing or access issue with config file %r with %s", configPath, str(e))
-        exit(1)
+    if not (configPath and configName):
+        logger.error("Config path and/or name not provided: %r, %r", configPath, configName)
+        raise ValueError("Config path and/or name not provided: %r, %r" % (configPath, configName))
+    mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data") if args.mock else None
+    logger.info("Using configuration file %r (section %r)", configPath, configName)
+    cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
+    cfgObTmp = cfgOb.exportConfig()
+    logger.info("Length of config object (%r)", len(cfgObTmp))
+    if len(cfgObTmp) == 0:
+        logger.error("Missing or access issue for config file %r", configPath)
+        raise ValueError("Missing or access issue for config file %r" % configPath)
+    else:
+        del cfgObTmp
     #
-    # First do any needed argument checking
+    if args.vrpt_repo_path:
+        vrptPath = args.vrpt_repo_path
+        if not os.access(vrptPath, os.R_OK):
+            logger.error("Unreadable validation report repository path %r", vrptPath)
+            raise ValueError("Unreadable validation report repository path %r" % vrptPath)
+        envName = cfgOb.get("VRPT_REPO_PATH_ENV", sectionName=configName)
+        os.environ[envName] = vrptPath
+        logger.info("Using alternate validation report path %s", os.getenv(envName))
+    #
+    # Do any additional argument checking
     op = args.op
     databaseName = args.database
     if not op:
         raise ValueError("Must supply a value to '--op' argument")
-    if op == "pdbx-loader" and not databaseName:
+    if op == "pdbx_loader" and not databaseName:
         raise ValueError("Must supply a value to '--database' argument for op type 'pdbx-loader")
     #
     if databaseName == "bird_family":  # Not sure if this is relevant anymore
@@ -261,4 +259,8 @@ def processArguments(args):
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logger.exception("Run failed %s", str(e))
+        sys.exit(1)

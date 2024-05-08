@@ -205,6 +205,7 @@ class PdbxLoader(object):
             #
             # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
             inputIdCodeList = inputIdCodeList if inputIdCodeList else []
+            inputIdCodeList = [id.upper() for id in inputIdCodeList]
             if databaseName in ["pdbx_core", "pdbx_comp_model_core"]:
                 totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=databaseName + "_entry")
                 # Get the list of IDs from only the given sublist that are already loaded

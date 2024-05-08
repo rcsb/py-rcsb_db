@@ -39,7 +39,7 @@ class RepoLoadWorkflow(object):
     def __init__(self, **kwargs):
         #  Configuration Details
         configPath = kwargs.get("configPath", "exdb-config-example.yml")
-        self.__configName = kwargs.get("configName", "site_info_configuration")
+        self.__configName = kwargs.get("configName", "site_info_remote_configuration")
         mockTopPath = kwargs.get("mockTopPath", None)
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=self.__configName, mockTopPath=mockTopPath)
         #
@@ -60,7 +60,7 @@ class RepoLoadWorkflow(object):
         #    logger.error("Resource cache test or rebuild has failed - exiting")
         #    return False
         # argument processing
-        if op not in ["pdbx-loader", "etl-repository-holdings", "etl-entity-sequence-clusters"]:
+        if op not in ["pdbx_loader", "etl_repository_holdings", "etl_entity_sequence_clusters"]:
             logger.error("Unsupported operation %r - exiting", op)
             return False
         try:
@@ -112,7 +112,7 @@ class RepoLoadWorkflow(object):
             return False
         #
 
-        if op == "pdbx-loader" and dbType == "mongo" and databaseName in databaseNameList:
+        if op == "pdbx_loader" and dbType == "mongo" and databaseName in databaseNameList:
             okS = True
             try:
                 inputPathList, inputIdCodeList = None, None
@@ -167,7 +167,7 @@ class RepoLoadWorkflow(object):
                 okS = self.loadStatus(mw.getLoadStatus(), readBackCheck=readBackCheck)
             except Exception as e:
                 logger.exception("Operation %r database %r failing with %s", op, databaseName, str(e))
-        elif op == "etl-entity-sequence-clusters" and dbType == "mongo":
+        elif op == "etl_entity_sequence_clusters" and dbType == "mongo":
             cw = SequenceClustersEtlWorker(
                 self.__cfgOb,
                 numProc=numProc,
@@ -181,7 +181,7 @@ class RepoLoadWorkflow(object):
             )
             ok = cw.etl(dataSetId, seqDataLocator, loadType=loadType)
             okS = self.loadStatus(cw.getLoadStatus(), readBackCheck=readBackCheck)
-        elif op == "etl-repository-holdings" and dbType == "mongo":
+        elif op == "etl_repository_holdings" and dbType == "mongo":
             rhw = RepoHoldingsEtlWorker(
                 self.__cfgOb,
                 sandboxPath,
@@ -213,7 +213,7 @@ class RepoLoadWorkflow(object):
             logger.exception("Failing with %s", str(e))
         return ret
 
-    def buildResourceCache(self, rebuildCache=False, providerTypeExclude=None):
+    def buildResourceCache(self, rebuildCache=False, providerTypeExclude=None, restoreUseStash=True, restoreUseGit=True):
         """Generate and cache resource dependencies."""
         ret = False
         try:
@@ -230,8 +230,8 @@ class RepoLoadWorkflow(object):
                 self.__cfgOb,
                 configName=self.__configName,
                 cachePath=self.__cachePath,
-                restoreUseStash=True,
-                restoreUseGit=True,
+                restoreUseStash=restoreUseStash,
+                restoreUseGit=restoreUseGit,
                 providerTypeExclude=providerTypeExclude,
             )
             ret = rP.cacheResources(useCache=useCache, doBackup=False, useStash=False, useGit=False)
@@ -242,7 +242,7 @@ class RepoLoadWorkflow(object):
         return ret
 
     def removeAndRecreateDbCollections(self, op, **kwargs):
-        if op not in ["pdbx-db-wiper"]:
+        if op not in ["pdbx_db_wiper"]:
             logger.error("Unsupported operation %r - exiting", op)
             return False
         try:
@@ -278,7 +278,7 @@ class RepoLoadWorkflow(object):
         return ok
 
     def splitIdList(self, op, **kwargs):
-        if op not in ["pdbx-id-list-splitter"]:
+        if op not in ["pdbx_id_list_splitter"]:
             logger.error("Unsupported operation %r - exiting", op)
             return False
 
@@ -384,7 +384,7 @@ class RepoLoadWorkflow(object):
         return filePathMappingD
 
     def loadCompleteCheck(self, op, **kwargs):
-        if op not in ["pdbx-loader-check"]:
+        if op not in ["pdbx_loader_check"]:
             logger.error("Unsupported operation %r - exiting", op)
             return False
         try:
