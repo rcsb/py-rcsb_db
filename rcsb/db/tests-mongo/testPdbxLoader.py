@@ -57,7 +57,7 @@ class PdbxLoaderTests(unittest.TestCase):
         #
         #
         self.__isMac = platform.system() == "Darwin"
-        self.__excludeType = None if self.__isMac else "optional"
+        self.__excludeTypeL = None if self.__isMac else ["optional"]
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
         configName = "site_info_configuration"
@@ -169,7 +169,7 @@ class PdbxLoaderTests(unittest.TestCase):
                 updateSchemaOnReplace=kwargs["updateSchemaOnReplace"],
                 restoreUseStash=False,
                 restoreUseGit=True,
-                providerTypeExclude=self.__excludeType,
+                providerTypeExcludeL=self.__excludeTypeL,
             )
             self.assertEqual(ok, kwargs["status"])
             ok = self.__loadStatus(mw.getLoadStatus())

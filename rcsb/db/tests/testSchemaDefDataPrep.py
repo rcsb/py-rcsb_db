@@ -67,7 +67,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
 
     def setUp(self):
         self.__isMac = platform.system() == "Darwin"
-        self.__excludeType = None if self.__isMac else "optional"
+        self.__excludeTypeL = None if self.__isMac else ["optional"]
         self.__numProc = 2
         mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         self.__cachePath = os.path.join(TOPDIR, "CACHE")
@@ -311,7 +311,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 cachePath=self.__cachePath,
                 restoreUseStash=False,
                 restoreUseGit=True,
-                providerTypeExclude=self.__excludeType,
+                providerTypeExcludeL=self.__excludeTypeL,
             )
             dmh = DictMethodRunner(dictApi, modulePathMap=self.__modulePathMap, resourceProvider=rP)
             #

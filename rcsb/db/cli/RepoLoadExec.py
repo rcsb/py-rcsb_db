@@ -93,7 +93,7 @@ def main():
     parser.add_argument("--load_file_list_dir", default=None, help="Directory path for storing load file lists")
     parser.add_argument("--num_sublists", default=None, help="Number of sublists to create/load for the associated database")
     parser.add_argument("--force_reload", default=False, action="store_true", help="Force re-load of provided ID list (i.e., don't just load delta; useful for manual/test runs).")
-    parser.add_argument("--provider_type_exclude", default=None, help="Resource provider types to exclude")
+    parser.add_argument("--provider_types_exclude", default=None, help="Resource provider types to exclude")
     #
     parser.add_argument("--db_type", default="mongo", help="Database server type (default=mongo)")
     parser.add_argument("--file_limit", default=None, help="Load file limit for testing")
@@ -130,7 +130,7 @@ def main():
         okR = rlWf.load(op, **loadD)
     #
     elif op == "build_resource_cache":
-        okR = rlWf.buildResourceCache(rebuildCache=True, providerTypeExclude=loadD["providerTypeExclude"])
+        okR = rlWf.buildResourceCache(rebuildCache=True, providerTypeExcludeL=loadD["providerTypeExcludeL"])
     #
     elif op == "pdbx_id_list_splitter":
         okR = rlWf.splitIdList(op, **loadD)
@@ -249,7 +249,7 @@ def processArguments(args):
         "documentStyle": args.document_style,
         "dataSelectors": dataSelectors,
         "mergeValidationReports": not args.disable_merge_validation_reports,
-        "providerTypeExclude": args.provider_type_exclude,
+        "providerTypeExcludeL": args.provider_types_exclude,
         "clusterFileNameTemplate": args.cluster_filename_template,
         "rebuildCache": args.rebuild_cache,
         "forceReload": args.force_reload,

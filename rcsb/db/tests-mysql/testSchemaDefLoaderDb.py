@@ -49,7 +49,7 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
 
     def setUp(self):
         self.__isMac = platform.system() == "Darwin"
-        self.__excludeType = None if self.__isMac else "optional"
+        self.__excludeTypeL = None if self.__isMac else ["optional"]
         self.__verbose = True
         #
         fileLimit = 100
@@ -134,7 +134,7 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
                     verbose=self.__verbose,
                     restoreUseStash=False,
                     restoreUseGit=True,
-                    providerTypeExclude=self.__excludeType,
+                    providerTypeExcludeL=self.__excludeTypeL,
                 )
                 ok = sdl.load(inputPathList=inputPathList, loadType="batch-file")
                 self.assertTrue(ok)
@@ -163,7 +163,7 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
                     verbose=self.__verbose,
                     restoreUseStash=False,
                     restoreUseGit=True,
-                    providerTypeExclude=self.__excludeType,
+                    providerTypeExcludeL=self.__excludeTypeL,
                 )
                 sdl.load(inputPathList=inputPathList, loadType="batch-file")
                 #
@@ -197,7 +197,7 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
                     verbose=self.__verbose,
                     restoreUseStash=False,
                     restoreUseGit=True,
-                    providerTypeExclude=self.__excludeType,
+                    providerTypeExcludeL=self.__excludeTypeL,
                 )
                 ok = sdl.load(inputPathList=inputPathList, loadType="batch-file")
                 self.assertTrue(ok)
@@ -226,7 +226,7 @@ class SchemaDefLoaderDbTests(unittest.TestCase):
                     verbose=self.__verbose,
                     restoreUseStash=False,
                     restoreUseGit=True,
-                    providerTypeExclude=self.__excludeType,
+                    providerTypeExcludeL=self.__excludeTypeL,
                 )
                 ok = sdl.load(inputPathList=inputPathList, loadType="batch-insert", deleteOpt="all")
                 self.assertTrue(ok)

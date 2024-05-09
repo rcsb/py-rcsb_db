@@ -89,7 +89,7 @@ class RepoLoadWorkflow(object):
             pruneDocumentSize = kwargs.get("pruneDocumentSize", None)
             pruneDocumentSize = float(pruneDocumentSize) if pruneDocumentSize else None
             regexPurge = kwargs.get("regexPurge", False)
-            providerTypeExclude = kwargs.get("providerTypeExclude", None)
+            providerTypeExcludeL = kwargs.get("providerTypeExcludeL", None)
             clusterFileNameTemplate = kwargs.get("clusterFileNameTemplate", None)
             #
             # "Document organization (rowwise_by_name_with_cardinality|rowwise_by_name|columnwise_by_name|rowwise_by_id|rowwise_no_name",
@@ -159,7 +159,7 @@ class RepoLoadWorkflow(object):
                     regexPurge=regexPurge,
                     validationLevel=schemaLevel,
                     mergeContentTypes=mergeContentTypes,
-                    providerTypeExclude=providerTypeExclude,
+                    providerTypeExcludeL=providerTypeExcludeL,
                     updateSchemaOnReplace=updateSchemaOnReplace,
                     rebuildCache=rebuildCache,
                     forceReload=forceReload,
@@ -213,7 +213,7 @@ class RepoLoadWorkflow(object):
             logger.exception("Failing with %s", str(e))
         return ret
 
-    def buildResourceCache(self, rebuildCache=False, providerTypeExclude=None, restoreUseStash=True, restoreUseGit=True):
+    def buildResourceCache(self, rebuildCache=False, providerTypeExcludeL=None, restoreUseStash=True, restoreUseGit=True):
         """Generate and cache resource dependencies."""
         ret = False
         try:
@@ -232,7 +232,7 @@ class RepoLoadWorkflow(object):
                 cachePath=self.__cachePath,
                 restoreUseStash=restoreUseStash,
                 restoreUseGit=restoreUseGit,
-                providerTypeExclude=providerTypeExclude,
+                providerTypeExcludeL=providerTypeExcludeL,
             )
             ret = rP.cacheResources(useCache=useCache, doBackup=False, useStash=False, useGit=False)
             logger.info("useCache %r cache reload status (%r)", useCache, ret)
