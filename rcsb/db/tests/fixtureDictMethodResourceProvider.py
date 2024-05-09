@@ -37,7 +37,7 @@ TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 class DictMethodResourceProviderFixture(unittest.TestCase):
     def setUp(self):
         self.__isMac = platform.system() == "Darwin"
-        self.__excludeType = None if self.__isMac else "optional"
+        self.__excludeTypeL = None if self.__isMac else ["optional"]
         self.__cachePath = os.path.join(TOPDIR, "CACHE")
         self.__mockTopPath = os.path.join(TOPDIR, "rcsb", "mock-data")
         configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
@@ -64,7 +64,7 @@ class DictMethodResourceProviderFixture(unittest.TestCase):
                 cachePath=self.__cachePath,
                 restoreUseGit=True,
                 restoreUseStash=False,
-                providerTypeExclude=self.__excludeType,
+                providerTypeExcludeL=self.__excludeTypeL,
             )
             ret = rp.cacheResources(useCache=True)
             self.assertTrue(ret)

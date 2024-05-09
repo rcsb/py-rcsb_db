@@ -247,7 +247,7 @@ optional arguments:
   --force_reload        Force re-load of provided ID list (i.e.,
                         don't just load delta; useful for manual/test
                         runs).
-  --provider_type_exclude PROVIDER_TYPE_EXCLUDE
+  --provider_types_exclude
                         Resource provider types to exclude
   --db_type DB_TYPE     Database server type (default=mongo)
   --file_limit FILE_LIMIT

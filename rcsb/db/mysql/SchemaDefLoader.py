@@ -72,7 +72,7 @@ class SchemaDefLoader(object):
         verbose=True,
         restoreUseStash=True,
         restoreUseGit=True,
-        providerTypeExclude=True,
+        providerTypeExcludeL=None,
     ):
         self.__verbose = verbose
         self.__debug = False
@@ -103,7 +103,12 @@ class SchemaDefLoader(object):
         modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=sectionName)
         dP = DictionaryApiProviderWrapper(self.__cachePath, cfgOb=self.__cfgOb, configName=sectionName, useCache=True)
         dictApi = dP.getApiByName(schemaName)
-        rP = DictMethodResourceProvider(self.__cfgOb, cachePath=self.__cachePath, restoreUseStash=restoreUseStash, restoreUseGit=restoreUseGit, providerTypeExclude=providerTypeExclude)
+        rP = DictMethodResourceProvider(
+            self.__cfgOb, cachePath=self.__cachePath,
+            restoreUseStash=restoreUseStash,
+            restoreUseGit=restoreUseGit,
+            providerTypeExcludeL=providerTypeExcludeL,
+        )
         self.__dmh = DictMethodRunner(dictApi, modulePathMap=modulePathMap, resourceProvider=rP)
 
     def setWarning(self, action):

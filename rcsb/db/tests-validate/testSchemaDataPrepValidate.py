@@ -59,7 +59,7 @@ def chunkList(seq, size):
 class SchemaDataPrepValidateTests(unittest.TestCase):
     def setUp(self):
         self.__isMac = platform.system() == "Darwin"
-        self.__excludeType = None if self.__isMac else "optional"
+        self.__excludeTypeL = None if self.__isMac else ["optional"]
         self.__numProc = 2
         # self.__fileLimit = None
         self.__fileLimit = 20
@@ -270,7 +270,7 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
                 cachePath=self.__cachePath,
                 restoreUseStash=False,
                 restoreUseGit=True,
-                providerTypeExclude=self.__excludeType,
+                providerTypeExcludeL=self.__excludeTypeL,
             )
             dmh = DictMethodRunner(dictApi, modulePathMap=self.__modulePathMap, resourceProvider=rP)
             #

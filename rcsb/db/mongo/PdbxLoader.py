@@ -40,6 +40,7 @@
 #                      containers fails to be read properly (incl. validation reports);
 #                      Begin adding code to support weekly update workflow CLI requirements
 #     26-Mar-2024 dwp  Add arguments and logic to support CLI usage from weekly-update workflow
+#      9-May-2024 dwp  Change providerTypeExclude to be a list, 'providerTypeExcludeL'
 #
 ##
 """
@@ -159,7 +160,7 @@ class PdbxLoader(object):
         validateFailures=True,
         rebuildCache=False,
         reloadPartial=True,
-        providerTypeExclude=None,
+        providerTypeExcludeL=None,
         restoreUseGit=True,
         restoreUseStash=True,
         forceReload=False,
@@ -186,7 +187,7 @@ class PdbxLoader(object):
             validateFailures (bool, optional): output validation report on load failures
             rebuildCache (bool, optional): whether to force rebuild of all cache resources (default is False, to just check them)
             reloadPartial (bool, optional): on load failures attempt reload of partial objects.
-            providerTypeExclude (str, optional): exclude dictionary method provider by type name. Defaults to None.
+            providerTypeExcludeL (list, optional): exclude dictionary method providers by type name. Defaults to None.
             restoreUseStash (bool, optional): restore cache resources using stash storage.  Defaults to True.
             restoreUseGit (bool, optional): restore cache resources using git storage.  Defaults to True.
             forceReload (bool, optional): Force re-load of provided ID list (i.e., don't just load delta; useful for manual/test runs)
@@ -241,18 +242,19 @@ class PdbxLoader(object):
                 logger.info("Saving %d paths in %s", len(locatorObjList), saveInputFileListPath)
             # ---
             # Don't load resource providers which are irrelevant to 'pdbx_core' or 'pdbx_comp_model_core'
-            if not providerTypeExclude:
-                if databaseName == "pdbx_core":
-                    providerTypeExclude = "pdbx_comp_model_core"
-                if databaseName == "pdbx_comp_model_core":
-                    providerTypeExclude = "pdbx_core"
+            if not providerTypeExcludeL:
+                providerTypeExcludeL = []
+                if databaseName in ["pdbx_core", "bird_chem_comp_core"]:
+                    providerTypeExcludeL.append("pdbx_comp_model_core")
+                if databaseName in ["pdbx_comp_model_core", "bird_chem_comp_core"]:
+                    providerTypeExcludeL.append("pdbx_core")
             #
             modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=self.__cfgSectionName)
             dP = DictionaryApiProviderWrapper(self.__cachePath, cfgOb=self.__cfgOb, useCache=True)
             dictApi = dP.getApiByName(databaseName)
             # ---
             dmrP = DictMethodResourceProvider(
-                self.__cfgOb, cachePath=self.__cachePath, restoreUseStash=restoreUseStash, restoreUseGit=restoreUseGit, providerTypeExclude=providerTypeExclude
+                self.__cfgOb, cachePath=self.__cachePath, restoreUseStash=restoreUseStash, restoreUseGit=restoreUseGit, providerTypeExcludeL=providerTypeExcludeL
             )
             # Cache dependencies in serial mode.
             useCacheInCheck = not rebuildCache
