@@ -356,3 +356,4 @@
  09-Apr-2024  V1.718 Update RepoLoadExec CLI and RepoLoadWorkflow to support CLI usage from weekly-update workflow
   6-May-2024  V1.719 Updates to CLI utilities
   9-May-2024  V1.720 Adjust provider type exclusion input to accept a list of types; update setuptools config
+ 13-May-2024  V1.721 Update requirements
