@@ -153,6 +153,8 @@ class SchemaDefLoader(object):
 
         """
         tableIdSkipD = tableIdSkipD if tableIdSkipD is not None else {}
+        tableDataDict = {}
+        containerNameList = []
         if inputPathList is not None:
             cL = self.__rpP.getContainerList(inputPathList)
             #
@@ -164,7 +166,6 @@ class SchemaDefLoader(object):
 
         elif containerList is not None:
             tableDataDict, containerNameList = self.__sdp.process(containerList)
-        #
         #
         if loadType in ["batch-file", "batch-file-append"]:
             append = True if loadType == "batch-file-append" else False

@@ -173,8 +173,8 @@ def main():
         mu = MarshalUtil(workPath=cachePath)
         inputPathList = mu.doImport(inputFileListPath, fmt="list")
     #
-    ##
-
+    contentType = None
+    #
     if args.scan_chem_comp_ref:
         contentType = "chem_comp_core"
 
@@ -205,24 +205,27 @@ def main():
     elif args.scan_ihm_dev:
         contentType = "ihm_dev"
 
-    ok = scanRepo(
-        cfgOb,
-        contentType,
-        scanDataFilePath,
-        numProc,
-        chunkSize,
-        fileLimit,
-        scanType=scanType,
-        inputPathList=inputPathList,
-        pathListFilePath=outputFileListPath,
-        dataCoverageFilePath=dataCoverageFilePath,
-        dataCoverageItemFilePath=dataCoverageItemFilePath,
-        dataTypeFilePath=dataTypeFilePath,
-        failedFilePath=failedFilePath,
-        cachePath=cachePath,
-    )
+    if not contentType:
+        logger.error("contentType unset due to insufficient arguments")
+    else:
+        ok = scanRepo(
+            cfgOb,
+            contentType,
+            scanDataFilePath,
+            numProc,
+            chunkSize,
+            fileLimit,
+            scanType=scanType,
+            inputPathList=inputPathList,
+            pathListFilePath=outputFileListPath,
+            dataCoverageFilePath=dataCoverageFilePath,
+            dataCoverageItemFilePath=dataCoverageItemFilePath,
+            dataTypeFilePath=dataTypeFilePath,
+            failedFilePath=failedFilePath,
+            cachePath=cachePath,
+        )
 
-    logger.info("Operation completed with status %r", ok)
+        logger.info("Operation completed with status %r", ok)
 
 
 if __name__ == "__main__":

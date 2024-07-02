@@ -162,6 +162,7 @@ def main():
         exit(1)
     ##
     if args.db_type == "mongo":
+        okS = True
         if args.etl_entity_sequence_clusters:
             cw = SequenceClustersEtlWorker(cfgOb, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck, workPath=cachePath)
             ok = cw.etl(dataSetId, seqDataLocator, loadType=loadType)

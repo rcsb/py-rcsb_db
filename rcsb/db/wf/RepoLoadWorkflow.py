@@ -111,9 +111,8 @@ class RepoLoadWorkflow(object):
             logger.exception("Argument and configuration processing failing with %s", str(e))
             return False
         #
-
+        ok = okS = True
         if op == "pdbx_loader" and dbType == "mongo" and databaseName in databaseNameList:
-            okS = True
             try:
                 inputPathList, inputIdCodeList = None, None
                 if loadIdListPath:
@@ -257,6 +256,7 @@ class RepoLoadWorkflow(object):
             logger.exception("Argument and configuration processing failing with %s", str(e))
             return False
         #
+        ok = False
         if dbType == "mongo" and databaseName in databaseNameList:
             try:
                 mw = PdbxLoader(

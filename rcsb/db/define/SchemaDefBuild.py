@@ -639,17 +639,16 @@ class SchemaDefBuild(object):
             sliceCategories.extend(sliceCategoryExtrasD[sliceFilter])
         sliceCardD = self.__contentInfo.getSliceUnitCardinalityForDatabase() if sliceFilter else {}
         #
+        blockAttributeName, blockAttributeAppType, blockRefPathList = None, None, None
         if addBlockAttribute:
             # Optional synthetic attribute added to each category with value linked to data block identifier (or other function)
             blockAttributeName = contentDefHelper.getBlockAttributeName(databaseName) if contentDefHelper else None
             blockAttributeCifType = contentDefHelper.getBlockAttributeCifType(databaseName) if contentDefHelper else None
             blockAttributeAppType = dtAppInfo.getAppTypeName(blockAttributeCifType)
-            blockRefPathList = None
             if "addParentRefs" in enforceOpts:
                 refD = contentDefHelper.getBlockAttributeRefParent(databaseName)
                 if refD is not None:
                     blockRefPathList = [convertNameF(refD["CATEGORY_NAME"]), convertNameF(refD["ATTRIBUTE_NAME"])]
-
         #
         dictSchema = self.__contentInfo.getSchemaNames()
         #

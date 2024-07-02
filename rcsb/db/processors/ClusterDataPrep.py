@@ -91,6 +91,8 @@ class ClusterDataPrep(object):
             # Levels must be string values internally -
             levelList = [str(level) for level in levels]
             #
+            clusterTypeKey, schemaNameMembership = None, None
+            #
             schemaNameMembers = self.__clusterSchemaName
             if clusterType.lower() == "entity":
                 clusterTypeKey = self.__entityAttributeName

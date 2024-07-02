@@ -22,6 +22,8 @@
 #                 Avoid overlap between current and removed/unreleased entries.
 # 30-Apr-2020 jdw new NMR content types and support for config option RCSB_EDMAP_LIST_PATH
 # 23-Oct-2020 jdw add getHoldingsCombined()
+#  1-Jul-2024 dwp Turn off population of "2fo-fc Map" and "fo-fc Map" content types (DSN6 maps)
+#                 (note that this file is only used when discoveryMode=='local')
 ##
 
 __docformat__ = "restructuredtext en"
@@ -515,8 +517,8 @@ class RepoHoldingsDataPrep(object):
                 if entryId in valCifD and valCifD[entryId]:
                     rD[entryId].append("validation data mmCIF")
                 if entryId in edD:
-                    rD[entryId].append("2fo-fc Map")
-                    rD[entryId].append("fo-fc Map")
+                    # rD[entryId].append("2fo-fc Map")
+                    # rD[entryId].append("fo-fc Map")
                     rD[entryId].append("Map Coefficients")
                 if entryId not in pD:
                     rD[entryId].append("FASTA sequence")
