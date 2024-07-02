@@ -699,7 +699,7 @@ class SchemaDefDataPrep(object):
                 #
                 otherAttributeIdList = tObj.getMapOtherAttributeIdList()
                 #
-
+                rowDList = []
                 if numMapCategories == 1:
                     rowDList = self.__mapInstanceCategory(tObj, mapCategoryNameList[0], myContainer, filterType)
                 elif numMapCategories == 0:

@@ -579,46 +579,45 @@ class PdbxLoader(object):
                     ok, _, failDocIdS = self.__loadDocuments(
                         databaseName, collectionName, dList, docIdL, replaceIdL=replaceIdL, loadType=loadType, readBackCheck=readBackCheck, pruneDocumentSize=pruneDocumentSize
                     )
-                #
-                if failDocIdS:
-
-                    logger.info("Initial load failures: %r", failDocIdS)
-                    fList = []
-                    for dD in dList:
-                        tId = self.__getKeyValues(dD, docIdL)
-                        if tId in failDocIdS:
-                            fList.append(dD)
-                            if validateFailures:
-                                logger.info("Validating document %r", tId)
-                                self.__validateDocuments(databaseName, collectionName, [dD], docIdL, schemaLevel=validationLevel)
                     #
-                    #  -- Try and repair failDocIdS --
+                    if failDocIdS:
+                        logger.info("Initial load failures: %r", failDocIdS)
+                        fList = []
+                        for dD in dList:
+                            tId = self.__getKeyValues(dD, docIdL)
+                            if tId in failDocIdS:
+                                fList.append(dD)
+                                if validateFailures:
+                                    logger.info("Validating document %r", tId)
+                                    self.__validateDocuments(databaseName, collectionName, [dD], docIdL, schemaLevel=validationLevel)
+                        #
+                        #  -- Try and repair failDocIdS --
+                        #
+                        if reloadPartial:
+                            logger.info("Attempting corrections on documents %r", failDocIdS)
+                            fList = self.__validateAndFix(databaseName, collectionName, fList, docIdL, schemaLevel=validationLevel)
+
+                            fOk, _, failDocIdS = self.__loadDocuments(
+                                databaseName, collectionName, fList, docIdL, replaceIdL=replaceIdL, loadType=loadType, readBackCheck=readBackCheck, pruneDocumentSize=pruneDocumentSize
+                            )
+                            logger.info("Final load (%r) failures: %r", fOk, failDocIdS)
+
+                    # ------
+                    # Collect the container identifiers for the successful loads (paths for logging only)
                     #
-                    if reloadPartial:
-                        logger.info("Attempting corrections on documents %r", failDocIdS)
-                        fList = self.__validateAndFix(databaseName, collectionName, fList, docIdL, schemaLevel=validationLevel)
-
-                        fOk, _, failDocIdS = self.__loadDocuments(
-                            databaseName, collectionName, fList, docIdL, replaceIdL=replaceIdL, loadType=loadType, readBackCheck=readBackCheck, pruneDocumentSize=pruneDocumentSize
-                        )
-                        logger.info("Final load (%r) failures: %r", fOk, failDocIdS)
-
-                # ------
-                # Collect the container identifiers for the successful loads (paths for logging only)
-                #
-                failPathList = []
-                for dId in failDocIdS:
-                    cId = indexDoc[dId]
-                    cardinalIdFailS.add(dId[0])
-                    failContainerIdS.add(cId)
-                    locObj = cIdD[cId]
-                    failPathList.extend(self.__rpP.getLocatorPaths([locObj], locatorIndex=0))
-                failPathList = list(set(failPathList))
-                #
-                if failPathList:
-                    logger.error("%s %s/%s worker load failures %r", procName, databaseName, collectionName, [os.path.basename(pth) for pth in failPathList if pth is not None])
-                if rejectPathList:
-                    logger.debug("%s %s/%s worker load rejected %r", procName, databaseName, collectionName, [os.path.basename(pth) for pth in rejectPathList])
+                    failPathList = []
+                    for dId in failDocIdS:
+                        cId = indexDoc[dId]
+                        cardinalIdFailS.add(dId[0])
+                        failContainerIdS.add(cId)
+                        locObj = cIdD[cId]
+                        failPathList.extend(self.__rpP.getLocatorPaths([locObj], locatorIndex=0))
+                    failPathList = list(set(failPathList))
+                    #
+                    if failPathList:
+                        logger.error("%s %s/%s worker load failures %r", procName, databaseName, collectionName, [os.path.basename(pth) for pth in failPathList if pth is not None])
+                    if rejectPathList:
+                        logger.debug("%s %s/%s worker load rejected %r", procName, databaseName, collectionName, [os.path.basename(pth) for pth in rejectPathList])
             #
             containerList = []
             # -------------------------
@@ -841,6 +840,7 @@ class PdbxLoader(object):
         """Update validation schema for the input collection -"""
         try:
             logger.debug("Updating validatio for schema database %s collection %s", databaseName, collectionName)
+            ok1 = ok2 = ok3 = True
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
                 ok1 = mg.databaseExists(databaseName)
@@ -1063,6 +1063,7 @@ class PdbxLoader(object):
 
         """
         try:
+            ok = False
             logger.info("Beginning wiping of database %s", databaseName)
 
             _, _, fullCollectionNameList, docIndexD = self.__schP.getSchemaInfo(databaseName, dataTyping="ANY")

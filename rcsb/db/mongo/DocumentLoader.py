@@ -163,6 +163,8 @@ class DocumentLoader(object):
             #
             logger.debug("%s databaseName %s collectionName %s workingDir %s", procName, databaseName, collectionName, workingDir)
             #
+            ok = False
+            successList, failedList = [], []
             if dataList:
                 ok, successList, failedList = self.__loadDocuments(databaseName, collectionName, dataList, loadType=loadType, readBackCheck=readBackCheck, keyNames=keyNames)
             #
@@ -176,7 +178,6 @@ class DocumentLoader(object):
                 len(failedList),
             )
             #
-
             self.__end(startTime, procName + " with status " + str(ok))
             return successList, [], []
 
