@@ -519,6 +519,7 @@ class PdbxLoader(object):
             # -----
             for collectionName in collectionNameList:
                 ok = True
+                failDocIdS = set()
                 # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
                 docIdL = sd.getDocumentKeyAttributeNames(collectionName)
                 replaceIdL = sd.getDocumentReplaceAttributeNames(collectionName)
@@ -581,7 +582,6 @@ class PdbxLoader(object):
                     )
                 #
                 if failDocIdS:
-
                     logger.info("Initial load failures: %r", failDocIdS)
                     fList = []
                     for dD in dList:
@@ -841,6 +841,7 @@ class PdbxLoader(object):
         """Update validation schema for the input collection -"""
         try:
             logger.debug("Updating validatio for schema database %s collection %s", databaseName, collectionName)
+            ok1 = ok2 = ok3 = True
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
                 ok1 = mg.databaseExists(databaseName)
@@ -1063,6 +1064,7 @@ class PdbxLoader(object):
 
         """
         try:
+            ok = False
             logger.info("Beginning wiping of database %s", databaseName)
 
             _, _, fullCollectionNameList, docIndexD = self.__schP.getSchemaInfo(databaseName, dataTyping="ANY")

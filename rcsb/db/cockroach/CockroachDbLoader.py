@@ -101,13 +101,13 @@ class CockroachDbLoader(object):
 
         """
         tableIdSkipD = tableIdSkipD if tableIdSkipD is not None else {}
+        tableDataDict = {}
+        containerNameList = []
         if inputPathList is not None:
             tableDataDict, containerNameList = self.__sdp.fetch(inputPathList)
         elif containerList is not None:
             tableDataDict, containerNameList = self.__sdp.process(containerList)
         #
-        #
-
         if loadType in ["cockroach-insert", "cockroach-insert-many"]:
             sqlMode = "single"
             if loadType in ["cockroach-insert-many"]:
