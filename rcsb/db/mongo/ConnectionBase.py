@@ -4,6 +4,7 @@
 #
 # Update:
 #    17-Mar-2018 jdw  add r/w sync controls - generalize auth to prefs
+#    13-Aug-2024 dwp  update keywords for pymongo 4.x support
 ##
 """
 Base class for managing database connection which handles application specific authentication.
