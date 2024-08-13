@@ -114,7 +114,7 @@ class ConnectionBase(object):
 
             kw = {}
             kw["w"] = self.__writeConcern
-            kw["j"] = True
+            kw["journal"] = True
             kw["appname"] = "dbloader"
             kw["readConcernLevel"] = self.__readConcern
             kw["readPreference"] = self.__readPreference
