@@ -358,3 +358,4 @@
   9-May-2024  V1.720 Adjust provider type exclusion input to accept a list of types; update setuptools config
  13-May-2024  V1.721 Update requirements
   1-Jul-2024  V1.722 Pylinting
+ 13-Aug-2024  V1.723 Update code for pymongo 4.x support

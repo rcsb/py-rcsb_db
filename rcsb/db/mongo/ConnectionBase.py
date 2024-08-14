@@ -4,6 +4,7 @@
 #
 # Update:
 #    17-Mar-2018 jdw  add r/w sync controls - generalize auth to prefs
+#    13-Aug-2024 dwp  update keywords for pymongo 4.x support
 ##
 """
 Base class for managing database connection which handles application specific authentication.
@@ -114,7 +115,7 @@ class ConnectionBase(object):
 
             kw = {}
             kw["w"] = self.__writeConcern
-            kw["j"] = True
+            kw["journal"] = True
             kw["appname"] = "dbloader"
             kw["readConcernLevel"] = self.__readConcern
             kw["readPreference"] = self.__readPreference

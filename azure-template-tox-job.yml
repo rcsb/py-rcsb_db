@@ -18,7 +18,7 @@ jobs:
     timeoutInMinutes: 0
     pool:
       ${{ if eq(parameters.os, 'macos') }}:
-        vmImage: "macOS-10.15"
+        vmImage: "macOS-12"
       ${{ if eq(parameters.os, 'linux') }}:
         vmImage: "ubuntu-20.04"
 
@@ -118,11 +118,11 @@ jobs:
         : # Mongo install
           - script: |
               sudo apt-get install gnupg wget
-              wget -qO - https://www.mongodb.org/static/pgp/server-4.2.asc | sudo apt-key add -
+              wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | sudo apt-key add -
               # sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
               sudo apt list --installed | grep mongodb
-              echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.2.list
-              # echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.2.list
+              echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+              # echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
               sudo apt-get update
               sudo apt-get install -y mongodb-org
               sudo apt list --installed | grep mongo

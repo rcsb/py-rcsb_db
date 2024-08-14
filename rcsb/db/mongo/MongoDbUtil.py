@@ -12,6 +12,7 @@
 #       7-Sep-2018  jdw add schema binding to createCollection method.createCollection. Change the default option to bypassValidation=False
 #                       for method insertList()
 #       8-Jan-2021  jdw add distinct() method
+#      13-Aug-2024  dwp update reindex method for pymongo 4.x support
 ##
 """
 Base class for simple essential database operations for MongoDb.
@@ -449,7 +450,7 @@ class MongoDbUtil(object):
         try:
             clt = self.__mgObj[databaseName].get_collection(collectionName)
             logger.debug("Current indexes for %s %s : %r", databaseName, collectionName, clt.list_indexes())
-            clt.reindex()
+            self.__mgObj[databaseName].command("reIndex", collectionName)
             return True
         except Exception as e:
             logger.exception("Failing %s and %s with %s", databaseName, collectionName, str(e))
