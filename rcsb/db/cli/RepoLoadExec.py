@@ -108,6 +108,7 @@ def main():
     parser.add_argument("--rebuild_schema", default=False, action="store_true", help="Rebuild schema on-the-fly if not cached")
     parser.add_argument("--vrpt_repo_path", default=None, help="Path to validation report repository")
     parser.add_argument("--cluster_filename_template", default=None, help="Filename template for cluster files (e.g., clusters-by-entity-90.txt)")
+    parser.add_argument("--min_npi_validation_count", default=None, help="Minimum number of nonpolymer entity instances expected to have validation data")
     parser.add_argument("--log_file_path", default=None, help="Path to runtime log file output.")
     #
     args = parser.parse_args()
@@ -253,6 +254,7 @@ def processArguments(args):
         "clusterFileNameTemplate": args.cluster_filename_template,
         "rebuildCache": args.rebuild_cache,
         "forceReload": args.force_reload,
+        "minNpiValidationCount": int(args.min_npi_validation_count) if args.min_npi_validation_count else None,
     }
 
     return op, commonD, loadD
