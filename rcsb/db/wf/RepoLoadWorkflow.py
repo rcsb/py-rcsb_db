@@ -419,9 +419,10 @@ class RepoLoadWorkflow(object):
                     "pdbx_core_nonpolymer_entity_instance": minNpiValidationCount,
                 }
                 for collection, minValidationCount in validationCollectionCheckMap.items():
-                    okV = mw.checkValidationDataCount(databaseName, collection, minValidationCount)
-                    logger.info("checkValidationDataCount for database %s coll %s (status %r)", databaseName, collection, okV)
-                    ok = ok and okV
+                    if minValidationCount:
+                        okV = mw.checkValidationDataCount(databaseName, collection, minValidationCount)
+                        logger.info("checkValidationDataCount for database %s coll %s (status %r)", databaseName, collection, okV)
+                        ok = ok and okV
         #
         except Exception as e:
             logger.exception("Operation %r database %r failing with %s", op, databaseName, str(e))
