@@ -197,7 +197,7 @@ class MongoDbUtil(object):
             clt = self.__mgObj[databaseName].get_collection(collectionName)
             rV = clt.insert_many(dList, ordered=ordered, bypass_document_validation=bypassValidation)
         except Exception as e:
-            logger.error("Bulk insert failing for document length %d with %s", len(dList), str(e)[:100])
+            logger.error("Bulk insert failing for document length %d with %s", len(dList), str(e)[:800])
 
             # for ii, dd in enumerate(dList):
             #    logger.error(" %d error doc %r" % (ii, list(dd.keys())))
