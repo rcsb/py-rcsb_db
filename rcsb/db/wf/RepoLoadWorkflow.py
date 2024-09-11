@@ -390,6 +390,7 @@ class RepoLoadWorkflow(object):
         try:
             databaseName = kwargs.get("databaseName", None)
             holdingsFilePath = kwargs.get("holdingsFilePath", None)
+            minNpiValidationCount = kwargs.get("minNpiValidationCount", None)
             completeIdCodeList, completeIdCodeCount = self.__getCompleteIdListCount(databaseName, holdingsFilePath)
             if not (completeIdCodeList or completeIdCodeCount):
                 logger.error("Failed to get completeIdCodeList and completeIdCodeCount for database %r", databaseName)
@@ -411,6 +412,18 @@ class RepoLoadWorkflow(object):
                 completeIdCodeList=completeIdCodeList,
                 completeIdCodeCount=completeIdCodeCount,
             )
+            logger.info("loadCompleteCheck for database %s (status %r)", databaseName, ok)
+            if databaseName == "pdbx_core":
+                validationCollectionCheckMap = {
+                    # map of collection names and minimum validation counts expected
+                    "pdbx_core_nonpolymer_entity_instance": minNpiValidationCount,
+                }
+                for collection, minValidationCount in validationCollectionCheckMap.items():
+                    if minValidationCount:
+                        okV = mw.checkValidationDataCount(databaseName, collection, minValidationCount)
+                        logger.info("checkValidationDataCount for database %s coll %s (status %r)", databaseName, collection, okV)
+                        ok = ok and okV
+        #
         except Exception as e:
             logger.exception("Operation %r database %r failing with %s", op, databaseName, str(e))
 

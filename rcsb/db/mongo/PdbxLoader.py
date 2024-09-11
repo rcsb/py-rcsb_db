@@ -41,6 +41,7 @@
 #                      Begin adding code to support weekly update workflow CLI requirements
 #     26-Mar-2024 dwp  Add arguments and logic to support CLI usage from weekly-update workflow
 #      9-May-2024 dwp  Change providerTypeExclude to be a list, 'providerTypeExcludeL'
+#     10-Sep-2024 dwp  Add method for checking number of nonpolymer entity instances with validation data
 #
 ##
 """
@@ -1141,3 +1142,17 @@ class PdbxLoader(object):
             logger.exception("Failing with %s", str(e))
 
         return False
+
+    def checkValidationDataCount(self, databaseName, collectionName, minValidationCount):
+        """Get the count of documents in the given collection with validation data"""
+        ok = False
+        try:
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                selectD = {"rcsb_nonpolymer_instance_validation_score": {"$exists": "true"}}
+                count = mg.count(databaseName=databaseName, collectionName=collectionName, countFilter=selectD)
+                ok = count > minValidationCount
+                logger.info("Number of documents in db %s coll %s with validation data %r (status %r)", databaseName, collectionName, count, ok)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return ok
