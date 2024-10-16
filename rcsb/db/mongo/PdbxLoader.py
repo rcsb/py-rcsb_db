@@ -1156,3 +1156,59 @@ class PdbxLoader(object):
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return ok
+
+    def checkLoadedEntriesWithHoldingsCount(self):
+        """Get the count of documents in the given collection with validation data"""
+        ok = True
+        try:
+            entryCount = 0
+            holdingCount = 0
+            combinedHoldingActualCount = 0
+            combinedHoldingExpectedCount = 0
+
+            exdbCollections = {
+                "pdbx_core": ["pdbx_core_entry"],
+                "repository_holdings": [
+                    "repository_holdings_combined_entry",
+                    "repository_holdings_current_entry",
+                    "repository_holdings_removed_entry",
+                    "repository_holdings_unreleased_entry",
+                    "repository_holdings_update_entry",
+                ],
+            }
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+
+                for databaseName, collL in exdbCollections.items():
+                    for collectionName in collL:
+                        num = len(mg.distinct(databaseName, collectionName, "rcsb_id"))
+                        if collectionName == "pdbx_core_entry":
+                            entryCount = num
+                        if collectionName == "repository_holdings_current_entry":
+                            holdingCount = num
+                        if collectionName == "repository_holdings_combined_entry":
+                            combinedHoldingActualCount = num
+                        if any(s in collectionName for s in ["current_entry", "removed_entry", "unreleased_entry"]):
+                            combinedHoldingExpectedCount += num
+
+                        logger.info("database %r collection %r count (%r)", databaseName, collectionName, num)
+                        if num == 0:
+                            logger.error("database %r collection %r is empty", databaseName, collectionName)
+                            ok = False
+
+            if entryCount != holdingCount:
+                logger.error("The total entries in the collections of core entry (%r) and current repository holdings (%r) are different.", entryCount, holdingCount)
+                ok = False
+
+            elif combinedHoldingActualCount != combinedHoldingExpectedCount:
+                logger.error(
+                    "The total entries in the repository_holdings_combined_entry collection (%r) and combined counts of the current_entry, "
+                    "removed_entry, and unreleased_entry repository holdings (%r) are different.",
+                    combinedHoldingActualCount, 
+                    combinedHoldingExpectedCount
+                )
+                ok = False
+
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return ok

@@ -10,6 +10,7 @@
 #  25-Sep-2021 jdw substitute RepoHoldingsRemoteDataPrep() for data processing
 #   4-Apr-2023 dwp Add maxStepLength input argument; update success/failure catching logic;
 #                  add final verification step to ensure all entries were loaded
+#  16-Oct-2024 dwp Remove usage of EDMAPS holdings file
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -89,12 +90,10 @@ class RepoHoldingsEtlWorker(object):
             # ---
             baseUrlPDB = self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__cfgSectionName, default="https://files.wwpdb.org/pub")
             fallbackUrlPDB = self.__cfgOb.getPath("PDB_REPO_FALLBACK_URL", sectionName=self.__cfgSectionName, default="https://files.wwpdb.org/pub")
-            edMapUrl = self.__cfgOb.getPath("RCSB_EDMAP_LIST_PATH", sectionName=self.__cfgSectionName, default=None)
             #
             kwD = {
                 "holdingsTargetUrl": os.path.join(baseUrlPDB, "pdb", "holdings"),
                 "holdingsFallbackUrl": os.path.join(fallbackUrlPDB, "pdb", "holdings"),
-                "edmapsLocator": edMapUrl,
                 "updateTargetUrl": os.path.join(baseUrlPDB, "pdb", "data", "status", "latest"),
                 "updateFallbackUrl": os.path.join(fallbackUrlPDB, "pdb", "data", "status", "latest"),
                 "filterType": self.__filterType,
