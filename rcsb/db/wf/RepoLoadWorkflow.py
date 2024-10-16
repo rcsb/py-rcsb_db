@@ -391,6 +391,7 @@ class RepoLoadWorkflow(object):
             databaseName = kwargs.get("databaseName", None)
             holdingsFilePath = kwargs.get("holdingsFilePath", None)
             minNpiValidationCount = kwargs.get("minNpiValidationCount", None)
+            checkLoadWithHoldings = kwargs.get("checkLoadWithHoldings", False)
             completeIdCodeList, completeIdCodeCount = self.__getCompleteIdListCount(databaseName, holdingsFilePath)
             if not (completeIdCodeList or completeIdCodeCount):
                 logger.error("Failed to get completeIdCodeList and completeIdCodeCount for database %r", databaseName)
@@ -423,6 +424,11 @@ class RepoLoadWorkflow(object):
                         okV = mw.checkValidationDataCount(databaseName, collection, minValidationCount)
                         logger.info("checkValidationDataCount for database %s coll %s (status %r)", databaseName, collection, okV)
                         ok = ok and okV
+            #
+            if checkLoadWithHoldings:
+                okH = mw.checkLoadedEntriesWithHoldingsCount()
+                logger.info("checkLoadedEntriesWithHoldingsCount (status %r)", okH)
+                ok = ok and okH
         #
         except Exception as e:
             logger.exception("Operation %r database %r failing with %s", op, databaseName, str(e))

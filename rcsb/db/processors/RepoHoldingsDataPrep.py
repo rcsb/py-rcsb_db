@@ -24,6 +24,7 @@
 # 23-Oct-2020 jdw add getHoldingsCombined()
 #  1-Jul-2024 dwp Turn off population of "2fo-fc Map" and "fo-fc Map" content types (DSN6 maps)
 #                 (note that this file is only used when discoveryMode=='local')
+# 16-Oct-2024 dwp Remove usage of EDMAPS holdings file (again, note that this file is only used when discoveryMode=='local')
 ##
 
 __docformat__ = "restructuredtext en"
@@ -463,15 +464,6 @@ class RepoHoldingsDataPrep(object):
             for entryId in nmrV2List:
                 nmrV2D[entryId.strip().upper()] = False
             #
-            if self.__cfgOb:
-                configName = self.__cfgOb.getDefaultSectionName()
-                fp = self.__cfgOb.getPath("RCSB_EDMAP_LIST_PATH", sectionName=configName)
-            else:
-                fp = os.path.join(dirPath, "status", "edmaps.json")
-            qD = self.__mU.doImport(fp, "json")
-            edD = {}
-            for entryId in qD:
-                edD[entryId.upper()] = qD[entryId]
             #
             fp = os.path.join(dirPath, "status", "obsolete_entry.json_2")
             oL = self.__mU.doImport(fp, "json")
@@ -516,10 +508,6 @@ class RepoHoldingsDataPrep(object):
                     rD[entryId].append("validation slider image")
                 if entryId in valCifD and valCifD[entryId]:
                     rD[entryId].append("validation data mmCIF")
-                if entryId in edD:
-                    # rD[entryId].append("2fo-fc Map")
-                    # rD[entryId].append("fo-fc Map")
-                    rD[entryId].append("Map Coefficients")
                 if entryId not in pD:
                     rD[entryId].append("FASTA sequence")
             #

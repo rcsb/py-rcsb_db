@@ -109,6 +109,12 @@ def main():
     parser.add_argument("--vrpt_repo_path", default=None, help="Path to validation report repository")
     parser.add_argument("--cluster_filename_template", default=None, help="Filename template for cluster files (e.g., clusters-by-entity-90.txt)")
     parser.add_argument("--min_npi_validation_count", default=None, help="Minimum number of nonpolymer entity instances expected to have validation data")
+    parser.add_argument(
+        "--check_load_with_holdings",
+        default=False,
+        action="store_true",
+        help="Compare the number of loaded entries with the number expected by the holdings (for op 'pdbx_loader_check')"
+    )
     parser.add_argument("--log_file_path", default=None, help="Path to runtime log file output.")
     #
     args = parser.parse_args()
@@ -255,6 +261,7 @@ def processArguments(args):
         "rebuildCache": args.rebuild_cache,
         "forceReload": args.force_reload,
         "minNpiValidationCount": int(args.min_npi_validation_count) if args.min_npi_validation_count else None,
+        "checkLoadWithHoldings": args.check_load_with_holdings,
     }
 
     return op, commonD, loadD
