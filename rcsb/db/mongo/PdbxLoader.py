@@ -1211,4 +1211,6 @@ class PdbxLoader(object):
 
         except Exception as e:
             logger.exception("Failing with %s", str(e))
+            ok = False
+
         return ok

@@ -360,6 +360,6 @@
   1-Jul-2024  V1.722 Pylinting
  13-Aug-2024  V1.723 Update code for pymongo 4.x support
  10-Sep-2024  V1.724 Add load completion check for the number of nonpolymer entity instances with validation data
- 16-Sep-2024  V1.725 Remove dependency on edmaps holdings file (no longer generating Map Coefficient MTZ files);
+ 22-Oct-2024  V1.725 Remove dependency on edmaps holdings file (no longer generating Map Coefficient MTZ files);
                      Add CLI support for performing final sanity check for ExDB loading and holdings in etl.load_ex.DbLoadingWorkflow task;
                      Update CI/CD testing to use python 3.10
