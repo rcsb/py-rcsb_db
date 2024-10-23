@@ -58,7 +58,7 @@ class CaseNormalizedDict(dict):
         self.__local[k.lower()] = k
 
 
-class CaseNormalizedDict2(collections.MutableMapping):
+class CaseNormalizedDict2(collections.abc.MutableMapping):
 
     """Dictionary container with case insensitive key comparison preserving the
     case of the input keys.
