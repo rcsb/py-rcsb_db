@@ -1204,7 +1204,7 @@ class PdbxLoader(object):
                 logger.error(
                     "The total entries in the repository_holdings_combined_entry collection (%r) and combined counts of the current_entry, "
                     "removed_entry, and unreleased_entry repository holdings (%r) are different.",
-                    combinedHoldingActualCount, 
+                    combinedHoldingActualCount,
                     combinedHoldingExpectedCount
                 )
                 ok = False
