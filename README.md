@@ -20,7 +20,7 @@ git clone --recurse-submodules https://github.com/rcsb/py-rcsb_db.git
 
 ```
 
-Optionally, run test suite (Python versions 2.7, 3.6, and 3.7) using
+Optionally, run test suite (Python versions 3.9+) using
 [setuptools](https://setuptools.readthedocs.io/en/latest/) or
 [tox](http://tox.readthedocs.io/en/latest/example/platform.html):
 
