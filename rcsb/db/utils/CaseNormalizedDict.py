@@ -91,7 +91,7 @@ class CaseNormalizedDict2(collections.abc.MutableMapping):
         del self.__dict__[k]
         del self.__local[k.lower()]
 
-    def pop(self, k):
+    def pop(self, k):  # pylint: disable=arguments-differ
         kp = self.__local.pop(k.lower())
         return self.__dict__.pop(kp)
 
