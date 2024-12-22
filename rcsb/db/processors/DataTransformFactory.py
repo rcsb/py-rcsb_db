@@ -90,6 +90,8 @@ class DataTransformFactory(object):
         self.__transFlags["normalizeEnums"] = "normalize-enums" in filterType
         self.__transFlags["translateXMLCharRefs"] = "translateXMLCharRefs" in filterType
         self.__transFlags["normalizeDates"] = True
+        # Can be added to filterType later if needed
+        self.__transFlags["dropLargeIntegers"] = True
         logger.debug("FLAGS settings are %r", self.__transFlags)
         #
         self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
@@ -228,10 +230,13 @@ class DataTransformFactory(object):
                         if dT["pureCast"][atName] == "string":
                             dD[dT["atNameD"][atName]] = row[ii]
                         elif dT["pureCast"][atName] == "integer":
-                            if int(row[ii]) < 2147483647:
-                                dD[dT["atNameD"][atName]] = int(row[ii])
-                            else:
+                            if int(row[ii]) > 2147483647 and self.__transFlags["dropLargeIntegers"]:
+                                # Skip large integers
                                 continue
+                                # Or set large integers to maxInt32
+                                # dD[dT["atNameD"][atName]] = 2147483647
+                            else:
+                                dD[dT["atNameD"][atName]] = int(row[ii])
                         elif dT["pureCast"][atName] == "float":
                             dD[dT["atNameD"][atName]] = float(row[ii])
                         continue
