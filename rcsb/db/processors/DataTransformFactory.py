@@ -13,6 +13,8 @@
 #                 to minimize costly functon calls for simple casts.
 # 24-Mar-2019 jdw adjust null value filtering
 #  4-Apr-2022  bv handle embedded iterable float values in 'castIterableFloat' method
+# 21-Dec-2024  bv Skip integers that exceed max int32 (2147483647)
+# 23-Dec-2-24  bv Handle "None" values in vrpt data
 ##
 """
 Factory for functional elements of the transformations between input data and
@@ -89,6 +91,8 @@ class DataTransformFactory(object):
         self.__transFlags["normalizeEnums"] = "normalize-enums" in filterType
         self.__transFlags["translateXMLCharRefs"] = "translateXMLCharRefs" in filterType
         self.__transFlags["normalizeDates"] = True
+        # Can be added to filterType later if needed
+        self.__transFlags["dropLargeIntegers"] = True
         logger.debug("FLAGS settings are %r", self.__transFlags)
         #
         self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
@@ -217,7 +221,7 @@ class DataTransformFactory(object):
                 if atName in dT["pureCast"]:
                     if nullFlag and self.__transFlags["dropEmpty"]:
                         continue
-                    if (row[ii] == "?") or (row[ii] == ".") or (row[ii]) == "":
+                    if (row[ii] == "?") or (row[ii] == ".") or (row[ii]) == "" or (row[ii]) == "None":
                         if self.__transFlags["dropEmpty"]:
                             continue
                         else:
@@ -227,7 +231,13 @@ class DataTransformFactory(object):
                         if dT["pureCast"][atName] == "string":
                             dD[dT["atNameD"][atName]] = row[ii]
                         elif dT["pureCast"][atName] == "integer":
-                            dD[dT["atNameD"][atName]] = int(row[ii])
+                            if int(row[ii]) > 2147483647 and self.__transFlags["dropLargeIntegers"]:
+                                # Skip large integers
+                                continue
+                                # Or set large integers to maxInt32
+                                # dD[dT["atNameD"][atName]] = 2147483647
+                            else:
+                                dD[dT["atNameD"][atName]] = int(row[ii])
                         elif dT["pureCast"][atName] == "float":
                             dD[dT["atNameD"][atName]] = float(row[ii])
                         continue
@@ -321,7 +331,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == ""):
+        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == "") or (trfTup.value == "None"):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
         return TrfValue(int(trfTup.value), trfTup.atId, trfTup.origLength, False)
 
@@ -331,7 +341,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == ""):
+        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == "") or (trfTup.value == "None"):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
         # vL = [int(v.strip()) for v in str(trfTup.value).split(self.__tObj.getIterableSeparator(trfTup.atId))]
         vL = [int(v.strip()) if v.strip() not in [".", "?"] else None for v in str(trfTup.value).split(self.__tObj.getIterableSeparator(trfTup.atId))]
@@ -343,7 +353,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == ""):
+        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == "") or (trfTup.value == "None"):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
         return TrfValue(float(trfTup.value), trfTup.atId, trfTup.origLength, False)
 
@@ -354,7 +364,7 @@ class DataTransform(object):
         # logger.info(">> atId %r value %r delimiter %r", trfTup.atId, trfTup.value, self.__tObj.getIterableSeparator(trfTup.atId))
         if trfTup.isNull:
             return trfTup
-        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == ""):
+        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == "") or (trfTup.value == "None"):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
         # vL = [float(v.strip()) for v in str(trfTup.value).split(self.__tObj.getIterableSeparator(trfTup.atId))]
         if not self.__tObj.isEmbeddedIterable(trfTup.atId):
