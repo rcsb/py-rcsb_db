@@ -14,6 +14,7 @@
 # 24-Mar-2019 jdw adjust null value filtering
 #  4-Apr-2022  bv handle embedded iterable float values in 'castIterableFloat' method
 # 21-Dec-2024  bv Skip integers that exceed max int32 (2147483647)
+# 23-Dec-2-24  bv Handle "None" values in vrpt data
 ##
 """
 Factory for functional elements of the transformations between input data and
@@ -220,7 +221,7 @@ class DataTransformFactory(object):
                 if atName in dT["pureCast"]:
                     if nullFlag and self.__transFlags["dropEmpty"]:
                         continue
-                    if (row[ii] == "?") or (row[ii] == ".") or (row[ii]) == "":
+                    if (row[ii] == "?") or (row[ii] == ".") or (row[ii]) == "" or (row[ii]) == "None":
                         if self.__transFlags["dropEmpty"]:
                             continue
                         else:
@@ -330,7 +331,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == ""):
+        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == "") or (trfTup.value == "None"):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
         return TrfValue(int(trfTup.value), trfTup.atId, trfTup.origLength, False)
 
@@ -340,7 +341,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == ""):
+        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == "") or (trfTup.value == "None"):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
         # vL = [int(v.strip()) for v in str(trfTup.value).split(self.__tObj.getIterableSeparator(trfTup.atId))]
         vL = [int(v.strip()) if v.strip() not in [".", "?"] else None for v in str(trfTup.value).split(self.__tObj.getIterableSeparator(trfTup.atId))]
@@ -352,7 +353,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == ""):
+        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == "") or (trfTup.value == "None"):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
         return TrfValue(float(trfTup.value), trfTup.atId, trfTup.origLength, False)
 
@@ -363,7 +364,7 @@ class DataTransform(object):
         # logger.info(">> atId %r value %r delimiter %r", trfTup.atId, trfTup.value, self.__tObj.getIterableSeparator(trfTup.atId))
         if trfTup.isNull:
             return trfTup
-        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == ""):
+        if (trfTup.value == "?") or (trfTup.value == ".") or (trfTup.value is None) or (trfTup.value == "") or (trfTup.value == "None"):
             return TrfValue(self.__nullValueOther, trfTup.atId, trfTup.origLength, True)
         # vL = [float(v.strip()) for v in str(trfTup.value).split(self.__tObj.getIterableSeparator(trfTup.atId))]
         if not self.__tObj.isEmbeddedIterable(trfTup.atId):
