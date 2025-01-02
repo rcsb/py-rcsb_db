@@ -13,6 +13,7 @@
 #                 to minimize costly functon calls for simple casts.
 # 24-Mar-2019 jdw adjust null value filtering
 #  4-Apr-2022  bv handle embedded iterable float values in 'castIterableFloat' method
+# 21-Dec-2024  bv Skip integers that exceed max int32 (2147483647)
 ##
 """
 Factory for functional elements of the transformations between input data and
@@ -89,6 +90,8 @@ class DataTransformFactory(object):
         self.__transFlags["normalizeEnums"] = "normalize-enums" in filterType
         self.__transFlags["translateXMLCharRefs"] = "translateXMLCharRefs" in filterType
         self.__transFlags["normalizeDates"] = True
+        # Can be added to filterType later if needed
+        self.__transFlags["dropLargeIntegers"] = True
         logger.debug("FLAGS settings are %r", self.__transFlags)
         #
         self.__wsPattern = re.compile(r"\s+", flags=re.UNICODE | re.MULTILINE)
@@ -227,7 +230,14 @@ class DataTransformFactory(object):
                         if dT["pureCast"][atName] == "string":
                             dD[dT["atNameD"][atName]] = row[ii]
                         elif dT["pureCast"][atName] == "integer":
-                            dD[dT["atNameD"][atName]] = int(row[ii])
+                            if abs(int(row[ii])) > 2147483647 and self.__transFlags["dropLargeIntegers"]:
+                                # Skip large integers
+                                logger.warning("Skipping large integer in entry %s table %s attribute %s", containerName, tableId, atName)
+                                continue
+                                # Or set large integers to maxInt32
+                                # dD[dT["atNameD"][atName]] = 2147483647
+                            else:
+                                dD[dT["atNameD"][atName]] = int(row[ii])
                         elif dT["pureCast"][atName] == "float":
                             dD[dT["atNameD"][atName]] = float(row[ii])
                         continue
