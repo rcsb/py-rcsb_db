@@ -231,8 +231,9 @@ class DataTransformFactory(object):
                         if dT["pureCast"][atName] == "string":
                             dD[dT["atNameD"][atName]] = row[ii]
                         elif dT["pureCast"][atName] == "integer":
-                            if int(row[ii]) > 2147483647 and self.__transFlags["dropLargeIntegers"]:
+                            if abs(int(row[ii])) > 2147483647 and self.__transFlags["dropLargeIntegers"]:
                                 # Skip large integers
+                                logger.warning("Skipping large integer in entry %s table %s attribute %s", containerName, tableId, atName)
                                 continue
                                 # Or set large integers to maxInt32
                                 # dD[dT["atNameD"][atName]] = 2147483647
