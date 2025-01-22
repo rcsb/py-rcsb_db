@@ -289,7 +289,7 @@ class RepoLoadWorkflow(object):
         loadFileListDir = kwargs.get("loadFileListDir")  # ExchangeDbConfig().loadFileListsDir
         loadFileListPrefix = databaseName + "_ids"  # pdbx_core_ids or pdbx_comp_model_core_ids
         numSublistFiles = kwargs.get("numSublistFiles")  # ExchangeDbConfig().pdbxCoreNumberSublistFiles
-        usingImgsFormat = kwargs.get("imgsWF")
+        useImgsFormat = kwargs.get("imgsWF")
         #
         mU = MarshalUtil(workPath=self.__cachePath)
         #
@@ -298,7 +298,13 @@ class RepoLoadWorkflow(object):
             if not holdingsFilePath:
                 holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb/holdings/released_structures_last_modified_dates.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
-            if usingImgsFormat:
+            if useImgsFormat:
+                ## add these flags to cli
+                # pdbIdList = self.getPdbList(pdbGzPath=kwargs.get("pdbGzPath"),
+                #                     updateAllImages=kwargs.get("updateAllImages"),
+                #                     pdbBaseDir=kwargs.get("pdbBaseDir"),
+                #                     noSubdirs=kwargs.get("noSubdirs"),
+                #                     )
                 pdbIdsTimestamps = {}
                 for idVal in holdingsFileD:
                     datetimeObject = datetime.datetime.strptime(holdingsFileD[idVal], "%Y-%m-%dT%H:%M:%S%z")
@@ -326,6 +332,33 @@ class RepoLoadWorkflow(object):
             filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFilePath)
 
         elif databaseName == "pdbx_comp_model_core":
+            def getImgsFormattedList(hD):
+                dic = {}
+                for modelId in hD:
+                    item = hD[modelId]
+                    item["modelPath"] = item["modelPath"].lower()  # prod route of BinaryCIF wf produces lowercase filenames
+                    item["datetime"] = datetime.datetime.strptime(item["lastModifiedDate"], "%Y-%m-%dT%H:%M:%S%z")
+                    dic[modelId.lower()] = item
+                modelIdsMetadata = dic
+                modelList = []
+                if kwargs.get("updateAllImages"):
+                    for modelId, metadata in modelIdsMetadata.items():
+                        modelPath = metadata["modelPath"].replace(".cif", ".bcif").replace(".gz", "")
+                        modelList.append(f"{modelId} {modelPath} computational")
+                else:
+                    # "incremental" for weekly
+                    for modelId, metadata in modelIdsMetadata.items():
+                        modelPath = metadata["modelPath"].replace(".cif", ".bcif").replace(".gz", "")
+                        bcifFile = os.path.join(kwargs.get("csmBaseDir"), modelPath)
+                        if Path.exists(bcifFile):
+                            t1 = Path.stat(bcifFile).stMtime
+                            t2 = metadata["datetime"].timestamp()
+                            if t1 < t2:
+                                modelList.append(f"{modelId} {modelPath} computational")
+                        else:
+                            modelList.append(f"{modelId} {modelPath} computational")
+                return modelList
+
             filePathMappingD = {}
             if holdingsFilePath:
                 holdingsFileBaseDir = os.path.dirname(os.path.dirname(holdingsFilePath))
@@ -338,7 +371,10 @@ class RepoLoadWorkflow(object):
                 # Split up single holdings file into multiple sub-lists
                 holdingsFile = os.path.join(holdingsFileBaseDir, list(holdingsFileD.keys())[0])
                 hD = mU.doImport(holdingsFile, fmt="json")
-                idL = [k.upper() for k in hD]
+                if useImgsFormat:
+                    idL = getImgsFormattedList(hD)
+                else:
+                    idL = [k.upper() for k in hD]
                 logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
                 filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFile)
             #
@@ -349,7 +385,10 @@ class RepoLoadWorkflow(object):
                 for hF, count in holdingsFileD.items():
                     holdingsFile = os.path.join(holdingsFileBaseDir, hF)
                     hD = mU.doImport(holdingsFile, fmt="json")
-                    idL = [k.upper() for k in hD]
+                    if useImgsFormat:
+                        idL = getImgsFormattedList(hD)
+                    else:
+                        idL = [k.upper() for k in hD]
                     logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
                     #
                     fPath = os.path.join(loadFileListDir, f"{loadFileListPrefix}-{index}.txt")
