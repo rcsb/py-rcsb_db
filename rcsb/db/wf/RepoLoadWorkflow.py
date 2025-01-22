@@ -280,6 +280,32 @@ class RepoLoadWorkflow(object):
 
         return ok
 
+    def getImgsFormattedList(self, hD):
+        dic = {}
+        for modelId in hD:
+            item = hD[modelId]
+            item["modelPath"] = item["modelPath"].lower()  # prod route of BinaryCIF wf produces lowercase filenames
+            item["datetime"] = datetime.datetime.strptime(item["lastModifiedDate"], "%Y-%m-%dT%H:%M:%S%z")
+            dic[modelId.lower()] = item
+        modelIdsMetadata = dic
+        modelList = []
+        if kwargs.get("updateAllImages"):
+            for modelId, metadata in modelIdsMetadata.items():
+                modelPath = metadata["modelPath"].replace(".cif", ".bcif").replace(".gz", "")
+                modelList.append(f"{modelId} {modelPath} computational")
+        else:
+            # "incremental" for weekly
+            for modelId, metadata in modelIdsMetadata.items():
+                modelPath = metadata["modelPath"].replace(".cif", ".bcif").replace(".gz", "")
+                bcifFile = os.path.join(kwargs.get("BcifBaseDir"), modelPath)
+                if Path.exists(bcifFile):
+                    t1 = Path.stat(bcifFile).stMtime
+                    t2 = metadata["datetime"].timestamp()
+                    if t1 < t2:
+                        modelList.append(f"{modelId} {modelPath} computational")
+                else:
+                    modelList.append(f"{modelId} {modelPath} computational")
+        return modelList
     def splitIdList(self, op, **kwargs):
         if op not in ["pdbx_id_list_splitter"]:
             logger.error("Unsupported operation %r - exiting", op)
@@ -333,33 +359,6 @@ class RepoLoadWorkflow(object):
             filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFilePath)
 
         elif databaseName == "pdbx_comp_model_core":
-            def getImgsFormattedList(hD):
-                dic = {}
-                for modelId in hD:
-                    item = hD[modelId]
-                    item["modelPath"] = item["modelPath"].lower()  # prod route of BinaryCIF wf produces lowercase filenames
-                    item["datetime"] = datetime.datetime.strptime(item["lastModifiedDate"], "%Y-%m-%dT%H:%M:%S%z")
-                    dic[modelId.lower()] = item
-                modelIdsMetadata = dic
-                modelList = []
-                if kwargs.get("updateAllImages"):
-                    for modelId, metadata in modelIdsMetadata.items():
-                        modelPath = metadata["modelPath"].replace(".cif", ".bcif").replace(".gz", "")
-                        modelList.append(f"{modelId} {modelPath} computational")
-                else:
-                    # "incremental" for weekly
-                    for modelId, metadata in modelIdsMetadata.items():
-                        modelPath = metadata["modelPath"].replace(".cif", ".bcif").replace(".gz", "")
-                        bcifFile = os.path.join(kwargs.get("BcifBaseDir"), modelPath)
-                        if Path.exists(bcifFile):
-                            t1 = Path.stat(bcifFile).stMtime
-                            t2 = metadata["datetime"].timestamp()
-                            if t1 < t2:
-                                modelList.append(f"{modelId} {modelPath} computational")
-                        else:
-                            modelList.append(f"{modelId} {modelPath} computational")
-                return modelList
-
             filePathMappingD = {}
             if holdingsFilePath:
                 holdingsFileBaseDir = os.path.dirname(os.path.dirname(holdingsFilePath))
@@ -373,7 +372,7 @@ class RepoLoadWorkflow(object):
                 holdingsFile = os.path.join(holdingsFileBaseDir, list(holdingsFileD.keys())[0])
                 hD = mU.doImport(holdingsFile, fmt="json")
                 if useImgsFormat:
-                    idL = getImgsFormattedList(hD)
+                    idL = self.getImgsFormattedList(hD)
                 else:
                     idL = [k.upper() for k in hD]
                 logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
@@ -387,7 +386,7 @@ class RepoLoadWorkflow(object):
                     holdingsFile = os.path.join(holdingsFileBaseDir, hF)
                     hD = mU.doImport(holdingsFile, fmt="json")
                     if useImgsFormat:
-                        idL = getImgsFormattedList(hD)
+                        idL = self.getImgsFormattedList(hD)
                     else:
                         idL = [k.upper() for k in hD]
                     logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))

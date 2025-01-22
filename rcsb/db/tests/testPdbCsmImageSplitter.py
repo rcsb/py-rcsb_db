@@ -31,7 +31,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(mo
 logger = logging.getLogger(__name__)
 
 
-class TestPdbCsmImageWorkflow(unittest.TestCase):
+class TestPdbCsmImagesSplitter(unittest.TestCase):
     def setUp(self) -> None:
         self.__startTime = time.time()
         # self.__cachePath = os.path.join(HERE, "test-data")
@@ -51,18 +51,31 @@ class TestPdbCsmImageWorkflow(unittest.TestCase):
         """Test id list file generation ..."""
         try:
             logger.info('creating object')
-            pciWF = PdbCsmImageWorkflow()
+            rlWf = RepoLoadWorkflow()
             logger.info("Generating 3 id lists to run through.")
             logger.info('mockdataDir %s', self.mockdataDir)
             logger.info('workpath %s', self.__workPath)
-            pciWF.imagesGenLists(
-                pdbGzPath=os.path.join(self.mockdataDir, "released_structures_last_modified_dates.json.gz"),
+            rlWf.splitIdList(
+                "pdbx_id_list_splitter",
+                databaseName="pdbx_core",
+                holdingsFilePath=os.path.join(self.mockdataDir, "released_structures_last_modified_dates.json.gz"),
+                loadFileListDir=self.__workPath,
+                numSublistFiles=3,
+                imgsWfFormat=True,
                 updateAllImages=True,
-                pdbBaseDir=self.mockdataDir,
-                csmGzPath=os.path.join(self.mockdataDir, "computed-models-holdings.json.gz"),
-                csmBaseDir=self.mockdataDir,
-                numWorkers=3,
-                idListPath=self.__workPath,
+                noBcifSubdirs=True,
+                BcifBaseDir=self.mockdataDir,
+            )
+            rlWf.splitIdList(
+                "pdbx_id_list_splitter",
+                databaseName="pdbx_core",
+                holdingsFilePath=os.path.join(self.mockdataDir, "computed-models-holdings.json.gz"),
+                loadFileListDir=self.__workPath,
+                numSublistFiles=3,
+                imgsWfFormat=True,
+                updateAllImages=True,
+                noBcifSubdirs=True,
+                BcifBaseDir=self.mockdataDir,
             )
 
             logger.info("Reading generated lists and checking for format.")
@@ -104,7 +117,7 @@ class TestPdbCsmImageWorkflow(unittest.TestCase):
 
 def suiteFileGeneration():
     suiteSelect = unittest.TestSuite()
-    suiteSelect.addTest(TestPdbCsmImageWorkflow("testIdListGeneration"))
+    suiteSelect.addTest(TestPdbCsmImagesSplitter("testIdListGeneration"))
     return suiteSelect
 
 
