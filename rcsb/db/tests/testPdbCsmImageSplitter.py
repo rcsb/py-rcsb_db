@@ -24,13 +24,6 @@ from pathlib import Path
 
 from rcsb.db.wf.RepoLoadWorkflow import RepoLoadWorkflow
 
-#
-# Warning: This does not test jpg generation only idList generation.
-# This is because infrastructure would need to accomodate node.js
-# which is excessive.
-#
-
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 

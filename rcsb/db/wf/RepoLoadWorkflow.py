@@ -11,7 +11,8 @@
 #  26-Apr-2023 dwp Add regexPurge flag to control running regexp purge step during document load (with default set to False)
 #   7-Nov-2023 dwp Add maxStepLength parameter
 #  26-Mar-2024 dwp Add arguments and methods to support CLI usage from weekly-update workflow
-#
+#  22-jan-2024 mjt Add Imgs format option (for jpg/svg generation) to splitIdList()
+#  
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -289,7 +290,7 @@ class RepoLoadWorkflow(object):
         loadFileListDir = kwargs.get("loadFileListDir")  # ExchangeDbConfig().loadFileListsDir
         loadFileListPrefix = databaseName + "_ids"  # pdbx_core_ids or pdbx_comp_model_core_ids
         numSublistFiles = kwargs.get("numSublistFiles")  # ExchangeDbConfig().pdbxCoreNumberSublistFiles
-        useImgsFormat = kwargs.get("imgsWF")
+        useImgsFormat = kwargs.get("imgsWfFormat")
         #
         mU = MarshalUtil(workPath=self.__cachePath)
         #
@@ -312,12 +313,12 @@ class RepoLoadWorkflow(object):
                 idL = []
                 if kwargs.get("updateAllImages"):
                     for idVal in pdbIdsTimestamps:
-                        path = idVal + ".bcif" if kwargs.get("noSubdirs") else idVal[1:3] + "/" + idVal + ".bcif"
+                        path = idVal + ".bcif" if kwargs.get("noBcifSubdirs") else idVal[1:3] + "/" + idVal + ".bcif"
                         idL.append(f"{idVal} {path} experimental")
                 else:
                     for idVal, timestamp in pdbIdsTimestamps.items():
-                        path = idVal + ".bcif" if kwargs.get("noSubdirs") else idVal[1:3] + "/" + idVal + ".bcif"  # idVal[1:3] + "/" + idVal + ".bcif"
-                        bcifFile = os.path.join(kwargs.get("pdbBaseDir"), path)
+                        path = idVal + ".bcif" if kwargs.get("noBcifSubdirs") else idVal[1:3] + "/" + idVal + ".bcif"  # idVal[1:3] + "/" + idVal + ".bcif"
+                        bcifFile = os.path.join(kwargs.get("BcifBaseDir"), path)
                         if Path.exists(bcifFile):
                             t1 = Path.stat(bcifFile).stMtime
                             t2 = timestamp.timestamp()
@@ -349,7 +350,7 @@ class RepoLoadWorkflow(object):
                     # "incremental" for weekly
                     for modelId, metadata in modelIdsMetadata.items():
                         modelPath = metadata["modelPath"].replace(".cif", ".bcif").replace(".gz", "")
-                        bcifFile = os.path.join(kwargs.get("csmBaseDir"), modelPath)
+                        bcifFile = os.path.join(kwargs.get("BcifBaseDir"), modelPath)
                         if Path.exists(bcifFile):
                             t1 = Path.stat(bcifFile).stMtime
                             t2 = metadata["datetime"].timestamp()

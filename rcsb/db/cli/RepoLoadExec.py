@@ -25,6 +25,7 @@
 #                      Add arguments and logic to support CLI usage from weekly-update workflow;
 #                      Add support for logging output to a specific file
 #    25-Apr-2024 - dwp Add support for remote config file loading; use underscores instead of hyphens for arg choices
+#    22-jan-2024 - mjt Add Imgs format option flags
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -116,6 +117,11 @@ def main():
         help="Compare the number of loaded entries with the number expected by the holdings (for op 'pdbx_loader_check')"
     )
     parser.add_argument("--log_file_path", default=None, help="Path to runtime log file output.")
+    # args for imgs workflow format
+    parser.add_argument("--imgsWfFormat", default=False, action="store_true", help="Write split id lists using imgs wf format.")
+    parser.add_argument("--updateAllImages", default=False, action="store_true", help="Ignore bcif and image time stamps and update them all.")
+    parser.add_argument("--noBcifSubdirs", default=False, action="store_true", help="Remove subdirectories from path to bcif files.")
+    parser.add_argument("--BcifBaseDir", default=None, help="Location of bcif files for timestamp comparisons")
     #
     args = parser.parse_args()
     #
