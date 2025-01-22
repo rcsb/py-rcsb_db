@@ -22,6 +22,8 @@ import logging
 import os
 import random
 import math
+import datetime
+from pathlib import Path
 
 from rcsb.db.cli.RepoHoldingsEtlWorker import RepoHoldingsEtlWorker
 from rcsb.db.cli.SequenceClustersEtlWorker import SequenceClustersEtlWorker
@@ -287,6 +289,7 @@ class RepoLoadWorkflow(object):
         loadFileListDir = kwargs.get("loadFileListDir")  # ExchangeDbConfig().loadFileListsDir
         loadFileListPrefix = databaseName + "_ids"  # pdbx_core_ids or pdbx_comp_model_core_ids
         numSublistFiles = kwargs.get("numSublistFiles")  # ExchangeDbConfig().pdbxCoreNumberSublistFiles
+        usingImgsFormat = kwargs.get("imgsWF")
         #
         mU = MarshalUtil(workPath=self.__cachePath)
         #
@@ -295,7 +298,29 @@ class RepoLoadWorkflow(object):
             if not holdingsFilePath:
                 holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb/holdings/released_structures_last_modified_dates.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
-            idL = [k.upper() for k in holdingsFileD]
+            if usingImgsFormat:
+                pdbIdsTimestamps = {}
+                for idVal in holdingsFileD:
+                    datetimeObject = datetime.datetime.strptime(holdingsFileD[idVal], "%Y-%m-%dT%H:%M:%S%z")
+                    pdbIdsTimestamps[idVal.lower()] = datetimeObject
+                idL = []
+                if kwargs.get("updateAllImages"):
+                    for idVal in pdbIdsTimestamps:
+                        path = idVal + ".bcif" if kwargs.get("noSubdirs") else idVal[1:3] + "/" + idVal + ".bcif"
+                        idL.append(f"{idVal} {path} experimental")
+                else:
+                    for idVal, timestamp in pdbIdsTimestamps.items():
+                        path = idVal + ".bcif" if kwargs.get("noSubdirs") else idVal[1:3] + "/" + idVal + ".bcif"  # idVal[1:3] + "/" + idVal + ".bcif"
+                        bcifFile = os.path.join(kwargs.get("pdbBaseDir"), path)
+                        if Path.exists(bcifFile):
+                            t1 = Path.stat(bcifFile).stMtime
+                            t2 = timestamp.timestamp()
+                            if t1 < t2:
+                                idL.append(f"{idVal} {path} experimental")
+                        else:
+                            idL.append(f"{idVal} {path} experimental")
+            else:
+                idL = [k.upper() for k in holdingsFileD]
             logger.info("Total number of entries to load: %d (obtained from file: %s)", len(idL), holdingsFilePath)
             random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
             filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFilePath)
