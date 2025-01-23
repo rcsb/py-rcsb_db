@@ -317,7 +317,6 @@ class RepoLoadWorkflow(object):
         loadFileListPrefix = databaseName + "_ids"  # pdbx_core_ids or pdbx_comp_model_core_ids
         numSublistFiles = kwargs.get("numSublistFiles")  # ExchangeDbConfig().pdbxCoreNumberSublistFiles
         useImgsFormat = kwargs.get("useImgsFormat")
-        logger.error('databaseName %s useImgsFormat %s ', databaseName, useImgsFormat)############################# delete
         #
         mU = MarshalUtil(workPath=self.__cachePath)
         #
@@ -355,7 +354,6 @@ class RepoLoadWorkflow(object):
                             idL.append(f"{idVal} {path} experimental")
             else:
                 idL = [k.upper() for k in holdingsFileD]
-            logger.error('idL %s', '\n'.join(idL)) ############################# delete
             logger.info("Total number of entries to load: %d (obtained from file: %s)", len(idL), holdingsFilePath)
             random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
             filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFilePath)
