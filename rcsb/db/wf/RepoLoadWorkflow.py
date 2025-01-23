@@ -280,7 +280,29 @@ class RepoLoadWorkflow(object):
 
         return ok
 
-    def getImgsFormattedList(self, hD, **kwargs):
+    def getPdbImgsFormattedList(self, hD, **kwargs):
+        pdbIdsTimestamps = {}
+        for idVal in hD:
+            datetimeObject = datetime.datetime.strptime(hD[idVal], "%Y-%m-%dT%H:%M:%S%z")
+            pdbIdsTimestamps[idVal.lower()] = datetimeObject
+        idL = []
+        if kwargs.get("updateAllImages"):
+            for idVal in pdbIdsTimestamps:
+                path = idVal + ".bcif" if kwargs.get("noBcifSubdirs") else idVal[1:3] + "/" + idVal + ".bcif"
+                idL.append(f"{idVal} {path} experimental")
+        else:
+            for idVal, timestamp in pdbIdsTimestamps.items():
+                path = idVal + ".bcif" if kwargs.get("noBcifSubdirs") else idVal[1:3] + "/" + idVal + ".bcif"  # idVal[1:3] + "/" + idVal + ".bcif"
+                bcifFile = os.path.join(kwargs.get("BcifBaseDir"), path)
+                if Path.exists(bcifFile):
+                    t1 = Path.stat(bcifFile).stMtime
+                    t2 = timestamp.timestamp()
+                    if t1 < t2:
+                        idL.append(f"{idVal} {path} experimental")
+                else:
+                    idL.append(f"{idVal} {path} experimental")
+
+    def getCsmImgsFormattedList(self, hD, **kwargs):
         dic = {}
         for modelId in hD:
             item = hD[modelId]
@@ -306,6 +328,7 @@ class RepoLoadWorkflow(object):
                 else:
                     modelList.append(f"{modelId} {modelPath} computational")
         return modelList
+
     def splitIdList(self, op, **kwargs):
         if op not in ["pdbx_id_list_splitter"]:
             logger.error("Unsupported operation %r - exiting", op)
@@ -326,32 +349,7 @@ class RepoLoadWorkflow(object):
                 holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb/holdings/released_structures_last_modified_dates.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             if useImgsFormat:
-                ## add these flags to cli
-                # pdbIdList = self.getPdbList(pdbGzPath=kwargs.get("pdbGzPath"),
-                #                     updateAllImages=kwargs.get("updateAllImages"),
-                #                     pdbBaseDir=kwargs.get("pdbBaseDir"),
-                #                     noSubdirs=kwargs.get("noSubdirs"),
-                #                     )
-                pdbIdsTimestamps = {}
-                for idVal in holdingsFileD:
-                    datetimeObject = datetime.datetime.strptime(holdingsFileD[idVal], "%Y-%m-%dT%H:%M:%S%z")
-                    pdbIdsTimestamps[idVal.lower()] = datetimeObject
-                idL = []
-                if kwargs.get("updateAllImages"):
-                    for idVal in pdbIdsTimestamps:
-                        path = idVal + ".bcif" if kwargs.get("noBcifSubdirs") else idVal[1:3] + "/" + idVal + ".bcif"
-                        idL.append(f"{idVal} {path} experimental")
-                else:
-                    for idVal, timestamp in pdbIdsTimestamps.items():
-                        path = idVal + ".bcif" if kwargs.get("noBcifSubdirs") else idVal[1:3] + "/" + idVal + ".bcif"  # idVal[1:3] + "/" + idVal + ".bcif"
-                        bcifFile = os.path.join(kwargs.get("BcifBaseDir"), path)
-                        if Path.exists(bcifFile):
-                            t1 = Path.stat(bcifFile).stMtime
-                            t2 = timestamp.timestamp()
-                            if t1 < t2:
-                                idL.append(f"{idVal} {path} experimental")
-                        else:
-                            idL.append(f"{idVal} {path} experimental")
+                idL = self.getPdbImgsFormattedList(holdingsFileD, **kwargs)
             else:
                 idL = [k.upper() for k in holdingsFileD]
             logger.info("Total number of entries to load: %d (obtained from file: %s)", len(idL), holdingsFilePath)
@@ -359,6 +357,7 @@ class RepoLoadWorkflow(object):
             filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFilePath)
 
         elif databaseName == "pdbx_comp_model_core":
+            logger.error('using comp')
             filePathMappingD = {}
             if holdingsFilePath:
                 holdingsFileBaseDir = os.path.dirname(os.path.dirname(holdingsFilePath))
@@ -372,7 +371,7 @@ class RepoLoadWorkflow(object):
                 holdingsFile = os.path.join(holdingsFileBaseDir, list(holdingsFileD.keys())[0])
                 hD = mU.doImport(holdingsFile, fmt="json")
                 if useImgsFormat:
-                    idL = self.getImgsFormattedList(hD, **kwargs)
+                    idL = self.getCsmImgsFormattedList(hD, **kwargs)
                 else:
                     idL = [k.upper() for k in hD]
                 logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
@@ -386,7 +385,7 @@ class RepoLoadWorkflow(object):
                     holdingsFile = os.path.join(holdingsFileBaseDir, hF)
                     hD = mU.doImport(holdingsFile, fmt="json")
                     if useImgsFormat:
-                        idL = self.getImgsFormattedList(hD)
+                        idL = self.getCsmImgsFormattedList(hD, **kwargs)
                     else:
                         idL = [k.upper() for k in hD]
                     logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))

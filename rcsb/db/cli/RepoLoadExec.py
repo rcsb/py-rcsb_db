@@ -118,10 +118,10 @@ def main():
     )
     parser.add_argument("--log_file_path", default=None, help="Path to runtime log file output.")
     # args for imgs workflow format
-    parser.add_argument("--useImgsFormat", default=False, action="store_true", help="Write split id lists using imgs wf format.")
-    parser.add_argument("--updateAllImages", default=False, action="store_true", help="Ignore bcif and image time stamps and update them all.")
-    parser.add_argument("--noBcifSubdirs", default=False, action="store_true", help="Remove subdirectories from path to bcif files.")
-    parser.add_argument("--BcifBaseDir", default=None, help="Location of bcif files for timestamp comparisons")
+    parser.add_argument("--use_imgs_format", default=False, action="store_true", help="Write split id lists using imgs wf format.")
+    parser.add_argument("--update_all_images", default=False, action="store_true", help="Ignore bcif and image time stamps and update them all.")
+    parser.add_argument("--no_bcif_subdirs", default=False, action="store_true", help="Remove subdirectories from path to bcif files.")
+    parser.add_argument("--bcif_base_dir", default=None, help="Location of bcif files for timestamp comparisons")
     #
     args = parser.parse_args()
     #
@@ -268,10 +268,10 @@ def processArguments(args):
         "forceReload": args.force_reload,
         "minNpiValidationCount": int(args.min_npi_validation_count) if args.min_npi_validation_count else None,
         "checkLoadWithHoldings": args.check_load_with_holdings,
-        "useImgsFormat": args.useImgsFormat,
-        "updateAllImages": args.updateAllImages,
-        "noBcifSubdirs": args.noBcifSubdirs,
-        "BcifBaseDir": args.BcifBaseDir,
+        "useImgsFormat": args.use_imgs_format,
+        "updateAllImages": args.update_all_images,
+        "noBcifSubdirs": args.no_bcif_subdirs,
+        "BcifBaseDir": args.bcif_base_dir,
     }
 
     return op, commonD, loadD
