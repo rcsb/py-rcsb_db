@@ -118,7 +118,7 @@ def main():
     )
     parser.add_argument("--log_file_path", default=None, help="Path to runtime log file output.")
     # args for imgs workflow format
-    parser.add_argument("--imgsWfFormat", default=False, action="store_true", help="Write split id lists using imgs wf format.")
+    parser.add_argument("--useImgsFormat", default=False, action="store_true", help="Write split id lists using imgs wf format.")
     parser.add_argument("--updateAllImages", default=False, action="store_true", help="Ignore bcif and image time stamps and update them all.")
     parser.add_argument("--noBcifSubdirs", default=False, action="store_true", help="Remove subdirectories from path to bcif files.")
     parser.add_argument("--BcifBaseDir", default=None, help="Location of bcif files for timestamp comparisons")

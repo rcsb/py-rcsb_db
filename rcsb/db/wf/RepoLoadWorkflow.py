@@ -280,7 +280,7 @@ class RepoLoadWorkflow(object):
 
         return ok
 
-    def getImgsFormattedList(self, hD):
+    def getImgsFormattedList(self, hD, **kwargs):
         dic = {}
         for modelId in hD:
             item = hD[modelId]
@@ -316,7 +316,7 @@ class RepoLoadWorkflow(object):
         loadFileListDir = kwargs.get("loadFileListDir")  # ExchangeDbConfig().loadFileListsDir
         loadFileListPrefix = databaseName + "_ids"  # pdbx_core_ids or pdbx_comp_model_core_ids
         numSublistFiles = kwargs.get("numSublistFiles")  # ExchangeDbConfig().pdbxCoreNumberSublistFiles
-        useImgsFormat = kwargs.get("imgsWfFormat")
+        useImgsFormat = kwargs.get("useImgsFormat")
         #
         mU = MarshalUtil(workPath=self.__cachePath)
         #
@@ -372,7 +372,7 @@ class RepoLoadWorkflow(object):
                 holdingsFile = os.path.join(holdingsFileBaseDir, list(holdingsFileD.keys())[0])
                 hD = mU.doImport(holdingsFile, fmt="json")
                 if useImgsFormat:
-                    idL = self.getImgsFormattedList(hD)
+                    idL = self.getImgsFormattedList(hD, **kwargs)
                 else:
                     idL = [k.upper() for k in hD]
                 logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
