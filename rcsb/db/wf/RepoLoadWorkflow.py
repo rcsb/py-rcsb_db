@@ -301,6 +301,7 @@ class RepoLoadWorkflow(object):
                         idL.append(f"{idVal} {path} experimental")
                 else:
                     idL.append(f"{idVal} {path} experimental")
+        return idL
 
     def getCsmImgsFormattedList(self, hD, **kwargs):
         dic = {}

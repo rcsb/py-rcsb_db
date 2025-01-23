@@ -55,31 +55,6 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
             logger.info("Generating 3 id lists to run through.")
             logger.info('mockdataDir %s', self.mockdataDir)
             logger.info('workpath %s', self.__workPath)
-            rlWf.splitIdList(
-                "pdbx_id_list_splitter",
-                databaseName="pdbx_core",
-                holdingsFilePath=os.path.join(self.mockdataDir, "released_structures_last_modified_dates.json.gz"),
-                loadFileListDir=self.__workPath,
-                numSublistFiles=3,
-                imgsWfFormat=True,
-                updateAllImages=True,
-                noBcifSubdirs=True,
-                BcifBaseDir=self.mockdataDir,
-            )
-            rlWf.splitIdList(
-                "pdbx_id_list_splitter",
-                databaseName="pdbx_core",
-                holdingsFilePath=os.path.join(self.mockdataDir, "computed-models-holdings.json.gz"),
-                loadFileListDir=self.__workPath,
-                numSublistFiles=3,
-                imgsWfFormat=True,
-                updateAllImages=True,
-                noBcifSubdirs=True,
-                BcifBaseDir=self.mockdataDir,
-            )
-
-            logger.info("Reading generated lists and checking for format.")
-
             def checkList(ids: str) -> bool:
                 try:
                     logger.info('ids path for checkList %s', ids)
@@ -98,6 +73,17 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
                     logger.exception("Failed to find created file %s", ids)
                     return False
 
+            rlWf.splitIdList(
+                "pdbx_id_list_splitter",
+                databaseName="pdbx_core",
+                holdingsFilePath=os.path.join(self.mockdataDir, "holdings/released_structures_last_modified_dates.json.gz"),
+                loadFileListDir=self.__workPath,
+                numSublistFiles=3,
+                imgsWfFormat=True,
+                updateAllImages=True,
+                noBcifSubdirs=True,
+                BcifBaseDir=self.mockdataDir,
+            )
             ok1 = checkList(os.path.join(self.__workPath, "idList_0.txt"))
             if not ok1:
                 logger.error("idList_0.txt failed")
@@ -110,6 +96,32 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
             if not ok3:
                 logger.error("idList_2.txt failed")
             self.assertTrue(ok3)
+            rlWf.splitIdList(
+                "pdbx_id_list_splitter",
+                databaseName="pdbx_comp_model_core",
+                holdingsFilePath=os.path.join(self.mockdataDir, "holdings/computed-models-holdings-list.json"),
+                loadFileListDir=self.__workPath,
+                numSublistFiles=3,
+                imgsWfFormat=True,
+                updateAllImages=True,
+                noBcifSubdirs=True,
+                BcifBaseDir=self.__workPath,
+            )
+            ok1 = checkList(os.path.join(self.__workPath, "idList_0.txt"))
+            if not ok1:
+                logger.error("idList_0.txt failed")
+            self.assertTrue(ok1)
+            ok2 = checkList(os.path.join(self.__workPath, "idList_1.txt"))
+            if not ok2:
+                logger.error("idList_1.txt failed")
+            self.assertTrue(ok2)
+            ok3 = checkList(os.path.join(self.__workPath, "idList_2.txt"))
+            if not ok3:
+                logger.error("idList_2.txt failed")
+            self.assertTrue(ok3)
+
+            logger.info("Reading generated lists and checking for format.")
+
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail("Failed to build idLists")
