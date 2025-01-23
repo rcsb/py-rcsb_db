@@ -268,6 +268,10 @@ def processArguments(args):
         "forceReload": args.force_reload,
         "minNpiValidationCount": int(args.min_npi_validation_count) if args.min_npi_validation_count else None,
         "checkLoadWithHoldings": args.check_load_with_holdings,
+        "useImgsFormat": args.useImgsFormat,
+        "updateAllImages": args.updateAllImages,
+        "noBcifSubdirs": args.noBcifSubdirs,
+        "BcifBaseDir": args.BcifBaseDir,
     }
 
     return op, commonD, loadD
