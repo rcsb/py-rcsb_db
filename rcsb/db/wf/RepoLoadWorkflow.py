@@ -300,6 +300,16 @@ class RepoLoadWorkflow(object):
             random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
             filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFilePath)
 
+        if databaseName == "pdbx_ihm_core":
+            # Get list of ALL entries to be loaded for the current update cycle
+            if not holdingsFilePath:
+                holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb_ihm/holdings/released_structures_last_modified_dates.json.gz")
+            holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
+            idL = [k.upper() for k in holdingsFileD]
+            logger.info("Total number of entries to load: %d (obtained from file: %s)", len(idL), holdingsFilePath)
+            random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
+            filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFilePath)
+
         elif databaseName == "pdbx_comp_model_core":
             filePathMappingD = {}
             if holdingsFilePath:
