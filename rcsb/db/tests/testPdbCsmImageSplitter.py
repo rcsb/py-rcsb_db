@@ -105,7 +105,7 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
                 imgsWfFormat=True,
                 updateAllImages=True,
                 noBcifSubdirs=True,
-                BcifBaseDir=self.__workPath,
+                bcifBaseDir=self.__workPath,
             )
             ok1 = checkList(os.path.join(self.__workPath, "pdbx_comp_model_core_ids-1.txt"))
             if not ok1:

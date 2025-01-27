@@ -11,7 +11,7 @@
 #  26-Apr-2023 dwp Add regexPurge flag to control running regexp purge step during document load (with default set to False)
 #   7-Nov-2023 dwp Add maxStepLength parameter
 #  26-Mar-2024 dwp Add arguments and methods to support CLI usage from weekly-update workflow
-#  22-jan-2024 mjt Add Imgs format option (for jpg/svg generation) to splitIdList()
+#  22-Jan-2025 mjt Add Imgs format option (for jpg/svg generation) to splitIdList()
 #  
 ##
 __docformat__ = "restructuredtext en"
@@ -280,56 +280,6 @@ class RepoLoadWorkflow(object):
 
         return ok
 
-    def getPdbImgsFormattedList(self, hD, **kwargs):
-        pdbIdsTimestamps = {}
-        for idVal in hD:
-            datetimeObject = datetime.datetime.strptime(hD[idVal], "%Y-%m-%dT%H:%M:%S%z")
-            pdbIdsTimestamps[idVal.lower()] = datetimeObject
-        idL = []
-        if kwargs.get("updateAllImages"):
-            for idVal in pdbIdsTimestamps:
-                path = idVal + ".bcif" if kwargs.get("noBcifSubdirs") else idVal[1:3] + "/" + idVal + ".bcif"
-                idL.append(f"{idVal} {path} experimental")
-        else:
-            for idVal, timestamp in pdbIdsTimestamps.items():
-                path = idVal + ".bcif" if kwargs.get("noBcifSubdirs") else idVal[1:3] + "/" + idVal + ".bcif"  # idVal[1:3] + "/" + idVal + ".bcif"
-                bcifFile = os.path.join(kwargs.get("BcifBaseDir"), path)
-                if Path.exists(bcifFile):
-                    t1 = Path.stat(bcifFile).stMtime
-                    t2 = timestamp.timestamp()
-                    if t1 < t2:
-                        idL.append(f"{idVal} {path} experimental")
-                else:
-                    idL.append(f"{idVal} {path} experimental")
-        return idL
-
-    def getCsmImgsFormattedList(self, hD, **kwargs):
-        dic = {}
-        for modelId in hD:
-            item = hD[modelId]
-            item["modelPath"] = item["modelPath"].lower()  # prod route of BinaryCIF wf produces lowercase filenames
-            item["datetime"] = datetime.datetime.strptime(item["lastModifiedDate"], "%Y-%m-%dT%H:%M:%S%z")
-            dic[modelId.lower()] = item
-        modelIdsMetadata = dic
-        modelList = []
-        if kwargs.get("updateAllImages"):
-            for modelId, metadata in modelIdsMetadata.items():
-                modelPath = metadata["modelPath"].replace(".cif", ".bcif").replace(".gz", "")
-                modelList.append(f"{modelId} {modelPath} computational")
-        else:
-            # "incremental" for weekly
-            for modelId, metadata in modelIdsMetadata.items():
-                modelPath = metadata["modelPath"].replace(".cif", ".bcif").replace(".gz", "")
-                bcifFile = os.path.join(kwargs.get("BcifBaseDir"), modelPath)
-                if Path.exists(bcifFile):
-                    t1 = Path.stat(bcifFile).stMtime
-                    t2 = metadata["datetime"].timestamp()
-                    if t1 < t2:
-                        modelList.append(f"{modelId} {modelPath} computational")
-                else:
-                    modelList.append(f"{modelId} {modelPath} computational")
-        return modelList
-
     def splitIdList(self, op, **kwargs):
         if op not in ["pdbx_id_list_splitter"]:
             logger.error("Unsupported operation %r - exiting", op)
@@ -350,7 +300,12 @@ class RepoLoadWorkflow(object):
                 holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb/holdings/released_structures_last_modified_dates.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             if useImgsFormat:
-                idL = self.getPdbImgsFormattedList(holdingsFileD, **kwargs)
+                idL = self.getPdbImgsFormattedList(
+                    holdingsFileD, 
+                    kwargs.get("updateAllImages"), 
+                    kwargs.get("noBcifSubdirs"),
+                    kwargs.get("bcifBaseDir"),
+                    )
             else:
                 idL = [k.upper() for k in holdingsFileD]
             logger.info("Total number of entries to load: %d (obtained from file: %s)", len(idL), holdingsFilePath)
@@ -372,7 +327,11 @@ class RepoLoadWorkflow(object):
                 holdingsFile = os.path.join(holdingsFileBaseDir, list(holdingsFileD.keys())[0])
                 hD = mU.doImport(holdingsFile, fmt="json")
                 if useImgsFormat:
-                    idL = self.getCsmImgsFormattedList(hD, **kwargs)
+                    idL = self.getCsmImgsFormattedList(
+                        hD,
+                        kwargs.get("updateAllImages"),
+                        kwargs.get("BcifBaseDir"),
+                        )
                 else:
                     idL = [k.upper() for k in hD]
                 logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
@@ -386,7 +345,11 @@ class RepoLoadWorkflow(object):
                     holdingsFile = os.path.join(holdingsFileBaseDir, hF)
                     hD = mU.doImport(holdingsFile, fmt="json")
                     if useImgsFormat:
-                        idL = self.getCsmImgsFormattedList(hD, **kwargs)
+                        idL = self.getCsmImgsFormattedList(
+                            hD,
+                            kwargs.get("updateAllImages"),
+                            kwargs.get("BcifBaseDir"),
+                            )
                     else:
                         idL = [k.upper() for k in hD]
                     logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
@@ -414,6 +377,58 @@ class RepoLoadWorkflow(object):
                 logger.error("Entry ID loading sublist file does not exist: %r", oPath)
 
         return ok
+
+    def getPdbImgsFormattedList(self, hD, **kwargs):
+        pdbIdsTimestamps = {}
+        for idVal in hD:
+            datetimeObject = datetime.datetime.strptime(hD[idVal], "%Y-%m-%dT%H:%M:%S%z")
+            pdbIdsTimestamps[idVal.lower()] = datetimeObject
+        idL = []
+        if kwargs.get("updateAllImages"):
+            for idVal in pdbIdsTimestamps:
+                if kwargs.get("noBcifSubdirs"):
+                    path = idVal + ".bcif"
+                else:
+                    path = os.path.join(idVal[1:3] + "/", idVal + ".bcif")
+                idL.append(f"{idVal} {path} experimental")
+        else:
+            for idVal, timestamp in pdbIdsTimestamps.items():
+                path = idVal + ".bcif" if kwargs.get("noBcifSubdirs") else idVal[1:3] + "/" + idVal + ".bcif"
+                bcifFile = os.path.join(kwargs.get("bcifBaseDir"), path)
+                if Path(bcifFile).exists():
+                    t1 = Path(bcifFile).stat().stMtime
+                    t2 = timestamp.timestamp()
+                    if t1 < t2:
+                        idL.append(f"{idVal} {path} experimental")
+                else:
+                    idL.append(f"{idVal} {path} experimental")
+        return idL
+
+    def getCsmImgsFormattedList(self, hD, **kwargs):
+        modelIdsMetadata = {}
+        for modelId in hD:
+            item = hD[modelId]
+            item["modelPath"] = item["modelPath"].lower()  # prod route of BinaryCIF wf produces lowercase filenames
+            item["datetime"] = datetime.datetime.strptime(item["lastModifiedDate"], "%Y-%m-%dT%H:%M:%S%z")
+            modelIdsMetadata[modelId.lower()] = item
+        modelList = []
+        if kwargs.get("updateAllImages"):
+            for modelId, metadata in modelIdsMetadata.items():
+                modelPath = metadata["modelPath"].replace(".cif", ".bcif").replace(".gz", "")
+                modelList.append(f"{modelId} {modelPath} computational")
+        else:
+            # "incremental" for weekly
+            for modelId, metadata in modelIdsMetadata.items():
+                modelPath = metadata["modelPath"].replace(".cif", ".bcif").replace(".gz", "")
+                bcifFile = os.path.join(kwargs.get("BcifBaseDir"), modelPath)
+                if Path(bcifFile).exists():
+                    t1 = Path(bcifFile).stat().stMtime
+                    t2 = metadata["datetime"].timestamp()
+                    if t1 < t2:
+                        modelList.append(f"{modelId} {modelPath} computational")
+                else:
+                    modelList.append(f"{modelId} {modelPath} computational")
+        return modelList
 
     def splitIdListAndWriteToFiles(self, inputList, nFiles, outfileDir, outfilePrefix, sourceFile):
         """Split input ID list into equally distributed sublists of size nFiles.

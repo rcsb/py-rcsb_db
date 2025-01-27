@@ -25,7 +25,7 @@
 #                      Add arguments and logic to support CLI usage from weekly-update workflow;
 #                      Add support for logging output to a specific file
 #    25-Apr-2024 - dwp Add support for remote config file loading; use underscores instead of hyphens for arg choices
-#    22-jan-2024 - mjt Add Imgs format option flags
+#    22-Jan-2025 - mjt Add Imgs format option flags
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -271,7 +271,7 @@ def processArguments(args):
         "useImgsFormat": args.use_imgs_format,
         "updateAllImages": args.update_all_images,
         "noBcifSubdirs": args.no_bcif_subdirs,
-        "BcifBaseDir": args.bcif_base_dir,
+        "bcifBaseDir": args.bcif_base_dir,
     }
 
     return op, commonD, loadD
