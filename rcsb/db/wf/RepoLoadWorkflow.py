@@ -302,9 +302,9 @@ class RepoLoadWorkflow(object):
             if useImgsFormat:
                 idL = self.getPdbImgsFormattedList(
                     holdingsFileD, 
-                    kwargs.get("updateAllImages"), 
-                    kwargs.get("noBcifSubdirs"),
-                    kwargs.get("bcifBaseDir"),
+                    updateAllImages=kwargs.get("updateAllImages"), 
+                    noBcifSubdirs=kwargs.get("noBcifSubdirs"),
+                    bcifBaseDir=kwargs.get("bcifBaseDir"),
                     )
             else:
                 idL = [k.upper() for k in holdingsFileD]
@@ -329,8 +329,8 @@ class RepoLoadWorkflow(object):
                 if useImgsFormat:
                     idL = self.getCsmImgsFormattedList(
                         hD,
-                        kwargs.get("updateAllImages"),
-                        kwargs.get("BcifBaseDir"),
+                        updateAllImages=kwargs.get("updateAllImages"),
+                        BcifBaseDir=kwargs.get("BcifBaseDir"),
                         )
                 else:
                     idL = [k.upper() for k in hD]
@@ -347,8 +347,8 @@ class RepoLoadWorkflow(object):
                     if useImgsFormat:
                         idL = self.getCsmImgsFormattedList(
                             hD,
-                            kwargs.get("updateAllImages"),
-                            kwargs.get("BcifBaseDir"),
+                            updateAllImages=kwargs.get("updateAllImages"),
+                            BcifBaseDir=kwargs.get("BcifBaseDir"),
                             )
                     else:
                         idL = [k.upper() for k in hD]
