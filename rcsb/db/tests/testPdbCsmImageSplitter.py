@@ -1,5 +1,5 @@
 ##
-# File:    testPdbCsmImageWorkflow.py
+# File:    testPdbCsmImageSplitter.py
 # Author:  Michael Trumbull
 # Date:    12-Dec-2024
 # Version: 0.01
@@ -12,7 +12,6 @@ __docformat__ = "google en"
 __author__ = "Michael Trumbull"
 __email__ = "michael.trumbull@rcsb.org"
 __license__ = "Apache 2.0"
-__version__ = "V0.01"
 
 import logging
 import os
@@ -35,7 +34,7 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
     def setUp(self) -> None:
         self.__startTime = time.time()
         # self.__cachePath = os.path.join(HERE, "test-data")
-        self.__workPath = os.path.join(HERE, "test-output", "CACHE")
+        self.__workPath = os.path.join(HERE, "test-output")
         self.mockdataDir = os.path.join(TOPDIR, "rcsb", "mock-data", "MOCK_IMGS_WF_BCIF_DATA")
         logger.debug("Running tests on version %s", __version__)
         logger.info("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
@@ -56,6 +55,7 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
             logger.info('mockdataDir %s', self.mockdataDir)
             logger.info('workpath %s', self.__workPath)
             def checkList(ids: str) -> bool:
+
                 try:
                     logger.info('ids path for checkList %s', ids)
                     allDataPresent = True
