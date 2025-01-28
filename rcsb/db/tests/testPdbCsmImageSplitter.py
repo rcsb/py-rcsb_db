@@ -36,7 +36,6 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
         # self.__cachePath = os.path.join(HERE, "test-data")
         self.__workPath = os.path.join(HERE, "test-output")
         self.mockdataDir = os.path.join(TOPDIR, "rcsb", "mock-data", "MOCK_IMGS_WF_BCIF_DATA")
-        logger.debug("Running tests on version %s", __version__)
         logger.info("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
 
     def tearDown(self) -> None:
@@ -112,29 +111,27 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
 
     def checkList(self, ids: str) -> bool:
 
-                try:
-                    logger.info('ids path for checkList %s', ids)
-                    allDataPresent = True
-                    with Path(ids).open("r", encoding="utf-8") as file:
-                        idList = [line.rstrip("\n") for line in file]
-                    for line in idList:
-                        logger.info('line from file is: %s', line)
-                        fileId, bcifFileName, sdm = line.split()
-                        if not ((len(fileId) > 0) and (len(bcifFileName) > 0) and (len(sdm) > 0)):
-                            logger.error('Found one of the following had a length of zero %s %s %s', fileId, bcifFileName, sdm)
-                            allDataPresent = False
-                    logger.info('End of a single checkList. Returning a value of %s', allDataPresent)
-                    return allDataPresent
-                except Exception:
-                    logger.exception("Failed to find created file %s", ids)
-                    return False
-
+        try:
+            logger.info('ids path for checkList %s', ids)
+            allDataPresent = True
+            with Path(ids).open("r", encoding="utf-8") as file:
+                idList = [line.rstrip("\n") for line in file]
+            for line in idList:
+                logger.info('line from file is: %s', line)
+                fileId, bcifFileName, sdm = line.split()
+                if not ((len(fileId) > 0) and (len(bcifFileName) > 0) and (len(sdm) > 0)):
+                    logger.error('Found one of the following had a length of zero %s %s %s', fileId, bcifFileName, sdm)
+                    allDataPresent = False
+            logger.info('End of a single checkList. Returning a value of %s', allDataPresent)
+            return allDataPresent
+        except Exception:
+            logger.exception("Failed to find created file %s", ids)
+            return False
 
 def suiteFileGeneration():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(TestPdbCsmImagesSplitter("testIdListGeneration"))
     return suiteSelect
-
 
 if __name__ == "__main__":
     mySuite = suiteFileGeneration()

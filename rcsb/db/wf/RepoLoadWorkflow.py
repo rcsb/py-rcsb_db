@@ -291,9 +291,9 @@ class RepoLoadWorkflow(object):
         loadFileListPrefix = databaseName + "_ids"  # pdbx_core_ids or pdbx_comp_model_core_ids
         numSublistFiles = kwargs.get("numSublistFiles")  # ExchangeDbConfig().pdbxCoreNumberSublistFiles
         useImgsFormat = kwargs.get("useImgsFormat", False)
-        updateAllImages=kwargs.get("updateAllImages", False)
-        noBcifSubdirs=kwargs.get("noBcifSubdirs", False)
-        bcifBaseDir=kwargs.get("bcifBaseDir", None)
+        updateAllImages = kwargs.get("updateAllImages", False)
+        noBcifSubdirs = kwargs.get("noBcifSubdirs", False)
+        bcifBaseDir = kwargs.get("bcifBaseDir", None)
         #
         mU = MarshalUtil(workPath=self.__cachePath)
         #
@@ -395,10 +395,13 @@ class RepoLoadWorkflow(object):
                 idL.append(f"{idVal} {path} experimental")
         else:
             for idVal, timestamp in pdbIdsTimestamps.items():
-                path = idVal + ".bcif" if noBcifSubdirs else idVal[1:3] + "/" + idVal + ".bcif"
+                if noBcifSubdirs:
+                    path = idVal + ".bcif"
+                else:
+                    path = os.path.join(idVal[1:3], idVal + ".bcif")
                 bcifFile = os.path.join(bcifBaseDir, path)
                 if Path(bcifFile).exists():
-                    t1 = Path(bcifFile).stat().stMtime
+                    t1 = Path(bcifFile).stat().st_mtime
                     t2 = timestamp.timestamp()
                     if t1 < t2:
                         idL.append(f"{idVal} {path} experimental")
@@ -424,7 +427,7 @@ class RepoLoadWorkflow(object):
                 modelPath = metadata["modelPath"].replace(".cif", ".bcif").replace(".gz", "")
                 bcifFile = os.path.join(bcifBaseDir, modelPath)
                 if Path(bcifFile).exists():
-                    t1 = Path(bcifFile).stat().stMtime
+                    t1 = Path(bcifFile).stat().st_mtime
                     t2 = metadata["datetime"].timestamp()
                     if t1 < t2:
                         modelList.append(f"{modelId} {modelPath} computational")
