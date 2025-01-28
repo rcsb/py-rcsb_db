@@ -289,7 +289,7 @@ class RepoLoadWorkflow(object):
         holdingsFilePath = kwargs.get("holdingsFilePath", None)  # For CSMs: http://computed-models-internal-%s.rcsb.org/staging/holdings/computed-models-holdings-list.json
         loadFileListDir = kwargs.get("loadFileListDir")  # ExchangeDbConfig().loadFileListsDir
         loadFileListPrefix = databaseName + "_ids"  # pdbx_core_ids or pdbx_comp_model_core_ids
-        numSublistFiles = kwargs.get("numSublistFiles")  # ExchangeDbConfig().pdbxCoreNumberSublistFiles
+        numSublistFiles = kwargs.get("numSublistFiles", 1)  # ExchangeDbConfig().pdbxCoreNumberSublistFiles
         useImgsFormat = kwargs.get("useImgsFormat", False)
         updateAllImages = kwargs.get("updateAllImages", False)
         noBcifSubdirs = kwargs.get("noBcifSubdirs", False)

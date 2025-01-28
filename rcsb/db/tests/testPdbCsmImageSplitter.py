@@ -60,10 +60,10 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
                 holdingsFilePath=os.path.join(self.mockdataDir, "holdings/released_structures_last_modified_dates.json.gz"),
                 loadFileListDir=self.__workPath,
                 numSublistFiles=3,
-                imgsWfFormat=True,
+                useImgsFormat=True,
                 updateAllImages=True,
                 noBcifSubdirs=True,
-                bcifBaseDir=self.mockdataDir,
+                bcifBaseDir=self.__workPath,
             )
             self.assertTrue(ok)
             ok1 = self.checkList(os.path.join(self.__workPath, "pdbx_core_ids-1.txt"))
@@ -84,10 +84,10 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
                 holdingsFilePath=os.path.join(self.mockdataDir, "holdings/computed-models-holdings-list.json"),
                 loadFileListDir=self.__workPath,
                 numSublistFiles=3,
-                imgsWfFormat=True,
+                useImgsFormat=True,
                 updateAllImages=True,
                 noBcifSubdirs=True,
-                bcifBaseDir=self.mockdataDir,
+                bcifBaseDir=self.__workPath,
             )
             self.assertTrue(ok)
             ok1 = self.checkList(os.path.join(self.__workPath, "pdbx_comp_model_core_ids-1.txt"))
@@ -128,10 +128,12 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
             logger.exception("Failed to find created file %s", ids)
             return False
 
+
 def suiteFileGeneration():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(TestPdbCsmImagesSplitter("testIdListGeneration"))
     return suiteSelect
+
 
 if __name__ == "__main__":
     mySuite = suiteFileGeneration()
