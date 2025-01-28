@@ -391,7 +391,7 @@ class RepoLoadWorkflow(object):
                 if noBcifSubdirs:
                     path = idVal + ".bcif"
                 else:
-                    path = os.path.join(idVal[1:3] + "/", idVal + ".bcif")
+                    path = os.path.join(idVal[1:3], idVal + ".bcif")
                 idL.append(f"{idVal} {path} experimental")
         else:
             for idVal, timestamp in pdbIdsTimestamps.items():

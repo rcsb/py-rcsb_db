@@ -49,31 +49,13 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
     def testIdListGeneration(self) -> None:
         """Test id list file generation ..."""
         try:
-            logger.info('creating object')
+            logger.info("creating object")
             rlWf = RepoLoadWorkflow()
             logger.info("Generating 3 id lists to run through.")
-            logger.info('mockdataDir %s', self.mockdataDir)
-            logger.info('workpath %s', self.__workPath)
-            def checkList(ids: str) -> bool:
+            logger.info("mockdataDir %s", self.mockdataDir)
+            logger.info("workpath %s", self.__workPath)
 
-                try:
-                    logger.info('ids path for checkList %s', ids)
-                    allDataPresent = True
-                    with Path(ids).open("r", encoding="utf-8") as file:
-                        idList = [line.rstrip("\n") for line in file]
-                    for line in idList:
-                        logger.info('line from file is: %s', line)
-                        fileId, bcifFileName, sdm = line.split(" ")
-                        if not ((len(fileId) > 0) and (len(bcifFileName) > 0) and (len(sdm) > 0)):
-                            logger.error('Found one of the following had a length of zero %s %s %s', fileId, bcifFileName, sdm)
-                            allDataPresent = False
-                    logger.info('End of a single checkList. Returning a value of %s', allDataPresent)
-                    return allDataPresent
-                except Exception:
-                    logger.exception("Failed to find created file %s", ids)
-                    return False
-
-            rlWf.splitIdList(
+            ok = rlWf.splitIdList(
                 "pdbx_id_list_splitter",
                 databaseName="pdbx_core",
                 holdingsFilePath=os.path.join(self.mockdataDir, "holdings/released_structures_last_modified_dates.json.gz"),
@@ -82,21 +64,22 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
                 imgsWfFormat=True,
                 updateAllImages=True,
                 noBcifSubdirs=True,
-                BcifBaseDir=self.mockdataDir,
+                bcifBaseDir=self.mockdataDir,
             )
-            ok1 = checkList(os.path.join(self.__workPath, "pdbx_core_ids-1.txt"))
+            self.assertTrue(ok)
+            ok1 = self.checkList(os.path.join(self.__workPath, "pdbx_core_ids-1.txt"))
             if not ok1:
                 logger.error("idList_0.txt failed")
             self.assertTrue(ok1)
-            ok2 = checkList(os.path.join(self.__workPath, "pdbx_core_ids-2.txt"))
+            ok2 = self.checkList(os.path.join(self.__workPath, "pdbx_core_ids-2.txt"))
             if not ok2:
                 logger.error("idList_1.txt failed")
             self.assertTrue(ok2)
-            ok3 = checkList(os.path.join(self.__workPath, "pdbx_core_ids-3.txt"))
+            ok3 = self.checkList(os.path.join(self.__workPath, "pdbx_core_ids-3.txt"))
             if not ok3:
                 logger.error("idList_2.txt failed")
             self.assertTrue(ok3)
-            rlWf.splitIdList(
+            ok = rlWf.splitIdList(
                 "pdbx_id_list_splitter",
                 databaseName="pdbx_comp_model_core",
                 holdingsFilePath=os.path.join(self.mockdataDir, "holdings/computed-models-holdings-list.json"),
@@ -105,17 +88,18 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
                 imgsWfFormat=True,
                 updateAllImages=True,
                 noBcifSubdirs=True,
-                bcifBaseDir=self.__workPath,
+                bcifBaseDir=self.mockdataDir,
             )
-            ok1 = checkList(os.path.join(self.__workPath, "pdbx_comp_model_core_ids-1.txt"))
+            self.assertTrue(ok)
+            ok1 = self.checkList(os.path.join(self.__workPath, "pdbx_comp_model_core_ids-1.txt"))
             if not ok1:
                 logger.error("idList_0.txt failed")
             self.assertTrue(ok1)
-            ok2 = checkList(os.path.join(self.__workPath, "pdbx_comp_model_core_ids-2.txt"))
+            ok2 = self.checkList(os.path.join(self.__workPath, "pdbx_comp_model_core_ids-2.txt"))
             if not ok2:
                 logger.error("idList_1.txt failed")
             self.assertTrue(ok2)
-            ok3 = checkList(os.path.join(self.__workPath, "pdbx_comp_model_core_ids-3.txt"))
+            ok3 = self.checkList(os.path.join(self.__workPath, "pdbx_comp_model_core_ids-3.txt"))
             if not ok3:
                 logger.error("idList_2.txt failed")
             self.assertTrue(ok3)
@@ -125,6 +109,25 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail("Failed to build idLists")
+
+    def checkList(self, ids: str) -> bool:
+
+                try:
+                    logger.info('ids path for checkList %s', ids)
+                    allDataPresent = True
+                    with Path(ids).open("r", encoding="utf-8") as file:
+                        idList = [line.rstrip("\n") for line in file]
+                    for line in idList:
+                        logger.info('line from file is: %s', line)
+                        fileId, bcifFileName, sdm = line.split()
+                        if not ((len(fileId) > 0) and (len(bcifFileName) > 0) and (len(sdm) > 0)):
+                            logger.error('Found one of the following had a length of zero %s %s %s', fileId, bcifFileName, sdm)
+                            allDataPresent = False
+                    logger.info('End of a single checkList. Returning a value of %s', allDataPresent)
+                    return allDataPresent
+                except Exception:
+                    logger.exception("Failed to find created file %s", ids)
+                    return False
 
 
 def suiteFileGeneration():
