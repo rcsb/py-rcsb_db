@@ -285,29 +285,28 @@ class RepoLoadWorkflow(object):
         databaseName = kwargs.get("databaseName")
         holdingsFilePath = kwargs.get("holdingsFilePath", None)  # For CSMs: http://computed-models-internal-%s.rcsb.org/staging/holdings/computed-models-holdings-list.json
         loadFileListDir = kwargs.get("loadFileListDir")  # ExchangeDbConfig().loadFileListsDir
-        loadFileListPrefix = databaseName + "_ids"  # pdbx_core_ids or pdbx_comp_model_core_ids
+        loadFileListPrefix = kwargs.get("loadFileListPrefix", databaseName + "_ids")  # pdbx_core_ids, pdbx_comp_model_core_ids, or pdbx_ihm_ids
         numSublistFiles = kwargs.get("numSublistFiles")  # ExchangeDbConfig().pdbxCoreNumberSublistFiles
+        loadIhm = kwargs.get("loadIhm", False)
         #
         mU = MarshalUtil(workPath=self.__cachePath)
         #
-        if databaseName == "pdbx_core":
+        if databaseName == "pdbx_core" and not loadIhm:
             # Get list of ALL entries to be loaded for the current update cycle
             if not holdingsFilePath:
                 holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb/holdings/released_structures_last_modified_dates.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             idL = [k.upper() for k in holdingsFileD]
-            logger.info("Total number of entries to load: %d (obtained from file: %s)", len(idL), holdingsFilePath)
+            logger.info("Total number of PDB entries: %d (obtained from file: %s)", len(idL), holdingsFilePath)
             random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
             filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFilePath)
 
-        if databaseName == "pdbx_ihm_core":
-            # Get list of ALL entries to be loaded for the current update cycle
+        if databaseName == "pdbx_core" and loadIhm:
             if not holdingsFilePath:
                 holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb_ihm/holdings/released_structures_last_modified_dates.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             idL = [k.upper() for k in holdingsFileD]
-            logger.info("Total number of entries to load: %d (obtained from file: %s)", len(idL), holdingsFilePath)
-            random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
+            logger.info("Total number of IHM entries: %d (obtained from file: %s)", len(idL), holdingsFilePath)
             filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFilePath)
 
         elif databaseName == "pdbx_comp_model_core":
@@ -367,7 +366,8 @@ class RepoLoadWorkflow(object):
         Write files to the given outfileDir and outfilePrefix.
 
         Returns:
-            list: list of output file paths
+            dict: dict of output file paths
+                  {list_index: {"filePath": filePath, "numModels": len(sublist), "sourceFile": sourceFile}}
         """
         sublistSize = math.ceil(len(inputList) / nFiles)
 
