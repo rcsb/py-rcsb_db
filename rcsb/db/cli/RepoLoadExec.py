@@ -25,6 +25,7 @@
 #                      Add arguments and logic to support CLI usage from weekly-update workflow;
 #                      Add support for logging output to a specific file
 #    25-Apr-2024 - dwp Add support for remote config file loading; use underscores instead of hyphens for arg choices
+#    28-Jan-2025 - dwp Add support for IHM model loading by adding 'content_type' flag
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -95,7 +96,7 @@ def main():
     parser.add_argument("--num_sublists", default=None, help="Number of sublists to create/load for the associated database")
     parser.add_argument("--force_reload", default=False, action="store_true", help="Force re-load of provided ID list (i.e., don't just load delta; useful for manual/test runs).")
     parser.add_argument("--provider_types_exclude", default=None, help="Resource provider types to exclude")
-    parser.add_argument("--load_ihm", default=False, action="store_true", help="Include IHMs in list splitting and DB loading.")
+    parser.add_argument("--content_type", default=None, help="Type of content to load ('pdbx_core', 'pdbx_comp_model_core', 'pdbx_ihm').")
     #
     parser.add_argument("--db_type", default="mongo", help="Database server type (default=mongo)")
     parser.add_argument("--file_limit", default=None, help="Load file limit for testing")
@@ -263,7 +264,7 @@ def processArguments(args):
         "clusterFileNameTemplate": args.cluster_filename_template,
         "rebuildCache": args.rebuild_cache,
         "forceReload": args.force_reload,
-        "loadIhm": args.load_ihm,
+        "contentType": args.content_type,
         "minNpiValidationCount": int(args.min_npi_validation_count) if args.min_npi_validation_count else None,
         "checkLoadWithHoldings": args.check_load_with_holdings,
     }
