@@ -60,11 +60,13 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
                 holdingsFilePath=os.path.join(self.mockdataDir, "holdings/released_structures_last_modified_dates.json.gz"),
                 loadFileListDir=self.__workPath,
                 numSublistFiles=3,
-                useImgsFormat=True,
-                updateAllImages=True,
+                incrementalUpdate=True,
+                useTrippleFormat=True,
                 noBcifSubdirs=True,
-                bcifBaseDir=self.__workPath,
+                targetFileDir=self.__workPath,
+                targetFileSuffix="_model-1.jpg",
             )
+
             self.assertTrue(ok)
             ok1 = self.checkList(os.path.join(self.__workPath, "pdbx_core_ids-1.txt"))
             if not ok1:
@@ -84,10 +86,11 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
                 holdingsFilePath=os.path.join(self.mockdataDir, "holdings/computed-models-holdings-list.json"),
                 loadFileListDir=self.__workPath,
                 numSublistFiles=3,
-                useImgsFormat=True,
-                updateAllImages=True,
+                incrementalUpdate=True,
+                useTrippleFormat=True,
                 noBcifSubdirs=True,
-                bcifBaseDir=self.__workPath,
+                targetFileDir=self.__workPath,
+                targetFileSuffix="_model-1.jpg",
             )
             self.assertTrue(ok)
             ok1 = self.checkList(os.path.join(self.__workPath, "pdbx_comp_model_core_ids-1.txt"))

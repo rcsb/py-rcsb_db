@@ -290,10 +290,12 @@ class RepoLoadWorkflow(object):
         loadFileListDir = kwargs.get("loadFileListDir")  # ExchangeDbConfig().loadFileListsDir
         loadFileListPrefix = databaseName + "_ids"  # pdbx_core_ids or pdbx_comp_model_core_ids
         numSublistFiles = kwargs.get("numSublistFiles", 1)  # ExchangeDbConfig().pdbxCoreNumberSublistFiles
-        useImgsFormat = kwargs.get("useImgsFormat", False)
-        updateAllImages = kwargs.get("updateAllImages", False)
+
+        incrementalUpdate = kwargs.get("incrementalUpdate", False)
+        useTrippleFormat = kwargs.get("useTrippleFormat", False)
+        targetFileDir = kwargs.get("targetFileDir", "")
+        targetFileSuffix = kwargs.get("targetFileSuffix", "_model-1.jpg")
         noBcifSubdirs = kwargs.get("noBcifSubdirs", False)
-        bcifBaseDir = kwargs.get("bcifBaseDir", None)
         #
         mU = MarshalUtil(workPath=self.__cachePath)
         #
@@ -302,15 +304,26 @@ class RepoLoadWorkflow(object):
             if not holdingsFilePath:
                 holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb/holdings/released_structures_last_modified_dates.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
-            if useImgsFormat:
-                idL = self.getPdbImgsFormattedList(
-                    holdingsFileD,
-                    updateAllImages=updateAllImages,
-                    noBcifSubdirs=noBcifSubdirs,
-                    bcifBaseDir=bcifBaseDir,
-                )
+
+            if incrementalUpdate:
+                holdingsFileD = self.pdbTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix)
+
+            if useTrippleFormat:
+                idL = [self.formatIdFileSource(k.lower(), "experimental", noBcifSubdirs) for k in holdingsFileD]
             else:
                 idL = [k.upper() for k in holdingsFileD]
+            
+            # if useImgsFormat:
+            #     idL = self.getPdbImgsFormattedList(
+            #         holdingsFileD,
+            #         updateAllImages=updateAllImages,
+            #         noBcifSubdirs=noBcifSubdirs,
+            #         bcifBaseDir=bcifBaseDir,
+            #     )
+            # else:
+            #     idL = [k.upper() for k in holdingsFileD]
+            ############################################
+
             logger.info("Total number of entries to load: %d (obtained from file: %s)", len(idL), holdingsFilePath)
             random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
             filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFilePath)
@@ -324,18 +337,27 @@ class RepoLoadWorkflow(object):
                 holdingsFileBaseDir = self.__cfgOb.getPath("PDBX_COMP_MODEL_REPO_PATH", sectionName=self.__configName)
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             #
+
             if len(holdingsFileD) == 1:
                 # Split up single holdings file into multiple sub-lists
                 holdingsFile = os.path.join(holdingsFileBaseDir, list(holdingsFileD.keys())[0])
                 hD = mU.doImport(holdingsFile, fmt="json")
-                if useImgsFormat:
-                    idL = self.getCsmImgsFormattedList(
-                        hD,
-                        updateAllImages=updateAllImages,
-                        bcifBaseDir=bcifBaseDir,
-                    )
+
+                if incrementalUpdate:
+                    hD = self.csmTimeStampCheck(hD, targetFileDir, targetFileSuffix)
+
+                if useTrippleFormat:
+                    idL = [self.formatIdFileSource(k.lower(), "computational", noBcifSubdirs) for k in hD]
                 else:
                     idL = [k.upper() for k in hD]
+                # if useImgsFormat:
+                #     idL = self.getCsmImgsFormattedList(
+                #         hD,
+                #         updateAllImages=updateAllImages,
+                #         bcifBaseDir=bcifBaseDir,
+                #     )
+                # else:
+                #     idL = [k.upper() for k in hD]
                 logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
                 filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFile)
             #
@@ -346,14 +368,20 @@ class RepoLoadWorkflow(object):
                 for hF, count in holdingsFileD.items():
                     holdingsFile = os.path.join(holdingsFileBaseDir, hF)
                     hD = mU.doImport(holdingsFile, fmt="json")
-                    if useImgsFormat:
-                        idL = self.getCsmImgsFormattedList(
-                            hD,
-                            updateAllImages=updateAllImages,
-                            bcifBaseDir=bcifBaseDir,
-                        )
+                    if incrementalUpdate:
+                        hD = self.csmTimeStampCheck(hD, targetFileDir, targetFileSuffix)
+                    if useTrippleFormat:
+                        idL = [self.formatIdFileSource(k.lower(), "computational", noBcifSubdirs) for k in hD]
                     else:
                         idL = [k.upper() for k in hD]
+                    # if useImgsFormat:
+                    #     idL = self.getCsmImgsFormattedList(
+                    #         hD,
+                    #         updateAllImages=updateAllImages,
+                    #         bcifBaseDir=bcifBaseDir,
+                    #     )
+                    # else:
+                    #     idL = [k.upper() for k in hD]
                     logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
                     #
                     fPath = os.path.join(loadFileListDir, f"{loadFileListPrefix}-{index}.txt")
@@ -380,60 +408,105 @@ class RepoLoadWorkflow(object):
 
         return ok
 
-    def getPdbImgsFormattedList(self, hD, updateAllImages=False, noBcifSubdirs=False, bcifBaseDir=""):
-        pdbIdsTimestamps = {}
-        for idVal in hD:
-            datetimeObject = datetime.datetime.strptime(hD[idVal], "%Y-%m-%dT%H:%M:%S%z")
-            pdbIdsTimestamps[idVal.lower()] = datetimeObject
-        idL = []
-        if updateAllImages:
-            for idVal in pdbIdsTimestamps:
-                if noBcifSubdirs:
-                    path = idVal + ".bcif"
-                else:
-                    path = os.path.join(idVal[1:3], idVal + ".bcif")
-                idL.append(f"{idVal} {path} experimental")
+    def formatIdFileSource(self, idVal, source, noBcifSubdirs):
+        if noBcifSubdirs:
+            path = idVal + ".bcif"
         else:
-            for idVal, timestamp in pdbIdsTimestamps.items():
-                if noBcifSubdirs:
-                    path = idVal + ".bcif"
-                else:
-                    path = os.path.join(idVal[1:3], idVal + ".bcif")
-                bcifFile = os.path.join(bcifBaseDir, path)
-                if Path(bcifFile).exists():
-                    t1 = Path(bcifFile).stat().st_mtime
-                    t2 = timestamp.timestamp()
-                    if t1 < t2:
-                        idL.append(f"{idVal} {path} experimental")
-                else:
-                    idL.append(f"{idVal} {path} experimental")
-        return idL
+            path = os.path.join(idVal[1:3], idVal + ".bcif")
+        return f"{idVal} {path} {source}"
+    
+    def pdbTimeStampCheck(self, hD, targetFileDir, targetFileSuffix):
+        res = hD.copy()
+        for id, value in hD.items():
+            pathToItem = os.path.join(targetFileDir, id + targetFileSuffix)
+            if Path(pathToItem).exists():
+                t1 = Path(pathToItem).stat().st_mtime
+                t2 = datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S%z").timestamp()
+                if t1 > t2:
+                    res.pop(id)
+        return res
 
-    def getCsmImgsFormattedList(self, hD, updateAllImages=False, bcifBaseDir=""):
-        modelIdsMetadata = {}
-        for modelId in hD:
-            item = hD[modelId]
-            item["modelPath"] = item["modelPath"].lower()  # prod route of BinaryCIF wf produces lowercase filenames
-            item["datetime"] = datetime.datetime.strptime(item["lastModifiedDate"], "%Y-%m-%dT%H:%M:%S%z")
-            modelIdsMetadata[modelId.lower()] = item
-        modelList = []
-        if updateAllImages:
-            for modelId, metadata in modelIdsMetadata.items():
-                modelPath = metadata["modelPath"].replace(".cif", ".bcif").replace(".gz", "")
-                modelList.append(f"{modelId} {modelPath} computational")
-        else:
-            # "incremental" for weekly
-            for modelId, metadata in modelIdsMetadata.items():
-                modelPath = metadata["modelPath"].replace(".cif", ".bcif").replace(".gz", "")
-                bcifFile = os.path.join(bcifBaseDir, modelPath)
-                if Path(bcifFile).exists():
-                    t1 = Path(bcifFile).stat().st_mtime
-                    t2 = metadata["datetime"].timestamp()
-                    if t1 < t2:
-                        modelList.append(f"{modelId} {modelPath} computational")
-                else:
-                    modelList.append(f"{modelId} {modelPath} computational")
-        return modelList
+    def csmTimeStampCheck(self, hD, targetFileDir, targetFileSuffix):
+        res = hD.copy()
+        for id, value in hD.items():
+            value["modelPath"].lower()
+            pathToItem = os.path.join(targetFileDir, id + targetFileSuffix)
+            if Path(pathToItem).exists():
+                t1 = Path(pathToItem).stat().st_mtime
+                t2 = datetime.datetime.strptime(value["lastModifiedDate"], "%Y-%m-%dT%H:%M:%S%z").timestamp()
+                if t1 > t2:
+                    res.pop(id)
+        return res
+
+    # def removeUpToDateIds(self, hD, targetFileDir, targetFileSuffix):
+    #     hDresult= {}
+    #     for idVal, time in hD.items():
+    #         hDtimestamp = datetime.datetime.strptime(time, "%Y-%m-%dT%H:%M:%S%z")
+    #         pathToItem = os.path.join(targetFileDir, idVal + targetFileSuffix)
+    #         if Path(pathToItem).exists():
+    #             t1 = Path(pathToItem).stat().st_mtime
+    #             t2 = hDtimestamp.timestamp()
+    #             if t1 < t2:
+    #                 hDresult[idVal] = time
+    #         else:
+    #             # the item doesn't exist
+    #             hDresult[idVal] = time
+    #     return hDresult
+
+    # def getPdbImgsFormattedList(self, hD, updateAllImages=False, noBcifSubdirs=False, bcifBaseDir=""):
+    #     pdbIdsTimestamps = {}
+    #     for idVal in hD:
+    #         datetimeObject = datetime.datetime.strptime(hD[idVal], "%Y-%m-%dT%H:%M:%S%z")
+    #         pdbIdsTimestamps[idVal.lower()] = datetimeObject
+    #     idL = []
+    #     if updateAllImages:
+    #         for idVal in pdbIdsTimestamps:
+    #             if noBcifSubdirs:
+    #                 path = idVal + ".bcif"
+    #             else:
+    #                 path = os.path.join(idVal[1:3], idVal + ".bcif")
+    #             idL.append(f"{idVal} {path} experimental")
+    #     else:
+    #         for idVal, timestamp in pdbIdsTimestamps.items():
+    #             if noBcifSubdirs:
+    #                 path = idVal + ".bcif"
+    #             else:
+    #                 path = os.path.join(idVal[1:3], idVal + ".bcif")
+    #             bcifFile = os.path.join(bcifBaseDir, path)
+    #             if Path(bcifFile).exists():
+    #                 t1 = Path(bcifFile).stat().st_mtime
+    #                 t2 = timestamp.timestamp()
+    #                 if t1 < t2:
+    #                     idL.append(f"{idVal} {path} experimental")
+    #             else:
+    #                 idL.append(f"{idVal} {path} experimental")
+    #     return idL
+
+    # def getCsmImgsFormattedList(self, hD, updateAllImages=False, bcifBaseDir=""):
+    #     modelIdsMetadata = {}
+    #     for modelId in hD:
+    #         item = hD[modelId]
+    #         item["modelPath"] = item["modelPath"].lower()  # prod route of BinaryCIF wf produces lowercase filenames
+    #         item["datetime"] = datetime.datetime.strptime(item["lastModifiedDate"], "%Y-%m-%dT%H:%M:%S%z")
+    #         modelIdsMetadata[modelId.lower()] = item
+    #     modelList = []
+    #     if updateAllImages:
+    #         for modelId, metadata in modelIdsMetadata.items():
+    #             modelPath = metadata["modelPath"].replace(".cif", ".bcif").replace(".gz", "")
+    #             modelList.append(f"{modelId} {modelPath} computational")
+    #     else:
+    #         # "incremental" for weekly
+    #         for modelId, metadata in modelIdsMetadata.items():
+    #             modelPath = metadata["modelPath"].replace(".cif", ".bcif").replace(".gz", "")
+    #             bcifFile = os.path.join(bcifBaseDir, modelPath)
+    #             if Path(bcifFile).exists():
+    #                 t1 = Path(bcifFile).stat().st_mtime
+    #                 t2 = metadata["datetime"].timestamp()
+    #                 if t1 < t2:
+    #                     modelList.append(f"{modelId} {modelPath} computational")
+    #             else:
+    #                 modelList.append(f"{modelId} {modelPath} computational")
+    #     return modelList
 
     def splitIdListAndWriteToFiles(self, inputList, nFiles, outfileDir, outfilePrefix, sourceFile):
         """Split input ID list into equally distributed sublists of size nFiles.
