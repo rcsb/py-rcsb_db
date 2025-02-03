@@ -27,12 +27,11 @@ import pprint
 import time
 import unittest
 from collections import OrderedDict
-
-import dateutil.parser
+from datetime import datetime
+from html import unescape
 
 from rcsb.db.mongo.Connection import Connection
 from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
-from rcsb.db.utils.TextUtil import unescapeXmlCharRef
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
@@ -102,7 +101,8 @@ class MongoDbUtilTests(unittest.TestCase):
         """
         Convert html character entities into unicode.
         """
-        return unescapeXmlCharRef(iStr)
+        # TODO: This function appears unused.
+        return unescape(iStr)
 
     def __makeDataObj(self, nCats, nAttribs, nRows, docId=1):
         rD = {}
@@ -120,14 +120,14 @@ class MongoDbUtilTests(unittest.TestCase):
             for attrib in range(nAttribs):
                 val = "2018-01-30 12:01"
                 attribName = "attribute_%d" % attrib
-                dD[attribName] = dateutil.parser.parse(val)
+                dD[attribName] = datetime.fromisoformat(val)
             rD[catName].append(dD)
             #
             dD = {}
             for attrib in range(nAttribs):
                 val = " &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171; "
                 attribName = "attribute_%d" % attrib
-                dD[attribName] = unescapeXmlCharRef(val).encode("utf-8").decode("utf-8")
+                dD[attribName] = unescape(val)
             rD[catName].append(dD)
         rD["DOC_ID"] = "DOC_%d" % docId
         return rD
@@ -587,7 +587,7 @@ class MongoDbUtilTests(unittest.TestCase):
                 rId = mg.insert(self.__dbName, self.__collectionName, dObj)
                 self.assertEqual(rId, None)
                 logger.info("rId is %r", rId)
-                dtVal = dateutil.parser.parse("2018-01-30 12:01")
+                dtVal = datetime.fromisoformat("2018-01-30 12:01")
                 logger.debug("date value is %r", dtVal)
                 s2 = unescapeXmlCharRef(" &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171;")
                 dObj = {"strField1": "test value", "strField2": s2, "intField1": 50, "enumField1": "v3", "dblField1": 100.1, "dateField1": dtVal}

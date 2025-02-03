@@ -1,16 +1,7 @@
-# File:    TimeUtilTests.py
-# Author:  J. Westbrook
-# Date:    9-Jul-2018
-# Version: 0.001
-#
-# Update:
-#
-#
-#
-##
 """
 Tests for Convenience utilities to manipulate time stamps.
 
+TODO: Delete.
 """
 
 __docformat__ = "restructuredtext en"

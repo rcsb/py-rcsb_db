@@ -30,11 +30,10 @@ __license__ = "Apache 2.0"
 import collections
 import logging
 import re
+from datetime import datetime
 from functools import reduce
-
-import dateutil.parser
-import pytz
-from rcsb.db.utils.TextUtil import unescapeXmlCharRef
+from html import unescape
+from zoneinfo import ZoneInfo
 
 TrfValue = collections.namedtuple("TrfValue", "value, atId, origLength, isNull")
 
@@ -384,21 +383,37 @@ class DataTransform(object):
         if (origLength == 0) or (trfTup.value == "?") or (trfTup.value == "."):
             return TrfValue(self.__nullValueOther, trfTup.atId, origLength, True)
         tv = trfTup.value.replace(":", " ", 1)
-        return TrfValue(dateutil.parser.parse(tv), trfTup.atId, origLength, False)
+        # Note: Previously used dateutil.parse, which returns a datetime anyway.
+        stamp = datetime.fromisoformat(tv)
+        return TrfValue(stamp, trfTup.atId, origLength, False)
 
     def castDateTimeToIsoDate(self, trfTup):
-        """Cast the input date (optional time) string (yyyy-mm-dd:hh::mm:ss) to a Python DateTime object -
-
-        Return:  TrfValue tuple
         """
+        Fixes/modifies a TrfValue with value formatted as `yyyy-mm-dd[:hh::mm:ss]` **(note the colon)**.
+        Substitutes the first `:` with `T`, fills in `00:00:00`, and appends `+00:00`.
+
+        Returns:
+            A TrfValue tuple
+        """
+        # TODO
+        # What is this function doing???!
+        # Its name was castDateTimeToIsoDate, suggesting it outputs YYYY-MM-DD.
+        # Contradicting tht, the docstring said:
+        # > Cast the input date (optional time) string (yyyy-mm-dd:hh::mm:ss) to a Python DateTime object
+        # Instead, it did this:
+        # > tS = dateutil.parser.parse(tv).replace(tzinfo=pytz.UTC).isoformat()
+        # That's three contradictory claims.
+        # What was this function supposed to do?
+        # Why did it fill in 00:00:00, and why did it append +00:00?
+        # Also, why did the format separate the date and time with `:`?
+        # END TODO
         if trfTup.isNull:
             return trfTup
         origLength = len(trfTup.value)
         if (origLength == 0) or (trfTup.value == "?") or (trfTup.value == "."):
             return TrfValue(self.__nullValueOther, trfTup.atId, origLength, True)
-        tv = trfTup.value.replace(":", " ", 1)
-        tS = dateutil.parser.parse(tv).replace(tzinfo=pytz.UTC).isoformat()
-
+        tv = trfTup.value.replace(":", "T", 1)
+        tS = datetime.fromisoformat(tv).astimezone(ZoneInfo("Etc/UTC")).isoformat()
         return TrfValue(tS, trfTup.atId, origLength, False)
 
     def castDateToIsoDate(self, trfTup):
@@ -406,15 +421,16 @@ class DataTransform(object):
 
         Return:  TrfValue tuple
         """
+        # TODO: As with the function above, I don't know what this was supposed to do.
         if trfTup.isNull:
             return trfTup
         origLength = len(trfTup.value)
         if (origLength == 0) or (trfTup.value == "?") or (trfTup.value == "."):
             return TrfValue(self.__nullValueOther, trfTup.atId, origLength, True)
-        tv = trfTup.value.replace(":", " ", 1)
-        tS = dateutil.parser.parse(tv).isoformat()
+        tv = trfTup.value.replace(":", "T", 1)
+        tS = datetime.fromisoformat(tv).strftime("%Y-%m-%d")
 
-        return TrfValue(tS[:10], trfTup.atId, origLength, False)
+        return TrfValue(tS, trfTup.atId, origLength, False)
 
     def castDateToString(self, trfTup):
         """Cast the input date (optional time) string (yyyy-mm-dd:hh::mm:ss) as a string unchanged -
@@ -454,7 +470,7 @@ class DataTransform(object):
         """
         if trfTup.isNull:
             return trfTup
-        return TrfValue(unescapeXmlCharRef(trfTup.value), trfTup.atId, trfTup.origLength, False)
+        return TrfValue(unescape(trfTup.value), trfTup.atId, trfTup.origLength, False)
 
     def translateXMLCharRefsIt(self, trfTup):
         """Convert XML Character references to unicode.
@@ -464,5 +480,5 @@ class DataTransform(object):
         if trfTup.isNull:
             return trfTup
         #
-        vL = [unescapeXmlCharRef(v) for v in trfTup.value]
+        vL = [unescape(v) for v in trfTup.value]
         return TrfValue(vL, trfTup.atId, trfTup.origLength, False)

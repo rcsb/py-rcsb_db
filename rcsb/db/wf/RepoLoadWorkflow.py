@@ -23,7 +23,7 @@ import logging
 import os
 import random
 import math
-import datetime
+from datetime import datetime
 from pathlib import Path
 
 from rcsb.db.cli.RepoHoldingsEtlWorker import RepoHoldingsEtlWorker
@@ -31,7 +31,6 @@ from rcsb.db.cli.SequenceClustersEtlWorker import SequenceClustersEtlWorker
 from rcsb.utils.dictionary.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.mongo.PdbxLoader import PdbxLoader
-from rcsb.db.utils.TimeUtil import TimeUtil
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 
@@ -105,8 +104,7 @@ class RepoLoadWorkflow(object):
             rebuildCache = kwargs.get("rebuildCache", False)
             forceReload = kwargs.get("forceReload", False)
             #
-            tU = TimeUtil()
-            dataSetId = kwargs.get("dataSetId") if "dataSetId" in kwargs else tU.getCurrentWeekSignature()
+            dataSetId = kwargs.get("dataSetId") if "dataSetId" in kwargs else datetime.now().strftime("%Y_%V")
             seqDataLocator = self.__cfgOb.getPath("RCSB_SEQUENCE_CLUSTER_DATA_PATH", sectionName=self.__configName)
             sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=self.__configName)
 
@@ -373,15 +371,15 @@ class RepoLoadWorkflow(object):
     def getTimeStampCheck(self, hD, targetFileDir, targetFileSuffix):
         res = hD.copy()
         for pdbid, value in hD.items():
-            pathToItem = os.path.join(targetFileDir, pdbid + targetFileSuffix)
+            pathToItem = Path(targetFileDir, pdbid + targetFileSuffix)
             if isinstance(value, dict):
                 timeStamp = value["lastModifiedDate"]
-                value["modelPath"].lower()
+                #value["modelPath"].lower()  # TODO: This does nothing.
             else:
                 timeStamp = value
-            if Path(pathToItem).exists():
-                t1 = Path(pathToItem).stat().st_mtime
-                t2 = datetime.datetime.strptime(timeStamp, "%Y-%m-%dT%H:%M:%S%z").timestamp()
+            if pathToItem.exists():
+                t1 = pathToItem.stat().st_mtime
+                t2 = datetime.strptime(timeStamp, "%Y-%m-%dT%H:%M:%S%z").timestamp()
                 if t1 > t2:
                     res.pop(pdbid)
         return res
