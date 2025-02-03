@@ -372,8 +372,8 @@ class RepoLoadWorkflow(object):
 
     def getTimeStampCheck(self, hD, targetFileDir, targetFileSuffix):
         res = hD.copy()
-        for id, value in hD.items():
-            pathToItem = os.path.join(targetFileDir, id + targetFileSuffix)
+        for pdbid, value in hD.items():
+            pathToItem = os.path.join(targetFileDir, pdbid + targetFileSuffix)
             if isinstance(value, dict):
                 timeStamp = value["lastModifiedDate"]
                 value["modelPath"].lower()
@@ -383,7 +383,7 @@ class RepoLoadWorkflow(object):
                 t1 = Path(pathToItem).stat().st_mtime
                 t2 = datetime.datetime.strptime(timeStamp, "%Y-%m-%dT%H:%M:%S%z").timestamp()
                 if t1 > t2:
-                    res.pop(id)
+                    res.pop(pdbid)
         return res
 
     def splitIdListAndWriteToFiles(self, inputList, nFiles, outfileDir, outfilePrefix, sourceFile):
