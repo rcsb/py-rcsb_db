@@ -292,10 +292,8 @@ class RepoLoadWorkflow(object):
         numSublistFiles = kwargs.get("numSublistFiles", 1)  # ExchangeDbConfig().pdbxCoreNumberSublistFiles
 
         incrementalUpdate = kwargs.get("incrementalUpdate", False)
-        useTrippleFormat = kwargs.get("useTrippleFormat", False)
         targetFileDir = kwargs.get("targetFileDir", "")
         targetFileSuffix = kwargs.get("targetFileSuffix", "_model-1.jpg")
-        noBcifSubdirs = kwargs.get("noBcifSubdirs", False)
         #
         mU = MarshalUtil(workPath=self.__cachePath)
         #
@@ -308,21 +306,7 @@ class RepoLoadWorkflow(object):
             if incrementalUpdate:
                 holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix)
 
-            if useTrippleFormat:
-                idL = [self.formatIdFileSource(k.lower(), "experimental", noBcifSubdirs) for k in holdingsFileD]
-            else:
-                idL = [k.upper() for k in holdingsFileD]
-            
-            # if useImgsFormat:
-            #     idL = self.getPdbImgsFormattedList(
-            #         holdingsFileD,
-            #         updateAllImages=updateAllImages,
-            #         noBcifSubdirs=noBcifSubdirs,
-            #         bcifBaseDir=bcifBaseDir,
-            #     )
-            # else:
-            #     idL = [k.upper() for k in holdingsFileD]
-            ############################################
+            idL = [k.upper() for k in holdingsFileD]
 
             logger.info("Total number of entries to load: %d (obtained from file: %s)", len(idL), holdingsFilePath)
             random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
@@ -346,18 +330,7 @@ class RepoLoadWorkflow(object):
                 if incrementalUpdate:
                     hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix)
 
-                if useTrippleFormat:
-                    idL = [self.formatIdFileSource(k.lower(), "computational", noBcifSubdirs) for k in hD]
-                else:
-                    idL = [k.upper() for k in hD]
-                # if useImgsFormat:
-                #     idL = self.getCsmImgsFormattedList(
-                #         hD,
-                #         updateAllImages=updateAllImages,
-                #         bcifBaseDir=bcifBaseDir,
-                #     )
-                # else:
-                #     idL = [k.upper() for k in hD]
+                idL = [k.upper() for k in hD]
                 logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
                 filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFile)
             #
@@ -370,18 +343,7 @@ class RepoLoadWorkflow(object):
                     hD = mU.doImport(holdingsFile, fmt="json")
                     if incrementalUpdate:
                         hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix)
-                    if useTrippleFormat:
-                        idL = [self.formatIdFileSource(k.lower(), "computational", noBcifSubdirs) for k in hD]
-                    else:
-                        idL = [k.upper() for k in hD]
-                    # if useImgsFormat:
-                    #     idL = self.getCsmImgsFormattedList(
-                    #         hD,
-                    #         updateAllImages=updateAllImages,
-                    #         bcifBaseDir=bcifBaseDir,
-                    #     )
-                    # else:
-                    #     idL = [k.upper() for k in hD]
+                    idL = [k.upper() for k in hD]
                     logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
                     #
                     fPath = os.path.join(loadFileListDir, f"{loadFileListPrefix}-{index}.txt")
@@ -408,13 +370,6 @@ class RepoLoadWorkflow(object):
 
         return ok
 
-    def formatIdFileSource(self, idVal, source, noBcifSubdirs):
-        if noBcifSubdirs:
-            path = idVal + ".bcif"
-        else:
-            path = os.path.join(idVal[1:3], idVal + ".bcif")
-        return f"{idVal} {path} {source}"
-
     def getTimeStampCheck(self, hD, targetFileDir, targetFileSuffix):
         res = hD.copy()
         for id, value in hD.items():
@@ -430,76 +385,6 @@ class RepoLoadWorkflow(object):
                 if t1 > t2:
                     res.pop(id)
         return res
-
-    # def removeUpToDateIds(self, hD, targetFileDir, targetFileSuffix):
-    #     hDresult= {}
-    #     for idVal, time in hD.items():
-    #         hDtimestamp = datetime.datetime.strptime(time, "%Y-%m-%dT%H:%M:%S%z")
-    #         pathToItem = os.path.join(targetFileDir, idVal + targetFileSuffix)
-    #         if Path(pathToItem).exists():
-    #             t1 = Path(pathToItem).stat().st_mtime
-    #             t2 = hDtimestamp.timestamp()
-    #             if t1 < t2:
-    #                 hDresult[idVal] = time
-    #         else:
-    #             # the item doesn't exist
-    #             hDresult[idVal] = time
-    #     return hDresult
-
-    # def getPdbImgsFormattedList(self, hD, updateAllImages=False, noBcifSubdirs=False, bcifBaseDir=""):
-    #     pdbIdsTimestamps = {}
-    #     for idVal in hD:
-    #         datetimeObject = datetime.datetime.strptime(hD[idVal], "%Y-%m-%dT%H:%M:%S%z")
-    #         pdbIdsTimestamps[idVal.lower()] = datetimeObject
-    #     idL = []
-    #     if updateAllImages:
-    #         for idVal in pdbIdsTimestamps:
-    #             if noBcifSubdirs:
-    #                 path = idVal + ".bcif"
-    #             else:
-    #                 path = os.path.join(idVal[1:3], idVal + ".bcif")
-    #             idL.append(f"{idVal} {path} experimental")
-    #     else:
-    #         for idVal, timestamp in pdbIdsTimestamps.items():
-    #             if noBcifSubdirs:
-    #                 path = idVal + ".bcif"
-    #             else:
-    #                 path = os.path.join(idVal[1:3], idVal + ".bcif")
-    #             bcifFile = os.path.join(bcifBaseDir, path)
-    #             if Path(bcifFile).exists():
-    #                 t1 = Path(bcifFile).stat().st_mtime
-    #                 t2 = timestamp.timestamp()
-    #                 if t1 < t2:
-    #                     idL.append(f"{idVal} {path} experimental")
-    #             else:
-    #                 idL.append(f"{idVal} {path} experimental")
-    #     return idL
-
-    # def getCsmImgsFormattedList(self, hD, updateAllImages=False, bcifBaseDir=""):
-    #     modelIdsMetadata = {}
-    #     for modelId in hD:
-    #         item = hD[modelId]
-    #         item["modelPath"] = item["modelPath"].lower()  # prod route of BinaryCIF wf produces lowercase filenames
-    #         item["datetime"] = datetime.datetime.strptime(item["lastModifiedDate"], "%Y-%m-%dT%H:%M:%S%z")
-    #         modelIdsMetadata[modelId.lower()] = item
-    #     modelList = []
-    #     if updateAllImages:
-    #         for modelId, metadata in modelIdsMetadata.items():
-    #             modelPath = metadata["modelPath"].replace(".cif", ".bcif").replace(".gz", "")
-    #             modelList.append(f"{modelId} {modelPath} computational")
-    #     else:
-    #         # "incremental" for weekly
-    #         for modelId, metadata in modelIdsMetadata.items():
-    #             modelPath = metadata["modelPath"].replace(".cif", ".bcif").replace(".gz", "")
-    #             bcifFile = os.path.join(bcifBaseDir, modelPath)
-    #             if Path(bcifFile).exists():
-    #                 t1 = Path(bcifFile).stat().st_mtime
-    #                 t2 = metadata["datetime"].timestamp()
-    #                 if t1 < t2:
-    #                     modelList.append(f"{modelId} {modelPath} computational")
-    #             else:
-    #                 modelList.append(f"{modelId} {modelPath} computational")
-    #     return modelList
 
     def splitIdListAndWriteToFiles(self, inputList, nFiles, outfileDir, outfilePrefix, sourceFile):
         """Split input ID list into equally distributed sublists of size nFiles.
