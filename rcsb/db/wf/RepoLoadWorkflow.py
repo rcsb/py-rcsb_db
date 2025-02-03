@@ -306,7 +306,7 @@ class RepoLoadWorkflow(object):
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
 
             if incrementalUpdate:
-                holdingsFileD = self.pdbTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix)
+                holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix)
 
             if useTrippleFormat:
                 idL = [self.formatIdFileSource(k.lower(), "experimental", noBcifSubdirs) for k in holdingsFileD]
@@ -344,7 +344,7 @@ class RepoLoadWorkflow(object):
                 hD = mU.doImport(holdingsFile, fmt="json")
 
                 if incrementalUpdate:
-                    hD = self.csmTimeStampCheck(hD, targetFileDir, targetFileSuffix)
+                    hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix)
 
                 if useTrippleFormat:
                     idL = [self.formatIdFileSource(k.lower(), "computational", noBcifSubdirs) for k in hD]
@@ -369,7 +369,7 @@ class RepoLoadWorkflow(object):
                     holdingsFile = os.path.join(holdingsFileBaseDir, hF)
                     hD = mU.doImport(holdingsFile, fmt="json")
                     if incrementalUpdate:
-                        hD = self.csmTimeStampCheck(hD, targetFileDir, targetFileSuffix)
+                        hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix)
                     if useTrippleFormat:
                         idL = [self.formatIdFileSource(k.lower(), "computational", noBcifSubdirs) for k in hD]
                     else:
@@ -414,26 +414,19 @@ class RepoLoadWorkflow(object):
         else:
             path = os.path.join(idVal[1:3], idVal + ".bcif")
         return f"{idVal} {path} {source}"
-    
-    def pdbTimeStampCheck(self, hD, targetFileDir, targetFileSuffix):
-        res = hD.copy()
-        for id, value in hD.items():
-            pathToItem = os.path.join(targetFileDir, id + targetFileSuffix)
-            if Path(pathToItem).exists():
-                t1 = Path(pathToItem).stat().st_mtime
-                t2 = datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S%z").timestamp()
-                if t1 > t2:
-                    res.pop(id)
-        return res
 
-    def csmTimeStampCheck(self, hD, targetFileDir, targetFileSuffix):
+    def getTimeStampCheck(self, hD, targetFileDir, targetFileSuffix):
         res = hD.copy()
         for id, value in hD.items():
-            value["modelPath"].lower()
             pathToItem = os.path.join(targetFileDir, id + targetFileSuffix)
+            if isinstance(value, dict):
+                timeStamp = value["lastModifiedDate"]
+                value["modelPath"].lower()
+            else:
+                timeStamp = value
             if Path(pathToItem).exists():
                 t1 = Path(pathToItem).stat().st_mtime
-                t2 = datetime.datetime.strptime(value["lastModifiedDate"], "%Y-%m-%dT%H:%M:%S%z").timestamp()
+                t2 = datetime.datetime.strptime(timeStamp, "%Y-%m-%dT%H:%M:%S%z").timestamp()
                 if t1 > t2:
                     res.pop(id)
         return res
