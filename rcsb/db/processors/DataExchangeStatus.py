@@ -15,6 +15,7 @@ __license__ = "Apache 2.0"
 
 
 import logging
+from datetime import datetime
 
 from rcsb.db.utils.TimeUtil import TimeUtil
 
@@ -67,39 +68,29 @@ class DataExchangeStatus(object):
             logger.exception("Failing with %s", str(e))
         return False
 
-    def setStartTime(self, tS=None, useUtc=True):
-        """Set the start time for the current exchange operation.
+    def setStartTime(self, tS=None, useUtc=True) -> None:
+        """
+        Sets the start time for the current exchange operation.
 
         Args:
-            tS (str, optional): timestamp for the start of the update operation (default=current time)
-            useUtc (bool, optional): Report times in UTC
-
-        Returns:
-            str: isoformat timestamp or None otherwise
+            tS: A `datetime` instance or RFC-3393 timestamp; uses the current system time if not given.
+            useUtc: Use UTC instead of the local zone.
         """
-        try:
-            self.__startTimestamp = tS if tS else self.__tU.getTimestamp(useUtc=useUtc)
-            return self.__startTimestamp
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-        return None
+        self.__startTimestamp = tS if tS else self.__tU.getTimestamp(useUtc=useUtc)
+        return self.__startTimestamp
 
-    def setEndTime(self, tS=None, useUtc=True):
-        """Set the end time for the current exchange operation.
+    def setEndTime(self, tS=None, useUtc=True) -> None:
+        """
+        Sets the end time for the current exchange operation.
 
         Args:
-            tS (str, optional): timestamp for the end of the update operation (default=current time)
-            useUtc (bool, optional): Report times in UTC
-
-        Returns:
-            str: isoformat timestamp or None otherwise
+            tS: A `datetime` instance or an RFC-3393 timestamp; uses the current system time if not given.
+            useUtc: Use UTC instead of the local zone.
         """
-        try:
-            self.__endTimestamp = tS if tS else self.__tU.getTimestamp(useUtc=useUtc)
-            return self.__endTimestamp
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-        return None
+        if isinstance(tS, datetime):
+            self.__end
+        self.__endTimestamp = tS if tS else self.__tU.getTimestamp(useUtc=useUtc)
+        return self.__endTimestamp
 
     def setStatus(self, updateId=None, successFlag="Y"):
         """Set the update identifier (yyyy_<week_in_year>) and success flag for the current exchange operation.
@@ -117,7 +108,7 @@ class DataExchangeStatus(object):
             return True
         except Exception as e:
             logger.exception("Failing with %s", str(e))
-        return False
+            return False
 
     def getStatus(self, useTimeStrings=False):
         """Get the current data exchange status document.

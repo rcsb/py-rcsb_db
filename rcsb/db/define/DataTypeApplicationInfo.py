@@ -325,14 +325,6 @@ class DataTypeApplicationInfo(object):
         retDataType = appType
         iWidth = dataWidth + int(bufferPercent * 0.01 * dataWidth)
         retDataWidth = iWidth if iWidth > minWidth else minWidth
-        if self.__dataTyping.upper() in ["SQL", "MYSQL", "COCKROACH", "CRATE"]:
-
-            if appType.upper() in ["CHAR", "VARCHAR"] and retDataWidth > self.__maxCharWidth:
-                retDataType = "TEXT"
-            if appType.upper() in ["TEXT"] and isKey:
-                retDataType = "CHAR"
-        else:
-            pass
         return (retDataType, retDataWidth)
 
     def hasType(self, cifType):
