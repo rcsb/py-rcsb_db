@@ -118,7 +118,7 @@ def main():
     )
     parser.add_argument("--log_file_path", default=None, help="Path to runtime log file output.")
     # args for imgs workflow format
-    parser.add_argument("--incremental_update", default=False, action="store_true", help="Ignore bcif and image time stamps and update them all.")
+    parser.add_argument("--incremental_update", default=False, action="store_true", help="Whether the process should look at timestamps (see --target_file_dir and --target_file_suffix) to find a delta list of ids to update. Default is a full update.")
     parser.add_argument("--target_file_dir", default=None, help="Location of files for timestamp comparisons.")
     parser.add_argument("--target_file_suffix", default="", help="Suffix attached to pdb id for timestamp comparison file.")
     #
