@@ -267,9 +267,7 @@ def processArguments(args):
         "forceReload": args.force_reload,
         "minNpiValidationCount": int(args.min_npi_validation_count) if args.min_npi_validation_count else None,
         "checkLoadWithHoldings": args.check_load_with_holdings,
-        "noBcifSubdirs": args.no_bcif_subdirs,
         "incrementalUpdate": args.incremental_update,
-        "useTrippleFormat": args.use_tripple_format,
         "targetFileDir": args.target_file_dir,
         "targetFileSuffix": args.target_file_suffix,
     }
