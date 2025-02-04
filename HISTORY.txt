@@ -365,3 +365,4 @@
                      Update CI/CD testing to use python 3.10
  23-Dec-2024  V1.726 Skip integers that exceed max int32 in DataTransformFactory
   7-Jan-2025  V1.727 Handle "None" values in vrpt data
+ 22-Jan-2025  V1.728 Add Imgs format option (for jpg/svg generation) to splitIdList()
