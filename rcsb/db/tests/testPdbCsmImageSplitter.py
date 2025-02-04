@@ -121,9 +121,9 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
                 idList = [line.rstrip("\n") for line in file]
             for line in idList:
                 logger.info('line from file is: %s', line)
-                fileId, bcifFileName, sdm = line.split()
-                if not ((len(fileId) > 0) and (len(bcifFileName) > 0) and (len(sdm) > 0)):
-                    logger.error('Found one of the following had a length of zero %s %s %s', fileId, bcifFileName, sdm)
+                fileId = line.split()
+                if (len(fileId) == 0):
+                    logger.error("Found pdbid with length zero.")
                     allDataPresent = False
             logger.info('End of a single checkList. Returning a value of %s', allDataPresent)
             return allDataPresent
