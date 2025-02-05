@@ -24,8 +24,6 @@ import logging
 import os
 import pprint
 
-# from jsondiff import diff
-
 from rcsb.db.define.SchemaDefAccess import SchemaDefAccess
 from rcsb.db.define.SchemaDefBuild import SchemaDefBuild
 from rcsb.utils.io.FileUtil import FileUtil
