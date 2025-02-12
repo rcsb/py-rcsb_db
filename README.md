@@ -14,7 +14,7 @@ these tools is a document database used to exchange content within the RCSB PDB 
 
 ### Ubuntu prerequisites
 
-You will need a few packages, before `pip install .` can work:
+You will need a few packages first.
 
 ```bash
 sudo apt install flex bison

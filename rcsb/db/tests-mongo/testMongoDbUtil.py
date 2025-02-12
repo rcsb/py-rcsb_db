@@ -551,7 +551,7 @@ class MongoDbUtilTests(unittest.TestCase):
                 logger.info("rId is %r", rId)
                 self.assertEqual(rId, None)
                 #
-                s2 = unescapeXmlCharRef(" &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171;")
+                s2 = unescape(" &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171;")
                 dObj = {"strField1": "test value", "strField2": s2, "intField1": 50, "enumField1": "v3", "dblField1": 100.1}
                 rId = mg.insert(self.__dbName, self.__collectionName, dObj)
                 logger.info("rId is %r", rId)
@@ -589,7 +589,7 @@ class MongoDbUtilTests(unittest.TestCase):
                 logger.info("rId is %r", rId)
                 dtVal = datetime.fromisoformat("2018-01-30 12:01")
                 logger.debug("date value is %r", dtVal)
-                s2 = unescapeXmlCharRef(" &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171;")
+                s2 = unescape(" &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171;")
                 dObj = {"strField1": "test value", "strField2": s2, "intField1": 50, "enumField1": "v3", "dblField1": 100.1, "dateField1": dtVal}
                 rId = mg.insert(self.__dbName, self.__collectionName, dObj)
                 logger.info("rId is %r", rId)
@@ -626,7 +626,7 @@ class MongoDbUtilTests(unittest.TestCase):
                 logger.info("rId is %r", rId)
                 self.assertNotEqual(rId, None)
                 #
-                s2 = unescapeXmlCharRef(" &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171;")
+                s2 = unescape(" &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171;")
                 dObj = {"strField1": "test value", "strField2": s2, "intField1": 50, "enumField1": "v3a", "dblField1": 100.1}
                 rId = mg.insert(self.__dbName, self.__collectionName, dObj)
                 self.assertNotEqual(rId, None)
