@@ -1,6 +1,6 @@
 # File: azure-template-tox-job.yml
 # Date: 8-Jul-2019 jdw split out from original pipeline
-# Supports: fixtures=mysql,mongodb (linux)
+# Supports: fixtures=mongodb (linux)
 #
 # Updates:
 #  6-Aug-2019  jdw build source and binary wheels by default.
@@ -18,9 +18,9 @@ jobs:
     timeoutInMinutes: 0
     pool:
       ${{ if eq(parameters.os, 'macos') }}:
-        vmImage: "macOS-13"
+        vmImage: "macOS-15"
       ${{ if eq(parameters.os, 'linux') }}:
-        vmImage: "ubuntu-22.04"
+        vmImage: "ubuntu-latest"
 
     variables:
       - group: py-shared-variables
@@ -43,7 +43,7 @@ jobs:
           - bash: |
               set -e
               ls -la /Applications/Xcode*
-              sudo xcode-select --switch /Applications/Xcode_12.2.app/Contents/Developer
+              sudo xcode-select --switch /Applications/Xcode_16.app/Contents/Developer
               which g++
               c++ --version
             displayName: "setup Xcode"
@@ -63,7 +63,7 @@ jobs:
       # ----------------------------------------------
       - ${{ if startsWith(parameters.os, 'linux') }}:
           - script: lsb_release -a
-            displayName: "Ubuntu kernal version"
+            displayName: "Ubuntu kernel version"
           - script: which apt
             displayName: "Installing OS dependencies"
           - script: apt-cache policy | grep http | awk '{print $2 $3}' | sort -u
@@ -80,39 +80,6 @@ jobs:
           - script: sudo apt-get install bison
             displayName: "Install bison"
       #
-      - ? ${{ if and(contains(parameters.fixtures, 'mysql'), startsWith(parameters.os, 'linux')) }}
-        : - bash: |
-              sudo apt-get install python3-dev mysql-server
-              sudo apt-get install default-libmysqlclient-dev
-              sudo apt-get install python-mysqldb
-              sudo apt list --installed | grep -i mysql
-            displayName: "Install mysql development libraries"
-          - bash: |
-              echo "Retarting mysql service"
-              sudo systemctl restart mysql.service
-              mysql -V
-              mysql --user=root --password=root -e "use mysql; select * from user;"
-              #
-              echo "Try resetting password"
-              mysqladmin --user=root --password=root password 'ChangeMeSoon'
-              #
-              # mysql -u root  -p root -e "SET PASSWORD FOR root@'localhost' = PASSWORD(‘ChangeMeSoon’);"
-              # mysql -u root  -p root -e "FLUSH PRIVILEGES; update mysql.user set password=password('ChangeMeSoon') where user='root'; FLUSH PRIVILEGES;"
-              # UPDATE mysql.user SET Password=PASSWORD('ChangeMeSoon') WHERE User='root';
-
-              echo "Running preliminary mysql setup"
-              mysql --user=root --password=ChangeMeSoon <<_EOF_
-                DELETE FROM mysql.user WHERE User='';
-                DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
-                DROP DATABASE IF EXISTS test;
-                DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
-                FLUSH PRIVILEGES;
-              _EOF_
-              ps -ef | grep -i my
-              mysql --user=root --password=ChangeMeSoon -e "show databases;"
-              #
-            displayName: "Start and configure mysql ..."
-
         # -----
       - ? ${{ if and(contains(parameters.fixtures, 'mongodb'), startsWith(parameters.os, 'linux')) }}
         : # Mongo install
@@ -137,8 +104,11 @@ jobs:
       - script: 'python -c "import sys; print(sys.version); print(sys.executable)"'
         displayName: show python information
       #
-      - script: python -m pip install --upgrade pip tox
-        displayName: "Install tools"
+      - script: python -m pip install --upgrade pip
+        displayName: "Upgrade pip"
+      #
+      - script: pip install tox jsonschema 'rcsb.utils.chemref>=0.91' 'jsondiff>=1.2.0'
+        displayName: "Install test requirements"
         #
       - script: pip install -r requirements.txt
         displayName: "Install dependencies"

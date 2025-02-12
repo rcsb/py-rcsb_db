@@ -41,18 +41,6 @@ site_info_configuration:
   MONGO_DB_PORT: "27017"
   _MONGO_DB_USER_NAME: ""
   _MONGO_DB_PASSWORD: ""
-  MYSQL_DB_HOST_NAME: localhost
-  MYSQL_DB_PORT_NUMBER: "3306"
-  _MYSQL_DB_USER_NAME: wrIzBGtCsQmkjc7tbEPQ3oEaOnpvivXaKcQsvXD6kn4KHMvA7LCL4O9GlAI=
-  _MYSQL_DB_PASSWORD: qXPp32Z6DhNVMwo9fQIK5+KB13c1Jd43E3Bn6LmJcSyXc0NAt4H/hwo/xglYpmELV5Vqaw==
-  _MYSQL_DB_PASSWORD_ALT: s6mNxq3FIwZLrLiIeHpDZQcuVxfQqrR3gA+dEMOGgHwsjrJV5da08H74RmnNRus74Q==
-  MYSQL_DB_DATABASE_NAME: mysql
-  CRATE_DB_HOST: localhost
-  CRATE_DB_PORT: "4200"
-  COCKROACH_DB_HOST: localhost
-  COCKROACH_DB_PORT: "26257"
-  COCKROACH_DB_NAME: system
-  _COCKROACH_DB_USER_NAME: HR2ez8iLbEpvN+hXKIQS3qa6/QpiFRpf/WvrfHiwfjcL09E+iWTQJhsxTsw=
   #
   # Primary repository data and related computed repository data paths
   #
@@ -180,7 +168,6 @@ site_info_remote_configuration:
   #_MONGO_DB_PASSWORD: ""
   MONGO_DB_ADMIN_DB_NAME: admin
   #
-  #
   #  Channel B
   # MONGO_DB_HOST: 128.6.159.133
   #  Channel A
@@ -189,20 +176,6 @@ site_info_remote_configuration:
   #_MONGO_DB_USER_NAME: vknsNHfQ1nyy5w1vsfP4fbOp1iPxD3K5yZmNFsJDqTRl+87zicTLa9lkHG5uReM=
   #_MONGO_DB_PASSWORD: wfm/FNyhON/AGaJfLhL5ZA0ObAVU0DZ0sICB2eemS8GFfAOZvo3Y/vXTkjLayViwppj2MQ==
   #
-  #
-  MYSQL_DB_HOST_NAME: localhost
-  MYSQL_DB_PORT_NUMBER: "3306"
-  _MYSQL_DB_USER_NAME: wrIzBGtCsQmkjc7tbEPQ3oEaOnpvivXaKcQsvXD6kn4KHMvA7LCL4O9GlAI=
-  _MYSQL_DB_PASSWORD: qXPp32Z6DhNVMwo9fQIK5+KB13c1Jd43E3Bn6LmJcSyXc0NAt4H/hwo/xglYpmELV5Vqaw==
-  _MYSQL_DB_PASSWORD_ALT: s6mNxq3FIwZLrLiIeHpDZQcuVxfQqrR3gA+dEMOGgHwsjrJV5da08H74RmnNRus74Q==
-  MYSQL_DB_DATABASE_NAME: mysql
-  #
-  CRATE_DB_HOST: localhost
-  CRATE_DB_PORT: "4200"
-  COCKROACH_DB_HOST: localhost
-  COCKROACH_DB_PORT: "26257"
-  COCKROACH_DB_NAME: system
-  _COCKROACH_DB_USER_NAME: HR2ez8iLbEpvN+hXKIQS3qa6/QpiFRpf/WvrfHiwfjcL09E+iWTQJhsxTsw=
   #
   # Primary repository data and related computed repository data paths
   #
