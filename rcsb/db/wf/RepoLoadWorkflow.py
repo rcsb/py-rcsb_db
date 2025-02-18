@@ -198,7 +198,7 @@ class RepoLoadWorkflow(object):
                 verbose=self.__debugFlag,
                 readBackCheck=readBackCheck,
             )
-            ok = rhw.load(dataSetId, loadType=loadType)
+            ok = rhw.load(dataSetId)
             okS = self.loadStatus(rhw.getLoadStatus(), readBackCheck=readBackCheck)
 
         logger.info("Completed operation %r with status %r", op, ok and okS)
@@ -308,15 +308,15 @@ class RepoLoadWorkflow(object):
             if not holdingsFilePath:
                 holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb/holdings/released_structures_last_modified_dates.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
-
+            #
             if incrementalUpdate:
                 holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix)
-
+            #
             idL = [k.upper() for k in holdingsFileD]
             logger.info("Total number of PDB entries: %d (obtained from file: %s)", len(idL), holdingsFilePath)
             random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
             filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFilePath)
-
+        #
         elif contentType == "pdbx_ihm":
             if not holdingsFilePath:
                 holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb_ihm/holdings/released_structures_last_modified_dates.json.gz")
@@ -324,7 +324,7 @@ class RepoLoadWorkflow(object):
             idL = [k.upper() for k in holdingsFileD]
             logger.info("Total number of IHM entries: %d (obtained from file: %s)", len(idL), holdingsFilePath)
             filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFilePath)
-
+        #
         elif contentType == "pdbx_comp_model_core":
             filePathMappingD = {}
             if holdingsFilePath:
@@ -334,15 +334,14 @@ class RepoLoadWorkflow(object):
                 holdingsFileBaseDir = self.__cfgOb.getPath("PDBX_COMP_MODEL_REPO_PATH", sectionName=self.__configName)
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             #
-
             if len(holdingsFileD) == 1:
                 # Split up single holdings file into multiple sub-lists
                 holdingsFile = os.path.join(holdingsFileBaseDir, list(holdingsFileD.keys())[0])
                 hD = mU.doImport(holdingsFile, fmt="json")
-
+                #
                 if incrementalUpdate:
                     hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix)
-
+                #
                 idL = [k.upper() for k in hD]
                 logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
                 filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFile)
