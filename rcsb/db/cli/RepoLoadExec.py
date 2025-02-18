@@ -25,7 +25,8 @@
 #                      Add arguments and logic to support CLI usage from weekly-update workflow;
 #                      Add support for logging output to a specific file
 #    25-Apr-2024 - dwp Add support for remote config file loading; use underscores instead of hyphens for arg choices
-#    28-Jan-2025 - dwp Add support for IHM model loading by adding 'content_type' flag
+#    22-Jan-2025 - mjt Add Imgs format option flags
+#    18-Feb-2025 - dwp Add support for IHM model loading by adding 'content_type' flag
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -119,6 +120,16 @@ def main():
         help="Compare the number of loaded entries with the number expected by the holdings (for op 'pdbx_loader_check')"
     )
     parser.add_argument("--log_file_path", default=None, help="Path to runtime log file output.")
+    #
+    # args for imgs workflow format
+    parser.add_argument(
+        "--incremental_update",
+        default=False,
+        action="store_true",
+        help="Whether the process should look at timestamps (see --target_file_dir and --target_file_suffix) to find a delta list of ids to update. Default is a full update."
+    )
+    parser.add_argument("--target_file_dir", default=None, help="Location of files for timestamp comparisons.")
+    parser.add_argument("--target_file_suffix", default="", help="Suffix attached to pdb id for timestamp comparison file.")
     #
     args = parser.parse_args()
     #
@@ -267,6 +278,9 @@ def processArguments(args):
         "contentType": args.content_type,
         "minNpiValidationCount": int(args.min_npi_validation_count) if args.min_npi_validation_count else None,
         "checkLoadWithHoldings": args.check_load_with_holdings,
+        "incrementalUpdate": args.incremental_update,
+        "targetFileDir": args.target_file_dir,
+        "targetFileSuffix": args.target_file_suffix,
     }
 
     return op, commonD, loadD

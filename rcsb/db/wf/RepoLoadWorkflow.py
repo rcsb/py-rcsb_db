@@ -11,7 +11,8 @@
 #  26-Apr-2023 dwp Add regexPurge flag to control running regexp purge step during document load (with default set to False)
 #   7-Nov-2023 dwp Add maxStepLength parameter
 #  26-Mar-2024 dwp Add arguments and methods to support CLI usage from weekly-update workflow
-#  28-Jan-2025 dwp Add support for IHM model loading
+#  22-Jan-2025 mjt Add Imgs format option (for jpg/svg generation) to splitIdList()
+#  18-Feb-2025 dwp Add support for IHM model loading
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -23,6 +24,8 @@ import logging
 import os
 import random
 import math
+import datetime
+from pathlib import Path
 
 from rcsb.db.cli.RepoHoldingsEtlWorker import RepoHoldingsEtlWorker
 from rcsb.db.cli.SequenceClustersEtlWorker import SequenceClustersEtlWorker
@@ -292,7 +295,11 @@ class RepoLoadWorkflow(object):
         loadFileListDir = kwargs.get("loadFileListDir")  # ExchangeDbConfig().loadFileListsDir
         loadFileListPrefix = kwargs.get("loadFileListPrefix")
         loadFileListPrefix = loadFileListPrefix if loadFileListPrefix else contentType + "_ids"  # pdbx_core_ids, pdbx_comp_model_core_ids, or pdbx_ihm_ids
-        numSublistFiles = kwargs.get("numSublistFiles")  # ExchangeDbConfig().pdbxCoreNumberSublistFiles
+        numSublistFiles = kwargs.get("numSublistFiles", 1)  # ExchangeDbConfig().pdbxCoreNumberSublistFiles
+
+        incrementalUpdate = kwargs.get("incrementalUpdate", False)
+        targetFileDir = kwargs.get("targetFileDir", "")
+        targetFileSuffix = kwargs.get("targetFileSuffix", "_model-1.jpg")
         #
         mU = MarshalUtil(workPath=self.__cachePath)
         #
@@ -301,6 +308,10 @@ class RepoLoadWorkflow(object):
             if not holdingsFilePath:
                 holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb/holdings/released_structures_last_modified_dates.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
+
+            if incrementalUpdate:
+                holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix)
+
             idL = [k.upper() for k in holdingsFileD]
             logger.info("Total number of PDB entries: %d (obtained from file: %s)", len(idL), holdingsFilePath)
             random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
@@ -323,10 +334,15 @@ class RepoLoadWorkflow(object):
                 holdingsFileBaseDir = self.__cfgOb.getPath("PDBX_COMP_MODEL_REPO_PATH", sectionName=self.__configName)
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             #
+
             if len(holdingsFileD) == 1:
                 # Split up single holdings file into multiple sub-lists
                 holdingsFile = os.path.join(holdingsFileBaseDir, list(holdingsFileD.keys())[0])
                 hD = mU.doImport(holdingsFile, fmt="json")
+
+                if incrementalUpdate:
+                    hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix)
+
                 idL = [k.upper() for k in hD]
                 logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
                 filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFile)
@@ -338,6 +354,8 @@ class RepoLoadWorkflow(object):
                 for hF, count in holdingsFileD.items():
                     holdingsFile = os.path.join(holdingsFileBaseDir, hF)
                     hD = mU.doImport(holdingsFile, fmt="json")
+                    if incrementalUpdate:
+                        hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix)
                     idL = [k.upper() for k in hD]
                     logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
                     #
@@ -364,6 +382,22 @@ class RepoLoadWorkflow(object):
                 logger.error("Entry ID loading sublist file does not exist: %r", oPath)
 
         return ok
+
+    def getTimeStampCheck(self, hD, targetFileDir, targetFileSuffix):
+        res = hD.copy()
+        for pdbid, value in hD.items():
+            pathToItem = os.path.join(targetFileDir, pdbid + targetFileSuffix)
+            if isinstance(value, dict):
+                timeStamp = value["lastModifiedDate"]
+                value["modelPath"].lower()
+            else:
+                timeStamp = value
+            if Path(pathToItem).exists():
+                t1 = Path(pathToItem).stat().st_mtime
+                t2 = datetime.datetime.strptime(timeStamp, "%Y-%m-%dT%H:%M:%S%z").timestamp()
+                if t1 > t2:
+                    res.pop(pdbid)
+        return res
 
     def splitIdListAndWriteToFiles(self, inputList, nFiles, outfileDir, outfilePrefix, sourceFile):
         """Split input ID list into equally distributed sublists of size nFiles.

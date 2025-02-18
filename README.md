@@ -2,7 +2,7 @@
 
 ## A collection of Python Database Utility Classes
 
-[![Build Status](https://dev.azure.com/rcsb/RCSB%20PDB%20Python%20Projects/_apis/build/status/rcsb.py-rcsb_db?branchName=master)](https://dev.azure.com/rcsb/RCSB%20PDB%20Python%20Projects/_build/latest?definitionId=12&branchName=master)
+[![Build Status](https://dev.azure.com/rcsb/RCSB%20PDB%20Python%20Projects/_apis/build/status/rcsb.py-rcsb_db?branchName=master)](https://dev.azure.com/rcsb/RCSB%20PDB%20Python%20Projects/_build/latest?definitionId=41&branchName=master)
 
 ## Introduction
 
@@ -20,17 +20,12 @@ git clone --recurse-submodules https://github.com/rcsb/py-rcsb_db.git
 
 ```
 
-Optionally, run test suite (Python versions 3.9+) using
-[setuptools](https://setuptools.readthedocs.io/en/latest/) or
-[tox](http://tox.readthedocs.io/en/latest/example/platform.html):
+Optionally, run test suite (Python versions 3.9+) using either:
 
-```bash
-python setup.py test
-
-or simply run
-
-tox
-```
+- [setuptools](https://setuptools.readthedocs.io/en/latest/)
+  with `python setup.py test`
+- [tox](http://tox.readthedocs.io/en/latest/example/platform.html)
+  by running simply `tox`
 
 Installation is via the program [pip](https://pypi.python.org/pypi/pip).  To run tests
 from the source tree, the package must be installed in editable mode (i.e. -e):
@@ -44,9 +39,7 @@ pip install -e .
 You will need a few packages, before `pip install .` can work:
 
 ```bash
-
-sudo apt install default-libmysqlclient-dev flex bison
-
+sudo apt install flex bison
 ```
 
 ### Installing on macOS

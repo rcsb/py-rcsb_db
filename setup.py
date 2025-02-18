@@ -70,7 +70,7 @@ setup(
     #
     # These basic tests require no database services -
     test_suite="rcsb.db.tests",
-    tests_require=["tox", "jsonschema", "strict-rfc3339"],
+    tests_require=["tox", "jsonschema", "rcsb.utils.chemref >= 0.91", "jsondiff >= 1.2.0"],
     #
     # Not configured ...
     extras_require={"dev": ["check-manifest"], "test": ["coverage"]},
