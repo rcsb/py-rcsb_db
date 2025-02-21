@@ -374,7 +374,6 @@ class RepoLoadWorkflow(object):
             pathToItem = Path(targetFileDir, pdbid + targetFileSuffix)
             if isinstance(value, dict):
                 timeStamp = value["lastModifiedDate"]
-                #value["modelPath"].lower()  # TODO: This does nothing.
             else:
                 timeStamp = value
             if pathToItem.exists():
