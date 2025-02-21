@@ -18,26 +18,13 @@ __license__ = "Apache 2.0"
 
 import copy
 import logging
-import platform
+from urllib.parse import quote_plus
 
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 
-try:
-    # Python 3.x
-    from urllib.parse import quote_plus
-except ImportError:
-    # Python 2.x
-    from urllib import quote_plus
 
 logger = logging.getLogger(__name__)
-
-
-if platform.system() == "Linux":
-    try:
-        pass
-    except Exception:
-        logger.exception("Loading Linux feature failing")
 
 
 class ConnectionBase(object):
