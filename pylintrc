@@ -134,7 +134,8 @@ disable=missing-docstring,
         exception-escape,
         comprehension-escape,
         W0238,
-        W0621
+        W0621,
+        E265
 
 
 # Enable the message, report, category or checker with the given id(s). You can
@@ -216,8 +217,7 @@ spelling-store-unknown-words=no
 
 # List of note tags to take in consideration, separated by a comma.
 notes=FIXME,
-      XXX,
-      TODO
+      XXX
 
 
 [TYPECHECK]
