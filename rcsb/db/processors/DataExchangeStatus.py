@@ -15,8 +15,9 @@ __license__ = "Apache 2.0"
 
 
 import logging
-
-from rcsb.db.utils.TimeUtil import TimeUtil
+from datetime import datetime
+from typing import Optional
+from zoneinfo import ZoneInfo
 
 logger = logging.getLogger(__name__)
 
@@ -40,13 +41,12 @@ class DataExchangeStatus(object):
     """
 
     def __init__(self, **kwargs):
-        self.__startTimestamp = None
-        self.__endTimestamp = None
+        self.__startTimestamp: Optional[datetime] = None
+        self.__endTimestamp: Optional[datetime] = None
         self.__updateId = "unset"
         self.__statusFlag = "N"
         self.__databaseName = "unset"
         self.__objectName = "unset"
-        self.__tU = TimeUtil()
         self.__kwargs = kwargs
 
     def setObject(self, databaseName, objectName):
@@ -78,11 +78,13 @@ class DataExchangeStatus(object):
             str: isoformat timestamp or None otherwise
         """
         try:
-            self.__startTimestamp = tS if tS else self.__tU.getTimestamp(useUtc=useUtc)
-            return self.__startTimestamp
+            if not tS:
+                tS = datetime.now()
+            self.__startTimestamp = tS.astimezone(ZoneInfo("Etc/UTC") if useUtc else None)
+            return self.__startTimestamp.isoformat(" ", "microseconds")
         except Exception as e:
             logger.exception("Failing with %s", str(e))
-        return None
+            return None  # TODO: Don't; plus we don't need this try-except.
 
     def setEndTime(self, tS=None, useUtc=True):
         """Set the end time for the current exchange operation.
@@ -95,11 +97,13 @@ class DataExchangeStatus(object):
             str: isoformat timestamp or None otherwise
         """
         try:
-            self.__endTimestamp = tS if tS else self.__tU.getTimestamp(useUtc=useUtc)
-            return self.__endTimestamp
+            if not tS:
+                tS = datetime.now()
+            self.__endTimestamp = tS.astimezone(ZoneInfo("Etc/UTC") if useUtc else None)
+            return self.__endTimestamp.isoformat(" ", "microseconds")
         except Exception as e:
             logger.exception("Failing with %s", str(e))
-        return None
+            return None  # TODO: Don't; plus we don't need this try-except.
 
     def setStatus(self, updateId=None, successFlag="Y"):
         """Set the update identifier (yyyy_<week_in_year>) and success flag for the current exchange operation.
@@ -113,11 +117,11 @@ class DataExchangeStatus(object):
         """
         try:
             self.__statusFlag = successFlag
-            self.__updateId = updateId if updateId else self.__tU.getCurrentWeekSignature()
+            self.__updateId = updateId if updateId else datetime.now().strftime("%Y_%V")
             return True
         except Exception as e:
             logger.exception("Failing with %s", str(e))
-        return False
+            return None  # TODO: Don't; plus we don't need this try-except.
 
     def getStatus(self, useTimeStrings=False):
         """Get the current data exchange status document.
@@ -142,8 +146,8 @@ class DataExchangeStatus(object):
                     "database_name": self.__databaseName,
                     "object_name": self.__objectName,
                     "update_status_flag": self.__statusFlag,
-                    "update_begin_timestamp": self.__tU.getDateTimeObj(self.__startTimestamp),
-                    "update_end_timestamp": self.__tU.getDateTimeObj(self.__endTimestamp),
+                    "update_begin_timestamp": self.__startTimestamp,
+                    "update_end_timestamp": self.__endTimestamp,
                 }
             return sD
         except Exception as e:

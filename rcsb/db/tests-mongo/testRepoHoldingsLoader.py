@@ -62,12 +62,11 @@ class RepoHoldingsLoaderTests(unittest.TestCase):
         # sample data set
         self.__updateId = "2019_23"
         #
-        self.__startTime = time.time()
-        logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
+        self.__startTime = time.monotonic()
+        logger.debug("Starting %s now", self.id())
 
     def tearDown(self):
-        endTime = time.time()
-        logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+        logger.debug("Completed %s in %.3f s", self.id(), time.monotonic() - self.__startTime)
 
     @unittest.skipUnless(loadLocal, "Skip local load test")
     def testLoadHoldings(self):

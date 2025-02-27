@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 class TestPdbCsmImagesSplitter(unittest.TestCase):
     def setUp(self) -> None:
-        self.__startTime = time.time()
+        self.__startTime = time.monotonic()
         # self.__cachePath = os.path.join(HERE, "test-data")
         self.__workPath = os.path.join(HERE, "test-output")
         self.mockdataDir = os.path.join(TOPDIR, "rcsb", "mock-data", "MOCK_IMGS_WF_BCIF_DATA")
@@ -42,8 +42,7 @@ class TestPdbCsmImagesSplitter(unittest.TestCase):
         unitS = "MB" if platform.system() == "Darwin" else "GB"
         rusageMax = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         logger.info("Maximum resident memory size %.4f %s", rusageMax / 10 ** 6, unitS)
-        endTime = time.time()
-        logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+        logger.debug("Completed %s in %.3f s", self.id(), time.monotonic() - self.__startTime)
 
     def testIdListGeneration(self) -> None:
         """Test id list file generation ..."""

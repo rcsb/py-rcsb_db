@@ -10,15 +10,42 @@ This module contains a collection of utility classes for processing and loading 
 derived data content using relational and document database servers.  One target data store for
 these tools is a document database used to exchange content within the RCSB PDB data pipeline.
 
-### Installation
+## Installation
+
+### Ubuntu prerequisites
+
+You will need a few packages first.
+
+```bash
+sudo apt install flex bison
+```
+
+### macOS prerequisites
+
+To use and develop this package on macOS requires a number of packages that are not
+distributed as part of the base macOS operating system.
+Install each of these:
+
+- [XCode](https://developer.apple.com/xcode/)
+- [HomeBrew](https://brew.sh/)
+- [MongoDB](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-os-x/) (via Homebrew)
+
+### Installation steps
 
 Download the library source software from the project repository:
 
 ```bash
-
 git clone --recurse-submodules https://github.com/rcsb/py-rcsb_db.git
-
 ```
+
+Install via [pip](https://pypi.python.org/pypi/pip).
+To run the tests from the source tree, the package must be installed in editable mode (i.e. `-e`):
+
+```bash
+pip install -e .
+```
+
+### Running tests
 
 Optionally, run test suite (Python versions 3.9+) using either:
 
@@ -27,49 +54,22 @@ Optionally, run test suite (Python versions 3.9+) using either:
 - [tox](http://tox.readthedocs.io/en/latest/example/platform.html)
   by running simply `tox`
 
-Installation is via the program [pip](https://pypi.python.org/pypi/pip).  To run tests
-from the source tree, the package must be installed in editable mode (i.e. -e):
-
-```bash
-pip install -e .
-```
-
-#### Installing in Ubuntu Linux (tested in 18.04)
-
-You will need a few packages, before `pip install .` can work:
-
-```bash
-sudo apt install flex bison
-```
-
-### Installing on macOS
-
-To use and develop this package on macOS requires a number of packages that are not
-distributed as part of the base macOS operating system.
-The following steps provide one approach to creating the development environment for this
-package.  First, install the Apple [XCode](https://developer.apple.com/xcode/) package and associate command-line tools.
-This will provide essential compilers and supporting tools.  The [HomeBrew](https://brew.sh/) package
-manager provides further access to a variety of common open source services and tools.
-Follow the instructions provided by at the [HomeBrew](https://brew.sh/) site to
-install this system.   Once HomeBrew is installed, you can further install the
-[MariaDB](https://mariadb.com/kb/en/library/installing-mariadb-on-macos-using-homebrew/) and
-[MongoDB](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-os-x/) packages which
-are required to support the ExDB  tools.  HomeBrew also provides a variety of options for
-managing a [Python virtual environments](https://gist.github.com/Geoyi/f55ed54d24cc9ff1c14bd95fac21c042).
-
 ### Configuration File
 
 RCSB/PDB repository path details are stored as configuration options.
-An example configuration file included in this package is viewable under `rcsb/db/config`: [exdb-config-example.yml](https://github.com/rcsb/py-rcsb_db/blob/master/rcsb/db/config/exdb-config-example.yml). This example references dictionary resources and mock repository data
+An example configuration file included in this package is viewable under `rcsb/db/config`:
+[exdb-config-example.yml](https://github.com/rcsb/py-rcsb_db/blob/master/rcsb/db/config/exdb-config-example.yml).
+This example references dictionary resources and mock repository data
 provided in the package in `rcsb/mock-data/*`. The `site_info_configuration` section
 in this file provides database server connection details and common path details.
 This is followed by sections specifying the dictionaries, helper functions, and
 configuration used to define the schema for the each supported content type
 (e.g., pdbx_core, chem_comp_core, bird_chem_comp_core,.. ).
 
-### Command Line Interfaces
+## Command Line Interfaces
 
-#### Schema File Generation
+### Schema File Generation
+
 A convenience CLI `schema_update_cli` is provided for generating operational schema from
 PDBx/mmCIF dictionary metadata.  Schema are encoded for the ExDB  API (rcsb), and
 for the document schema encoded in JSON and BSON formats.  The latter schema can be used to
@@ -146,13 +146,14 @@ ________________________________________________________________________________
 
 ```
 
-##### Example Usage
+#### Example Usage
 
 For example, the following command will generate the JSON and BSON schema for the collections in the
 pdbx_core schema.
 
 ```bash
-schema_update_cli  --mock --schema_types json,bson \
+schema_update_cli  --mock \
+                   --schema_types json,bson \
                    --schema_level full  \
                    --update_pdbx_core   \
                    --cache_path . \
@@ -160,13 +161,13 @@ schema_update_cli  --mock --schema_types json,bson \
                    --config_name site_info_configuration
 ```
 
-#### ExDB Loading
+### ExDB Loading
 
 A convenience CLI `exdb_repo_load_cli` is provided to support loading PDB repositories
 containing entry and chemical reference data content types in the form of document collections
 compatible with MongoDB.
 
-```bash
+```text
 exdb_repo_load_cli --help
 
 usage: exdb_repo_load_cli [-h] [--op OP_TYPE] [--load_type LOAD_TYPE]
@@ -265,8 +266,10 @@ optional arguments:
 ________________________________________________________________________________
 ```
 
-##### Example Usage
-The following commands demonstrate how each type of operation (`--op`) is used for loading of PDB repository data to ExDB. For all commands, the following environmental variables must first be set:
+#### Example Usage
+
+The following commands demonstrate how each type of operation (`--op`) is used for loading of PDB repository data to ExDB.
+For all commands, the following environmental variables must first be set:
 
 ```bash
 export CONFIG_SUPPORT_TOKEN_ENV=personal_token_used_for_decrypting_config_variables
@@ -335,7 +338,7 @@ exdb_repo_load_cli --op "pdbx_loader_check" \
 
 ```
 
-#### Repository Scanning
+### Repository Scanning
 
 Part of the schema definition process supported by this module involves refining
 the dictionary metadata with more specific data typing and coverage details.
@@ -343,7 +346,7 @@ A scanning tools is provided to collect and organize these details for the
 other ETL tools in this package.  The following convenience CLI, `repo_scan_cli`,
 is provided to scan supported PDB repository content and update data type and coverage details.
 
-```bash
+```text
 repo_scan_cli --help
 
 usage: repo_scan_cli [-h] [--scanType SCANTYPE]
@@ -407,11 +410,12 @@ ________________________________________________________________________________
 
 ```
 
-#### ETL Processing
+### ETL Processing
+
 The following CLI provides a preliminary access to ETL functions for processing
 derived content types such as sequence comparative data.
 
-```bash
+```text
 etl_exec_cli --help
 usage: etl_exec_cli [-h] [--full] [--etl_entity_sequence_clusters]
                     [--etl_repository_holdings] [--data_set_id DATA_SET_ID]

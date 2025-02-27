@@ -27,12 +27,11 @@ import pprint
 import time
 import unittest
 from collections import OrderedDict
-
-import dateutil.parser
+from datetime import datetime
+from html import unescape
 
 from rcsb.db.mongo.Connection import Connection
 from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
-from rcsb.db.utils.TextUtil import unescapeXmlCharRef
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
@@ -67,13 +66,11 @@ class MongoDbUtilTests(unittest.TestCase):
                 "dateField1": {"bsonType": "date", "description": "must be a date and is not required"},
             },
         }
-        self.__startTime = time.time()
-        logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
+        self.__startTime = time.monotonic()
+        logger.debug("Starting %s now", self.id())
 
     def tearDown(self):
-        # self.__close(self.__cObj)
-        endTime = time.time()
-        logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+        logger.debug("Completed %s in %.3f s", self.id(), time.monotonic() - self.__startTime)
 
     def __assignResource(self, cfgOb, resourceName="MONGO_DB", sectionName=None):
         cn = Connection(cfgOb=cfgOb)
@@ -102,7 +99,8 @@ class MongoDbUtilTests(unittest.TestCase):
         """
         Convert html character entities into unicode.
         """
-        return unescapeXmlCharRef(iStr)
+        # TODO: This function appears unused.
+        return unescape(iStr)
 
     def __makeDataObj(self, nCats, nAttribs, nRows, docId=1):
         rD = {}
@@ -120,14 +118,14 @@ class MongoDbUtilTests(unittest.TestCase):
             for attrib in range(nAttribs):
                 val = "2018-01-30 12:01"
                 attribName = "attribute_%d" % attrib
-                dD[attribName] = dateutil.parser.parse(val)
+                dD[attribName] = datetime.fromisoformat(val)
             rD[catName].append(dD)
             #
             dD = {}
             for attrib in range(nAttribs):
                 val = " &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171; "
                 attribName = "attribute_%d" % attrib
-                dD[attribName] = unescapeXmlCharRef(val).encode("utf-8").decode("utf-8")
+                dD[attribName] = unescape(val)
             rD[catName].append(dD)
         rD["DOC_ID"] = "DOC_%d" % docId
         return rD
@@ -551,7 +549,7 @@ class MongoDbUtilTests(unittest.TestCase):
                 logger.info("rId is %r", rId)
                 self.assertEqual(rId, None)
                 #
-                s2 = unescapeXmlCharRef(" &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171;")
+                s2 = unescape(" &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171;")
                 dObj = {"strField1": "test value", "strField2": s2, "intField1": 50, "enumField1": "v3", "dblField1": 100.1}
                 rId = mg.insert(self.__dbName, self.__collectionName, dObj)
                 logger.info("rId is %r", rId)
@@ -587,9 +585,9 @@ class MongoDbUtilTests(unittest.TestCase):
                 rId = mg.insert(self.__dbName, self.__collectionName, dObj)
                 self.assertEqual(rId, None)
                 logger.info("rId is %r", rId)
-                dtVal = dateutil.parser.parse("2018-01-30 12:01")
+                dtVal = datetime.fromisoformat("2018-01-30 12:01")
                 logger.debug("date value is %r", dtVal)
-                s2 = unescapeXmlCharRef(" &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171;")
+                s2 = unescape(" &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171;")
                 dObj = {"strField1": "test value", "strField2": s2, "intField1": 50, "enumField1": "v3", "dblField1": 100.1, "dateField1": dtVal}
                 rId = mg.insert(self.__dbName, self.__collectionName, dObj)
                 logger.info("rId is %r", rId)
@@ -626,7 +624,7 @@ class MongoDbUtilTests(unittest.TestCase):
                 logger.info("rId is %r", rId)
                 self.assertNotEqual(rId, None)
                 #
-                s2 = unescapeXmlCharRef(" &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171;")
+                s2 = unescape(" &quot; &Phi; &Psi; &alpha; &#xa3;  &#8453;  &#9734;  &#120171;")
                 dObj = {"strField1": "test value", "strField2": s2, "intField1": 50, "enumField1": "v3a", "dblField1": 100.1}
                 rId = mg.insert(self.__dbName, self.__collectionName, dObj)
                 self.assertNotEqual(rId, None)

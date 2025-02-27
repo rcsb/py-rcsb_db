@@ -25,11 +25,14 @@ __license__ = "Apache 2.0"
 
 
 import logging
+import warnings
 
 from mmcif.api.PdbxContainers import CifName
 from mmcif.io.PdbxReader import PdbxReader
 
 logger = logging.getLogger(__name__)
+__msg = f"{__name__} is deprecated and does not have a replacement."
+warnings.warn(__msg, DeprecationWarning)
 
 
 class PdbxSchemaMapReader(object):

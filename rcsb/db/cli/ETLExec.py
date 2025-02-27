@@ -22,6 +22,8 @@ import argparse
 import logging
 import os
 import sys
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from rcsb.db.cli.RepoHoldingsEtlWorker import RepoHoldingsEtlWorker
 from rcsb.db.cli.SequenceClustersEtlWorker import SequenceClustersEtlWorker
@@ -29,7 +31,6 @@ from rcsb.db.cli.SequenceClustersEtlWorker import SequenceClustersEtlWorker
 # from rcsb.db.cli.TreeNodeListWorker import TreeNodeListWorker
 from rcsb.utils.dictionary.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
-from rcsb.db.utils.TimeUtil import TimeUtil
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -130,8 +131,7 @@ def main():
     #
     try:
         readBackCheck = args.read_back_check
-        tU = TimeUtil()
-        dataSetId = args.data_set_id if args.data_set_id else tU.getCurrentWeekSignature()
+        dataSetId = args.data_set_id if args.data_set_id else datetime.now().astimezone(ZoneInfo("Etc/UTC")).strftime("%Y_%V")
         seqDataLocator = args.sequence_cluster_data_path if args.sequence_cluster_data_path else cfgOb.getPath("RCSB_SEQUENCE_CLUSTER_DATA_PATH", sectionName=configName)
         sandboxPath = args.sandbox_data_path if args.sandbox_data_path else cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=configName)
         numProc = int(args.num_proc)

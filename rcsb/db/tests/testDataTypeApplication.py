@@ -55,12 +55,11 @@ class DataTypeApplicationInfoTests(unittest.TestCase):
         self.__pathSaveTypeMapJson = os.path.join(HERE, "test-output", "app_data_type_mapping.json")
 
         # self.__pathDataTypeMap = os.path.join(self.__mockTopPath, "data_type_info", "app_data_type_mapping.cif")
-        self.__startTime = time.time()
-        logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
+        self.__startTime = time.monotonic()
+        logger.debug("Starting %s now", self.id())
 
     def tearDown(self):
-        endTime = time.time()
-        logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+        logger.debug("Completed %s in %.3f s", self.id(), time.monotonic() - self.__startTime)
 
     def testDefaults(self):
         """Verify default type assignments and read, write and update operations."""

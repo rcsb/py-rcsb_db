@@ -35,8 +35,8 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+from datetime import datetime
 
-import dateutil.parser
 from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logger = logging.getLogger(__name__)
@@ -249,7 +249,7 @@ class RepoHoldingsDataPrep(object):
                 if len(fields) < 3:
                     continue
                 entryId = str(fields[0]).strip().upper()
-                obsDateD[entryId] = dateutil.parser.parse(fields[2]) if self.__assignDates else fields[2]
+                obsDateD[entryId] = datetime.fromisoformat(fields[2]) if self.__assignDates else fields[2]
                 if len(fields) > 3 and len(fields[3]) > 3:
                     obsIdD[entryId] = str(fields[3]).strip().upper()
             logger.debug("Read %d obsolete insilico id codes", len(obsDateD))
@@ -276,10 +276,10 @@ class RepoHoldingsDataPrep(object):
                 fields = str(line).split("\t")
                 if len(fields) < 6:
                     continue
-                depDate = dateutil.parser.parse(fields[2]) if self.__assignDates else fields[2]
+                depDate = datetime.fromisoformat(fields[2]) if self.__assignDates else fields[2]
                 relDate = None
                 if len(fields[3]) >= 10 and not fields[3].startswith("0000"):
-                    relDate = dateutil.parser.parse(fields[3]) if self.__assignDates else fields[3]
+                    relDate = datetime.fromisoformat(fields[3]) if self.__assignDates else fields[3]
 
                 statusCode = "TRSF" if fields[1] == "REL" else fields[1]
 
@@ -571,7 +571,7 @@ class RepoHoldingsDataPrep(object):
                 for dTup in dTupL:
                     fN = dTup[1]
                     if fields[fN] and len(fields[fN]) >= 4:
-                        dD[dTup[0]] = dateutil.parser.parse(fields[fN]) if self.__assignDates else fields[fN]
+                        dD[dTup[0]] = datetime.fromisoformat(fields[fN]) if self.__assignDates else fields[fN]
                 #
                 retD[entryId] = {k: v for k, v in dD.items() if v}
         except Exception as e:
@@ -637,7 +637,7 @@ class RepoHoldingsDataPrep(object):
                 for dTup in dTupL:
                     fN = dTup[1]
                     if dT[fN] and len(dT[fN]) > 4:
-                        d1[dTup[0]] = dateutil.parser.parse(dT[fN]) if self.__assignDates else dT[fN]
+                        d1[dTup[0]] = datetime.fromisoformat(dT[fN]) if self.__assignDates else dT[fN]
 
                 rL1D[dT["entryId"]] = {k: v for k, v in d1.items() if v}
                 #

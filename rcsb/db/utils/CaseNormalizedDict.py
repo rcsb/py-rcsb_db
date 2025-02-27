@@ -68,6 +68,9 @@ class CaseNormalizedDict2(collections.abc.MutableMapping):
     # This example subclasses the abstract base class MutableMapping.
 
     def __init__(self, *args, **kwargs):
+        import warnings
+        msg = f"{self.__class__.__name__} is deprecated. Use {CaseNormalizedDict.__name__} instead."
+        warnings.warn(msg, DeprecationWarning)
         self.__dict__.update(*args, **kwargs)
         self.__local = dict((k.lower(), k) for k in self.__dict__)
 

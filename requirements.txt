@@ -1,6 +1,3 @@
-python-dateutil
-pytz
-jsonschema >= 2.6.0
 pymongo >= 4.8.0
 mmcif >= 0.91.0
 rcsb.utils.config >= 0.40

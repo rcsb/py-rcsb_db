@@ -153,7 +153,8 @@ class DocumentLoader(object):
     def loadWorker(self, dataList, procName, optionsD, workingDir):
         """Multi-proc worker method for MongoDb document loading -"""
         try:
-            startTime = self.__begin(message=procName)
+            t0 = time.monotonic()
+            logger.debug("Starting %s now", procName)
             readBackCheck = optionsD["readBackCheck"]
             loadType = optionsD["loadType"]
 
@@ -169,7 +170,7 @@ class DocumentLoader(object):
                 ok, successList, failedList = self.__loadDocuments(databaseName, collectionName, dataList, loadType=loadType, readBackCheck=readBackCheck, keyNames=keyNames)
             #
             logger.debug(
-                "%s database %s collection %s inputList length %d successList length %d  failed %d",
+                "%s database %s collection %s inputList length %d successList length %d failed %d",
                 procName,
                 databaseName,
                 collectionName,
@@ -177,8 +178,7 @@ class DocumentLoader(object):
                 len(successList),
                 len(failedList),
             )
-            #
-            self.__end(startTime, procName + " with status " + str(ok))
+            logger.debug("%s %s in %.3f s", "Finished" if ok else "Failed", procName, time.monotonic() - t0)
             return successList, [], []
 
         except Exception as e:
@@ -189,18 +189,6 @@ class DocumentLoader(object):
     # -------------- -------------- -------------- -------------- -------------- -------------- --------------
     #                                        ---  Supporting code follows ---
     #
-
-    def __begin(self, message=""):
-        startTime = time.time()
-        ts = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
-        logger.debug("Starting %s at %s", message, ts)
-        return startTime
-
-    def __end(self, startTime, message=""):
-        endTime = time.time()
-        ts = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
-        delta = endTime - startTime
-        logger.debug("Completed %s at %s (%.4f seconds)", message, ts, delta)
 
     def __createCollection(self, dbName, collectionName, indexAttributeNames=None, checkExists=False, bsonSchema=None):
         """Create database and collection and optionally a primary index -"""
