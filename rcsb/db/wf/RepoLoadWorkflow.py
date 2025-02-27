@@ -25,6 +25,7 @@ import random
 import math
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from rcsb.db.cli.RepoHoldingsEtlWorker import RepoHoldingsEtlWorker
 from rcsb.db.cli.SequenceClustersEtlWorker import SequenceClustersEtlWorker
@@ -104,7 +105,7 @@ class RepoLoadWorkflow(object):
             rebuildCache = kwargs.get("rebuildCache", False)
             forceReload = kwargs.get("forceReload", False)
             #
-            dataSetId = kwargs.get("dataSetId") if "dataSetId" in kwargs else datetime.now().strftime("%Y_%V")
+            dataSetId = kwargs.get("dataSetId") if "dataSetId" in kwargs else datetime.now().astimezone(ZoneInfo("Etc/UTC")).strftime("%Y_%V")
             seqDataLocator = self.__cfgOb.getPath("RCSB_SEQUENCE_CLUSTER_DATA_PATH", sectionName=self.__configName)
             sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=self.__configName)
 

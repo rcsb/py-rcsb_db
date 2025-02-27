@@ -39,12 +39,11 @@ class ConnectionBaseTests(unittest.TestCase):
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName)
         self.__resourceName = "MONGO_DB"
 
-        self.__startTime = time.time()
-        logger.debug("Starting at %s", time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
+        self.__startTime = time.monotonic()
+        logger.debug("Starting now")
 
     def tearDown(self):
-        endTime = time.time()
-        logger.debug("Completed at %s (%.4f seconds)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+        logger.debug("Completed in %.3f s", time.monotonic() - self.__startTime)
 
     def testCreateConnection(self):
         """Test case -  connection creation"""

@@ -45,12 +45,11 @@ class SchemaDefAccessTests(unittest.TestCase):
         self.__cfgOb = ConfigUtil(configPath=pathConfig, defaultSectionName=configName, mockTopPath=mockTopPath)
         self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=True, clearPath=False)
         #
-        self.__startTime = time.time()
-        logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
+        self.__startTime = time.monotonic()
+        logger.debug("Starting %s now", self.id())
 
     def tearDown(self):
-        endTime = time.time()
-        logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+        logger.debug("Completed %s in %.3f s", self.id(), time.monotonic() - self.__startTime)
 
     def testAccess(self):
         databaseNames = ["pdbx_core", "bird_chem_comp_core"]

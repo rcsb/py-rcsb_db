@@ -203,7 +203,7 @@ class PdbxLoader(object):
             statusStartTimestamp = desp.setStartTime()
             #
             logger.info("Beginning load operation (%r) for database %s", loadType, databaseName)
-            startTime = self.__begin(message="loading operation")
+            startTime = time.monotonic()
             #
             # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
             inputIdCodeList = inputIdCodeList if inputIdCodeList else []
@@ -375,7 +375,7 @@ class PdbxLoader(object):
                 logger.info("Writing failure path %s length %d status %r", failedFilePath, len(failList), wOk)
             #
             ok = len(failList) == 0
-            self.__end(startTime, "Loading operation completed with status " + str(ok))
+            logger.debug("%s loading in %.3f s", "Finished" if ok else "Failed", time.monotonic() - t0)
             #
             # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
             if databaseName in ["pdbx_core", "pdbx_comp_model_core"]:
@@ -445,8 +445,9 @@ class PdbxLoader(object):
                             Note that this gets assigned to the variable, 'resultList', returned by mpu.runMulti(...) call above
             diagList (list): list of unique diagnostics (usually left empty)
         """
+        t0 = time.monotonic()
+        logger.debug("Starting %s now", procName)
         try:
-            startTime = self.__begin(message=procName)
             # Recover common options
             styleType = optionsD["styleType"]
             filterType = optionsD["filterType"]
@@ -641,7 +642,7 @@ class PdbxLoader(object):
                     ok = self.__purgeDocuments(databaseName, collectionName, list(cardinalIdFailS))
             #
             ok = len(failContainerIdS) == 0
-            self.__end(startTime, procName + " with status " + str(ok))
+            logger.debug("%s %s in %.3f s", "Finished" if ok else "Failed", procName, time.monotonic() - t0)
 
             return successList, retList, diagList
 
@@ -805,18 +806,6 @@ class PdbxLoader(object):
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return False
-
-    def __begin(self, message=""):
-        startTime = time.time()
-        ts = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
-        logger.debug("Starting %s at %s", message, ts)
-        return startTime
-
-    def __end(self, startTime, message=""):
-        endTime = time.time()
-        ts = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
-        delta = endTime - startTime
-        logger.debug("Completed %s at %s (%.4f seconds)", message, ts, delta)
 
     def __createCollection(self, databaseName, collectionName, indexDL=None, bsonSchema=None):
         """Create database and collection and optionally a set of indices -"""

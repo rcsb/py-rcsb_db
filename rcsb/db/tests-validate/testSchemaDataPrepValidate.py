@@ -141,12 +141,11 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
         # self.__databaseNameD = {"ihm_dev_full": ["ihm_dev_full"]}
         # self.__databaseNameD = {"pdbx_core": ["pdbx_core_entity_instance_validation"]}
         # self.__databaseNameD = {"pdbx_core": ["pdbx_core_entity_monomer"]}
-        self.__startTime = time.time()
-        logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
+        self.__startTime = time.monotonic()
+        logger.debug("Starting %s now", self.id())
 
     def tearDown(self):
-        endTime = time.time()
-        logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+        logger.debug("Completed %s in %.3f s", self.id(), time.monotonic() - self.__startTime)
 
     # def __modelFixture(self):
     #     fU = FileUtil()

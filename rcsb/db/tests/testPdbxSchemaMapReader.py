@@ -46,11 +46,11 @@ class PdbxSchemaMapReaderTests(unittest.TestCase):
         self.__pathPrdSchemaMapFile = os.path.join(TOPDIR, "rcsb", "mock-data", "schema-maps", "schema_map_pdbx_prd_v5.cif")
         self.__pathPdbxSchemaMapFile = os.path.join(TOPDIR, "rcsb", "mock-data", "schema-maps", "schema_map_pdbx_v5_rc.cif")
         self.__pathCcSchemaMapFile = os.path.join(TOPDIR, "rcsb", "mock-data", "schema-maps", "schema_map_pdbx_cc.cif")
-        self.__startTime = time.time()
-        logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
+        self.__startTime = time.monotonic()
+        logger.debug("Starting %s now", self.id())
 
     def tearDown(self):
-        pass
+        logger.debug("Completed %s in %.3f s", self.id(), time.monotonic() - self.__startTime)
 
     def testReadPrdMap(self):
         self.__readMap(self.__pathPrdSchemaMapFile, os.path.join(HERE, "test-output", "prd-def.out"))

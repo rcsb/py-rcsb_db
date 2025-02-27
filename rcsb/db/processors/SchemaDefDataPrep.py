@@ -46,9 +46,10 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 
-import datetime
 import logging
 import time
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from rcsb.db.processors.SchemaDefReShape import SchemaDefReShape
 from rcsb.utils.io.MarshalUtil import MarshalUtil
@@ -100,7 +101,7 @@ class SchemaDefDataPrep(object):
         return False
 
     def __getTimeStamp(self):
-        utcnow = datetime.datetime.utcnow()
+        utcnow = datetime.now().astimezone(ZoneInfo("Etc/UTC"))
         ts = utcnow.strftime("%Y-%m-%d:%H:%M:%S")
         return ts
 
@@ -500,7 +501,7 @@ class SchemaDefDataPrep(object):
                  container name list. []
 
         """
-        startTime = time.time()
+        t0 = time.monotonic()
         #
         rejectLocatorObjList = []
         containerIdList = []
@@ -532,9 +533,7 @@ class SchemaDefDataPrep(object):
         rejectLocatorObjList = list(set(rejectLocatorObjList))
         #
         #
-        #
-        endTime = time.time()
-        logger.debug("completed at %s (%.3f seconds)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
+        logger.debug("Completed in %.3f s", time.monotonic() - t0)
 
         return schemaDataDictF, containerIdList, rejectLocatorObjList
 
@@ -548,7 +547,7 @@ class SchemaDefDataPrep(object):
                  list of rejected containers ids. []
 
         """
-        startTime = time.time()
+        t0 = time.monotonic()
         #
         rejectIdList = []
         containerIdList = []
@@ -578,8 +577,7 @@ class SchemaDefDataPrep(object):
             schemaDataDictF = schemaDataDict
         #
         #
-        endTime = time.time()
-        logger.debug("completed at %s (%.3f seconds)", time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - startTime)
+        logger.debug("Completed in %.3f s",  time.monotonic() - t0)
 
         return schemaDataDictF, containerIdList, rejectIdList
 

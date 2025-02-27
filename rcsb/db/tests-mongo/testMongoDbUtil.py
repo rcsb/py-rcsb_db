@@ -66,13 +66,11 @@ class MongoDbUtilTests(unittest.TestCase):
                 "dateField1": {"bsonType": "date", "description": "must be a date and is not required"},
             },
         }
-        self.__startTime = time.time()
-        logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
+        self.__startTime = time.monotonic()
+        logger.debug("Starting %s now", self.id())
 
     def tearDown(self):
-        # self.__close(self.__cObj)
-        endTime = time.time()
-        logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
+        logger.debug("Completed %s in %.3f s", self.id(), time.monotonic() - self.__startTime)
 
     def __assignResource(self, cfgOb, resourceName="MONGO_DB", sectionName=None):
         cn = Connection(cfgOb=cfgOb)
