@@ -24,7 +24,6 @@ import os
 
 from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
-from rcsb.db.processors.RepoHoldingsDataPrep import RepoHoldingsDataPrep
 from rcsb.db.processors.RepoHoldingsRemoteDataPrep import RepoHoldingsRemoteDataPrep
 from rcsb.db.mongo.Connection import Connection
 from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
@@ -101,7 +100,6 @@ class RepoHoldingsEtlWorker(object):
             desp = DataExchangeStatus()
             statusStartTimestamp = desp.setStartTime()
 
-            discoveryMode = self.__cfgOb.get("DISCOVERY_MODE", sectionName=self.__cfgSectionName, default="local")
             # ---
             baseUrlPDB = self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__cfgSectionName, default="https://files.wwpdb.org/pub")
             fallbackUrlPDB = self.__cfgOb.getPath("PDB_REPO_FALLBACK_URL", sectionName=self.__cfgSectionName, default="https://files.wwpdb.org/pub")
@@ -115,10 +113,7 @@ class RepoHoldingsEtlWorker(object):
                 "filterType": self.__filterType,
             }
             # ---
-            if discoveryMode == "local":
-                rhdp = RepoHoldingsDataPrep(cfgOb=self.__cfgOb, sandboxPath=self.__sandboxPath, cachePath=self.__cachePath, filterType=self.__filterType)
-            else:
-                rhdp = RepoHoldingsRemoteDataPrep(cachePath=self.__cachePath, **kwD)
+            rhdp = RepoHoldingsRemoteDataPrep(cachePath=self.__cachePath, **kwD)
             #
             dl = DocumentLoader(
                 self.__cfgOb,
