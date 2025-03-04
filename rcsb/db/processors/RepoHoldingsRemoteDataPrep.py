@@ -24,6 +24,7 @@
 # 23-Oct-2020 jdw add getHoldingsCombined()
 # 21-Sep-2021 jdw overhaul using new resource files and with support for remote access
 #  4-Feb-2022 dwp Further overhaul for using new resource files and support for remote access
+#  3-Mar-2025 dwp Don't load empty 'assembly_ids' array
 ##
 
 __docformat__ = "restructuredtext en"
@@ -80,7 +81,7 @@ class RepoHoldingsRemoteDataPrep(object):
         for entryId, qD in retD.items():
             tD = (
                 {"rcsb_id": entryId, "entry_id": entryId, "update_id": updateId, "assembly_ids": qD["assembly_ids"]}
-                if "assembly_ids" in qD
+                if "assembly_ids" in qD and len(qD["assembly_ids"]) > 0
                 else {"rcsb_id": entryId, "entry_id": entryId, "update_id": updateId}
             )
             rD = {
