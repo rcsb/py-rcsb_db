@@ -293,8 +293,8 @@ class RepoLoadWorkflow(object):
         contentType = contentType if contentType else databaseName  # 'pdbx_core', 'pdbx_comp_model_core', 'pdbx_ihm'
         holdingsFilePath = kwargs.get("holdingsFilePath", None)  # For CSMs: http://computed-models-internal-%s.rcsb.org/staging/holdings/computed-models-holdings-list.json
         loadFileListDir = kwargs.get("loadFileListDir")  # ExchangeDbConfig().loadFileListsDir
-        loadFileListPrefix = kwargs.get("loadFileListPrefix")
-        loadFileListPrefix = loadFileListPrefix if loadFileListPrefix else contentType + "_ids"  # pdbx_core_ids, pdbx_comp_model_core_ids, or pdbx_ihm_ids
+        splitFileListPrefix = kwargs.get("splitFileListPrefix")
+        splitFileListPrefix = splitFileListPrefix if splitFileListPrefix else contentType + "_ids"  # pdbx_core_ids, pdbx_comp_model_core_ids, or pdbx_ihm_ids
         numSublistFiles = kwargs.get("numSublistFiles", 1)  # ExchangeDbConfig().pdbxCoreNumberSublistFiles
 
         incrementalUpdate = kwargs.get("incrementalUpdate", False)
@@ -315,7 +315,7 @@ class RepoLoadWorkflow(object):
             idL = [k.upper() for k in holdingsFileD]
             logger.info("Total number of PDB entries: %d (obtained from file: %s)", len(idL), holdingsFilePath)
             random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
-            filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFilePath)
+            filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, splitFileListPrefix, holdingsFilePath)
         #
         elif contentType == "pdbx_ihm":
             if not holdingsFilePath:
@@ -323,7 +323,7 @@ class RepoLoadWorkflow(object):
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             idL = [k.upper() for k in holdingsFileD]
             logger.info("Total number of IHM entries: %d (obtained from file: %s)", len(idL), holdingsFilePath)
-            filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFilePath)
+            filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, splitFileListPrefix, holdingsFilePath)
         #
         elif contentType == "pdbx_comp_model_core":
             filePathMappingD = {}
@@ -344,7 +344,7 @@ class RepoLoadWorkflow(object):
                 #
                 idL = [k.upper() for k in hD]
                 logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
-                filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, loadFileListPrefix, holdingsFile)
+                filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, splitFileListPrefix, holdingsFile)
             #
             elif len(holdingsFileD) > 1:
                 # Create one sub-list for each holdings file
@@ -358,14 +358,14 @@ class RepoLoadWorkflow(object):
                     idL = [k.upper() for k in hD]
                     logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
                     #
-                    fPath = os.path.join(loadFileListDir, f"{loadFileListPrefix}-{index}.txt")
+                    fPath = os.path.join(loadFileListDir, f"{splitFileListPrefix}-{index}.txt")
                     ok = mU.doExport(fPath, idL, fmt="list")
                     if not ok:
                         raise ValueError("Failed to export id list %r" % fPath)
                     filePathMappingD.update({str(index): {"filePath": fPath, "numModels": count, "sourceFile": holdingsFile}})
                     index += 1
                 #
-                mappingFilePath = os.path.join(loadFileListDir, loadFileListPrefix + "_mapping.json")
+                mappingFilePath = os.path.join(loadFileListDir, splitFileListPrefix + "_mapping.json")
                 ok = mU.doExport(mappingFilePath, filePathMappingD, fmt="json", indent=4)
 
         else:

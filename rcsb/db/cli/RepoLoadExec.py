@@ -93,7 +93,11 @@ def main():
     parser.add_argument("--fail_file_list_path", default=None, help="Output file containing file paths that fail to load")
     parser.add_argument("--save_file_list_path", default=None, help="Save repo file paths from automatic file system scan in this path")
     parser.add_argument("--load_file_list_dir", default=None, help="Directory path for storing load file lists")
-    parser.add_argument("--load_file_list_prefix", default=None, help="Filename prefix for load file lists")
+    parser.add_argument(
+        "--split_file_list_prefix",
+        default=None,
+        help="Filename prefix to use for naming the split sublists (overrides autoconstructed prefix; e.g., 'pdbx_core_ids' will become 'pdbx_core_ids-1.txt', 'pdbx_core_ids-2.txt')"
+    )
     parser.add_argument("--num_sublists", default=None, help="Number of sublists to create/load for the associated database")
     parser.add_argument("--force_reload", default=False, action="store_true", help="Force re-load of provided ID list (i.e., don't just load delta; useful for manual/test runs).")
     parser.add_argument("--provider_types_exclude", default=None, help="Resource provider types to exclude")
@@ -263,7 +267,7 @@ def processArguments(args):
         "loadFileListPath": args.load_file_list_path,
         "saveInputFileListPath": args.save_file_list_path,
         "loadFileListDir": args.load_file_list_dir,
-        "loadFileListPrefix": args.load_file_list_prefix,
+        "splitFileListPrefix": args.split_file_list_prefix,
         "numSublistFiles": int(args.num_sublists) if args.num_sublists else None,
         "schemaLevel": args.schema_level if args.schema_level in ["min", "full", "minimum"] else None,
         "pruneDocumentSize": float(args.prune_document_size) if args.prune_document_size else None,
