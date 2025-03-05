@@ -391,9 +391,12 @@ class RepoLoadWorkflow(object):
 
     def getTimeStampCheck(self, hD, targetFileDir, targetFileSuffix, databaseName, outputContentType=False, outputHash=False):
         res = hD.copy()
+        modelPath = None
         for key, value in hD.items():
             if isinstance(value, dict):
+                # csm
                 timeStamp = value["lastModifiedDate"]
+                modelPath = value["modelPath"]
             else:
                 timeStamp = value
 
@@ -403,7 +406,6 @@ class RepoLoadWorkflow(object):
             hashPath = self.getPdbHash(pdbid)
             if databaseName == "pdbx_comp_model_core":
                 pdbid = key.upper()
-                modelPath = hD[key].get("modelPath", None)
                 if modelPath:
                     hashPath = os.path.dirname(modelPath)
                 else:
