@@ -21,6 +21,7 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
+import sys
 import random
 import math
 import datetime
@@ -306,8 +307,7 @@ class RepoLoadWorkflow(object):
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
 
             if incrementalUpdate:
-                contentType = "pdb"
-                holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix, contentType, outputContentType, outputHash)
+                holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix, databaseName, outputContentType, outputHash)
 
             # experimental paths and file names are lower case
             idL = [k.lower() for k in holdingsFileD]
@@ -332,8 +332,7 @@ class RepoLoadWorkflow(object):
                 hD = mU.doImport(holdingsFile, fmt="json")
 
                 if incrementalUpdate:
-                    contentType = "csm"
-                    hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix, contentType, outputContentType, outputHash)
+                    hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix, databaseName, outputContentType, outputHash)
 
                 # csm paths and file names are upper case
                 idL = [k.upper() for k in hD]
@@ -349,8 +348,7 @@ class RepoLoadWorkflow(object):
                     holdingsFile = os.path.join(holdingsFileBaseDir, hF)
                     hD = mU.doImport(holdingsFile, fmt="json")
                     if incrementalUpdate:
-                        contentType = "csm"
-                        hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix, contentType, outputContentType, outputHash)
+                        hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix, databaseName, outputContentType, outputHash)
                     idL = [k.upper() for k in hD]
                     random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
                     logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
@@ -379,7 +377,7 @@ class RepoLoadWorkflow(object):
 
         return ok
 
-    def getTimeStampCheck(self, hD, targetFileDir, targetFileSuffix, contentType="pdb", outputContentType=False, outputHash=False):
+    def getTimeStampCheck(self, hD, targetFileDir, targetFileSuffix, databaseName, outputContentType=False, outputHash=False):
         res = hD.copy()
         for key, value in hD.items():
             if isinstance(value, dict):
@@ -390,15 +388,21 @@ class RepoLoadWorkflow(object):
 
             # experimental models are stored with lower case while csms are stored with upper case (except content type)
             pdbid = key.lower()
+            contentTypePrefix = "pdb"
             hashPath = pdbid[1:3]
-            if contentType == "csm":
+            if databaseName == "pdbx_comp_model_core":
                 pdbid = key.upper()
-                hashPath = os.path.join(pdbid[0:2], pdbid[-6:-4], pdbid[-4:-2])
+                contentTypePrefix = "csm"
+                modelPath = hD[key].get("modelPath", None)
+                if modelPath:
+                    hashPath = os.path.dirname(modelPath)
+                else:
+                    hashPath = os.path.join(pdbid[0:2], pdbid[-6:-4], pdbid[-4:-2])
 
             if outputContentType and outputHash:
-                pathToItem = os.path.join(targetFileDir, contentType, hashPath, pdbid + targetFileSuffix)
+                pathToItem = os.path.join(targetFileDir, contentTypePrefix, hashPath, pdbid + targetFileSuffix)
             elif outputContentType:
-                pathToItem = os.path.join(targetFileDir, contentType, pdbid + targetFileSuffix)
+                pathToItem = os.path.join(targetFileDir, contentTypePrefix, pdbid + targetFileSuffix)
             elif outputHash:
                 pathToItem = os.path.join(targetFileDir, hashPath, pdbid + targetFileSuffix)
             else:
