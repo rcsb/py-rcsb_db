@@ -394,7 +394,6 @@ class RepoLoadWorkflow(object):
         for key, value in hD.items():
             if isinstance(value, dict):
                 timeStamp = value["lastModifiedDate"]
-                value["modelPath"].lower()
             else:
                 timeStamp = value
 
