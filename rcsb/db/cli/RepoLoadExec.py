@@ -236,9 +236,6 @@ def processArguments(args):
     #
     cachePath = args.cache_path if args.cache_path else "."
     cachePath = os.path.abspath(cachePath)
-    #
-    outputContentType = args.outputContentType
-    outputHash = args.outputHash
 
     # Now collect arguments into dictionaries
     commonD = {

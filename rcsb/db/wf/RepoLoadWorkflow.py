@@ -21,7 +21,6 @@ __license__ = "Apache 2.0"
 
 import logging
 import os
-import sys
 import random
 import math
 import datetime
@@ -377,6 +376,19 @@ class RepoLoadWorkflow(object):
 
         return ok
 
+    def getPdbHash(self, pdbid):
+        return pdbid[1:3]
+
+    def getCsmHash(self, pdbid):
+        return os.path.join(pdbid[0:2], pdbid[-6:-4], pdbid[-4:-2])
+
+    def getContentTypePrefix(self, databaseName):
+        if databaseName == "pdbx_core":
+            return "pdb"
+        if databaseName == "pdbx_comp_model_core":
+            return "csm"
+        return ""
+
     def getTimeStampCheck(self, hD, targetFileDir, targetFileSuffix, databaseName, outputContentType=False, outputHash=False):
         res = hD.copy()
         for key, value in hD.items():
@@ -388,16 +400,15 @@ class RepoLoadWorkflow(object):
 
             # experimental models are stored with lower case while csms are stored with upper case (except content type)
             pdbid = key.lower()
-            contentTypePrefix = "pdb"
-            hashPath = pdbid[1:3]
+            contentTypePrefix = self.getContentTypePrefix(databaseName)
+            hashPath = self.getPdbHash(pdbid)
             if databaseName == "pdbx_comp_model_core":
                 pdbid = key.upper()
-                contentTypePrefix = "csm"
                 modelPath = hD[key].get("modelPath", None)
                 if modelPath:
                     hashPath = os.path.dirname(modelPath)
                 else:
-                    hashPath = os.path.join(pdbid[0:2], pdbid[-6:-4], pdbid[-4:-2])
+                    hashPath = self.getCsmHash(pdbid)
 
             if outputContentType and outputHash:
                 pathToItem = os.path.join(targetFileDir, contentTypePrefix, hashPath, pdbid + targetFileSuffix)
