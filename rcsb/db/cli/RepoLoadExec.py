@@ -26,6 +26,7 @@
 #                      Add support for logging output to a specific file
 #    25-Apr-2024 - dwp Add support for remote config file loading; use underscores instead of hyphens for arg choices
 #    22-Jan-2025 - mjt Add Imgs format option flags
+#     5-Mar-2025 - james smith output hash
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
