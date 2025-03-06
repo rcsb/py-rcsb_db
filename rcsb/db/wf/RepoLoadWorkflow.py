@@ -309,8 +309,7 @@ class RepoLoadWorkflow(object):
             if incrementalUpdate:
                 holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType, prependOutputHash)
 
-            # experimental paths and file names are lower case
-            idL = [k.lower() for k in holdingsFileD]
+            idL = [k.upper() for k in holdingsFileD]
 
             logger.info("Total number of entries to load: %d (obtained from file: %s)", len(idL), holdingsFilePath)
             random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
@@ -334,7 +333,6 @@ class RepoLoadWorkflow(object):
                 if incrementalUpdate:
                     hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType, prependOutputHash)
 
-                # csm paths and file names are upper case
                 idL = [k.upper() for k in hD]
                 random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
                 logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
