@@ -396,6 +396,7 @@ class RepoLoadWorkflow(object):
         if databaseName not in ["pdbx_core", "pdbx_comp_model_core"]:
             logger.error("unrecognized argument %s", databaseName)
             return hD
+        contentTypePrefix = self.getContentTypePrefix(databaseName)
         res = hD.copy()
         modelPath = None
         for key, value in hD.items():
@@ -409,7 +410,6 @@ class RepoLoadWorkflow(object):
             # experimental models are stored with lower case while csms are stored with upper case (except content type)
             if databaseName == "pdbx_core":
                 pdbid = key.lower()
-                contentTypePrefix = self.getContentTypePrefix(databaseName)
                 hashPath = self.getPdbHash(pdbid)
             elif databaseName == "pdbx_comp_model_core":
                 pdbid = key.upper()
