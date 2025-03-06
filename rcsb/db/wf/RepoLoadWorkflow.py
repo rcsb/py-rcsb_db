@@ -12,7 +12,7 @@
 #   7-Nov-2023 dwp Add maxStepLength parameter
 #  26-Mar-2024 dwp Add arguments and methods to support CLI usage from weekly-update workflow
 #  22-Jan-2025 mjt Add Imgs format option (for jpg/svg generation) to splitIdList()
-#   5-Mar-2025 james smith output hash
+#   5-Mar-2025 js Add support for prepending content type and directory hash for splitIdList output
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -295,8 +295,8 @@ class RepoLoadWorkflow(object):
         incrementalUpdate = kwargs.get("incrementalUpdate", False)
         targetFileDir = kwargs.get("targetFileDir", "")
         targetFileSuffix = kwargs.get("targetFileSuffix", "_model-1.jpg")
-        outputContentType = bool(kwargs.get("outputContentType", False))
-        outputHash = bool(kwargs.get("outputHash", False))
+        prependOutputContentType = bool(kwargs.get("prependOutputContentType", False))
+        prependOutputHash = bool(kwargs.get("prependOutputHash", False))
         #
         mU = MarshalUtil(workPath=self.__cachePath)
         #
@@ -307,7 +307,7 @@ class RepoLoadWorkflow(object):
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
 
             if incrementalUpdate:
-                holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix, databaseName, outputContentType, outputHash)
+                holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType, prependOutputHash)
 
             # experimental paths and file names are lower case
             idL = [k.lower() for k in holdingsFileD]
@@ -332,7 +332,7 @@ class RepoLoadWorkflow(object):
                 hD = mU.doImport(holdingsFile, fmt="json")
 
                 if incrementalUpdate:
-                    hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix, databaseName, outputContentType, outputHash)
+                    hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType, prependOutputHash)
 
                 # csm paths and file names are upper case
                 idL = [k.upper() for k in hD]
@@ -348,7 +348,7 @@ class RepoLoadWorkflow(object):
                     holdingsFile = os.path.join(holdingsFileBaseDir, hF)
                     hD = mU.doImport(holdingsFile, fmt="json")
                     if incrementalUpdate:
-                        hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix, databaseName, outputContentType, outputHash)
+                        hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType, prependOutputHash)
                     idL = [k.upper() for k in hD]
                     random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
                     logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
@@ -390,7 +390,14 @@ class RepoLoadWorkflow(object):
             return "csm"
         return ""
 
-    def getTimeStampCheck(self, hD, targetFileDir, targetFileSuffix, databaseName, outputContentType=False, outputHash=False):
+    def getTimeStampCheck(self, hD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType=False, prependOutputHash=False):
+        """
+        Compares timestamp of source file (from holdings file information) with timestamp of target file (from file properties).
+        If target file exists and has the same or newer timestamp, its id is removed from the return list.
+        """
+        if databaseName not in ["pdbx_core", "pdbx_comp_model_core"]:
+            logger.error("unrecognized argument %s", databaseName)
+            return hD
         res = hD.copy()
         modelPath = None
         for key, value in hD.items():
@@ -402,21 +409,22 @@ class RepoLoadWorkflow(object):
                 timeStamp = value
 
             # experimental models are stored with lower case while csms are stored with upper case (except content type)
-            pdbid = key.lower()
-            contentTypePrefix = self.getContentTypePrefix(databaseName)
-            hashPath = self.getPdbHash(pdbid)
-            if databaseName == "pdbx_comp_model_core":
+            if databaseName == "pdbx_core":
+                pdbid = key.lower()
+                contentTypePrefix = self.getContentTypePrefix(databaseName)
+                hashPath = self.getPdbHash(pdbid)
+            elif databaseName == "pdbx_comp_model_core":
                 pdbid = key.upper()
                 if modelPath:
                     hashPath = os.path.dirname(modelPath)
                 else:
                     hashPath = self.getCsmHash(pdbid)
 
-            if outputContentType and outputHash:
+            if prependOutputContentType and prependOutputHash:
                 pathToItem = os.path.join(targetFileDir, contentTypePrefix, hashPath, pdbid + targetFileSuffix)
-            elif outputContentType:
+            elif prependOutputContentType:
                 pathToItem = os.path.join(targetFileDir, contentTypePrefix, pdbid + targetFileSuffix)
-            elif outputHash:
+            elif prependOutputHash:
                 pathToItem = os.path.join(targetFileDir, hashPath, pdbid + targetFileSuffix)
             else:
                 pathToItem = os.path.join(targetFileDir, pdbid + targetFileSuffix)
