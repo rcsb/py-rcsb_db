@@ -7,4 +7,4 @@ rcsb.utils.config >= 0.40
 rcsb.utils.io >= 1.46
 rcsb.utils.multiproc >= 0.19
 rcsb.utils.dictionary >= 1.29
-rcsb.utils.repository >= 0.48
+rcsb.utils.repository >= 0.49
