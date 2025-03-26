@@ -13,6 +13,7 @@
 #  26-Mar-2024 dwp Add arguments and methods to support CLI usage from weekly-update workflow
 #  22-Jan-2025 mjt Add Imgs format option (for jpg/svg generation) to splitIdList()
 #  18-Feb-2025 dwp Add support for IHM model loading
+#   5-Mar-2025 js Add support for prepending content type and directory hash for splitIdList output
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -300,6 +301,8 @@ class RepoLoadWorkflow(object):
         incrementalUpdate = kwargs.get("incrementalUpdate", False)
         targetFileDir = kwargs.get("targetFileDir", "")
         targetFileSuffix = kwargs.get("targetFileSuffix", "_model-1.jpg")
+        prependOutputContentType = bool(kwargs.get("prependOutputContentType", False))
+        prependOutputHash = bool(kwargs.get("prependOutputHash", False))
         #
         mU = MarshalUtil(workPath=self.__cachePath)
         #
@@ -310,7 +313,7 @@ class RepoLoadWorkflow(object):
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             #
             if incrementalUpdate:
-                holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix)
+                holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType, prependOutputHash)
             #
             idL = [k.upper() for k in holdingsFileD]
             logger.info("Total number of PDB entries: %d (obtained from file: %s)", len(idL), holdingsFilePath)
@@ -340,9 +343,10 @@ class RepoLoadWorkflow(object):
                 hD = mU.doImport(holdingsFile, fmt="json")
                 #
                 if incrementalUpdate:
-                    hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix)
+                    hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType, prependOutputHash)
                 #
                 idL = [k.upper() for k in hD]
+                random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
                 logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
                 filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, splitFileListPrefix, holdingsFile)
             #
@@ -354,8 +358,9 @@ class RepoLoadWorkflow(object):
                     holdingsFile = os.path.join(holdingsFileBaseDir, hF)
                     hD = mU.doImport(holdingsFile, fmt="json")
                     if incrementalUpdate:
-                        hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix)
+                        hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType, prependOutputHash)
                     idL = [k.upper() for k in hD]
+                    random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
                     logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
                     #
                     fPath = os.path.join(loadFileListDir, f"{splitFileListPrefix}-{index}.txt")
@@ -382,20 +387,63 @@ class RepoLoadWorkflow(object):
 
         return ok
 
-    def getTimeStampCheck(self, hD, targetFileDir, targetFileSuffix):
+    def getPdbHash(self, pdbid):
+        return pdbid[1:3]
+
+    def getCsmHash(self, pdbid):
+        return os.path.join(pdbid[0:2], pdbid[-6:-4], pdbid[-4:-2])
+
+    def getContentTypePrefix(self, databaseName):
+        if databaseName == "pdbx_core":
+            return "pdb"
+        if databaseName == "pdbx_comp_model_core":
+            return "csm"
+        return ""
+
+    def getTimeStampCheck(self, hD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType=False, prependOutputHash=False):
+        """
+        Compares timestamp of source file (from holdings file information) with timestamp of target file (from file properties).
+        If target file exists and has the same or newer timestamp, its id is removed from the return list.
+        """
+        if databaseName not in ["pdbx_core", "pdbx_comp_model_core"]:
+            logger.error("unrecognized argument %s", databaseName)
+            return hD
+        contentTypePrefix = self.getContentTypePrefix(databaseName)
         res = hD.copy()
-        for pdbid, value in hD.items():
-            pathToItem = os.path.join(targetFileDir, pdbid + targetFileSuffix)
+        modelPath = None
+        for key, value in hD.items():
             if isinstance(value, dict):
+                # csm
                 timeStamp = value["lastModifiedDate"]
-                value["modelPath"].lower()
+                modelPath = value["modelPath"]
             else:
                 timeStamp = value
+
+            # experimental models are stored with lower case while csms are stored with upper case (except content type)
+            if databaseName == "pdbx_core":
+                pdbid = key.lower()
+                hashPath = self.getPdbHash(pdbid)
+            elif databaseName == "pdbx_comp_model_core":
+                pdbid = key.upper()
+                if modelPath:
+                    hashPath = os.path.dirname(modelPath)
+                else:
+                    hashPath = self.getCsmHash(pdbid)
+
+            if prependOutputContentType and prependOutputHash:
+                pathToItem = os.path.join(targetFileDir, contentTypePrefix, hashPath, pdbid + targetFileSuffix)
+            elif prependOutputContentType:
+                pathToItem = os.path.join(targetFileDir, contentTypePrefix, pdbid + targetFileSuffix)
+            elif prependOutputHash:
+                pathToItem = os.path.join(targetFileDir, hashPath, pdbid + targetFileSuffix)
+            else:
+                pathToItem = os.path.join(targetFileDir, pdbid + targetFileSuffix)
+
             if Path(pathToItem).exists():
                 t1 = Path(pathToItem).stat().st_mtime
                 t2 = datetime.datetime.strptime(timeStamp, "%Y-%m-%dT%H:%M:%S%z").timestamp()
-                if t1 > t2:
-                    res.pop(pdbid)
+                if t1 >= t2:
+                    res.pop(key)
         return res
 
     def splitIdListAndWriteToFiles(self, inputList, nFiles, outfileDir, outfilePrefix, sourceFile):
