@@ -26,6 +26,7 @@
 #                      Add support for logging output to a specific file
 #    25-Apr-2024 - dwp Add support for remote config file loading; use underscores instead of hyphens for arg choices
 #    22-Jan-2025 - mjt Add Imgs format option flags
+#     5-Mar-2025 - js  Add support for prepending content type and directory hash for splitIdList output
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -95,6 +96,13 @@ def main():
     parser.add_argument("--num_sublists", default=None, help="Number of sublists to create/load for the associated database")
     parser.add_argument("--force_reload", default=False, action="store_true", help="Force re-load of provided ID list (i.e., don't just load delta; useful for manual/test runs).")
     parser.add_argument("--provider_types_exclude", default=None, help="Resource provider types to exclude")
+    parser.add_argument(
+        "--prepend_output_content_type",
+        action="store_true",
+        default=False,
+        help="Whether output path in downstream application has prepended content type (pdb, csm) before file name"
+    )
+    parser.add_argument("--prepend_output_hash", action="store_true", default=False, help="Whether output path in downstream application has prepended hash before file name")
     #
     parser.add_argument("--db_type", default="mongo", help="Database server type (default=mongo)")
     parser.add_argument("--file_limit", default=None, help="Load file limit for testing")
@@ -276,6 +284,8 @@ def processArguments(args):
         "incrementalUpdate": args.incremental_update,
         "targetFileDir": args.target_file_dir,
         "targetFileSuffix": args.target_file_suffix,
+        "prependOutputContentType": args.prepend_output_content_type,
+        "prependOutputHash": args.prepend_output_hash
     }
 
     return op, commonD, loadD

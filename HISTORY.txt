@@ -367,3 +367,4 @@
   7-Jan-2025  V1.727 Handle "None" values in vrpt data
  22-Jan-2025  V1.728 Add Imgs format option (for jpg/svg generation) to splitIdList()
  11-Feb-2025  V1.800 Removal of unused code and dependencies (MySQL, SQL, CockroachDB, CrateDB, and other accessory code snippets)
+ 26-Mar-2025  V1.801 Add support for prepending content type and directory hash for splitIdList output
