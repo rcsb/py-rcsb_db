@@ -408,6 +408,7 @@ class RepoLoadWorkflow(object):
                 timeStamp = value
 
             # experimental models are stored with lower case while csms are stored with upper case (except content type)
+            hashPath = None
             if databaseName == "pdbx_core":
                 pdbid = key.lower()
                 hashPath = self.getPdbHash(pdbid)
@@ -417,6 +418,11 @@ class RepoLoadWorkflow(object):
                     hashPath = os.path.dirname(modelPath)
                 else:
                     hashPath = self.getCsmHash(pdbid)
+            #
+            if not hashPath:
+                logger.error("Unable to determine hashPath for key %r - skipping", key)
+                res.pop(key)
+                continue
 
             if prependOutputContentType and prependOutputHash:
                 pathToItem = os.path.join(targetFileDir, contentTypePrefix, hashPath, pdbid + targetFileSuffix)
