@@ -12,7 +12,7 @@
 #   7-Nov-2023 dwp Add maxStepLength parameter
 #  26-Mar-2024 dwp Add arguments and methods to support CLI usage from weekly-update workflow
 #  22-Jan-2025 mjt Add Imgs format option (for jpg/svg generation) to splitIdList()
-#   5-Mar-2025 js Add support for prepending content type and directory hash for splitIdList output
+#   5-Mar-2025 js  Add support for prepending content type and directory hash for splitIdList output
 #
 ##
 __docformat__ = "restructuredtext en"
