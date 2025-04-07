@@ -26,8 +26,8 @@
 #                      Add support for logging output to a specific file
 #    25-Apr-2024 - dwp Add support for remote config file loading; use underscores instead of hyphens for arg choices
 #    22-Jan-2025 - mjt Add Imgs format option flags
-#    18-Feb-2025 - dwp Add support for IHM model loading by adding 'content_type' flag
-#     5-Mar-2025 - js Add support for prepending content type and directory hash for splitIdList output
+#     5-Mar-2025 - js  Add support for prepending content type and directory hash for splitIdList output
+#     7-Apr-2025 - dwp Add support for IHM model loading by adding 'content_type' flag
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -103,7 +103,12 @@ def main():
     parser.add_argument("--force_reload", default=False, action="store_true", help="Force re-load of provided ID list (i.e., don't just load delta; useful for manual/test runs).")
     parser.add_argument("--provider_types_exclude", default=None, help="Resource provider types to exclude")
     parser.add_argument("--content_type", default=None, help="Type of content to load ('pdbx_core', 'pdbx_comp_model_core', 'pdbx_ihm').")
-    parser.add_argument("--prepend_output_content_type", action="store_true", default=False, help="Whether output path in downstream application has prepended content type (pdb, csm) before file name")
+    parser.add_argument(
+        "--prepend_output_content_type",
+        action="store_true",
+        default=False,
+        help="Whether output path in downstream application has prepended content type (pdb, csm) before file name"
+    )
     parser.add_argument("--prepend_output_hash", action="store_true", default=False, help="Whether output path in downstream application has prepended hash before file name")
     #
     parser.add_argument("--db_type", default="mongo", help="Database server type (default=mongo)")
