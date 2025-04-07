@@ -11,7 +11,8 @@
 #   4-Apr-2023 dwp Add maxStepLength input argument; update success/failure catching logic;
 #                  add final verification step to ensure all entries were loaded
 #  16-Oct-2024 dwp Remove usage of EDMAPS holdings file
-#  18-Feb-2025 dwp Add support for IHM repository holdings file loading
+#  18-Feb-2025 dwp Add support for IHM repository holdings file loading;
+#                  Change indexed field to be 'rcsb_id'
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -130,6 +131,10 @@ class RepoHoldingsEtlWorker(object):
                 verbose=self.__verbose,
                 readBackCheck=self.__readBackCheck,
             )
+            # Index attribute list
+            # Currently set to "rcsb_id" since this is used by pdbx_loader_check, and correct schema-based index is set in DW anyway;
+            # but, should eventually be changed to use schema-based index names, as done in PdbxLoader.__createCollection (but DocumentLoader.__createCollection works differently)
+            indexAttributeList = ["rcsb_id"]
             #
             sectionName = "repository_holdings_configuration"
             databaseName = self.__cfgOb.get("DATABASE_NAME", sectionName=sectionName)
@@ -143,17 +148,17 @@ class RepoHoldingsEtlWorker(object):
             else:
                 dList = rhdp.getHoldingsUpdateEntry(updateId=updateId)
                 collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UPDATE", sectionName=sectionName)
-                ok1 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+                ok1 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=indexAttributeList, keyNames=None, addValues=addValues)
                 self.__updateStatus(updateId, databaseName, collectionName, ok1, statusStartTimestamp)
             #
             dList = rhdp.getHoldingsCurrentEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_CURRENT", sectionName=sectionName)
-            ok2 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            ok2 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=indexAttributeList, keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok2, statusStartTimestamp)
 
             dList = rhdp.getHoldingsUnreleasedEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UNRELEASED", sectionName=sectionName)
-            ok3 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            ok3 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=indexAttributeList, keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok3, statusStartTimestamp)
             #
             if repoType == "pdb_ihm":
@@ -162,12 +167,12 @@ class RepoHoldingsEtlWorker(object):
             else:
                 dList = rhdp.getHoldingsRemovedEntry(updateId=updateId)
                 collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_REMOVED", sectionName=sectionName)
-                ok4 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+                ok4 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=indexAttributeList, keyNames=None, addValues=addValues)
                 self.__updateStatus(updateId, databaseName, collectionName, ok4, statusStartTimestamp)
             #
             dList = rhdp.getHoldingsCombinedEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_COMBINED", sectionName=sectionName)
-            ok5 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            ok5 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=indexAttributeList, keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok5, statusStartTimestamp)
             #
             ok = ok1 and ok2 and ok3 and ok4 and ok5

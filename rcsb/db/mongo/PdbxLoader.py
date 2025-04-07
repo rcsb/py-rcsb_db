@@ -1192,7 +1192,6 @@ class PdbxLoader(object):
             combinedHoldingActualCount = 0
             combinedHoldingExpectedCount = 0
 
-            # structDetermMethod = self.__getStructDetermMethod(contentType="pdbx_core")
             repoHoldingsCollections = {
                 "repository_holdings": [
                     "repository_holdings_combined_entry",
@@ -1209,7 +1208,6 @@ class PdbxLoader(object):
                 entryCount = mg.count(
                     databaseName=databaseName,
                     collectionName=str(databaseName + "_entry"),
-                    # countFilter={"rcsb_entry_info.structure_determination_methodology": structDetermMethod},
                 )
 
                 for databaseName, collL in repoHoldingsCollections.items():
