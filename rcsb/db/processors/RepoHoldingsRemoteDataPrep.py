@@ -24,7 +24,7 @@
 # 23-Oct-2020 jdw add getHoldingsCombined()
 # 21-Sep-2021 jdw overhaul using new resource files and with support for remote access
 #  4-Feb-2022 dwp Further overhaul for using new resource files and support for remote access
-#  3-Mar-2025 dwp Don't load empty 'assembly_ids' array
+#  7-Apr-2025 dwp Don't load empty 'assembly_ids' array
 ##
 
 __docformat__ = "restructuredtext en"

@@ -25,7 +25,7 @@
 #  1-Jul-2024 dwp Turn off population of "2fo-fc Map" and "fo-fc Map" content types (DSN6 maps)
 #                 (note that this file is only used when discoveryMode=='local')
 # 16-Oct-2024 dwp Remove usage of EDMAPS holdings file (again, note that this file is only used when discoveryMode=='local')
-#  3-Mar-2025 dwp Don't load empty 'assembly_ids' array
+#  7-Apr-2025 dwp Don't load empty 'assembly_ids' array
 ##
 
 __docformat__ = "restructuredtext en"

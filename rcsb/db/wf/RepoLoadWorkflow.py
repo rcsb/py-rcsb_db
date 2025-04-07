@@ -517,18 +517,19 @@ class RepoLoadWorkflow(object):
                 completeIdCodeList=completeIdCodeList,
                 completeIdCodeCount=completeIdCodeCount,
             )
-            logger.info("loadCompleteCheck for database %s (status %r)", databaseName, ok)
-            if databaseName == "pdbx_core" and (not contentType or contentType == "pdbx_core"):  # only check for PDB (not IHM)
-                validationCollectionCheckMap = {
-                    # map of collection names and minimum validation counts expected
-                    "pdbx_core_nonpolymer_entity_instance": minNpiValidationCount,
-                }
-                for collection, minValidationCount in validationCollectionCheckMap.items():
-                    if minValidationCount:
-                        okV = mw.checkValidationDataCount(databaseName, collection, minValidationCount)
-                        logger.info("checkValidationDataCount for database %s coll %s (status %r)", databaseName, collection, okV)
-                        ok = ok and okV
-                #
+            logger.info("loadCompleteCheck for database %s contentType %r (status %r)", databaseName, contentType, ok)
+            if databaseName == "pdbx_core":
+                if (not contentType or contentType == "pdbx_core"):  # only check validation data for PDB (not IHM)
+                    validationCollectionCheckMap = {
+                        # map of collection names and minimum validation counts expected
+                        "pdbx_core_nonpolymer_entity_instance": minNpiValidationCount,
+                    }
+                    for collection, minValidationCount in validationCollectionCheckMap.items():
+                        if minValidationCount:
+                            okV = mw.checkValidationDataCount(databaseName, collection, minValidationCount)
+                            logger.info("checkValidationDataCount for database %s coll %s (status %r)", databaseName, collection, okV)
+                            ok = ok and okV
+                    #
                 if checkLoadWithHoldings:
                     okH = mw.checkLoadedEntriesWithHoldingsCount(databaseName)
                     logger.info("checkLoadedEntriesWithHoldingsCount (status %r)", okH)

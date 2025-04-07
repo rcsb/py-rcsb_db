@@ -42,7 +42,7 @@
 #     26-Mar-2024 dwp  Add arguments and logic to support CLI usage from weekly-update workflow
 #      9-May-2024 dwp  Change providerTypeExclude to be a list, 'providerTypeExcludeL'
 #     10-Sep-2024 dwp  Add method for checking number of nonpolymer entity instances with validation data
-#     28-Jan-2025 dwp  Add support for IHM model loading
+#      7-Apr-2025 dwp  Add support for IHM model loading
 ##
 """
 Worker methods for loading primary data content following mapping conventions in external schema definitions.
@@ -1184,7 +1184,7 @@ class PdbxLoader(object):
         return ok
 
     def checkLoadedEntriesWithHoldingsCount(self, databaseName):
-        """Get the count of documents in the given collection with validation data"""
+        """Compare the count of documents in the given database (e.g., 'pdbx_core') with counts in repository_holdings DB"""
         ok = True
         try:
             entryCount = 0
@@ -1192,7 +1192,7 @@ class PdbxLoader(object):
             combinedHoldingActualCount = 0
             combinedHoldingExpectedCount = 0
 
-            structDetermMethod = self.__getStructDetermMethod(contentType="pdbx_core")
+            # structDetermMethod = self.__getStructDetermMethod(contentType="pdbx_core")
             repoHoldingsCollections = {
                 "repository_holdings": [
                     "repository_holdings_combined_entry",
@@ -1208,8 +1208,8 @@ class PdbxLoader(object):
 
                 entryCount = mg.count(
                     databaseName=databaseName,
-                    collectionName="pdbx_core_entry",
-                    countFilter={"rcsb_entry_info.structure_determination_methodology": structDetermMethod},
+                    collectionName=str(databaseName + "_entry"),
+                    # countFilter={"rcsb_entry_info.structure_determination_methodology": structDetermMethod},
                 )
 
                 for databaseName, collL in repoHoldingsCollections.items():
@@ -1233,8 +1233,8 @@ class PdbxLoader(object):
 
             elif combinedHoldingActualCount != combinedHoldingExpectedCount:
                 logger.error(
-                    "The total entries in the repository_holdings_combined_entry collection (%r) and combined counts of the current_entry, "
-                    "removed_entry, and unreleased_entry repository holdings (%r) are different.",
+                    "The total entries in the repository_holdings_combined_entry collection (%r) and combined counts of "
+                    "the current_entry, removed_entry, and unreleased_entry repository holdings (%r) are different.",
                     combinedHoldingActualCount,
                     combinedHoldingExpectedCount
                 )
