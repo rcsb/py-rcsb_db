@@ -170,7 +170,7 @@ def main():
 
         if args.etl_repository_holdings:
             rhw = RepoHoldingsEtlWorker(cfgOb, sandboxPath, cachePath, numProc=numProc, chunkSize=chunkSize, documentLimit=documentLimit, verbose=debugFlag, readBackCheck=readBackCheck)
-            ok = rhw.load(dataSetId, loadType=loadType)
+            ok = rhw.load(dataSetId)
             okS = loadStatus(rhw.getLoadStatus(), cfgOb, cachePath, readBackCheck=readBackCheck)
 
         logger.info("Operation completed with status %r " % ok and okS)
