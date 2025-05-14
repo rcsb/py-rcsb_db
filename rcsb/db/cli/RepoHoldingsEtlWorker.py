@@ -11,6 +11,8 @@
 #   4-Apr-2023 dwp Add maxStepLength input argument; update success/failure catching logic;
 #                  add final verification step to ensure all entries were loaded
 #  16-Oct-2024 dwp Remove usage of EDMAPS holdings file
+#  18-Feb-2025 dwp Add support for IHM repository holdings file loading;
+#                  Change indexed field to be 'rcsb_id'
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -63,7 +65,21 @@ class RepoHoldingsEtlWorker(object):
             logger.exception("Failing with %s", str(e))
         return False
 
-    def load(self, updateId, loadType="full"):
+    def load(self, updateId):
+        # First load PDB holdings (with loadType="full")
+        ok1 = self.loadRepoType(updateId, loadType="full", repoType="pdb")
+        #
+        # Next load IHM holdings (with loadType="replace")
+        ok2 = self.loadRepoType(updateId, loadType="replace", repoType="pdb_ihm")
+        #
+        # Last, verify all pdbx_core data has been loaded (based on repository holdings)
+        ok3 = self.verifyCompleteLoad()
+        logger.info("Verification of complete load status %r", ok3)
+        #
+        ok = ok1 and ok2 and ok3
+        return ok
+
+    def loadRepoType(self, updateId, loadType="full", repoType="pdb"):
         """Load legacy repository holdings and status data -
 
         Relevant configuration options:
@@ -85,17 +101,17 @@ class RepoHoldingsEtlWorker(object):
             self.__statusList = []
             desp = DataExchangeStatus()
             statusStartTimestamp = desp.setStartTime()
-
-            discoveryMode = self.__cfgOb.get("DISCOVERY_MODE", sectionName=self.__cfgSectionName, default="local")
             # ---
+            discoveryMode = self.__cfgOb.get("DISCOVERY_MODE", sectionName=self.__cfgSectionName, default="local")
             baseUrlPDB = self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__cfgSectionName, default="https://files.wwpdb.org/pub")
             fallbackUrlPDB = self.__cfgOb.getPath("PDB_REPO_FALLBACK_URL", sectionName=self.__cfgSectionName, default="https://files.wwpdb.org/pub")
             #
             kwD = {
-                "holdingsTargetUrl": os.path.join(baseUrlPDB, "pdb", "holdings"),
-                "holdingsFallbackUrl": os.path.join(fallbackUrlPDB, "pdb", "holdings"),
-                "updateTargetUrl": os.path.join(baseUrlPDB, "pdb", "data", "status", "latest"),
-                "updateFallbackUrl": os.path.join(fallbackUrlPDB, "pdb", "data", "status", "latest"),
+                "repoType": repoType,  # either "pdb" or "pdb_ihm"
+                "holdingsTargetUrl": os.path.join(baseUrlPDB, repoType, "holdings"),
+                "holdingsFallbackUrl": os.path.join(fallbackUrlPDB, repoType, "holdings"),
+                "updateTargetUrl": os.path.join(baseUrlPDB, repoType, "data", "status", "latest"),
+                "updateFallbackUrl": os.path.join(fallbackUrlPDB, repoType, "data", "status", "latest"),
                 "filterType": self.__filterType,
             }
             # ---
@@ -115,6 +131,10 @@ class RepoHoldingsEtlWorker(object):
                 verbose=self.__verbose,
                 readBackCheck=self.__readBackCheck,
             )
+            # Index attribute list
+            # Currently set to "rcsb_id" since this is used by pdbx_loader_check, and correct schema-based index is set in DW anyway;
+            # but, should eventually be changed to use schema-based index names, as done in PdbxLoader.__createCollection (but DocumentLoader.__createCollection works differently)
+            indexAttributeList = ["rcsb_id"]
             #
             sectionName = "repository_holdings_configuration"
             databaseName = self.__cfgOb.get("DATABASE_NAME", sectionName=sectionName)
@@ -122,35 +142,42 @@ class RepoHoldingsEtlWorker(object):
             # addValues = {"_schema_version": collectionVersion}
             addValues = None
             #
-            dList = rhdp.getHoldingsUpdateEntry(updateId=updateId)
-            collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UPDATE", sectionName=sectionName)
-            ok1 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok1, statusStartTimestamp)
+            if repoType == "pdb_ihm":
+                logger.info("Skipping load of update repository holdings for repoType %r", repoType)
+                ok1 = True
+            else:
+                dList = rhdp.getHoldingsUpdateEntry(updateId=updateId)
+                collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UPDATE", sectionName=sectionName)
+                ok1 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=indexAttributeList, keyNames=None, addValues=addValues)
+                self.__updateStatus(updateId, databaseName, collectionName, ok1, statusStartTimestamp)
             #
             dList = rhdp.getHoldingsCurrentEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_CURRENT", sectionName=sectionName)
-            ok2 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            ok2 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=indexAttributeList, keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok2, statusStartTimestamp)
 
             dList = rhdp.getHoldingsUnreleasedEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UNRELEASED", sectionName=sectionName)
-            ok3 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            ok3 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=indexAttributeList, keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok3, statusStartTimestamp)
             #
-            dList = rhdp.getHoldingsRemovedEntry(updateId=updateId)
-            collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_REMOVED", sectionName=sectionName)
-            ok4 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok4, statusStartTimestamp)
+            if repoType == "pdb_ihm":
+                logger.info("Skipping load of removed repository holdings for repoType %r", repoType)
+                ok4 = True
+            else:
+                dList = rhdp.getHoldingsRemovedEntry(updateId=updateId)
+                collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_REMOVED", sectionName=sectionName)
+                ok4 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=indexAttributeList, keyNames=None, addValues=addValues)
+                self.__updateStatus(updateId, databaseName, collectionName, ok4, statusStartTimestamp)
             #
             dList = rhdp.getHoldingsCombinedEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_COMBINED", sectionName=sectionName)
-            ok5 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
+            ok5 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=indexAttributeList, keyNames=None, addValues=addValues)
             self.__updateStatus(updateId, databaseName, collectionName, ok5, statusStartTimestamp)
             #
-            ok6 = self.verifyCompleteLoad()
-            logger.info("Verification of complete load status %r", ok6)
-            #
-            return ok1 and ok2 and ok3 and ok4 and ok5 and ok6
+            ok = ok1 and ok2 and ok3 and ok4 and ok5
+            logger.info("Completed load of repository holdings for repoType %r, loadType %r (status %r)", repoType, loadType, ok)
+            return ok
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return False

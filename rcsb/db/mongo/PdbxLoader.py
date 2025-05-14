@@ -42,7 +42,7 @@
 #     26-Mar-2024 dwp  Add arguments and logic to support CLI usage from weekly-update workflow
 #      9-May-2024 dwp  Change providerTypeExclude to be a list, 'providerTypeExcludeL'
 #     10-Sep-2024 dwp  Add method for checking number of nonpolymer entity instances with validation data
-#
+#      7-Apr-2025 dwp  Add support for IHM model loading
 ##
 """
 Worker methods for loading primary data content following mapping conventions in external schema definitions.
@@ -145,6 +145,7 @@ class PdbxLoader(object):
         databaseName,
         collectionLoadList=None,
         loadType="full",
+        contentType=None,
         inputPathList=None,
         inputIdCodeList=None,
         styleType="rowwise_by_name",
@@ -172,6 +173,7 @@ class PdbxLoader(object):
             databaseName (str): A content datbase schema (e.g. 'bird','bird_family','bird_chem_comp', chem_comp', 'pdbx', 'pdbx_core')
             collectionLoadList (list, optional): list of collection names in this schema to load (default is load all collections)
             loadType (str, optional): mode of loading 'full' (bulk delete then bulk insert) or 'replace'
+            contentType (str, optional): content type to load ('pdbx_core', 'pdbx_comp_model_core', 'pdbx_ihm'). Defaults to databaseName.
             inputPathList (list, optional): Data file path list (if not provided the full repository will be scanned)
             inputIdCodeList (list, optional): ID Code list (remote discovery mode) (if not provided the full repository will be scanned)
             styleType (str, optional): one of 'rowwise_by_name', 'columnwise_by_name', 'rowwise_no_name', 'rowwise_by_name_with_cardinality'
@@ -205,11 +207,15 @@ class PdbxLoader(object):
             logger.info("Beginning load operation (%r) for database %s", loadType, databaseName)
             startTime = self.__begin(message="loading operation")
             #
+            contentType = contentType if contentType else databaseName
+            #
             # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
             inputIdCodeList = inputIdCodeList if inputIdCodeList else []
             inputIdCodeList = [id.upper() for id in inputIdCodeList]
             if databaseName in ["pdbx_core", "pdbx_comp_model_core"]:
-                totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=databaseName + "_entry")
+                structDetermMethod = self.__getStructDetermMethod(contentType=contentType)
+                #
+                totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=databaseName + "_entry", structDetermMethod=structDetermMethod)
                 # Get the list of IDs from only the given sublist that are already loaded
                 subsetIdsAlreadyLoaded = list(set(totalIdsAlreadyLoaded).intersection(set(inputIdCodeList)))
                 if not forceReload:
@@ -235,8 +241,9 @@ class PdbxLoader(object):
             else:
                 # For "bird_chem_comp_core":
                 idCodesToLoadL = inputIdCodeList
-            locatorObjList = self.__rpP.getLocatorObjList(contentType=databaseName, inputPathList=inputPathList, inputIdCodeList=idCodesToLoadL, mergeContentTypes=mergeContentTypes)
+            locatorObjList = self.__rpP.getLocatorObjList(contentType=contentType, inputPathList=inputPathList, inputIdCodeList=idCodesToLoadL, mergeContentTypes=mergeContentTypes)
             logger.info("Loading database %s (%r) with path length %d", databaseName, loadType, len(locatorObjList))
+            logger.info("First locatorObj: %r", locatorObjList[0])
             #
             if saveInputFileListPath:
                 self.__writePathList(saveInputFileListPath, self.__rpP.getLocatorPaths(locatorObjList))
@@ -379,7 +386,8 @@ class PdbxLoader(object):
             #
             # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
             if databaseName in ["pdbx_core", "pdbx_comp_model_core"]:
-                totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=databaseName + "_entry")
+                structDetermMethod = self.__getStructDetermMethod(contentType=contentType)
+                totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=databaseName + "_entry", structDetermMethod=structDetermMethod)
                 # Get the list of IDs from only the given sublist that are already loaded
                 subsetIdsAlreadyLoaded = list(set(totalIdsAlreadyLoaded).intersection(set(inputIdCodeList)))
                 idCodesNotLoadedL = list(set(inputIdCodeList) ^ set(subsetIdsAlreadyLoaded))
@@ -894,7 +902,7 @@ class PdbxLoader(object):
             logger.exception("Failing with %s", str(e))
         return False
 
-    def __getLoadedRcsbIdList(self, databaseName, collectionName):
+    def __getLoadedRcsbIdList(self, databaseName, collectionName, structDetermMethod=None):
         """Get list of all loaded 'rcsb_id' values in the given database and collection"""
         loadedRcsbIdL = []
         try:
@@ -903,12 +911,26 @@ class PdbxLoader(object):
                 mg = MongoDbUtil(client)
                 selectL = ["rcsb_id"]
                 queryD = {}
+                if structDetermMethod:
+                    queryD.update({"rcsb_entry_info.structure_determination_methodology": structDetermMethod})
                 loadedDocL = mg.fetch(databaseName, collectionName, selectL, queryD=queryD, suppressId=True)
-                logger.info("Number of entries already loaded to database %s collection %s: %r", databaseName, collectionName, len(loadedDocL))
+                logger.info("Number of entries already loaded to database %s collection %s (method %r): %r", databaseName, collectionName, structDetermMethod, len(loadedDocL))
                 loadedRcsbIdL = [docD["rcsb_id"] for docD in loadedDocL]
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return loadedRcsbIdL
+
+    def __getStructDetermMethod(self, contentType):
+        """Get the structure determination methodology based on the contentType and predefined mapping below"""
+        structDetermMethodMap = {
+            "pdbx_core": "experimental",
+            "pdbx_comp_model_core": "computational",
+            "pdbx_ihm": "integrative",
+        }
+        structDetermMethod = structDetermMethodMap.get(contentType, None)
+        if not structDetermMethod:
+            logger.error("No structure determination method for contentType %r", contentType)
+        return structDetermMethod
 
     def __pruneBySize(self, dList, limitMB=15.9):
         """For the input list of objects (dictionaries).objects
@@ -1093,6 +1115,7 @@ class PdbxLoader(object):
     def loadCompleteCheck(
         self,
         databaseName,
+        contentType=None,
         completeIdCodeList=None,
         completeIdCodeCount=None,
     ):
@@ -1100,6 +1123,7 @@ class PdbxLoader(object):
 
         Args:
             databaseName (str): A content datbase schema (e.g. 'pdbx_core', 'pdbx_comp_model_core)
+            contentType (str, optional): content type to load ('pdbx_core', 'pdbx_comp_model_core', 'pdbx_ihm')
             completeIdCodeList (list, optional): Complete list of ID codes that should be loaded by the end of all sublist loader tasks
             completeIdCodeCount (int, optional): Number of total ID codes that should be loaded by the end of all sublist loader tasks
         Returns:
@@ -1110,8 +1134,10 @@ class PdbxLoader(object):
             if databaseName not in ["pdbx_core", "pdbx_comp_model_core"]:
                 logger.error("Unsupported database for completed load checking %s", databaseName)
                 return False
+            contentType = contentType if contentType else databaseName
+            structDetermMethod = self.__getStructDetermMethod(contentType=contentType)
             # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
-            totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=databaseName + "_entry")
+            totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=databaseName + "_entry", structDetermMethod=structDetermMethod)
             if completeIdCodeList:
                 # Get the list of IDs from only the given sublist that are already loaded
                 subsetIdsAlreadyLoaded = list(set(totalIdsAlreadyLoaded).intersection(set(completeIdCodeList)))
@@ -1157,8 +1183,8 @@ class PdbxLoader(object):
             logger.exception("Failing with %s", str(e))
         return ok
 
-    def checkLoadedEntriesWithHoldingsCount(self):
-        """Get the count of documents in the given collection with validation data"""
+    def checkLoadedEntriesWithHoldingsCount(self, databaseName):
+        """Compare the count of documents in the given database (e.g., 'pdbx_core') with counts in repository_holdings DB"""
         ok = True
         try:
             entryCount = 0
@@ -1166,8 +1192,7 @@ class PdbxLoader(object):
             combinedHoldingActualCount = 0
             combinedHoldingExpectedCount = 0
 
-            exdbCollections = {
-                "pdbx_core": ["pdbx_core_entry"],
+            repoHoldingsCollections = {
                 "repository_holdings": [
                     "repository_holdings_combined_entry",
                     "repository_holdings_current_entry",
@@ -1176,14 +1201,18 @@ class PdbxLoader(object):
                     "repository_holdings_update_entry",
                 ],
             }
+
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
 
-                for databaseName, collL in exdbCollections.items():
+                entryCount = mg.count(
+                    databaseName=databaseName,
+                    collectionName=str(databaseName + "_entry"),
+                )
+
+                for databaseName, collL in repoHoldingsCollections.items():
                     for collectionName in collL:
                         num = len(mg.distinct(databaseName, collectionName, "rcsb_id"))
-                        if collectionName == "pdbx_core_entry":
-                            entryCount = num
                         if collectionName == "repository_holdings_current_entry":
                             holdingCount = num
                         if collectionName == "repository_holdings_combined_entry":
@@ -1202,8 +1231,8 @@ class PdbxLoader(object):
 
             elif combinedHoldingActualCount != combinedHoldingExpectedCount:
                 logger.error(
-                    "The total entries in the repository_holdings_combined_entry collection (%r) and combined counts of the current_entry, "
-                    "removed_entry, and unreleased_entry repository holdings (%r) are different.",
+                    "The total entries in the repository_holdings_combined_entry collection (%r) and combined counts of "
+                    "the current_entry, removed_entry, and unreleased_entry repository holdings (%r) are different.",
                     combinedHoldingActualCount,
                     combinedHoldingExpectedCount
                 )
