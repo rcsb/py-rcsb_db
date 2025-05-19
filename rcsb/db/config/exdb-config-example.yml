@@ -119,6 +119,7 @@ site_info_configuration:
   VRPT_DICT_MAPPING_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/reference/vrpt_dictmap.json
   IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/reference/ihm-extension.dic
   MA_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/reference/mmcif_ma_ext.dic
+  IHM_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/reference/mmcif_ihm_ext.dic
   ## Previously pointed to 'dictionary_files/reference', but point to authoritative source instead to ensure most recent version is used
   # IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/ihmwg/IHM-dictionary/master/ihm-extension.dic
   # MA_DICT_LOCATOR: https://raw.githubusercontent.com/ihmwg/ModelCIF/master/dist/mmcif_ma_ext.dic
@@ -254,6 +255,7 @@ site_info_remote_configuration:
   VRPT_DICT_MAPPING_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/reference/vrpt_dictmap.json
   IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/reference/ihm-extension.dic
   MA_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/reference/mmcif_ma_ext.dic
+  IHM_DICT_LOCATOR: https://raw.githubusercontent.com/rcsb/py-rcsb_exdb_assets/master/dictionary_files/reference/mmcif_ihm_ext.dic
   ## Previously pointed to 'dictionary_files/reference', but point to authoritative source instead to ensure most recent version is used
   # IHMDEV_DICT_LOCATOR: https://raw.githubusercontent.com/ihmwg/IHM-dictionary/master/ihm-extension.dic
   # MA_DICT_LOCATOR: https://raw.githubusercontent.com/ihmwg/ModelCIF/master/dist/mmcif_ma_ext.dic
