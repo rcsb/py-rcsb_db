@@ -109,6 +109,21 @@ class DocumentDefinitionHelper(object):
             logger.debug("Collection %s failing with %s", collectionName, str(e))
         return sf
 
+    def getCollectionRequiredAttributes(self, collectionName, asTuple=True):
+        atRequiredD = {}
+        for cn, cDL in self.__cfgD["collection_required_attributes"].items():
+            if cn != collectionName:
+                continue
+            for cD in cDL:
+                catName = cD["CATEGORY_NAME"]
+                if "ATTRIBUTE_NAME_LIST" in cD:
+                    for atName in cD["ATTRIBUTE_NAME_LIST"]:
+                        if asTuple:
+                            atRequiredD[(catName, atName)] = collectionName
+                        else:
+                            atRequiredD.setdefault(catName, []).append(atName)
+        return atRequiredD
+
     def getDocumentExcludedAttributes(self, collectionName, asTuple=True):
         atExcludeD = {}
         for cn, cDL in self.__cfgD["collection_attribute_content_filters"].items():
