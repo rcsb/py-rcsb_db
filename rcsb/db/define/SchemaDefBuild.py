@@ -631,7 +631,9 @@ class SchemaDefBuild(object):
         docExcludeAttributes = documentDefHelper.getDocumentExcludedAttributes(collectionName)
         # JDW combine the schema and document excluded attributes here ...
         excludeAttributesD.update(docExcludeAttributes)
-
+        #
+        collectionRequiredAttributes = documentDefHelper.getCollectionRequiredAttributes(collectionName)
+        #
         sliceFilter = documentDefHelper.getSliceFilter(collectionName)
         sliceCategories = self.__contentInfo.getSliceCategories(sliceFilter) if sliceFilter else []
         sliceCategoryExtrasD = self.__contentInfo.getSliceCategoryExtrasForDatabase() if sliceFilter else {}
@@ -658,7 +660,7 @@ class SchemaDefBuild(object):
         for catName, fullAtNameList in dictSchema.items():
             atNameList = [at for at in fullAtNameList if (catName, at) not in excludeAttributesD]
             #
-
+            catAttrRequiredList = [(catName, at) for at in fullAtNameList if (catName, at) in collectionRequiredAttributes]
             #
             cfD = self.__contentInfo.getCategoryFeatures(catName)
             # logger.debug("catName %s contentClasses %r cfD %r" % (catName, contentClasses, cfD))
@@ -845,10 +847,16 @@ class SchemaDefBuild(object):
                     logger.info("CONFIG   - %s", atName)
                 #
                 schemaAttributeName = convertNameF(atName)
-                isRequired = ("mandatoryKeys" in enforceOpts and fD["IS_KEY"]) or ("mandatoryAttributes" in enforceOpts and fD["IS_MANDATORY"])
+                isRequired = (
+                    ("mandatoryKeys" in enforceOpts and fD["IS_KEY"])
+                    or ("mandatoryAttributes" in enforceOpts and fD["IS_MANDATORY"])
+                    or ((catName, atName) in catAttrRequiredList)
+                )
                 # subject to exclusion
                 if isRequired and (catName, atName) not in excludeAttributesD:
-                    pD.setdefault("required", []).append(schemaAttributeName)
+                    pD.setdefault("required", [])
+                    if schemaAttributeName not in pD["required"]:
+                        pD["required"].append(schemaAttributeName)
                 #
                 atPropD = self.__getJsonAttributeProperties(fD, dataTypingU, dtAppInfo, dtInstInfo, jsonSpecDraft, enforceOpts, suppressRelations, addRcsbExtensions)
 
