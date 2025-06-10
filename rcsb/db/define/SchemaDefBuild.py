@@ -705,8 +705,10 @@ class SchemaDefBuild(object):
                     mandatoryCategoryL.append(catName)
             #
             isUnitCard = True if ("UNIT_CARDINALITY" in cfD and cfD["UNIT_CARDINALITY"]) else False
-            if sliceFilter and sliceFilter in sliceCardD:
-                isUnitCard = catName in sliceCardD[sliceFilter]
+            if not isUnitCard:  # Don't overwrite if already True (especially needed for rcsb_latest_revision, but shouldn't affect anything else)
+                if sliceFilter and sliceFilter in sliceCardD:
+                    isUnitCard = catName in sliceCardD[sliceFilter]
+
             #
             pD = {typeKey: "object", "properties": {}, "additionalProperties": False}
             #
