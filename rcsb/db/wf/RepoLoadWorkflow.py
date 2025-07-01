@@ -464,7 +464,10 @@ class RepoLoadWorkflow(object):
         sublistSize = math.ceil(len(inputList) / nFiles)
 
         # Split the input list into n sublists
-        sublists = [inputList[i: i + sublistSize] for i in range(0, len(inputList), sublistSize)]
+        if sublistSize < 1:
+            sublists = []
+        else:
+            sublists = [inputList[i: i + sublistSize] for i in range(0, len(inputList), sublistSize)]
 
         # Write each sublist to a separate file
         filePathMappingD = {}
