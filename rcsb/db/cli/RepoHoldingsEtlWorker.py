@@ -87,14 +87,15 @@ class RepoHoldingsEtlWorker(object):
         [DEFAULT]
         RCSB_EXCHANGE_SANDBOX_PATH=MOCK_EXCHANGE_SANDBOX
 
-        [repository_holdings_configuration]
-        DATABASE_NAME=repository_holdings
-        DATABASE_VERSION_STRING=v5
-        COLLECTION_HOLDINGS_UPDATE=rcsb_repository_holdings_update_entry
-        COLLECTION_HOLDINGS_CURRENT=rcsb_repository_holdings_current_entry
-        COLLECTION_HOLDINGS_UNRELEASED=rcsb_repository_holdings_unreleased_entry
-        COLLECTION_HOLDINGS_REMOVED=rcsb_repository_holdings_removed_entry
-        COLLECTION_VERSION_STRING=v0_1
+        # (TO UPDATE IN ASSETS CONFIG AND MAKE USE OF HERE ONCE SCHEMA FILES ARE READY):
+        repository_holdings_configuration:
+          DATABASE_NAME: dw  # <-- ! MAIN ONE TO UPDATE !
+          DATABASE_VERSION_STRING: v5
+          COLLECTION_HOLDINGS_UPDATE: repository_holdings_update_entry
+          COLLECTION_HOLDINGS_CURRENT: repository_holdings_current_entry
+          COLLECTION_HOLDINGS_UNRELEASED: repository_holdings_unreleased_entry
+          COLLECTION_HOLDINGS_REMOVED: repository_holdings_removed_entry
+          COLLECTION_HOLDINGS_COMBINED: repository_holdings_combined_entry
 
         """
         try:
