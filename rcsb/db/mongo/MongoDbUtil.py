@@ -13,6 +13,7 @@
 #                       for method insertList()
 #       8-Jan-2021  jdw add distinct() method
 #      13-Aug-2024  dwp update reindex method for pymongo 4.x support
+#      15-Jul-2025  dwp add getCollectionIndexes method
 ##
 """
 Base class for simple essential database operations for MongoDb.
@@ -455,6 +456,21 @@ class MongoDbUtil(object):
         except Exception as e:
             logger.exception("Failing %s and %s with %s", databaseName, collectionName, str(e))
         return False
+
+    def getCollectionIndexes(self, databaseName, collectionName):
+        """
+        Return a list of index information dictionaries for the given collection.
+        """
+        try:
+            clt = self.__mgObj[databaseName].get_collection(collectionName)
+            indexList = list(clt.list_indexes())
+            if self.__verbose:
+                for idx in indexList:
+                    logger.debug("Index on %s.%s: %r", databaseName, collectionName, idx)
+            return indexList
+        except Exception as e:
+            logger.exception("Failed to retrieve indexes for %s.%s with error: %s", databaseName, collectionName, str(e))
+        return []
 
     def fetch(self, databaseName, collectionName, selectL, queryD=None, suppressId=False):
         """Fetch selections (selectL) from documents satisfying input

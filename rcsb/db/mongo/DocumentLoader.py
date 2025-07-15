@@ -7,6 +7,7 @@
 # Updates:
 #  13-July-2018 jdw add append mode
 #  14-Aug-2018  jdw generalize key identifiers to lists
+#  15-Jul-2025  dwp add ability to provide a dictionary of fields to index and their desired corresponding names
 ##
 """
 Worker methods for loading document sets into MongoDb.
@@ -65,7 +66,7 @@ class DocumentLoader(object):
         #
         #
 
-    def load(self, databaseName, collectionName, loadType="full", documentList=None, indexAttributeList=None, keyNames=None, schemaLevel="full", addValues=None):
+    def load(self, databaseName, collectionName, loadType="full", documentList=None, indexAttributeList=None, keyNames=None, schemaLevel="full", addValues=None, indexAttributeDict=None):
         """Driver method for loading MongoDb content -
 
 
@@ -101,6 +102,7 @@ class DocumentLoader(object):
 
             #
             indAtList = indexAttributeList if indexAttributeList else []
+            indAtDict = {k: v for k, v in indexAttributeDict.items()} if indexAttributeDict else {}
             bsonSchema = None
             if schemaLevel and schemaLevel in ["min", "full"]:
                 bsonSchema = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="BSON", level=schemaLevel)
@@ -108,11 +110,11 @@ class DocumentLoader(object):
 
             if loadType == "full":
                 self.__removeCollection(databaseName, collectionName)
-                ok = self.__createCollection(databaseName, collectionName, indAtList, bsonSchema=bsonSchema)
+                ok = self.__createCollection(databaseName, collectionName, indexAttributeNames=indAtList, bsonSchema=bsonSchema, indexAttributeDict=indAtDict)
                 logger.info("Collection %s create status %r", collectionName, ok)
             elif loadType == "append":
                 # create only if object does not exist -
-                ok = self.__createCollection(databaseName, collectionName, indexAttributeNames=indAtList, checkExists=True, bsonSchema=bsonSchema)
+                ok = self.__createCollection(databaseName, collectionName, indexAttributeNames=indAtList, checkExists=True, bsonSchema=bsonSchema, indexAttributeDict=indAtDict)
                 logger.debug("Collection %s create status %r", collectionName, ok)
                 # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             numDocs = len(docList)
@@ -202,8 +204,21 @@ class DocumentLoader(object):
         delta = endTime - startTime
         logger.debug("Completed %s at %s (%.4f seconds)", message, ts, delta)
 
-    def __createCollection(self, dbName, collectionName, indexAttributeNames=None, checkExists=False, bsonSchema=None):
-        """Create database and collection and optionally a primary index -"""
+    def __createCollection(self, dbName, collectionName, indexAttributeNames=None, checkExists=False, bsonSchema=None, indexAttributeDict=None):
+        """Create database and collection and optionally a primary index
+
+        Args:
+            dbName (str): Database name
+            collectionName (str): Collection name
+            indexAttributeNames (list, optional): List of attributes/fields to create a COMPOUND index on with name "primary". Defaults to None.
+            checkExists (bool, optional): _description_. Defaults to False.
+            bsonSchema (_type_, optional): _description_. Defaults to None.
+            indexAttributeDict (dict, optional): Dictionary of attributes/fields (keys) and desired index name (value). Use this INSTEAD OF indexAttributeNames. Defaults to None.
+                                                 For a compound index, make the key a tuple.
+
+        Returns:
+            bool: True if success; False otherwise
+        """
         try:
             logger.debug("Create database %s collection %s", dbName, collectionName)
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
@@ -215,9 +230,16 @@ class DocumentLoader(object):
                 ok2 = mg.databaseExists(dbName)
                 ok3 = mg.collectionExists(dbName, collectionName)
                 okI = True
+                if indexAttributeNames and indexAttributeDict:
+                    raise ValueError("Cannot provide both indexAttributeNames and indexAttributeDict in collection creation - must provide one or the other")
                 if indexAttributeNames:
                     okI = mg.createIndex(dbName, collectionName, indexAttributeNames, indexName="primary", indexType="DESCENDING", uniqueFlag=False)
-
+                if indexAttributeDict:
+                    for indexAttr, indexName in indexAttributeDict.items():
+                        if isinstance(indexAttr, tuple):
+                            okI = mg.createIndex(dbName, collectionName, [ia for ia in indexAttr], indexName=indexName, indexType="DESCENDING", uniqueFlag=False) and okI
+                        else:
+                            okI = mg.createIndex(dbName, collectionName, [indexAttr], indexName=indexName, indexType="DESCENDING", uniqueFlag=False) and okI
             return ok1 and ok2 and ok3 and okI
             #
         except Exception as e:
