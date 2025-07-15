@@ -66,7 +66,7 @@ class DocumentLoader(object):
         #
         #
 
-    def load(self, databaseName, collectionName, loadType="full", documentList=None, indexAttributeList=None, keyNames=None, schemaLevel="full", addValues=None, indexAttributeDict=None):
+    def load(self, databaseName, collectionName, loadType="full", documentList=None, indexAttributeList=None, keyNames=None, schemaLevel="full", addValues=None, indexDL=None):
         """Driver method for loading MongoDb content -
 
 
@@ -102,7 +102,7 @@ class DocumentLoader(object):
 
             #
             indAtList = indexAttributeList if indexAttributeList else []
-            indAtDict = {k: v for k, v in indexAttributeDict.items()} if indexAttributeDict else {}
+            indAtDictList = indexDL if indexDL else []
             bsonSchema = None
             if schemaLevel and schemaLevel in ["min", "full"]:
                 bsonSchema = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="BSON", level=schemaLevel)
@@ -110,11 +110,11 @@ class DocumentLoader(object):
 
             if loadType == "full":
                 self.__removeCollection(databaseName, collectionName)
-                ok = self.__createCollection(databaseName, collectionName, indexAttributeNames=indAtList, bsonSchema=bsonSchema, indexAttributeDict=indAtDict)
+                ok = self.__createCollection(databaseName, collectionName, indexAttributeNames=indAtList, bsonSchema=bsonSchema, indexDL=indAtDictList)
                 logger.info("Collection %s create status %r", collectionName, ok)
             elif loadType == "append":
                 # create only if object does not exist -
-                ok = self.__createCollection(databaseName, collectionName, indexAttributeNames=indAtList, checkExists=True, bsonSchema=bsonSchema, indexAttributeDict=indAtDict)
+                ok = self.__createCollection(databaseName, collectionName, indexAttributeNames=indAtList, checkExists=True, bsonSchema=bsonSchema, indexDL=indAtDictList)
                 logger.debug("Collection %s create status %r", collectionName, ok)
                 # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             numDocs = len(docList)
@@ -204,7 +204,7 @@ class DocumentLoader(object):
         delta = endTime - startTime
         logger.debug("Completed %s at %s (%.4f seconds)", message, ts, delta)
 
-    def __createCollection(self, dbName, collectionName, indexAttributeNames=None, checkExists=False, bsonSchema=None, indexAttributeDict=None):
+    def __createCollection(self, dbName, collectionName, indexAttributeNames=None, checkExists=False, bsonSchema=None, indexDL=None):
         """Create database and collection and optionally a primary index
 
         Args:
@@ -213,8 +213,8 @@ class DocumentLoader(object):
             indexAttributeNames (list, optional): List of attributes/fields to create a COMPOUND index on with name "primary". Defaults to None.
             checkExists (bool, optional): _description_. Defaults to False.
             bsonSchema (_type_, optional): _description_. Defaults to None.
-            indexAttributeDict (dict, optional): Dictionary of attributes/fields (keys) and desired index name (value). Use this INSTEAD OF indexAttributeNames. Defaults to None.
-                                                 For a compound index, make the key a tuple.
+            indexDL (list, optional): List of dictionaries containing attributes/fields to index and desired index name. Use this INSTEAD OF indexAttributeNames. Defaults to None.
+                                      Structure looks like: [{"ATTRIBUTE_NAMES": ["rcsb_id"], "INDEX_NAME": "index_1"}], where ATTRIBUTE_NAMES can be a list > 1 for a compound index.
 
         Returns:
             bool: True if success; False otherwise
@@ -230,16 +230,13 @@ class DocumentLoader(object):
                 ok2 = mg.databaseExists(dbName)
                 ok3 = mg.collectionExists(dbName, collectionName)
                 okI = True
-                if indexAttributeNames and indexAttributeDict:
-                    raise ValueError("Cannot provide both indexAttributeNames and indexAttributeDict in collection creation - must provide one or the other")
+                if indexAttributeNames and indexDL:
+                    raise ValueError("Cannot provide both indexAttributeNames and indexDL in collection creation - must provide one or the other")
                 if indexAttributeNames:
                     okI = mg.createIndex(dbName, collectionName, indexAttributeNames, indexName="primary", indexType="DESCENDING", uniqueFlag=False)
-                if indexAttributeDict:
-                    for indexAttr, indexName in indexAttributeDict.items():
-                        if isinstance(indexAttr, tuple):
-                            okI = mg.createIndex(dbName, collectionName, [ia for ia in indexAttr], indexName=indexName, indexType="DESCENDING", uniqueFlag=False) and okI
-                        else:
-                            okI = mg.createIndex(dbName, collectionName, [indexAttr], indexName=indexName, indexType="DESCENDING", uniqueFlag=False) and okI
+                if indexDL:
+                    for indexD in indexDL:
+                        okI = mg.createIndex(dbName, collectionName, indexD["ATTRIBUTE_NAMES"], indexName=indexD["INDEX_NAME"], indexType="DESCENDING", uniqueFlag=False) and okI
             return ok1 and ok2 and ok3 and okI
             #
         except Exception as e:

@@ -81,8 +81,17 @@ class DocumentLoaderTests(unittest.TestCase):
                 verbose=True,
                 readBackCheck=False,
             )
-            indAtDict = {"id": "index_1", "parents": "index_2"}
-            ok = dl.load(self.__dbName, self.__collectionName, loadType="full", documentList=self.__testDocs, schemaLevel=None, indexAttributeDict=indAtDict)
+            indAtDictList = [
+                {
+                    "ATTRIBUTE_NAMES": ["id"],
+                    "INDEX_NAME": "index_1"
+                },
+                {
+                    "ATTRIBUTE_NAMES": ["parents"],
+                    "INDEX_NAME": "index_2"
+                }
+            ]
+            ok = dl.load(self.__dbName, self.__collectionName, loadType="full", documentList=self.__testDocs, schemaLevel=None, indexDL=indAtDictList)
             logger.info("Document loader status %r", ok)
             self.assertTrue(ok)
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
