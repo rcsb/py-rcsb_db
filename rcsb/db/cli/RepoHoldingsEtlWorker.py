@@ -13,6 +13,9 @@
 #  16-Oct-2024 dwp Remove usage of EDMAPS holdings file
 #  18-Feb-2025 dwp Add support for IHM repository holdings file loading;
 #                  Change indexed field to be 'rcsb_id'
+#  15-Jul-2025 dwp Adjust loader to load holdings data to DW repository_holdings collections;
+#                  Turn off loading of repository_holdings_update_entry (since not used by anything downstream);
+#                  Use indexes defined in py-rcsb_exdb_assets schemas and configuration
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -87,14 +90,15 @@ class RepoHoldingsEtlWorker(object):
         [DEFAULT]
         RCSB_EXCHANGE_SANDBOX_PATH=MOCK_EXCHANGE_SANDBOX
 
-        [repository_holdings_configuration]
-        DATABASE_NAME=repository_holdings
-        DATABASE_VERSION_STRING=v5
-        COLLECTION_HOLDINGS_UPDATE=rcsb_repository_holdings_update_entry
-        COLLECTION_HOLDINGS_CURRENT=rcsb_repository_holdings_current_entry
-        COLLECTION_HOLDINGS_UNRELEASED=rcsb_repository_holdings_unreleased_entry
-        COLLECTION_HOLDINGS_REMOVED=rcsb_repository_holdings_removed_entry
-        COLLECTION_VERSION_STRING=v0_1
+        # (TO UPDATE IN ASSETS CONFIG AND MAKE USE OF HERE ONCE SCHEMA FILES ARE READY):
+        repository_holdings_configuration:
+          DATABASE_NAME: dw  # <-- ! MAIN ONE TO UPDATE !
+          DATABASE_VERSION_STRING: v5
+          COLLECTION_HOLDINGS_UPDATE: repository_holdings_update_entry
+          COLLECTION_HOLDINGS_CURRENT: repository_holdings_current_entry
+          COLLECTION_HOLDINGS_UNRELEASED: repository_holdings_unreleased_entry
+          COLLECTION_HOLDINGS_REMOVED: repository_holdings_removed_entry
+          COLLECTION_HOLDINGS_COMBINED: repository_holdings_combined_entry
 
         """
         try:
@@ -132,9 +136,40 @@ class RepoHoldingsEtlWorker(object):
                 readBackCheck=self.__readBackCheck,
             )
             # Index attribute list
-            # Currently set to "rcsb_id" since this is used by pdbx_loader_check, and correct schema-based index is set in DW anyway;
-            # but, should eventually be changed to use schema-based index names, as done in PdbxLoader.__createCollection (but DocumentLoader.__createCollection works differently)
-            indexAttributeList = ["rcsb_id"]
+            # Currently set to "rcsb_id" and "rcsb_repository_holdings_XXX_entry_container_identifiers.entry_id"
+            # since this is used by pdbx_loader_check, and correct schema-based index is set in DW anyway;
+            # BUT, should eventually be changed to use schema-based index names, as done in PdbxLoader.__createCollection (but DocumentLoader.__createCollection works differently)
+            # --> this would be done by adding a section for each collection under 'collection_indices', and regenerating those JSON schemas for those collections
+            indAtBase = {"ATTRIBUTE_NAMES": ["rcsb_id"], "INDEX_NAME": "index_1"}
+            #
+            indAtListCurrent = [
+                indAtBase,
+                {
+                    "ATTRIBUTE_NAMES": ["rcsb_repository_holdings_current_entry_container_identifiers.entry_id"],
+                    "INDEX_NAME": "index_2"
+                }
+            ]
+            indAtListUnreleased = [
+                indAtBase,
+                {
+                    "ATTRIBUTE_NAMES": ["rcsb_repository_holdings_unreleased_entry_container_identifiers.entry_id"],
+                    "INDEX_NAME": "index_2"
+                }
+            ]
+            indAtListRemoved = [
+                indAtBase,
+                {
+                    "ATTRIBUTE_NAMES": ["rcsb_repository_holdings_removed_entry_container_identifiers.entry_id"],
+                    "INDEX_NAME": "index_2"
+                }
+            ]
+            indAtListCombined = [
+                indAtBase,
+                {
+                    "ATTRIBUTE_NAMES": ["rcsb_repository_holdings_combined_entry_container_identifiers.entry_id"],
+                    "INDEX_NAME": "index_2"
+                }
+            ]
             #
             sectionName = "repository_holdings_configuration"
             databaseName = self.__cfgOb.get("DATABASE_NAME", sectionName=sectionName)
@@ -142,40 +177,46 @@ class RepoHoldingsEtlWorker(object):
             # addValues = {"_schema_version": collectionVersion}
             addValues = None
             #
-            if repoType == "pdb_ihm":
-                logger.info("Skipping load of update repository holdings for repoType %r", repoType)
-                ok1 = True
-            else:
-                dList = rhdp.getHoldingsUpdateEntry(updateId=updateId)
-                collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UPDATE", sectionName=sectionName)
-                ok1 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=indexAttributeList, keyNames=None, addValues=addValues)
-                self.__updateStatus(updateId, databaseName, collectionName, ok1, statusStartTimestamp)
-            #
+            # Load repository_holdings CURRENT
             dList = rhdp.getHoldingsCurrentEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_CURRENT", sectionName=sectionName)
-            ok2 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=indexAttributeList, keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok2, statusStartTimestamp)
+            ok1 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, keyNames=None, addValues=addValues, indexDL=indAtListCurrent)
+            self.__updateStatus(updateId, databaseName, collectionName, ok1, statusStartTimestamp)
 
+            # Load repository_holdings UNRELEASED
             dList = rhdp.getHoldingsUnreleasedEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UNRELEASED", sectionName=sectionName)
-            ok3 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=indexAttributeList, keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok3, statusStartTimestamp)
+            ok2 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, keyNames=None, addValues=addValues, indexDL=indAtListUnreleased)
+            self.__updateStatus(updateId, databaseName, collectionName, ok2, statusStartTimestamp)
             #
+            # Load repository_holdings REMOVED
             if repoType == "pdb_ihm":
                 logger.info("Skipping load of removed repository holdings for repoType %r", repoType)
-                ok4 = True
+                ok3 = True
             else:
                 dList = rhdp.getHoldingsRemovedEntry(updateId=updateId)
                 collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_REMOVED", sectionName=sectionName)
-                ok4 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=indexAttributeList, keyNames=None, addValues=addValues)
-                self.__updateStatus(updateId, databaseName, collectionName, ok4, statusStartTimestamp)
+                ok3 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, keyNames=None, addValues=addValues, indexDL=indAtListRemoved)
+                self.__updateStatus(updateId, databaseName, collectionName, ok3, statusStartTimestamp)
             #
+            # Load repository_holdings COMBINED
             dList = rhdp.getHoldingsCombinedEntry(updateId=updateId)
             collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_COMBINED", sectionName=sectionName)
-            ok5 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=indexAttributeList, keyNames=None, addValues=addValues)
-            self.__updateStatus(updateId, databaseName, collectionName, ok5, statusStartTimestamp)
+            ok4 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, keyNames=None, addValues=addValues, indexDL=indAtListCombined)
+            self.__updateStatus(updateId, databaseName, collectionName, ok4, statusStartTimestamp)
             #
-            ok = ok1 and ok2 and ok3 and ok4 and ok5
+            # # Load repository_holdings UPDATE - TURNED OFF 15-JUL-2025 for transition to DW loading (since not used by anything)
+            # if repoType == "pdb_ihm":
+            #     logger.info("Skipping load of update repository holdings for repoType %r", repoType)
+            #     ok5 = True
+            # else:
+            #     dList = rhdp.getHoldingsUpdateEntry(updateId=updateId)
+            #     collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UPDATE", sectionName=sectionName)
+            #     ok5 = dl.load(databaseName, collectionName, loadType=loadType, documentList=dList, indexAttributeList=["rcsb_id"], keyNames=None, addValues=addValues)
+            #     self.__updateStatus(updateId, databaseName, collectionName, ok5, statusStartTimestamp)
+            #
+            # ok = ok1 and ok2 and ok3 and ok4 and ok5
+            ok = ok1 and ok2 and ok3 and ok4
             logger.info("Completed load of repository holdings for repoType %r, loadType %r (status %r)", repoType, loadType, ok)
             return ok
         except Exception as e:

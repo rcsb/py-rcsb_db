@@ -461,6 +461,7 @@ class MongoDbUtil(object):
         """
         Return a list of index information dictionaries for the given collection.
         """
+        indexList = []
         try:
             clt = self.__mgObj[databaseName].get_collection(collectionName)
             indexList = list(clt.list_indexes())
@@ -468,6 +469,12 @@ class MongoDbUtil(object):
                 for idx in indexList:
                     logger.debug("Index on %s.%s: %r", databaseName, collectionName, idx)
             return indexList
+            # Return list looks like:
+            # [
+            #     SON([('v', 2), ('key', SON([('_id', 1)])), ('name', '_id_')]),
+            #     SON([('v', 2), ('key', SON([('id', -1)])), ('name', 'index_1'), ('background', True)]),
+            #     SON([('v', 2), ('key', SON([('parents', -1)])), ('name', 'index_2'), ('background', True)])
+            # ]
         except Exception as e:
             logger.exception("Failed to retrieve indexes for %s.%s with error: %s", databaseName, collectionName, str(e))
         return []
