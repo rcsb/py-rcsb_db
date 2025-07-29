@@ -419,13 +419,11 @@ class RepoLoadWorkflow(object):
             else:
                 timeStamp = value
 
-            # experimental models are stored with lower case while csms are stored with upper case (except content type)
             hashPath = None
+            pdbid = key.lower()
             if databaseName == "pdbx_core":
-                pdbid = key.lower()
                 hashPath = self.getPdbHash(pdbid)
             elif databaseName == "pdbx_comp_model_core":
-                pdbid = key.upper()
                 if modelPath:
                     hashPath = os.path.dirname(modelPath)
                 else:
