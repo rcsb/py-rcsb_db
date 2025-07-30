@@ -84,7 +84,8 @@ class DocumentLoaderTests(unittest.TestCase):
             indAtDictList = [
                 {
                     "ATTRIBUTE_NAMES": ["id"],
-                    "INDEX_NAME": "index_1"
+                    "INDEX_NAME": "index_1",
+                    "UNIQUE": True
                 },
                 {
                     "ATTRIBUTE_NAMES": ["parents"],

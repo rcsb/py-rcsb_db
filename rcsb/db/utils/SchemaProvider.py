@@ -327,8 +327,8 @@ class SchemaProvider(SingletonClass):
             filePath = os.path.join(self.__schemaCachePath, self.__fileU.getFileName(schemaLocator))
             self.makeSchema(schemaGroupName, collectionName, encodingType=encodingType, level=level, extraOpts=extraOpts)
         else:
-            logger.info("Reload schema filePath: %r", filePath)
             filePath = self.__reload(schemaLocator, self.__jsonSchemaCachePath, useCache=self.__useCache)
+            logger.info("Reloaded schema filePath: %r", filePath)
         mU = MarshalUtil(workPath=self.__workPath)
         if filePath and mU.exists(filePath):
             mU = MarshalUtil(workPath=self.__workPath)
@@ -366,6 +366,7 @@ class SchemaProvider(SingletonClass):
                 mU.doExport(localPath, cD, fmt="json", indent=3, enforceAscii=False)
         except Exception as e:
             logger.exception("Building schema %s collection %s failing with %s", schemaGroupName, collectionName, str(e))
+            raise
         return cD
 
     def makeSchemaDef(self, schemaGroupName, dataTyping="ANY", saveSchema=False):

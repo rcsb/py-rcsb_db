@@ -238,7 +238,8 @@ class DocumentLoader(object):
                     okI = mg.createIndex(dbName, collectionName, indexAttributeNames, indexName="primary", indexType="DESCENDING", uniqueFlag=False)
                 if indexDL:
                     for indexD in indexDL:
-                        okI = mg.createIndex(dbName, collectionName, indexD["ATTRIBUTE_NAMES"], indexName=indexD["INDEX_NAME"], indexType=indexType, uniqueFlag=False) and okI
+                        uniqueFlag = indexD.get("UNIQUE", False)
+                        okI = mg.createIndex(dbName, collectionName, indexD["ATTRIBUTE_NAMES"], indexName=indexD["INDEX_NAME"], indexType=indexType, uniqueFlag=uniqueFlag) and okI
             return ok1 and ok2 and ok3 and okI
             #
         except Exception as e:
