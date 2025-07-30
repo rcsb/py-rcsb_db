@@ -254,8 +254,8 @@ class DocumentDefinitionHelper(object):
         Example:
 
             collection_iterable_attribute_metadata:
-                drugbank_core:
-                    - ATTRIBUTE_NAME: drugbank_info.drug_groups
+                core_drugbank:
+                  - ATTRIBUTE_NAME: drugbank_info.drug_groups
                     MIN_ITEMS: 1
                     UNIQUE_ITEMS: TRUE
         """
