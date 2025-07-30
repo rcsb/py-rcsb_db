@@ -39,6 +39,7 @@ def main():
     parser.add_argument("--update_chem_comp_core_ref", default=False, action="store_true", help="Update core schema for Chemical Component reference definitions")
     parser.add_argument("--update_bird_chem_comp_ref", default=False, action="store_true", help="Update schema for Bird Chemical Component reference definitions")
     parser.add_argument("--update_bird_chem_comp_core_ref", default=False, action="store_true", help="Update core schema for Bird Chemical Component reference definitions")
+    parser.add_argument("--update_core_chem_comp_ref", default=False, action="store_true", help="Update core schema for Bird Chemical Component reference definitions")
 
     parser.add_argument("--update_bird_ref", default=False, action="store_true", help="Update schema for Bird reference definitions")
     parser.add_argument("--update_bird_family_ref", default=False, action="store_true", help="Update schema for Bird Family reference definitions")
@@ -51,7 +52,7 @@ def main():
     parser.add_argument("--update_entity_sequence_clusters", default=False, action="store_true", help="Update schema for entity sequence clusters")
     parser.add_argument("--update_data_exchange", default=False, action="store_true", help="Update schema for data exchange status")
     parser.add_argument("--update_ihm_dev", default=False, action="store_true", help="Update schema for I/HM dev entry data")
-    parser.add_argument("--update_drugbank_core", default=False, action="store_true", help="Update DrugBank schema")
+    parser.add_argument("--update_core_drugbank", default=False, action="store_true", help="Update DrugBank schema")
     #
     parser.add_argument("--update_config_all", default=False, action="store_true", help="Update using configuration settings (e.g. DATABASE_NAMES_ALL)")
     parser.add_argument("--update_config_deployed", default=False, action="store_true", help="Update using configuration settings (e.g. DATABASE_NAMES_DEPLOYED)")
@@ -114,6 +115,9 @@ def main():
     if args.update_bird_chem_comp_core_ref:
         databaseNameList.append("bird_chem_comp_core")
 
+    if args.update_core_chem_comp_ref:
+        databaseNameList.append("core_chem_comp")
+
     if args.update_bird_ref:
         databaseNameList.append("bird")
 
@@ -141,8 +145,8 @@ def main():
     if args.update_ihm_dev:
         databaseNameList.append("ihm_dev")
 
-    if args.update_drugbank_core:
-        databaseNameList.append("drugbank_core")
+    if args.update_core_drugbank:
+        databaseNameList.append("core_drugbank")
 
     if args.update_config_deployed:
         databaseNameList = cfgOb.getList("DATABASE_NAMES_DEPLOYED", sectionName="database_catalog_configuration")

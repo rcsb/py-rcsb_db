@@ -43,6 +43,7 @@
 #      9-May-2024 dwp  Change providerTypeExclude to be a list, 'providerTypeExcludeL'
 #     10-Sep-2024 dwp  Add method for checking number of nonpolymer entity instances with validation data
 #      7-Apr-2025 dwp  Add support for IHM model loading
+#     30-Jul-2025 dwp  Replace redundant methods with those from DocumentLoader (createCollection, removeCollection, getKeyValues)
 ##
 """
 Worker methods for loading primary data content following mapping conventions in external schema definitions.
@@ -71,6 +72,7 @@ from rcsb.utils.dictionary.DictionaryApiProviderWrapper import DictionaryApiProv
 from rcsb.utils.dictionary.DictMethodResourceProvider import DictMethodResourceProvider
 from rcsb.db.mongo.Connection import Connection
 from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
+from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
 from rcsb.db.processors.DataTransformFactory import DataTransformFactory
 from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
@@ -133,6 +135,19 @@ class PdbxLoader(object):
         #
         self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath, useCache=self.__useSchemaCache, rebuildFlag=self.__rebuildSchemaFlag)
         self.__rpP = RepositoryProvider(cfgOb=self.__cfgOb, numProc=self.__numProc, fileLimit=self.__fileLimit, cachePath=self.__cachePath)
+        self.__dL = DocumentLoader(
+            self.__cfgOb,
+            self.__cachePath,
+            resourceName=self.__resourceName,
+            numProc=self.__numProc,
+            chunkSize=self.__chunkSize,
+            documentLimit=self.__fileLimit,
+            verbose=self.__verbose,
+            readBackCheck=self.__readBackCheck,
+            maxStepLength=self.__maxStepLength,
+            schemaRebuildFlag=False,  # If self.__rebuildSchemaFlag is True, would have already run in SchemaProvider instantiation above
+        )
+
         #
         self.__statusList = []
         #
@@ -170,7 +185,7 @@ class PdbxLoader(object):
         """Driver method for loading PDBx/mmCIF content into the Mongo document store.
 
         Args:
-            databaseName (str): A content datbase schema (e.g. 'bird','bird_family','bird_chem_comp', chem_comp', 'pdbx', 'pdbx_core')
+            databaseName (str): A content database schema (e.g. 'bird','bird_family','bird_chem_comp', chem_comp', 'pdbx', 'pdbx_core')
             collectionLoadList (list, optional): list of collection names in this schema to load (default is load all collections)
             loadType (str, optional): mode of loading 'full' (bulk delete then bulk insert) or 'replace'
             contentType (str, optional): content type to load ('pdbx_core', 'pdbx_comp_model_core', 'pdbx_ihm'). Defaults to databaseName.
@@ -298,6 +313,9 @@ class PdbxLoader(object):
             chunkSize = self.__chunkSize if locatorObjList and self.__chunkSize < len(locatorObjList) else 0
             #
             sd, _, fullCollectionNameList, docIndexD = self.__schP.getSchemaInfo(databaseName, dataTyping="ANY")
+            # databaseNameMongo = self.getDatabaseMongoName(databaseName)
+            # BUT ABOVE RELIES ON 'ANY' SCHEMA FILE TO GET INDICES...which i don't think will be possible with our diverging schemas per ExDB DB...
+            # ...well, it "is" possible, but filename will remain 'schema_def-repository-holdings-ANY.json' (no '-dw-')
             collectionNameList = collectionLoadList if collectionLoadList else fullCollectionNameList
 
             # Move "entry" collection to the end of the list so that if it fails midload, we can determine which entities/assemblies/etc. need reloading based on entry collection
@@ -309,12 +327,13 @@ class PdbxLoader(object):
 
             for collectionName in collectionNameList:
                 if loadType == "full":
-                    self.__removeCollection(databaseName, collectionName)
+                    self.__dL.removeCollection(databaseName, collectionName)
                     indexDL = docIndexD[collectionName] if collectionName in docIndexD else []
                     bsonSchema = None
                     if validationLevel and validationLevel in ["min", "full"]:
                         bsonSchema = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="BSON", level=validationLevel)
-                    ok = self.__createCollection(databaseName, collectionName, indexDL=indexDL, bsonSchema=bsonSchema)
+                    # ok = self.__createCollection(databaseName, collectionName, indexDL=indexDL, bsonSchema=bsonSchema)
+                    ok = self.__dL.createCollection(databaseName, collectionName, indexDL=indexDL, bsonSchema=bsonSchema)
                     logger.debug("Collection create return status %r", ok)
                 elif loadType == "replace" and updateSchemaOnReplace:
                     bsonSchema = None
@@ -579,7 +598,7 @@ class PdbxLoader(object):
                 indexDoc = {}
                 try:
                     for dD, cId in zip(dList, containerIdList):
-                        dIdTup = self.__getKeyValues(dD, docIdL)
+                        dIdTup = self.__dL.getKeyValues(dD, docIdL)
                         indexDoc[dIdTup] = cId
                 except Exception as e:
                     logger.exception("Failing cN %r  dD %r with %s", cId, dD, str(e))
@@ -594,7 +613,7 @@ class PdbxLoader(object):
                     logger.info("Initial load failures: %r", failDocIdS)
                     fList = []
                     for dD in dList:
-                        tId = self.__getKeyValues(dD, docIdL)
+                        tId = self.__dL.getKeyValues(dD, docIdL)
                         if tId in failDocIdS:
                             fList.append(dD)
                             if validateFailures:
@@ -687,7 +706,7 @@ class PdbxLoader(object):
         filterArtifactErrors = True
         valInfo = Draft4Validator(cD, format_checker=FormatChecker())
         for ii, dD in enumerate(dList):
-            cN = self.__getKeyValues(dD, docIdL)
+            cN = self.__dL.getKeyValues(dD, docIdL)
             logger.info("Checking %r with schema %s collection %s document (%d)", cN, databaseName, collectionName, ii + 1)
             updL = []
             try:
@@ -741,7 +760,7 @@ class PdbxLoader(object):
         valInfo = Draft4Validator(cD, format_checker=FormatChecker())
         logger.info("Validating %d documents from %s %s", len(dList), databaseName, collectionName)
         for ii, dD in enumerate(dList):
-            cN = self.__getKeyValues(dD, docIdL)
+            cN = self.__dL.getKeyValues(dD, docIdL)
             logger.info("Checking with schema %s collection %s document (%d) %r", databaseName, collectionName, ii + 1, cN)
             try:
                 cCount = 0
@@ -767,7 +786,7 @@ class PdbxLoader(object):
         thresholdMB = 15.8
         # thresholdMB = 5.0
         for tD in dList:
-            cN = self.__getKeyValues(tD, docIdL)
+            cN = self.__dL.getKeyValues(tD, docIdL)
             # documentMegaBytes = float(sys.getsizeof(pickle.dumps(tD, protocol=0))) / 1000000.0
             documentMegaBytes = float(sys.getsizeof(bson.BSON.encode(tD))) / 1000000.0
             logger.debug("%s Document %s %.4f MB", procName, cN, documentMegaBytes)
@@ -826,26 +845,6 @@ class PdbxLoader(object):
         delta = endTime - startTime
         logger.debug("Completed %s at %s (%.4f seconds)", message, ts, delta)
 
-    def __createCollection(self, databaseName, collectionName, indexDL=None, bsonSchema=None):
-        """Create database and collection and optionally a set of indices -"""
-        try:
-            logger.debug("Create database %s collection %s", databaseName, collectionName)
-            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
-                mg = MongoDbUtil(client)
-                ok1 = mg.createCollection(databaseName, collectionName, bsonSchema=bsonSchema)
-                ok2 = mg.databaseExists(databaseName)
-                ok3 = mg.collectionExists(databaseName, collectionName)
-                okI = True
-                if indexDL:
-                    for indexD in indexDL:
-                        okI = mg.createIndex(databaseName, collectionName, indexD["ATTRIBUTE_NAMES"], indexName=indexD["INDEX_NAME"], indexType="DESCENDING", uniqueFlag=False)
-
-            return ok1 and ok2 and ok3 and okI
-            #
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-        return False
-
     def __updateCollectionSchema(self, databaseName, collectionName, bsonSchema=None, validationLevel="strict", validationAction="error"):
         """Update validation schema for the input collection -"""
         try:
@@ -860,25 +859,6 @@ class PdbxLoader(object):
                     logger.info("Updated %r %r validation schema", databaseName, collectionName)
             return ok1 and ok2 and ok3
             #
-        except Exception as e:
-            logger.exception("Failing with %s", str(e))
-        return False
-
-    def __removeCollection(self, databaseName, collectionName):
-        """Drop collection within database"""
-        try:
-            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
-                mg = MongoDbUtil(client)
-                #
-                logger.debug("Remove collection database %s collection %s", databaseName, collectionName)
-                logger.debug("Starting databases = %r", mg.getDatabaseNames())
-                logger.debug("Starting collections = %r", mg.getCollectionNames(databaseName))
-                ok = mg.dropCollection(databaseName, collectionName)
-                logger.debug("Databases = %r", mg.getDatabaseNames())
-                logger.debug("Post drop collections = %r", mg.getCollectionNames(databaseName))
-                ok = mg.collectionExists(databaseName, collectionName)
-                logger.debug("Post drop collections = %r", mg.getCollectionNames(databaseName))
-            return ok
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return False
@@ -976,7 +956,7 @@ class PdbxLoader(object):
         rIdL = []
 
         logger.debug("databaseName %s collectionName %s docIdL %r", databaseName, collectionName, docIdL)
-        inputDocIdS = {self.__getKeyValues(dD, docIdL) for dD in dList}
+        inputDocIdS = {self.__dL.getKeyValues(dD, docIdL) for dD in dList}
         failDocIdS = set()
         successDocIdS = set()
 
@@ -1000,7 +980,7 @@ class PdbxLoader(object):
                     try:
                         for rId in rIdL:
                             rObj = mg.fetchOne(databaseName, collectionName, "_id", rId)
-                            dIdTup = self.__getKeyValues(rObj, docIdL)
+                            dIdTup = self.__dL.getKeyValues(rObj, docIdL)
                             sIdS.add(dIdTup)
                     except Exception as e:
                         logger.exception("Failing with %s", str(e))
@@ -1013,7 +993,7 @@ class PdbxLoader(object):
                     indD = {}
                     try:
                         for ii, dD in enumerate(dList):
-                            dIdTup = self.__getKeyValues(dD, docIdL)
+                            dIdTup = self.__dL.getKeyValues(dD, docIdL)
                             indD[dIdTup] = ii
                     except Exception as e:
                         logger.exception("Failing ii %d d %r with %s", ii, dD, str(e))
@@ -1024,7 +1004,7 @@ class PdbxLoader(object):
                     rbStatus = True
                     for ii, rId in enumerate(rIdL):
                         rObj = mg.fetchOne(databaseName, collectionName, "_id", rId)
-                        dIdTup = self.__getKeyValues(rObj, docIdL)
+                        dIdTup = self.__dL.getKeyValues(rObj, docIdL)
                         jj = indD[dIdTup]
                         if rObj != dList[jj]:
                             rbStatus = False
@@ -1038,42 +1018,6 @@ class PdbxLoader(object):
             logger.exception("Failing with %s", str(e))
 
         return False, [], inputDocIdS
-
-    def __getKeyValues(self, dct, keyNames):
-        """Return the tuple of values corresponding to the input dictionary of key names expressed in dot notation.
-
-        Args:
-            dct (dict): source dictionary object (nested)
-            keyNames (list): list of dictionary keys in dot notation
-
-        Returns:
-            tuple: tuple of values corresponding to the input key names
-
-        """
-        rL = []
-        try:
-            for keyName in keyNames:
-                rL.append(self.__getKeyValue(dct, keyName))
-        except Exception as e:
-            logger.exception("Failing for key names %r with %s", keyNames, str(e))
-
-        return tuple(rL)
-
-    def __getKeyValue(self, dct, keyName):
-        """Return the value of the corresponding key expressed in dot notation in the input dictionary object (nested)."""
-        try:
-            kys = keyName.split(".")
-            for key in kys:
-                try:
-                    dct = dct[key]
-                except Exception:
-                    logger.warning("Missing document key %r in %r", key, list(dct.keys()))
-                    return None
-            return dct
-        except Exception as e:
-            logger.error("Failing for key %r with %s", keyName, str(e))
-
-        return None
 
     def removeAndRecreateDbCollections(self, databaseName, collectionLoadList=None, validationLevel="min"):
         """Remove and recreate collections for input database.
@@ -1095,12 +1039,12 @@ class PdbxLoader(object):
 
             for collectionName in collectionNameList:
                 logger.info("Removing and recreating database %s collection %s", databaseName, collectionName)
-                self.__removeCollection(databaseName, collectionName)
+                self.__dL.removeCollection(databaseName, collectionName)
                 indexDL = docIndexD[collectionName] if collectionName in docIndexD else []
                 bsonSchema = None
                 if validationLevel and validationLevel in ["min", "full"]:
                     bsonSchema = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="BSON", level=validationLevel)
-                ok = self.__createCollection(databaseName, collectionName, indexDL=indexDL, bsonSchema=bsonSchema)
+                ok = self.__dL.createCollection(databaseName, collectionName, indexDL=indexDL, bsonSchema=bsonSchema)
                 logger.debug("Collection create return status %r", ok)
                 colIdL = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=collectionName)
                 ok = len(colIdL) == 0 and ok

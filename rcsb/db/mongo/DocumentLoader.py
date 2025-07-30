@@ -68,19 +68,24 @@ class DocumentLoader(object):
 
     def load(self, databaseName, collectionName, loadType="full", documentList=None, indexAttributeList=None, keyNames=None, schemaLevel="full", addValues=None, indexDL=None):
         """Driver method for loading MongoDb content -
-
-
-        loadType:     "full" or "replace"
-
         """
         try:
             startTime = self.__begin(message="loading operation")
             #
-
-            #
+            # if not collectionName:
+            #     logger.error("Must specify 'collectionName' argument")
+            # #
+            # if databaseName is not None:
+            #     databaseNameMongo = databaseName
+            # elif schemaGroupName is not None:
+            #     databaseNameMongo = self.__schP.getDatabaseMongoName(schemaGroupName=schemaGroupName)
+            # else:
+            #     logger.error("Must specify either 'databaseName' or 'schemaGroupName' argument")
+            # #
             optionsD = {}
             optionsD["collectionName"] = collectionName
             optionsD["databaseName"] = databaseName
+            # optionsD["databaseName"] = databaseNameMongo
             optionsD["readBackCheck"] = self.__readBackCheck
             optionsD["loadType"] = loadType
             optionsD["keyNames"] = keyNames
@@ -99,7 +104,6 @@ class DocumentLoader(object):
                             doc[k] = v
                 except Exception as e:
                     logger.error("Add values %r fails with %s", addValues, str(e))
-
             #
             indAtList = indexAttributeList if indexAttributeList else []
             indAtDictList = indexDL if indexDL else []
@@ -107,14 +111,14 @@ class DocumentLoader(object):
             if schemaLevel and schemaLevel in ["min", "full"]:
                 bsonSchema = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="BSON", level=schemaLevel)
                 logger.debug("Using schema validation for %r %r %r", databaseName, collectionName, schemaLevel)
-
+            #
             if loadType == "full":
-                self.__removeCollection(databaseName, collectionName)
-                ok = self.__createCollection(databaseName, collectionName, indexAttributeNames=indAtList, bsonSchema=bsonSchema, indexDL=indAtDictList)
+                self.removeCollection(databaseName, collectionName)
+                ok = self.createCollection(databaseName, collectionName, indexAttributeNames=indAtList, bsonSchema=bsonSchema, indexDL=indAtDictList)
                 logger.info("Collection %s create status %r", collectionName, ok)
             elif loadType == "append":
                 # create only if object does not exist -
-                ok = self.__createCollection(databaseName, collectionName, indexAttributeNames=indAtList, checkExists=True, bsonSchema=bsonSchema, indexDL=indAtDictList)
+                ok = self.createCollection(databaseName, collectionName, indexAttributeNames=indAtList, checkExists=True, bsonSchema=bsonSchema, indexDL=indAtDictList)
                 logger.debug("Collection %s create status %r", collectionName, ok)
                 # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
             numDocs = len(docList)
@@ -142,9 +146,7 @@ class DocumentLoader(object):
             logger.info("Completed load with failing document list %r", failList)
             logger.info("Document list length %d failed load list length %d", len(docList), len(failList))
             #
-
             self.__end(startTime, "loading operation with status " + str(ok))
-
             #
             return ok
         except Exception as e:
@@ -204,7 +206,7 @@ class DocumentLoader(object):
         delta = endTime - startTime
         logger.debug("Completed %s at %s (%.4f seconds)", message, ts, delta)
 
-    def __createCollection(self, dbName, collectionName, indexAttributeNames=None, checkExists=False, bsonSchema=None, indexDL=None):
+    def createCollection(self, dbName, collectionName, indexDL=None, indexAttributeNames=None, checkExists=False, bsonSchema=None, indexType="DESCENDING"):
         """Create database and collection and optionally a primary index
 
         Args:
@@ -236,14 +238,14 @@ class DocumentLoader(object):
                     okI = mg.createIndex(dbName, collectionName, indexAttributeNames, indexName="primary", indexType="DESCENDING", uniqueFlag=False)
                 if indexDL:
                     for indexD in indexDL:
-                        okI = mg.createIndex(dbName, collectionName, indexD["ATTRIBUTE_NAMES"], indexName=indexD["INDEX_NAME"], indexType="DESCENDING", uniqueFlag=False) and okI
+                        okI = mg.createIndex(dbName, collectionName, indexD["ATTRIBUTE_NAMES"], indexName=indexD["INDEX_NAME"], indexType=indexType, uniqueFlag=False) and okI
             return ok1 and ok2 and ok3 and okI
             #
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return False
 
-    def __removeCollection(self, dbName, collectionName):
+    def removeCollection(self, dbName, collectionName):
         """Drop collection within database"""
         try:
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
@@ -276,7 +278,7 @@ class DocumentLoader(object):
             indL = []
             try:
                 for ii, doc in enumerate(docList):
-                    dIdTup = self.__getKeyValues(doc, keyNames)
+                    dIdTup = self.getKeyValues(doc, keyNames)
                     indD[dIdTup] = ii
                 indL = list(range(len(docList)))
             except Exception as e:
@@ -302,7 +304,7 @@ class DocumentLoader(object):
                         successIndList = []
                         for rId in rIdL:
                             rObj = mg.fetchOne(dbName, collectionName, "_id", rId)
-                            dIdTup = self.__getKeyValues(rObj, keyNames)
+                            dIdTup = self.getKeyValues(rObj, keyNames)
                             successIndList.append(indD[dIdTup])
                         failIndList = list(set(indL) - set(successIndList))
                         failList = [docList[ii] for ii in failIndList]
@@ -320,7 +322,7 @@ class DocumentLoader(object):
                     #
                     for ii, rId in enumerate(rIdL):
                         rObj = mg.fetchOne(dbName, collectionName, "_id", rId)
-                        dIdTup = self.__getKeyValues(rObj, keyNames)
+                        dIdTup = self.getKeyValues(rObj, keyNames)
                         jj = indD[dIdTup]
                         if rObj != docList[jj]:
                             rbStatus = False
@@ -334,7 +336,7 @@ class DocumentLoader(object):
             logger.exception("Failing %r %r (len=%d) %s with %s", dbName, collectionName, len(docList), keyNames, str(e))
         return False, [], docList
 
-    def __getKeyValues(self, dct, keyNames):
+    def getKeyValues(self, dct, keyNames):
         """Return the tuple of values of corresponding to the input dictionary key names expressed in dot notation.
 
         Args:
@@ -362,9 +364,10 @@ class DocumentLoader(object):
                 try:
                     dct = dct[key]
                 except KeyError:
+                    logger.warning("Missing document key %r in %r", key, list(dct.keys()))
                     return None
             return dct
         except Exception as e:
-            logger.exception("Failing for key %r with %s", keyName, str(e))
+            logger.error("Failing for key %r with %s", keyName, str(e))
 
         return None
