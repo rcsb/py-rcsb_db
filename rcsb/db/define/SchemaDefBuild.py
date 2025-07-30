@@ -109,7 +109,7 @@ class SchemaDefBuild(object):
         databaseVersion = contentDefHelper.getDatabaseVersion(schemaGroupName) if contentDefHelper else ""
 
         #
-        schemaDef = {"NAME": schemaGroupName, "APP_NAME": dataTyping, "SCHEMA_GROUP_NAME": schemaGroupName, "DATABASE_NAME": self.__databaseName, "DATABASE_VERSION": databaseVersion}
+        schemaDef = {"NAME": schemaGroupName, "APP_NAME": dataTyping, "DATABASE_NAME": self.__databaseName, "DATABASE_VERSION": databaseVersion}
         #
         schemaDef["SELECTION_FILTERS"] = self.__contentInfo.getSelectionFiltersForDatabase()
 

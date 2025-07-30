@@ -89,7 +89,7 @@ class ContentDefinitionHelper(object):
             rD = OrderedDict()
             for catName, cDL in self.__categoryClasses.items():
                 for cD in cDL:
-                    if cD["SCHEMA_GROUP_NAME"] == schemaGroupName:
+                    if cD["NAME"] == schemaGroupName:
                         if catName not in rD:
                             rD[catName] = []
                         rD[catName].append(cD["CONTENT_CLASS"])
@@ -103,7 +103,7 @@ class ContentDefinitionHelper(object):
             rD = OrderedDict()
             for (catName, atName), cDL in self.__attributeClasses.items():
                 for cD in cDL:
-                    if cD["SCHEMA_GROUP_NAME"] == schemaGroupName:
+                    if cD["NAME"] == schemaGroupName:
                         if (catName, atName) not in rD:
                             rD[(catName, atName)] = []
                         rD[(catName, atName)].append(cD["CONTENT_CLASS"])
@@ -119,9 +119,9 @@ class ContentDefinitionHelper(object):
                 for cD in cDL:
                     if cD["CATEGORY_NAME"] not in classD:
                         classD[cD["CATEGORY_NAME"]] = []
-                    classD[cD["CATEGORY_NAME"]].append({"CONTENT_CLASS": cTup[0], "SCHEMA_GROUP_NAME": cTup[1]})
+                    classD[cD["CATEGORY_NAME"]].append({"CONTENT_CLASS": cTup[0], "NAME": cTup[1]})
                     # if "drugbank" in cTup[1]:
-                    #     logger.info("CONTENT_CLASS  %r   - SCHEMA_GROUP_NAME  %r", cTup[0], cTup[1])
+                    #     logger.info("CONTENT_CLASS  %r   - NAME  %r", cTup[0], cTup[1])
         except Exception as e:
             logger.debug("Failing with %s", str(e))
         return classD
@@ -137,11 +137,11 @@ class ContentDefinitionHelper(object):
                         for atName in cD["ATTRIBUTE_NAME_LIST"]:
                             if (catName, atName) not in classD:
                                 classD[(catName, atName)] = []
-                            classD[(catName, atName)].append({"CONTENT_CLASS": cTup[0], "SCHEMA_GROUP_NAME": cTup[1]})
+                            classD[(catName, atName)].append({"CONTENT_CLASS": cTup[0], "NAME": cTup[1]})
                     else:
                         if (catName, wildCardAtName) not in classD:
                             classD[(catName, wildCardAtName)] = []
-                        classD[(catName, wildCardAtName)].append({"CONTENT_CLASS": cTup[0], "SCHEMA_GROUP_NAME": cTup[1]})
+                        classD[(catName, wildCardAtName)].append({"CONTENT_CLASS": cTup[0], "NAME": cTup[1]})
         except Exception as e:
             logger.debug("Failing with %s", str(e))
         return classD

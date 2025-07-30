@@ -48,7 +48,6 @@ class SchemaDefAccess(object):
         self.__name = schemaDef["NAME"] if "NAME" in schemaDef else "unassigned"
         self.__appName = schemaDef["APP_NAME"] if "APP_NAME" in schemaDef else "unassigned"
 
-        self.__schemaGroupName = schemaDef["SCHEMA_GROUP_NAME"] if "SCHEMA_GROUP_NAME" in schemaDef else "unassigned"
         self.__databaseName = schemaDef["DATABASE_NAME"] if "DATABASE_NAME" in schemaDef else "unassigned"
         self.__databaseVersion = schemaDef["DATABASE_VERSION"] if "DATABASE_VERSION" in schemaDef else "0_0"
         self.__versionedDatabaseName = self.__databaseName + "_" + self.__databaseVersion
@@ -277,9 +276,6 @@ class SchemaDefAccess(object):
             return self.__schemaDefDict[schemaId]["SCHEMA_UNIT_CARDINALITY"]
         except Exception:
             return False
-
-    def getSchemaGroupName(self):
-        return self.__schemaGroupName
 
     def getDatabaseName(self):
         return self.__databaseName
