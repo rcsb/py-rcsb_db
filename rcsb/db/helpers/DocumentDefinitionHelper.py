@@ -320,7 +320,6 @@ class DocumentDefinitionHelper(object):
                         break
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
-        print(catName, atName ret)
         return ret
 
     def getScAttributeAdttlFeatSupDesc(self, collectionName, catName, atName):
@@ -355,7 +354,6 @@ class DocumentDefinitionHelper(object):
                 for tD in tDL:
                     ff = str(tD["ATTRIBUTE_NAME"]).split(".")
                     if ff[0] == catName and ff[1] == atName:
-                        # pD = {"minItems": tD["MIN_ITEMS"], "uniqueItems": tD["UNIQUE_ITEMS"]}
                         if "MIN_ITEMS" in tD:
                             pD["minItems"] = tD["MIN_ITEMS"]
                         if "MAX_ITEMS" in tD:
