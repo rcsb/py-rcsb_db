@@ -314,8 +314,6 @@ class PdbxLoader(object):
             #
             sd, _, fullCollectionNameList, docIndexD = self.__schP.getSchemaInfo(databaseName, dataTyping="ANY")
             # databaseNameMongo = self.getDatabaseMongoName(databaseName)
-            # BUT ABOVE RELIES ON 'ANY' SCHEMA FILE TO GET INDICES...which i don't think will be possible with our diverging schemas per ExDB DB...
-            # ...well, it "is" possible, but filename will remain 'schema_def-repository-holdings-ANY.json' (no '-dw-')
             collectionNameList = collectionLoadList if collectionLoadList else fullCollectionNameList
 
             # Move "entry" collection to the end of the list so that if it fails midload, we can determine which entities/assemblies/etc. need reloading based on entry collection
