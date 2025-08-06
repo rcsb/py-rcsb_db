@@ -977,7 +977,7 @@ class DocumentDefinitionHelper(object):
         databaseNameMongo = collectionGroupName
         try:
             if collectionGroupName:
-                schemaGroupToDbMap = self.__cfgOb.get("schema_group_to_mongodb_name", sectionName="database_catalog_configuration")
+                schemaGroupToDbMap = self.__cfgOb.get("collection_schema_group_to_mongodb_name", sectionName="database_catalog_configuration")
                 if schemaGroupToDbMap and collectionGroupName in schemaGroupToDbMap:
                     databaseNameMongo = schemaGroupToDbMap.get(collectionGroupName, collectionGroupName)
                 logger.info("Mapping for collectionGroupName %s -> databaseNameMongo %r", collectionGroupName, databaseNameMongo)
