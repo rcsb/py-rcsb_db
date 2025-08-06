@@ -17,6 +17,7 @@
 #  23-Oct-2019 jdw add collection subcategory nested property support
 #  28-Feb-2022 bv add method getSubCategoryAggregateMandatory()
 #  21-Nov-2022 bv add methods getIterableAttributeMetadata() and getSubCategoryAggregateMinUniqueItems()
+#   2-Aug-2025 bv add methods to support nested subcategories needed for merging ExDB and DW
 ##
 """
 Inject additional document information into a schema definition.
@@ -228,6 +229,42 @@ class DocumentDefinitionHelper(object):
             logger.debug("Collection %s failing with %s", collectionName, str(e))
         return ret
 
+    def getSubCategoryAggregateNestedChild(self, collectionName, subCategoryName):
+        ret = False
+        try:
+            if collectionName in self.__cfgD["collection_subcategory_aggregates"]:
+                for dD in self.__cfgD["collection_subcategory_aggregates"][collectionName]:
+                    if dD["NAME"] == subCategoryName:
+                        ret = dD["NESTED_CHILD"]
+                        break
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return ret
+
+    def getSubCategoryAggregateDescription(self, collectionName, subCategoryName):
+        ret = False
+        try:
+            if collectionName in self.__cfgD["collection_subcategory_aggregates"]:
+                for dD in self.__cfgD["collection_subcategory_aggregates"][collectionName]:
+                    if dD["NAME"] == subCategoryName:
+                        ret = dD["DESCRIPTION"]
+                        break
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return ret
+
+    def getSubCategoryAggregateDescriptionAlt(self, collectionName, subCategoryName):
+        ret = False
+        try:
+            if collectionName in self.__cfgD["collection_subcategory_aggregates"]:
+                for dD in self.__cfgD["collection_subcategory_aggregates"][collectionName]:
+                    if dD["NAME"] == subCategoryName:
+                        ret = dD["DESCRIPTION_ALT"]
+                        break
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return ret
+
     def getSubCategoryAggregateMinUniqueItems(self, collectionName, subCategoryName):
         pD = {}
         try:
@@ -244,6 +281,56 @@ class DocumentDefinitionHelper(object):
         ret = []
         try:
             return [tD for tD in self.__cfgD["collection_subcategory_aggregates"][collectionName]]
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return ret
+
+    def getNestedSubcategoryAttributes(self, collectionName):
+        ret = []
+        try:
+            if collectionName in self.__cfgD["collection_nested_subcategory_attributes"]:
+                for dD in self.__cfgD["collection_nested_subcategory_attributes"][collectionName]:
+                    ff = str(dD["ATTRIBUTE_NAME"]).split(".")
+                    ret.append(ff[1])
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return ret
+
+    def getNestedSubcategoryAttributeEmbNesItr(self, collectionName, catName, atName):
+        ret = False
+        try:
+            if collectionName in self.__cfgD["collection_nested_subcategory_attributes"]:
+                for dD in self.__cfgD["collection_nested_subcategory_attributes"][collectionName]:
+                    ff = str(dD["ATTRIBUTE_NAME"]).split(".")
+                    if ff[0] == catName and ff[1] == atName:
+                        ret = dD["EMBEDDED_NESTED_ITERABLE"]
+                        break
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return ret
+
+    def getScAttributeAdttlFeatDescAlt(self, collectionName, catName, atName):
+        ret = None
+        try:
+            if collectionName in self.__cfgD["collection_subcategory_attribute_additional_features"]:
+                for dD in self.__cfgD["collection_subcategory_attribute_additional_features"][collectionName]:
+                    ff = str(dD["ATTRIBUTE_NAME"]).split(".")
+                    if ff[0] == catName and ff[1] == atName:
+                        ret = dD["DESCRIPTION_ALT"]
+                        break
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return ret
+
+    def getScAttributeAdttlFeatSupDesc(self, collectionName, catName, atName):
+        ret = False
+        try:
+            if collectionName in self.__cfgD["collection_subcategory_attribute_additional_features"]:
+                for dD in self.__cfgD["collection_subcategory_attribute_additional_features"][collectionName]:
+                    ff = str(dD["ATTRIBUTE_NAME"]).split(".")
+                    if ff[0] == catName and ff[1] == atName:
+                        ret = dD["SUPPRESS_DESCRIPTION"]
+                        break
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
         return ret
@@ -267,7 +354,12 @@ class DocumentDefinitionHelper(object):
                 for tD in tDL:
                     ff = str(tD["ATTRIBUTE_NAME"]).split(".")
                     if ff[0] == catName and ff[1] == atName:
-                        pD = {"minItems": tD["MIN_ITEMS"], "uniqueItems": tD["UNIQUE_ITEMS"]}
+                        if "MIN_ITEMS" in tD:
+                            pD["minItems"] = tD["MIN_ITEMS"]
+                        if "MAX_ITEMS" in tD:
+                            pD["maxItems"] = tD["MAX_ITEMS"]
+                        if "UNIQUE_ITEMS" in tD:
+                            pD["uniqueItems"] = tD["UNIQUE_ITEMS"]
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return pD

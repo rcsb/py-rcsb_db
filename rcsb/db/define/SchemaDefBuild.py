@@ -27,6 +27,7 @@
 # 22-Aug-2019 jdw DictInfo() replaced with new ContentInfo()
 # 28-Feb-2022 bv add support for mandatory sub-categories in json schema
 # 21-Nov-2022 bv add support in json schema for min and unique items for sub-categories and iterable attributes
+# 3-Aug-2025 bv add support in json schema for nested child subcategories needed for DW and ExDB merging
 ##
 """
 Integrate dictionary metadata and file based (type/coverage) into internal and JSON/BSON schema defintions.
@@ -712,14 +713,13 @@ class SchemaDefBuild(object):
                     mandatoryCategoryL.append(catName)
             #
             isUnitCard = True if ("UNIT_CARDINALITY" in cfD and cfD["UNIT_CARDINALITY"]) else False
+            #
             if not isUnitCard:  # Don't overwrite if already True (especially needed for rcsb_latest_revision, but shouldn't affect anything else)
                 if sliceFilter and sliceFilter in sliceCardD:
                     isUnitCard = catName in sliceCardD[sliceFilter]
-
             #
             pD = {typeKey: "object", "properties": {}, "additionalProperties": False}
             #
-
             if isUnitCard:
                 catPropD = pD
             else:
@@ -750,7 +750,6 @@ class SchemaDefBuild(object):
 
             #  First, filter any subcategory aggregates from the available list of a category attributes
             #
-
             subCatPropD = {}
             scMandatory = None
             scMinUniqueItems = {}
@@ -765,10 +764,96 @@ class SchemaDefBuild(object):
                     scHasUnitCard = documentDefHelper.getSubCategoryAggregateUnitCardinality(collectionName, subCategory)
                     scMandatory = documentDefHelper.getSubCategoryAggregateMandatory(collectionName, subCategory)
                     scMinUniqueItems = documentDefHelper.getSubCategoryAggregateMinUniqueItems(collectionName, subCategory)
+                    scNestedChild = documentDefHelper.getSubCategoryAggregateNestedChild(collectionName, subCategory)
+                    scNesAttrL = documentDefHelper.getNestedSubcategoryAttributes(collectionName)
+                    scDes = documentDefHelper.getSubCategoryAggregateDescription(collectionName, subCategory)
+                    scDesAlt = documentDefHelper.getSubCategoryAggregateDescriptionAlt(collectionName, subCategory)
+                    if scDes:
+                        scD["description"] = scDes
+
+                    # Filter any nested child subcategories
+                    # Supports additional nesting needed by DW schemas
+                    if scNestedChild:
+                        scnReqL = []
+                        scnHasUnitCard = documentDefHelper.getSubCategoryAggregateUnitCardinality(collectionName, scNestedChild)
+                        scnMandatory = documentDefHelper.getSubCategoryAggregateMandatory(collectionName, scNestedChild)
+                        scnMinUniqueItems = documentDefHelper.getSubCategoryAggregateMinUniqueItems(collectionName, scNestedChild)
+                        scnDes = documentDefHelper.getSubCategoryAggregateDescription(collectionName, scNestedChild)
+                        scnDesAlt = documentDefHelper.getSubCategoryAggregateDescriptionAlt(collectionName, scNestedChild)
+                        xD = {typeKey: "object", "properties": {}, "additionalProperties": False}
+                        if scnDes:
+                            xD["description"] = scnDes
+                        scnName = convertNameF(scNestedChild)
+                        if scnMandatory:
+                            reqL.append(scnName)
+
+                        # Populate the information for each attribute within the nested child subcategory
+                        for atName in sorted(atNameList):
+                            fD = aD[atName]
+                            if atName not in scNesAttrL:
+                                continue
+                            schemaAttributeName = convertNameF(atName)
+                            if removeSubCategoryPrefix:
+                                schemaAttributeName = schemaAttributeName.replace(subCategory + "_" + scNestedChild + "_", "")
+                            isReq = (
+                                mandatorySubcategoryAttributes and fD["IS_MANDATORY"]
+                                or ((catName, atName) in catAttrRequiredList)
+                            )
+                            if isReq:
+                                scnReqL.append(schemaAttributeName)
+                            atPropD = self.__getJsonAttributeProperties(
+                                fD,
+                                dataTypingU,
+                                dtAppInfo,
+                                dtInstInfo,
+                                jsonSpecDraft,
+                                enforceOpts,
+                                suppressRelations,
+                                addRcsbExtensions
+                            )
+                            # Supress object level descriptions if needed
+                            # Array level descriptions are handled separatly
+                            nesScAttrSupDesc = documentDefHelper.getScAttributeAdttlFeatSupDesc(collectionName, catName, atName)
+                            if nesScAttrSupDesc:
+                                atPropD.pop("rcsb_description", None)
+                                atPropD.pop("description", None)
+
+                            # Identify iterable attributes and populate nested child subcategory attributes accordingly
+                            nesScAttrDelimiter = documentDefHelper.getNestedSubcategoryAttributeEmbNesItr(collectionName, catName, atName)
+                            if nesScAttrDelimiter:
+                                emNesIterAttMd = documentDefHelper.getIterableAttributeMetadata(collectionName, catName, atName)
+                                emNesIterAttDesAlt = documentDefHelper.getScAttributeAdttlFeatDescAlt(collectionName, catName, atName)
+                                xD["properties"][schemaAttributeName] = {typeKey: "array", "items": atPropD}
+                                if emNesIterAttMd and "minItems" in emNesIterAttMd:
+                                    xD["properties"][schemaAttributeName]["minItems"] = emNesIterAttMd["minItems"]
+                                if emNesIterAttDesAlt:
+                                    xD["properties"][schemaAttributeName]["description"] = emNesIterAttDesAlt
+                            else:
+                                xD["properties"][schemaAttributeName] = atPropD
+
+                        # Populate nested child subcategory
+                        if xD["properties"]:
+                            if scnReqL:
+                                xD["required"] = scnReqL
+                            if scnHasUnitCard:
+                                scD["properties"][scNestedChild] = xD
+                            else:
+                                scD["properties"][scNestedChild] = {typeKey: "array", "items": xD}
+                                if scnMinUniqueItems and "minItems" in scnMinUniqueItems:
+                                    scD["properties"][scNestedChild]["minItems"] = scnMinUniqueItems["minItems"]
+                                if scnMinUniqueItems and "uniqueItems" in scnMinUniqueItems:
+                                    scD["properties"][scNestedChild]["uniqueItems"] = scnMinUniqueItems["uniqueItems"]
+                                if scnDesAlt:
+                                    scD["properties"][scNestedChild]["description"] = scnDesAlt
+
                     for atName in sorted(atNameList):
                         fD = aD[atName]
                         #
                         if subCategory not in [qtD["id"] for qtD in fD["SUB_CATEGORIES"]]:
+                            continue
+
+                        # Skip attributes in nested child subcategories that have already been handled above
+                        if atName in scNesAttrL:
                             continue
                         #
                         schemaAttributeName = convertNameF(atName)
@@ -777,7 +862,10 @@ class SchemaDefBuild(object):
                         #
                         # isRequired = "mandatoryAttributes" in enforceOpts and fD["IS_MANDATORY"]
                         # JDW separate general support for mandatory attributes and support in subcategories.
-                        isRequired = mandatorySubcategoryAttributes and fD["IS_MANDATORY"]
+                        isRequired = (
+                            (mandatorySubcategoryAttributes and fD["IS_MANDATORY"])
+                            or ((catName, atName) in catAttrRequiredList)
+                        )
                         if isRequired:
                             reqL.append(schemaAttributeName)
                         #
@@ -785,10 +873,21 @@ class SchemaDefBuild(object):
                         # --- replace
                         # scD["properties"][schemaAttributeName] = atPropD
                         # --- with adding general support for embedded iterable
+                        #
                         delimiter = fD["EMBEDDED_ITERABLE_DELIMITER"]
                         if delimiter:
                             logger.debug("embedded iterable %r %r (%r)", catName, atName, subCategory)
+                            atIterMd = documentDefHelper.getIterableAttributeMetadata(collectionName, catName, atName)
+                            atDesAlt = documentDefHelper.getScAttributeAdttlFeatDescAlt(collectionName, catName, atName)
                             scD["properties"][schemaAttributeName] = {typeKey: "array", "items": atPropD, "uniqueItems": False}
+                            if atIterMd and "minItems" in atIterMd:
+                                scD["properties"][schemaAttributeName]["minItems"] = atIterMd["minItems"]
+                            if atIterMd and "maxItems" in atIterMd:
+                                scD["properties"][schemaAttributeName]["maxItems"] = atIterMd["maxItems"]
+                            if atIterMd and "uniqueItems" in atIterMd:
+                                scD["properties"][schemaAttributeName]["uniqueItems"] = atIterMd["uniqueItems"]
+                            if atDesAlt:
+                                scD["properties"][schemaAttributeName]["description"] = atDesAlt
                         else:
                             scD["properties"][schemaAttributeName] = atPropD
                         # ---
@@ -798,15 +897,20 @@ class SchemaDefBuild(object):
                     if scD["properties"]:
                         if reqL:
                             scD["required"] = reqL
-                        if scMandatory and "mandatoryAttributes" in enforceOpts:
+                        # if scMandatory and "mandatoryAttributes" in enforceOpts:
+                        if scMandatory:
                             pD.setdefault("required", []).append(subCategory)
                         if scHasUnitCard:
                             subCatPropD[subCategory] = scD
                         else:
-                            if scMinUniqueItems:
-                                subCatPropD[subCategory] = {typeKey: "array", "items": scD, "minItems": scMinUniqueItems["minItems"], "uniqueItems": scMinUniqueItems["uniqueItems"]}
-                            else:
-                                subCatPropD[subCategory] = {typeKey: "array", "items": scD, "uniqueItems": False}
+                            subCatPropD[subCategory] = {typeKey: "array", "items": scD, "uniqueItems": False}
+                            if scMinUniqueItems and "minItems" in scMinUniqueItems:
+                                subCatPropD[subCategory]["minItems"] = scMinUniqueItems["minItems"]
+                            if scMinUniqueItems and "uniqueItems" in scMinUniqueItems:
+                                subCatPropD[subCategory]["uniqueItems"] = scMinUniqueItems["uniqueItems"]
+                            if scDesAlt:
+                                subCatPropD[subCategory]["description"] = scDesAlt
+
                             if dataTypingU == "JSON" and addRcsbExtensions:
                                 if documentDefHelper.isSubCategoryNested(collectionName, catName, subCategory):
                                     tD = documentDefHelper.getSubCategoryNestedContext(collectionName, catName, subCategory)
