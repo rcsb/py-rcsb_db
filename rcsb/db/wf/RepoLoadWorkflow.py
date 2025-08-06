@@ -70,6 +70,7 @@ class RepoLoadWorkflow(object):
             return False
         try:
             databaseName = kwargs.get("databaseName", None)
+            collectionGroupName = kwargs.get("collectionGroupName", None)
             databaseNameList = self.__cfgOb.get("DATABASE_NAMES_ALL", sectionName="database_catalog_configuration").split(",")
             collectionNameList = kwargs.get("collectionNameList", None)
             loadType = kwargs.get("loadType", "replace")  # or "full"
@@ -152,6 +153,7 @@ class RepoLoadWorkflow(object):
                 )
                 ok = mw.load(
                     databaseName,
+                    collectionGroupName=collectionGroupName,
                     collectionLoadList=collectionNameList,
                     loadType=loadType,
                     contentType=contentType,

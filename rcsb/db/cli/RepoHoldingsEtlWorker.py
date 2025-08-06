@@ -16,6 +16,7 @@
 #  15-Jul-2025 dwp Adjust loader to load holdings data to DW repository_holdings collections;
 #                  Turn off loading of repository_holdings_update_entry (since not used by anything downstream);
 #                  Use indexes defined in py-rcsb_exdb_assets schemas and configuration
+#   6-Aug-2025 dwp Make use of schema configuration file for loading collections and setting indexed fields
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -93,7 +94,7 @@ class RepoHoldingsEtlWorker(object):
             desp = DataExchangeStatus()
             statusStartTimestamp = desp.setStartTime()
             # ---
-            schemaGroupName = "repository_holdings"
+            collectionGroupName = "repository_holdings"
             discoveryMode = self.__cfgOb.get("DISCOVERY_MODE", sectionName=self.__cfgSectionName, default="local")
             baseUrlPDB = self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__cfgSectionName, default="https://files.wwpdb.org/pub")
             fallbackUrlPDB = self.__cfgOb.getPath("PDB_REPO_FALLBACK_URL", sectionName=self.__cfgSectionName, default="https://files.wwpdb.org/pub")
@@ -125,10 +126,10 @@ class RepoHoldingsEtlWorker(object):
                 verbose=self.__verbose,
                 readBackCheck=self.__readBackCheck,
             )
-            _, _, collectionNameList, docIndexD = self.__schP.getSchemaInfo(schemaGroupName=schemaGroupName, dataTyping="ANY")
+            _, _, collectionNameList, docIndexD = self.__schP.getSchemaInfo(collectionGroupName=collectionGroupName, dataTyping="ANY")
             # collectionNameList: ['repository_holdings_update_entry', 'repository_holdings_combined_entry', 'repository_holdings_current_entry',
             #                      'repository_holdings_unreleased_entry', 'repository_holdings_removed_entry']
-            databaseNameMongo = self.__schP.getDatabaseMongoName(schemaGroupName=schemaGroupName)
+            databaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=collectionGroupName)
 
             ok = True
             for collectionName in collectionNameList:

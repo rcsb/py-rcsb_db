@@ -24,7 +24,7 @@
 #   6-Jun-2019  jdw remove dictSubset and dictPath keywords and methods
 #  22-Aug-2019  jdw consolidate with ContentDefinitionHelper() as ContentDefinitionHelper, consolidate configInfo data sections,
 #                   unify terminology dictSubset->databaseName
-#  30-Jul-2025  dwp rename "databaseName" -> "schemaGroupName" to generalize terminology
+#   6-Aug-2025  dwp rename "databaseName" -> "collectionGroupName" to generalize terminology
 
 ##
 """
@@ -84,12 +84,12 @@ class ContentDefinitionHelper(object):
                 return tD["DELIMITER"]
         return default
 
-    def getCategoryContentClasses(self, schemaGroupName):
+    def getCategoryContentClasses(self, collectionGroupName):
         try:
             rD = OrderedDict()
             for catName, cDL in self.__categoryClasses.items():
                 for cD in cDL:
-                    if cD["NAME"] == schemaGroupName:
+                    if cD["NAME"] == collectionGroupName:
                         if catName not in rD:
                             rD[catName] = []
                         rD[catName].append(cD["CONTENT_CLASS"])
@@ -98,12 +98,12 @@ class ContentDefinitionHelper(object):
             logger.debug("Failing with %s", str(e))
         return rD
 
-    def getAttributeContentClasses(self, schemaGroupName):
+    def getAttributeContentClasses(self, collectionGroupName):
         try:
             rD = OrderedDict()
             for (catName, atName), cDL in self.__attributeClasses.items():
                 for cD in cDL:
-                    if cD["NAME"] == schemaGroupName:
+                    if cD["NAME"] == collectionGroupName:
                         if (catName, atName) not in rD:
                             rD[(catName, atName)] = []
                         rD[(catName, atName)].append(cD["CONTENT_CLASS"])
@@ -182,22 +182,22 @@ class ContentDefinitionHelper(object):
     def getCardinalityCategoryExtras(self):
         return self.__cfgD["cardinality_category_extras"]
 
-    def getCardinalityKeyItem(self, schemaGroupName):
+    def getCardinalityKeyItem(self, collectionGroupName):
         """Identify the parent item for the dictionary subset that can be used to
         identify child categories with unity cardinality.   That is, logically containing
         a single data row in any instance.
 
         """
         try:
-            return self.__cfgD["cardinality_parent_items"][schemaGroupName]
+            return self.__cfgD["cardinality_parent_items"][collectionGroupName]
         except Exception:
             pass
         return {"CATEGORY_NAME": None, "ATTRIBUTE_NAME": None}
 
-    def getInternalEnumItems(self, schemaGroupName):
+    def getInternalEnumItems(self, collectionGroupName):
         """Return the list of items in the input database that should use internal enumerations."""
         try:
-            return self.__cfgD["internal_enumeration_items"][schemaGroupName]
+            return self.__cfgD["internal_enumeration_items"][collectionGroupName]
         except Exception:
             pass
         return []
@@ -221,21 +221,21 @@ class ContentDefinitionHelper(object):
 
         return []
 
-    def getSelectionFilter(self, schemaGroupName, kind):
+    def getSelectionFilter(self, collectionGroupName, kind):
         """Interim api for selection filters defined in terms of dictionary category and attributes name and their values.
         JDW Warning -- check for yaml artifacts
         """
         try:
-            return self.__cfgD["selection_filters"][(kind, schemaGroupName)]
+            return self.__cfgD["selection_filters"][(kind, collectionGroupName)]
         except Exception:
             pass
         return []
 
-    def getDatabaseSelectionFilters(self, schemaGroupName):
+    def getDatabaseSelectionFilters(self, collectionGroupName):
         """Interim api for selection filters for a particular dictionary subset."""
         try:
             vD = OrderedDict()
-            tD = {kind: v for (kind, dS), v in self.__cfgD["selection_filters"].items() if dS == schemaGroupName}
+            tD = {kind: v for (kind, dS), v in self.__cfgD["selection_filters"].items() if dS == collectionGroupName}
             # cleanup the yaml artifacts --
             for kk, vvL in tD.items():
                 vD[kk] = []
@@ -246,63 +246,63 @@ class ContentDefinitionHelper(object):
             pass
         return {}
 
-    def getContentClass(self, schemaGroupName, kind):
+    def getContentClass(self, collectionGroupName, kind):
         """Interim api for special category classes."""
         try:
-            return self.__cfgD["special_content"][(kind, schemaGroupName)]
+            return self.__cfgD["special_content"][(kind, collectionGroupName)]
         except Exception:
             pass
         return []
 
-    def getDatabaseContentClass(self, schemaGroupName):
+    def getDatabaseContentClass(self, collectionGroupName):
         """Interim api for special category classes."""
         try:
-            return {kind: v for (kind, dS), v in self.__cfgD["special_content"].items() if dS == schemaGroupName}
+            return {kind: v for (kind, dS), v in self.__cfgD["special_content"].items() if dS == collectionGroupName}
         except Exception:
             pass
         return {}
 
-    def getSliceParentItems(self, schemaGroupName, kind):
+    def getSliceParentItems(self, collectionGroupName, kind):
         """Interim api for slice parent itens defined in terms of dictionary category and attributes name and their values."""
         try:
-            return self.__cfgD["slice_parent_items"][(kind, schemaGroupName)]
+            return self.__cfgD["slice_parent_items"][(kind, collectionGroupName)]
         except Exception:
             pass
         return []
 
-    def getDatabaseSliceParents(self, schemaGroupName):
+    def getDatabaseSliceParents(self, collectionGroupName):
         """Interim api for slice parent items for a particular dictionary subset."""
         try:
-            return {kind: v for (kind, dS), v in self.__cfgD["slice_parent_items"].items() if dS == schemaGroupName}
+            return {kind: v for (kind, dS), v in self.__cfgD["slice_parent_items"].items() if dS == collectionGroupName}
         except Exception:
             pass
         return {}
 
-    def getSliceParentFilters(self, schemaGroupName, kind):
+    def getSliceParentFilters(self, collectionGroupName, kind):
         """Interim api for slice parent condition filters defined in terms of dictionary category and attributes name and their values."""
         try:
-            return self.__cfgD["slice_parent_filters"][(kind, schemaGroupName)]
+            return self.__cfgD["slice_parent_filters"][(kind, collectionGroupName)]
         except Exception:
             pass
         return []
 
-    def getDatabaseSliceParentFilters(self, schemaGroupName):
+    def getDatabaseSliceParentFilters(self, collectionGroupName):
         """Interim api for slice parent condition filters for a particular dictionary subset."""
         try:
-            return {kind: v for (kind, dS), v in self.__cfgD["slice_parent_filters"].items() if dS == schemaGroupName}
+            return {kind: v for (kind, dS), v in self.__cfgD["slice_parent_filters"].items() if dS == collectionGroupName}
         except Exception:
             pass
         return {}
 
-    def getSliceCardinalityCategoryExtras(self, schemaGroupName, kind):
+    def getSliceCardinalityCategoryExtras(self, collectionGroupName, kind):
         try:
-            return self.__cfgD["slice_cardinality_category_extras"][(kind, schemaGroupName)]
+            return self.__cfgD["slice_cardinality_category_extras"][(kind, collectionGroupName)]
         except Exception:
             return []
 
-    def getSliceCategoryExtras(self, schemaGroupName, kind):
+    def getSliceCategoryExtras(self, collectionGroupName, kind):
         try:
-            return self.__cfgD["slice_category_extras"][(kind, schemaGroupName)]
+            return self.__cfgD["slice_category_extras"][(kind, collectionGroupName)]
         except Exception:
             return []
 

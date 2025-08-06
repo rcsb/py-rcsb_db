@@ -7,6 +7,7 @@
 # Updates:
 #    26-Aug-2019 jdw  add database name to json schema name, add schema rebuild option.
 #     6-Sep-2019 jdw  add rcsb extensions to the the json schema full options
+#     6-Aug-2025 dwp  rename "databaseName" -> "collectionGroupName" to generalize terminology
 #
 ##
 """
@@ -84,11 +85,11 @@ class SchemaProvider(SingletonClass):
         else:
             return opts
 
-    def getSchemaInfo(self, schemaGroupName, dataTyping="ANY"):
+    def getSchemaInfo(self, collectionGroupName, dataTyping="ANY"):
         """Convenience method to return essential schema details for the input repository content type.
 
         Args:
-            schemaGroupName (str): schema name  (e.g. pdbx, bird, chem_comp, ...)
+            collectionGroupName (str): collection schema group name (e.g., "pdbx_core", "core_chem_comp", "core_drugbank", ...)
             dataTyping (str, optional): Application name for the target schema (e.g. ANY, SQL, ...)
 
         Returns:
@@ -102,39 +103,39 @@ class SchemaProvider(SingletonClass):
         docIndexD = {}
         try:
             mU = MarshalUtil(workPath=self.__workPath)
-            schemaLocator = self.__getSchemaDefLocator(schemaGroupName, dataTyping=dataTyping)
+            schemaLocator = self.__getSchemaDefLocator(collectionGroupName, dataTyping=dataTyping)
             if self.__rebuildFlag:
                 filePath = os.path.join(self.__schemaCachePath, self.__fileU.getFileName(schemaLocator))
-                self.makeSchemaDef(schemaGroupName, dataTyping=dataTyping, saveSchema=True)
+                self.makeSchemaDef(collectionGroupName, dataTyping=dataTyping, saveSchema=True)
             else:
                 filePath = self.__reload(schemaLocator, self.__schemaCachePath, useCache=self.__useCache)
 
             if not filePath:
-                logger.error("Unable to recover schema %s (%s)", schemaGroupName, dataTyping)
-            logger.debug("ContentType %r dataTyping %r schemaLocator %r", schemaGroupName, dataTyping, schemaLocator)
+                logger.error("Unable to recover schema %s (%s)", collectionGroupName, dataTyping)
+            logger.debug("ContentType %r dataTyping %r schemaLocator %r", collectionGroupName, dataTyping, schemaLocator)
             schemaDef = mU.doImport(filePath, fmt="json")
             if schemaDef:
-                logger.debug("Using cached schema definition for %s application %s", schemaGroupName, dataTyping)
+                logger.debug("Using cached schema definition for %s application %s", collectionGroupName, dataTyping)
                 sd = SchemaDefAccess(schemaDef)
                 if sd:
                     dbName = sd.getDatabaseName()
                     collectionInfoList = sd.getCollectionInfo()
-                    logger.debug("Schema %s database name %s collections %r", schemaGroupName, dbName, collectionInfoList)
+                    logger.debug("Schema %s database name %s collections %r", collectionGroupName, dbName, collectionInfoList)
                     for cd in collectionInfoList:
                         collectionName = cd["NAME"]
                         collectionNameList.append(collectionName)
                         docIndexD[collectionName] = sd.getDocumentIndices(collectionName)
 
         except Exception as e:
-            logger.exception("Retreiving schema %s for %s failing with %s", schemaGroupName, dataTyping, str(e))
+            logger.exception("Retreiving schema %s for %s failing with %s", collectionGroupName, dataTyping, str(e))
 
         return sd, dbName, collectionNameList, docIndexD
 
-    def schemaDefCompare(self, schemaGroupName, dataTyping="ANY"):
+    def schemaDefCompare(self, collectionGroupName, dataTyping="ANY"):
         """Compare computed schema defintion with current source/cached version.
 
         Args:
-            schemaGroupName (str): schema definition name for comparison
+            collectionGroupName (str): collection/schema group definition name for comparison
             dataTyping (str, optional): data type conventions for the schema comparison. Defaults to "ANY".
 
         Returns:
@@ -143,9 +144,9 @@ class SchemaProvider(SingletonClass):
         mU = MarshalUtil(workPath=self.__workPath)
         schemaDiffPath = os.path.join(self.__cachePath, "schema_diff")
         mU.mkdir(schemaDiffPath)
-        schemaPath = self.__getSchemaDefLocator(schemaGroupName, dataTyping=dataTyping)
+        schemaPath = self.__getSchemaDefLocator(collectionGroupName, dataTyping=dataTyping)
         fn = self.__fileU.getFileName(schemaPath)
-        sD = self.makeSchemaDef(schemaGroupName, dataTyping=dataTyping)
+        sD = self.makeSchemaDef(collectionGroupName, dataTyping=dataTyping)
         v2 = sD["DATABASE_VERSION"]
         # ----
         # tPath = os.path.join(self.__schemaCachePath, self.__fileU.getFileName(schemaPath) + "-test")
@@ -164,16 +165,16 @@ class SchemaProvider(SingletonClass):
         if numDiff:
             bn, _ = os.path.splitext(fn)
             diffPath = os.path.join(schemaDiffPath, bn + "-" + v1 + "-" + v2 + "-diff.json")
-            # logger.info("diff for %s %s = \n%s", schemaGroupName, dataTyping, pprint.pformat(difD, indent=3, width=100))
+            # logger.info("diff for %s %s = \n%s", collectionGroupName, dataTyping, pprint.pformat(difD, indent=3, width=100))
             mU.doExport(diffPath, difD, fmt="json", indent=3)
         #
         return diffPath
 
-    def jsonSchemaCompare(self, schemaGroupName, collectionName, encodingType, level, extraOpts=None):
+    def jsonSchemaCompare(self, collectionGroupName, collectionName, encodingType, level, extraOpts=None):
         """Compare computed JSON schema defintion with current source/cached version.
 
         Args:
-            schemaGroupName (str): schema name
+            collectionGroupName (str): collection/schema group definition name for comparison
             collectionName (str): collection name
             encodingType (str): schema data type conventions (JSON|BSON)
             level (str): metadata level (min|full)
@@ -185,11 +186,11 @@ class SchemaProvider(SingletonClass):
         mU = MarshalUtil(workPath=self.__workPath)
         schemaDiffPath = os.path.join(self.__cachePath, "schema_diff")
         mU.mkdir(schemaDiffPath)
-        schemaLocator = self.__getJsonSchemaLocator(schemaGroupName, collectionName, encodingType, level)
+        schemaLocator = self.__getJsonSchemaLocator(collectionGroupName, collectionName, encodingType, level)
         fn = self.__fileU.getFileName(schemaLocator)
         schemaPath = os.path.join(self.__jsonSchemaCachePath, fn)
         #
-        sD = self.makeSchema(schemaGroupName, collectionName, encodingType=encodingType, level=level, saveSchema=False, extraOpts=extraOpts)
+        sD = self.makeSchema(collectionGroupName, collectionName, encodingType=encodingType, level=level, saveSchema=False, extraOpts=extraOpts)
         v2 = self.__getSchemaVersion(sD)
         # ----
         # tPath = os.path.join(self.__jsonSchemaCachePath, self.__fileU.getFileName(schemaPath) + "-test")
@@ -200,13 +201,13 @@ class SchemaProvider(SingletonClass):
         sDCache = mU.doImport(schemaPath, fmt="json")
         v1 = self.__getSchemaVersion(sDCache)
         if not v1:
-            logger.error("no version for %s - %s %s", schemaLocator, schemaGroupName, collectionName)
+            logger.error("no version for %s - %s %s", schemaLocator, collectionGroupName, collectionName)
         #
         numDiff, difD = self.schemaCompare(sDCache, sD)
         # jD = diff(sDCache, sD, marshal=True, syntax="explicit")
         diffPath = None
         if numDiff:
-            logger.debug("diff for %s %s %s %s = \n%s", schemaGroupName, collectionName, encodingType, level, pprint.pformat(difD, indent=3, width=100))
+            logger.debug("diff for %s %s %s %s = \n%s", collectionGroupName, collectionName, encodingType, level, pprint.pformat(difD, indent=3, width=100))
             bn, _ = os.path.splitext(fn)
             diffPath = os.path.join(schemaDiffPath, bn + "-" + v1 + "-" + v2 + "-diff.json")
             mU.doExport(diffPath, difD, fmt="json", indent=3)
@@ -223,13 +224,13 @@ class SchemaProvider(SingletonClass):
             logger.exception("Failing for with %s", str(e))
         return ""
 
-    def __getSchemaDefLocator(self, schemaGroupName, dataTyping="ANY"):
+    def __getSchemaDefLocator(self, collectionGroupName, dataTyping="ANY"):
         """Internal method returning schema definition path for the input content type and application.
         Defines schema definition naming convention -
 
         Args:
-         schemaGroupName (str): schema name (e.g. pdbx, bird, chem_comp, ...)
-         dataTyping (str, optional): Application name for the target schema (e.g. ANY, SQL, ...)
+            collectionGroupName (str): collection schema group name (e.g., "pdbx_core", "core_chem_comp", "core_drugbank", ...)
+             dataTyping (str, optional): Application name for the target schema (e.g. ANY, SQL, ...)
 
          Returns:
 
@@ -239,21 +240,21 @@ class SchemaProvider(SingletonClass):
         schemaLocator = None
         try:
             locPath = self.__cfgOb.get("SCHEMA_DEFINITION_LOCATOR_PATH", sectionName=self.__configName)
-            fn = "schema_def-%s-%s.json" % (schemaGroupName, dataTyping.upper())
+            fn = "schema_def-%s-%s.json" % (collectionGroupName, dataTyping.upper())
             schemaLocator = os.path.join(locPath, fn)
         except Exception as e:
-            logger.exception("Retreiving schema definition path %s for %s failing with %s", schemaGroupName, dataTyping, str(e))
+            logger.exception("Retreiving schema definition path %s for %s failing with %s", collectionGroupName, dataTyping, str(e))
         return schemaLocator
 
-    def __getJsonSchemaLocator(self, schemaGroupName, collectionName, encodingType="BSON", level="full"):
+    def __getJsonSchemaLocator(self, collectionGroupName, collectionName, encodingType="BSON", level="full"):
         """Internal method returning JSON schema path for the input collection data type convention and level.
         Defines the JSON/BSON schema naming convention -
 
         Args:
-         schemaGroupName (str): schema group name
-         collectionName (str): collection name in document store
-         encodingType (str, optional): data type convention (BSON|JSON)
-         level (str, optional): Completeness of the schema (e.g. min or full)
+            collectionGroupName (str): collection schema group name (e.g., "pdbx_core", "core_chem_comp", "core_drugbank", ...)
+            collectionName (str): collection name in document store
+            encodingType (str, optional): data type convention (BSON|JSON)
+            level (str, optional): Completeness of the schema (e.g. min or full)
 
          Returns:
 
@@ -275,7 +276,7 @@ class SchemaProvider(SingletonClass):
             if sdType and sLevel:
                 locPath = self.__cfgOb.get("JSON_SCHEMA_DEFINITION_LOCATOR_PATH", sectionName=self.__configName)
                 # BETTER TO DO THIS HERE AND GENERATE A FILE WITH '-DW-' NAMESPACE, RATHER THAN MAPPING DB NAMES DURING LOAD STEP
-                databaseName = self.getDatabaseMongoName(schemaGroupName)
+                databaseName = self.getDatabaseMongoName(collectionGroupName)
                 fn = "%s-%s-db-%s-col-%s.json" % (sdType, sLevel, databaseName, collectionName)
                 schemaLocator = os.path.join(locPath, fn)
                 logger.info("JSON schemaLocator: %r", schemaLocator)
@@ -307,11 +308,11 @@ class SchemaProvider(SingletonClass):
 
         return filePath if ok else None
 
-    def getJsonSchema(self, schemaGroupName, collectionName, encodingType="BSON", level="full", extraOpts=None):
+    def getJsonSchema(self, collectionGroupName, collectionName, encodingType="BSON", level="full", extraOpts=None):
         """Return JSON schema (w/ BSON types) object for the input collection and level.and
 
         Args:
-            schemaGroupName (str): schema group name
+            collectionGroupName (str): collection schema group name (e.g., "pdbx_core", "core_chem_comp", "core_drugbank", ...)
             collectionName (str): collection name in document store
             encodingType (str, optional): data type convention (BSON|JSON)
             level (str, optional): Completeness of the schema (e.g. min or full)
@@ -321,11 +322,11 @@ class SchemaProvider(SingletonClass):
 
         """
         sObj = None
-        schemaLocator = self.__getJsonSchemaLocator(schemaGroupName, collectionName, encodingType=encodingType, level=level)
+        schemaLocator = self.__getJsonSchemaLocator(collectionGroupName, collectionName, encodingType=encodingType, level=level)
         #
         if self.__rebuildFlag:
             filePath = os.path.join(self.__schemaCachePath, self.__fileU.getFileName(schemaLocator))
-            self.makeSchema(schemaGroupName, collectionName, encodingType=encodingType, level=level, extraOpts=extraOpts)
+            self.makeSchema(collectionGroupName, collectionName, encodingType=encodingType, level=level, extraOpts=extraOpts)
         else:
             filePath = self.__reload(schemaLocator, self.__jsonSchemaCachePath, useCache=self.__useCache)
             logger.info("Reloaded schema filePath: %r", filePath)
@@ -337,11 +338,11 @@ class SchemaProvider(SingletonClass):
             logger.debug("Failed to read schema for %s %r", collectionName, level)
         return sObj
 
-    def makeSchema(self, schemaGroupName, collectionName, encodingType="BSON", level="full", saveSchema=False, extraOpts=None):
+    def makeSchema(self, collectionGroupName, collectionName, encodingType="BSON", level="full", saveSchema=False, extraOpts=None):
         """Create the JSON or BSON schema file for a given database and collection (i.e., the files under, 'json_schema_definitions')
 
         Args:
-            schemaGroupName (str): schema group name (e.g., 'pdbx_comp_model_core')
+            collectionGroupName (str): collection schema group name (e.g., "pdbx_core", "core_chem_comp", "core_drugbank", ...)
             collectionName (str): collection name in document store (e.g., 'pdbx_comp_model_core_entry')
             encodingType (str, optional): data type convention (BSON|JSON)
             level (str, optional): Completeness of the schema (e.g. min or full)
@@ -353,27 +354,27 @@ class SchemaProvider(SingletonClass):
 
         """
         try:
-            smb = SchemaDefBuild(schemaGroupName, self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
+            smb = SchemaDefBuild(collectionGroupName, self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
             #
             cD = None
             stU = encodingType.upper()
             cD = smb.build(collectionName, dataTyping=stU, encodingType=stU, enforceOpts=self.getSchemaOptions(level, extraOpts=extraOpts))
             if cD and saveSchema:
-                schemaLocator = self.__getJsonSchemaLocator(schemaGroupName, collectionName, encodingType=encodingType, level=level)
+                schemaLocator = self.__getJsonSchemaLocator(collectionGroupName, collectionName, encodingType=encodingType, level=level)
                 localPath = os.path.join(self.__jsonSchemaCachePath, self.__fileU.getFileName(schemaLocator))
                 logger.info("Output makeSchema localPath: %r", localPath)
                 mU = MarshalUtil(workPath=self.__workPath)
                 mU.doExport(localPath, cD, fmt="json", indent=3, enforceAscii=False)
         except Exception as e:
-            logger.exception("Building schema %s collection %s failing with %s", schemaGroupName, collectionName, str(e))
+            logger.exception("Building schema %s collection %s failing with %s", collectionGroupName, collectionName, str(e))
             raise
         return cD
 
-    def makeSchemaDef(self, schemaGroupName, dataTyping="ANY", saveSchema=False):
+    def makeSchemaDef(self, collectionGroupName, dataTyping="ANY", saveSchema=False):
         """Create the schema definition file for a given database (i.e., the files under 'schema_definitions')
 
         Args:
-            schemaGroupName (str): Schema group name (e.g., 'pdbx_comp_model_core')
+            collectionGroupName (str): Collection schema group name (e.g., "pdbx_core", "core_chem_comp", "core_drugbank", ...)
             dataTyping (str, optional): Application name for the target schema (e.g. ANY, SQL, ...)
             saveSchema (bool, optional): whether to save the schema to schemaCachePath or not (default False)
 
@@ -383,15 +384,15 @@ class SchemaProvider(SingletonClass):
         """
         schemaDef = None
         try:
-            smb = SchemaDefBuild(schemaGroupName, self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
+            smb = SchemaDefBuild(collectionGroupName, self.__cfgOb, configName=self.__configName, cachePath=self.__cachePath)
             schemaDef = smb.build(dataTyping=dataTyping, encodingType="rcsb")
             if schemaDef and saveSchema:
-                schemaLocator = self.__getSchemaDefLocator(schemaGroupName, dataTyping=dataTyping)
+                schemaLocator = self.__getSchemaDefLocator(collectionGroupName, dataTyping=dataTyping)
                 localPath = os.path.join(self.__schemaCachePath, self.__fileU.getFileName(schemaLocator))
                 mU = MarshalUtil(workPath=self.__workPath)
                 mU.doExport(localPath, schemaDef, fmt="json", indent=3, enforceAscii=False)
         except Exception as e:
-            logger.exception("Building schema %s failing with %s", schemaGroupName, str(e))
+            logger.exception("Building schema %s failing with %s", collectionGroupName, str(e))
         return schemaDef
 
     def schemaCompare(self, orgD, newD):
@@ -492,7 +493,7 @@ class SchemaProvider(SingletonClass):
         else:
             yield indict
 
-    def getDatabaseMongoName(self, schemaGroupName=None):
+    def getDatabaseMongoName(self, collectionGroupName=None):
         """Get the actual MongoDB name to load data to, given the schema group name.
         """
-        return self.__documentDefHelper.getDatabaseMongoName(schemaGroupName)
+        return self.__documentDefHelper.getDatabaseMongoName(collectionGroupName)

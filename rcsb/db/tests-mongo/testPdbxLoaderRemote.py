@@ -72,7 +72,7 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
         self.__ldList = [
             # {"databaseName": "chem_comp_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min"},
             {
-                "databaseName": "bird_chem_comp_core",
+                "databaseName": "core_chem_comp",
                 "collectionNameList": None,
                 "loadType": "full",
                 "mergeContentTypes": None,
@@ -81,7 +81,7 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
                 "status": True,
             },
             {
-                "databaseName": "bird_chem_comp_core",
+                "databaseName": "core_chem_comp",
                 "collectionNameList": None,
                 "loadType": "replace",
                 "mergeContentTypes": None,

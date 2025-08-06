@@ -153,7 +153,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
                 "excludeExtras": excludeExtras,
             },
             {
-                "contentType": "bird_chem_comp_core",
+                "contentType": "core_chem_comp",
                 "mockLength": self.__chemCompMockLen,
                 "filterType": self.__fTypeRow,
                 "styleType": "rowwise_by_name_with_cardinality",
@@ -193,7 +193,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         for tcD in self.__simpleTestCaseList:
             rejectLength = 0 if self.__discoveryMode == "remote" else tcD["rejectLength"]
             mockLength = self.__fileLimit if self.__discoveryMode == "remote" else tcD["mockLength"]
-            if tcD["contentType"] == "bird_chem_comp_core" and self.__discoveryMode == "remote":
+            if tcD["contentType"] == "core_chem_comp" and self.__discoveryMode == "remote":
                 logger.info("Skipping %r in discovery mode %r", tcD["contentType"], self.__discoveryMode)
                 continue
             self.__simpleSchemaDataPrep(tcD["contentType"], tcD["filterType"], tcD["styleType"], mockLength, rejectLength=rejectLength, mergeContentTypes=tcD["mergeContentTypes"])
@@ -202,7 +202,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
         for tcD in self.__fullTestCaseList:
             rejectLength = 0 if self.__discoveryMode == "remote" else tcD["rejectLength"]
             mockLength = self.__fileLimit if self.__discoveryMode == "remote" else tcD["mockLength"]
-            if tcD["contentType"] == "bird_chem_comp_core" and self.__discoveryMode == "remote":
+            if tcD["contentType"] == "core_chem_comp" and self.__discoveryMode == "remote":
                 logger.info("Skipping %r in discovery mode %r", tcD["contentType"], self.__discoveryMode)
                 continue
             self.__fullSchemaDataPrep(
@@ -232,7 +232,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             dD = self.__schP.makeSchemaDef(contentType, dataTyping="ANY", saveSchema=True)
             _ = SchemaDefAccess(dD)
             inputPathList = self.__rpP.getLocatorObjList(contentType=contentType, mergeContentTypes=mergeContentTypes)
-            sd, _, _, _ = self.__schP.getSchemaInfo(schemaGroupName=contentType, dataTyping="ANY")
+            sd, _, _, _ = self.__schP.getSchemaInfo(collectionGroupName=contentType, dataTyping="ANY")
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=filterType)
             sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__cachePath, verbose=self.__verbose)
             #
@@ -300,7 +300,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             dD = self.__schP.makeSchemaDef(contentType, dataTyping="ANY", saveSchema=True)
             _ = SchemaDefAccess(dD)
             inputPathList = self.__rpP.getLocatorObjList(contentType=contentType, mergeContentTypes=mergeContentTypes)
-            sd, _, collectionNameList, _ = self.__schP.getSchemaInfo(schemaGroupName=contentType, dataTyping="ANY")
+            sd, _, collectionNameList, _ = self.__schP.getSchemaInfo(collectionGroupName=contentType, dataTyping="ANY")
             #
             dP = DictionaryApiProviderWrapper(self.__cachePath, cfgOb=self.__cfgOb, configName=self.__configName, useCache=True)
             dictApi = dP.getApiByName(contentType)

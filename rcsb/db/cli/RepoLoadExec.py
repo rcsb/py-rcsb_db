@@ -27,7 +27,8 @@
 #    25-Apr-2024 - dwp Add support for remote config file loading; use underscores instead of hyphens for arg choices
 #    22-Jan-2025 - mjt Add Imgs format option flags
 #     5-Mar-2025 - js  Add support for prepending content type and directory hash for splitIdList output
-#     7-Apr-2025 - dwp Add support for IHM model loading by adding 'content_type' flag
+#     7-Apr-2025 - dwp Add support for IHM model loading by adding 'content_type' argument
+#     6-Aug-2025 - dwp Add support for 'collection_group' argument (to eventually replace 'database' argument)
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -72,6 +73,13 @@ def main():
         default=None,
         help="Database to load (most common choices are: 'pdbx_core', 'pdbx_comp_model_core', or 'bird_chem_comp_core')",
         choices=["pdbx_core", "pdbx_comp_model_core", "bird_chem_comp_core", "chem_comp", "chem_comp_core", "bird_chem_comp", "bird", "bird_family", "ihm_dev"],
+    )
+    #
+    parser.add_argument(
+        "--collection_group",
+        default=None,
+        help="Collection/schema group to load (most common choices are: 'pdbx_core', 'pdbx_comp_model_core', or 'core_chem_comp')",
+        choices=["pdbx_core", "pdbx_comp_model_core", "core_chem_comp"],
     )
     #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
@@ -233,16 +241,15 @@ def processArguments(args):
     #
     # Do any additional argument checking
     op = args.op
-    databaseName = args.database
     if not op:
         raise ValueError("Must supply a value to '--op' argument")
-    if op == "pdbx_loader" and not databaseName:
-        raise ValueError("Must supply a value to '--database' argument for op type 'pdbx-loader")
+    if op == "pdbx_loader" and not (args.collection_group or args.database):
+        raise ValueError("Must supply a value to '--collection_group' or '--database' argument for op type 'pdbx-loader")
     #
-    if databaseName == "bird_family":  # Not sure if this is relevant anymore
-        dataSelectors = ["BIRD_FAMILY_PUBLIC_RELEASE"]
-    else:
-        dataSelectors = args.data_selectors if args.data_selectors else ["PUBLIC_RELEASE"]
+    # if args.database == "bird_family":  # Not sure if this is relevant anymore
+    #     dataSelectors = ["BIRD_FAMILY_PUBLIC_RELEASE"]
+    # else:
+    dataSelectors = args.data_selectors if args.data_selectors else ["PUBLIC_RELEASE"]
     #
     if args.document_style not in ["rowwise_by_name", "rowwise_by_name_with_cardinality", "columnwise_by_name", "rowwise_by_id", "rowwise_no_name"]:
         logger.error("Unsupported document style %s", args.document_style)
@@ -259,7 +266,8 @@ def processArguments(args):
         "debugFlag": debugFlag,
     }
     loadD = {
-        "databaseName": databaseName,
+        "databaseName": args.database,
+        "collectionGroupName": args.collection_group,
         "collectionNameList": args.collection_list,
         "loadType": args.load_type,
         "numProc": int(args.num_proc),

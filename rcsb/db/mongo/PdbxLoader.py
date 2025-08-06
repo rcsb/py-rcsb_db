@@ -44,6 +44,7 @@
 #     10-Sep-2024 dwp  Add method for checking number of nonpolymer entity instances with validation data
 #      7-Apr-2025 dwp  Add support for IHM model loading
 #     30-Jul-2025 dwp  Replace redundant methods with those from DocumentLoader (createCollection, removeCollection, getKeyValues)
+#      6-Aug-2025 dwp  Add in usage of "collectionGroupName" (in place of "databaseName", where appropriate)
 ##
 """
 Worker methods for loading primary data content following mapping conventions in external schema definitions.
@@ -158,6 +159,7 @@ class PdbxLoader(object):
     def load(
         self,
         databaseName,
+        collectionGroupName=None,
         collectionLoadList=None,
         loadType="full",
         contentType=None,
@@ -185,7 +187,8 @@ class PdbxLoader(object):
         """Driver method for loading PDBx/mmCIF content into the Mongo document store.
 
         Args:
-            databaseName (str): A content database schema (e.g. 'bird','bird_family','bird_chem_comp', chem_comp', 'pdbx', 'pdbx_core')
+            databaseName (str): The database name (e.g. 'bird','bird_family','bird_chem_comp', chem_comp', 'pdbx', 'pdbx_core')
+            collectionGroupName (str): A content collection group schema (e.g. 'bird','bird_family','bird_chem_comp', chem_comp', 'pdbx', 'pdbx_core')
             collectionLoadList (list, optional): list of collection names in this schema to load (default is load all collections)
             loadType (str, optional): mode of loading 'full' (bulk delete then bulk insert) or 'replace'
             contentType (str, optional): content type to load ('pdbx_core', 'pdbx_comp_model_core', 'pdbx_ihm'). Defaults to databaseName.
@@ -219,7 +222,16 @@ class PdbxLoader(object):
             desp = DataExchangeStatus()
             statusStartTimestamp = desp.setStartTime()
             #
-            logger.info("Beginning load operation (%r) for database %s", loadType, databaseName)
+            # Temporarily set collectionGroupName here until corresponding code in weekly-update-workflow is updated
+            if databaseName and not collectionGroupName:
+                if databaseName in ["pdbx_core", "pdbx_comp_model_core"]:
+                    collectionGroupName = databaseName
+                elif databaseName in ["bird_chem_comp_core"]:
+                    collectionGroupName = "core_chem_comp"
+
+            databaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=collectionGroupName)
+            #
+            logger.info("Beginning load operation (%r) for collectionGroup %r into Mongo database %s", loadType, collectionGroupName, databaseNameMongo)
             startTime = self.__begin(message="loading operation")
             #
             contentType = contentType if contentType else databaseName
@@ -227,10 +239,10 @@ class PdbxLoader(object):
             # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
             inputIdCodeList = inputIdCodeList if inputIdCodeList else []
             inputIdCodeList = [id.upper() for id in inputIdCodeList]
-            if databaseName in ["pdbx_core", "pdbx_comp_model_core"]:
+            if collectionGroupName in ["pdbx_core", "pdbx_comp_model_core"]:
                 structDetermMethod = self.__getStructDetermMethod(contentType=contentType)
                 #
-                totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=databaseName + "_entry", structDetermMethod=structDetermMethod)
+                totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseNameMongo, collectionName=collectionGroupName + "_entry", structDetermMethod=structDetermMethod)
                 # Get the list of IDs from only the given sublist that are already loaded
                 subsetIdsAlreadyLoaded = list(set(totalIdsAlreadyLoaded).intersection(set(inputIdCodeList)))
                 if not forceReload:
@@ -257,7 +269,7 @@ class PdbxLoader(object):
                 # For "bird_chem_comp_core":
                 idCodesToLoadL = inputIdCodeList
             locatorObjList = self.__rpP.getLocatorObjList(contentType=contentType, inputPathList=inputPathList, inputIdCodeList=idCodesToLoadL, mergeContentTypes=mergeContentTypes)
-            logger.info("Loading database %s (%r) with path length %d", databaseName, loadType, len(locatorObjList))
+            logger.info("Loading collection group %s (%r) with path length %d", collectionGroupName, loadType, len(locatorObjList))
             logger.info("First locatorObj: %r", locatorObjList[0])
             #
             if saveInputFileListPath:
@@ -267,14 +279,14 @@ class PdbxLoader(object):
             # Don't load resource providers which are irrelevant to 'pdbx_core' or 'pdbx_comp_model_core'
             if not providerTypeExcludeL:
                 providerTypeExcludeL = []
-                if databaseName in ["pdbx_core", "bird_chem_comp_core"]:
+                if collectionGroupName in ["pdbx_core", "core_chem_comp"]:
                     providerTypeExcludeL.append("pdbx_comp_model_core")
-                if databaseName in ["pdbx_comp_model_core", "bird_chem_comp_core"]:
+                if collectionGroupName in ["pdbx_comp_model_core", "core_chem_comp"]:
                     providerTypeExcludeL.append("pdbx_core")
             #
             modulePathMap = self.__cfgOb.get("DICT_METHOD_HELPER_MODULE_PATH_MAP", sectionName=self.__cfgSectionName)
             dP = DictionaryApiProviderWrapper(self.__cachePath, cfgOb=self.__cfgOb, useCache=True)
-            dictApi = dP.getApiByName(databaseName)
+            dictApi = dP.getApiByName(collectionGroupName)
             # ---
             dmrP = DictMethodResourceProvider(
                 self.__cfgOb, cachePath=self.__cachePath, restoreUseStash=restoreUseStash, restoreUseGit=restoreUseGit, providerTypeExcludeL=providerTypeExcludeL
@@ -283,7 +295,7 @@ class PdbxLoader(object):
             useCacheInCheck = not rebuildCache
             ok = dmrP.cacheResources(useCache=useCacheInCheck)
             if not ok:
-                logger.error("Checking cached resource dependencies failed - %s load (%r) aborted", databaseName, loadType)
+                logger.error("Checking cached resource dependencies failed - aborting load for group %s mongodb %r (%r)", collectionGroupName, databaseNameMongo, loadType)
                 return ok
             # ---
             self.__dmh = DictMethodRunner(dictApi, modulePathMap=modulePathMap, resourceProvider=dmrP)
@@ -293,7 +305,8 @@ class PdbxLoader(object):
                 filterType = "drop-empty-tables|skip-max-width|assign-dates|convert-iterables|normalize-enums|translateXMLCharRefs"
             #
             optD = {}
-            optD["databaseName"] = databaseName
+            optD["databaseNameMongo"] = databaseNameMongo
+            optD["collectionGroupName"] = collectionGroupName
             optD["styleType"] = styleType
             optD["filterType"] = filterType
             optD["readBackCheck"] = self.__readBackCheck
@@ -312,8 +325,7 @@ class PdbxLoader(object):
             numProc = self.__numProc
             chunkSize = self.__chunkSize if locatorObjList and self.__chunkSize < len(locatorObjList) else 0
             #
-            sd, _, fullCollectionNameList, docIndexD = self.__schP.getSchemaInfo(databaseName, dataTyping="ANY")
-            # databaseNameMongo = self.getDatabaseMongoName(databaseName)
+            sd, _, fullCollectionNameList, docIndexD = self.__schP.getSchemaInfo(collectionGroupName, dataTyping="ANY")
             collectionNameList = collectionLoadList if collectionLoadList else fullCollectionNameList
 
             # Move "entry" collection to the end of the list so that if it fails midload, we can determine which entities/assemblies/etc. need reloading based on entry collection
@@ -324,23 +336,20 @@ class PdbxLoader(object):
             logger.info("collectionNameList: %r", collectionNameList)
 
             for collectionName in collectionNameList:
+                bsonSchema = None
+                if validationLevel and validationLevel in ["min", "full"]:
+                    bsonSchema = self.__schP.getJsonSchema(collectionGroupName, collectionName, encodingType="BSON", level=validationLevel)
+                #
                 if loadType == "full":
-                    self.__dL.removeCollection(databaseName, collectionName)
+                    self.__dL.removeCollection(databaseNameMongo, collectionName)
                     indexDL = docIndexD[collectionName] if collectionName in docIndexD else []
-                    bsonSchema = None
-                    if validationLevel and validationLevel in ["min", "full"]:
-                        bsonSchema = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="BSON", level=validationLevel)
-                    # ok = self.__createCollection(databaseName, collectionName, indexDL=indexDL, bsonSchema=bsonSchema)
-                    ok = self.__dL.createCollection(databaseName, collectionName, indexDL=indexDL, bsonSchema=bsonSchema)
+                    ok = self.__dL.createCollection(databaseNameMongo, collectionName, indexDL=indexDL, bsonSchema=bsonSchema)
                     logger.debug("Collection create return status %r", ok)
                 elif loadType == "replace" and updateSchemaOnReplace:
-                    bsonSchema = None
-                    if validationLevel and validationLevel in ["min", "full"]:
-                        bsonSchema = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="BSON", level=validationLevel)
                     if bsonSchema:
-                        ok = self.__updateCollectionSchema(databaseName, collectionName, bsonSchema=bsonSchema)
+                        ok = self.__updateCollectionSchema(databaseNameMongo, collectionName, bsonSchema=bsonSchema)
                         if not ok:
-                            logger.info("Schema update failing for %s (%s)", databaseName, collectionName)
+                            logger.info("Schema update failing for database %s collection %s", databaseNameMongo, collectionName)
             #
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=filterType)
             optD["schemaDefAccess"] = sd
@@ -362,8 +371,9 @@ class PdbxLoader(object):
             #
             if subLists:
                 logger.info(
-                    "Starting load of %s (%r) using %d processor for total count %d outer subtask count %d subtask length %d",
-                    databaseName,
+                    "Starting load of collection group %s mongoDB %s (%r) using %d processors for total count %d outer subtask count %d subtask length %d",
+                    collectionGroupName,
+                    databaseNameMongo,
                     loadType,
                     numProc,
                     numPaths,
@@ -371,7 +381,7 @@ class PdbxLoader(object):
                     len(subLists[0]),
                 )
             else:
-                logger.error("Path partitioning fails for %s (%r) using numProc %d", databaseName, loadType, numProc)
+                logger.error("Path partitioning fails for collection group %s mongoDB %s (%r) using numProc %d", collectionGroupName, databaseNameMongo, loadType, numProc)
             #
             failList = []
             for ii, subList in enumerate(subLists):
@@ -402,9 +412,9 @@ class PdbxLoader(object):
             self.__end(startTime, "Loading operation completed with status " + str(ok))
             #
             # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
-            if databaseName in ["pdbx_core", "pdbx_comp_model_core"]:
+            if collectionGroupName in ["pdbx_core", "pdbx_comp_model_core"]:
                 structDetermMethod = self.__getStructDetermMethod(contentType=contentType)
-                totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=databaseName + "_entry", structDetermMethod=structDetermMethod)
+                totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseNameMongo, collectionName=collectionGroupName + "_entry", structDetermMethod=structDetermMethod)
                 # Get the list of IDs from only the given sublist that are already loaded
                 subsetIdsAlreadyLoaded = list(set(totalIdsAlreadyLoaded).intersection(set(inputIdCodeList)))
                 idCodesNotLoadedL = list(set(inputIdCodeList) ^ set(subsetIdsAlreadyLoaded))
@@ -423,23 +433,24 @@ class PdbxLoader(object):
             sFlag = "Y" if ok else "N"
             for collectionName in collectionNameList:
                 desp.setStartTime(tS=statusStartTimestamp)
-                desp.setObject(databaseName, collectionName)
+                desp.setObject(databaseNameMongo, collectionName)
                 desp.setStatus(updateId=None, successFlag=sFlag)
                 desp.setEndTime()
                 self.__statusList.append(desp.getStatus())
             #
             if ok:
-                logger.info("Completed loading %s with status %r loaded %d paths", databaseName, ok, numPaths)
+                logger.info("Completed loading of collection group %s mongoDB %s (status %r) - loaded %d paths", collectionGroupName, databaseNameMongo, ok, numPaths)
             else:
                 logger.error(
-                    "Completed loading %s with status %r failure count %d of %d paths: %r",
-                    databaseName,
+                    "Failed to complete loading of collection group %s mongoDB %s (status %r) - failure count %d of %d paths: %r",
+                    collectionGroupName,
+                    databaseNameMongo,
                     ok,
                     len(failList),
                     numPaths,
                     [os.path.basename(pth) for pth in failedPathList],
                 )
-                # raise ValueError("Failed loading %s - Check log for more details" % databaseName)
+                # raise ValueError("Failed loading %s - Check log for more details" % collectionGroupName)
             #
             return ok
         except Exception as e:
@@ -479,7 +490,8 @@ class PdbxLoader(object):
             logSize = "logSize" in optionsD and optionsD["logSize"]
             dataSelectors = optionsD["dataSelectors"]
             loadType = optionsD["loadType"]
-            databaseName = optionsD["databaseName"]
+            databaseNameMongo = optionsD["databaseNameMongo"]
+            collectionGroupName = optionsD["collectionGroupName"]
             pruneDocumentSize = optionsD["pruneDocumentSize"]
             regexPurge = optionsD["regexPurge"]
             sd = optionsD["schemaDefAccess"]
@@ -528,9 +540,9 @@ class PdbxLoader(object):
                 if readFailL:
                     purgeL += [cN for cN in readFailL if cN not in purgeL]
                 for collectionName in collectionNameList:
-                    logger.info("Purging objects from %s for %d containers", collectionName, len(purgeL))
-                    ok = self.__purgeDocuments(databaseName, collectionName, cNameL)
-                    logger.info("%s %s - loadType %r purgeL %r (%r)", databaseName, collectionName, loadType, purgeL, ok)
+                    logger.info("Purging objects from %s collection %s for %d containers", databaseNameMongo, collectionName, len(purgeL))
+                    ok = self.__purgeDocuments(databaseNameMongo, collectionName, cNameL)
+                    logger.info("%s %s - loadType %r purgeL %r (%r)", databaseNameMongo, collectionName, loadType, purgeL, ok)
             #
             # -- Apply methods to each container
             for container in containerList:
@@ -556,9 +568,9 @@ class PdbxLoader(object):
                 sdp.setSchemaIdExcludeList(tableIdExcludeList)
                 sdp.setSchemaIdIncludeList(tableIdIncludeList)
                 #
-                logger.debug("%s databaseName %s collectionName %s slice filter %s", procName, databaseName, collectionName, sliceFilter)
-                logger.debug("%s databaseName %s include list %r", procName, databaseName, tableIdIncludeList)
-                logger.debug("%s databaseName %s exclude list %r", procName, databaseName, tableIdExcludeList)
+                logger.debug("%s databaseNameMongo %s collectionName %s slice filter %s", procName, databaseNameMongo, collectionName, sliceFilter)
+                logger.debug("%s databaseNameMongo %s include list %r", procName, databaseNameMongo, tableIdIncludeList)
+                logger.debug("%s databaseNameMongo %s exclude list %r", procName, databaseNameMongo, tableIdExcludeList)
                 #
                 dList, containerIdList, rejectIdList = sdp.processDocuments(
                     containerList,
@@ -604,7 +616,7 @@ class PdbxLoader(object):
                 #
                 if dList:
                     ok, _, failDocIdS = self.__loadDocuments(
-                        databaseName, collectionName, dList, docIdL, replaceIdL=replaceIdL, loadType=loadType, readBackCheck=readBackCheck, pruneDocumentSize=pruneDocumentSize
+                        databaseNameMongo, collectionName, dList, docIdL, replaceIdL=replaceIdL, loadType=loadType, readBackCheck=readBackCheck, pruneDocumentSize=pruneDocumentSize
                     )
                 #
                 if failDocIdS:
@@ -616,16 +628,16 @@ class PdbxLoader(object):
                             fList.append(dD)
                             if validateFailures:
                                 logger.info("Validating document %r", tId)
-                                self.__validateDocuments(databaseName, collectionName, [dD], docIdL, schemaLevel=validationLevel)
+                                self.__validateDocuments(collectionGroupName, collectionName, [dD], docIdL, schemaLevel=validationLevel)
                     #
                     #  -- Try and repair failDocIdS --
                     #
                     if reloadPartial:
                         logger.info("Attempting corrections on documents %r", failDocIdS)
-                        fList = self.__validateAndFix(databaseName, collectionName, fList, docIdL, schemaLevel=validationLevel)
+                        fList = self.__validateAndFix(collectionGroupName, collectionName, fList, docIdL, schemaLevel=validationLevel)
 
                         fOk, _, failDocIdS = self.__loadDocuments(
-                            databaseName, collectionName, fList, docIdL, replaceIdL=replaceIdL, loadType=loadType, readBackCheck=readBackCheck, pruneDocumentSize=pruneDocumentSize
+                            databaseNameMongo, collectionName, fList, docIdL, replaceIdL=replaceIdL, loadType=loadType, readBackCheck=readBackCheck, pruneDocumentSize=pruneDocumentSize
                         )
                         logger.info("Final load (%r) failures: %r", fOk, failDocIdS)
 
@@ -642,9 +654,23 @@ class PdbxLoader(object):
                 failPathList = list(set(failPathList))
                 #
                 if failPathList:
-                    logger.error("%s %s/%s worker load failures %r", procName, databaseName, collectionName, [os.path.basename(pth) for pth in failPathList if pth is not None])
+                    logger.error(
+                        "%s %s %s/%s worker load failures %r",
+                        procName,
+                        collectionGroupName,
+                        databaseNameMongo,
+                        collectionName,
+                        [os.path.basename(pth) for pth in failPathList if pth is not None]
+                    )
                 if rejectPathList:
-                    logger.debug("%s %s/%s worker load rejected %r", procName, databaseName, collectionName, [os.path.basename(pth) for pth in rejectPathList])
+                    logger.debug(
+                        "%s %s %s/%s worker load rejected %r",
+                        procName,
+                        collectionGroupName,
+                        databaseNameMongo,
+                        collectionName,
+                        [os.path.basename(pth) for pth in rejectPathList]
+                    )
             #
             containerList = []
             # -------------------------
@@ -654,7 +680,15 @@ class PdbxLoader(object):
             #  cIdD[cId] = locatorObj
             # ----
             successList = [locatorObj for cId, locatorObj in cIdD.items() if cId not in failContainerIdS]
-            logger.debug("%s %s load worker returns  successes %d rejects %d failures %d", procName, databaseName, len(successList), len(rejectContainerIdS), len(failContainerIdS))
+            logger.debug(
+                "%s %s %s load worker returns successes %d rejects %d failures %d",
+                procName,
+                collectionGroupName,
+                databaseNameMongo,
+                len(successList),
+                len(rejectContainerIdS),
+                len(failContainerIdS)
+            )
             #
             retList = [(cId, locatorObj, True) for cId, locatorObj in cIdD.items() if cId not in failContainerIdS]
             retList += [(cId, locatorObj, False) for cId, locatorObj in cIdD.items() if cId in failContainerIdS]
@@ -663,7 +697,7 @@ class PdbxLoader(object):
                 # remove all collection objects related to a load failure
                 for collectionName in collectionNameList:
                     logger.info("Purging all objects from %s for failed ids: %r", collectionName, cardinalIdFailS)
-                    ok = self.__purgeDocuments(databaseName, collectionName, list(cardinalIdFailS))
+                    ok = self.__purgeDocuments(databaseNameMongo, collectionName, list(cardinalIdFailS))
             #
             ok = len(failContainerIdS) == 0
             self.__end(startTime, procName + " with status " + str(ok))
@@ -679,10 +713,10 @@ class PdbxLoader(object):
     # -------------- -------------- -------------- -------------- -------------- -------------- --------------
     #                                        ---  Supporting code follows ---
     #
-    def __validateAndFix(self, databaseName, collectionName, dList, docIdL, schemaLevel="full"):
+    def __validateAndFix(self, collectionGroupName, collectionName, dList, docIdL, schemaLevel="full"):
         """[summary]
         Args:
-            databaseName (str): Target database name
+            collectionGroupName (str): Target collection/schema group name
             collectionName (str): Target collection name
             dList (list): document list
             docIdL (list): list of key document attributes required to uniquely identify a document in a given collection
@@ -693,19 +727,19 @@ class PdbxLoader(object):
         """
         #
         rList = []
-        logger.info("Validating and fixing objects in databaseName %s collectionName %s numObject %d docIdL %r", databaseName, collectionName, len(dList), docIdL)
-        cD = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="JSON", level=schemaLevel)
+        logger.info("Validating and fixing objects in schema group %s collectionName %s numObject %d docIdL %r", collectionGroupName, collectionName, len(dList), docIdL)
+        cD = self.__schP.getJsonSchema(collectionGroupName, collectionName, encodingType="JSON", level=schemaLevel)
         # --
         try:
             Draft4Validator.check_schema(cD)
         except Exception as e:
-            logger.error("%s %s schema validation fails with %s", databaseName, collectionName, str(e))
+            logger.error("%s %s schema validation fails with %s", collectionGroupName, collectionName, str(e))
         # --
         filterArtifactErrors = True
         valInfo = Draft4Validator(cD, format_checker=FormatChecker())
         for ii, dD in enumerate(dList):
             cN = self.__dL.getKeyValues(dD, docIdL)
-            logger.info("Checking %r with schema %s collection %s document (%d)", cN, databaseName, collectionName, ii + 1)
+            logger.info("Checking %r with schema %s collection %s document (%d)", cN, collectionGroupName, collectionName, ii + 1)
             updL = []
             try:
                 failFlag = False
@@ -719,7 +753,7 @@ class PdbxLoader(object):
                     if filterArtifactErrors and "datetime.datetime" in error.message and "is not of type 'string'" in error.message:
                         continue
                     #
-                    logger.info("Document issues with schema %s collection %s (%s) path %s error: %s", databaseName, collectionName, cN, error.path, error.message)
+                    logger.info("Document issues with schema %s collection %s (%s) path %s error: %s", collectionGroupName, collectionName, cN, error.path, error.message)
                     logger.debug("Failing document %d : %r", ii + 1, list(dD.items()))
                     #
                     pLen = len(error.path)
@@ -742,24 +776,25 @@ class PdbxLoader(object):
         return rList
 
     #
-    def __validateDocuments(self, databaseName, collectionName, dList, docIdL, schemaLevel="full"):
+    def __validateDocuments(self, collectionGroupName, collectionName, dList, docIdL, schemaLevel="full"):
         #
-        logger.info("Validating databaseName %s collectionName %s numObject %d docIdL %r", databaseName, collectionName, len(dList), docIdL)
+        logger.info("Validating collectionGroupName %s collectionName %s numObject %d docIdL %r", collectionGroupName, collectionName, len(dList), docIdL)
         eCount = 0
-        cD = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="JSON", level=schemaLevel)
-        # cD = self.__schP.makeSchema(databaseName, collectionName, encodingType="JSON", level=schemaLevel, saveSchema=True, extraOpts=self.__extraOpts)
+        #
+        cD = self.__schP.getJsonSchema(collectionGroupName, collectionName, encodingType="JSON", level=schemaLevel)
+        # cD = self.__schP.makeSchema(collectionGroupName, collectionName, encodingType="JSON", level=schemaLevel, saveSchema=True, extraOpts=self.__extraOpts)
         # Raises exceptions for schema compliance.
         try:
             Draft4Validator.check_schema(cD)
         except Exception as e:
-            logger.error("%s %s schema validation fails with %s", databaseName, collectionName, str(e))
+            logger.error("%s %s schema validation fails with %s", collectionGroupName, collectionName, str(e))
         #
         filterErrors = True
         valInfo = Draft4Validator(cD, format_checker=FormatChecker())
-        logger.info("Validating %d documents from %s %s", len(dList), databaseName, collectionName)
+        logger.info("Validating %d documents from %s %s", len(dList), collectionGroupName, collectionName)
         for ii, dD in enumerate(dList):
             cN = self.__dL.getKeyValues(dD, docIdL)
-            logger.info("Checking with schema %s collection %s document (%d) %r", databaseName, collectionName, ii + 1, cN)
+            logger.info("Checking with schema %s collection %s document (%d) %r", collectionGroupName, collectionName, ii + 1, cN)
             try:
                 cCount = 0
                 for error in sorted(valInfo.iter_errors(dD), key=str):
@@ -769,12 +804,12 @@ class PdbxLoader(object):
                         continue
                     if filterErrors and "datetime.datetime" in error.message and "is not of type 'string'" in error.message:
                         continue
-                    logger.info("Document issues with schema %s collection %s (%s) path %s error: %s", databaseName, collectionName, cN, error.path, error.message)
+                    logger.info("Document issues with schema %s collection %s (%s) path %s error: %s", collectionGroupName, collectionName, cN, error.path, error.message)
                     logger.debug("Failing document %d : %r", ii + 1, list(dD.items()))
                     eCount += 1
                     cCount += 1
                 if cCount > 0:
-                    logger.info("For schema %s collection %s container %s error count %d", databaseName, collectionName, cN, cCount)
+                    logger.info("For schema %s collection %s container %s error count %d", collectionGroupName, collectionName, cN, cCount)
             except Exception as e:
                 logger.exception("Validation processing error %s", str(e))
         return eCount
@@ -1021,7 +1056,7 @@ class PdbxLoader(object):
         """Remove and recreate collections for input database.
 
         Args:
-            databaseName (str): A content datbase schema (e.g. 'bird','bird_family','bird_chem_comp', chem_comp', 'pdbx', 'pdbx_core')
+            databaseName (str): database name (e.g. 'bird','bird_family','bird_chem_comp', chem_comp', 'pdbx', 'pdbx_core')
             collectionLoadList (list, optional): list of collection names in this schema to load (default is load all collections)
             validationLevel (str, optional): Completeness of json/bson metadata schema bound to each collection (e.g. 'min', 'full' or None)
         Returns:
@@ -1064,7 +1099,7 @@ class PdbxLoader(object):
         """Driver method for checking if DB loading is complete (following the execution of the individual sublist tasks).
 
         Args:
-            databaseName (str): A content datbase schema (e.g. 'pdbx_core', 'pdbx_comp_model_core)
+            databaseName (str): database name (e.g. 'pdbx_core', 'pdbx_comp_model_core)
             contentType (str, optional): content type to load ('pdbx_core', 'pdbx_comp_model_core', 'pdbx_ihm')
             completeIdCodeList (list, optional): Complete list of ID codes that should be loaded by the end of all sublist loader tasks
             completeIdCodeCount (int, optional): Number of total ID codes that should be loaded by the end of all sublist loader tasks
@@ -1133,16 +1168,11 @@ class PdbxLoader(object):
             holdingCount = 0
             combinedHoldingActualCount = 0
             combinedHoldingExpectedCount = 0
+            #
+            repoHoldingsCollectionGroupName = "repository_holdings"
 
-            repoHoldingsCollections = {
-                "repository_holdings": [
-                    "repository_holdings_combined_entry",
-                    "repository_holdings_current_entry",
-                    "repository_holdings_removed_entry",
-                    "repository_holdings_unreleased_entry",
-                    "repository_holdings_update_entry",
-                ],
-            }
+            _, _, collectionNameList, _ = self.__schP.getSchemaInfo(collectionGroupName=repoHoldingsCollectionGroupName, dataTyping="ANY")
+            repoHoldingsDatabaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=repoHoldingsCollectionGroupName)
 
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
@@ -1152,20 +1182,19 @@ class PdbxLoader(object):
                     collectionName=str(databaseName + "_entry"),
                 )
 
-                for databaseName, collL in repoHoldingsCollections.items():
-                    for collectionName in collL:
-                        num = len(mg.distinct(databaseName, collectionName, "rcsb_id"))
-                        if collectionName == "repository_holdings_current_entry":
-                            holdingCount = num
-                        if collectionName == "repository_holdings_combined_entry":
-                            combinedHoldingActualCount = num
-                        if any(s in collectionName for s in ["current_entry", "removed_entry", "unreleased_entry"]):
-                            combinedHoldingExpectedCount += num
+                for collectionName in collectionNameList:
+                    num = len(mg.distinct(repoHoldingsDatabaseNameMongo, collectionName, "rcsb_id"))
+                    if collectionName == "repository_holdings_current_entry":
+                        holdingCount = num
+                    if collectionName == "repository_holdings_combined_entry":
+                        combinedHoldingActualCount = num
+                    if any(s in collectionName for s in ["current_entry", "removed_entry", "unreleased_entry"]):
+                        combinedHoldingExpectedCount += num
 
-                        logger.info("database %r collection %r count (%r)", databaseName, collectionName, num)
-                        if num == 0:
-                            logger.error("database %r collection %r is empty", databaseName, collectionName)
-                            ok = False
+                    logger.info("database %r collection %r count (%r)", repoHoldingsDatabaseNameMongo, collectionName, num)
+                    if num == 0:
+                        logger.error("database %r collection %r is empty", repoHoldingsDatabaseNameMongo, collectionName)
+                        ok = False
 
             if entryCount != holdingCount:
                 logger.error("The total entries in the collections of core entry (%r) and current repository holdings (%r) are different.", entryCount, holdingCount)

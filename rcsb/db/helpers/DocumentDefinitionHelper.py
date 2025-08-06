@@ -965,24 +965,25 @@ class DocumentDefinitionHelper(object):
                 logger.debug("  %r %r -> %r (%s)", catName, atName, descriptionText, ",".join([tup[0] for tup in searchContextTupL]))
         return True
 
-    def getDatabaseMongoName(self, schemaGroupName=None):
+    def getDatabaseMongoName(self, collectionGroupName=None):
         """Get the actual MongoDB name to load data to, given the schema group name.
 
         Args:
-            schemaGroupName (str): schema group name (e.g., "core_drugbank")
+            collectionGroupName (str): collection schema group name (e.g., "pdbx_core" or "core_drugbank")
 
         Returns:
-            str: corresponding MongoDB name if defined in config; else returns input schemaGroupName
+            str: corresponding MongoDB name if defined in config; else returns input collectionGroupName
         """
-        databaseNameMongo = None
+        databaseNameMongo = collectionGroupName
         try:
-            if not schemaGroupName:
+            if collectionGroupName:
+                schemaGroupToDbMap = self.__cfgOb.get("schema_group_to_mongodb_name", sectionName="database_catalog_configuration")
+                if schemaGroupToDbMap and collectionGroupName in schemaGroupToDbMap:
+                    databaseNameMongo = schemaGroupToDbMap.get(collectionGroupName, collectionGroupName)
+                logger.info("Mapping for collectionGroupName %s -> databaseNameMongo %r", collectionGroupName, databaseNameMongo)
                 return databaseNameMongo
-            schemaGroupToDbMap = self.__cfgOb.get("schema_group_to_mongodb_name", sectionName="database_catalog_configuration")
-            if schemaGroupToDbMap and schemaGroupName in schemaGroupToDbMap:
-                databaseNameMongo = schemaGroupToDbMap[schemaGroupName]
-            databaseNameMongo = databaseNameMongo if databaseNameMongo else schemaGroupName
         except Exception as e:
-            logger.exception("Mapping from schema group %s to MongoDB name failing with %s", schemaGroupName, str(e))
-        logger.info("Mapped schemaGroupName %s -> databaseNameMongo %r", schemaGroupName, databaseNameMongo)
-        return databaseNameMongo
+            logger.exception("Mapping from schema group %s to MongoDB name failing with %s", collectionGroupName, str(e))
+        #
+        logger.info("Unable to get mapping for collectionGroupName %r", collectionGroupName)
+        return collectionGroupName

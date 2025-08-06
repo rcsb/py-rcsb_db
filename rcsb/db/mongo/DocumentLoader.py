@@ -72,16 +72,6 @@ class DocumentLoader(object):
         try:
             startTime = self.__begin(message="loading operation")
             #
-            # if not collectionName:
-            #     logger.error("Must specify 'collectionName' argument")
-            # #
-            # if databaseName is not None:
-            #     databaseNameMongo = databaseName
-            # elif schemaGroupName is not None:
-            #     databaseNameMongo = self.__schP.getDatabaseMongoName(schemaGroupName=schemaGroupName)
-            # else:
-            #     logger.error("Must specify either 'databaseName' or 'schemaGroupName' argument")
-            # #
             optionsD = {}
             optionsD["collectionName"] = collectionName
             optionsD["databaseName"] = databaseName
