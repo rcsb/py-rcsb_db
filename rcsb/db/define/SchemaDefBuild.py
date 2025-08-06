@@ -55,36 +55,39 @@ logger = logging.getLogger(__name__)
 class SchemaDefBuild(object):
     """Integrate dictionary metadata and file based(type/coverage) into internal and JSON/BSON schema defintions."""
 
-    def __init__(self, databaseName, cfgOb, cachePath=None, includeContentClasses=None):
+    def __init__(self, schemaGroupName, cfgOb, configName="site_info_configuration", cachePath=None, includeContentClasses=None):
         """Integrate dictionary metadata and file based(type/coverage) into internal and JSON/BSON schema defintions.
 
         Args:
-            databaseName (str): schema name
+            schemaGroupName (str): schema name
             cfgOb (object): ConfigInfo() object instance
+            configName (str): Config section name (default "site_info_configuration")
             cachePath (str): path to cached resources
             includeContentClasses (list, optional): content class list. Defaults to None.
         """
-        configName = "site_info_configuration"
+        # configName = "site_info_configuration"
         self.__cfgOb = cfgOb
-        self.__databaseName = databaseName
+        self.__schemaGroupName = schemaGroupName
         self.__cachePath = cachePath if cachePath else "."
         self.__includeContentClasses = includeContentClasses if includeContentClasses else ["GENERATED_CONTENT", "EVOLVING_CONTENT", "CONSOLIDATED_BIRD_CONTENT", "INTEGRATED_CONTENT"]
         #
         self.__contentDefHelper = self.__cfgOb.getHelper("CONTENT_DEF_HELPER_MODULE", sectionName=configName, cfgOb=self.__cfgOb)
         self.__documentDefHelper = self.__cfgOb.getHelper("DOCUMENT_DEF_HELPER_MODULE", sectionName=configName, cfgOb=self.__cfgOb)
         #
+        self.__databaseName = self.__documentDefHelper.getDatabaseMongoName(self.__schemaGroupName)
+        #
         self.__dtP = DataTypeApiProvider(self.__cfgOb, cachePath, useCache=True)
         #
         dP = DictionaryApiProviderWrapper(self.__cachePath, cfgOb=cfgOb, configName=configName, useCache=True)
-        dictApi = dP.getApiByName(databaseName)
-        self.__contentInfo = ContentDefinition(dictApi, contentDefHelper=self.__contentDefHelper, databaseName=databaseName)
+        dictApi = dP.getApiByName(schemaGroupName)
+        self.__contentInfo = ContentDefinition(dictApi, contentDefHelper=self.__contentDefHelper, schemaGroupName=schemaGroupName)
         #
 
     def build(self, collectionName=None, dataTyping="ANY", encodingType="rcsb", enforceOpts="mandatoryKeys|mandatoryAttributes|bounds|enums"):
         rD = {}
         if encodingType.lower() == "rcsb":
             rD = self.__build(
-                databaseName=self.__databaseName,
+                schemaGroupName=self.__schemaGroupName,
                 dataTyping=dataTyping,
                 contentDefHelper=self.__contentDefHelper,
                 documentDefHelper=self.__documentDefHelper,
@@ -92,7 +95,7 @@ class SchemaDefBuild(object):
             )
         elif encodingType.lower() in ["json", "bson"]:
             rD = self.__createJsonLikeSchema(
-                databaseName=self.__databaseName,
+                schemaGroupName=self.__schemaGroupName,
                 collectionName=collectionName,
                 dataTyping=dataTyping.upper(),
                 contentDefHelper=self.__contentDefHelper,
@@ -102,27 +105,27 @@ class SchemaDefBuild(object):
             )
         return rD
 
-    def __build(self, databaseName, dataTyping, contentDefHelper, documentDefHelper, includeContentClasses):
+    def __build(self, schemaGroupName, dataTyping, contentDefHelper, documentDefHelper, includeContentClasses):
         """ """
-        databaseVersion = contentDefHelper.getDatabaseVersion(databaseName) if contentDefHelper else ""
+        databaseVersion = contentDefHelper.getDatabaseVersion(schemaGroupName) if contentDefHelper else ""
 
         #
-        schemaDef = {"NAME": databaseName, "APP_NAME": dataTyping, "DATABASE_NAME": databaseName, "DATABASE_VERSION": databaseVersion}
+        schemaDef = {"NAME": schemaGroupName, "APP_NAME": dataTyping, "DATABASE_NAME": self.__databaseName, "DATABASE_VERSION": databaseVersion}
         #
         schemaDef["SELECTION_FILTERS"] = self.__contentInfo.getSelectionFiltersForDatabase()
 
-        schemaDef["SCHEMA_DICT"] = self.__createSchemaDict(databaseName, dataTyping, contentDefHelper, includeContentClasses)
-        schemaDef["DOCUMENT_DICT"] = self.__createDocumentDict(databaseName, documentDefHelper)
-        schemaDef["SLICE_PARENT_ITEMS"] = self.__convertSliceParentItemNames(databaseName, dataTyping)
-        schemaDef["SLICE_PARENT_FILTERS"] = self.__convertSliceParentFilterNames(databaseName, dataTyping)
+        schemaDef["SCHEMA_DICT"] = self.__createSchemaDict(schemaGroupName, dataTyping, contentDefHelper, includeContentClasses)
+        schemaDef["DOCUMENT_DICT"] = self.__createDocumentDict(schemaGroupName, documentDefHelper)
+        schemaDef["SLICE_PARENT_ITEMS"] = self.__convertSliceParentItemNames(schemaGroupName, dataTyping)
+        schemaDef["SLICE_PARENT_FILTERS"] = self.__convertSliceParentFilterNames(schemaGroupName, dataTyping)
         return schemaDef
 
-    def __createDocumentDict(self, databaseName, documentDefHelper):
+    def __createDocumentDict(self, schemaGroupName, documentDefHelper):
         """Internal method to assign document-level details to the schema definition,
 
 
         Args:
-            databaseName (string): A schema/content name: pdbx|chem_comp|bird|bird_family ...
+            schemaGroupName (string): A schema/content name: pdbx|chem_comp|bird|bird_family ...
             documentDefHelper (class instance):  Class instance providing additional document-level metadata
 
         Returns:
@@ -143,7 +146,7 @@ class SchemaDefBuild(object):
         dH = documentDefHelper
         if dH:
             # cdL  = list of [{'NAME': , 'VERSION': xx }, ...]
-            cdL = dH.getCollectionInfo(databaseName)
+            cdL = dH.getCollectionInfo(schemaGroupName)
             rD["CONTENT_TYPE_COLLECTION_INFO"] = cdL
             for cd in cdL:
                 cN = cd["NAME"]
@@ -184,11 +187,11 @@ class SchemaDefBuild(object):
 
         return self.__convertNameDefault
 
-    def __createSchemaDict(self, databaseName, dataTyping, contentDefHelper, includeContentClasses=None):
+    def __createSchemaDict(self, schemaGroupName, dataTyping, contentDefHelper, includeContentClasses=None):
         """Internal method to integrate dictionary and instance metadata into a common schema description data structure.
 
         Args:
-            databaseName (string): A schema/content name: pdbx|chem_comp|bird|bird_family ...
+            schemaGroupName (string): A schema/content name: pdbx|chem_comp|bird|bird_family ...
             dataTyping (string): ANY|SQL
             contentDefHelper (class instance): Class instance providing additional schema details
             includeContentClasses (list, optional): list of additional content classes to be included (e.g. GENERATED_CONTENT)
@@ -203,29 +206,30 @@ class SchemaDefBuild(object):
         #
         logger.debug("Including additional category classes %r", contentClasses)
         #
-        dtInstInfo = self.__dtP.getDataTypeInstanceApi(databaseName)
+        dtInstInfo = self.__dtP.getDataTypeInstanceApi(schemaGroupName)
         dtAppInfo = self.__dtP.getDataTypeApplicationApi(dataTyping)
         #
         # Supplied by the contentDefHelper
         #
-        includeList = contentDefHelper.getIncluded(databaseName) if contentDefHelper else []
-        excludeList = contentDefHelper.getExcluded(databaseName) if contentDefHelper else []
-        excludeAttributesD = contentDefHelper.getExcludedAttributes(databaseName) if contentDefHelper else {}
+        includeList = contentDefHelper.getIncluded(schemaGroupName) if contentDefHelper else []
+        excludeList = contentDefHelper.getExcluded(schemaGroupName) if contentDefHelper else []
+        excludeAttributesD = contentDefHelper.getExcludedAttributes(schemaGroupName) if contentDefHelper else {}
         #
         logger.debug("Schema include list length %d", len(includeList))
         logger.debug("Schema exclude list length %d", len(excludeList))
         #
         # Optional synthetic attribute added to each category with value linked to data block identifier (or other function)
         #
-        blockAttributeName = contentDefHelper.getBlockAttributeName(databaseName) if contentDefHelper else None
-        blockAttributeCifType = contentDefHelper.getBlockAttributeCifType(databaseName) if contentDefHelper else None
+        blockAttributeName = contentDefHelper.getBlockAttributeName(schemaGroupName) if contentDefHelper else None
+        blockAttributeCifType = contentDefHelper.getBlockAttributeCifType(schemaGroupName) if contentDefHelper else None
         blockAttributeAppType = dtAppInfo.getAppTypeName(blockAttributeCifType)
-        blockAttributeWidth = contentDefHelper.getBlockAttributeMaxWidth(databaseName) if contentDefHelper else 0
-        blockAttributeMethod = contentDefHelper.getBlockAttributeMethod(databaseName) if contentDefHelper else None
+        blockAttributeWidth = contentDefHelper.getBlockAttributeMaxWidth(schemaGroupName) if contentDefHelper else 0
+        blockAttributeMethod = contentDefHelper.getBlockAttributeMethod(schemaGroupName) if contentDefHelper else None
         #
         convertNameF = self.__getConvertNameMethod(dataTyping)
         #
         dictSchema = self.__contentInfo.getSchemaNames()
+        # print("dictSchema", dictSchema)
         logger.debug("Dictionary category length %d", len(dictSchema))
         #
         rD = OrderedDict()
@@ -239,7 +243,7 @@ class SchemaDefBuild(object):
             # logger.debug("catName %s contentClasses %r cfD %r" % (catName, contentClasses, cfD))
 
             if not dtInstInfo.exists(catName) and not self.__testContentClasses(contentClasses, cfD["CONTENT_CLASSES"]):
-                logger.debug("Schema %r Skipping category %s content classes %r", databaseName, catName, cfD["CONTENT_CLASSES"])
+                logger.debug("Schema %r Skipping category %s content classes %r", schemaGroupName, catName, cfD["CONTENT_CLASSES"])
                 continue
             sName = convertNameF(catName)
             sId = sName.upper()
@@ -250,7 +254,7 @@ class SchemaDefBuild(object):
                 continue
             # JDW
             if not cfD:
-                logger.info("%s catName %s contentClasses %r cfD %r", databaseName, catName, contentClasses, cfD)
+                logger.info("%s catName %s contentClasses %r cfD %r", schemaGroupName, catName, contentClasses, cfD)
             #
             aD = self.__contentInfo.getAttributeFeatures(catName)
             #
@@ -356,7 +360,9 @@ class SchemaDefBuild(object):
                     iOrder += 1
             #
             for atName in sorted(atNameList):
+                # print("atName: ", atName)
                 fD = aD[atName]
+                # print("fD", fD)
                 if not dtInstInfo.exists(catName, atName) and not self.__testContentClasses(contentClasses, fD["CONTENT_CLASSES"]):
                     continue
 
@@ -472,7 +478,7 @@ class SchemaDefBuild(object):
         #
         return rD
 
-    def __convertSliceParentItemNames(self, databaseName, dataTyping):
+    def __convertSliceParentItemNames(self, schemaGroupName, dataTyping):
         sliceD = {}
         try:
             convertNameF = self.__getConvertNameMethod(dataTyping)
@@ -487,11 +493,11 @@ class SchemaDefBuild(object):
             #
             return sliceD
         except Exception as e:
-            logger.exception("Failing for %s with %s", databaseName, str(e))
+            logger.exception("Failing for %s with %s", schemaGroupName, str(e))
 
         return sliceD
 
-    def __convertSliceParentFilterNames(self, databaseName, dataTyping):
+    def __convertSliceParentFilterNames(self, schemaGroupName, dataTyping):
         sliceD = {}
         try:
             convertNameF = self.__getConvertNameMethod(dataTyping)
@@ -506,7 +512,7 @@ class SchemaDefBuild(object):
             #
             return sliceD
         except Exception as e:
-            logger.exception("Failing for %s with %s", databaseName, str(e))
+            logger.exception("Failing for %s with %s", schemaGroupName, str(e))
 
         return sliceD
 
@@ -538,6 +544,7 @@ class SchemaDefBuild(object):
                     elif tD["context"] == "dictionary":
                         fD["DESCRIPTION_ANNOTATED"].append({"text": tD["text"], "context": "brief"})
             # ----
+            # print(documentDefHelper.getSearchGroup(catName, atName))
             fD["SEARCH_GROUP_AND_PRIORITY"] = [{"group_name": tup[0], "priority_order": tup[1]} for tup in documentDefHelper.getSearchGroup(catName, atName)]
             # ----
         #
@@ -564,7 +571,7 @@ class SchemaDefBuild(object):
 
     def __createJsonLikeSchema(
         self,
-        databaseName,
+        schemaGroupName,
         collectionName,
         dataTyping,
         contentDefHelper,
@@ -579,7 +586,7 @@ class SchemaDefBuild(object):
            Working only for practical schema style: rowwise_by_name_with_cardinality
 
         Args:
-            databaseName (str): A schema/content name: pdbx|chem_comp|bird|bird_family ...
+            schemaGroupName (str): A schema/content name: pdbx|chem_comp|bird|bird_family ...
             collectionName (str): Collection defined within a schema/content type
             dataTyping (str): Target data type convention for the schema (e.g. JSON, BSON, or a variant of these...)
             contentDefHelper (class instance): Class instance providing additional schema details
@@ -602,7 +609,7 @@ class SchemaDefBuild(object):
         suppressRelations = documentDefHelper.getSuppressedCategoryRelationships(collectionName)
         logger.debug("Collection %s suppress singleton %r", collectionName, suppressSingleton)
         subCategoryAggregates = documentDefHelper.getSubCategoryAggregates(collectionName)
-        logger.debug("%s %s Sub_category aggregates %r", databaseName, collectionName, subCategoryAggregates)
+        logger.debug("%s %s Sub_category aggregates %r", schemaGroupName, collectionName, subCategoryAggregates)
         privDocKeyL = documentDefHelper.getPrivateDocumentAttributes(collectionName)
 
         dataTypingU = dataTyping.upper()
@@ -616,14 +623,14 @@ class SchemaDefBuild(object):
         if exportConfig:
             logger.info("CONFIG  %s:", collectionName)
         #
-        dtInstInfo = self.__dtP.getDataTypeInstanceApi(databaseName)
+        dtInstInfo = self.__dtP.getDataTypeInstanceApi(schemaGroupName)
         dtAppInfo = self.__dtP.getDataTypeApplicationApi(dataTypingU)
         #
         #      Supplied by the contentDefHelper for the content type (SchemaIds)
         #
-        includeList = contentDefHelper.getIncluded(databaseName) if contentDefHelper else []
-        excludeList = contentDefHelper.getExcluded(databaseName) if contentDefHelper else []
-        excludeAttributesD = contentDefHelper.getExcludedAttributes(databaseName) if contentDefHelper else {}
+        includeList = contentDefHelper.getIncluded(schemaGroupName) if contentDefHelper else []
+        excludeList = contentDefHelper.getExcluded(schemaGroupName) if contentDefHelper else []
+        excludeAttributesD = contentDefHelper.getExcludedAttributes(schemaGroupName) if contentDefHelper else {}
         #
         #      Supplied by the documentDefHelp for the collection (SchemaIds)
         #
@@ -632,9 +639,9 @@ class SchemaDefBuild(object):
         docExcludeAttributes = documentDefHelper.getDocumentExcludedAttributes(collectionName)
         # JDW combine the schema and document excluded attributes here ...
         excludeAttributesD.update(docExcludeAttributes)
-
+        #
         collectionRequiredAttributes = documentDefHelper.getCollectionRequiredAttributes(collectionName)
-
+        #
         sliceFilter = documentDefHelper.getSliceFilter(collectionName)
         sliceCategories = self.__contentInfo.getSliceCategories(sliceFilter) if sliceFilter else []
         sliceCategoryExtrasD = self.__contentInfo.getSliceCategoryExtrasForDatabase() if sliceFilter else {}
@@ -645,11 +652,11 @@ class SchemaDefBuild(object):
         blockAttributeName, blockAttributeAppType, blockRefPathList = None, None, None
         if addBlockAttribute:
             # Optional synthetic attribute added to each category with value linked to data block identifier (or other function)
-            blockAttributeName = contentDefHelper.getBlockAttributeName(databaseName) if contentDefHelper else None
-            blockAttributeCifType = contentDefHelper.getBlockAttributeCifType(databaseName) if contentDefHelper else None
+            blockAttributeName = contentDefHelper.getBlockAttributeName(schemaGroupName) if contentDefHelper else None
+            blockAttributeCifType = contentDefHelper.getBlockAttributeCifType(schemaGroupName) if contentDefHelper else None
             blockAttributeAppType = dtAppInfo.getAppTypeName(blockAttributeCifType)
             if "addParentRefs" in enforceOpts:
-                refD = contentDefHelper.getBlockAttributeRefParent(databaseName)
+                refD = contentDefHelper.getBlockAttributeRefParent(schemaGroupName)
                 if refD is not None:
                     blockRefPathList = [convertNameF(refD["CATEGORY_NAME"]), convertNameF(refD["ATTRIBUTE_NAME"])]
         #
@@ -662,7 +669,7 @@ class SchemaDefBuild(object):
             atNameList = [at for at in fullAtNameList if (catName, at) not in excludeAttributesD]
             catAttrRequiredList = [(catName, at) for at in fullAtNameList if (catName, at) in collectionRequiredAttributes]
             #
-
+            catAttrRequiredList = [(catName, at) for at in fullAtNameList if (catName, at) in collectionRequiredAttributes]
             #
             cfD = self.__contentInfo.getCategoryFeatures(catName)
             # logger.debug("catName %s contentClasses %r cfD %r" % (catName, contentClasses, cfD))
@@ -671,7 +678,7 @@ class SchemaDefBuild(object):
             #  Skip categories that are uniformly unpopulated --
             #
             if not dtInstInfo.exists(catName) and not self.__testContentClasses(contentClasses, cfD["CONTENT_CLASSES"]):
-                logger.debug("Schema %r Skipping category %s content classes %r", databaseName, catName, cfD["CONTENT_CLASSES"])
+                logger.debug("Schema %r Skipping category %s content classes %r", schemaGroupName, catName, cfD["CONTENT_CLASSES"])
                 continue
             #
             # -> Create a schema id  for catName <-
@@ -707,8 +714,7 @@ class SchemaDefBuild(object):
                     mandatoryCategoryL.append(catName)
             #
             isUnitCard = True if ("UNIT_CARDINALITY" in cfD and cfD["UNIT_CARDINALITY"]) else False
-            # if sliceFilter and sliceFilter in sliceCardD:
-            #    isUnitCard = catName in sliceCardD[sliceFilter]
+            #
             if not isUnitCard:  # Don't overwrite if already True (especially needed for rcsb_latest_revision, but shouldn't affect anything else)
                 if sliceFilter and sliceFilter in sliceCardD:
                     isUnitCard = catName in sliceCardD[sliceFilter]
@@ -750,11 +756,11 @@ class SchemaDefBuild(object):
             scMandatory = None
             scMinUniqueItems = {}
             if subCategoryAggregates:
-                logger.debug("%s %s %s subcategories %r", databaseName, collectionName, catName, cfD["SUB_CATEGORIES"])
+                logger.debug("%s %s %s subcategories %r", schemaGroupName, collectionName, catName, cfD["SUB_CATEGORIES"])
                 for subCategory in subCategoryAggregates:
                     if subCategory not in cfD["SUB_CATEGORIES"]:
                         continue
-                    logger.debug("%s %s %s processing subcategory %r", databaseName, collectionName, catName, subCategory)
+                    logger.debug("%s %s %s processing subcategory %r", schemaGroupName, collectionName, catName, subCategory)
                     reqL = []
                     scD = {typeKey: "object", "properties": {}, "additionalProperties": False}
                     scHasUnitCard = documentDefHelper.getSubCategoryAggregateUnitCardinality(collectionName, subCategory)
@@ -940,7 +946,7 @@ class SchemaDefBuild(object):
                                         subCatPropD[subCategory]["rcsb_nested_indexing"] = True
             #
             if subCatPropD:
-                logger.debug("%s %s %s processing subcategory properties %r", databaseName, collectionName, catName, subCatPropD.items())
+                logger.debug("%s %s %s processing subcategory properties %r", schemaGroupName, collectionName, catName, subCatPropD.items())
             #
             if exportConfig:
                 logger.info("CONFIG - CATEGORY_NAME: %s", catName)
@@ -957,7 +963,6 @@ class SchemaDefBuild(object):
                     logger.info("CONFIG   - %s", atName)
                 #
                 schemaAttributeName = convertNameF(atName)
-                # isRequired = ("mandatoryKeys" in enforceOpts and fD["IS_KEY"]) or ("mandatoryAttributes" in enforceOpts and fD["IS_MANDATORY"])
                 isRequired = (
                     ("mandatoryKeys" in enforceOpts and fD["IS_KEY"])
                     or ("mandatoryAttributes" in enforceOpts and fD["IS_MANDATORY"])
@@ -1014,7 +1019,7 @@ class SchemaDefBuild(object):
         # Suppress the category name for schemas with a single category -
         #
         if suppressSingleton and len(schemaPropD) == 1:
-            logger.debug("%s %s suppressing category in singleton schema", databaseName, collectionName)
+            logger.debug("%s %s suppressing category in singleton schema", schemaGroupName, collectionName)
             sName = list(schemaPropD.keys())[0]
             catName = sNameD[sName]
             logger.debug("%s singleton state sName %r catName %r", collectionName, sName, catName)
@@ -1048,18 +1053,18 @@ class SchemaDefBuild(object):
         if dataTypingU == "JSON":
             sdType = dataTyping.lower()
             sLevel = "full" if "bounds" in enforceOpts else "min"
-            fn = "%s-schema-%s-%s.json" % (sdType, sLevel, collectionName)
-            collectionVersion = documentDefHelper.getCollectionVersion(databaseName, collectionName)
+            fn = "%s-%s-db-%s-col-%s.json" % (sdType, sLevel, self.__databaseName, collectionName)
+            collectionVersion = documentDefHelper.getCollectionVersion(schemaGroupName, collectionName)
             jsonSchemaUrl = "http://json-schema.org/draft-0%s/schema#" % jsonSpecDraft if jsonSpecDraft in ["3", "4", "6", "7"] else "http://json-schema.org/schema#"
-            schemaRepo = "https://github.com/rcsb/py-rcsb.db/tree/master/rcsb.db/data/json-schema/"
-            desc1 = "RCSB Exchange Database JSON schema derived from the %s content type schema. " % databaseName
+            schemaRepo = "https://github.com/rcsb/py-rcsb_exdb_assets/tree/master/json_schema_definitions/"
+            desc1 = "RCSB Exchange Database JSON schema derived from the %s content type schema. " % schemaGroupName
             desc2 = "This schema supports collection %s version %s. " % (collectionName, collectionVersion)
             desc3 = "This schema is hosted in repository %s%s and follows JSON schema specification version %s" % (schemaRepo, fn, jsonSpecDraft)
             rD.update(
                 {
                     "$id": "%s%s" % (schemaRepo, fn),
                     "$schema": jsonSchemaUrl,
-                    "title": "schema: %s collection: %s version: %s" % (databaseName, collectionName, collectionVersion),
+                    "title": "schema: %s collection: %s version: %s" % (schemaGroupName, collectionName, collectionVersion),
                     "description": desc1 + desc2 + desc3,
                     "$comment": "schema_version: %s" % collectionVersion,
                 }

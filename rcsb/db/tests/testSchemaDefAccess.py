@@ -53,15 +53,15 @@ class SchemaDefAccessTests(unittest.TestCase):
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
     def testAccess(self):
-        databaseNames = ["pdbx_core", "bird_chem_comp_core"]
+        schemaGroupNames = ["pdbx_core", "bird_chem_comp_core"]
         dataTypingList = ["ANY", "SQL"]
-        for databaseName in databaseNames:
+        for schemaGroupName in schemaGroupNames:
             for dataTyping in dataTypingList:
-                self.__testAccess(databaseName, dataTyping)
+                self.__testAccess(schemaGroupName, dataTyping)
 
-    def __testAccess(self, databaseName, dataTyping):
+    def __testAccess(self, schemaGroupName, dataTyping):
         try:
-            sD = self.__schP.makeSchemaDef(databaseName, dataTyping=dataTyping, saveSchema=False)
+            sD = self.__schP.makeSchemaDef(schemaGroupName, dataTyping=dataTyping, saveSchema=False)
             ok = self.__testAccessors(sD)
             self.assertTrue(ok)
             #
@@ -76,6 +76,7 @@ class SchemaDefAccessTests(unittest.TestCase):
         sd = SchemaDefAccess(schemaDef)
         logger.debug("Schema name %s", sd.getName())
         logger.debug("Schema name %s", sd.getAppName())
+        logger.debug("Schema group name %s", sd.getSchemaGroupName())
 
         logger.debug("Database name %s", sd.getDatabaseName())
         logger.debug("Versioned database name %s", sd.getVersionedDatabaseName())

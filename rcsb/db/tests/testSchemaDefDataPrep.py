@@ -232,7 +232,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             dD = self.__schP.makeSchemaDef(contentType, dataTyping="ANY", saveSchema=True)
             _ = SchemaDefAccess(dD)
             inputPathList = self.__rpP.getLocatorObjList(contentType=contentType, mergeContentTypes=mergeContentTypes)
-            sd, _, _, _ = self.__schP.getSchemaInfo(databaseName=contentType, dataTyping="ANY")
+            sd, _, _, _ = self.__schP.getSchemaInfo(schemaGroupName=contentType, dataTyping="ANY")
             dtf = DataTransformFactory(schemaDefAccessObj=sd, filterType=filterType)
             sdp = SchemaDefDataPrep(schemaDefAccessObj=sd, dtObj=dtf, workPath=self.__cachePath, verbose=self.__verbose)
             #
@@ -300,7 +300,7 @@ class SchemaDefDataPrepTests(unittest.TestCase):
             dD = self.__schP.makeSchemaDef(contentType, dataTyping="ANY", saveSchema=True)
             _ = SchemaDefAccess(dD)
             inputPathList = self.__rpP.getLocatorObjList(contentType=contentType, mergeContentTypes=mergeContentTypes)
-            sd, _, collectionNameList, _ = self.__schP.getSchemaInfo(databaseName=contentType, dataTyping="ANY")
+            sd, _, collectionNameList, _ = self.__schP.getSchemaInfo(schemaGroupName=contentType, dataTyping="ANY")
             #
             dP = DictionaryApiProviderWrapper(self.__cachePath, cfgOb=self.__cfgOb, configName=self.__configName, useCache=True)
             dictApi = dP.getApiByName(contentType)

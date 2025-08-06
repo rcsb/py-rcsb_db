@@ -404,7 +404,7 @@ class SchemaSearchContextsTests(unittest.TestCase):
             cH = ContentDefinitionHelper(cfgOb=self.__cfgOb)
             dictApi = self.__dP.getApiByLocators(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile])
             # logger.info("units = %r", dictApi.getUnits("pdbx_nmr_spectrometer", "manufacturer"))
-            sdi = ContentDefinition(dictApi, databaseName="pdbx_core", contentDefHelper=cH)
+            sdi = ContentDefinition(dictApi, schemaGroupName="pdbx_core", contentDefHelper=cH)
             catNameL = sdi.getCategories()
             cfD = {}
             afD = {}

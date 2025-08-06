@@ -41,21 +41,21 @@ logger = logging.getLogger(__name__)
 class ContentDefinition(object):
     """Assemble configuration and dictionary metadata required to build/load database schema definitions ..."""
 
-    def __init__(self, dictApi, contentDefHelper=None, databaseName=None, **kwargs):
+    def __init__(self, dictApi, contentDefHelper=None, schemaGroupName=None, **kwargs):
         """
         Args:
             dictApi (object): instance of DictionaryApi() class
             contentHelper (object, optional): an instance of a contentHelper().
-            databaseName (string, optional): name of a content database (e.g. 'chem_comp', 'bird', 'bird_family', 'pdbx')
+            schemaGroupName (string, optional): name of a content database (e.g. 'chem_comp', 'bird', 'bird_family', 'pdbx')
 
         """
         self.__dApi = dictApi
-        self.__databaseName = databaseName
-        self.__setup(contentDefHelper, databaseName)
+        self.__databaseName = schemaGroupName
+        self.__setup(contentDefHelper, schemaGroupName)
         _ = kwargs
         #
 
-    def __setup(self, contentDefHelper, databaseName):
+    def __setup(self, contentDefHelper, schemaGroupName):
         #
         iTypeCodes = []
         iQueryStrings = []
@@ -80,37 +80,37 @@ class ContentDefinition(object):
         logger.debug("Primary key replacements: %r", self.__keyReplaceItems)
         logger.debug("Primary key replacement category index: %r", self.__keyReplaceCategoryD)
         #
-        if contentDefHelper and databaseName:
-            self.__intEnumD = {(tD["CATEGORY_NAME"], tD["ATTRIBUTE_NAME"]): True for tD in contentDefHelper.getInternalEnumItems(databaseName)}
+        if contentDefHelper and schemaGroupName:
+            self.__intEnumD = {(tD["CATEGORY_NAME"], tD["ATTRIBUTE_NAME"]): True for tD in contentDefHelper.getInternalEnumItems(schemaGroupName)}
             logger.debug("Internal enum items %r", self.__intEnumD)
             #
-            cardD = contentDefHelper.getCardinalityKeyItem(databaseName)
+            cardD = contentDefHelper.getCardinalityKeyItem(schemaGroupName)
             logger.debug("Cardinality attribute %r", cardD.items())
             #
             unitCardinalityList = self.__getUnitCardinalityCategories([cardD])
             unitCardinalityList.extend(contentDefHelper.getCardinalityCategoryExtras())
             logger.debug("Cardinality categories %r", unitCardinalityList)
             #
-            self.__categoryContentClasses = contentDefHelper.getCategoryContentClasses(databaseName)
+            self.__categoryContentClasses = contentDefHelper.getCategoryContentClasses(schemaGroupName)
             logger.debug("categoryContentClasses %r", self.__categoryContentClasses)
             #
-            self.__attributeContentClasses = contentDefHelper.getAttributeContentClasses(databaseName)
+            self.__attributeContentClasses = contentDefHelper.getAttributeContentClasses(schemaGroupName)
             logger.debug("attributeContentClasses %r", self.__attributeContentClasses)
             #
-            self.__sliceParentItemsD = contentDefHelper.getDatabaseSliceParents(databaseName)
+            self.__sliceParentItemsD = contentDefHelper.getDatabaseSliceParents(schemaGroupName)
             self.__sliceUnitCardinalityD = OrderedDict()
             self.__sliceCategoryExtrasD = OrderedDict()
             for sliceName, pDL in self.__sliceParentItemsD.items():
                 logger.debug("Slicename %s parents %r", sliceName, pDL)
                 #
                 # Some categories are included in a slice even if they are unconnected to the slice parent.
-                self.__sliceCategoryExtrasD[sliceName] = contentDefHelper.getSliceCategoryExtras(databaseName, sliceName)
+                self.__sliceCategoryExtrasD[sliceName] = contentDefHelper.getSliceCategoryExtras(schemaGroupName, sliceName)
                 logger.debug("Slice %s extra categories %r", sliceName, self.__sliceCategoryExtrasD[sliceName])
                 #
                 self.__sliceUnitCardinalityD[sliceName] = self.__getUnitCardinalityCategories(pDL)
                 logger.debug("Slicename %s unit cardinality categories %r", sliceName, self.__sliceUnitCardinalityD[sliceName])
                 #
-                self.__sliceUnitCardinalityD[sliceName].extend(contentDefHelper.getSliceCardinalityCategoryExtras(databaseName, sliceName))
+                self.__sliceUnitCardinalityD[sliceName].extend(contentDefHelper.getSliceCardinalityCategoryExtras(schemaGroupName, sliceName))
                 logger.debug("Slicename %s unit cardinality categories %r", sliceName, self.__sliceUnitCardinalityD[sliceName])
             #
             #
@@ -133,21 +133,21 @@ class ContentDefinition(object):
             embeddedIterableD = self.__getEmbeddedIterables(emiTypeCodes)
             logger.debug("iterableD %r", iterableD.items())
             logger.debug("embeddedIterableD %r", embeddedIterableD.items())
-            dataSelectFilterD = contentDefHelper.getDatabaseSelectionFilters(databaseName)
+            dataSelectFilterD = contentDefHelper.getDatabaseSelectionFilters(schemaGroupName)
             itemTransformD = contentDefHelper.getItemTransformD()
             logger.debug("itemTransformD %r", itemTransformD.items())
             #
-            self.__selectionFiltersD = contentDefHelper.getDatabaseSelectionFilters(databaseName)
-            self.__sliceParentFiltersD = contentDefHelper.getDatabaseSliceParentFilters(databaseName)
+            self.__selectionFiltersD = contentDefHelper.getDatabaseSelectionFilters(schemaGroupName)
+            self.__sliceParentFiltersD = contentDefHelper.getDatabaseSliceParentFilters(schemaGroupName)
         else:
-            logger.debug("Dictionary helper not loaded for schema %r", databaseName, stack_info=True)
+            logger.debug("Dictionary helper not loaded for schema %r", schemaGroupName, stack_info=True)
             self.__selectionFiltersD = {}
             self.__sliceParentItemsD = {}
             self.__sliceParentFiltersD = {}
             self.__sliceUnitCardinalityD = {}
             self.__sliceCategoryExtrasD = {}
             embeddedIterableD = {}
-            logger.warning("Missing dictionary helper method or schema %r", databaseName)
+            logger.warning("Missing dictionary helper method or schema %r", schemaGroupName)
 
         #
         self.__methodD = self.__getMethodInfo()

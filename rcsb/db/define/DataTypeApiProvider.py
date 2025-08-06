@@ -52,18 +52,18 @@ class DataTypeApiProvider(SingletonClass):
         #
         logger.debug("Leaving constructor")
 
-    def getDataTypeInstanceApi(self, databaseName, **kwargs):
+    def getDataTypeInstanceApi(self, schemaGroupName, **kwargs):
         """Return instance of DataTypeInstanceInfo().
 
         Args:
-            databaseName (str): database name
+            schemaGroupName (str): schema group name (e.g., "pdbx_core" or "core_drugbank")
 
         Returns:
             (object): Instance of DataTypeInstanceInfo()
         """
         _ = kwargs
         dataTypeInstanceLocatorPath = self.__cfgOb.getPath("INSTANCE_DATA_TYPE_INFO_LOCATOR_PATH", sectionName=self.__configName)
-        dataTypeInstanceFile = self.__contentDefHelper.getDataTypeInstanceFile(databaseName) if self.__contentDefHelper else None
+        dataTypeInstanceFile = self.__contentDefHelper.getDataTypeInstanceFile(schemaGroupName) if self.__contentDefHelper else None
         if dataTypeInstanceLocatorPath and dataTypeInstanceFile:
             loc = os.path.join(dataTypeInstanceLocatorPath, dataTypeInstanceFile)
             filePath = self.__reload(loc, self.__dirPath, useCache=self.__useCache)
@@ -71,7 +71,7 @@ class DataTypeApiProvider(SingletonClass):
         else:
             # DataTypeInstanceInfo() provides an internal by-pass mode where no coverage data is available.
             dtApi = DataTypeInstanceInfo(None)
-            logger.debug("No data coverage available for database %s", databaseName)
+            logger.debug("No data coverage available for schema group %s", schemaGroupName)
         return dtApi
 
     def getDataTypeApplicationApi(self, appName, **kwargs):
