@@ -667,7 +667,6 @@ class SchemaDefBuild(object):
         mandatoryCategoryL = []
         for catName, fullAtNameList in dictSchema.items():
             atNameList = [at for at in fullAtNameList if (catName, at) not in excludeAttributesD]
-            catAttrRequiredList = [(catName, at) for at in fullAtNameList if (catName, at) in collectionRequiredAttributes]
             #
             catAttrRequiredList = [(catName, at) for at in fullAtNameList if (catName, at) in collectionRequiredAttributes]
             #
@@ -721,7 +720,6 @@ class SchemaDefBuild(object):
             #
             pD = {typeKey: "object", "properties": {}, "additionalProperties": False}
             #
-
             if isUnitCard:
                 catPropD = pD
             else:
@@ -864,11 +862,10 @@ class SchemaDefBuild(object):
                         #
                         # isRequired = "mandatoryAttributes" in enforceOpts and fD["IS_MANDATORY"]
                         # JDW separate general support for mandatory attributes and support in subcategories.
-                        # isRequired = mandatorySubcategoryAttributes and fD["IS_MANDATORY"]
                         isRequired = (
-                                mandatorySubcategoryAttributes and fD["IS_MANDATORY"]
-                                or ((catName, atName) in catAttrRequiredList)
-                            )
+                            (mandatorySubcategoryAttributes and fD["IS_MANDATORY"])
+                            or ((catName, atName) in catAttrRequiredList)
+                        )
                         if isRequired:
                             reqL.append(schemaAttributeName)
                         #
@@ -876,7 +873,7 @@ class SchemaDefBuild(object):
                         # --- replace
                         # scD["properties"][schemaAttributeName] = atPropD
                         # --- with adding general support for embedded iterable
-
+                        #
                         delimiter = fD["EMBEDDED_ITERABLE_DELIMITER"]
                         if delimiter:
                             logger.debug("embedded iterable %r %r (%r)", catName, atName, subCategory)
@@ -969,8 +966,6 @@ class SchemaDefBuild(object):
                     or ((catName, atName) in catAttrRequiredList)
                 )
                 # subject to exclusion
-                # if isRequired and (catName, atName) not in excludeAttributesD:
-                #    pD.setdefault("required", []).append(schemaAttributeName)
                 if isRequired and (catName, atName) not in excludeAttributesD:
                     pD.setdefault("required", [])
                     if schemaAttributeName not in pD["required"]:
