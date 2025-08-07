@@ -56,7 +56,9 @@ class RepoHoldingsEtlWorker(object):
         self.__verbose = verbose
         self.__statusList = []
         #
+        self.__collectionGroupName = "repository_holdings"
         self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath)
+        self.__databaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=self.__collectionGroupName)
 
     def __updateStatus(self, updateId, databaseName, collectionName, status, startTimestamp):
         try:
@@ -94,7 +96,7 @@ class RepoHoldingsEtlWorker(object):
             desp = DataExchangeStatus()
             statusStartTimestamp = desp.setStartTime()
             # ---
-            collectionGroupName = "repository_holdings"
+            
             discoveryMode = self.__cfgOb.get("DISCOVERY_MODE", sectionName=self.__cfgSectionName, default="local")
             baseUrlPDB = self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__cfgSectionName, default="https://files.wwpdb.org/pub")
             fallbackUrlPDB = self.__cfgOb.getPath("PDB_REPO_FALLBACK_URL", sectionName=self.__cfgSectionName, default="https://files.wwpdb.org/pub")
@@ -126,21 +128,20 @@ class RepoHoldingsEtlWorker(object):
                 verbose=self.__verbose,
                 readBackCheck=self.__readBackCheck,
             )
-            _, _, collectionNameList, docIndexD = self.__schP.getSchemaInfo(collectionGroupName=collectionGroupName, dataTyping="ANY")
+            _, _, collectionNameList, docIndexD = self.__schP.getSchemaInfo(collectionGroupName=self.__collectionGroupName, dataTyping="ANY")
             # collectionNameList: ['repository_holdings_update_entry', 'repository_holdings_combined_entry', 'repository_holdings_current_entry',
             #                      'repository_holdings_unreleased_entry', 'repository_holdings_removed_entry']
-            databaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=collectionGroupName)
 
             ok = True
             for collectionName in collectionNameList:
                 indexDL = docIndexD[collectionName] if collectionName in docIndexD else []
                 dList = self.__getHoldingsDocList(repoType, collectionName, rhdp, updateId)
                 if dList:
-                    ok = dl.load(databaseNameMongo, collectionName, loadType=loadType, documentList=dList, keyNames=None, addValues=addValues, indexDL=indexDL) and ok
-                self.__updateStatus(updateId, databaseNameMongo, collectionName, ok, statusStartTimestamp)
+                    ok = dl.load(self.__databaseNameMongo, collectionName, loadType=loadType, documentList=dList, keyNames=None, addValues=addValues, indexDL=indexDL) and ok
+                self.__updateStatus(updateId, self.__databaseNameMongo, collectionName, ok, statusStartTimestamp)
                 logger.info(
                     "Completed load of repository holdings for repoType %r, database %r, collection %r, len(dList) %r (status %r)",
-                    repoType, databaseNameMongo, collectionName, len(dList), ok
+                    repoType, self.__databaseNameMongo, collectionName, len(dList), ok
                 )
             logger.info("Completed load of repository holdings for repoType %r, loadType %r (status %r)", repoType, loadType, ok)
             return ok
@@ -159,10 +160,10 @@ class RepoHoldingsEtlWorker(object):
 
         pdbxCoreEntryL = self.__getUniqueLoadedRcsbIds("pdbx_core", "pdbx_core_entry")
 
-        repoHoldingsCurrentEntryL = self.__getUniqueLoadedRcsbIds("repository_holdings", "repository_holdings_current_entry")
-        repoHoldingsCombinedEntryL = self.__getUniqueLoadedRcsbIds("repository_holdings", "repository_holdings_combined_entry")
-        repoHoldingsRemovedEntryL = self.__getUniqueLoadedRcsbIds("repository_holdings", "repository_holdings_removed_entry")
-        repoHoldingsUnreleasedEntryL = self.__getUniqueLoadedRcsbIds("repository_holdings", "repository_holdings_unreleased_entry")
+        repoHoldingsCurrentEntryL = self.__getUniqueLoadedRcsbIds(self.__databaseNameMongo, "repository_holdings_current_entry")
+        repoHoldingsCombinedEntryL = self.__getUniqueLoadedRcsbIds(self.__databaseNameMongo, "repository_holdings_combined_entry")
+        repoHoldingsRemovedEntryL = self.__getUniqueLoadedRcsbIds(self.__databaseNameMongo, "repository_holdings_removed_entry")
+        repoHoldingsUnreleasedEntryL = self.__getUniqueLoadedRcsbIds(self.__databaseNameMongo, "repository_holdings_unreleased_entry")
 
         combinedHoldingsExpectedCount = len(repoHoldingsCurrentEntryL) + len(repoHoldingsRemovedEntryL) + len(repoHoldingsUnreleasedEntryL)
 

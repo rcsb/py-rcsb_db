@@ -980,10 +980,10 @@ class DocumentDefinitionHelper(object):
                 schemaGroupToDbMap = self.__cfgOb.get("collection_schema_group_to_mongodb_name", sectionName="database_catalog_configuration")
                 if schemaGroupToDbMap and collectionGroupName in schemaGroupToDbMap:
                     databaseNameMongo = schemaGroupToDbMap.get(collectionGroupName, collectionGroupName)
-                logger.info("Mapping for collectionGroupName %s -> databaseNameMongo %r", collectionGroupName, databaseNameMongo)
+                logger.info("Mapping for collectionGroupName %r -> databaseNameMongo %r", collectionGroupName, databaseNameMongo)
                 return databaseNameMongo
         except Exception as e:
-            logger.exception("Mapping from schema group %s to MongoDB name failing with %s", collectionGroupName, str(e))
+            logger.exception("Mapping from schema group %r to MongoDB name failing with %s", collectionGroupName, str(e))
         #
         logger.info("Unable to get mapping for collectionGroupName %r", collectionGroupName)
         return collectionGroupName

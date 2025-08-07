@@ -113,13 +113,24 @@ class RepoLoadWorkflow(object):
             dataSetId = kwargs.get("dataSetId") if "dataSetId" in kwargs else tU.getCurrentWeekSignature()
             seqDataLocator = self.__cfgOb.getPath("RCSB_SEQUENCE_CLUSTER_DATA_PATH", sectionName=self.__configName)
             sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=self.__configName)
+            #
+            # NOTE: Temporarily set collectionGroupName here until all corresponding code in weekly-update-workflow is updated
+            if databaseName:
+                if not collectionGroupName:
+                    collectionGroupName = "core_chem_comp" if databaseName in ["bird_chem_comp_core", "core_chem_comp"] else databaseName
+                if not contentType:
+                    # TODO: Change to "core_chem_comp" after updating usage in RepositoryProvider
+                    contentType = "bird_chem_comp_core" if databaseName in ["bird_chem_comp_core", "core_chem_comp"] else databaseName
 
         except Exception as e:
             logger.exception("Argument and configuration processing failing with %s", str(e))
             return False
         #
         ok = okS = True
-        if op == "pdbx_loader" and dbType == "mongo" and databaseName in databaseNameList:
+        if op == "pdbx_loader" and dbType == "mongo":
+            if collectionGroupName not in databaseNameList:
+                logger.error("collectionGroupName (%r) not in databaseNameList: %r", collectionGroupName, databaseNameList)
+                return False
             try:
                 inputPathList, inputIdCodeList = None, None
                 if loadIdListPath:
@@ -152,7 +163,7 @@ class RepoLoadWorkflow(object):
                     rebuildSchemaFlag=rebuildSchemaFlag,
                 )
                 ok = mw.load(
-                    databaseName,
+                    databaseName=databaseName,
                     collectionGroupName=collectionGroupName,
                     collectionLoadList=collectionNameList,
                     loadType=loadType,
@@ -174,7 +185,7 @@ class RepoLoadWorkflow(object):
                 )
                 okS = self.loadStatus(mw.getLoadStatus(), readBackCheck=readBackCheck)
             except Exception as e:
-                logger.exception("Operation %r database %r failing with %s", op, databaseName, str(e))
+                logger.exception("Operation %r collection group %r (database %r) failing with %s", op, collectionGroupName, databaseName, str(e))
         elif op == "etl_entity_sequence_clusters" and dbType == "mongo":
             cw = SequenceClustersEtlWorker(
                 self.__cfgOb,
@@ -254,19 +265,22 @@ class RepoLoadWorkflow(object):
             logger.error("Unsupported operation %r - exiting", op)
             return False
         try:
-            schemaLevel = kwargs.get("schemaLevel", "min") if kwargs.get("schemaLevel") in ["min", "full"] else "min"
-            dbType = kwargs.get("dbType", "mongo")
-            #
             databaseName = kwargs.get("databaseName", None)
+            collectionGroupName = kwargs.get("collectionGroupName", databaseName)
             databaseNameList = self.__cfgOb.get("DATABASE_NAMES_ALL", sectionName="database_catalog_configuration").split(",")
             collectionNameList = kwargs.get("collectionNameList", None)
+            schemaLevel = kwargs.get("schemaLevel", "min") if kwargs.get("schemaLevel") in ["min", "full"] else "min"
+            dbType = kwargs.get("dbType", "mongo")
             #
         except Exception as e:
             logger.exception("Argument and configuration processing failing with %s", str(e))
             return False
         #
         ok = False
-        if dbType == "mongo" and databaseName in databaseNameList:
+        if dbType == "mongo":
+            if collectionGroupName not in databaseNameList:
+                logger.error("collectionGroupName (%r) not in databaseNameList: %r", collectionGroupName, databaseNameList)
+                return False
             try:
                 mw = PdbxLoader(
                     self.__cfgOb,
@@ -275,7 +289,7 @@ class RepoLoadWorkflow(object):
                     verbose=self.__debugFlag,
                 )
                 ok = mw.removeAndRecreateDbCollections(
-                    databaseName,
+                    collectionGroupName,
                     collectionLoadList=collectionNameList,
                     validationLevel=schemaLevel,
                 )
@@ -291,7 +305,7 @@ class RepoLoadWorkflow(object):
             logger.error("Unsupported operation %r - exiting", op)
             return False
 
-        databaseName = kwargs.get("databaseName")  # 'pdbx_core' or 'pdbx_comp_model_core'
+        databaseName = kwargs.get("databaseName", None)  # 'pdbx_core' or 'pdbx_comp_model_core'
         contentType = kwargs.get("contentType", None)
         contentType = contentType if contentType else databaseName  # 'pdbx_core', 'pdbx_comp_model_core', 'pdbx_ihm'
         holdingsFilePath = kwargs.get("holdingsFilePath", None)  # For CSMs: http://computed-models-internal-%s.rcsb.org/staging/holdings/computed-models-holdings-list.json
@@ -494,6 +508,7 @@ class RepoLoadWorkflow(object):
             return False
         try:
             databaseName = kwargs.get("databaseName", None)
+            collectionGroupName = kwargs.get("collectionGroupName", databaseName)
             contentType = kwargs.get("contentType", None)
             holdingsFilePath = kwargs.get("holdingsFilePath", None)
             minNpiValidationCount = kwargs.get("minNpiValidationCount", None)
@@ -515,26 +530,27 @@ class RepoLoadWorkflow(object):
                 verbose=self.__debugFlag,
             )
             ok = mw.loadCompleteCheck(
-                databaseName,
+                collectionGroupName=collectionGroupName,
                 contentType=contentType,
                 completeIdCodeList=completeIdCodeList,
                 completeIdCodeCount=completeIdCodeCount,
             )
-            logger.info("loadCompleteCheck for database %s contentType %r (status %r)", databaseName, contentType, ok)
-            if databaseName == "pdbx_core":
+            logger.info("loadCompleteCheck for collection group %s contentType %r (status %r)", collectionGroupName, contentType, ok)
+            if collectionGroupName == "pdbx_core":
                 if (not contentType or contentType == "pdbx_core"):  # only check validation data for PDB (not IHM)
+                    validationDbMongoCheckName = collectionGroupName  # assumes that "pdbx_core" will remain its own DB
                     validationCollectionCheckMap = {
                         # map of collection names and minimum validation counts expected
                         "pdbx_core_nonpolymer_entity_instance": minNpiValidationCount,
                     }
                     for collection, minValidationCount in validationCollectionCheckMap.items():
                         if minValidationCount:
-                            okV = mw.checkValidationDataCount(databaseName, collection, minValidationCount)
-                            logger.info("checkValidationDataCount for database %s coll %s (status %r)", databaseName, collection, okV)
+                            okV = mw.checkValidationDataCount(validationDbMongoCheckName, collection, minValidationCount)
+                            logger.info("checkValidationDataCount for database %s coll %s (status %r)", validationDbMongoCheckName, collection, okV)
                             ok = ok and okV
                     #
                 if checkLoadWithHoldings:
-                    okH = mw.checkLoadedEntriesWithHoldingsCount(databaseName)
+                    okH = mw.checkLoadedEntriesWithHoldingsCount(collectionGroupName)
                     logger.info("checkLoadedEntriesWithHoldingsCount (status %r)", okH)
                     ok = ok and okH
         #

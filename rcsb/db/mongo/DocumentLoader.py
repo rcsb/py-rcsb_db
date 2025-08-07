@@ -8,6 +8,8 @@
 #  13-July-2018 jdw add append mode
 #  14-Aug-2018  jdw generalize key identifiers to lists
 #  15-Jul-2025  dwp add ability to provide a dictionary of fields to index and their desired corresponding names
+#  30-Jul-2025  dwp consolidate redundant methods with those previously in PdbxLoader and make them public methods
+#                   to allow for re-use by PdbxLoader (createCollection(), removeCollection(), getKeyValues())
 ##
 """
 Worker methods for loading document sets into MongoDb.

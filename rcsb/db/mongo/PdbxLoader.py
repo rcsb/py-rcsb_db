@@ -158,7 +158,7 @@ class PdbxLoader(object):
 
     def load(
         self,
-        databaseName,
+        databaseName=None,
         collectionGroupName=None,
         collectionLoadList=None,
         loadType="full",
@@ -188,7 +188,7 @@ class PdbxLoader(object):
 
         Args:
             databaseName (str): The database name (e.g. 'bird','bird_family','bird_chem_comp', chem_comp', 'pdbx', 'pdbx_core')
-            collectionGroupName (str): A content collection group schema (e.g. 'bird','bird_family','bird_chem_comp', chem_comp', 'pdbx', 'pdbx_core')
+            collectionGroupName (str): A content collection/schema group name (e.g. 'pdbx_core','chem_comp_core'). Takes precedence over databaseName.
             collectionLoadList (list, optional): list of collection names in this schema to load (default is load all collections)
             loadType (str, optional): mode of loading 'full' (bulk delete then bulk insert) or 'replace'
             contentType (str, optional): content type to load ('pdbx_core', 'pdbx_comp_model_core', 'pdbx_ihm'). Defaults to databaseName.
@@ -222,19 +222,14 @@ class PdbxLoader(object):
             desp = DataExchangeStatus()
             statusStartTimestamp = desp.setStartTime()
             #
-            # Temporarily set collectionGroupName here until corresponding code in weekly-update-workflow is updated
-            if databaseName and not collectionGroupName:
-                if databaseName in ["pdbx_core", "pdbx_comp_model_core"]:
-                    collectionGroupName = databaseName
-                elif databaseName in ["bird_chem_comp_core"]:
-                    collectionGroupName = "core_chem_comp"
 
             databaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=collectionGroupName)
             #
             logger.info("Beginning load operation (%r) for collectionGroup %r into Mongo database %s", loadType, collectionGroupName, databaseNameMongo)
             startTime = self.__begin(message="loading operation")
             #
-            contentType = contentType if contentType else databaseName
+            # NOTE: contentType should remain one of ["pdbx_core", "pdbx_comp_model_core", "bird_chem_comp_core"] until RepositoryProvider is updated to use "core_chem_comp" instead
+            contentType = contentType if contentType else databaseName  # TODO: Change to use "collectionGroupName" instead of "databaseName" (but see note above)
             #
             # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
             inputIdCodeList = inputIdCodeList if inputIdCodeList else []
@@ -1052,11 +1047,11 @@ class PdbxLoader(object):
 
         return False, [], inputDocIdS
 
-    def removeAndRecreateDbCollections(self, databaseName, collectionLoadList=None, validationLevel="min"):
+    def removeAndRecreateDbCollections(self, collectionGroupName, collectionLoadList=None, validationLevel="min"):
         """Remove and recreate collections for input database.
 
         Args:
-            databaseName (str): database name (e.g. 'bird','bird_family','bird_chem_comp', chem_comp', 'pdbx', 'pdbx_core')
+            collectionGroupName (str): collection/schema group name (e.g. 'pdbx_core','core_chem_comp')
             collectionLoadList (list, optional): list of collection names in this schema to load (default is load all collections)
             validationLevel (str, optional): Completeness of json/bson metadata schema bound to each collection (e.g. 'min', 'full' or None)
         Returns:
@@ -1065,21 +1060,22 @@ class PdbxLoader(object):
         """
         try:
             ok = False
-            logger.info("Beginning wiping of database %s", databaseName)
+            logger.info("Beginning wiping of collection group %s", collectionGroupName)
 
-            _, _, fullCollectionNameList, docIndexD = self.__schP.getSchemaInfo(databaseName, dataTyping="ANY")
+            databaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=collectionGroupName)
+            _, _, fullCollectionNameList, docIndexD = self.__schP.getSchemaInfo(collectionGroupName, dataTyping="ANY")
             collectionNameList = collectionLoadList if collectionLoadList else fullCollectionNameList
 
             for collectionName in collectionNameList:
-                logger.info("Removing and recreating database %s collection %s", databaseName, collectionName)
-                self.__dL.removeCollection(databaseName, collectionName)
+                logger.info("Removing and recreating database %s collection %s", databaseNameMongo, collectionName)
+                self.__dL.removeCollection(databaseNameMongo, collectionName)
                 indexDL = docIndexD[collectionName] if collectionName in docIndexD else []
                 bsonSchema = None
                 if validationLevel and validationLevel in ["min", "full"]:
-                    bsonSchema = self.__schP.getJsonSchema(databaseName, collectionName, encodingType="BSON", level=validationLevel)
-                ok = self.__dL.createCollection(databaseName, collectionName, indexDL=indexDL, bsonSchema=bsonSchema)
+                    bsonSchema = self.__schP.getJsonSchema(collectionGroupName, collectionName, encodingType="BSON", level=validationLevel)
+                ok = self.__dL.createCollection(databaseNameMongo, collectionName, indexDL=indexDL, bsonSchema=bsonSchema)
                 logger.debug("Collection create return status %r", ok)
-                colIdL = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=collectionName)
+                colIdL = self.__getLoadedRcsbIdList(databaseName=databaseNameMongo, collectionName=collectionName)
                 ok = len(colIdL) == 0 and ok
                 logger.info("Collection wipe and create return status %r", ok)
             #
@@ -1091,7 +1087,7 @@ class PdbxLoader(object):
 
     def loadCompleteCheck(
         self,
-        databaseName,
+        collectionGroupName=None,
         contentType=None,
         completeIdCodeList=None,
         completeIdCodeCount=None,
@@ -1099,7 +1095,7 @@ class PdbxLoader(object):
         """Driver method for checking if DB loading is complete (following the execution of the individual sublist tasks).
 
         Args:
-            databaseName (str): database name (e.g. 'pdbx_core', 'pdbx_comp_model_core)
+            collectionGroupName (str): collection/schema group name (e.g. 'pdbx_core', 'pdbx_comp_model_core)
             contentType (str, optional): content type to load ('pdbx_core', 'pdbx_comp_model_core', 'pdbx_ihm')
             completeIdCodeList (list, optional): Complete list of ID codes that should be loaded by the end of all sublist loader tasks
             completeIdCodeCount (int, optional): Number of total ID codes that should be loaded by the end of all sublist loader tasks
@@ -1107,14 +1103,16 @@ class PdbxLoader(object):
             bool: True on success or False otherwise
         """
         try:
-            logger.info("Beginning load completeness check for database %s", databaseName)
-            if databaseName not in ["pdbx_core", "pdbx_comp_model_core"]:
-                logger.error("Unsupported database for completed load checking %s", databaseName)
+            logger.info("Beginning load completeness check for collection group %s", collectionGroupName)
+            if collectionGroupName not in ["pdbx_core", "pdbx_comp_model_core"]:
+                logger.error("Unsupported collection group for completed load checking %s", collectionGroupName)
                 return False
-            contentType = contentType if contentType else databaseName
+            contentType = contentType if contentType else collectionGroupName
             structDetermMethod = self.__getStructDetermMethod(contentType=contentType)
             # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
-            totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseName, collectionName=databaseName + "_entry", structDetermMethod=structDetermMethod)
+            databaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=collectionGroupName)
+
+            totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseNameMongo, collectionName=databaseNameMongo + "_entry", structDetermMethod=structDetermMethod)
             if completeIdCodeList:
                 # Get the list of IDs from only the given sublist that are already loaded
                 subsetIdsAlreadyLoaded = list(set(totalIdsAlreadyLoaded).intersection(set(completeIdCodeList)))
@@ -1160,7 +1158,7 @@ class PdbxLoader(object):
             logger.exception("Failing with %s", str(e))
         return ok
 
-    def checkLoadedEntriesWithHoldingsCount(self, databaseName):
+    def checkLoadedEntriesWithHoldingsCount(self, collectionGroupName):
         """Compare the count of documents in the given database (e.g., 'pdbx_core') with counts in repository_holdings DB"""
         ok = True
         try:
@@ -1170,16 +1168,17 @@ class PdbxLoader(object):
             combinedHoldingExpectedCount = 0
             #
             repoHoldingsCollectionGroupName = "repository_holdings"
-
             _, _, collectionNameList, _ = self.__schP.getSchemaInfo(collectionGroupName=repoHoldingsCollectionGroupName, dataTyping="ANY")
             repoHoldingsDatabaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=repoHoldingsCollectionGroupName)
+
+            databaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=collectionGroupName)
 
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
 
                 entryCount = mg.count(
-                    databaseName=databaseName,
-                    collectionName=str(databaseName + "_entry"),
+                    databaseName=databaseNameMongo,
+                    collectionName=str(databaseNameMongo + "_entry"),
                 )
 
                 for collectionName in collectionNameList:

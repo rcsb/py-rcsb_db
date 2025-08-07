@@ -152,7 +152,7 @@ class PdbxLoaderTests(unittest.TestCase):
                 rebuildSchemaFlag=True,
             )
             ok = mw.load(
-                kwargs["databaseName"],
+                databaseName=kwargs["databaseName"],
                 collectionLoadList=kwargs["collectionNameList"],
                 loadType=kwargs["loadType"],
                 inputPathList=None,
