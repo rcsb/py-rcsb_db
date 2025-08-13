@@ -27,8 +27,10 @@
 # 22-Aug-2019 jdw DictInfo() replaced with new ContentInfo()
 # 28-Feb-2022  bv add support for mandatory sub-categories in json schema
 # 21-Nov-2022  bv add support in json schema for min and unique items for sub-categories and iterable attributes
+# 20-May-2025 dwp add support for making manually-configured attributes "required" in schema, even in "min" validation mode
 #  3-Aug-2025  bv add support in json schema for nested child subcategories needed for DW and ExDB merging
 #  6-Aug-2025 dwp rename "databaseName" -> "collectionGroupName" to generalize terminology
+# 13-Aug-2025 dwp add support for making manually-configured categories "required" in schema, even in "min" validation mode
 ##
 """
 Integrate dictionary metadata and file based (type/coverage) into internal and JSON/BSON schema defintions.
@@ -642,6 +644,7 @@ class SchemaDefBuild(object):
         excludeAttributesD.update(docExcludeAttributes)
         #
         collectionRequiredAttributes = documentDefHelper.getCollectionRequiredAttributes(collectionName)
+        collectionRequiredCategories = documentDefHelper.getCollectionRequiredCategories(collectionName)
         #
         sliceFilter = documentDefHelper.getSliceFilter(collectionName)
         sliceCategories = self.__contentInfo.getSliceCategories(sliceFilter) if sliceFilter else []
@@ -665,7 +668,7 @@ class SchemaDefBuild(object):
         #
         sNameD = {}
         schemaPropD = {}
-        mandatoryCategoryL = []
+        mandatoryCategoryL = [c for c in collectionRequiredCategories] if collectionRequiredCategories else []
         for catName, fullAtNameList in dictSchema.items():
             atNameList = [at for at in fullAtNameList if (catName, at) not in excludeAttributesD]
             #
@@ -711,7 +714,8 @@ class SchemaDefBuild(object):
             #
             if cfD["IS_MANDATORY"]:
                 if not catName.startswith("ma_"):
-                    mandatoryCategoryL.append(catName)
+                    if catName not in mandatoryCategoryL:
+                        mandatoryCategoryL.append(catName)
             #
             isUnitCard = True if ("UNIT_CARDINALITY" in cfD and cfD["UNIT_CARDINALITY"]) else False
             #
@@ -1035,7 +1039,8 @@ class SchemaDefBuild(object):
             for k, v in privKeyD.items():
                 schemaPropD[k] = v
                 if privMandatoryD[k]:
-                    mandatoryCategoryL.append(k)
+                    if k not in mandatoryCategoryL:
+                        mandatoryCategoryL.append(k)
             #
             rD = {typeKey: "object", "properties": schemaPropD, "additionalProperties": False}
             if mandatoryCategoryL:

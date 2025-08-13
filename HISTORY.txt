@@ -371,7 +371,8 @@
  14-May-2025  V1.802 Add support for IHM repository holdings and model file loading
   1-Jul-2025  V1.803 Error handling for splitIdListAndWriteToFiles
  24-Jul-2025  V1.804 Switch to lower-case for CSM ID list generation (for incremental BCIF/image workflow updates)
-  6-Aug-2025  V1.805 Adjustments to schema builder tools needed for merging DW schemas with ExDB schemas;
+ 13-Aug-2025  V1.805 Adjustments to schema builder tools needed for merging DW schemas with ExDB schemas;
+                     Add support for making manually-configured categories and attributes "required" in JSON schemas;
                      Add support for providing dictionary of indexes to create during MongoDB document load;
                      Add support for nested subcategories needed for merging ExDB and DW;
                      Change usage of "databaseName" to "collectionGroupName" (where appropriate) to generalize terminology

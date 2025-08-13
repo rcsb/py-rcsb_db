@@ -15,9 +15,11 @@
 #  13-Mar-2019 jdw add getCollectionVersion() and getCollectionInfo() and remove getCollections().
 #   6-Sep-2019 jdw incorporate search type and brief descriptions
 #  23-Oct-2019 jdw add collection subcategory nested property support
-#  28-Feb-2022 bv add method getSubCategoryAggregateMandatory()
-#  21-Nov-2022 bv add methods getIterableAttributeMetadata() and getSubCategoryAggregateMinUniqueItems()
-#   2-Aug-2025 bv add methods to support nested subcategories needed for merging ExDB and DW
+#  28-Feb-2022  bv add method getSubCategoryAggregateMandatory()
+#  21-Nov-2022  bv add methods getIterableAttributeMetadata() and getSubCategoryAggregateMinUniqueItems()
+#  20-May-2025 dwp add support for making manually-configured attributes "required" in schema, even in "min" validation mode
+#   2-Aug-2025  bv add methods to support nested subcategories needed for merging ExDB and DW
+#  13-Aug-2025 dwp add support for making manually-configured categories "required" in schema, even in "min" validation mode
 ##
 """
 Inject additional document information into a schema definition.
@@ -124,6 +126,16 @@ class DocumentDefinitionHelper(object):
                         else:
                             atRequiredD.setdefault(catName, []).append(atName)
         return atRequiredD
+
+    def getCollectionRequiredCategories(self, collectionName):
+        catRequiredL = []
+        for cn, cDL in self.__cfgD["collection_required_categories"].items():
+            if cn != collectionName:
+                continue
+            for cD in cDL:
+                catName = cD["CATEGORY_NAME"]
+                catRequiredL.append(catName)
+        return catRequiredL
 
     def getDocumentExcludedAttributes(self, collectionName, asTuple=True):
         atExcludeD = {}
