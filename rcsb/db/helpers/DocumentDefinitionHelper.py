@@ -19,7 +19,8 @@
 #  21-Nov-2022  bv add methods getIterableAttributeMetadata() and getSubCategoryAggregateMinUniqueItems()
 #  20-May-2025 dwp add support for making manually-configured attributes "required" in schema, even in "min" validation mode
 #   2-Aug-2025  bv add methods to support nested subcategories needed for merging ExDB and DW
-#  13-Aug-2025 dwp add support for making manually-configured categories "required" in schema, even in "min" validation mode
+#  13-Aug-2025 dwp add support for making manually-configured categories "required" in schema, even in "min" validation mode;
+#                  add support for "MIN_LENGTH" ("minLength") and "MAX_LENGTH" ("maxLength") configured attribute properties
 ##
 """
 Inject additional document information into a schema definition.
@@ -372,6 +373,10 @@ class DocumentDefinitionHelper(object):
                             pD["maxItems"] = tD["MAX_ITEMS"]
                         if "UNIQUE_ITEMS" in tD:
                             pD["uniqueItems"] = tD["UNIQUE_ITEMS"]
+                        if "MIN_LENGTH" in tD:
+                            pD["minLength"] = tD["MIN_LENGTH"]
+                        if "MAX_LENGTH" in tD:
+                            pD["maxLength"] = tD["MAX_LENGTH"]
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return pD

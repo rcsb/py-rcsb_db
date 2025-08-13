@@ -30,7 +30,8 @@
 # 20-May-2025 dwp add support for making manually-configured attributes "required" in schema, even in "min" validation mode
 #  3-Aug-2025  bv add support in json schema for nested child subcategories needed for DW and ExDB merging
 #  6-Aug-2025 dwp rename "databaseName" -> "collectionGroupName" to generalize terminology
-# 13-Aug-2025 dwp add support for making manually-configured categories "required" in schema, even in "min" validation mode
+# 13-Aug-2025 dwp add support for making manually-configured categories "required" in schema, even in "min" validation mode;
+#                 add support for "MIN_LENGTH" ("minLength") and "MAX_LENGTH" ("maxLength") configured attribute properties
 ##
 """
 Integrate dictionary metadata and file based (type/coverage) into internal and JSON/BSON schema defintions.
@@ -891,6 +892,10 @@ class SchemaDefBuild(object):
                                 scD["properties"][schemaAttributeName]["maxItems"] = atIterMd["maxItems"]
                             if atIterMd and "uniqueItems" in atIterMd:
                                 scD["properties"][schemaAttributeName]["uniqueItems"] = atIterMd["uniqueItems"]
+                            if atIterMd and "minLength" in atIterMd:
+                                scD["properties"][schemaAttributeName]["minLength"] = atIterMd["minLength"]
+                            if atIterMd and "maxLength" in atIterMd:
+                                scD["properties"][schemaAttributeName]["maxLength"] = atIterMd["maxLength"]
                             if atDesAlt:
                                 scD["properties"][schemaAttributeName]["description"] = atDesAlt
                         else:
