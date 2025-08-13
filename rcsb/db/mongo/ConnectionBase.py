@@ -5,6 +5,7 @@
 # Update:
 #    17-Mar-2018 jdw  add r/w sync controls - generalize auth to prefs
 #    13-Aug-2024 dwp  update keywords for pymongo 4.x support
+#    13-Aug-2025 dwp  make use of configured port number in URI string
 ##
 """
 Base class for managing database connection which handles application specific authentication.
@@ -108,7 +109,9 @@ class ConnectionBase(object):
             self.closeConnection()
 
         try:
-            if self.__dbUser and self.__dbPw:
+            if self.__dbUser and self.__dbPw and self.__dbPort:
+                uri = "mongodb://%s:%s@%s:%d/%s" % (quote_plus(self.__dbUser), quote_plus(self.__dbPw), self.__dbHost, self.__dbPort, self.__dbAdminDb)
+            elif self.__dbUser and self.__dbPw:
                 uri = "mongodb://%s:%s@%s/%s" % (quote_plus(self.__dbUser), quote_plus(self.__dbPw), self.__dbHost, self.__dbAdminDb)
             else:
                 uri = "mongodb://%s:%d" % (self.__dbHost, self.__dbPort)
