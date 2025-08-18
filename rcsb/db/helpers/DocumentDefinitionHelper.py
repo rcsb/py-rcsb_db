@@ -703,7 +703,7 @@ class DocumentDefinitionHelper(object):
         Example:
         #
         collection_subcategory_nested:
-            bird_chem_comp_core:
+            core_chem_comp:
                 - CATEGORY: rcsb_chem_comp_related
                   SUBCATEGORY: resource_lineage
                   CONTEXT_ATTRIBUTE_NAMES:

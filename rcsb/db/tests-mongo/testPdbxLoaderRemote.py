@@ -72,8 +72,9 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
         self.__ldList = [
             # {"databaseName": "chem_comp_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min"},
             {
-                "databaseName": "core_chem_comp",
-                "collectionNameList": None,
+                # "databaseName": "dw",
+                # "collectionNameList": ["core_chem_comp"],
+                "collectionGroupName": "core_chem_comp",
                 "loadType": "full",
                 "mergeContentTypes": None,
                 "validationLevel": "full",
@@ -81,8 +82,9 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
                 "status": True,
             },
             {
-                "databaseName": "core_chem_comp",
-                "collectionNameList": None,
+                # "databaseName": "dw",
+                # "collectionNameList": ["core_chem_comp"],
+                "collectionGroupName": "core_chem_comp",
                 "loadType": "replace",
                 "mergeContentTypes": None,
                 "validationLevel": "full",
@@ -90,7 +92,9 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
                 "status": True,
             },
             {
-                "databaseName": "pdbx_core",
+                # "databaseName": "pdbx_core",
+                "collectionGroupName": "pdbx_core",
+                "contentType": "pdbx_core",
                 "collectionNameList": None,
                 "loadType": "full",
                 "mergeContentTypes": ["vrpt"],
@@ -99,7 +103,9 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
                 "status": True,
             },
             {
-                "databaseName": "pdbx_core",
+                # "databaseName": "pdbx_core",
+                "collectionGroupName": "pdbx_core",
+                "contentType": "pdbx_core",
                 "collectionNameList": None,
                 "loadType": "replace",
                 "mergeContentTypes": ["vrpt"],
@@ -126,7 +132,7 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
     def __pdbxLoaderWrapper(self, **kwargs):
         """Wrapper for PDBx loader module"""
         try:
-            logger.info("Loading %s", kwargs["databaseName"])
+            logger.info("Loading %s", kwargs["collectionGroupName"])
             mw = PdbxLoader(
                 self.__cfgOb,
                 cachePath=self.__cachePath,
@@ -141,7 +147,7 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
                 rebuildSchemaFlag=False,
             )
             ok = mw.load(
-                databaseName=kwargs["databaseName"],
+                collectionGroupName=kwargs["collectionGroupName"],
                 collectionLoadList=kwargs["collectionNameList"],
                 loadType=kwargs["loadType"],
                 inputPathList=None,
