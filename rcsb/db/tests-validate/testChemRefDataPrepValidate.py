@@ -62,8 +62,8 @@ class ChemRefDataPrepValidateTests(unittest.TestCase):
     def __validateChemRef(self, extResource, schemaLevel="full"):
         eCount = 0
         if extResource == "DrugBank":
-            schemaName = "drugbank_core"
-            collectionNames = ["drugbank_core"]
+            schemaName = "core_drugbank"
+            collectionNames = ["core_drugbank"]
             user = self.__cfgOb.get("_DRUGBANK_AUTH_USERNAME", sectionName=self.__configName)
             pw = self.__cfgOb.get("_DRUGBANK_AUTH_PASSWORD", sectionName=self.__configName)
             # cacheDir = self.__cfgOb.get("DRUGBANK_CACHE_DIR", sectionName=self.__configName)

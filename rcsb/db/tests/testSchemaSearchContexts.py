@@ -243,7 +243,7 @@ class SchemaSearchContextsTests(unittest.TestCase):
                         for sp in cvD["SEARCH_PATHS"]:
                             if sp.count(".") > 1:
                                 k = sp.rfind(".")
-                                sp = sp[:k] + "_" + sp[k + 1 :]
+                                sp = sp[:k] + "_" + sp[k + 1:]
                             cnS = sp.split(".")[0]
                             anS = sp.split(".")[1]
                             briefDescr = self.__docHelper.getAttributeDescription(cnS, anS, contextType="brief")
@@ -254,7 +254,7 @@ class SchemaSearchContextsTests(unittest.TestCase):
                             sp = aD["PATH"]
                             if sp.count(".") > 1:
                                 k = sp.rfind(".")
-                                sp = sp[:k] + "_" + sp[k + 1 :]
+                                sp = sp[:k] + "_" + sp[k + 1:]
                             cnS = sp.split(".")[0]
                             anS = sp.split(".")[1]
                             briefDescr = self.__docHelper.getAttributeDescription(cnS, anS, contextType="brief")
@@ -312,7 +312,7 @@ class SchemaSearchContextsTests(unittest.TestCase):
             #
             if contextPath.count(".") > 1:
                 k = contextPath.rfind(".")
-                contextPath = contextPath[:k] + "_" + contextPath[k + 1 :]
+                contextPath = contextPath[:k] + "_" + contextPath[k + 1:]
             logger.debug("%s subcategory %s context path %r", catName, subCatName, contextPath)
             contextName = nestedContextD["CONTEXT_NAME"]
             cpCatName = contextPath.split(".")[0]
@@ -373,7 +373,7 @@ class SchemaSearchContextsTests(unittest.TestCase):
                     for sp in cvD["SEARCH_PATHS"]:
                         if sp.count(".") > 1:
                             k = sp.rfind(".")
-                            sp = sp[:k] + "_" + sp[k + 1 :]
+                            sp = sp[:k] + "_" + sp[k + 1:]
                         cnS = sp.split(".")[0]
                         anS = sp.split(".")[1]
                         briefDescr = self.__docHelper.getAttributeDescription(cnS, anS, contextType="brief")
@@ -383,7 +383,7 @@ class SchemaSearchContextsTests(unittest.TestCase):
                         sp = aD["PATH"]
                         if sp.count(".") > 1:
                             k = sp.rfind(".")
-                            sp = sp[:k] + "_" + sp[k + 1 :]
+                            sp = sp[:k] + "_" + sp[k + 1:]
                         cnS = sp.split(".")[0]
                         anS = sp.split(".")[1]
                         briefDescr = self.__docHelper.getAttributeDescription(cnS, anS, contextType="brief")
@@ -404,7 +404,7 @@ class SchemaSearchContextsTests(unittest.TestCase):
             cH = ContentDefinitionHelper(cfgOb=self.__cfgOb)
             dictApi = self.__dP.getApiByLocators(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile])
             # logger.info("units = %r", dictApi.getUnits("pdbx_nmr_spectrometer", "manufacturer"))
-            sdi = ContentDefinition(dictApi, databaseName="pdbx_core", contentDefHelper=cH)
+            sdi = ContentDefinition(dictApi, collectionGroupName="pdbx_core", contentDefHelper=cH)
             catNameL = sdi.getCategories()
             cfD = {}
             afD = {}

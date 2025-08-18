@@ -8,6 +8,9 @@
 #   13-Dec-2018 jdw add Drugbank and I/HM schema options
 #    7-Jan-2019 jdw overhaul
 #   23-Nov-2021 dwp Add pdbx_comp_model_core
+#    6-Aug-2025 dwp Rename "databaseName" -> "collectionGroupName" to generalize terminology;
+#                   Change "drugbank_core" -> "core_drugbank" (as part of ExDB/DW consolidatoin);
+#                   Add "core_chem_comp" (to replace "bird_chem_comp_core")
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -39,6 +42,7 @@ def main():
     parser.add_argument("--update_chem_comp_core_ref", default=False, action="store_true", help="Update core schema for Chemical Component reference definitions")
     parser.add_argument("--update_bird_chem_comp_ref", default=False, action="store_true", help="Update schema for Bird Chemical Component reference definitions")
     parser.add_argument("--update_bird_chem_comp_core_ref", default=False, action="store_true", help="Update core schema for Bird Chemical Component reference definitions")
+    parser.add_argument("--update_core_chem_comp_ref", default=False, action="store_true", help="Update core schema for Bird Chemical Component reference definitions")
 
     parser.add_argument("--update_bird_ref", default=False, action="store_true", help="Update schema for Bird reference definitions")
     parser.add_argument("--update_bird_family_ref", default=False, action="store_true", help="Update schema for Bird Family reference definitions")
@@ -51,7 +55,7 @@ def main():
     parser.add_argument("--update_entity_sequence_clusters", default=False, action="store_true", help="Update schema for entity sequence clusters")
     parser.add_argument("--update_data_exchange", default=False, action="store_true", help="Update schema for data exchange status")
     parser.add_argument("--update_ihm_dev", default=False, action="store_true", help="Update schema for I/HM dev entry data")
-    parser.add_argument("--update_drugbank_core", default=False, action="store_true", help="Update DrugBank schema")
+    parser.add_argument("--update_core_drugbank", default=False, action="store_true", help="Update DrugBank schema")
     #
     parser.add_argument("--update_config_all", default=False, action="store_true", help="Update using configuration settings (e.g. DATABASE_NAMES_ALL)")
     parser.add_argument("--update_config_deployed", default=False, action="store_true", help="Update using configuration settings (e.g. DATABASE_NAMES_DEPLOYED)")
@@ -101,87 +105,90 @@ def main():
         logger.error("Missing or access issue with config file %r with %s", configPath, str(e))
         exit(1)
     #
-    databaseNameList = []
+    collectionGroupNameList = []
     if args.update_chem_comp_ref:
-        databaseNameList.append("chem_comp")
+        collectionGroupNameList.append("chem_comp")
 
     if args.update_bird_chem_comp_ref:
-        databaseNameList.append("bird_chem_comp")
+        collectionGroupNameList.append("bird_chem_comp")
 
     if args.update_chem_comp_core_ref:
-        databaseNameList.append("chem_comp_core")
+        collectionGroupNameList.append("chem_comp_core")
 
     if args.update_bird_chem_comp_core_ref:
-        databaseNameList.append("bird_chem_comp_core")
+        collectionGroupNameList.append("bird_chem_comp_core")
+
+    if args.update_core_chem_comp_ref:
+        collectionGroupNameList.append("core_chem_comp")
 
     if args.update_bird_ref:
-        databaseNameList.append("bird")
+        collectionGroupNameList.append("bird")
 
     if args.update_bird_family_ref:
-        databaseNameList.append("bird_family")
+        collectionGroupNameList.append("bird_family")
 
     if args.update_pdbx:
-        databaseNameList.append("pdbx")
+        collectionGroupNameList.append("pdbx")
 
     if args.update_pdbx_core:
-        databaseNameList.append("pdbx_core")
+        collectionGroupNameList.append("pdbx_core")
 
     if args.update_pdbx_comp_model_core:
-        databaseNameList.append("pdbx_comp_model_core")
+        collectionGroupNameList.append("pdbx_comp_model_core")
 
     if args.update_repository_holdings:
-        databaseNameList.append("repository_holdings")
+        collectionGroupNameList.append("repository_holdings")
 
     if args.update_entity_sequence_clusters:
-        databaseNameList.append("sequence_clusters")
+        collectionGroupNameList.append("sequence_clusters")
 
     if args.update_data_exchange:
-        databaseNameList.append("data_exchange")
+        collectionGroupNameList.append("data_exchange")
 
     if args.update_ihm_dev:
-        databaseNameList.append("ihm_dev")
+        collectionGroupNameList.append("ihm_dev")
 
-    if args.update_drugbank_core:
-        databaseNameList.append("drugbank_core")
+    if args.update_core_drugbank:
+        collectionGroupNameList.append("core_drugbank")
 
     if args.update_config_deployed:
-        databaseNameList = cfgOb.getList("DATABASE_NAMES_DEPLOYED", sectionName="database_catalog_configuration")
+        collectionGroupNameList = cfgOb.getList("DATABASE_NAMES_DEPLOYED", sectionName="database_catalog_configuration")
         dataTypingList = cfgOb.getList("DATATYPING_DEPLOYED", sectionName="database_catalog_configuration")
         validationLevels = cfgOb.getList("VALIDATION_LEVELS_DEPLOYED", sectionName="database_catalog_configuration")
         encodingTypes = cfgOb.getList("ENCODING_TYPES_DEPLOYED", sectionName="database_catalog_configuration")
 
     if args.update_config_all:
-        databaseNameList = cfgOb.getList("DATABASE_NAMES_ALL", sectionName="database_catalog_configuration")
+        collectionGroupNameList = cfgOb.getList("DATABASE_NAMES_ALL", sectionName="database_catalog_configuration")
         dataTypingList = cfgOb.getList("DATATYPING_ALL", sectionName="database_catalog_configuration")
         validationLevels = cfgOb.getList("VALIDATION_LEVELS_ALL", sectionName="database_catalog_configuration")
         encodingTypes = cfgOb.getList("ENCODING_TYPES_ALL", sectionName="database_catalog_configuration")
 
     if args.update_config_test:
-        databaseNameList = cfgOb.getList("DATABASE_NAMES_TEST", sectionName="database_catalog_configuration")
+        collectionGroupNameList = cfgOb.getList("DATABASE_NAMES_TEST", sectionName="database_catalog_configuration")
         dataTypingList = cfgOb.getList("DATATYPING_TEST", sectionName="database_catalog_configuration")
         validationLevels = cfgOb.getList("VALIDATION_LEVELS_TEST", sectionName="database_catalog_configuration")
         encodingTypes = cfgOb.getList("ENCODING_TYPES_TEST", sectionName="database_catalog_configuration")
     #
     scnD = cfgOb.get("document_collection_names", sectionName="document_helper_configuration")
     #
-    databaseNameList = list(set(databaseNameList))
+    collectionGroupNameList = list(set(collectionGroupNameList))
     logger.debug("Collections %s", list(scnD.items()))
-    logger.debug("databaseNameList %s", databaseNameList)
+    logger.debug("collectionGroupNameList %s", collectionGroupNameList)
 
     if compareOnly:
         schP = SchemaProvider(cfgOb, cachePath, useCache=True)
         difPathList = []
-        for databaseName in databaseNameList:
+        for collectionGroupName in collectionGroupNameList:
             for dataTyping in dataTypingList:
-                logger.debug("Building schema %s with types %s", databaseName, dataTyping)
-                pth = schP.schemaDefCompare(databaseName, dataTyping)
+                logger.debug("Building schema %s with types %s", collectionGroupName, dataTyping)
+                pth = schP.schemaDefCompare(collectionGroupName, dataTyping)
                 if pth:
                     difPathList.append(pth)
         if difPathList:
             logger.info("Schema definition difference path list %r", difPathList)
         difPathList = []
-        for databaseName in databaseNameList:
-            dD = schP.makeSchemaDef(databaseName, dataTyping="ANY", saveSchema=False)
+        for collectionGroupName in collectionGroupNameList:
+            dD = schP.makeSchemaDef(collectionGroupName, dataTyping="ANY", saveSchema=False)
             sD = SchemaDefAccess(dD)
             for cd in sD.getCollectionInfo():
                 collectionName = cd["NAME"]
@@ -189,7 +196,7 @@ def main():
                     if encodingType.lower() != "json":
                         continue
                     for level in validationLevels:
-                        pth = schP.jsonSchemaCompare(databaseName, collectionName, encodingType, level)
+                        pth = schP.jsonSchemaCompare(collectionGroupName, collectionName, encodingType, level)
                         if pth:
                             difPathList.append(pth)
         if difPathList:
@@ -197,19 +204,19 @@ def main():
 
     else:
         schP = SchemaProvider(cfgOb, cachePath, useCache=False)
-        for databaseName in databaseNameList:
+        for collectionGroupName in collectionGroupNameList:
             for encodingType in encodingTypes:
                 if encodingType == "rcsb":
                     for dataTyping in dataTypingList:
-                        logger.info("Creating schema definition for content type %s data typing %s", databaseName, dataTyping)
-                        schP.makeSchemaDef(databaseName, dataTyping=dataTyping, saveSchema=True)
+                        logger.info("Creating schema definition for content type %s data typing %s", collectionGroupName, dataTyping)
+                        schP.makeSchemaDef(collectionGroupName, dataTyping=dataTyping, saveSchema=True)
                 else:
-                    if databaseName in scnD:
-                        for dD in scnD[databaseName]:
+                    if collectionGroupName in scnD:
+                        for dD in scnD[collectionGroupName]:
                             collectionName = dD["NAME"]
                             for validationLevel in validationLevels:
-                                logger.info("Creating %r schema for content type %s collection %s", encodingType, databaseName, collectionName)
-                                schP.makeSchema(databaseName, collectionName, encodingType=encodingType, level=validationLevel, saveSchema=True)
+                                logger.info("Creating %r schema for content type %s collection %s", encodingType, collectionGroupName, collectionName)
+                                schP.makeSchema(collectionGroupName, collectionName, encodingType=encodingType, level=validationLevel, saveSchema=True)
 
 
 if __name__ == "__main__":

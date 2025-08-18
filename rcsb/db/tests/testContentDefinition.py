@@ -85,7 +85,7 @@ class ContentDefinitionTests(unittest.TestCase):
         try:
             cH = ContentDefinitionHelper(cfgOb=self.__cfgOb)
             dictApi = self.__dP.getApiByLocators(dictLocators=[self.__pathPdbxDictionaryFile])
-            sdi = ContentDefinition(dictApi, databaseName="chem_comp", contentDefHelper=cH)
+            sdi = ContentDefinition(dictApi, collectionGroupName="chem_comp", contentDefHelper=cH)
             catNameL = sdi.getCategories()
             cfD = {}
             afD = {}
@@ -106,7 +106,7 @@ class ContentDefinitionTests(unittest.TestCase):
         try:
             cH = ContentDefinitionHelper(cfgOb=self.__cfgOb)
             dictApi = self.__dP.getApiByLocators(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile])
-            sdi = ContentDefinition(dictApi, databaseName="pdbx_core", contentDefHelper=cH)
+            sdi = ContentDefinition(dictApi, collectionGroupName="pdbx_core", contentDefHelper=cH)
             catNameL = sdi.getCategories()
             cfD = {}
             afD = {}
@@ -127,7 +127,7 @@ class ContentDefinitionTests(unittest.TestCase):
         try:
             cH = ContentDefinitionHelper(cfgOb=self.__cfgOb)
             dictApi = self.__dP.getApiByLocators(dictLocators=[self.__pathPdbxDictionaryFile, self.__pathRcsbDictionaryFile, self.__pathVrptDictionaryFile])
-            sdi = ContentDefinition(dictApi, databaseName="repository_holdings", contentDefHelper=cH)
+            sdi = ContentDefinition(dictApi, collectionGroupName="repository_holdings", contentDefHelper=cH)
             catNameL = sdi.getCategories()
             cfD = {}
             afD = {}
