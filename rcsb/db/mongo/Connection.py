@@ -7,6 +7,7 @@
 #  23-Oct-2018 jdw add section name config access methods and make this a constructor argument
 #   5-Dec-2018 jdw pass on exceptions from the context manager __exit__() method
 #   3-Sep-2019 jdw make all user/pw combinations secure - always use default config section
+#  20-Aug-2020 mjt add optional value of DB_URI pulled from MONGO_DB_URI
 ##
 """
 Derived class for managing database connection which handles application specific authentication.
