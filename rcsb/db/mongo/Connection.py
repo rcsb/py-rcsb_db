@@ -51,6 +51,7 @@ class Connection(ConnectionBase):
             return infoD
         #
         if resourceName == "EXCHANGE_DB":
+            infoD["DB_URI"] = self.__cfgOb.get("MONGO_DB_URI", default=None, sectionName=sectionName)
             infoD["DB_NAME"] = self.__cfgOb.get("EXCHANGE_DB_NAME", sectionName=sectionName)
             infoD["DB_HOST"] = self.__cfgOb.get("EXCHANGE_DB_HOST", sectionName=sectionName)
             infoD["DB_SOCKET"] = self.__cfgOb.get("EXCHANGE_DB_SOCKET", default=None, sectionName=sectionName)
@@ -63,7 +64,7 @@ class Connection(ConnectionBase):
             infoD["DB_READ_PREFERENCE"] = self.__cfgOb.get("EXCHANGE_DB_READ_PREFERENCE", default="nearest", sectionName=sectionName)
             infoD["DB_WRITE_TO_JOURNAL"] = self.__cfgOb.get("EXCHANGE_DB_WRITE_TO_JOURNAL", default=True, sectionName=sectionName)
         elif resourceName == "MONGO_DB":
-            infoD["DB_URI"] = self.__cfgOb.get("MONGO_DB_URI", sectionName=sectionName)
+            infoD["DB_URI"] = self.__cfgOb.get("MONGO_DB_URI", default=None, sectionName=sectionName)
             infoD["DB_NAME"] = self.__cfgOb.get("MONGO_DB_NAME", sectionName=sectionName)
             infoD["DB_HOST"] = self.__cfgOb.get("MONGO_DB_HOST", default=defaultHost, sectionName=sectionName)
             infoD["DB_SOCKET"] = self.__cfgOb.get("MONGO_DB_SOCKET", default=None, sectionName=sectionName)
@@ -76,6 +77,7 @@ class Connection(ConnectionBase):
             infoD["DB_READ_PREFERENCE"] = self.__cfgOb.get("MONGO_DB_READ_PREFERENCE", default="nearest", sectionName=sectionName)
             infoD["DB_WRITE_TO_JOURNAL"] = self.__cfgOb.get("MONGO_DB_WRITE_TO_JOURNAL", default=True, sectionName=sectionName)
         else:
+            infoD["DB_URI"] = self.__cfgOb.get("MONGO_DB_URI", default=None, sectionName=sectionName)
             infoD["DB_NAME"] = self.__cfgOb.get("DB_NAME", sectionName=sectionName)
             infoD["DB_HOST"] = self.__cfgOb.get("DB_HOST", default=defaultHost, sectionName=sectionName)
             infoD["DB_SOCKET"] = self.__cfgOb.get("DB_SOCKET", default=None, sectionName=sectionName)
