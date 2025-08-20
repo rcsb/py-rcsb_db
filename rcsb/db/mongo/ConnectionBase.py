@@ -48,6 +48,7 @@ class ConnectionBase(object):
         self.__infoD = {}
         self.__dbClient = None
 
+        self.__dbUri = None
         self.__databaseName = None
         self.__dbHost = None
         self.__dbUser = None
@@ -79,6 +80,7 @@ class ConnectionBase(object):
     def setPreferences(self, infoD):
         try:
             self.__infoD = copy.deepcopy(infoD)
+            self.__dbUri = self.__infoD.get("DB_URI", None)
             self.__databaseName = self.__infoD.get("DB_NAME", None)
             self.__dbHost = self.__infoD.get("DB_HOST", "localhost")
             self.__dbUser = self.__infoD.get("DB_USER", None)
@@ -109,7 +111,9 @@ class ConnectionBase(object):
             self.closeConnection()
 
         try:
-            if self.__dbUser and self.__dbPw and self.__dbPort:
+            if self.__dbUri:
+                uri = self.__dbUri
+            elif self.__dbUser and self.__dbPw and self.__dbPort:
                 uri = "mongodb://%s:%s@%s:%d/%s" % (quote_plus(self.__dbUser), quote_plus(self.__dbPw), self.__dbHost, self.__dbPort, self.__dbAdminDb)
             elif self.__dbUser and self.__dbPw:
                 uri = "mongodb://%s:%s@%s/%s" % (quote_plus(self.__dbUser), quote_plus(self.__dbPw), self.__dbHost, self.__dbAdminDb)
