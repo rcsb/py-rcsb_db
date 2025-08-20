@@ -113,6 +113,7 @@ class ConnectionBase(object):
 
         try:
             if self.__dbUri:
+                # expects complete uri. Ex: mongodb://<username>:<password>@<ip>:<port>
                 uri = self.__dbUri
             elif self.__dbUser and self.__dbPw and self.__dbPort:
                 uri = "mongodb://%s:%s@%s:%d/%s" % (quote_plus(self.__dbUser), quote_plus(self.__dbPw), self.__dbHost, self.__dbPort, self.__dbAdminDb)
