@@ -1,4 +1,4 @@
-# File:    ProvenanceProviderTests.py
+# File:    testProvenanceProvider.py
 # Author:  J. Westbrook
 # Date:    24-Jun-2018
 # Version: 0.001
@@ -44,68 +44,66 @@ class ProvenanceProviderTests(unittest.TestCase):
         #
         # Sanple provenance data -
         self.__provKeyName = "rcsb_entity_sequence_cluster_prov"
-        self.__provInfo = {
-            "software": {
-                "pdbx_ordinal": 1,
-                "name": "MMseq2",
-                "version": "7d26617002d155353b375b47404621d4b07e196a",
-                "date": "2017",
-                "type": "package",
-                "contact_author": "Martin Steinegger",
-                "contact_author_email": "martin.steinegger@mpibpc.mpg.de",
-                "classification": "bioinformatics",
-                "location": "https://github.com/soedinglab/MMseqs2",
-                "language": "C++",
-                "citation_id": "mmseq2",
-            },
-            #
-            "citation": {
-                "id": "mmseq2",
-                "title": "MMseqs2 enables sensitive protein sequence searching for the analysis of massive data sets.",
-                "journal_abbrev": "Nat Biotechnol.",
-                "journal_volume": "35",
-                "page_first": "1026",
-                "page_last": "1028",
-                "year": 2017,
-                "pdbx_database_id_PubMed": 29035372,
-                "pdbx_database_id_DOI": "10.1038/nbt.3988",
-            },
-            #
-            "citation_author": [{"citation_id": "mmseq2", "name": "Steinegger, M.", "ordinal": 1}, {"citation_id": "mmseq2", "name": "Soding, J.", "ordinal": 2}],
-        }
-
         self.__provInfoL = {
             "software": [
                 {
                     "pdbx_ordinal": 1,
-                    "name": "MMseq2",
-                    "version": "7d26617002d155353b375b47404621d4b07e196a",
-                    "date": "2017",
+                    "name": "DIAMOND",
+                    "version": "v2.1.13",
+                    "date": "2025",
                     "type": "package",
-                    "contact_author": "Martin Steinegger",
-                    "contact_author_email": "martin.steinegger@mpibpc.mpg.de",
+                    "contact_author": "Benjamin Buchfink",
+                    "contact_author_email": "buchfink@gmail.com",
                     "classification": "bioinformatics",
-                    "location": "https://github.com/soedinglab/MMseqs2",
+                    "location": "https://github.com/bbuchfink/diamond",
                     "language": "C++",
-                    "citation_id": "mmseq2",
+                    "citation_id": "diamond"
                 }
             ],
-            #
             "citation": [
                 {
-                    "id": "mmseq2",
-                    "title": "MMseqs2 enables sensitive protein sequence searching for the analysis of massive data sets.",
-                    "journal_abbrev": "Nat Biotechnol.",
-                    "journal_volume": "35",
-                    "page_first": "1026",
-                    "page_last": "1028",
-                    "year": 2017,
-                    "pdbx_database_id_PubMed": 29035372,
-                    "pdbx_database_id_DOI": "10.1038/nbt.3988",
+                    "id": "primary",
+                    "title": "Sensitive protein alignments at tree-of-life scale using DIAMOND",
+                    "journal_abbrev": "Nat. Methods",
+                    "journal_volume": "18",
+                    "page_first": "366",
+                    "page_last": "368",
+                    "year": 2021,
+                    "pdbx_database_id_PubMed": 33828273,
+                    "pdbx_database_id_DOI": "10.1038/s41592-021-01101-x"
+                },
+                {
+                    "id": "1",
+                    "title": "Sensitive clustering of protein sequences at tree-of-life scale using DIAMOND DeepClust",
+                    "journal_abbrev": "bioRxiv",
+                    "year": 2023,
+                    "pdbx_database_id_DOI": "10.1101/2023.01.24.525373"
+                },
+                {
+                    "id": "2",
+                    "title": "Fast and sensitive protein alignment using DIAMOND",
+                    "journal_abbrev": "Nat. Methods",
+                    "journal_volume": "12",
+                    "page_first": "59",
+                    "page_last": "60",
+                    "year": 2015,
+                    "pdbx_database_id_PubMed": 25402007,
+                    "pdbx_database_id_DOI": "10.1038/nmeth.3176"
                 }
             ],
-            #
-            "citation_author": [{"citation_id": "mmseq2", "name": "Steinegger, M.", "ordinal": 1}, {"citation_id": "mmseq2", "name": "Soding, J.", "ordinal": 2}],
+            "citation_author": [
+                {"citation_id": "primary", "name": "Buchfink, B.", "ordinal": 1},
+                {"citation_id": "primary", "name": "Reuter, K.", "ordinal": 2},
+                {"citation_id": "primary", "name": "Drost, H.G.", "ordinal": 3},
+                {"citation_id": "1", "name": "Buchfink, B.", "ordinal": 4},
+                {"citation_id": "1", "name": "Ashkenazy, H.", "ordinal": 5},
+                {"citation_id": "1", "name": "Reuter, K.", "ordinal": 6},
+                {"citation_id": "1", "name": "Kennedy, J.A.", "ordinal": 7},
+                {"citation_id": "1", "name": "Drost, H.G.", "ordinal": 8},
+                {"citation_id": "2", "name": "Buchfink, B.", "ordinal": 9},
+                {"citation_id": "2", "name": "Xie, C.", "ordinal": 10},
+                {"citation_id": "2", "name": "Huson, D.H.", "ordinal": 11}
+            ]
         }
         self.__startTime = time.time()
         logger.debug("Starting %s at %s", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()))
