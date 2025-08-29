@@ -420,12 +420,14 @@ class RepoLoadWorkflow(object):
                 timeStamp = value
 
             hashPath = None
+            # output paths and file names set for lower-case in py-rcsb_db RepoLoadWorkflow.py
             pdbid = key.lower()
             if databaseName == "pdbx_core":
                 hashPath = self.getPdbHash(pdbid)
             elif databaseName == "pdbx_comp_model_core":
                 if modelPath:
-                    hashPath = os.path.dirname(modelPath)
+                    # sync upper/lower-case with pdbid above
+                    hashPath = os.path.dirname(modelPath).lower()
                 else:
                     hashPath = self.getCsmHash(pdbid)
             #
