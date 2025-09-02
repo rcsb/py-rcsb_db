@@ -398,7 +398,7 @@ class RepoLoadWorkflow(object):
         return os.path.join(pdbid[0:2], pdbid[-6:-4], pdbid[-4:-2])
 
     def getContentTypePrefix(self, databaseName):
-        if databaseName in ["pdbx_core", "pdbx_ihm"]:
+        if databaseName != "pdbx_comp_model_core": # pdb or ihm
             return "pdb"
         if databaseName == "pdbx_comp_model_core":
             return "csm"
@@ -409,7 +409,7 @@ class RepoLoadWorkflow(object):
         Compares timestamp of source file (from holdings file information) with timestamp of target file (from file properties).
         If target file exists and has the same or newer timestamp, its id is removed from the return list.
         """
-        if databaseName not in ["pdbx_core", "pdbx_comp_model_core", "pdbx_ihm"]:
+        if databaseName not in ["pdbx_core", "pdbx_comp_model_core"]:
             logger.error("unrecognized argument %s", databaseName)
             return hD
         contentTypePrefix = self.getContentTypePrefix(databaseName)
@@ -426,9 +426,9 @@ class RepoLoadWorkflow(object):
             hashPath = None
             # output paths and file names set for lower-case in py-rcsb_db RepoLoadWorkflow.py
             pdbid = key.lower()
-            if databaseName in ["pdbx_core", "pdbx_ihm"]:
+            if databaseName != "pdbx_comp_model_core": # pdb or ihm
                 hashPath = self.getPdbHash(pdbid)
-            elif databaseName == "pdbx_comp_model_core":
+            else: # csm
                 if modelPath:
                     # sync upper/lower-case with pdbid above
                     hashPath = os.path.dirname(modelPath).lower()
