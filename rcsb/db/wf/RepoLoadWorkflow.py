@@ -424,7 +424,7 @@ class RepoLoadWorkflow(object):
                 timeStamp = value
 
             hashPath = None
-            # output paths and file names set for lower-case in py-rcsb_db RepoLoadWorkflow.py
+            # output paths and file names set for lower-case in py-rcsb_workflow bcif task_functions.py
             pdbid = key.lower()
             if databaseName != "pdbx_comp_model_core": # pdb or ihm
                 hashPath = self.getPdbHash(pdbid)
