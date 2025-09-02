@@ -400,9 +400,7 @@ class RepoLoadWorkflow(object):
     def getContentTypePrefix(self, databaseName):
         if databaseName != "pdbx_comp_model_core": # pdb or ihm
             return "pdb"
-        if databaseName == "pdbx_comp_model_core":
-            return "csm"
-        return ""
+        return "csm"
 
     def getTimeStampCheck(self, hD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType=False, prependOutputHash=False):
         """
