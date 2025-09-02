@@ -372,3 +372,4 @@
   1-Jul-2025  V1.803 Error handling for splitIdListAndWriteToFiles
  24-Jul-2025  V1.804 Switch to lower-case for CSM ID list generation (for incremental BCIF/image workflow updates)
  13-Aug-2025  V1.805 Make use of configured port number in constructing MongoDB URI string
+  2-Sep-2025  V1.806 Error handling in RepoLoadWorkflow and other improvements relevant to bcif incremental workflow
