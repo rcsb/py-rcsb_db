@@ -398,7 +398,7 @@ class RepoLoadWorkflow(object):
         return os.path.join(pdbid[0:2], pdbid[-6:-4], pdbid[-4:-2])
 
     def getContentTypePrefix(self, databaseName):
-        if databaseName != "pdbx_comp_model_core": # pdb or ihm
+        if databaseName != "pdbx_comp_model_core":  # pdb or ihm
             return "pdb"
         return "csm"
 
@@ -424,9 +424,9 @@ class RepoLoadWorkflow(object):
             hashPath = None
             # output paths and file names set for lower-case in py-rcsb_workflow bcif task_functions.py
             pdbid = key.lower()
-            if databaseName != "pdbx_comp_model_core": # pdb or ihm
+            if databaseName != "pdbx_comp_model_core":  # pdb or ihm
                 hashPath = self.getPdbHash(pdbid)
-            else: # csm
+            else:  # csm
                 if modelPath:
                     # sync upper/lower-case with pdbid above
                     hashPath = os.path.dirname(modelPath).lower()
