@@ -46,11 +46,7 @@ class RepoLoadWorkflow(object):
         configPath = kwargs.get("configPath", "exdb-config-example.yml")
         self.__configName = kwargs.get("configName", "site_info_remote_configuration")
         mockTopPath = kwargs.get("mockTopPath", None)
-        self.__cfgOb = ConfigUtil(
-            configPath=configPath,
-            defaultSectionName=self.__configName,
-            mockTopPath=mockTopPath,
-        )
+        self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=self.__configName, mockTopPath=mockTopPath)
         #
         self.__cachePath = kwargs.get("cachePath", ".")
         self.__cachePath = os.path.abspath(self.__cachePath)
@@ -69,18 +65,12 @@ class RepoLoadWorkflow(object):
         #    logger.error("Resource cache test or rebuild has failed - exiting")
         #    return False
         # argument processing
-        if op not in [
-            "pdbx_loader",
-            "etl_repository_holdings",
-            "etl_entity_sequence_clusters",
-        ]:
+        if op not in ["pdbx_loader", "etl_repository_holdings", "etl_entity_sequence_clusters"]:
             logger.error("Unsupported operation %r - exiting", op)
             return False
         try:
             databaseName = kwargs.get("databaseName", None)
-            databaseNameList = self.__cfgOb.get(
-                "DATABASE_NAMES_ALL", sectionName="database_catalog_configuration"
-            ).split(",")
+            databaseNameList = self.__cfgOb.get("DATABASE_NAMES_ALL", sectionName="database_catalog_configuration").split(",")
             collectionNameList = kwargs.get("collectionNameList", None)
             loadType = kwargs.get("loadType", "replace")  # or "full"
             contentType = kwargs.get("contentType", None)
@@ -100,11 +90,7 @@ class RepoLoadWorkflow(object):
             # inputIdCodeList = kwargs.get("inputIdCodeList", None)
             loadFileListPath = kwargs.get("loadFileListPath", None)
             saveInputFileListPath = kwargs.get("saveInputFileListPath", None)
-            schemaLevel = (
-                kwargs.get("schemaLevel", "min")
-                if kwargs.get("schemaLevel") in ["min", "full"]
-                else "min"
-            )
+            schemaLevel = kwargs.get("schemaLevel", "min") if kwargs.get("schemaLevel") in ["min", "full"] else "min"
             updateSchemaOnReplace = kwargs.get("updateSchemaOnReplace", True)
             pruneDocumentSize = kwargs.get("pruneDocumentSize", None)
             pruneDocumentSize = float(pruneDocumentSize) if pruneDocumentSize else None
@@ -113,9 +99,7 @@ class RepoLoadWorkflow(object):
             clusterFileNameTemplate = kwargs.get("clusterFileNameTemplate", None)
             #
             # "Document organization (rowwise_by_name_with_cardinality|rowwise_by_name|columnwise_by_name|rowwise_by_id|rowwise_no_name",
-            documentStyle = kwargs.get(
-                "documentStyle", "rowwise_by_name_with_cardinality"
-            )
+            documentStyle = kwargs.get("documentStyle", "rowwise_by_name_with_cardinality")
             dataSelectors = kwargs.get("dataSelectors", ["PUBLIC_RELEASE"])
             #
             mergeValidationReports = kwargs.get("mergeValidationReports", True)
@@ -125,58 +109,32 @@ class RepoLoadWorkflow(object):
             forceReload = kwargs.get("forceReload", False)
             #
             tU = TimeUtil()
-            dataSetId = (
-                kwargs.get("dataSetId")
-                if "dataSetId" in kwargs
-                else tU.getCurrentWeekSignature()
-            )
-            seqDataLocator = self.__cfgOb.getPath(
-                "RCSB_SEQUENCE_CLUSTER_DATA_PATH", sectionName=self.__configName
-            )
-            sandboxPath = self.__cfgOb.getPath(
-                "RCSB_EXCHANGE_SANDBOX_PATH", sectionName=self.__configName
-            )
+            dataSetId = kwargs.get("dataSetId") if "dataSetId" in kwargs else tU.getCurrentWeekSignature()
+            seqDataLocator = self.__cfgOb.getPath("RCSB_SEQUENCE_CLUSTER_DATA_PATH", sectionName=self.__configName)
+            sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=self.__configName)
 
         except Exception as e:
-            logger.exception(
-                "Argument and configuration processing failing with %s", str(e)
-            )
+            logger.exception("Argument and configuration processing failing with %s", str(e))
             return False
         #
         ok = okS = True
-        if (
-            op == "pdbx_loader"
-            and dbType == "mongo"
-            and databaseName in databaseNameList
-        ):
+        if op == "pdbx_loader" and dbType == "mongo" and databaseName in databaseNameList:
             try:
                 inputPathList, inputIdCodeList = None, None
                 if loadIdListPath:
                     mu = MarshalUtil(workPath=self.__cachePath)
                     inputIdCodeList = mu.doImport(loadIdListPath, fmt="list")
                     if not inputIdCodeList:
-                        logger.error(
-                            "Operation %r missing or empty input file path list %s - exiting",
-                            op,
-                            loadIdListPath,
-                        )
+                        logger.error("Operation %r missing or empty input file path list %s - exiting", op, loadIdListPath)
                         return False
                 elif loadFileListPath:
                     mu = MarshalUtil(workPath=self.__cachePath)
                     inputPathList = mu.doImport(loadFileListPath, fmt="list")
                     if not inputPathList:
-                        logger.error(
-                            "Operation %r missing or empty input file path list %s - exiting",
-                            op,
-                            loadFileListPath,
-                        )
+                        logger.error("Operation %r missing or empty input file path list %s - exiting", op, loadFileListPath)
                         return False
             except Exception as e:
-                logger.exception(
-                    "Operation %r processing input path list failing with %s",
-                    op,
-                    str(e),
-                )
+                logger.exception("Operation %r processing input path list failing with %s", op, str(e))
                 return False
             #
             try:
@@ -214,9 +172,7 @@ class RepoLoadWorkflow(object):
                 )
                 okS = self.loadStatus(mw.getLoadStatus(), readBackCheck=readBackCheck)
             except Exception as e:
-                logger.exception(
-                    "Operation %r database %r failing with %s", op, databaseName, str(e)
-                )
+                logger.exception("Operation %r database %r failing with %s", op, databaseName, str(e))
         elif op == "etl_entity_sequence_clusters" and dbType == "mongo":
             cw = SequenceClustersEtlWorker(
                 self.__cfgOb,
@@ -253,49 +209,23 @@ class RepoLoadWorkflow(object):
     def loadStatus(self, statusList, readBackCheck=True):
         ret = False
         try:
-            dl = DocumentLoader(
-                self.__cfgOb,
-                self.__cachePath,
-                "MONGO_DB",
-                numProc=1,
-                chunkSize=2,
-                documentLimit=None,
-                verbose=False,
-                readBackCheck=readBackCheck,
-            )
+            dl = DocumentLoader(self.__cfgOb, self.__cachePath, "MONGO_DB", numProc=1, chunkSize=2, documentLimit=None, verbose=False, readBackCheck=readBackCheck)
             #
             sectionName = "data_exchange_configuration"
             databaseName = self.__cfgOb.get("DATABASE_NAME", sectionName=sectionName)
-            collectionName = self.__cfgOb.get(
-                "COLLECTION_UPDATE_STATUS", sectionName=sectionName
-            )
-            ret = dl.load(
-                databaseName,
-                collectionName,
-                loadType="append",
-                documentList=statusList,
-                indexAttributeList=["update_id", "database_name", "object_name"],
-                keyNames=None,
-            )
+            collectionName = self.__cfgOb.get("COLLECTION_UPDATE_STATUS", sectionName=sectionName)
+            ret = dl.load(databaseName, collectionName, loadType="append", documentList=statusList, indexAttributeList=["update_id", "database_name", "object_name"], keyNames=None)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return ret
 
-    def buildResourceCache(
-        self,
-        rebuildCache=False,
-        providerTypeExcludeL=None,
-        restoreUseStash=True,
-        restoreUseGit=True,
-    ):
+    def buildResourceCache(self, rebuildCache=False, providerTypeExcludeL=None, restoreUseStash=True, restoreUseGit=True):
         """Generate and cache resource dependencies."""
         ret = False
         try:
             # First make sure the CACHE directory exists
             if not os.path.isdir(self.__cachePath):
-                logger.info(
-                    "Cache directory %s doesn't exist. Creating it", self.__cachePath
-                )
+                logger.info("Cache directory %s doesn't exist. Creating it", self.__cachePath)
                 os.makedirs(self.__cachePath)
             else:
                 logger.info("Cache directory %s already exists.", self.__cachePath)
@@ -310,9 +240,7 @@ class RepoLoadWorkflow(object):
                 restoreUseGit=restoreUseGit,
                 providerTypeExcludeL=providerTypeExcludeL,
             )
-            ret = rP.cacheResources(
-                useCache=useCache, doBackup=False, useStash=False, useGit=False
-            )
+            ret = rP.cacheResources(useCache=useCache, doBackup=False, useStash=False, useGit=False)
             logger.info("useCache %r cache reload status (%r)", useCache, ret)
 
         except Exception as e:
@@ -324,23 +252,15 @@ class RepoLoadWorkflow(object):
             logger.error("Unsupported operation %r - exiting", op)
             return False
         try:
-            schemaLevel = (
-                kwargs.get("schemaLevel", "min")
-                if kwargs.get("schemaLevel") in ["min", "full"]
-                else "min"
-            )
+            schemaLevel = kwargs.get("schemaLevel", "min") if kwargs.get("schemaLevel") in ["min", "full"] else "min"
             dbType = kwargs.get("dbType", "mongo")
             #
             databaseName = kwargs.get("databaseName", None)
-            databaseNameList = self.__cfgOb.get(
-                "DATABASE_NAMES_ALL", sectionName="database_catalog_configuration"
-            ).split(",")
+            databaseNameList = self.__cfgOb.get("DATABASE_NAMES_ALL", sectionName="database_catalog_configuration").split(",")
             collectionNameList = kwargs.get("collectionNameList", None)
             #
         except Exception as e:
-            logger.exception(
-                "Argument and configuration processing failing with %s", str(e)
-            )
+            logger.exception("Argument and configuration processing failing with %s", str(e))
             return False
         #
         ok = False
@@ -358,9 +278,7 @@ class RepoLoadWorkflow(object):
                     validationLevel=schemaLevel,
                 )
             except Exception as e:
-                logger.exception(
-                    "Operation %r database %r failing with %s", op, databaseName, str(e)
-                )
+                logger.exception("Operation %r database %r failing with %s", op, databaseName, str(e))
 
         logger.info("Completed operation %r with status %r", op, ok)
 
@@ -371,26 +289,14 @@ class RepoLoadWorkflow(object):
             logger.error("Unsupported operation %r - exiting", op)
             return False
 
-        databaseName = kwargs.get(
-            "databaseName"
-        )  # 'pdbx_core' or 'pdbx_comp_model_core'
+        databaseName = kwargs.get("databaseName")  # 'pdbx_core' or 'pdbx_comp_model_core'
         contentType = kwargs.get("contentType", None)
-        contentType = (
-            contentType if contentType else databaseName
-        )  # 'pdbx_core', 'pdbx_comp_model_core', 'pdbx_ihm'
-        holdingsFilePath = kwargs.get(
-            "holdingsFilePath", None
-        )  # For CSMs: http://computed-models-internal-%s.rcsb.org/staging/holdings/computed-models-holdings-list.json
-        loadFileListDir = kwargs.get(
-            "loadFileListDir"
-        )  # ExchangeDbConfig().loadFileListsDir
+        contentType = contentType if contentType else databaseName  # 'pdbx_core', 'pdbx_comp_model_core', 'pdbx_ihm'
+        holdingsFilePath = kwargs.get("holdingsFilePath", None)  # For CSMs: http://computed-models-internal-%s.rcsb.org/staging/holdings/computed-models-holdings-list.json
+        loadFileListDir = kwargs.get("loadFileListDir")  # ExchangeDbConfig().loadFileListsDir
         splitFileListPrefix = kwargs.get("splitFileListPrefix")
-        splitFileListPrefix = (
-            splitFileListPrefix if splitFileListPrefix else contentType + "_ids"
-        )  # pdbx_core_ids, pdbx_comp_model_core_ids, or pdbx_ihm_ids
-        numSublistFiles = kwargs.get(
-            "numSublistFiles", 1
-        )  # ExchangeDbConfig().pdbxCoreNumberSublistFiles
+        splitFileListPrefix = splitFileListPrefix if splitFileListPrefix else contentType + "_ids"  # pdbx_core_ids, pdbx_comp_model_core_ids, or pdbx_ihm_ids
+        numSublistFiles = kwargs.get("numSublistFiles", 1)  # ExchangeDbConfig().pdbxCoreNumberSublistFiles
 
         incrementalUpdate = kwargs.get("incrementalUpdate", False)
         targetFileDir = kwargs.get("targetFileDir", "")
@@ -403,117 +309,50 @@ class RepoLoadWorkflow(object):
         if contentType == "pdbx_core":
             # Get list of ALL entries to be loaded for the current update cycle
             if not holdingsFilePath:
-                holdingsFilePath = os.path.join(
-                    self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName),
-                    "pdb/holdings/released_structures_last_modified_dates.json.gz",
-                )
+                holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb/holdings/released_structures_last_modified_dates.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             #
             if incrementalUpdate:
-                holdingsFileD = self.getTimeStampCheck(
-                    holdingsFileD,
-                    targetFileDir,
-                    targetFileSuffix,
-                    databaseName,
-                    prependOutputContentType,
-                    prependOutputHash,
-                )
+                holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType, prependOutputHash)
             #
             idL = [k.upper() for k in holdingsFileD]
-            logger.info(
-                "Total number of PDB entries: %d (obtained from file: %s)",
-                len(idL),
-                holdingsFilePath,
-            )
-            random.shuffle(
-                idL
-            )  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
-            filePathMappingD = self.splitIdListAndWriteToFiles(
-                idL,
-                numSublistFiles,
-                loadFileListDir,
-                splitFileListPrefix,
-                holdingsFilePath,
-            )
+            logger.info("Total number of PDB entries: %d (obtained from file: %s)", len(idL), holdingsFilePath)
+            random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
+            filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, splitFileListPrefix, holdingsFilePath)
         #
         elif contentType == "pdbx_ihm":
             if not holdingsFilePath:
-                holdingsFilePath = os.path.join(
-                    self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName),
-                    "pdb_ihm/holdings/released_structures_last_modified_dates.json.gz",
-                )
+                holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb_ihm/holdings/released_structures_last_modified_dates.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             #
             if incrementalUpdate:
-                holdingsFileD = self.getTimeStampCheck(
-                    holdingsFileD,
-                    targetFileDir,
-                    targetFileSuffix,
-                    databaseName,
-                    prependOutputContentType,
-                    prependOutputHash,
-                )
+                holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType, prependOutputHash)
             #
             idL = [k.upper() for k in holdingsFileD]
-            logger.info(
-                "Total number of IHM entries: %d (obtained from file: %s)",
-                len(idL),
-                holdingsFilePath,
-            )
-            filePathMappingD = self.splitIdListAndWriteToFiles(
-                idL,
-                numSublistFiles,
-                loadFileListDir,
-                splitFileListPrefix,
-                holdingsFilePath,
-            )
+            logger.info("Total number of IHM entries: %d (obtained from file: %s)", len(idL), holdingsFilePath)
+            filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, splitFileListPrefix, holdingsFilePath)
         #
         elif contentType == "pdbx_comp_model_core":
             filePathMappingD = {}
             if holdingsFilePath:
                 holdingsFileBaseDir = os.path.dirname(os.path.dirname(holdingsFilePath))
             else:
-                holdingsFilePath = self.__cfgOb.getPath(
-                    "PDBX_COMP_MODEL_HOLDINGS_LIST_PATH", sectionName=self.__configName
-                )
-                holdingsFileBaseDir = self.__cfgOb.getPath(
-                    "PDBX_COMP_MODEL_REPO_PATH", sectionName=self.__configName
-                )
+                holdingsFilePath = self.__cfgOb.getPath("PDBX_COMP_MODEL_HOLDINGS_LIST_PATH", sectionName=self.__configName)
+                holdingsFileBaseDir = self.__cfgOb.getPath("PDBX_COMP_MODEL_REPO_PATH", sectionName=self.__configName)
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             #
             if len(holdingsFileD) == 1:
                 # Split up single holdings file into multiple sub-lists
-                holdingsFile = os.path.join(
-                    holdingsFileBaseDir, list(holdingsFileD.keys())[0]
-                )
+                holdingsFile = os.path.join(holdingsFileBaseDir, list(holdingsFileD.keys())[0])
                 hD = mU.doImport(holdingsFile, fmt="json")
                 #
                 if incrementalUpdate:
-                    hD = self.getTimeStampCheck(
-                        hD,
-                        targetFileDir,
-                        targetFileSuffix,
-                        databaseName,
-                        prependOutputContentType,
-                        prependOutputHash,
-                    )
+                    hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType, prependOutputHash)
                 #
                 idL = [k.upper() for k in hD]
-                random.shuffle(
-                    idL
-                )  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
-                logger.info(
-                    "Total number of entries to load for holdingsFile %s: %d",
-                    holdingsFile,
-                    len(idL),
-                )
-                filePathMappingD = self.splitIdListAndWriteToFiles(
-                    idL,
-                    numSublistFiles,
-                    loadFileListDir,
-                    splitFileListPrefix,
-                    holdingsFile,
-                )
+                random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
+                logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
+                filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, splitFileListPrefix, holdingsFile)
             #
             elif len(holdingsFileD) > 1:
                 # Create one sub-list for each holdings file
@@ -523,54 +362,23 @@ class RepoLoadWorkflow(object):
                     holdingsFile = os.path.join(holdingsFileBaseDir, hF)
                     hD = mU.doImport(holdingsFile, fmt="json")
                     if incrementalUpdate:
-                        hD = self.getTimeStampCheck(
-                            hD,
-                            targetFileDir,
-                            targetFileSuffix,
-                            databaseName,
-                            prependOutputContentType,
-                            prependOutputHash,
-                        )
+                        hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType, prependOutputHash)
                     idL = [k.upper() for k in hD]
-                    random.shuffle(
-                        idL
-                    )  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
-                    logger.info(
-                        "Total number of entries to load for holdingsFile %s: %d",
-                        holdingsFile,
-                        len(idL),
-                    )
+                    random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
+                    logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
                     #
-                    fPath = os.path.join(
-                        loadFileListDir, f"{splitFileListPrefix}-{index}.txt"
-                    )
+                    fPath = os.path.join(loadFileListDir, f"{splitFileListPrefix}-{index}.txt")
                     ok = mU.doExport(fPath, idL, fmt="list")
                     if not ok:
                         raise ValueError("Failed to export id list %r" % fPath)
-                    filePathMappingD.update(
-                        {
-                            str(index): {
-                                "filePath": fPath,
-                                "numModels": count,
-                                "sourceFile": holdingsFile,
-                            }
-                        }
-                    )
+                    filePathMappingD.update({str(index): {"filePath": fPath, "numModels": count, "sourceFile": holdingsFile}})
                     index += 1
                 #
-                mappingFilePath = os.path.join(
-                    loadFileListDir, splitFileListPrefix + "_mapping.json"
-                )
-                ok = mU.doExport(
-                    mappingFilePath, filePathMappingD, fmt="json", indent=4
-                )
+                mappingFilePath = os.path.join(loadFileListDir, splitFileListPrefix + "_mapping.json")
+                ok = mU.doExport(mappingFilePath, filePathMappingD, fmt="json", indent=4)
 
         else:
-            logger.error(
-                "Unsupported database/content type for ID list splitting %s, %r",
-                databaseName,
-                contentType,
-            )
+            logger.error("Unsupported database/content type for ID list splitting %s, %r", databaseName, contentType)
             return False
 
         # Do one last santity check
@@ -590,19 +398,11 @@ class RepoLoadWorkflow(object):
         return os.path.join(pdbid[0:2], pdbid[-6:-4], pdbid[-4:-2])
 
     def getContentTypePrefix(self, databaseName):
-        if databaseName != "pdbx_comp_model_core":  # pdb or ihm
+        if databaseName != "pdbx_comp_model_core": # pdb or ihm
             return "pdb"
         return "csm"
 
-    def getTimeStampCheck(
-        self,
-        hD,
-        targetFileDir,
-        targetFileSuffix,
-        databaseName,
-        prependOutputContentType=False,
-        prependOutputHash=False,
-    ):
+    def getTimeStampCheck(self, hD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType=False, prependOutputHash=False):
         """
         Compares timestamp of source file (from holdings file information) with timestamp of target file (from file properties).
         If target file exists and has the same or newer timestamp, its id is removed from the return list.
@@ -624,9 +424,9 @@ class RepoLoadWorkflow(object):
             hashPath = None
             # output paths and file names set for lower-case in py-rcsb_workflow bcif task_functions.py
             pdbid = key.lower()
-            if databaseName != "pdbx_comp_model_core":  # pdb or ihm
+            if databaseName != "pdbx_comp_model_core": # pdb or ihm
                 hashPath = self.getPdbHash(pdbid)
-            else:  # csm
+            else: # csm
                 if modelPath:
                     # sync upper/lower-case with pdbid above
                     hashPath = os.path.dirname(modelPath).lower()
@@ -639,32 +439,22 @@ class RepoLoadWorkflow(object):
                 continue
 
             if prependOutputContentType and prependOutputHash:
-                pathToItem = os.path.join(
-                    targetFileDir, contentTypePrefix, hashPath, pdbid + targetFileSuffix
-                )
+                pathToItem = os.path.join(targetFileDir, contentTypePrefix, hashPath, pdbid + targetFileSuffix)
             elif prependOutputContentType:
-                pathToItem = os.path.join(
-                    targetFileDir, contentTypePrefix, pdbid + targetFileSuffix
-                )
+                pathToItem = os.path.join(targetFileDir, contentTypePrefix, pdbid + targetFileSuffix)
             elif prependOutputHash:
-                pathToItem = os.path.join(
-                    targetFileDir, hashPath, pdbid + targetFileSuffix
-                )
+                pathToItem = os.path.join(targetFileDir, hashPath, pdbid + targetFileSuffix)
             else:
                 pathToItem = os.path.join(targetFileDir, pdbid + targetFileSuffix)
 
             if Path(pathToItem).exists():
                 t1 = Path(pathToItem).stat().st_mtime
-                t2 = datetime.datetime.strptime(
-                    timeStamp, "%Y-%m-%dT%H:%M:%S%z"
-                ).timestamp()
+                t2 = datetime.datetime.strptime(timeStamp, "%Y-%m-%dT%H:%M:%S%z").timestamp()
                 if t1 >= t2:
                     res.pop(key)
         return res
 
-    def splitIdListAndWriteToFiles(
-        self, inputList, nFiles, outfileDir, outfilePrefix, sourceFile
-    ):
+    def splitIdListAndWriteToFiles(self, inputList, nFiles, outfileDir, outfilePrefix, sourceFile):
         """Split input ID list into equally distributed sublists of size nFiles.
 
         Write files to the given outfileDir and outfilePrefix.
@@ -679,10 +469,7 @@ class RepoLoadWorkflow(object):
         if sublistSize < 1:
             raise ValueError(f"Sublist size {sublistSize}")
         else:
-            sublists = [
-                inputList[i : i + sublistSize]
-                for i in range(0, len(inputList), sublistSize)
-            ]
+            sublists = [inputList[i: i + sublistSize] for i in range(0, len(inputList), sublistSize)]
 
         # Write each sublist to a separate file
         filePathMappingD = {}
@@ -693,15 +480,7 @@ class RepoLoadWorkflow(object):
                 # Write each string on its own line in the file
                 for string in sublist:
                     file.write(f"{string}\n")
-            filePathMappingD.update(
-                {
-                    str(index): {
-                        "filePath": filePath,
-                        "numModels": len(sublist),
-                        "sourceFile": sourceFile,
-                    }
-                }
-            )
+            filePathMappingD.update({str(index): {"filePath": filePath, "numModels": len(sublist), "sourceFile": sourceFile}})
 
         mappingFilePath = os.path.join(outfileDir, outfilePrefix + "_mapping.json")
         mU = MarshalUtil()
@@ -721,20 +500,13 @@ class RepoLoadWorkflow(object):
             holdingsFilePath = kwargs.get("holdingsFilePath", None)
             minNpiValidationCount = kwargs.get("minNpiValidationCount", None)
             checkLoadWithHoldings = kwargs.get("checkLoadWithHoldings", False)
-            completeIdCodeList, completeIdCodeCount = self.__getCompleteIdListCount(
-                databaseName, contentType, holdingsFilePath
-            )
+            completeIdCodeList, completeIdCodeCount = self.__getCompleteIdListCount(databaseName, contentType, holdingsFilePath)
             if not (completeIdCodeList or completeIdCodeCount):
-                logger.error(
-                    "Failed to get completeIdCodeList and completeIdCodeCount for database %r",
-                    databaseName,
-                )
+                logger.error("Failed to get completeIdCodeList and completeIdCodeCount for database %r", databaseName)
                 return False
             #
         except Exception as e:
-            logger.exception(
-                "Argument and configuration processing failing with %s", str(e)
-            )
+            logger.exception("Argument and configuration processing failing with %s", str(e))
             return False
         #
         try:
@@ -750,34 +522,17 @@ class RepoLoadWorkflow(object):
                 completeIdCodeList=completeIdCodeList,
                 completeIdCodeCount=completeIdCodeCount,
             )
-            logger.info(
-                "loadCompleteCheck for database %s contentType %r (status %r)",
-                databaseName,
-                contentType,
-                ok,
-            )
+            logger.info("loadCompleteCheck for database %s contentType %r (status %r)", databaseName, contentType, ok)
             if databaseName == "pdbx_core":
-                if (
-                    not contentType or contentType == "pdbx_core"
-                ):  # only check validation data for PDB (not IHM)
+                if (not contentType or contentType == "pdbx_core"):  # only check validation data for PDB (not IHM)
                     validationCollectionCheckMap = {
                         # map of collection names and minimum validation counts expected
                         "pdbx_core_nonpolymer_entity_instance": minNpiValidationCount,
                     }
-                    for (
-                        collection,
-                        minValidationCount,
-                    ) in validationCollectionCheckMap.items():
+                    for collection, minValidationCount in validationCollectionCheckMap.items():
                         if minValidationCount:
-                            okV = mw.checkValidationDataCount(
-                                databaseName, collection, minValidationCount
-                            )
-                            logger.info(
-                                "checkValidationDataCount for database %s coll %s (status %r)",
-                                databaseName,
-                                collection,
-                                okV,
-                            )
+                            okV = mw.checkValidationDataCount(databaseName, collection, minValidationCount)
+                            logger.info("checkValidationDataCount for database %s coll %s (status %r)", databaseName, collection, okV)
                             ok = ok and okV
                     #
                 if checkLoadWithHoldings:
@@ -786,9 +541,7 @@ class RepoLoadWorkflow(object):
                     ok = ok and okH
         #
         except Exception as e:
-            logger.exception(
-                "Operation %r database %r failing with %s", op, databaseName, str(e)
-            )
+            logger.exception("Operation %r database %r failing with %s", op, databaseName, str(e))
 
         logger.info("Completed operation %r with status %r", op, ok)
 
@@ -802,46 +555,28 @@ class RepoLoadWorkflow(object):
         if contentType == "pdbx_core":
             # Get list of ALL entries to be loaded for the current update cycle
             if not holdingsFilePath:
-                holdingsFilePath = os.path.join(
-                    self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName),
-                    "pdb/holdings/released_structures_last_modified_dates.json.gz",
-                )
+                holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb/holdings/released_structures_last_modified_dates.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             idL = [k.upper() for k in holdingsFileD]
-            logger.info(
-                "Total number of entries to load: %d (obtained from file: %s)",
-                len(idL),
-                holdingsFilePath,
-            )
+            logger.info("Total number of entries to load: %d (obtained from file: %s)", len(idL), holdingsFilePath)
             return idL, len(idL)
 
         elif contentType == "pdbx_ihm":
             if not holdingsFilePath:
-                holdingsFilePath = os.path.join(
-                    self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName),
-                    "pdb_ihm/holdings/released_structures_last_modified_dates.json.gz",
-                )
+                holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb_ihm/holdings/released_structures_last_modified_dates.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             idL = [k.upper() for k in holdingsFileD]
-            logger.info(
-                "Total number of IHM entries: %d (obtained from file: %s)",
-                len(idL),
-                holdingsFilePath,
-            )
+            logger.info("Total number of IHM entries: %d (obtained from file: %s)", len(idL), holdingsFilePath)
             return idL, len(idL)
 
         elif contentType == "pdbx_comp_model_core":
             if not holdingsFilePath:
-                holdingsFilePath = self.__cfgOb.getPath(
-                    "PDBX_COMP_MODEL_HOLDINGS_LIST_PATH", sectionName=self.__configName
-                )
+                holdingsFilePath = self.__cfgOb.getPath("PDBX_COMP_MODEL_HOLDINGS_LIST_PATH", sectionName=self.__configName)
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             # Don't return the actual CSM file list since it will be unmanageable upon scaling
             return None, sum(holdingsFileD.values())
 
         else:
-            logger.error(
-                "Unsupported database for completed load checking %s", databaseName
-            )
+            logger.error("Unsupported database for completed load checking %s", databaseName)
 
         return None, None
