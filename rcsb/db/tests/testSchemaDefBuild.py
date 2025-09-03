@@ -140,7 +140,7 @@ class SchemaDefBuildTests(unittest.TestCase):
     def testCompareSchemaCategories(self):
         """Compare common categories across schema definitions."""
         try:
-            sdCc = SchemaDefAccess(self.__schP.makeSchemaDef("chem_comp_core", dataTyping="ANY", saveSchema=False))
+            sdCc = SchemaDefAccess(self.__schP.makeSchemaDef("core_chem_comp", dataTyping="ANY", saveSchema=False))
             sdBcc = SchemaDefAccess(self.__schP.makeSchemaDef("bird_chem_comp_core", dataTyping="ANY", saveSchema=False))
             #
             logger.info("")
