@@ -290,8 +290,8 @@ class RepoLoadWorkflow(object):
             return False
 
         databaseName = kwargs.get("databaseName")  # 'pdbx_core' or 'pdbx_comp_model_core'
-        contentType = kwargs.get("contentType", None)
-        contentType = contentType if contentType else databaseName  # 'pdbx_core', 'pdbx_comp_model_core', 'pdbx_ihm'
+        contentType = kwargs.get("contentType", None)  # 'pdbx_core', 'pdbx_comp_model_core', 'pdbx_ihm'
+        contentType = contentType if contentType else databaseName
         holdingsFilePath = kwargs.get("holdingsFilePath", None)  # For CSMs: http://computed-models-internal-%s.rcsb.org/staging/holdings/computed-models-holdings-list.json
         loadFileListDir = kwargs.get("loadFileListDir")  # ExchangeDbConfig().loadFileListsDir
         splitFileListPrefix = kwargs.get("splitFileListPrefix")
@@ -313,7 +313,7 @@ class RepoLoadWorkflow(object):
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             #
             if incrementalUpdate:
-                holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType, prependOutputHash)
+                holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix, contentType, prependOutputContentType, prependOutputHash)
             #
             idL = [k.upper() for k in holdingsFileD]
             logger.info("Total number of PDB entries: %d (obtained from file: %s)", len(idL), holdingsFilePath)
@@ -326,7 +326,7 @@ class RepoLoadWorkflow(object):
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             #
             if incrementalUpdate:
-                holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType, prependOutputHash)
+                holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix, contentType, prependOutputContentType, prependOutputHash)
             #
             idL = [k.upper() for k in holdingsFileD]
             logger.info("Total number of IHM entries: %d (obtained from file: %s)", len(idL), holdingsFilePath)
@@ -347,7 +347,7 @@ class RepoLoadWorkflow(object):
                 hD = mU.doImport(holdingsFile, fmt="json")
                 #
                 if incrementalUpdate:
-                    hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType, prependOutputHash)
+                    hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix, contentType, prependOutputContentType, prependOutputHash)
                 #
                 idL = [k.upper() for k in hD]
                 random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
@@ -362,7 +362,7 @@ class RepoLoadWorkflow(object):
                     holdingsFile = os.path.join(holdingsFileBaseDir, hF)
                     hD = mU.doImport(holdingsFile, fmt="json")
                     if incrementalUpdate:
-                        hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType, prependOutputHash)
+                        hD = self.getTimeStampCheck(hD, targetFileDir, targetFileSuffix, contentType, prependOutputContentType, prependOutputHash)
                     idL = [k.upper() for k in hD]
                     random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
                     logger.info("Total number of entries to load for holdingsFile %s: %d", holdingsFile, len(idL))
@@ -397,24 +397,26 @@ class RepoLoadWorkflow(object):
     def getCsmHash(self, pdbid):
         return os.path.join(pdbid[0:2], pdbid[-6:-4], pdbid[-4:-2])
 
-    def getContentTypePrefix(self, databaseName):
-        if databaseName != "pdbx_comp_model_core":  # pdb or ihm
+    def getContentTypePrefix(self, contentType):
+        if contentType in ["pdbx_core", "pdbx_ihm"]:
             return "pdb"
-        return "csm"
+        if contentType == "pdbx_comp_model_core":
+            return "csm"
+        return ""
 
-    def getTimeStampCheck(self, hD, targetFileDir, targetFileSuffix, databaseName, prependOutputContentType=False, prependOutputHash=False):
+    def getTimeStampCheck(self, hD, targetFileDir, targetFileSuffix, contentType, prependOutputContentType=False, prependOutputHash=False):
         """
         Compares timestamp of source file (from holdings file information) with timestamp of target file (from file properties).
         If target file exists and has the same or newer timestamp, its id is removed from the return list.
         """
-        if databaseName not in ["pdbx_core", "pdbx_comp_model_core"]:
-            logger.error("unrecognized argument %s", databaseName)
+        if contentType not in ["pdbx_core", "pdbx_ihm", "pdbx_comp_model_core"]:
+            logger.error("unrecognized argument %s", contentType)
             return hD
-        contentTypePrefix = self.getContentTypePrefix(databaseName)
+        contentTypePrefix = self.getContentTypePrefix(contentType)
         res = hD.copy()
         modelPath = None
         for key, value in hD.items():
-            if isinstance(value, dict):
+            if isinstance(value, dict) and "lastModifiedDate" in value and "modelPath" in value:
                 # csm
                 timeStamp = value["lastModifiedDate"]
                 modelPath = value["modelPath"]
@@ -424,7 +426,7 @@ class RepoLoadWorkflow(object):
             hashPath = None
             # output paths and file names set for lower-case in py-rcsb_workflow bcif task_functions.py
             pdbid = key.lower()
-            if databaseName != "pdbx_comp_model_core":  # pdb or ihm
+            if contentType in ["pdbx_core", "pdbx_ihm"]:
                 hashPath = self.getPdbHash(pdbid)
             else:  # csm
                 if modelPath:
