@@ -57,9 +57,9 @@ class RepoLoadWorkflowTests(unittest.TestCase):
             "chunkSize": 10,
         }
         self.__ldList = [
-            {"databaseName": "bird_chem_comp_core", "collectionNameList": None, "loadType": "full"},
-            {"databaseName": "bird_chem_comp_core", "collectionNameList": None, "loadType": "replace", "updateSchemaOnReplace": True},
-            {"databaseName": "pdbx_core", "collectionNameList": None, "loadType": "full"},
+            {"collectionGroupName": "core_chem_comp", "loadType": "full"},
+            {"collectionGroupName": "core_chem_comp", "loadType": "replace", "updateSchemaOnReplace": True},
+            {"collectionGroupName": "pdbx_core", "contentType": "pdbx_core", "collectionNameList": None, "loadType": "full"},
         ]
         #
         self.__startTime = time.time()

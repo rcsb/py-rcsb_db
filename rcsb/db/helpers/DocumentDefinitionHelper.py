@@ -1,5 +1,5 @@
 ##
-# File:    SchemaDocumentHelper.py
+# File:    DocumentDefinitionHelper.py
 # Author:  J. Westbrook
 # Date:    7-Jun-2018
 # Version: 0.001 Initial version
@@ -15,8 +15,12 @@
 #  13-Mar-2019 jdw add getCollectionVersion() and getCollectionInfo() and remove getCollections().
 #   6-Sep-2019 jdw incorporate search type and brief descriptions
 #  23-Oct-2019 jdw add collection subcategory nested property support
-#  28-Feb-2022 bv add method getSubCategoryAggregateMandatory()
-#  21-Nov-2022 bv add methods getIterableAttributeMetadata() and getSubCategoryAggregateMinUniqueItems()
+#  28-Feb-2022  bv add method getSubCategoryAggregateMandatory()
+#  21-Nov-2022  bv add methods getIterableAttributeMetadata() and getSubCategoryAggregateMinUniqueItems()
+#  20-May-2025 dwp add support for making manually-configured attributes "required" in schema, even in "min" validation mode
+#   2-Aug-2025  bv add methods to support nested subcategories needed for merging ExDB and DW
+#  13-Aug-2025 dwp add support for making manually-configured categories "required" in schema, even in "min" validation mode;
+#                  add support for "MIN_LENGTH" ("minLength") and "MAX_LENGTH" ("maxLength") configured attribute properties
 ##
 """
 Inject additional document information into a schema definition.
@@ -108,6 +112,31 @@ class DocumentDefinitionHelper(object):
         except Exception as e:
             logger.debug("Collection %s failing with %s", collectionName, str(e))
         return sf
+
+    def getCollectionRequiredAttributes(self, collectionName, asTuple=True):
+        atRequiredD = {}
+        for cn, cDL in self.__cfgD["collection_required_attributes"].items():
+            if cn != collectionName:
+                continue
+            for cD in cDL:
+                catName = cD["CATEGORY_NAME"]
+                if "ATTRIBUTE_NAME_LIST" in cD:
+                    for atName in cD["ATTRIBUTE_NAME_LIST"]:
+                        if asTuple:
+                            atRequiredD[(catName, atName)] = collectionName
+                        else:
+                            atRequiredD.setdefault(catName, []).append(atName)
+        return atRequiredD
+
+    def getCollectionRequiredCategories(self, collectionName):
+        catRequiredL = []
+        for cn, cDL in self.__cfgD["collection_required_categories"].items():
+            if cn != collectionName:
+                continue
+            for cD in cDL:
+                catName = cD["CATEGORY_NAME"]
+                catRequiredL.append(catName)
+        return catRequiredL
 
     def getDocumentExcludedAttributes(self, collectionName, asTuple=True):
         atExcludeD = {}
@@ -213,6 +242,42 @@ class DocumentDefinitionHelper(object):
             logger.debug("Collection %s failing with %s", collectionName, str(e))
         return ret
 
+    def getSubCategoryAggregateNestedChild(self, collectionName, subCategoryName):
+        ret = False
+        try:
+            if collectionName in self.__cfgD["collection_subcategory_aggregates"]:
+                for dD in self.__cfgD["collection_subcategory_aggregates"][collectionName]:
+                    if dD["NAME"] == subCategoryName:
+                        ret = dD["NESTED_CHILD"]
+                        break
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return ret
+
+    def getSubCategoryAggregateDescription(self, collectionName, subCategoryName):
+        ret = False
+        try:
+            if collectionName in self.__cfgD["collection_subcategory_aggregates"]:
+                for dD in self.__cfgD["collection_subcategory_aggregates"][collectionName]:
+                    if dD["NAME"] == subCategoryName:
+                        ret = dD["DESCRIPTION"]
+                        break
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return ret
+
+    def getSubCategoryAggregateDescriptionAlt(self, collectionName, subCategoryName):
+        ret = False
+        try:
+            if collectionName in self.__cfgD["collection_subcategory_aggregates"]:
+                for dD in self.__cfgD["collection_subcategory_aggregates"][collectionName]:
+                    if dD["NAME"] == subCategoryName:
+                        ret = dD["DESCRIPTION_ALT"]
+                        break
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return ret
+
     def getSubCategoryAggregateMinUniqueItems(self, collectionName, subCategoryName):
         pD = {}
         try:
@@ -233,16 +298,66 @@ class DocumentDefinitionHelper(object):
             logger.debug("Collection %s failing with %s", collectionName, str(e))
         return ret
 
+    def getNestedSubcategoryAttributes(self, collectionName):
+        ret = []
+        try:
+            if collectionName in self.__cfgD["collection_nested_subcategory_attributes"]:
+                for dD in self.__cfgD["collection_nested_subcategory_attributes"][collectionName]:
+                    ff = str(dD["ATTRIBUTE_NAME"]).split(".")
+                    ret.append(ff[1])
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return ret
+
+    def getNestedSubcategoryAttributeEmbNesItr(self, collectionName, catName, atName):
+        ret = False
+        try:
+            if collectionName in self.__cfgD["collection_nested_subcategory_attributes"]:
+                for dD in self.__cfgD["collection_nested_subcategory_attributes"][collectionName]:
+                    ff = str(dD["ATTRIBUTE_NAME"]).split(".")
+                    if ff[0] == catName and ff[1] == atName:
+                        ret = dD["EMBEDDED_NESTED_ITERABLE"]
+                        break
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return ret
+
+    def getScAttributeAdttlFeatDescAlt(self, collectionName, catName, atName):
+        ret = None
+        try:
+            if collectionName in self.__cfgD["collection_subcategory_attribute_additional_features"]:
+                for dD in self.__cfgD["collection_subcategory_attribute_additional_features"][collectionName]:
+                    ff = str(dD["ATTRIBUTE_NAME"]).split(".")
+                    if ff[0] == catName and ff[1] == atName:
+                        ret = dD["DESCRIPTION_ALT"]
+                        break
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return ret
+
+    def getScAttributeAdttlFeatSupDesc(self, collectionName, catName, atName):
+        ret = False
+        try:
+            if collectionName in self.__cfgD["collection_subcategory_attribute_additional_features"]:
+                for dD in self.__cfgD["collection_subcategory_attribute_additional_features"][collectionName]:
+                    ff = str(dD["ATTRIBUTE_NAME"]).split(".")
+                    if ff[0] == catName and ff[1] == atName:
+                        ret = dD["SUPPRESS_DESCRIPTION"]
+                        break
+        except Exception as e:
+            logger.debug("Collection %s failing with %s", collectionName, str(e))
+        return ret
+
     def getIterableAttributeMetadata(self, collectionName, catName, atName):
         """
         Get metadata for iterable attributes (attribute types - scsv, csv, vbsv)
         Example:
 
             collection_iterable_attribute_metadata:
-                drugbank_core:
-                    - ATTRIBUTE_NAME: drugbank_info.drug_groups
+                core_drugbank:
+                  - ATTRIBUTE_NAME: drugbank_info.drug_groups
                     MIN_ITEMS: 1
-                    UNIQUE_ITEMS: TRUE
+                    UNIQUE_ITEMS: True
         """
         pD = {}
         try:
@@ -252,7 +367,16 @@ class DocumentDefinitionHelper(object):
                 for tD in tDL:
                     ff = str(tD["ATTRIBUTE_NAME"]).split(".")
                     if ff[0] == catName and ff[1] == atName:
-                        pD = {"minItems": tD["MIN_ITEMS"], "uniqueItems": tD["UNIQUE_ITEMS"]}
+                        if "MIN_ITEMS" in tD:
+                            pD["minItems"] = tD["MIN_ITEMS"]
+                        if "MAX_ITEMS" in tD:
+                            pD["maxItems"] = tD["MAX_ITEMS"]
+                        if "UNIQUE_ITEMS" in tD:
+                            pD["uniqueItems"] = tD["UNIQUE_ITEMS"]
+                        if "MIN_LENGTH" in tD:
+                            pD["minLength"] = tD["MIN_LENGTH"]
+                        if "MAX_LENGTH" in tD:
+                            pD["maxLength"] = tD["MAX_LENGTH"]
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return pD
@@ -579,7 +703,7 @@ class DocumentDefinitionHelper(object):
         Example:
         #
         collection_subcategory_nested:
-            bird_chem_comp_core:
+            core_chem_comp:
                 - CATEGORY: rcsb_chem_comp_related
                   SUBCATEGORY: resource_lineage
                   CONTEXT_ATTRIBUTE_NAMES:
@@ -857,3 +981,26 @@ class DocumentDefinitionHelper(object):
                 #
                 logger.debug("  %r %r -> %r (%s)", catName, atName, descriptionText, ",".join([tup[0] for tup in searchContextTupL]))
         return True
+
+    def getDatabaseMongoName(self, collectionGroupName=None):
+        """Get the actual MongoDB name to load data to, given the schema group name.
+
+        Args:
+            collectionGroupName (str): collection schema group name (e.g., "pdbx_core" or "core_drugbank")
+
+        Returns:
+            str: corresponding MongoDB name if defined in config; else returns input collectionGroupName
+        """
+        databaseNameMongo = collectionGroupName
+        try:
+            if collectionGroupName:
+                schemaGroupToDbMap = self.__cfgOb.get("collection_schema_group_to_mongodb_name", sectionName="database_catalog_configuration")
+                if schemaGroupToDbMap and collectionGroupName in schemaGroupToDbMap:
+                    databaseNameMongo = schemaGroupToDbMap.get(collectionGroupName, collectionGroupName)
+                logger.info("Mapping for collectionGroupName %r -> databaseNameMongo %r", collectionGroupName, databaseNameMongo)
+                return databaseNameMongo
+        except Exception as e:
+            logger.exception("Mapping from schema group %r to MongoDB name failing with %s", collectionGroupName, str(e))
+        #
+        logger.info("Unable to get mapping for collectionGroupName %r", collectionGroupName)
+        return collectionGroupName
