@@ -357,7 +357,7 @@ class DocumentDefinitionHelper(object):
                 core_drugbank:
                   - ATTRIBUTE_NAME: drugbank_info.drug_groups
                     MIN_ITEMS: 1
-                    UNIQUE_ITEMS: TRUE
+                    UNIQUE_ITEMS: True
         """
         pD = {}
         try:
