@@ -469,7 +469,7 @@ class RepoLoadWorkflow(object):
 
         # Split the input list into n sublists
         if sublistSize < 1:
-            raise ValueError(f"Sublist size {sublistSize}")
+            return {}
         else:
             sublists = [inputList[i: i + sublistSize] for i in range(0, len(inputList), sublistSize)]
 
