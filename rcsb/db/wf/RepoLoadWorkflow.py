@@ -14,6 +14,7 @@
 #  22-Jan-2025 mjt Add Imgs format option (for jpg/svg generation) to splitIdList()
 #   5-Mar-2025 js  Add support for prepending content type and directory hash for splitIdList output
 #   7-Apr-2025 dwp Add support for IHM model loading
+#  10-Sep-2025 js  Add support for bcif incremental update and IHM model loading
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -469,7 +470,8 @@ class RepoLoadWorkflow(object):
 
         # Split the input list into n sublists
         if sublistSize < 1:
-            raise ValueError(f"Sublist size {sublistSize}")
+            logger.warning("Sublist size is less than 1 - skipping")
+            return {}
         else:
             sublists = [inputList[i: i + sublistSize] for i in range(0, len(inputList), sublistSize)]
 
