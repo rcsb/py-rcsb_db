@@ -73,8 +73,8 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
             # {"databaseName": "chem_comp_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min"},
             {
                 # "databaseName": "dw",
-                # "collectionNameList": ["core_chem_comp"],
                 "collectionGroupName": "core_chem_comp",
+                "collectionNameList": None,
                 "loadType": "full",
                 "mergeContentTypes": None,
                 "validationLevel": "full",
@@ -83,8 +83,8 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
             },
             {
                 # "databaseName": "dw",
-                # "collectionNameList": ["core_chem_comp"],
                 "collectionGroupName": "core_chem_comp",
+                "collectionNameList": None,
                 "loadType": "replace",
                 "mergeContentTypes": None,
                 "validationLevel": "full",
