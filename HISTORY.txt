@@ -374,7 +374,7 @@
  13-Aug-2025  V1.805 Make use of configured port number in constructing MongoDB URI string
   2-Sep-2025  V1.806 Error handling in RepoLoadWorkflow and other improvements relevant to bcif incremental workflow
  10-Sep-2025  V1.807 Fault-tolerance for RepoLoadWorkflow splitIdListAndWriteToFiles
- 22-Sep-2025  V1.808 Adjustments to schema builder tools needed for merging DW schemas with ExDB schemas;
+  1-Oct-2025  V1.808 Adjustments to schema builder tools needed for merging DW schemas with ExDB schemas;
                      Add support for making manually-configured categories and attributes "required" in JSON schemas;
                      Add support for providing dictionary of indexes to create during MongoDB document load;
                      Add support for nested subcategories needed for merging ExDB and DW;

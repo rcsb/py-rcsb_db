@@ -120,7 +120,7 @@ class RepoLoadWorkflow(object):
                 if not collectionGroupName:
                     collectionGroupName = "core_chem_comp" if databaseName in ["bird_chem_comp_core", "core_chem_comp"] else databaseName
                 if not contentType:
-                    # TODO: Change to "core_chem_comp" after updating usage in RepositoryProvider
+                    # NOTE: REMINDER TO-DO: Change to "core_chem_comp" after updating usage in RepositoryProvider
                     contentType = "bird_chem_comp_core" if databaseName in ["bird_chem_comp_core", "core_chem_comp"] else databaseName
 
         except Exception as e:

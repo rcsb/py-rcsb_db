@@ -229,7 +229,7 @@ class PdbxLoader(object):
             startTime = self.__begin(message="loading operation")
             #
             # NOTE: contentType should remain one of ["pdbx_core", "pdbx_comp_model_core", "bird_chem_comp_core"] until RepositoryProvider is updated to use "core_chem_comp" instead
-            contentType = contentType if contentType else databaseName  # TODO: Change to use "collectionGroupName" instead of "databaseName" (but see note above)
+            contentType = contentType if contentType else databaseName  # NOTE: Change to use "collectionGroupName" instead of "databaseName" (but see note above)
             #
             # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
             inputIdCodeList = inputIdCodeList if inputIdCodeList else []
