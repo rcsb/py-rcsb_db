@@ -151,6 +151,7 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
             ok = mw.load(
                 collectionGroupName=kwargs["collectionGroupName"],
                 collectionLoadList=kwargs["collectionNameList"],
+                contentType=kwargs["contentType"],
                 loadType=kwargs["loadType"],
                 inputPathList=None,
                 styleType=self.__documentStyle,
