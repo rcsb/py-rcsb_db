@@ -75,8 +75,9 @@ class PdbxLoaderTests(unittest.TestCase):
             # {"databaseName": "chem_comp_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min"},
             {
                 # "databaseName": "dw",
-                # "collectionNameList": ["core_chem_comp"],
                 "collectionGroupName": "core_chem_comp",
+                "collectionNameList": None,
+                "contentType": "bird_chem_comp_core",
                 "loadType": "full",
                 "mergeContentTypes": None,
                 "validationLevel": "full",
@@ -85,8 +86,9 @@ class PdbxLoaderTests(unittest.TestCase):
             },
             {
                 # "databaseName": "dw",
-                # "collectionNameList": ["core_chem_comp"],
                 "collectionGroupName": "core_chem_comp",
+                "collectionNameList": None,
+                "contentType": "bird_chem_comp_core",
                 "loadType": "replace",
                 "mergeContentTypes": None,
                 "validationLevel": "full",
@@ -160,6 +162,7 @@ class PdbxLoaderTests(unittest.TestCase):
             ok = mw.load(
                 collectionGroupName=kwargs["collectionGroupName"],
                 collectionLoadList=kwargs["collectionNameList"],
+                contentType=kwargs["contentType"],
                 loadType=kwargs["loadType"],
                 inputPathList=None,
                 inputIdCodeList=None,

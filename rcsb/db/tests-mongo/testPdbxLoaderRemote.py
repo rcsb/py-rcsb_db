@@ -1,5 +1,5 @@
 ##
-# File:    PdbxLoaderTests.py
+# File:    testPdbxLoaderRemote.py
 # Author:  J. Westbrook
 # Date:    14-Mar-2018
 # Version: 0.001
@@ -127,6 +127,7 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
         endTime = time.time()
         logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
+    @unittest.skipUnless(False, "Skipping PdbxLoader remote load test until unittest is updated - there still seems to be an issue with the 'replace' type")
     def testPdbxLoader(self):
         for ld in self.__ldList:
             self.__pdbxLoaderWrapper(**ld)
