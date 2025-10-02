@@ -187,6 +187,9 @@ def main():
     elif args.scan_bird_chem_comp_core_ref:
         contentType = "bird_chem_comp_core"
 
+    elif args.scan_core_chem_comp_ref:
+        contentType = "core_chem_comp"
+
     elif args.scan_bird_ref:
         contentType = "bird"
 

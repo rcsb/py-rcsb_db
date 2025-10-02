@@ -74,8 +74,10 @@ class PdbxLoaderTests(unittest.TestCase):
         self.__ldList = [
             # {"databaseName": "chem_comp_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min"},
             {
-                "databaseName": "bird_chem_comp_core",
+                # "databaseName": "dw",
+                "collectionGroupName": "core_chem_comp",
                 "collectionNameList": None,
+                "contentType": "bird_chem_comp_core",
                 "loadType": "full",
                 "mergeContentTypes": None,
                 "validationLevel": "full",
@@ -83,8 +85,10 @@ class PdbxLoaderTests(unittest.TestCase):
                 "status": True,
             },
             {
-                "databaseName": "bird_chem_comp_core",
+                # "databaseName": "dw",
+                "collectionGroupName": "core_chem_comp",
                 "collectionNameList": None,
+                "contentType": "bird_chem_comp_core",
                 "loadType": "replace",
                 "mergeContentTypes": None,
                 "validationLevel": "full",
@@ -92,7 +96,9 @@ class PdbxLoaderTests(unittest.TestCase):
                 "status": True,
             },
             {
-                "databaseName": "pdbx_core",
+                # "databaseName": "pdbx_core",
+                "collectionGroupName": "pdbx_core",
+                "contentType": "pdbx_core",
                 "collectionNameList": None,
                 "loadType": "full",
                 "mergeContentTypes": ["vrpt"],
@@ -103,7 +109,9 @@ class PdbxLoaderTests(unittest.TestCase):
         ]
         self.__ldModelList = [
             {
-                "databaseName": "pdbx_comp_model_core",
+                # "databaseName": "pdbx_comp_model_core",
+                "collectionGroupName": "pdbx_comp_model_core",
+                "contentType": "pdbx_comp_model_core",
                 "collectionNameList": None,
                 "loadType": "full",
                 "mergeContentTypes": None,
@@ -136,7 +144,7 @@ class PdbxLoaderTests(unittest.TestCase):
     def __pdbxLoaderWrapper(self, **kwargs):
         """Wrapper for PDBx loader module"""
         try:
-            logger.info("Loading %s", kwargs["databaseName"])
+            logger.info("Loading %s", kwargs["collectionGroupName"])
             mw = PdbxLoader(
                 self.__cfgOb,
                 cachePath=self.__cachePath,
@@ -152,8 +160,9 @@ class PdbxLoaderTests(unittest.TestCase):
                 rebuildSchemaFlag=True,
             )
             ok = mw.load(
-                kwargs["databaseName"],
+                collectionGroupName=kwargs["collectionGroupName"],
                 collectionLoadList=kwargs["collectionNameList"],
+                contentType=kwargs["contentType"],
                 loadType=kwargs["loadType"],
                 inputPathList=None,
                 inputIdCodeList=None,

@@ -13,7 +13,7 @@
 #     8-Jan-2019 jdw add tests for loading and recovering translated XML character references
 ##
 """
-Test cases for simple MongoDb client opeations .
+Test cases for simple MongoDb client operations.
 
 """
 __docformat__ = "restructuredtext en"
