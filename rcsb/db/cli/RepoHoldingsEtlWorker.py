@@ -17,6 +17,7 @@
 #                  Turn off loading of repository_holdings_update_entry (since not used by anything downstream);
 #                  Use indexes defined in py-rcsb_exdb_assets schemas and configuration
 #   6-Aug-2025 dwp Make use of schema configuration file for loading collections and setting indexed fields
+#   6-Oct-2025 dwp Turned OFF loading of "repository_holdings_update_entry" collection as part of transition to DW consolidation (since not used by anything)
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -128,9 +129,9 @@ class RepoHoldingsEtlWorker(object):
                 readBackCheck=self.__readBackCheck,
             )
             _, _, collectionNameList, docIndexD = self.__schP.getSchemaInfo(collectionGroupName=self.__collectionGroupName, dataTyping="ANY")
+            collectionNameList = [cN for cN in collectionNameList if "_update_entry" not in cN]  # Turned OFF loading "update" collection in OCT 2025 for transition to DW loading
+            # ['repository_holdings_combined_entry', 'repository_holdings_current_entry', 'repository_holdings_unreleased_entry', 'repository_holdings_removed_entry']
             logger.info("RepoHoldings collectionNameList: %r", collectionNameList)
-            # collectionNameList: ['repository_holdings_update_entry', 'repository_holdings_combined_entry', 'repository_holdings_current_entry',
-            #                      'repository_holdings_unreleased_entry', 'repository_holdings_removed_entry']
 
             ok = True
             for collectionName in collectionNameList:

@@ -45,6 +45,7 @@
 #      7-Apr-2025 dwp  Add support for IHM model loading
 #     30-Jul-2025 dwp  Replace redundant methods with those from DocumentLoader (createCollection, removeCollection, getKeyValues)
 #      6-Aug-2025 dwp  Add in usage of "collectionGroupName" (in place of "databaseName", where appropriate)
+#      6-Oct-2025 dwp  Turned OFF loading and checking of "repository_holdings_update_entry" collection as part of transition to DW consolidation (since not used by anything)
 ##
 """
 Worker methods for loading primary data content following mapping conventions in external schema definitions.
@@ -928,6 +929,34 @@ class PdbxLoader(object):
             logger.exception("Failing with %s", str(e))
         return loadedRcsbIdL
 
+    def __getLoadedCcIdList(self, databaseName, collectionName):
+        """Get list of all loaded CC IDs to compare with refdata holdings file"""
+        loadedCcIdL = []
+        try:
+            #
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                selectL = ["rcsb_chem_comp_container_identifiers"]
+                queryD = {}
+                loadedDocL = mg.fetch(databaseName, collectionName, selectL, queryD=queryD, suppressId=True)
+                collatedMongoIdS = set()
+                for cc in loadedDocL:
+                    rcsb_id = cc["rcsb_id"]
+                    collatedMongoIdS.add(rcsb_id)
+                    if "prd_id" in cc and cc["prd_id"] != rcsb_id:
+                        collatedMongoIdS.add(cc["prd_id"])
+                logger.info(
+                    "Number of entries already loaded to database %s collection %s: %r (%r accounting for redundant PRD/CCs)",
+                    databaseName,
+                    collectionName,
+                    len(loadedDocL),
+                    len(collatedMongoIdS)
+                )
+                loadedCcIdL = list(collatedMongoIdS)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+        return loadedCcIdL
+
     def __getStructDetermMethod(self, contentType):
         """Get the structure determination methodology based on the contentType and predefined mapping below"""
         structDetermMethodMap = {
@@ -1104,15 +1133,20 @@ class PdbxLoader(object):
         """
         try:
             logger.info("Beginning load completeness check for collection group %s", collectionGroupName)
-            if collectionGroupName not in ["pdbx_core", "pdbx_comp_model_core"]:
+
+            if collectionGroupName in ["pdbx_core", "pdbx_comp_model_core"]:
+                contentType = contentType if contentType else collectionGroupName
+                structDetermMethod = self.__getStructDetermMethod(contentType=contentType)
+                # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
+                databaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=collectionGroupName)
+                totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseNameMongo, collectionName=databaseNameMongo + "_entry", structDetermMethod=structDetermMethod)
+            elif collectionGroupName in ["core_chem_comp"]:
+                databaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=collectionGroupName)
+                totalIdsAlreadyLoaded = self.__getLoadedCcIdList(databaseName=databaseNameMongo, collectionName=collectionGroupName)
+            else:
                 logger.error("Unsupported collection group for completed load checking %s", collectionGroupName)
                 return False
-            contentType = contentType if contentType else collectionGroupName
-            structDetermMethod = self.__getStructDetermMethod(contentType=contentType)
-            # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
-            databaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=collectionGroupName)
 
-            totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseNameMongo, collectionName=databaseNameMongo + "_entry", structDetermMethod=structDetermMethod)
             if completeIdCodeList:
                 # Get the list of IDs from only the given sublist that are already loaded
                 subsetIdsAlreadyLoaded = list(set(totalIdsAlreadyLoaded).intersection(set(completeIdCodeList)))
@@ -1169,6 +1203,8 @@ class PdbxLoader(object):
             #
             repoHoldingsCollectionGroupName = "repository_holdings"
             _, _, collectionNameList, _ = self.__schP.getSchemaInfo(collectionGroupName=repoHoldingsCollectionGroupName, dataTyping="ANY")
+            collectionNameList = [cN for cN in collectionNameList if "_update_entry" not in cN]  # Turned OFF loading "update" collection in OCT 2025 for transition to DW loading
+            # ['repository_holdings_combined_entry', 'repository_holdings_current_entry', 'repository_holdings_unreleased_entry', 'repository_holdings_removed_entry']
             repoHoldingsDatabaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=repoHoldingsCollectionGroupName)
 
             databaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=collectionGroupName)

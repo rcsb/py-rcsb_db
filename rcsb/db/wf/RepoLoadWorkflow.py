@@ -598,6 +598,16 @@ class RepoLoadWorkflow(object):
             # Don't return the actual CSM file list since it will be unmanageable upon scaling
             return None, sum(holdingsFileD.values())
 
+        if contentType in ["core_chem_comp", "bird_chem_comp_core"]:
+            # Get list of ALL CCs to be loaded for the current update cycle (note that this will include several hundred “duplicated” chemical components
+            # --that is, they are represented as a CC and as a BIRD, but only one version is actually loaded to MongoDB.
+            if not holdingsFilePath:
+                holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb/holdings/refdata_id_list.json.gz")
+            holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
+            idL = [k.upper() for k, v in holdingsFileD.items() if v["release_status"] == "REL" and v["content_type"] != "BIRD Family"]
+            logger.info("Total number of entries to load: %d (obtained from file: %s)", len(idL), holdingsFilePath)
+            return idL, len(idL)
+
         else:
             logger.error("Unsupported database for completed load checking %s", databaseName)
 
