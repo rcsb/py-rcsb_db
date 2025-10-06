@@ -128,6 +128,7 @@ class RepoHoldingsEtlWorker(object):
                 readBackCheck=self.__readBackCheck,
             )
             _, _, collectionNameList, docIndexD = self.__schP.getSchemaInfo(collectionGroupName=self.__collectionGroupName, dataTyping="ANY")
+            logger.info("RepoHoldings collectionNameList: %r", collectionNameList)
             # collectionNameList: ['repository_holdings_update_entry', 'repository_holdings_combined_entry', 'repository_holdings_current_entry',
             #                      'repository_holdings_unreleased_entry', 'repository_holdings_removed_entry']
 
