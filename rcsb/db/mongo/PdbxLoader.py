@@ -941,10 +941,11 @@ class PdbxLoader(object):
                 loadedDocL = mg.fetch(databaseName, collectionName, selectL, queryD=queryD, suppressId=True)
                 collatedMongoIdS = set()
                 for cc in loadedDocL:
-                    rcsb_id = cc["rcsb_id"]
+                    ccIdD = cc["rcsb_chem_comp_container_identifiers"]
+                    rcsb_id = ccIdD["rcsb_id"]
                     collatedMongoIdS.add(rcsb_id)
-                    if "prd_id" in cc and cc["prd_id"] != rcsb_id:
-                        collatedMongoIdS.add(cc["prd_id"])
+                    if "prd_id" in ccIdD and ccIdD["prd_id"] != rcsb_id:
+                        collatedMongoIdS.add(ccIdD["prd_id"])
                 logger.info(
                     "Number of entries already loaded to database %s collection %s: %r (%r accounting for redundant PRD/CCs)",
                     databaseName,
