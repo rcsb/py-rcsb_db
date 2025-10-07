@@ -15,6 +15,7 @@
 #   5-Mar-2025 js  Add support for prepending content type and directory hash for splitIdList output
 #   7-Apr-2025 dwp Add support for IHM model loading
 #  10-Sep-2025 js  Add support for bcif incremental update and IHM model loading
+#   6-Oct-2025 dwp Add support for load completion checking of 'core_chem_comp' collection
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -600,7 +601,7 @@ class RepoLoadWorkflow(object):
 
         if contentType in ["core_chem_comp", "bird_chem_comp_core"]:
             # Get list of ALL CCs to be loaded for the current update cycle (note that this will include several hundred “duplicated” chemical components
-            # --that is, they are represented as a CC and as a BIRD, but only one version is actually loaded to MongoDB.
+            # --that is, they are represented as a CC and as a BIRD, but only one representation is actually loaded to MongoDB
             if not holdingsFilePath:
                 holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb/holdings/refdata_id_list.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")

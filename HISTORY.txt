@@ -379,3 +379,5 @@
                      Add support for providing dictionary of indexes to create during MongoDB document load;
                      Add support for nested subcategories needed for merging ExDB and DW;
                      Change usage of "databaseName" to "collectionGroupName" (where appropriate) to generalize terminology
+  6-Oct-2025  V1.809 Turned OFF loading and checking of "repository_holdings_update_entry" collection;
+                     Add support for load completion checking of 'core_chem_comp' collection

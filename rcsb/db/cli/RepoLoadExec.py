@@ -29,6 +29,7 @@
 #     5-Mar-2025 - js  Add support for prepending content type and directory hash for splitIdList output
 #     7-Apr-2025 - dwp Add support for IHM model loading by adding 'content_type' argument
 #     6-Aug-2025 - dwp Add support for 'collection_group' argument (to eventually replace 'database' argument)
+#     6-Oct-2025 - dwp Add support for load completion checking of 'core_chem_comp' data via '--load_complete_check' flag
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -119,6 +120,7 @@ def main():
     )
     parser.add_argument("--prepend_output_hash", action="store_true", default=False, help="Whether output path in downstream application has prepended hash before file name")
     #
+    parser.add_argument("--load_complete_check", default=False, action="store_true", help="Perform a load completion check on the final DB")
     parser.add_argument("--db_type", default="mongo", help="Database server type (default=mongo)")
     parser.add_argument("--file_limit", default=None, help="Load file limit for testing")
     parser.add_argument("--prune_document_size", default=None, help="Prune large documents to this size limit (MB)")
@@ -169,6 +171,10 @@ def main():
     rlWf = RepoLoadWorkflow(**commonD)
     if op in ["pdbx_loader", "etl_entity_sequence_clusters", "etl_repository_holdings"]:
         okR = rlWf.load(op, **loadD)
+        # Perform a final load completion check (currently only do this up here for core_chem_comp since all CCs are
+        # loaded in a single task, as opposed to pdbx_core is loaded in sublists)
+        if loadD.get("loadCompleteCheck", False):
+            okR = rlWf.loadCompleteCheck("pdbx_loader_check", **loadD)
     #
     elif op == "build_resource_cache":
         okR = rlWf.buildResourceCache(rebuildCache=True, providerTypeExcludeL=loadD["providerTypeExcludeL"])
@@ -302,7 +308,8 @@ def processArguments(args):
         "targetFileDir": args.target_file_dir,
         "targetFileSuffix": args.target_file_suffix,
         "prependOutputContentType": args.prepend_output_content_type,
-        "prependOutputHash": args.prepend_output_hash
+        "prependOutputHash": args.prepend_output_hash,
+        "loadCompleteCheck": args.load_complete_check,
     }
 
     return op, commonD, loadD

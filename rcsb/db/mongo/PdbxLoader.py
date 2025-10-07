@@ -45,7 +45,8 @@
 #      7-Apr-2025 dwp  Add support for IHM model loading
 #     30-Jul-2025 dwp  Replace redundant methods with those from DocumentLoader (createCollection, removeCollection, getKeyValues)
 #      6-Aug-2025 dwp  Add in usage of "collectionGroupName" (in place of "databaseName", where appropriate)
-#      6-Oct-2025 dwp  Turned OFF loading and checking of "repository_holdings_update_entry" collection as part of transition to DW consolidation (since not used by anything)
+#      6-Oct-2025 dwp  Turned OFF loading and checking of "repository_holdings_update_entry" collection as part of transition to DW consolidation (since not used by anything);
+#                      Add support for load completion checking of 'core_chem_comp' collection
 ##
 """
 Worker methods for loading primary data content following mapping conventions in external schema definitions.
