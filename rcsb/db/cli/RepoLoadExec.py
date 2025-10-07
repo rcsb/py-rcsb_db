@@ -173,7 +173,7 @@ def main():
         okR = rlWf.load(op, **loadD)
         # Perform a final load completion check (currently only do this up here for core_chem_comp since all CCs are
         # loaded in a single task, as opposed to pdbx_core is loaded in sublists)
-        if loadD.get("loadCompleteCheck", False):
+        if okR and loadD.get("loadCompleteCheck", False):
             okR = rlWf.loadCompleteCheck("pdbx_loader_check", **loadD)
     #
     elif op == "build_resource_cache":
