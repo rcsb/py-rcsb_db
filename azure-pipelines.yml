@@ -9,8 +9,6 @@
 #
 name: $(BuildDefinitionName)_$(Date:yyyyMMdd)$(Rev:.rr)
 
-name: $(BuildDefinitionName)_$(Date:yyyyMMdd)$(Rev:.rr)
-
 trigger:
   - master
 
