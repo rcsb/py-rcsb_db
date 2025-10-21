@@ -8,6 +8,7 @@
 # 14-Jul-2018 jdw add configuration options
 #  7-Oct-2018 jdw add schema validation to the underlying load processing
 # 21-Sep-2021 jdw overhaul using new resource files and with support for remote access
+# 21-Oct-2025 dwp make use of RepoHoldingsEtlWorker instead of re-writing the code here
 #
 ##
 """
@@ -26,8 +27,6 @@ import os
 import time
 import unittest
 
-from rcsb.db.mongo.DocumentLoader import DocumentLoader
-from rcsb.db.processors.RepoHoldingsRemoteDataPrep import RepoHoldingsRemoteDataPrep
 from rcsb.db.cli.RepoHoldingsEtlWorker import RepoHoldingsEtlWorker
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.struct.EntryInfoProvider import EntryInfoProvider
@@ -52,12 +51,10 @@ class RepoHoldingsRemoteLoaderTests(unittest.TestCase):
         configName = "site_info_configuration"
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName, mockTopPath=mockTopPath)
 
-        self.__resourceName = "MONGO_DB"
         self.__readBackCheck = True
         self.__numProc = 2
         self.__chunkSize = 10
-        self.__documentLimit = None
-        self.__filterType = "assign-dates"
+        self.__documentLimit = 10
         #
         self.__cachePath = os.path.join(TOPDIR, "CACHE")
         self.__sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=configName)
@@ -80,19 +77,8 @@ class RepoHoldingsRemoteLoaderTests(unittest.TestCase):
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    # @unittest.skipUnless(False, "Skipping holdings remote load test until unittest is updated")
     def testLoadHoldingsRemote(self):
         """Test case - load legacy repository holdings and status data -
-
-        [repository_holdings]
-        DATABASE_NAME=repository_holdings
-        DATABASE_VERSION_STRING=v5
-        COLLECTION_HOLDINGS_UPDATE=rcsb_repository_holdings_update_entry
-        COLLECTION_HOLDINGS_CURRENT=rcsb_repository_holdings_current_entry
-        COLLECTION_HOLDINGS_UNRELEASED=rcsb_repository_holdings_unreleased_entry
-        COLLECTION_HOLDINGS_REMOVED=rcsb_repository_holdings_removed_entry
-        COLLECTION_HOLDINGS_COMBINED=rcsb_repository_holdings_combined_entry
-
         """
         try:
             rhw = RepoHoldingsEtlWorker(
@@ -113,63 +99,6 @@ class RepoHoldingsRemoteLoaderTests(unittest.TestCase):
             ok = rhw.loadRepoType(self.__updateId, loadType="replace", repoType="pdb_ihm")
             logger.info("RepoHoldingsEtlWorker repoType 'pdb_ihm' loaded with status %r", ok)
             self.assertTrue(ok)
-
-
-
-            # sectionName = "repository_holdings_configuration"
-            # rhdp = RepoHoldingsRemoteDataPrep(cachePath=self.__cachePath, filterType=self.__filterType)
-            # #
-            # dl = DocumentLoader(
-            #     self.__cfgOb,
-            #     self.__cachePath,
-            #     self.__resourceName,
-            #     numProc=self.__numProc,
-            #     chunkSize=self.__chunkSize,
-            #     documentLimit=self.__documentLimit,
-            #     verbose=self.__verbose,
-            #     readBackCheck=self.__readBackCheck,
-            # )
-            # #
-            # databaseName = self.__cfgOb.get("DATABASE_NAME", sectionName=sectionName)
-            # logger.info("databaseName %r", databaseName)
-            # addValues = None
-            # #
-            # maxDoc = 5
-            # dList = rhdp.getHoldingsRemovedEntry(updateId=self.__updateId)
-            # dList = dList[:maxDoc] if maxDoc else dList
-            # collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_REMOVED", sectionName=sectionName)
-            # ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            # logger.info("Collection %r length %d load status %r", collectionName, len(dList), ok)
-            # self.assertTrue(ok)
-            # #
-            # dList = rhdp.getHoldingsUnreleasedEntry(updateId=self.__updateId)
-            # dList = dList[:maxDoc] if maxDoc else dList
-            # collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UNRELEASED", sectionName=sectionName)
-            # ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            # logger.info("Collection %r length %d load status %r", collectionName, len(dList), ok)
-            # self.assertTrue(ok)
-            # #
-            # # dList = rhdp.getHoldingsUpdateEntry(updateId=self.__updateId)
-            # # dList = dList[:maxDoc] if maxDoc else dList
-            # # collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_UPDATE", sectionName=sectionName)
-            # # logger.info("collectionName %r", collectionName)
-            # # ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            # # logger.info("Collection %r length %d load status %r", collectionName, len(dList), ok)
-            # # self.assertTrue(ok)
-            # #
-            # dList = rhdp.getHoldingsCurrentEntry(updateId=self.__updateId)
-            # dList = dList[:maxDoc] if maxDoc else dList
-            # collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_CURRENT", sectionName=sectionName)
-            # ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            # logger.info("Collection %r length %d load status %r", collectionName, len(dList), ok)
-            # self.assertTrue(ok)
-            # #
-            # dList = rhdp.getHoldingsCombinedEntry(updateId=self.__updateId)
-            # dList = dList[:maxDoc] if maxDoc else dList
-            # collectionName = self.__cfgOb.get("COLLECTION_HOLDINGS_COMBINED", sectionName=sectionName)
-            # ok = dl.load(databaseName, collectionName, loadType="full", documentList=dList, indexAttributeList=["update_id", "entry_id"], keyNames=None, addValues=addValues)
-            # logger.info("Collection %r length %d load status %r", collectionName, len(dList), ok)
-            # self.assertTrue(ok)
             #
         except Exception as e:
             logger.exception("Failing with %s", str(e))
