@@ -70,7 +70,6 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
         self.__fileLimit = 5
         self.__documentStyle = "rowwise_by_name_with_cardinality"
         self.__ldList = [
-            # {"databaseName": "chem_comp_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min"},
             {
                 "collectionGroupName": "core_chem_comp",
                 "collectionNameList": None,
@@ -81,18 +80,20 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
                 "updateSchemaOnReplace": False,
                 "status": True,
             },
+            #
+            # The "replace" method below doesn't work for "core_chem_comp" because of a 'E11000 duplicate key error' following from the above load.
+            # Will need to add support for pre-clearing existing "core_chem_comp" documents if there is a desire to use "replace" in the future.
+            # {
+            #     "collectionGroupName": "core_chem_comp",
+            #     "collectionNameList": None,
+            #     "contentType": "bird_chem_comp_core",
+            #     "loadType": "replace",
+            #     "mergeContentTypes": None,
+            #     "validationLevel": "full",
+            #     "updateSchemaOnReplace": True,
+            #     "status": True,
+            # },
             {
-                "collectionGroupName": "core_chem_comp",
-                "collectionNameList": None,
-                "contentType": "bird_chem_comp_core",
-                "loadType": "replace",
-                "mergeContentTypes": None,
-                "validationLevel": "full",
-                "updateSchemaOnReplace": True,
-                "status": True,
-            },
-            {
-                # "databaseName": "pdbx_core",
                 "collectionGroupName": "pdbx_core",
                 "contentType": "pdbx_core",
                 "collectionNameList": None,
@@ -103,7 +104,6 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
                 "status": True,
             },
             {
-                # "databaseName": "pdbx_core",
                 "collectionGroupName": "pdbx_core",
                 "contentType": "pdbx_core",
                 "collectionNameList": None,
@@ -125,7 +125,6 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
         endTime = time.time()
         logger.info("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
-    # @unittest.skipUnless(False, "Skipping PdbxLoader remote load test until unittest is updated - there still seems to be an issue with the 'replace' type")
     def testPdbxLoader(self):
         for ld in self.__ldList:
             logger.info("Loading ld: %r", ld)
@@ -173,8 +172,7 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
             self.assertTrue(ok)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
-            logger.info("Would normally FAIL but ignore for now")
-            # self.fail()
+            self.fail()
 
     def __loadStatus(self, statusList):
         sectionName = "data_exchange_configuration"

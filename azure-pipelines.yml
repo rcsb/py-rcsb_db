@@ -9,36 +9,35 @@
 #
 name: $(BuildDefinitionName)_$(Date:yyyyMMdd)$(Rev:.rr)
 
+name: $(BuildDefinitionName)_$(Date:yyyyMMdd)$(Rev:.rr)
+
 trigger:
-- master
-- db-*
+  - master
 
 pr:
-- master
+  - master
 
 schedules:
-- cron: "0 12 * * 0"
-  displayName: Weekly Sunday build
-  branches:
-    include:
-    - master
-  always: true
+  - cron: "0 12 * * 0"
+    displayName: Weekly Sunday build
+    branches:
+      include:
+        - master
+    always: true
 
 jobs:
   - template: azure-template-tox-job.yml
-    parameters: {tox: 'format_pep8', python: '3.10', os: 'linux', fixtures: 'mongodb'}
+    parameters: { tox: "format_pep8", python: "3.13", os: "linux", fixtures: 'mongodb'}
   - template: azure-template-tox-job.yml
-    parameters: {tox: 'lint_pylint', python: '3.10', os: 'linux', fixtures: 'mongodb'}
-  #- template: azure-template-tox-job.yml
-  #  parameters: {tox: 'test_coverage', python: '3.10', os: 'linux', fixtures: mongodb'}
-  #
-  - template: azure-template-tox-job.yml
-    parameters: {tox: 'py310', python: '3.10', os: 'linux', fixtures: 'mongodb'}
-  - template: azure-template-publish-job.yml
-    parameters: {tox: 'py310', python: '3.10', os: 'linux'}
+    parameters: { tox: "lint_pylint", python: "3.13", os: "linux", fixtures: 'mongodb'}
+  # - template: azure-template-tox-job.yml
+  #   parameters: { tox: "test_coverage", python: "3.13", os: "linux", fixtures: 'mongodb'}
     #
-#  - template: azure-template-tox-job.yml
-#    parameters: {tox: 'py310', python: '3.10', os: 'macos'}
-#  #
-#  - template: azure-template-publish-job.yml
-#    parameters: {tox: 'py310', python: '3.10', os: 'macos'}
+  - template: azure-template-tox-job.yml
+    parameters: { tox: "py313", python: "3.13", os: "linux", fixtures: 'mongodb'}  #
+  # - template: azure-template-tox-job.yml
+  #   parameters: { tox: "py313", python: "3.13", os: "macos", fixtures: 'mongodb'}
+  #
+  - template: azure-template-publish-job.yml
+    parameters: { tox: "py313", python: "3.13", os: "linux" }
+  #
