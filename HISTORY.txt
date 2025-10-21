@@ -381,3 +381,4 @@
                      Change usage of "databaseName" to "collectionGroupName" (where appropriate) to generalize terminology
   6-Oct-2025  V1.809 Turned OFF loading and checking of "repository_holdings_update_entry" collection;
                      Add support for load completion checking of 'core_chem_comp' collection
+ 21-Oct-2025  V1.810 Increase connection timeout for MongoDB to 60s;

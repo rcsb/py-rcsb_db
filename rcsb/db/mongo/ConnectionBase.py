@@ -122,6 +122,7 @@ class ConnectionBase(object):
             kw["appname"] = "dbloader"
             kw["readConcernLevel"] = self.__readConcern
             kw["readPreference"] = self.__readPreference
+            kw["connectTimeoutMS"] = 60000  # default is 20000ms (20s)
             #
             # logger.debug("URI is %s" % uri)
             self.__dbClient = MongoClient(uri, **kw)
@@ -129,8 +130,7 @@ class ConnectionBase(object):
             logger.error("Connection to resource %s failing with %s", self.__resourceName, str(e))
         dD = {}
         try:
-            # The ismaster command is cheap and does not require auth.
-            dD = self.__dbClient.admin.command("ismaster")
+            dD = self.__dbClient.admin.command("hello")
             # logger.debug("Server status: %r", dD)
             return True
         except ConnectionFailure:
