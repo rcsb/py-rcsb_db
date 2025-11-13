@@ -49,7 +49,7 @@ class ProvenanceProviderTests(unittest.TestCase):
                 {
                     "pdbx_ordinal": 1,
                     "name": "DIAMOND",
-                    "version": "v2.1.13",
+                    "version": "v2.1.16",
                     "date": "2025",
                     "type": "package",
                     "contact_author": "Benjamin Buchfink",
