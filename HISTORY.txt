@@ -383,3 +383,4 @@
                      Add support for load completion checking of 'core_chem_comp' collection
  21-Oct-2025  V1.810 Increase connection timeout for MongoDB to 60s;
                      Switch to 'pyproject.toml' file and update test pipelines to python 3.13
+ 13-Nov-2025  V1.811 Support full URI value passed via config MONGO_DB_URI

@@ -6,6 +6,7 @@
 #    17-Mar-2018 jdw  add r/w sync controls - generalize auth to prefs
 #    13-Aug-2024 dwp  update keywords for pymongo 4.x support
 #    13-Aug-2025 dwp  make use of configured port number in URI string
+#    13-Nov-2025 mjt  set URI with DB_URI instead of building it, if available
 ##
 """
 Base class for managing database connection which handles application specific authentication.
@@ -48,6 +49,7 @@ class ConnectionBase(object):
         self.__infoD = {}
         self.__dbClient = None
 
+        self.__dbUri = None
         self.__databaseName = None
         self.__dbHost = None
         self.__dbUser = None
@@ -79,6 +81,7 @@ class ConnectionBase(object):
     def setPreferences(self, infoD):
         try:
             self.__infoD = copy.deepcopy(infoD)
+            self.__dbUri = self.__infoD.get("DB_URI", None)
             self.__databaseName = self.__infoD.get("DB_NAME", None)
             self.__dbHost = self.__infoD.get("DB_HOST", "localhost")
             self.__dbUser = self.__infoD.get("DB_USER", None)
@@ -109,7 +112,10 @@ class ConnectionBase(object):
             self.closeConnection()
 
         try:
-            if self.__dbUser and self.__dbPw and self.__dbPort:
+            if self.__dbUri:
+                # expects complete uri. Ex: mongodb://<username>:<password>@<ip>:<port>
+                uri = self.__dbUri
+            elif self.__dbUser and self.__dbPw and self.__dbPort:
                 uri = "mongodb://%s:%s@%s:%d/%s" % (quote_plus(self.__dbUser), quote_plus(self.__dbPw), self.__dbHost, self.__dbPort, self.__dbAdminDb)
             elif self.__dbUser and self.__dbPw:
                 uri = "mongodb://%s:%s@%s/%s" % (quote_plus(self.__dbUser), quote_plus(self.__dbPw), self.__dbHost, self.__dbAdminDb)

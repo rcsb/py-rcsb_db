@@ -7,6 +7,7 @@
 #  23-Oct-2018 jdw add section name config access methods and make this a constructor argument
 #   5-Dec-2018 jdw pass on exceptions from the context manager __exit__() method
 #   3-Sep-2019 jdw make all user/pw combinations secure - always use default config section
+#  13-Nov-2025 mjt add optional value of DB_URI pulled from MONGO_DB_URI
 ##
 """
 Derived class for managing database connection which handles application specific authentication.
@@ -51,6 +52,7 @@ class Connection(ConnectionBase):
             return infoD
         #
         if resourceName == "EXCHANGE_DB":
+            infoD["DB_URI"] = self.__cfgOb.get("EXCHANGE_DB_URI", default=None, sectionName=sectionName)
             infoD["DB_NAME"] = self.__cfgOb.get("EXCHANGE_DB_NAME", sectionName=sectionName)
             infoD["DB_HOST"] = self.__cfgOb.get("EXCHANGE_DB_HOST", sectionName=sectionName)
             infoD["DB_SOCKET"] = self.__cfgOb.get("EXCHANGE_DB_SOCKET", default=None, sectionName=sectionName)
@@ -63,6 +65,7 @@ class Connection(ConnectionBase):
             infoD["DB_READ_PREFERENCE"] = self.__cfgOb.get("EXCHANGE_DB_READ_PREFERENCE", default="nearest", sectionName=sectionName)
             infoD["DB_WRITE_TO_JOURNAL"] = self.__cfgOb.get("EXCHANGE_DB_WRITE_TO_JOURNAL", default=True, sectionName=sectionName)
         elif resourceName == "MONGO_DB":
+            infoD["DB_URI"] = self.__cfgOb.get("MONGO_DB_URI", default=None, sectionName=sectionName)
             infoD["DB_NAME"] = self.__cfgOb.get("MONGO_DB_NAME", sectionName=sectionName)
             infoD["DB_HOST"] = self.__cfgOb.get("MONGO_DB_HOST", default=defaultHost, sectionName=sectionName)
             infoD["DB_SOCKET"] = self.__cfgOb.get("MONGO_DB_SOCKET", default=None, sectionName=sectionName)
@@ -75,6 +78,7 @@ class Connection(ConnectionBase):
             infoD["DB_READ_PREFERENCE"] = self.__cfgOb.get("MONGO_DB_READ_PREFERENCE", default="nearest", sectionName=sectionName)
             infoD["DB_WRITE_TO_JOURNAL"] = self.__cfgOb.get("MONGO_DB_WRITE_TO_JOURNAL", default=True, sectionName=sectionName)
         else:
+            infoD["DB_URI"] = self.__cfgOb.get("DB_URI", default=None, sectionName=sectionName)
             infoD["DB_NAME"] = self.__cfgOb.get("DB_NAME", sectionName=sectionName)
             infoD["DB_HOST"] = self.__cfgOb.get("DB_HOST", default=defaultHost, sectionName=sectionName)
             infoD["DB_SOCKET"] = self.__cfgOb.get("DB_SOCKET", default=None, sectionName=sectionName)
