@@ -66,7 +66,7 @@ class DataTypeApiProviderTests(unittest.TestCase):
         """Test case - get application data type API"""
         try:
             dta = DataTypeApiProvider(self.__cfgOb, self.__cachePath, useCache=False)
-            for schemaName in ["pdbx_core", "chem_comp_core", "bird_chem_comp_core"]:
+            for schemaName in ["pdbx_core", "chem_comp_core", "core_chem_comp"]:
                 dtApi = dta.getDataTypeInstanceApi(schemaName)
                 ok = dtApi.testCache()
                 self.assertTrue(ok)

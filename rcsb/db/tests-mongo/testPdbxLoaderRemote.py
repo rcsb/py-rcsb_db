@@ -1,5 +1,5 @@
 ##
-# File:    PdbxLoaderTests.py
+# File:    testPdbxLoaderRemote.py
 # Author:  J. Westbrook
 # Date:    14-Mar-2018
 # Version: 0.001
@@ -70,27 +70,32 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
         self.__fileLimit = 5
         self.__documentStyle = "rowwise_by_name_with_cardinality"
         self.__ldList = [
-            # {"databaseName": "chem_comp_core", "collectionNameList": None, "loadType": "full", "mergeContentTypes": None, "validationLevel": "min"},
             {
-                "databaseName": "bird_chem_comp_core",
+                "collectionGroupName": "core_chem_comp",
                 "collectionNameList": None,
+                "contentType": "bird_chem_comp_core",
                 "loadType": "full",
                 "mergeContentTypes": None,
                 "validationLevel": "full",
                 "updateSchemaOnReplace": False,
                 "status": True,
             },
+            #
+            # The "replace" method below doesn't work for "core_chem_comp" because of a 'E11000 duplicate key error' following from the above load.
+            # Will need to add support for pre-clearing existing "core_chem_comp" documents if there is a desire to use "replace" in the future.
+            # {
+            #     "collectionGroupName": "core_chem_comp",
+            #     "collectionNameList": None,
+            #     "contentType": "bird_chem_comp_core",
+            #     "loadType": "replace",
+            #     "mergeContentTypes": None,
+            #     "validationLevel": "full",
+            #     "updateSchemaOnReplace": True,
+            #     "status": True,
+            # },
             {
-                "databaseName": "bird_chem_comp_core",
-                "collectionNameList": None,
-                "loadType": "replace",
-                "mergeContentTypes": None,
-                "validationLevel": "full",
-                "updateSchemaOnReplace": True,
-                "status": True,
-            },
-            {
-                "databaseName": "pdbx_core",
+                "collectionGroupName": "pdbx_core",
+                "contentType": "pdbx_core",
                 "collectionNameList": None,
                 "loadType": "full",
                 "mergeContentTypes": ["vrpt"],
@@ -99,7 +104,8 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
                 "status": True,
             },
             {
-                "databaseName": "pdbx_core",
+                "collectionGroupName": "pdbx_core",
+                "contentType": "pdbx_core",
                 "collectionNameList": None,
                 "loadType": "replace",
                 "mergeContentTypes": ["vrpt"],
@@ -121,12 +127,13 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
 
     def testPdbxLoader(self):
         for ld in self.__ldList:
+            logger.info("Loading ld: %r", ld)
             self.__pdbxLoaderWrapper(**ld)
 
     def __pdbxLoaderWrapper(self, **kwargs):
         """Wrapper for PDBx loader module"""
         try:
-            logger.info("Loading %s", kwargs["databaseName"])
+            logger.info("Loading %s", kwargs["collectionGroupName"])
             mw = PdbxLoader(
                 self.__cfgOb,
                 cachePath=self.__cachePath,
@@ -141,8 +148,9 @@ class PdbxLoaderRemoteTests(unittest.TestCase):
                 rebuildSchemaFlag=False,
             )
             ok = mw.load(
-                kwargs["databaseName"],
+                collectionGroupName=kwargs["collectionGroupName"],
                 collectionLoadList=kwargs["collectionNameList"],
+                contentType=kwargs["contentType"],
                 loadType=kwargs["loadType"],
                 inputPathList=None,
                 styleType=self.__documentStyle,

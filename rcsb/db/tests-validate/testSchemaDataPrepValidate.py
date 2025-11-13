@@ -109,11 +109,11 @@ class SchemaDataPrepValidateTests(unittest.TestCase):
             "bird_family": ["family"],
             "chem_comp": ["chem_comp"],
             "bird_chem_comp": ["bird_chem_comp"],
-            "bird_chem_comp_core": ["bird_chem_comp_core"],
+            "dw": ["core_chem_comp"],
         }
 
         self.__databaseNameD = {
-            "bird_chem_comp_core": ["bird_chem_comp_core"],
+            "dw": ["core_chem_comp"],
             "pdbx_core": [
                 "pdbx_core_polymer_entity_instance",
                 "pdbx_core_polymer_entity",

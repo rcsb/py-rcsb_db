@@ -372,5 +372,15 @@
   1-Jul-2025  V1.803 Error handling for splitIdListAndWriteToFiles
  24-Jul-2025  V1.804 Switch to lower-case for CSM ID list generation (for incremental BCIF/image workflow updates)
  13-Aug-2025  V1.805 Make use of configured port number in constructing MongoDB URI string
- 20-Aug-2025  V1.806 Support full URI value passed via config MONGO_DB_URI
- 
+  2-Sep-2025  V1.806 Error handling in RepoLoadWorkflow and other improvements relevant to bcif incremental workflow
+ 10-Sep-2025  V1.807 Fault-tolerance for RepoLoadWorkflow splitIdListAndWriteToFiles
+  1-Oct-2025  V1.808 Adjustments to schema builder tools needed for merging DW schemas with ExDB schemas;
+                     Add support for making manually-configured categories and attributes "required" in JSON schemas;
+                     Add support for providing dictionary of indexes to create during MongoDB document load;
+                     Add support for nested subcategories needed for merging ExDB and DW;
+                     Change usage of "databaseName" to "collectionGroupName" (where appropriate) to generalize terminology
+  6-Oct-2025  V1.809 Turned OFF loading and checking of "repository_holdings_update_entry" collection;
+                     Add support for load completion checking of 'core_chem_comp' collection
+ 21-Oct-2025  V1.810 Increase connection timeout for MongoDB to 60s;
+                     Switch to 'pyproject.toml' file and update test pipelines to python 3.13
+ 13-Nov-2025  V1.811 Support full URI value passed via config MONGO_DB_URI

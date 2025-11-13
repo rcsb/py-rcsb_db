@@ -27,7 +27,9 @@
 #    25-Apr-2024 - dwp Add support for remote config file loading; use underscores instead of hyphens for arg choices
 #    22-Jan-2025 - mjt Add Imgs format option flags
 #     5-Mar-2025 - js  Add support for prepending content type and directory hash for splitIdList output
-#     7-Apr-2025 - dwp Add support for IHM model loading by adding 'content_type' flag
+#     7-Apr-2025 - dwp Add support for IHM model loading by adding 'content_type' argument
+#     6-Aug-2025 - dwp Add support for 'collection_group' argument (to eventually replace 'database' argument)
+#     6-Oct-2025 - dwp Add support for load completion checking of 'core_chem_comp' data via '--load_complete_check' flag
 ##
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -74,6 +76,13 @@ def main():
         choices=["pdbx_core", "pdbx_comp_model_core", "bird_chem_comp_core", "chem_comp", "chem_comp_core", "bird_chem_comp", "bird", "bird_family", "ihm_dev"],
     )
     #
+    parser.add_argument(
+        "--collection_group",
+        default=None,
+        help="Collection/schema group to load (most common choices are: 'pdbx_core', 'pdbx_comp_model_core', or 'core_chem_comp')",
+        choices=["pdbx_core", "pdbx_comp_model_core", "core_chem_comp"],
+    )
+    #
     parser.add_argument("--config_path", default=None, help="Path to configuration options file")
     parser.add_argument("--config_name", default="site_info_remote_configuration", help="Configuration section name")
     parser.add_argument(
@@ -111,6 +120,7 @@ def main():
     )
     parser.add_argument("--prepend_output_hash", action="store_true", default=False, help="Whether output path in downstream application has prepended hash before file name")
     #
+    parser.add_argument("--load_complete_check", default=False, action="store_true", help="Perform a load completion check on the final DB")
     parser.add_argument("--db_type", default="mongo", help="Database server type (default=mongo)")
     parser.add_argument("--file_limit", default=None, help="Load file limit for testing")
     parser.add_argument("--prune_document_size", default=None, help="Prune large documents to this size limit (MB)")
@@ -161,6 +171,10 @@ def main():
     rlWf = RepoLoadWorkflow(**commonD)
     if op in ["pdbx_loader", "etl_entity_sequence_clusters", "etl_repository_holdings"]:
         okR = rlWf.load(op, **loadD)
+        # Perform a final load completion check (currently only do this up here for core_chem_comp since all CCs are
+        # loaded in a single task, as opposed to pdbx_core is loaded in sublists)
+        if okR and loadD.get("loadCompleteCheck", False):
+            okR = rlWf.loadCompleteCheck("pdbx_loader_check", **loadD)
     #
     elif op == "build_resource_cache":
         okR = rlWf.buildResourceCache(rebuildCache=True, providerTypeExcludeL=loadD["providerTypeExcludeL"])
@@ -233,16 +247,15 @@ def processArguments(args):
     #
     # Do any additional argument checking
     op = args.op
-    databaseName = args.database
     if not op:
         raise ValueError("Must supply a value to '--op' argument")
-    if op == "pdbx_loader" and not databaseName:
-        raise ValueError("Must supply a value to '--database' argument for op type 'pdbx-loader")
+    if op == "pdbx_loader" and not (args.collection_group or args.database):
+        raise ValueError("Must supply a value to '--collection_group' or '--database' argument for op type 'pdbx-loader")
     #
-    if databaseName == "bird_family":  # Not sure if this is relevant anymore
-        dataSelectors = ["BIRD_FAMILY_PUBLIC_RELEASE"]
-    else:
-        dataSelectors = args.data_selectors if args.data_selectors else ["PUBLIC_RELEASE"]
+    # if args.database == "bird_family":  # Not sure if this is relevant anymore
+    #     dataSelectors = ["BIRD_FAMILY_PUBLIC_RELEASE"]
+    # else:
+    dataSelectors = args.data_selectors if args.data_selectors else ["PUBLIC_RELEASE"]
     #
     if args.document_style not in ["rowwise_by_name", "rowwise_by_name_with_cardinality", "columnwise_by_name", "rowwise_by_id", "rowwise_no_name"]:
         logger.error("Unsupported document style %s", args.document_style)
@@ -259,7 +272,8 @@ def processArguments(args):
         "debugFlag": debugFlag,
     }
     loadD = {
-        "databaseName": databaseName,
+        "databaseName": args.database,
+        "collectionGroupName": args.collection_group,
         "collectionNameList": args.collection_list,
         "loadType": args.load_type,
         "numProc": int(args.num_proc),
@@ -294,7 +308,8 @@ def processArguments(args):
         "targetFileDir": args.target_file_dir,
         "targetFileSuffix": args.target_file_suffix,
         "prependOutputContentType": args.prepend_output_content_type,
-        "prependOutputHash": args.prepend_output_hash
+        "prependOutputHash": args.prepend_output_hash,
+        "loadCompleteCheck": args.load_complete_check,
     }
 
     return op, commonD, loadD

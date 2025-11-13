@@ -2,6 +2,7 @@
 # File: py-rcsb_db/MANIFEST.in
 #
 include HISTORY.txt
-include requirements.txt
 include README.md
+include LICENSE
+include pyproject.toml
 #
