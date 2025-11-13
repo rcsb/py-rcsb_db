@@ -6,7 +6,7 @@
 #    17-Mar-2018 jdw  add r/w sync controls - generalize auth to prefs
 #    13-Aug-2024 dwp  update keywords for pymongo 4.x support
 #    13-Aug-2025 dwp  make use of configured port number in URI string
-#    20-Aut-2025 mjt  set URI with DB_URI instead of building it, if available
+#    13-Nov-2025 mjt  set URI with DB_URI instead of building it, if available
 ##
 """
 Base class for managing database connection which handles application specific authentication.
