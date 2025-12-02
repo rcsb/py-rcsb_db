@@ -95,14 +95,18 @@ class ConnectionBase(object):
             self.__dbPw = self.__infoD.get("DB_PW", None)
             self.__dbSocket = self.__infoD.get("DB_SOCKET", None)
             self.__dbServer = self.__infoD.get("DB_SERVER", "mongo")
-            self.__dbAdminDb = self.__infoD.get("DB_ADMIN_DB_NAME", uriKwargD.get("authSource", "admin"))
-            self.__writeConcern = self.__infoD.get("DB_WRITE_CONCERN", uriKwargD.get("w", "majority"))
-            self.__readConcern = self.__infoD.get("DB_READ_CONCERN", uriKwargD.get("readConcernLevel", "majority"))
-            self.__readPreference = self.__infoD.get("DB_READ_PREFERENCE", uriKwargD.get("readPreference", "nearest"))
-            self.__writeJournalOpt = self.__infoD.get("DB_WRITE_TO_JOURNAL", uriKwargD.get("journal", True))
-            self.__connectTimeoutMS = self.__infoD.get("DB_CONNECTION_TIMEOUT_MS", uriKwargD.get("connectTimeoutMS", 60000))
-            self.__socketTimeoutMS = self.__infoD.get("DB_SOCKET_TIMEOUT_MS", uriKwargD.get("socketTimeoutMS", None))
-            self.__appname = self.__infoD.get("DB_APP_NAME", uriKwargD.get("appname", "dbloader"))
+            self.__dbAdminDb = self.__infoD.get("DB_ADMIN_DB_NAME") if self.__infoD.get("DB_ADMIN_DB_NAME") is not None else uriKwargD.get("authSource", "admin")
+            self.__writeConcern = self.__infoD.get("DB_WRITE_CONCERN") if self.__infoD.get("DB_WRITE_CONCERN") is not None else uriKwargD.get("w", "majority")
+            self.__readConcern = self.__infoD.get("DB_READ_CONCERN") if self.__infoD.get("DB_READ_CONCERN") is not None else uriKwargD.get("readConcernLevel", "majority")
+            self.__readPreference = self.__infoD.get("DB_READ_PREFERENCE") if self.__infoD.get("DB_READ_PREFERENCE") is not None else uriKwargD.get("readPreference", "nearest")
+            self.__writeJournalOpt = self.__infoD.get("DB_WRITE_TO_JOURNAL") if self.__infoD.get("DB_WRITE_TO_JOURNAL") is not None else uriKwargD.get("journal", True)
+            self.__connectTimeoutMS = (
+                self.__infoD.get("DB_CONNECTION_TIMEOUT_MS")
+                if self.__infoD.get("DB_CONNECTION_TIMEOUT_MS") is not None
+                else uriKwargD.get("connectTimeoutMS", 60000)
+            )
+            self.__socketTimeoutMS = self.__infoD.get("DB_SOCKET_TIMEOUT_MS") if self.__infoD.get("DB_SOCKET_TIMEOUT_MS") is not None else uriKwargD.get("socketTimeoutMS", None)
+            self.__appname = self.__infoD.get("DB_APP_NAME") if self.__infoD.get("DB_APP_NAME") is not None else uriKwargD.get("appname", "dbloader")
             #
             port = self.__infoD.get("DB_PORT", self.__defaultPort)
             if port and str(port):
