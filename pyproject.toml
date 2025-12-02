@@ -1,13 +1,17 @@
 [build-system]
-requires = ["setuptools>=61", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "rcsb.db"
 description = "RCSB Python Database Access and Loading Utility Classes"
+version = "1.812"
 readme = "README.md"
 authors = [
     { name="John Westbrook", email="john.westbrook@rcsb.org" }
+]
+maintainers = [
+    { name="Dennis Piehl", email="dennis.piehl@rcsb.org" }
 ]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
@@ -32,11 +36,9 @@ dependencies = [
     "rcsb.utils.dictionary >= 1.32",
     "rcsb.utils.repository >= 0.50",
 ]
-dynamic = ["version"]
 
 [project.optional-dependencies]
-dev = ["check-manifest"]
-tests = ["tox", "pylint", "black>=21.5b1", "flake8", "coverage", "jsonschema", "rcsb.utils.chemref >= 0.91", "jsondiff >= 1.2.0"]
+tests = ["tox", "pylint", "black>=21.5b1", "flake8", "coverage", "jsonschema", "rcsb.utils.chemref >= 0.91", "jsondiff >= 1.2.0", "check-manifest"]
 
 [project.urls]
 Homepage = "https://github.com/rcsb/py-rcsb_db"
@@ -47,14 +49,41 @@ repo_scan_cli = "rcsb.db.cli.RepoScanExec:main"
 schema_update_cli = "rcsb.db.cli.SchemaUpdateExec:main"
 etl_exec_cli = "rcsb.db.cli.ETLExec:main"
 
-[tool.setuptools.packages.find]
-include = ["rcsb*"]  # must leave at "rcsb*" and not "rcsb.*", else the 'rcsb/__init__.py' file is dropped
-exclude = ["rcsb.db.test*", "rcsb.mock-*", "test*"]
-namespaces = false
+# ----------------  hatch configuration ----------------
+[tool.hatch.build.targets.sdist]
+include = [
+    "/rcsb/**",
+    "/README.md",
+    "/LICENSE",
+    "/HISTORY.txt",
+    "/pyproject.toml",
+]
+exclude = [
+    "/rcsb/mock-*",
+    "/rcsb/db/test*/test*-*",
+    "/rcsb/db/test*/**.tdd",
+    "/rcsb/db/test*/**.txt",
+    "/rcsb/db/test*/**.sh",
+]
 
-[tool.setuptools.dynamic]
-version = {attr = "rcsb.db.cli.__version__"}
+[tool.hatch.build.targets.wheel]
+packages = ["rcsb"]
+exclude = [
+    "/rcsb/db/test*",
+    "/rcsb/mock-*",
+]
 
+[tool.hatch.envs.default]
+skip-install = true
+
+# ----------------  test configuration ----------------
+[tool.hatch.envs.hatch-test]
+dependencies = ["tox"]
+
+[tool.hatch.envs.hatch-test.scripts]
+run = ["tox"]
+
+# ----------------  UV configuration ----------------
 # Add this to prevent uv from automatically creating venvs within individual packages when running 'uv run ...' from within the package directory
 [tool.uv]
 managed = false
