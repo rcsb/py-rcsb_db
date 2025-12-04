@@ -61,10 +61,10 @@ class ConnectionBase(object):
         self.__writeConcern = None
         self.__readConcern = None
         self.__readPreference = None
-        self.__writeJournalOpt = None
+        self.__writeJournalOpt = True
         self.__connectTimeoutMS = None
         self.__socketTimeoutMS = None
-        self.__appname = None
+        self.__appname = "dbloader"
 
     def assignResource(self, resourceName=None, sectionName=None):
         # implement in the derived class
