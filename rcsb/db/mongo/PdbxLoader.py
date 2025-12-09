@@ -1306,7 +1306,7 @@ class PdbxLoader(object):
         logger.info("Loaded %r IDs from database %r collection %r", len(collectionIdMap), databaseName, collectionName)
         return collectionIdMap
 
-    def __constructExpectedRcsbIdMaps(self, loaded_id_map):
+    def __constructExpectedRcsbIdMaps(self, loadedIdMap):
         """Build sets of expected IDs for entities and assemblies from entry metadata."""
 
         expectedIdMap = {
@@ -1318,7 +1318,7 @@ class PdbxLoader(object):
             "nonpoly_instance": set(),
             "branched_instance": set(),
         }
-        entryMap = loaded_id_map["entry"]
+        entryMap = loadedIdMap["entry"]
         for rid, cidD in entryMap.items():
             for eid in cidD.get("polymer_entity_ids", []):
                 expectedIdMap["polymer_entity"].add(f"{rid}_{eid}")
@@ -1329,7 +1329,7 @@ class PdbxLoader(object):
             for aid in cidD.get("assembly_ids", []):
                 expectedIdMap["assembly"].add(f"{rid}-{aid}")
         #
-        for col, entityMap in loaded_id_map.items():
+        for col, entityMap in loadedIdMap.items():
             if col.endswith("_entity"):
                 for eid, cidD in entityMap.items():
                     rid = cidD["entry_id"]

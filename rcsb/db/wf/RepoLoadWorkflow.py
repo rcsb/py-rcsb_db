@@ -539,7 +539,6 @@ class RepoLoadWorkflow(object):
                 resourceName="MONGO_DB",
                 verbose=self.__debugFlag,
             )
-            ok = True
             ok = mw.loadCompleteCheck(
                 collectionGroupName=collectionGroupName,
                 contentType=contentType,
