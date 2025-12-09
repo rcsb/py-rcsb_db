@@ -11,7 +11,8 @@ authors = [
     { name="John Westbrook", email="john.westbrook@rcsb.org" }
 ]
 maintainers = [
-    { name="Dennis Piehl", email="dennis.piehl@rcsb.org" }
+    { name="Dennis Piehl", email="dennis.piehl@rcsb.org" },
+    { name="Brinda Vallat", email="brinda.vallat@rcsb.org" }
 ]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
