@@ -16,6 +16,7 @@
 #   7-Apr-2025 dwp Add support for IHM model loading
 #  10-Sep-2025 js  Add support for bcif incremental update and IHM model loading
 #   6-Oct-2025 dwp Add support for load completion checking of 'core_chem_comp' collection
+#   9-Dec-2025 dwp Add more fine-grained load completion checking of 'pdbx_core' collections
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -538,6 +539,7 @@ class RepoLoadWorkflow(object):
                 resourceName="MONGO_DB",
                 verbose=self.__debugFlag,
             )
+            ok = True
             ok = mw.loadCompleteCheck(
                 collectionGroupName=collectionGroupName,
                 contentType=contentType,
@@ -558,6 +560,11 @@ class RepoLoadWorkflow(object):
                             logger.info("checkValidationDataCount for database %s coll %s (status %r)", validationDbMongoCheckName, collection, okV)
                             ok = ok and okV
                     #
+                    # Check assembly, entity, and instance collections by comparing with container_ids referenced in entry and entity collections
+                    okC = mw.checkEntryCompositionLoad(collectionGroupName)
+                    logger.info("checkEntryCompositionLoad (status %r)", okC)
+                    ok = ok and okC
+                #
                 if checkLoadWithHoldings:
                     okH = mw.checkLoadedEntriesWithHoldingsCount(collectionGroupName)
                     logger.info("checkLoadedEntriesWithHoldingsCount (status %r)", okH)

@@ -386,3 +386,4 @@
  13-Nov-2025  V1.811 Support full URI value passed via config MONGO_DB_URI
   2-Dec-2025  V1.812 Adjust MongoClient option priority to use explicitly provided settings first, else use URI-provided options;
                      Switch from setuptools to hatch build system
+  9-Dec-2025  V1.813 Add more fine-grained load completion checking of 'pdbx_core' collections
