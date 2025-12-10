@@ -47,6 +47,7 @@
 #      6-Aug-2025 dwp  Add in usage of "collectionGroupName" (in place of "databaseName", where appropriate)
 #      6-Oct-2025 dwp  Turned OFF loading and checking of "repository_holdings_update_entry" collection as part of transition to DW consolidation (since not used by anything);
 #                      Add support for load completion checking of 'core_chem_comp' collection
+#      9-Dec-2025 dwp  Add more fine-grained load completion checking of 'pdbx_core' collections
 ##
 """
 Worker methods for loading primary data content following mapping conventions in external schema definitions.
@@ -1251,3 +1252,97 @@ class PdbxLoader(object):
             ok = False
 
         return ok
+
+    def checkAllLoadedCollections(self, collectionGroupName):
+        """Perform a more precise load-completion check, by checking that all referenced container_identifiers are present in their respective child collections.
+        """
+        ok = True
+        try:
+            collectionsMap = {
+                "entry": {"col": "pdbx_core_entry", "container_field": "rcsb_entry_container_identifiers"},
+                "polymer_entity": {"col": "pdbx_core_polymer_entity", "container_field": "rcsb_polymer_entity_container_identifiers"},
+                "nonpoly_entity": {"col": "pdbx_core_nonpolymer_entity", "container_field": "rcsb_nonpolymer_entity_container_identifiers"},
+                "branched_entity": {"col": "pdbx_core_branched_entity", "container_field": "rcsb_branched_entity_container_identifiers"},
+                "assembly": {"col": "pdbx_core_assembly", "container_field": None},
+                "polymer_instance": {"col": "pdbx_core_polymer_entity_instance", "container_field": None},
+                "nonpoly_instance": {"col": "pdbx_core_nonpolymer_entity_instance", "container_field": None},
+                "branched_instance": {"col": "pdbx_core_branched_entity_instance", "container_field": None},
+            }
+
+            logger.info("Loading all collection IDs into memory...")
+            loadedIdMaps = {}
+            databaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=collectionGroupName)
+            for col, cD in collectionsMap.items():
+                loadedIdMaps.update({col: self.__gatherIdMappings(databaseNameMongo, cD["col"], cD["container_field"])})
+
+            # Build expected entity ID sets
+            expectedIdMaps = self.__constructExpectedRcsbIdMaps(loadedIdMaps)
+
+            # Compare expected vs loaded
+            for col in collectionsMap:
+                if col == "entry":
+                    continue
+                self.__compareExpectedAndLoadedIds(expectedIdMaps.get(col, set()), loadedIdMaps.get(col), col)
+
+            logger.info("Database verification complete: all entries, entities, assemblies, and instances are consistent.")
+
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+            ok = False
+
+        return ok
+
+    def __gatherIdMappings(self, databaseName, collectionName, containerIdField=None):
+        """Load all IDs from a collection into a dict mapping rcsb_id -> container info (or None)."""
+        collectionIdMap = {}
+        with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+            mg = MongoDbUtil(client)
+            selectL = ["rcsb_id"]
+            if containerIdField is not None:
+                selectL.append(containerIdField)
+            loadedDocL = mg.fetch(databaseName, collectionName, selectL, queryD={}, suppressId=True)
+            for doc in loadedDocL:
+                collectionIdMap[doc["rcsb_id"]] = doc.get(containerIdField)
+        logger.info("Loaded %r IDs from database %r collection %r", len(collectionIdMap), databaseName, collectionName)
+        return collectionIdMap
+
+    def __constructExpectedRcsbIdMaps(self, loadedIdMap):
+        """Build sets of expected IDs for entities and assemblies from entry metadata."""
+
+        expectedIdMap = {
+            "polymer_entity": set(),
+            "nonpoly_entity": set(),
+            "branched_entity": set(),
+            "assembly": set(),
+            "polymer_instance": set(),
+            "nonpoly_instance": set(),
+            "branched_instance": set(),
+        }
+        entryMap = loadedIdMap["entry"]
+        for rid, cidD in entryMap.items():
+            for eid in cidD.get("polymer_entity_ids", []):
+                expectedIdMap["polymer_entity"].add(f"{rid}_{eid}")
+            for eid in cidD.get("non_polymer_entity_ids", []):
+                expectedIdMap["nonpoly_entity"].add(f"{rid}_{eid}")
+            for eid in cidD.get("branched_entity_ids", []):
+                expectedIdMap["branched_entity"].add(f"{rid}_{eid}")
+            for aid in cidD.get("assembly_ids", []):
+                expectedIdMap["assembly"].add(f"{rid}-{aid}")
+        #
+        for col, entityMap in loadedIdMap.items():
+            if col.endswith("_entity"):
+                for eid, cidD in entityMap.items():
+                    rid = cidD["entry_id"]
+                    for asymId in cidD.get("asym_ids", []):
+                        instanceType = col.replace("_entity", "_instance")
+                        expectedIdMap[instanceType].add(f"{rid}.{asymId}")
+
+        return expectedIdMap
+
+    def __compareExpectedAndLoadedIds(self, expectedSet, loadedD, colName):
+        loadedSet = set(loadedD.keys())
+        logger.info("Comparing %r - expected (%r), loaded (%r))", colName, len(expectedSet), len(loadedSet))
+        if expectedSet != loadedSet:
+            missing = expectedSet - loadedSet
+            extra = loadedSet - expectedSet
+            raise ValueError(f"{colName} mismatch: missing {len(missing)}, extra {len(extra)}")

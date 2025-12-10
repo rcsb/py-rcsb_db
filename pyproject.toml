@@ -5,13 +5,14 @@ build-backend = "hatchling.build"
 [project]
 name = "rcsb.db"
 description = "RCSB Python Database Access and Loading Utility Classes"
-version = "1.812"
+version = "1.813"
 readme = "README.md"
 authors = [
     { name="John Westbrook", email="john.westbrook@rcsb.org" }
 ]
 maintainers = [
-    { name="Dennis Piehl", email="dennis.piehl@rcsb.org" }
+    { name="Dennis Piehl", email="dennis.piehl@rcsb.org" },
+    { name="Brinda Vallat", email="brinda.vallat@rcsb.org" }
 ]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
