@@ -1253,7 +1253,7 @@ class PdbxLoader(object):
 
         return ok
 
-    def checkEntryCompositionLoad(self, collectionGroupName):
+    def checkAllLoadedCollections(self, collectionGroupName):
         """Perform a more precise load-completion check, by checking that all referenced container_identifiers are present in their respective child collections.
         """
         ok = True

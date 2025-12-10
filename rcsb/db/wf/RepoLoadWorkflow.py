@@ -560,8 +560,8 @@ class RepoLoadWorkflow(object):
                             ok = ok and okV
                     #
                     # Check assembly, entity, and instance collections by comparing with container_ids referenced in entry and entity collections
-                    okC = mw.checkEntryCompositionLoad(collectionGroupName)
-                    logger.info("checkEntryCompositionLoad (status %r)", okC)
+                    okC = mw.checkAllLoadedCollections(collectionGroupName)
+                    logger.info("checkAllLoadedCollections (status %r)", okC)
                     ok = ok and okC
                 #
                 if checkLoadWithHoldings:
