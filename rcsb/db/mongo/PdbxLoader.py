@@ -1341,7 +1341,7 @@ class PdbxLoader(object):
 
     def __compareExpectedAndLoadedIds(self, expectedSet, loadedD, colName):
         loadedSet = set(loadedD.keys())
-        logger.info("Comparing %r - expected (%r), loaded (%r))", colName, len(expectedSet), len(loadedSet))
+        logger.info("Comparing %r - expected (%r), loaded (%r)", colName, len(expectedSet), len(loadedSet))
         if expectedSet != loadedSet:
             missing = expectedSet - loadedSet
             extra = loadedSet - expectedSet
