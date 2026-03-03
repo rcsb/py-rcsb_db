@@ -48,6 +48,8 @@
 #      6-Oct-2025 dwp  Turned OFF loading and checking of "repository_holdings_update_entry" collection as part of transition to DW consolidation (since not used by anything);
 #                      Add support for load completion checking of 'core_chem_comp' collection
 #      9-Dec-2025 dwp  Add more fine-grained load completion checking of 'pdbx_core' collections
+#      3-Mar-2026 dwp  Adjust logic for handling loading failures and salvaging (handle one at a time in serial fashion),
+#                      and prevent post-failure handling step from pre-deleting all related documents beyond the problematic case
 ##
 """
 Worker methods for loading primary data content following mapping conventions in external schema definitions.
@@ -557,7 +559,10 @@ class PdbxLoader(object):
                 ok = True
                 failDocIdS = set()
                 # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
+                # Return list of key document attributes required to uniquely identify a document (more specific, e.g., "4HHB.A")
                 docIdL = sd.getDocumentKeyAttributeNames(collectionName)
+                # Return list of document attributes required to remove all relevant documents prior  to load 'replace' operation (more generic,
+                # e.g. usually just the container_identifiers.entry_id, so catches all "4HHB.*")
                 replaceIdL = sd.getDocumentReplaceAttributeNames(collectionName)
                 #
                 tableIdExcludeList = sd.getCollectionExcluded(collectionName)
@@ -611,7 +616,17 @@ class PdbxLoader(object):
                 except Exception as e:
                     logger.exception("Failing cN %r  dD %r with %s", cId, dD, str(e))
 
+                # logger.info("collectionName: %r", collectionName)
+                # logger.info("rcsb_id dList: %r", [d['rcsb_id'] for d in dList])
+                # logger.info("replaceIdL - %r", replaceIdL)
+                # logger.info("docIdL - %r", docIdL)
                 #
+                # Example values;
+                #  collectionName: 'pdbx_core_polymer_entity'
+                #  rcsb_id dList: ['4HHB_1', '4HHB_2', '7HZW_1', '9UZ6_1', '2LGI_1']
+                #  replaceIdL - ['rcsb_polymer_entity_container_identifiers.entry_id']
+                #  docIdL - ['rcsb_polymer_entity_container_identifiers.entry_id', 'rcsb_polymer_entity_container_identifiers.entity_id']
+
                 if dList:
                     ok, _, failDocIdS = self.__loadDocuments(
                         databaseNameMongo, collectionName, dList, docIdL, replaceIdL=replaceIdL, loadType=loadType, readBackCheck=readBackCheck, pruneDocumentSize=pruneDocumentSize
@@ -619,25 +634,39 @@ class PdbxLoader(object):
                 #
                 if failDocIdS:
                     logger.info("Initial load failures: %r", failDocIdS)
-                    fList = []
+                    failDocIdRetryS = set()
+
                     for dD in dList:
+                        fList = []
+                        failDocIdSingleRetryS = set()
                         tId = self.__dL.getKeyValues(dD, docIdL)
                         if tId in failDocIdS:
                             fList.append(dD)
                             if validateFailures:
                                 logger.info("Validating document %r", tId)
                                 self.__validateDocuments(collectionGroupName, collectionName, [dD], docIdL, schemaLevel=validationLevel)
-                    #
-                    #  -- Try and repair failDocIdS --
-                    #
-                    if reloadPartial:
-                        logger.info("Attempting corrections on documents %r", failDocIdS)
-                        fList = self.__validateAndFix(collectionGroupName, collectionName, fList, docIdL, schemaLevel=validationLevel)
+                            #
+                            #  -- Try and repair each individual doc from failDocIdS one-at-a-time --
+                            #
+                            if reloadPartial:
+                                logger.info("Attempting corrections on document %r", tId)
+                                fList = self.__validateAndFix(collectionGroupName, collectionName, fList, docIdL, schemaLevel=validationLevel)
 
-                        fOk, _, failDocIdS = self.__loadDocuments(
-                            databaseNameMongo, collectionName, fList, docIdL, replaceIdL=replaceIdL, loadType=loadType, readBackCheck=readBackCheck, pruneDocumentSize=pruneDocumentSize
-                        )
-                        logger.info("Final load (%r) failures: %r", fOk, failDocIdS)
+                                fOk, _, failDocIdSingleRetryS = self.__loadDocuments(
+                                    databaseNameMongo,
+                                    collectionName,
+                                    fList, docIdL,
+                                    # This time, set replaceIdL=docIdL so that pre-deletion is only done for problematic documents and not all related docs of the same structure
+                                    replaceIdL=docIdL,
+                                    loadType=loadType,
+                                    readBackCheck=readBackCheck,
+                                    pruneDocumentSize=pruneDocumentSize,
+                                )
+                                logger.info("Re-try load (%r) failures: %r", fOk, failDocIdSingleRetryS)
+                            #
+                        failDocIdRetryS.update(failDocIdSingleRetryS)
+                    failDocIdS = failDocIdRetryS
+                    logger.info("Final load failDocIdS failures: %r", failDocIdS)
 
                 # ------
                 # Collect the container identifiers for the successful loads (paths for logging only)

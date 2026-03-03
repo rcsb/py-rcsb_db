@@ -387,4 +387,5 @@
   2-Dec-2025  V1.812 Adjust MongoClient option priority to use explicitly provided settings first, else use URI-provided options;
                      Switch from setuptools to hatch build system
  10-Dec-2025  V1.813 Add more fine-grained load completion checking of 'pdbx_core' collections
-  3-Mar-2026  V1.814 Configure logging at start of CLI executable scripts
+  3-Mar-2026  V1.814 Configure logging at start of CLI executable scripts;
+                     Adjust loading error handling/salvaging process

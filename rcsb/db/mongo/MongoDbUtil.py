@@ -14,6 +14,7 @@
 #       8-Jan-2021  jdw add distinct() method
 #      13-Aug-2024  dwp update reindex method for pymongo 4.x support
 #      15-Jul-2025  dwp add getCollectionIndexes method
+#       3-Mar-2026  dwp remove try/except handling from deleteList, to force failure if self.__mgObj is None
 ##
 """
 Base class for simple essential database operations for MongoDb.
@@ -198,6 +199,8 @@ class MongoDbUtil(object):
             clt = self.__mgObj[databaseName].get_collection(collectionName)
             rV = clt.insert_many(dList, ordered=ordered, bypass_document_validation=bypassValidation)
         except Exception as e:
+            # If above insert_many fails, nothing *should* have been loaded and rV should be None
+            # But, in case so, salvaging (below) will pre-delete all potential docs that may have been partially loaded
             logger.error("Bulk insert failing for document length %d with %s", len(dList), str(e)[:100])
 
             # for ii, dd in enumerate(dList):
@@ -377,27 +380,34 @@ class MongoDbUtil(object):
             list: (value tuple of key names, deletion count)
 
         """
-        try:
-            cD = {}
-            delTupL = []
-            clt = self.__mgObj[databaseName].get_collection(collectionName)
-            for dD in dList:
-                kyVals = self.__getKeyValues(dD, keyNames)
-                selectD = {ky: val for ky, val in zip(keyNames, kyVals)}
-                tt = tuple(selectD.items())
-                if tt in cD:
-                    continue
-                cD[tt] = True
-                rV = clt.delete_many(selectD)
-                try:
-                    # delTupL.append((kyVals, r.deleted_count))
-                    delTupL.append((selectD, rV.deleted_count))
-                except Exception as e:
-                    logger.error("Failing %s and %s selectD %r with %s", databaseName, collectionName, selectD.items(), str(e))
-            logger.debug("%s %s deleted status %r", databaseName, collectionName, delTupL)
-            return delTupL
-        except Exception as e:
-            logger.error("Failing %s and %s selectD %r with %s", databaseName, collectionName, selectD.items(), str(e))
+        cD = {}
+        delTupL = []
+        selectD = {}
+        #
+        # NOTE: Sometimes self.__mgObj is randomly None and causes a failure...why? Timeout?
+        if self.__mgObj is None:
+            raise ValueError("Mongo object self.__mgObj is None")
+        clt = self.__mgObj[databaseName].get_collection(collectionName)
+        #
+        # NOTE: May want to look into grouping these into one single delete query instead of multiple individual ones,
+        #       and evaluating how much faster (if at all) that lets the workflow run. May be significant for CSMs.
+        #       If doing so, make sure that you only do so when the selectD has just one Key (e.g., not a paired key)
+        #       and make sure the delete query doesn't timeout too easily with this approach.
+        for dD in dList:  # each dD is an entire Mongo doc for an entry/entity/...
+            kyVals = self.__getKeyValues(dD, keyNames)
+            selectD = {ky: val for ky, val in zip(keyNames, kyVals)}
+            # Example 'selectD': {'rcsb_assembly_container_identifiers.entry_id': 'AF_AFQ06159F1'}
+            tt = tuple(selectD.items())
+            if tt in cD:
+                continue
+            cD[tt] = True
+            rV = clt.delete_many(selectD)
+            try:
+                # delTupL.append((kyVals, r.deleted_count))
+                delTupL.append((selectD, rV.deleted_count))
+            except Exception as e:
+                logger.error("Failing %s and %s selectD %r with %s", databaseName, collectionName, selectD.items(), str(e))
+        logger.debug("%s %s deleted status %r", databaseName, collectionName, delTupL)
         #
         return delTupL
 
