@@ -518,6 +518,7 @@ class PdbxLoader(object):
             purgeL = []
 
             for locatorObj in dataList:  # len(dataList) is of size chunkSize
+                logger.info("locator %r", locatorObj)
                 cL = self.__rpP.getContainerList([locatorObj])
                 if cL:
                     cNameL.append(cL[0].getName().upper().strip())
@@ -575,6 +576,7 @@ class PdbxLoader(object):
                 logger.debug("%s databaseNameMongo %s include list %r", procName, databaseNameMongo, tableIdIncludeList)
                 logger.debug("%s databaseNameMongo %s exclude list %r", procName, databaseNameMongo, tableIdExcludeList)
                 #
+                logger.info("containerList %r", containerList)
                 dList, containerIdList, rejectIdList = sdp.processDocuments(
                     containerList,
                     styleType=styleType,
@@ -655,7 +657,8 @@ class PdbxLoader(object):
                                 fOk, _, failDocIdSingleRetryS = self.__loadDocuments(
                                     databaseNameMongo,
                                     collectionName,
-                                    fList, docIdL,
+                                    fList,
+                                    docIdL,
                                     # This time, set replaceIdL=docIdL so that pre-deletion is only done for problematic documents and not all related docs of the same structure
                                     replaceIdL=docIdL,
                                     loadType=loadType,
@@ -664,7 +667,7 @@ class PdbxLoader(object):
                                 )
                                 logger.info("Re-try load (%r) failures: %r", fOk, failDocIdSingleRetryS)
                             #
-                        failDocIdRetryS.update(failDocIdSingleRetryS)
+                        failDocIdRetryS.add(failDocIdSingleRetryS)
                     failDocIdS = failDocIdRetryS
                     logger.info("Final load failDocIdS failures: %r", failDocIdS)
 
@@ -1045,7 +1048,8 @@ class PdbxLoader(object):
         rIdL = []
 
         logger.debug("databaseName %s collectionName %s docIdL %r", databaseName, collectionName, docIdL)
-        inputDocIdS = {self.__dL.getKeyValues(dD, docIdL) for dD in dList}
+        inputDocIdS = {self.__dL.getKeyValues(dD, docIdL) for dD in dList}  # docIdL is currently empty for core_chem_comp, so inputDocIdS is empty, causing the waterfall
+                                                                            # would normally add the "primary" and "replace" collection_indices to the assets config file, but this is trickier for core_chem_comp
         failDocIdS = set()
         successDocIdS = set()
 
@@ -1053,6 +1057,8 @@ class PdbxLoader(object):
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
                 #
+                logger.info("docIdL %r", docIdL)
+                logger.info("replaceL %r", replaceIdL)
                 if loadType == "replace" and replaceIdL:
                     deleteTupL = mg.deleteList(databaseName, collectionName, dList, replaceIdL)
                     logger.debug("Deleted document status %r", deleteTupL)
@@ -1060,6 +1066,9 @@ class PdbxLoader(object):
                     dList = self.__pruneBySize(dList, limitMB=pruneDocumentSize)
                 #
                 rIdL.extend(mg.insertList(databaseName, collectionName, dList, keyNames=docIdL, salvage=True))
+                logger.info("rIdL: %r", rIdL)
+                logger.info("len(dList): %r", len(dList))
+                # logger.info("dList: %r", dList)
                 # ---
                 #  If there is a failure then determine the specific successes and failures -
                 #
@@ -1076,6 +1085,9 @@ class PdbxLoader(object):
                     successDocIdS = sIdS
                 # enumerate the failures
                 failDocIdS = inputDocIdS - successDocIdS
+                logger.info("inputDocIdS: %r", inputDocIdS)
+                logger.info("successDocIdS: %r", successDocIdS)
+                logger.info("failDocIdS: %r", failDocIdS)
                 #
                 if readBackCheck:
                     # build an index of the input document list
