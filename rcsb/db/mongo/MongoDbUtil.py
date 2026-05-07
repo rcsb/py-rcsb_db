@@ -14,7 +14,7 @@
 #       8-Jan-2021  jdw add distinct() method
 #      13-Aug-2024  dwp update reindex method for pymongo 4.x support
 #      15-Jul-2025  dwp add getCollectionIndexes method
-#       7-Apr-2026  dwp add pre-check to each method to make sure self.__mgObj is not None;
+#       7-May-2026  dwp add pre-check to each method to make sure self.__mgObj is not None;
 #                       remove try/except handling from deleteList to force failure
 ##
 """

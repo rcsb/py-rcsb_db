@@ -34,7 +34,7 @@ dependencies = [
     "rcsb.utils.config >= 0.40",
     "rcsb.utils.io >= 1.52",
     "rcsb.utils.multiproc >= 0.19",
-    "rcsb.utils.dictionary >= 1.32",
+    "rcsb.utils.dictionary >= 1.39",
     "rcsb.utils.repository >= 0.50",
 ]
 
