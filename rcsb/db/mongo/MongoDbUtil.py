@@ -14,6 +14,8 @@
 #       8-Jan-2021  jdw add distinct() method
 #      13-Aug-2024  dwp update reindex method for pymongo 4.x support
 #      15-Jul-2025  dwp add getCollectionIndexes method
+#       7-May-2026  dwp add pre-check to each method to make sure self.__mgObj is not None;
+#                       remove try/except handling from deleteList to force failure
 ##
 """
 Base class for simple essential database operations for MongoDb.
@@ -38,7 +40,17 @@ class MongoDbUtil(object):
         self.__mgObj = mongoClientObj
         self.__mongoIndexTypes = {"DESCENDING": pymongo.DESCENDING, "ASCENDING": pymongo.ASCENDING, "TEXT": pymongo.TEXT}
 
+    def testMongoObj(self):
+        """Sometimes self.__mgObj is randomly None and causes a failure. Not sure why...timeout?
+
+        Raises:
+            ValueError: if self.__mgObj is None
+        """
+        if self.__mgObj is None:
+            raise ValueError("Mongo object self.__mgObj is None")
+
     def databaseExists(self, databaseName):
+        self.testMongoObj()
         try:
             dbNameList = self.__mgObj.list_database_names()
             if databaseName in dbNameList:
@@ -50,9 +62,11 @@ class MongoDbUtil(object):
         return False
 
     def getDatabaseNames(self):
+        self.testMongoObj()
         return self.__mgObj.list_database_names()
 
     def createDatabase(self, databaseName, overWrite=True):
+        self.testMongoObj()
         try:
             if overWrite and self.databaseExists(databaseName):
                 logger.debug("Dropping existing database %s", databaseName)
@@ -66,6 +80,7 @@ class MongoDbUtil(object):
         return False
 
     def dropDatabase(self, databaseName):
+        self.testMongoObj()
         try:
             self.__mgObj.drop_database(databaseName)
             return True
@@ -74,6 +89,7 @@ class MongoDbUtil(object):
         return False
 
     def databaseCommand(self, databaseName, command):
+        self.testMongoObj()
         try:
             rs = self.__mgObj[databaseName].command(command)
             logger.debug("Database %s Command %r returns %r", databaseName, command, rs)
@@ -83,6 +99,7 @@ class MongoDbUtil(object):
         return False
 
     def collectionExists(self, databaseName, collectionName):
+        self.testMongoObj()
         try:
             if self.databaseExists(databaseName) and (collectionName in self.__mgObj[databaseName].list_collection_names()):
                 return True
@@ -93,6 +110,7 @@ class MongoDbUtil(object):
         return False
 
     def getCollectionNames(self, databaseName):
+        self.testMongoObj()
         return self.__mgObj[databaseName].list_collection_names()
 
     def createCollection(self, databaseName, collectionName, overWrite=True, bsonSchema=None, validationLevel="strict", validationAction="error"):
@@ -110,6 +128,7 @@ class MongoDbUtil(object):
         Returns:
             bool: True for success or False otherwise
         """
+        self.testMongoObj()
         try:
             if overWrite and self.collectionExists(databaseName, collectionName):
                 self.__mgObj[databaseName].drop_collection(collectionName)
@@ -137,6 +156,7 @@ class MongoDbUtil(object):
         Returns:
             bool: True for success or False otherwise
         """
+        self.testMongoObj()
         try:
             if bsonSchema:
                 # bsonSchema.update({'additionalProperties': False})
@@ -149,6 +169,7 @@ class MongoDbUtil(object):
         return False
 
     def dropCollection(self, databaseName, collectionName):
+        self.testMongoObj()
         try:
             ok = self.__mgObj[databaseName].drop_collection(collectionName)
             logger.debug("Return from drop collection %r", ok)
@@ -158,6 +179,7 @@ class MongoDbUtil(object):
         return False
 
     def insert(self, databaseName, collectionName, dObj, documentKey=None):
+        self.testMongoObj()
         try:
             clt = self.__mgObj[databaseName].get_collection(collectionName)
             rV = clt.insert_one(dObj)
@@ -194,10 +216,13 @@ class MongoDbUtil(object):
         """
         rIdL = []
         rV = None
+        self.testMongoObj()
         try:
             clt = self.__mgObj[databaseName].get_collection(collectionName)
             rV = clt.insert_many(dList, ordered=ordered, bypass_document_validation=bypassValidation)
         except Exception as e:
+            # If above insert_many fails, nothing *should* have been loaded and rV should be None
+            # But, in case so, salvaging (below) will pre-delete all potential docs that may have been partially loaded
             logger.error("Bulk insert failing for document length %d with %s", len(dList), str(e)[:100])
 
             # for ii, dd in enumerate(dList):
@@ -264,6 +289,7 @@ class MongoDbUtil(object):
         return rIdL
 
     def fetchOne(self, databaseName, collectionName, ky, val):
+        self.testMongoObj()
         try:
             clt = self.__mgObj[databaseName].get_collection(collectionName)
             dObj = clt.find_one({ky: val})
@@ -286,6 +312,7 @@ class MongoDbUtil(object):
 
             update_many(filter, update, upsert=False, array_filters=None)
         """
+        self.testMongoObj()
         try:
             numModified = 0
             clt = self.__mgObj[databaseName].get_collection(collectionName)
@@ -316,6 +343,7 @@ class MongoDbUtil(object):
             str: MongoDB document identifier for the replaced object
 
         """
+        self.testMongoObj()
         try:
             clt = self.__mgObj[databaseName].get_collection(collectionName)
             rV = clt.replace_one(selectD, dObj, upsert=upsertFlag)
@@ -347,8 +375,9 @@ class MongoDbUtil(object):
             list: List of MongoDB document identifiers for replaced objects
 
         """
+        rIdL = []
+        self.testMongoObj()
         try:
-            rIdL = []
             clt = self.__mgObj[databaseName].get_collection(collectionName)
             for dD in dList:
                 kyVals = self.__getKeyValues(dD, keyNames)
@@ -377,27 +406,32 @@ class MongoDbUtil(object):
             list: (value tuple of key names, deletion count)
 
         """
-        try:
-            cD = {}
-            delTupL = []
-            clt = self.__mgObj[databaseName].get_collection(collectionName)
-            for dD in dList:
-                kyVals = self.__getKeyValues(dD, keyNames)
-                selectD = {ky: val for ky, val in zip(keyNames, kyVals)}
-                tt = tuple(selectD.items())
-                if tt in cD:
-                    continue
-                cD[tt] = True
-                rV = clt.delete_many(selectD)
-                try:
-                    # delTupL.append((kyVals, r.deleted_count))
-                    delTupL.append((selectD, rV.deleted_count))
-                except Exception as e:
-                    logger.error("Failing %s and %s selectD %r with %s", databaseName, collectionName, selectD.items(), str(e))
-            logger.debug("%s %s deleted status %r", databaseName, collectionName, delTupL)
-            return delTupL
-        except Exception as e:
-            logger.error("Failing %s and %s selectD %r with %s", databaseName, collectionName, selectD.items(), str(e))
+        cD = {}
+        delTupL = []
+        selectD = {}
+        #
+        self.testMongoObj()
+        clt = self.__mgObj[databaseName].get_collection(collectionName)
+        #
+        # NOTE: May want to look into grouping these into one single delete query instead of multiple individual ones,
+        #       and evaluating how much faster (if at all) that lets the workflow run. May be significant for CSMs.
+        #       If doing so, make sure that you only do so when the selectD has just one Key (e.g., not a paired key)
+        #       and make sure the delete query doesn't timeout too easily with this approach.
+        for dD in dList:  # each dD is an entire Mongo doc for an entry/entity/...
+            kyVals = self.__getKeyValues(dD, keyNames)
+            selectD = {ky: val for ky, val in zip(keyNames, kyVals)}
+            # Example 'selectD': {'rcsb_assembly_container_identifiers.entry_id': 'AF_AFQ06159F1'}
+            tt = tuple(selectD.items())
+            if tt in cD:
+                continue
+            cD[tt] = True
+            rV = clt.delete_many(selectD)
+            try:
+                # delTupL.append((kyVals, r.deleted_count))
+                delTupL.append((selectD, rV.deleted_count))
+            except Exception as e:
+                logger.error("Failing %s and %s selectD %r with %s", databaseName, collectionName, selectD.items(), str(e))
+        logger.debug("%s %s deleted status %r", databaseName, collectionName, delTupL)
         #
         return delTupL
 
@@ -415,6 +449,7 @@ class MongoDbUtil(object):
 
         """
         delCount = 0
+        self.testMongoObj()
         try:
             clt = self.__mgObj[databaseName].get_collection(collectionName)
             rV = clt.delete_many(selectD)
@@ -426,7 +461,7 @@ class MongoDbUtil(object):
         return delCount
 
     def createIndex(self, databaseName, collectionName, keyList, indexName="primary", indexType="DESCENDING", uniqueFlag=False):
-
+        self.testMongoObj()
         try:
             iTupL = [(ky, self.__mongoIndexTypes[indexType]) for ky in keyList]
             clt = self.__mgObj[databaseName].get_collection(collectionName)
@@ -438,6 +473,7 @@ class MongoDbUtil(object):
         return False
 
     def dropIndex(self, databaseName, collectionName, indexName="primary"):
+        self.testMongoObj()
         try:
             clt = self.__mgObj[databaseName].get_collection(collectionName)
             clt.drop_index(indexName)
@@ -448,6 +484,7 @@ class MongoDbUtil(object):
         return False
 
     def reIndex(self, databaseName, collectionName):
+        self.testMongoObj()
         try:
             clt = self.__mgObj[databaseName].get_collection(collectionName)
             logger.debug("Current indexes for %s %s : %r", databaseName, collectionName, clt.list_indexes())
@@ -462,6 +499,7 @@ class MongoDbUtil(object):
         Return a list of index information dictionaries for the given collection.
         """
         indexList = []
+        self.testMongoObj()
         try:
             clt = self.__mgObj[databaseName].get_collection(collectionName)
             indexList = list(clt.list_indexes())
@@ -485,6 +523,7 @@ class MongoDbUtil(object):
         """
         dList = []
         sD = {}
+        self.testMongoObj()
         try:
             qD = queryD if queryD is not None else None
             if selectL:
@@ -507,6 +546,7 @@ class MongoDbUtil(object):
         return None
 
     def count(self, databaseName, collectionName, countFilter=None):
+        self.testMongoObj()
         try:
             tF = countFilter if countFilter else {}
             clt = self.__mgObj[databaseName].get_collection(collectionName)
@@ -519,6 +559,7 @@ class MongoDbUtil(object):
     def distinct(self, databaseName, collectionName, ky):
         """Return a list of distinct values for the input key in the collection."""
         rL = []
+        self.testMongoObj()
         try:
             clt = self.__mgObj[databaseName].get_collection(collectionName)
             rL = clt.distinct(ky)

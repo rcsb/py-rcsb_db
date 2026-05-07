@@ -557,7 +557,10 @@ class PdbxLoader(object):
                 ok = True
                 failDocIdS = set()
                 # ---------------- - ---------------- - ---------------- - ---------------- - ---------------- -
+                # Return list of key document attributes required to uniquely identify a document (more specific, e.g., "4HHB.A")
                 docIdL = sd.getDocumentKeyAttributeNames(collectionName)
+                # Return list of document attributes required to remove all relevant documents prior  to load 'replace' operation (more generic,
+                # e.g. usually just the container_identifiers.entry_id, so catches all "4HHB.*")
                 replaceIdL = sd.getDocumentReplaceAttributeNames(collectionName)
                 #
                 tableIdExcludeList = sd.getCollectionExcluded(collectionName)
@@ -611,7 +614,17 @@ class PdbxLoader(object):
                 except Exception as e:
                     logger.exception("Failing cN %r  dD %r with %s", cId, dD, str(e))
 
+                # logger.info("collectionName: %r", collectionName)
+                # logger.info("rcsb_id dList: %r", [d['rcsb_id'] for d in dList])
+                # logger.info("replaceIdL - %r", replaceIdL)
+                # logger.info("docIdL - %r", docIdL)
                 #
+                # Example values;
+                #  collectionName: 'pdbx_core_polymer_entity'
+                #  rcsb_id dList: ['4HHB_1', '4HHB_2', '7HZW_1', '9UZ6_1', '2LGI_1']
+                #  replaceIdL - ['rcsb_polymer_entity_container_identifiers.entry_id']
+                #  docIdL - ['rcsb_polymer_entity_container_identifiers.entry_id', 'rcsb_polymer_entity_container_identifiers.entity_id']
+
                 if dList:
                     ok, _, failDocIdS = self.__loadDocuments(
                         databaseNameMongo, collectionName, dList, docIdL, replaceIdL=replaceIdL, loadType=loadType, readBackCheck=readBackCheck, pruneDocumentSize=pruneDocumentSize
@@ -1016,7 +1029,11 @@ class PdbxLoader(object):
         rIdL = []
 
         logger.debug("databaseName %s collectionName %s docIdL %r", databaseName, collectionName, docIdL)
+
+        # For below, docIdL is currently empty for core_chem_comp, so inputDocIdS is empty, causing the waterfall.
+        # Would normally add the "primary" and "replace" collection_indices to the assets config file, but this is trickier for core_chem_comp
         inputDocIdS = {self.__dL.getKeyValues(dD, docIdL) for dD in dList}
+
         failDocIdS = set()
         successDocIdS = set()
 
@@ -1341,7 +1358,7 @@ class PdbxLoader(object):
 
     def __compareExpectedAndLoadedIds(self, expectedSet, loadedD, colName):
         loadedSet = set(loadedD.keys())
-        logger.info("Comparing %r - expected (%r), loaded (%r))", colName, len(expectedSet), len(loadedSet))
+        logger.info("Comparing %r - expected (%r), loaded (%r)", colName, len(expectedSet), len(loadedSet))
         if expectedSet != loadedSet:
             missing = expectedSet - loadedSet
             extra = loadedSet - expectedSet
