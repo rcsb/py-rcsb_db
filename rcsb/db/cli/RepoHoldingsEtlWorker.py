@@ -60,6 +60,7 @@ class RepoHoldingsEtlWorker(object):
         self.__collectionGroupName = "repository_holdings"
         self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath)
         self.__databaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=self.__collectionGroupName)
+        logger.info("In RepoHoldingsEtlWorker - self.__sandboxPath: %r", self.__sandboxPath)
 
     def __updateStatus(self, updateId, databaseName, collectionName, status, startTimestamp):
         try:
