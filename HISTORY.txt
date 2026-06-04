@@ -389,3 +389,4 @@
  10-Dec-2025  V1.813 Add more fine-grained load completion checking of 'pdbx_core' collections
   7-May-2026  V1.814 Configure logging at start of CLI executable scripts;
                      Add pre-check to MongoDbUtil methods to ensure MongoObj is not None
+  4-Jun-2026  V1.815 Add logging statements for debugging

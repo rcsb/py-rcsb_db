@@ -680,10 +680,13 @@ class RepoHoldingsDataPrep(object):
         """
         retD = {}
         fields = []
+        logger.info("In self.__getHoldingsPrerelease - self.__sandboxPath: %r", self.__sandboxPath)
+        logger.info("In self.__getHoldingsPrerelease - dirPath: %r", dirPath)
         dirPath = dirPath if dirPath else self.__sandboxPath
         try:
             # Get prerelease sequence data
             fp = os.path.join(dirPath, "sequence", "pdb_seq_prerelease.fasta")
+            logger.info("In self.__getHoldingsPrerelease - Importing file fp: %r", fp)
             sD = self.__mU.doImport(fp, "fasta", commentStyle="prerelease")
             seqD = {}
             for sid in sD:

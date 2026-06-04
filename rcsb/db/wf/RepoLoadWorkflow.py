@@ -116,6 +116,7 @@ class RepoLoadWorkflow(object):
             dataSetId = kwargs.get("dataSetId") if "dataSetId" in kwargs else tU.getCurrentWeekSignature()
             seqDataLocator = self.__cfgOb.getPath("RCSB_SEQUENCE_CLUSTER_DATA_PATH", sectionName=self.__configName)
             sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=self.__configName)
+            logger.info("In RepoLoadWorkflow.load 1 - sandboxPath: %r", sandboxPath)
             #
             # NOTE: Temporarily set collectionGroupName here until all corresponding code in weekly-update-workflow is updated
             if databaseName:
@@ -204,6 +205,7 @@ class RepoLoadWorkflow(object):
             ok = cw.etl(dataSetId, seqDataLocator, loadType=loadType)
             okS = self.loadStatus(cw.getLoadStatus(), readBackCheck=readBackCheck)
         elif op == "etl_repository_holdings" and dbType == "mongo":
+            logger.info("In RepoLoadWorkflow.load 2 - sandboxPath: %r", sandboxPath)
             rhw = RepoHoldingsEtlWorker(
                 self.__cfgOb,
                 sandboxPath,
