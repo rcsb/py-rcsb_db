@@ -236,7 +236,11 @@ class PdbxLoader(object):
             #
             # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
             inputIdCodeList = inputIdCodeList if inputIdCodeList else []
-            inputIdCodeList = [id.upper() for id in inputIdCodeList]
+            if collectionGroupName in ["pdbx_core"]:
+                inputIdCodeList = [id.lower() for id in inputIdCodeList]  # extended PDB IDs are lowercase
+            else:
+                inputIdCodeList = [id.upper() for id in inputIdCodeList]  # CSM and bird/chem comp IDs are uppercase
+            #
             if collectionGroupName in ["pdbx_core", "pdbx_comp_model_core"]:
                 structDetermMethod = self.__getStructDetermMethod(contentType=contentType)
                 #
@@ -518,7 +522,7 @@ class PdbxLoader(object):
             for locatorObj in dataList:  # len(dataList) is of size chunkSize
                 cL = self.__rpP.getContainerList([locatorObj])
                 if cL:
-                    cNameL.append(cL[0].getName().upper().strip())
+                    cNameL.append(cL[0].getName().strip())
                     cId = cL[0].getName() if useNameFlag else cL[0].getProp("uid")
                     cIdD[cId] = locatorObj
                     containerList.extend(cL)
@@ -860,7 +864,7 @@ class PdbxLoader(object):
                 return cName
             #
             fName = os.path.basename(locator)
-            cName = fName.split(".")[0].upper()
+            cName = fName.split(".")[0]
         #
         except Exception as e:
             logger.exception("Failing to determine container name for %r with %s", locatorObj, str(e))
@@ -918,7 +922,7 @@ class PdbxLoader(object):
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
                 for cardId in cardinalIdL:
-                    selectD = {"rcsb_id": {"$regex": f"^{cardId.upper()}{regexEnd}"}}  # case-sensitive (avoid case-insensitive -- very slow performance)
+                    selectD = {"rcsb_id": {"$regex": f"^{cardId}{regexEnd}"}}  # case-sensitive (avoid case-insensitive -- very slow performance)
                     dCount = mg.delete(databaseName, collectionName, selectD)
                     logger.debug("Remove %d objects in database %s collection %s selection %r", dCount, databaseName, collectionName, selectD)
             return True

@@ -60,7 +60,8 @@ class RepoHoldingsEtlWorker(object):
         self.__collectionGroupName = "repository_holdings"
         self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath)
         self.__databaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=self.__collectionGroupName)
-        logger.info("In RepoHoldingsEtlWorker - self.__sandboxPath: %r", self.__sandboxPath)
+        #
+        logger.debug("Current sandboxPath: %r", self.__sandboxPath)  # This is None in production, at least as of 2026-06-08
 
     def __updateStatus(self, updateId, databaseName, collectionName, status, startTimestamp):
         try:
@@ -98,18 +99,18 @@ class RepoHoldingsEtlWorker(object):
             desp = DataExchangeStatus()
             statusStartTimestamp = desp.setStartTime()
             # ---
-            discoveryMode = self.__cfgOb.get("DISCOVERY_MODE", sectionName=self.__cfgSectionName, default="local")
-            baseUrlPDB = self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__cfgSectionName, default="https://files.wwpdb.org/pub")
-            fallbackUrlPDB = self.__cfgOb.getPath("PDB_REPO_FALLBACK_URL", sectionName=self.__cfgSectionName, default="https://files.wwpdb.org/pub")
+            discoveryMode = self.__cfgOb.get("DISCOVERY_MODE", sectionName=self.__cfgSectionName, default="remote")
+            baseUrlPDB = self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__cfgSectionName, default="https://files-beta.wwpdb.org")
+            baseDirPDB = self.__cfgOb.getPath("BASE_PDB_REPO_DIR", sectionName=self.__cfgSectionName, default="pub/wwpdb")
+            baseRepoUrlPDB = os.path.join(baseUrlPDB, baseDirPDB)
             # addValues = {"_schema_version": collectionVersion}
             addValues = None
             #
             kwD = {
                 "repoType": repoType,  # either "pdb" or "pdb_ihm"
-                "holdingsTargetUrl": os.path.join(baseUrlPDB, repoType, "holdings"),
-                "holdingsFallbackUrl": os.path.join(fallbackUrlPDB, repoType, "holdings"),
-                "updateTargetUrl": os.path.join(baseUrlPDB, repoType, "data", "status", "latest"),
-                "updateFallbackUrl": os.path.join(fallbackUrlPDB, repoType, "data", "status", "latest"),
+                "holdingsTargetUrl": os.path.join(baseRepoUrlPDB, repoType, "holdings"),
+                "updateTargetUrl": os.path.join(baseRepoUrlPDB, repoType, "data", "status", "latest"),  # Doesn't exist for IHM
+                "refHoldingsTargetUrl": os.path.join(baseRepoUrlPDB, "refdata", "derived_data", "refdata_id_list.json.gz"),
                 "filterType": self.__filterType,
             }
             # ---
