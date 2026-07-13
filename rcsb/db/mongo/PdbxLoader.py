@@ -48,6 +48,7 @@
 #      6-Oct-2025 dwp  Turned OFF loading and checking of "repository_holdings_update_entry" collection as part of transition to DW consolidation (since not used by anything);
 #                      Add support for load completion checking of 'core_chem_comp' collection
 #      9-Dec-2025 dwp  Add more fine-grained load completion checking of 'pdbx_core' collections
+#     13-Jul-2026 dwp  Update PdbxLoader for providing an inputPathList instead of a list of ID codes (useful for manual testing)
 ##
 """
 Worker methods for loading primary data content following mapping conventions in external schema definitions.
@@ -83,6 +84,7 @@ from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
 from rcsb.utils.repository.RepositoryProvider import RepositoryProvider
 from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
+# from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logger = logging.getLogger(__name__)
 
@@ -241,35 +243,40 @@ class PdbxLoader(object):
             else:
                 inputIdCodeList = [id.upper() for id in inputIdCodeList]  # CSM and bird/chem comp IDs are uppercase
             #
-            if collectionGroupName in ["pdbx_core", "pdbx_comp_model_core"]:
-                structDetermMethod = self.__getStructDetermMethod(contentType=contentType)
-                #
-                totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseNameMongo, collectionName=collectionGroupName + "_entry", structDetermMethod=structDetermMethod)
-                # Get the list of IDs from only the given sublist that are already loaded
-                subsetIdsAlreadyLoaded = list(set(totalIdsAlreadyLoaded).intersection(set(inputIdCodeList)))
-                if not forceReload:
-                    # Get a list of the delta between the two lists—-i.e., the entry IDs needed to be loaded
-                    idCodesToLoadL = list(set(inputIdCodeList) ^ set(subsetIdsAlreadyLoaded))
-                else:
-                    idCodesToLoadL = inputIdCodeList
-                logger.info(
-                    "Total # IDs already loaded %d, # IDs provided as input %d (of which %d are already loaded), # IDs to load for current iteration %d",
-                    len(totalIdsAlreadyLoaded),
-                    len(inputIdCodeList),
-                    len(subsetIdsAlreadyLoaded),
-                    len(idCodesToLoadL)
-                )
-                # Check if all entries are already loaded, and if so, exit here.
-                if len(idCodesToLoadL) == 0:
-                    logger.info("All entries for current iteration already loaded. Skipping re-load.")
-                    return True
-                #
-                if len(idCodesToLoadL) < 100:
-                    logger.info("List of entries to load: %r", idCodesToLoadL)
-            #
+            if inputPathList:
+                # If a full path list is provided, don't pass any input IDs (full path list takes priority)
+                idCodesToLoadL = []
             else:
-                # For "bird_chem_comp_core":
-                idCodesToLoadL = inputIdCodeList
+                if collectionGroupName in ["pdbx_core", "pdbx_comp_model_core"]:
+                    structDetermMethod = self.__getStructDetermMethod(contentType=contentType)
+                    #
+                    totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseNameMongo, collectionName=collectionGroupName + "_entry", structDetermMethod=structDetermMethod)
+                    # Get the list of IDs from only the given sublist that are already loaded
+                    subsetIdsAlreadyLoaded = list(set(totalIdsAlreadyLoaded).intersection(set(inputIdCodeList)))
+                    if not forceReload:
+                        # Get a list of the delta between the two lists—-i.e., the entry IDs needed to be loaded
+                        idCodesToLoadL = list(set(inputIdCodeList) ^ set(subsetIdsAlreadyLoaded))
+                    else:
+                        idCodesToLoadL = inputIdCodeList
+                    logger.info(
+                        "Total # IDs already loaded %d, # IDs provided as input %d (of which %d are already loaded), # IDs to load for current iteration %d",
+                        len(totalIdsAlreadyLoaded),
+                        len(inputIdCodeList),
+                        len(subsetIdsAlreadyLoaded),
+                        len(idCodesToLoadL)
+                    )
+                    # Check if all entries are already loaded, and if so, exit here.
+                    if len(idCodesToLoadL) == 0:
+                        logger.info("All entries for current iteration already loaded. Skipping re-load.")
+                        return True
+                    #
+                    if len(idCodesToLoadL) < 100:
+                        logger.info("List of entries to load: %r", idCodesToLoadL)
+                #
+                else:
+                    # For "bird_chem_comp_core":
+                    idCodesToLoadL = inputIdCodeList
+            #
             locatorObjList = self.__rpP.getLocatorObjList(contentType=contentType, inputPathList=inputPathList, inputIdCodeList=idCodesToLoadL, mergeContentTypes=mergeContentTypes)
             logger.info("Loading collection group %s (%r) with path length %d", collectionGroupName, loadType, len(locatorObjList))
             logger.info("First locatorObj: %r", locatorObjList[0])
