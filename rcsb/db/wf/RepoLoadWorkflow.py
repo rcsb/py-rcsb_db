@@ -52,8 +52,7 @@ class RepoLoadWorkflow(object):
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=self.__configName, mockTopPath=mockTopPath)
         #
         self.__baseUrlPDB = self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName, default="https://files-beta.wwpdb.org")
-        self.__baseDirPDB = self.__cfgOb.getPath("BASE_PDB_REPO_DIR", sectionName=self.__configName, default="pub/wwpdb")  # Added new config (will need to add to mock-data configs)
-        self.__baseRepoUrlPDB = os.path.join(self.__baseUrlPDB, self.__baseDirPDB)
+        self.__baseRepoUrlPDB = os.path.join(self.__baseUrlPDB, "pub/wwpdb")
         self.__cachePath = kwargs.get("cachePath", ".")
         self.__cachePath = os.path.abspath(self.__cachePath)
         self.__debugFlag = kwargs.get("debugFlag", False)
@@ -330,6 +329,8 @@ class RepoLoadWorkflow(object):
         prependOutputHash = bool(kwargs.get("prependOutputHash", False))
         #
         mU = MarshalUtil(workPath=self.__cachePath)
+        #
+        # TODO: clean this upper() and lower() business up (but make sure to avoid creating issues for other workflows that use this, like BCIF)
         #
         if contentType == "pdbx_core":
             # Get list of ALL entries to be loaded for the current update cycle

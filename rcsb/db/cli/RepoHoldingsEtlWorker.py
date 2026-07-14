@@ -101,8 +101,7 @@ class RepoHoldingsEtlWorker(object):
             # ---
             discoveryMode = self.__cfgOb.get("DISCOVERY_MODE", sectionName=self.__cfgSectionName, default="remote")
             baseUrlPDB = self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__cfgSectionName, default="https://files-beta.wwpdb.org")
-            baseDirPDB = self.__cfgOb.getPath("BASE_PDB_REPO_DIR", sectionName=self.__cfgSectionName, default="pub/wwpdb")
-            baseRepoUrlPDB = os.path.join(baseUrlPDB, baseDirPDB)
+            baseRepoUrlPDB = os.path.join(baseUrlPDB, "pub/wwpdb")
             # addValues = {"_schema_version": collectionVersion}
             addValues = None
             #
