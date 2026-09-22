@@ -6,6 +6,8 @@
 # Update:
 #   6-Jul-2018. jdw generalize test case.
 #   9-Oct-2018  jdw only use the list cases and make pubmedid an int
+#  22-Sep-2026  dwp compare only stable provenance elements (software name/citation_id and
+#                   primary citation) against the remote assets file, rather than the full dict
 #
 ##
 """
@@ -112,6 +114,26 @@ class ProvenanceProviderTests(unittest.TestCase):
         endTime = time.time()
         logger.debug("Completed %s at %s (%.4f seconds)", self.id(), time.strftime("%Y %m %d %H:%M:%S", time.localtime()), endTime - self.__startTime)
 
+    def __assertProvenanceSubset(self, expectedD, fetchedD):
+        """Compare the stable subset of provenance content that should not change with routine
+        version/citation updates to the remote provenance file (py-rcsb_exdb_assets).
+        """
+        self.assertIn(self.__provKeyName, fetchedD)
+        eD = expectedD[self.__provKeyName]
+        fD = fetchedD[self.__provKeyName]
+        #
+        # Software names and their citation references
+        self.assertEqual(
+            [(sw["name"], sw["citation_id"]) for sw in eD["software"]],
+            [(sw["name"], sw["citation_id"]) for sw in fD["software"]],
+        )
+        #
+        # Primary citation
+        ePrimaryL = [cit for cit in eD["citation"] if cit["id"] == "primary"]
+        fPrimaryL = [cit for cit in fD["citation"] if cit["id"] == "primary"]
+        self.assertEqual(len(fPrimaryL), 1)
+        self.assertDictEqual(ePrimaryL[0], fPrimaryL[0])
+
     def testPrefetchProvenance(self):
         """Test case for pre-fetching cached provenance dictionary content."""
         try:
@@ -144,8 +166,7 @@ class ProvenanceProviderTests(unittest.TestCase):
             self.assertTrue(ok)
             #
             fD = provU.fetch()
-            self.assertTrue(self.__provKeyName in fD)
-            self.assertDictEqual(pD, fD)
+            self.__assertProvenanceSubset(pD, fD)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
@@ -162,8 +183,7 @@ class ProvenanceProviderTests(unittest.TestCase):
             self.assertTrue(ok)
             #
             fD = provU.fetch()
-            self.assertTrue(self.__provKeyName in fD)
-            self.assertDictEqual(pD, fD)
+            self.__assertProvenanceSubset(pD, fD)
         except Exception as e:
             logger.exception("Failing with %s", str(e))
             self.fail()
