@@ -18,6 +18,7 @@
 #  24-Jan-2022 dwp Exclude all categories beginning with "ma_" from being mandatory
 #                  (temporarily hardcoded here until new configuration file section added to achieve same effect)
 #   6-Aug-2025 dwp rename "databaseName" -> "collectionGroupName" to generalize terminology
+#  24-Sep-2026  bv concatenate multi-line attribute descriptions for better formatting in json schemas
 #
 ##
 """
@@ -552,7 +553,7 @@ class ContentDefinition(object):
             fD["TYPE_CODE"] = self.__dApi.getTypeCode(catName, atName)
             fD["TYPE_CODE_ALT"] = self.__dApi.getTypeCodeAlt(catName, atName)
             fD["IS_MANDATORY"] = True if str(self.__dApi.getMandatoryCode(catName, atName)).lower() in ["y", "yes"] else False
-            fD["DESCRIPTION"] = textwrap.dedent(self.__dApi.getDescription(catName, atName)).lstrip().rstrip()
+            fD["DESCRIPTION"] = " ".join(textwrap.dedent(self.__dApi.getDescription(catName, atName)).split())
             #
             fD["DESCRIPTION_ANNOTATED"] = [{"text": fD["DESCRIPTION"], "context": "dictionary"}]
             tS = self.__dApi.getDescriptionPdbx(catName, atName)
