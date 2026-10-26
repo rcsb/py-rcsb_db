@@ -19,6 +19,8 @@
 #      15-Sep-2026  dwp add fetchBatched() to page large result sets over successive short-lived
 #                       cursors (bounded per-batch timeout + retry), bound count() with a timeout,
 #                       and add estimatedCount() for informational collection counts
+#      26-Oct-2026  dwp batch deleteList() into one delete_many() per batch of key values ($in, or $or for
+#                       compound keys) instead of one per document
 ##
 """
 Base class for simple essential database operations for MongoDb.
@@ -319,7 +321,7 @@ class MongoDbUtil(object):
         """
         logger.info("Salvaging %s %s document list length %d", databaseName, collectionName, len(dList))
         dTupL = self.deleteList(databaseName, collectionName, dList, keyNames)
-        logger.info("Salvage bulk insert - deleting %d documents", len(dTupL))
+        logger.info("Salvage bulk insert - deleted %d documents", sum(n for _, n in dTupL))
         rIdL = self.insertListSerial(databaseName, collectionName, dList, keyNames)
         logger.info("Salvage bulk insert - salvaged document length %d", len(rIdL))
         return rIdL
@@ -428,46 +430,53 @@ class MongoDbUtil(object):
         #
         return rIdL
 
-    def deleteList(self, databaseName, collectionName, dList, keyNames):
-        """Delete the list of input documents based on a selection query by keyNames.
+    def deleteList(self, databaseName, collectionName, dList, keyNames, batchSize=1000):
+        """Delete all existing documents that share the keyNames values of the input documents.
 
+        The distinct key values across dList are removed with one delete_many() per batch of up to batchSize values
+        (an $in query for a single key name, or an $or of the per-document selections for compound keys), rather than
+        one delete_many() per document. Each delete waits for the configured write concern, so batching cuts the number
+        of round trips per load chunk from one per document to one per batch.
 
         Args:
             databaseName (str): Target database name
             collectionName (str): Target collection name
             dList (list): document list
             keyNames (list, optional): list of key names required to uniquely identify the object (dot notation)
+            batchSize (int, optional): maximum number of distinct key values per delete_many() call (default 1000)
 
         Returns:
-            list: (value tuple of key names, deletion count)
+            list: (selection query, deletion count) for each delete_many() call
 
         """
-        cD = {}
         delTupL = []
-        selectD = {}
         #
         self.testMongoObj()
         clt = self.__mgObj[databaseName].get_collection(collectionName)
         #
-        # NOTE: May want to look into grouping these into one single delete query instead of multiple individual ones,
-        #       and evaluating how much faster (if at all) that lets the workflow run. May be significant for CSMs.
-        #       If doing so, make sure that you only do so when the selectD has just one Key (e.g., not a paired key)
-        #       and make sure the delete query doesn't timeout too easily with this approach.
+        # Distinct selections in input order, e.g. {'rcsb_assembly_container_identifiers.entry_id': 'AF_AFQ06159F1'}
+        selectDL = []
+        cD = {}
         for dD in dList:  # each dD is an entire Mongo doc for an entry/entity/...
             kyVals = self.__getKeyValues(dD, keyNames)
             selectD = {ky: val for ky, val in zip(keyNames, kyVals)}
-            # Example 'selectD': {'rcsb_assembly_container_identifiers.entry_id': 'AF_AFQ06159F1'}
             tt = tuple(selectD.items())
             if tt in cD:
                 continue
             cD[tt] = True
-            rV = clt.delete_many(selectD)
-            try:
-                # delTupL.append((kyVals, r.deleted_count))
-                delTupL.append((selectD, rV.deleted_count))
-            except Exception as e:
-                logger.error("Failing %s and %s selectD %r with %s", databaseName, collectionName, selectD.items(), str(e))
-        logger.debug("%s %s deleted status %r", databaseName, collectionName, delTupL)
+            selectDL.append(selectD)
+        #
+        batchSize = max(int(batchSize), 1)
+        for ii in range(0, len(selectDL), batchSize):
+            batchL = selectDL[ii : ii + batchSize]
+            if len(keyNames) == 1:
+                ky = keyNames[0]
+                queryD = {ky: {"$in": [sD[ky] for sD in batchL]}}
+            else:
+                queryD = {"$or": batchL}
+            rV = clt.delete_many(queryD)
+            delTupL.append((queryD, rV.deleted_count))
+        logger.debug("%s %s deleted %d documents for %d selections in %d call(s)", databaseName, collectionName, sum(n for _, n in delTupL), len(selectDL), len(delTupL))
         #
         return delTupL
 
