@@ -5,6 +5,8 @@
 # Updates:
 #  6-Aug-2019  jdw build source and binary wheels by default.
 # 13-Aug-2019  jdw export config support token prior to launching tox runner
+#  2-Nov-2026  dwp run MongoDB 7.0 in Docker on linux, since MongoDB 8.0+ can't start on kernel 6.19+ (SERVER-121912),
+#                  and check that mongod is listening before running tests
 #
 ##
 parameters:
@@ -79,21 +81,24 @@ jobs:
       #
         # -----
       - ? ${{ if and(contains(parameters.fixtures, 'mongodb'), startsWith(parameters.os, 'linux')) }}
-        : # Mongo install
+        : # MongoDB 8.0+ refuses to start on the hosted agents' Linux kernel (6.19 and newer; https://jira.mongodb.org/browse/SERVER-121912),
+          # so run MongoDB 7.0 in Docker instead (7.0 has no Ubuntu 24.04 apt packages)
           - script: |
-              sudo apt-get install gnupg curl
-              curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-8.0.gpg --dearmor
-              sudo apt list --installed | grep mongodb
-              echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/8.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.0.list
-              sudo apt-get update
-              sudo apt-get install -y mongodb-org
-              sudo apt list --installed | grep mongo
-            displayName: "Installing mongodb"
-          #
-          - script: |
-              sudo service mongod start
-              sudo ss -tulpn
+              uname -r
+              docker run -d --name mongod -p 27017:27017 mongo:7.0
+              docker ps
             displayName: "Start Mongo service"
+          #
+          - bash: |
+              for i in $(seq 1 30); do
+                if timeout 1 bash -c '</dev/tcp/127.0.0.1/27017' 2>/dev/null; then echo "mongod is listening on port 27017"; docker exec mongod mongod --version | head -1; exit 0; fi
+                sleep 2
+              done
+              echo "mongod is not listening on port 27017"
+              docker ps -a
+              docker logs --tail 100 mongod || true
+              exit 1
+            displayName: "Check mongodb service"
         #
       #
       - script: 'python -c "import sys; print(sys.version); print(sys.executable)"'
