@@ -3,8 +3,13 @@
 # Author:  J. Westbrook
 # Date:  12-Jul-2018
 #
-# Note:  This module uses well sandbox and repository defined file names
-#        within the configuration defined RCSB exchange sandbox path.
+# NOTE: This file is NOT used in production (i.e., when discoveryMode=='remote')!
+#       It is only used when discoveryMode=='local', which is only the case in very specific testing environments.
+#       Instead, "RepoHoldingsRemoteDataPrep.py" is used.
+# TO-DO: Remove this file if/when the discoveryMode setting is deprecated.
+#
+# Note 2:  This module uses well sandbox and repository defined file names
+#          within the configuration defined RCSB exchange sandbox path.
 #
 # Update:
 # 16-Jul-2018 jdw adjust naming to current sandbox conventions.
@@ -680,13 +685,12 @@ class RepoHoldingsDataPrep(object):
         """
         retD = {}
         fields = []
-        logger.info("In self.__getHoldingsPrerelease - self.__sandboxPath: %r", self.__sandboxPath)
-        logger.info("In self.__getHoldingsPrerelease - dirPath: %r", dirPath)
+        logger.info("HoldingsPrerelease sandboxPath (%r) dirPath (%r)", self.__sandboxPath, dirPath)
         dirPath = dirPath if dirPath else self.__sandboxPath
         try:
             # Get prerelease sequence data
             fp = os.path.join(dirPath, "sequence", "pdb_seq_prerelease.fasta")
-            logger.info("In self.__getHoldingsPrerelease - Importing file fp: %r", fp)
+            logger.info("Importing prerelease sequence data file: %r", fp)
             sD = self.__mU.doImport(fp, "fasta", commentStyle="prerelease")
             seqD = {}
             for sid in sD:
