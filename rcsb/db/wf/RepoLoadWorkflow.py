@@ -17,6 +17,7 @@
 #  10-Sep-2025 js  Add support for bcif incremental update and IHM model loading
 #   6-Oct-2025 dwp Add support for load completion checking of 'core_chem_comp' collection
 #   9-Dec-2025 dwp Add more fine-grained load completion checking of 'pdbx_core' collections
+#   3-Nov-2026 mjt Fix getPdbHash for extended PDB IDs so bcif incremental update finds existing files
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -418,7 +419,9 @@ class RepoLoadWorkflow(object):
         return ok
 
     def getPdbHash(self, pdbid):
-        return pdbid[1:3]
+        # middle two characters of a 4-character ID or last-but-one two of an extended ID (e.g., 1abc -> ab, pdb_00001abc -> ab),
+        # matching the output path set by py-rcsb_workflow bcif task_functions.py
+        return pdbid[-3:-1]
 
     def getCsmHash(self, pdbid):
         return os.path.join(pdbid[0:2], pdbid[-6:-4], pdbid[-4:-2])
