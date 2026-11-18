@@ -18,7 +18,8 @@
 #                  Use indexes defined in py-rcsb_exdb_assets schemas and configuration
 #   6-Aug-2025 dwp Make use of schema configuration file for loading collections and setting indexed fields
 #   6-Oct-2025 dwp Turned OFF loading of "repository_holdings_update_entry" collection as part of transition to DW consolidation (since not used by anything)
-#  18-Nov-2026 dwp Use the archive holdings short links (same on the current and extended-id archives)
+#  18-Nov-2026 dwp Use the archive holdings short links (same on the current and extended-id archives);
+#                  remove the commented-out update holdings loading
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -220,6 +221,4 @@ class RepoHoldingsEtlWorker(object):
             dList = repoHoldingsDataPrep.getHoldingsCombinedEntry(updateId=updateId)
         elif repoType != "pdb_ihm" and "_removed_" in holdingsCollectionName.lower():
             dList = repoHoldingsDataPrep.getHoldingsRemovedEntry(updateId=updateId)
-        # elif repoType != "pdb_ihm" and "_update_" in holdingsCollectionName.lower():  # TURNED OFF 15-JUL-2025 for transition to DW loading (since not used by anything)
-        #     dList = repoHoldingsDataPrep.getHoldingsUpdateEntry(updateId=updateId)
         return dList

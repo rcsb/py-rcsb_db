@@ -79,7 +79,6 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
         collectionNames = {
             "repository_holdings": [
                 "repository_holdings_removed_entry",
-                "repository_holdings_update_entry",
                 "repository_holdings_current_entry",
                 "repository_holdings_unreleased_entry",
                 "repository_holdings_combined_entry",
@@ -123,12 +122,7 @@ class RepoHoldingsDataPrepValidateTests(unittest.TestCase):
         rL = []
         try:
             rhdp = RepoHoldingsRemoteDataPrep(cachePath=self.__cachePath)
-            if collectionName == "repository_holdings_update_entry":
-                rL = rhdp.getHoldingsUpdateEntry(updateId=updateId)
-                self.assertGreaterEqual(len(rL), 10)
-                logger.debug("update data length %r", len(rL))
-            #
-            elif collectionName == "repository_holdings_current_entry":
+            if collectionName == "repository_holdings_current_entry":
                 rL = rhdp.getHoldingsCurrentEntry(updateId=updateId)
                 self.assertGreaterEqual(len(rL), 10)
                 logger.debug("holdings data length %r", len(rL))
