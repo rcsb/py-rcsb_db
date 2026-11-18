@@ -390,3 +390,4 @@
   7-May-2026  V1.814 Configure logging at start of CLI executable scripts;
                      Add pre-check to MongoDbUtil methods to ensure MongoObj is not None
   4-Jun-2026  V1.815 Add logging statements for debugging
+  3-Nov-2026  V1.816 Fix getPdbHash for extended PDB IDs so bcif incremental update finds existing files
