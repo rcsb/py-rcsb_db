@@ -49,7 +49,8 @@
 #                      Add support for load completion checking of 'core_chem_comp' collection
 #      9-Dec-2025 dwp  Add more fine-grained load completion checking of 'pdbx_core' collections
 #     13-Jul-2026 dwp  Update PdbxLoader for providing an inputPathList instead of a list of ID codes (useful for manual testing)
-#     18-Nov-2026 dwp  Normalize pdbx_core input ID case by format (upper case short IDs, lower case extended IDs), as loaded rcsb_ids are
+#     18-Nov-2026 dwp  Normalize pdbx_core input ID case by format (upper case short IDs, lower case extended IDs), as loaded rcsb_ids are;
+#                      purge the intended purgeL (incl. entries whose files failed to read) instead of cNameL, with IDs normalized the same way
 ##
 """
 Worker methods for loading primary data content following mapping conventions in external schema definitions.
@@ -552,7 +553,7 @@ class PdbxLoader(object):
                     purgeL += [cN for cN in readFailL if cN not in purgeL]
                 for collectionName in collectionNameList:
                     logger.info("Purging objects from %s collection %s for %d containers", databaseNameMongo, collectionName, len(purgeL))
-                    ok = self.__purgeDocuments(databaseNameMongo, collectionName, cNameL)
+                    ok = self.__purgeDocuments(databaseNameMongo, collectionName, purgeL)
                     logger.info("%s %s - loadType %r purgeL %r (%r)", databaseNameMongo, collectionName, loadType, purgeL, ok)
             #
             # -- Apply methods to each container
@@ -931,7 +932,7 @@ class PdbxLoader(object):
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
                 for cardId in cardinalIdL:
-                    selectD = {"rcsb_id": {"$regex": f"^{cardId}{regexEnd}"}}  # case-sensitive (avoid case-insensitive -- very slow performance)
+                    selectD = {"rcsb_id": {"$regex": f"^{normalizeEntryId(cardId)}{regexEnd}"}}  # case-sensitive (avoid case-insensitive -- very slow performance)
                     dCount = mg.delete(databaseName, collectionName, selectD)
                     logger.debug("Remove %d objects in database %s collection %s selection %r", dCount, databaseName, collectionName, selectD)
             return True
