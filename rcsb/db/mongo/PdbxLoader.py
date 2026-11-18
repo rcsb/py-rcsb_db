@@ -49,6 +49,7 @@
 #                      Add support for load completion checking of 'core_chem_comp' collection
 #      9-Dec-2025 dwp  Add more fine-grained load completion checking of 'pdbx_core' collections
 #     13-Jul-2026 dwp  Update PdbxLoader for providing an inputPathList instead of a list of ID codes (useful for manual testing)
+#     18-Nov-2026 dwp  Normalize pdbx_core input ID case by format (upper case short IDs, lower case extended IDs), as loaded rcsb_ids are
 ##
 """
 Worker methods for loading primary data content following mapping conventions in external schema definitions.
@@ -81,6 +82,7 @@ from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
 from rcsb.db.processors.DataTransformFactory import DataTransformFactory
 from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
+from rcsb.utils.repository.RepositoryHelper import normalizeEntryId
 from rcsb.utils.repository.RepositoryProvider import RepositoryProvider
 from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
@@ -239,7 +241,7 @@ class PdbxLoader(object):
             # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
             inputIdCodeList = inputIdCodeList if inputIdCodeList else []
             if collectionGroupName in ["pdbx_core"]:
-                inputIdCodeList = [id.lower() for id in inputIdCodeList]  # extended PDB IDs are lowercase
+                inputIdCodeList = [normalizeEntryId(id) for id in inputIdCodeList]  # short PDB IDs are uppercase, extended PDB IDs lowercase
             else:
                 inputIdCodeList = [id.upper() for id in inputIdCodeList]  # CSM and bird/chem comp IDs are uppercase
             #
