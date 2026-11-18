@@ -19,7 +19,9 @@
 #   6-Aug-2025 dwp Make use of schema configuration file for loading collections and setting indexed fields
 #   6-Oct-2025 dwp Turned OFF loading of "repository_holdings_update_entry" collection as part of transition to DW consolidation (since not used by anything)
 #  18-Nov-2026 dwp Use the archive holdings short links (same on the current and extended-id archives);
-#                  remove the commented-out update holdings loading
+#                  remove the commented-out update holdings loading; fail when a holdings collection gets no documents
+#                  (missing or unreadable holdings file), except IHM removed holdings (no such file) and an empty but
+#                  present IHM unreleased holdings file
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -37,6 +39,7 @@ from rcsb.db.processors.RepoHoldingsRemoteDataPrep import RepoHoldingsRemoteData
 from rcsb.db.mongo.Connection import Connection
 from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
 from rcsb.db.utils.SchemaProvider import SchemaProvider
+from rcsb.utils.io.FileUtil import FileUtil
 from rcsb.utils.repository.RepositoryHelper import getHoldingsUrl, getRepositoryRootUrl
 
 logger = logging.getLogger(__name__)
@@ -141,6 +144,10 @@ class RepoHoldingsEtlWorker(object):
                 dList = self.__getHoldingsDocList(repoType, collectionName, rhdp, updateId)
                 if dList:
                     ok = dl.load(self.__databaseNameMongo, collectionName, loadType=loadType, documentList=dList, keyNames=None, addValues=addValues, indexDL=indexDL) and ok
+                elif not self.__isEmptyHoldingsExpected(repoType, collectionName, kwD, discoveryMode):
+                    # No documents means a missing or unreadable holdings file: fail instead of silently keeping the previous data
+                    logger.error("No %r holdings documents for collection %r (holdings file missing or empty?)", repoType, collectionName)
+                    ok = False
                 self.__updateStatus(updateId, self.__databaseNameMongo, collectionName, ok, statusStartTimestamp)
                 logger.info(
                     "Completed load of repository holdings for repoType %r, database %r, collection %r, len(dList) %r (status %r)",
@@ -210,6 +217,23 @@ class RepoHoldingsEtlWorker(object):
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return loadedRcsbIdL
+
+    def __isEmptyHoldingsExpected(self, repoType, holdingsCollectionName, kwD, discoveryMode):
+        """Return True if no holdings documents are expected for this collection (only possible for IHM)."""
+        if repoType != "pdb_ihm":
+            return False
+        if "_removed_" in holdingsCollectionName.lower():
+            return True  # there are no removed IHM holdings (no such holdings file)
+        if "_unreleased_" in holdingsCollectionName.lower():
+            if discoveryMode == "local":
+                return True
+            # The IHM unreleased holdings file may legitimately be empty, but it must exist
+            url = os.path.join(kwD["holdingsTargetUrl"], "unreleased_entries.json.gz")
+            if FileUtil().exists(url):
+                logger.info("IHM unreleased holdings file %s is empty", url)
+                return True
+            logger.error("IHM unreleased holdings file %s not found", url)
+        return False
 
     def __getHoldingsDocList(self, repoType, holdingsCollectionName, repoHoldingsDataPrep, updateId):
         dList = []
