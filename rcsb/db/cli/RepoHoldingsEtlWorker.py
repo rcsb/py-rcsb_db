@@ -18,6 +18,7 @@
 #                  Use indexes defined in py-rcsb_exdb_assets schemas and configuration
 #   6-Aug-2025 dwp Make use of schema configuration file for loading collections and setting indexed fields
 #   6-Oct-2025 dwp Turned OFF loading of "repository_holdings_update_entry" collection as part of transition to DW consolidation (since not used by anything)
+#  18-Nov-2026 dwp Use the archive holdings short links (same on the current and extended-id archives)
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -35,6 +36,7 @@ from rcsb.db.processors.RepoHoldingsRemoteDataPrep import RepoHoldingsRemoteData
 from rcsb.db.mongo.Connection import Connection
 from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
 from rcsb.db.utils.SchemaProvider import SchemaProvider
+from rcsb.utils.repository.RepositoryHelper import getHoldingsUrl, getRepositoryRootUrl
 
 logger = logging.getLogger(__name__)
 
@@ -100,16 +102,14 @@ class RepoHoldingsEtlWorker(object):
             statusStartTimestamp = desp.setStartTime()
             # ---
             discoveryMode = self.__cfgOb.get("DISCOVERY_MODE", sectionName=self.__cfgSectionName, default="remote")
-            baseUrlPDB = self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__cfgSectionName, default="https://files-beta.wwpdb.org")
-            baseRepoUrlPDB = os.path.join(baseUrlPDB, "pub/wwpdb")
+            baseUrlPDB = getRepositoryRootUrl(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__cfgSectionName))
             # addValues = {"_schema_version": collectionVersion}
             addValues = None
             #
             kwD = {
                 "repoType": repoType,  # either "pdb" or "pdb_ihm"
-                "holdingsTargetUrl": os.path.join(baseRepoUrlPDB, repoType, "holdings"),
-                "updateTargetUrl": os.path.join(baseRepoUrlPDB, repoType, "data", "status", "latest"),  # Doesn't exist for IHM
-                "refHoldingsTargetUrl": os.path.join(baseRepoUrlPDB, "refdata", "derived_data", "refdata_id_list.json.gz"),
+                "holdingsTargetUrl": getHoldingsUrl(baseUrlPDB, repoType),
+                "refHoldingsTargetUrl": os.path.join(getHoldingsUrl(baseUrlPDB, "refdata"), "refdata_id_list.json.gz"),
                 "filterType": self.__filterType,
             }
             # ---
