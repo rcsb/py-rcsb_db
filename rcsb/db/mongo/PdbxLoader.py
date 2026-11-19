@@ -50,7 +50,8 @@
 #      9-Dec-2025 dwp  Add more fine-grained load completion checking of 'pdbx_core' collections
 #     13-Jul-2026 dwp  Update PdbxLoader for providing an inputPathList instead of a list of ID codes (useful for manual testing)
 #     18-Nov-2026 dwp  Normalize pdbx_core input ID case by format (upper case short IDs, lower case extended IDs), as loaded rcsb_ids are;
-#                      purge the intended purgeL (incl. entries whose files failed to read) instead of cNameL, with IDs normalized the same way
+#                      purge the intended purgeL (incl. entries whose files failed to read) instead of cNameL, with IDs normalized the same way;
+#                      wrap an over-long line (flake8 E501)
 ##
 """
 Worker methods for loading primary data content following mapping conventions in external schema definitions.
@@ -253,7 +254,9 @@ class PdbxLoader(object):
                 if collectionGroupName in ["pdbx_core", "pdbx_comp_model_core"]:
                     structDetermMethod = self.__getStructDetermMethod(contentType=contentType)
                     #
-                    totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseNameMongo, collectionName=collectionGroupName + "_entry", structDetermMethod=structDetermMethod)
+                    totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(
+                        databaseName=databaseNameMongo, collectionName=collectionGroupName + "_entry", structDetermMethod=structDetermMethod
+                    )
                     # Get the list of IDs from only the given sublist that are already loaded
                     subsetIdsAlreadyLoaded = list(set(totalIdsAlreadyLoaded).intersection(set(inputIdCodeList)))
                     if not forceReload:
