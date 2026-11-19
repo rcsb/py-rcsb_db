@@ -48,6 +48,10 @@
 #      6-Oct-2025 dwp  Turned OFF loading and checking of "repository_holdings_update_entry" collection as part of transition to DW consolidation (since not used by anything);
 #                      Add support for load completion checking of 'core_chem_comp' collection
 #      9-Dec-2025 dwp  Add more fine-grained load completion checking of 'pdbx_core' collections
+#     13-Jul-2026 dwp  Update PdbxLoader for providing an inputPathList instead of a list of ID codes (useful for manual testing)
+#     18-Nov-2026 dwp  Normalize pdbx_core input ID case by format (upper case short IDs, lower case extended IDs), as loaded rcsb_ids are;
+#                      purge the intended purgeL (incl. entries whose files failed to read) instead of cNameL, with IDs normalized the same way;
+#                      wrap an over-long line (flake8 E501)
 ##
 """
 Worker methods for loading primary data content following mapping conventions in external schema definitions.
@@ -80,9 +84,11 @@ from rcsb.db.mongo.DocumentLoader import DocumentLoader
 from rcsb.db.processors.DataExchangeStatus import DataExchangeStatus
 from rcsb.db.processors.DataTransformFactory import DataTransformFactory
 from rcsb.db.processors.SchemaDefDataPrep import SchemaDefDataPrep
+from rcsb.utils.repository.RepositoryHelper import normalizeEntryId
 from rcsb.utils.repository.RepositoryProvider import RepositoryProvider
 from rcsb.db.utils.SchemaProvider import SchemaProvider
 from rcsb.utils.multiproc.MultiProcUtil import MultiProcUtil
+# from rcsb.utils.io.MarshalUtil import MarshalUtil
 
 logger = logging.getLogger(__name__)
 
@@ -236,36 +242,47 @@ class PdbxLoader(object):
             #
             # -- Check database to see if any entries have already been loaded, and determine the delta for the current load
             inputIdCodeList = inputIdCodeList if inputIdCodeList else []
-            inputIdCodeList = [id.upper() for id in inputIdCodeList]
-            if collectionGroupName in ["pdbx_core", "pdbx_comp_model_core"]:
-                structDetermMethod = self.__getStructDetermMethod(contentType=contentType)
-                #
-                totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(databaseName=databaseNameMongo, collectionName=collectionGroupName + "_entry", structDetermMethod=structDetermMethod)
-                # Get the list of IDs from only the given sublist that are already loaded
-                subsetIdsAlreadyLoaded = list(set(totalIdsAlreadyLoaded).intersection(set(inputIdCodeList)))
-                if not forceReload:
-                    # Get a list of the delta between the two lists—-i.e., the entry IDs needed to be loaded
-                    idCodesToLoadL = list(set(inputIdCodeList) ^ set(subsetIdsAlreadyLoaded))
-                else:
-                    idCodesToLoadL = inputIdCodeList
-                logger.info(
-                    "Total # IDs already loaded %d, # IDs provided as input %d (of which %d are already loaded), # IDs to load for current iteration %d",
-                    len(totalIdsAlreadyLoaded),
-                    len(inputIdCodeList),
-                    len(subsetIdsAlreadyLoaded),
-                    len(idCodesToLoadL)
-                )
-                # Check if all entries are already loaded, and if so, exit here.
-                if len(idCodesToLoadL) == 0:
-                    logger.info("All entries for current iteration already loaded. Skipping re-load.")
-                    return True
-                #
-                if len(idCodesToLoadL) < 100:
-                    logger.info("List of entries to load: %r", idCodesToLoadL)
-            #
+            if collectionGroupName in ["pdbx_core"]:
+                inputIdCodeList = [normalizeEntryId(id) for id in inputIdCodeList]  # short PDB IDs are uppercase, extended PDB IDs lowercase
             else:
-                # For "bird_chem_comp_core":
-                idCodesToLoadL = inputIdCodeList
+                inputIdCodeList = [id.upper() for id in inputIdCodeList]  # CSM and bird/chem comp IDs are uppercase
+            #
+            if inputPathList:
+                # If a full path list is provided, don't pass any input IDs (full path list takes priority)
+                idCodesToLoadL = []
+            else:
+                if collectionGroupName in ["pdbx_core", "pdbx_comp_model_core"]:
+                    structDetermMethod = self.__getStructDetermMethod(contentType=contentType)
+                    #
+                    totalIdsAlreadyLoaded = self.__getLoadedRcsbIdList(
+                        databaseName=databaseNameMongo, collectionName=collectionGroupName + "_entry", structDetermMethod=structDetermMethod
+                    )
+                    # Get the list of IDs from only the given sublist that are already loaded
+                    subsetIdsAlreadyLoaded = list(set(totalIdsAlreadyLoaded).intersection(set(inputIdCodeList)))
+                    if not forceReload:
+                        # Get a list of the delta between the two lists—-i.e., the entry IDs needed to be loaded
+                        idCodesToLoadL = list(set(inputIdCodeList) ^ set(subsetIdsAlreadyLoaded))
+                    else:
+                        idCodesToLoadL = inputIdCodeList
+                    logger.info(
+                        "Total # IDs already loaded %d, # IDs provided as input %d (of which %d are already loaded), # IDs to load for current iteration %d",
+                        len(totalIdsAlreadyLoaded),
+                        len(inputIdCodeList),
+                        len(subsetIdsAlreadyLoaded),
+                        len(idCodesToLoadL)
+                    )
+                    # Check if all entries are already loaded, and if so, exit here.
+                    if len(idCodesToLoadL) == 0:
+                        logger.info("All entries for current iteration already loaded. Skipping re-load.")
+                        return True
+                    #
+                    if len(idCodesToLoadL) < 100:
+                        logger.info("List of entries to load: %r", idCodesToLoadL)
+                #
+                else:
+                    # For "bird_chem_comp_core":
+                    idCodesToLoadL = inputIdCodeList
+            #
             locatorObjList = self.__rpP.getLocatorObjList(contentType=contentType, inputPathList=inputPathList, inputIdCodeList=idCodesToLoadL, mergeContentTypes=mergeContentTypes)
             logger.info("Loading collection group %s (%r) with path length %d", collectionGroupName, loadType, len(locatorObjList))
             logger.info("First locatorObj: %r", locatorObjList[0])
@@ -518,7 +535,7 @@ class PdbxLoader(object):
             for locatorObj in dataList:  # len(dataList) is of size chunkSize
                 cL = self.__rpP.getContainerList([locatorObj])
                 if cL:
-                    cNameL.append(cL[0].getName().upper().strip())
+                    cNameL.append(cL[0].getName().strip())
                     cId = cL[0].getName() if useNameFlag else cL[0].getProp("uid")
                     cIdD[cId] = locatorObj
                     containerList.extend(cL)
@@ -539,7 +556,7 @@ class PdbxLoader(object):
                     purgeL += [cN for cN in readFailL if cN not in purgeL]
                 for collectionName in collectionNameList:
                     logger.info("Purging objects from %s collection %s for %d containers", databaseNameMongo, collectionName, len(purgeL))
-                    ok = self.__purgeDocuments(databaseNameMongo, collectionName, cNameL)
+                    ok = self.__purgeDocuments(databaseNameMongo, collectionName, purgeL)
                     logger.info("%s %s - loadType %r purgeL %r (%r)", databaseNameMongo, collectionName, loadType, purgeL, ok)
             #
             # -- Apply methods to each container
@@ -860,7 +877,7 @@ class PdbxLoader(object):
                 return cName
             #
             fName = os.path.basename(locator)
-            cName = fName.split(".")[0].upper()
+            cName = fName.split(".")[0]
         #
         except Exception as e:
             logger.exception("Failing to determine container name for %r with %s", locatorObj, str(e))
@@ -918,7 +935,7 @@ class PdbxLoader(object):
             with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
                 mg = MongoDbUtil(client)
                 for cardId in cardinalIdL:
-                    selectD = {"rcsb_id": {"$regex": f"^{cardId.upper()}{regexEnd}"}}  # case-sensitive (avoid case-insensitive -- very slow performance)
+                    selectD = {"rcsb_id": {"$regex": f"^{normalizeEntryId(cardId)}{regexEnd}"}}  # case-sensitive (avoid case-insensitive -- very slow performance)
                     dCount = mg.delete(databaseName, collectionName, selectD)
                     logger.debug("Remove %d objects in database %s collection %s selection %r", dCount, databaseName, collectionName, selectD)
             return True

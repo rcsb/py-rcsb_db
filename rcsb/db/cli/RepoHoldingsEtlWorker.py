@@ -18,6 +18,10 @@
 #                  Use indexes defined in py-rcsb_exdb_assets schemas and configuration
 #   6-Aug-2025 dwp Make use of schema configuration file for loading collections and setting indexed fields
 #   6-Oct-2025 dwp Turned OFF loading of "repository_holdings_update_entry" collection as part of transition to DW consolidation (since not used by anything)
+#  18-Nov-2026 dwp Use the archive holdings short links (same on the current and extended-id archives);
+#                  remove the commented-out update holdings loading; fail when a holdings collection gets no documents
+#                  (missing or unreadable holdings file), except IHM removed holdings (no such file) and an empty but
+#                  present IHM unreleased holdings file
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -35,6 +39,8 @@ from rcsb.db.processors.RepoHoldingsRemoteDataPrep import RepoHoldingsRemoteData
 from rcsb.db.mongo.Connection import Connection
 from rcsb.db.mongo.MongoDbUtil import MongoDbUtil
 from rcsb.db.utils.SchemaProvider import SchemaProvider
+from rcsb.utils.io.FileUtil import FileUtil
+from rcsb.utils.repository.RepositoryHelper import getHoldingsUrl, getRepositoryRootUrl
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +66,8 @@ class RepoHoldingsEtlWorker(object):
         self.__collectionGroupName = "repository_holdings"
         self.__schP = SchemaProvider(self.__cfgOb, self.__cachePath)
         self.__databaseNameMongo = self.__schP.getDatabaseMongoName(collectionGroupName=self.__collectionGroupName)
-        logger.info("In RepoHoldingsEtlWorker - self.__sandboxPath: %r", self.__sandboxPath)
+        #
+        logger.debug("Current sandboxPath: %r", self.__sandboxPath)  # This is None in production, at least as of 2026-06-08
 
     def __updateStatus(self, updateId, databaseName, collectionName, status, startTimestamp):
         try:
@@ -98,18 +105,15 @@ class RepoHoldingsEtlWorker(object):
             desp = DataExchangeStatus()
             statusStartTimestamp = desp.setStartTime()
             # ---
-            discoveryMode = self.__cfgOb.get("DISCOVERY_MODE", sectionName=self.__cfgSectionName, default="local")
-            baseUrlPDB = self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__cfgSectionName, default="https://files.wwpdb.org/pub")
-            fallbackUrlPDB = self.__cfgOb.getPath("PDB_REPO_FALLBACK_URL", sectionName=self.__cfgSectionName, default="https://files.wwpdb.org/pub")
+            discoveryMode = self.__cfgOb.get("DISCOVERY_MODE", sectionName=self.__cfgSectionName, default="remote")
+            baseUrlPDB = getRepositoryRootUrl(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__cfgSectionName))
             # addValues = {"_schema_version": collectionVersion}
             addValues = None
             #
             kwD = {
                 "repoType": repoType,  # either "pdb" or "pdb_ihm"
-                "holdingsTargetUrl": os.path.join(baseUrlPDB, repoType, "holdings"),
-                "holdingsFallbackUrl": os.path.join(fallbackUrlPDB, repoType, "holdings"),
-                "updateTargetUrl": os.path.join(baseUrlPDB, repoType, "data", "status", "latest"),
-                "updateFallbackUrl": os.path.join(fallbackUrlPDB, repoType, "data", "status", "latest"),
+                "holdingsTargetUrl": getHoldingsUrl(baseUrlPDB, repoType),
+                "refHoldingsTargetUrl": os.path.join(getHoldingsUrl(baseUrlPDB, "refdata"), "refdata_id_list.json.gz"),
                 "filterType": self.__filterType,
             }
             # ---
@@ -140,6 +144,10 @@ class RepoHoldingsEtlWorker(object):
                 dList = self.__getHoldingsDocList(repoType, collectionName, rhdp, updateId)
                 if dList:
                     ok = dl.load(self.__databaseNameMongo, collectionName, loadType=loadType, documentList=dList, keyNames=None, addValues=addValues, indexDL=indexDL) and ok
+                elif not self.__isEmptyHoldingsExpected(repoType, collectionName, kwD, discoveryMode):
+                    # No documents means a missing or unreadable holdings file: fail instead of silently keeping the previous data
+                    logger.error("No %r holdings documents for collection %r (holdings file missing or empty?)", repoType, collectionName)
+                    ok = False
                 self.__updateStatus(updateId, self.__databaseNameMongo, collectionName, ok, statusStartTimestamp)
                 logger.info(
                     "Completed load of repository holdings for repoType %r, database %r, collection %r, len(dList) %r (status %r)",
@@ -210,6 +218,23 @@ class RepoHoldingsEtlWorker(object):
             logger.exception("Failing with %s", str(e))
         return loadedRcsbIdL
 
+    def __isEmptyHoldingsExpected(self, repoType, holdingsCollectionName, kwD, discoveryMode):
+        """Return True if no holdings documents are expected for this collection (only possible for IHM)."""
+        if repoType != "pdb_ihm":
+            return False
+        if "_removed_" in holdingsCollectionName.lower():
+            return True  # there are no removed IHM holdings (no such holdings file)
+        if "_unreleased_" in holdingsCollectionName.lower():
+            if discoveryMode == "local":
+                return True
+            # The IHM unreleased holdings file may legitimately be empty, but it must exist
+            url = os.path.join(kwD["holdingsTargetUrl"], "unreleased_entries.json.gz")
+            if FileUtil().exists(url):
+                logger.info("IHM unreleased holdings file %s is empty", url)
+                return True
+            logger.error("IHM unreleased holdings file %s not found", url)
+        return False
+
     def __getHoldingsDocList(self, repoType, holdingsCollectionName, repoHoldingsDataPrep, updateId):
         dList = []
         if "_current_" in holdingsCollectionName.lower():
@@ -220,6 +245,4 @@ class RepoHoldingsEtlWorker(object):
             dList = repoHoldingsDataPrep.getHoldingsCombinedEntry(updateId=updateId)
         elif repoType != "pdb_ihm" and "_removed_" in holdingsCollectionName.lower():
             dList = repoHoldingsDataPrep.getHoldingsRemovedEntry(updateId=updateId)
-        # elif repoType != "pdb_ihm" and "_update_" in holdingsCollectionName.lower():  # TURNED OFF 15-JUL-2025 for transition to DW loading (since not used by anything)
-        #     dList = repoHoldingsDataPrep.getHoldingsUpdateEntry(updateId=updateId)
         return dList
