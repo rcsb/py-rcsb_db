@@ -31,6 +31,7 @@
 #                 (note that this file is only used when discoveryMode=='local')
 # 16-Oct-2024 dwp Remove usage of EDMAPS holdings file (again, note that this file is only used when discoveryMode=='local')
 #  7-Apr-2025 dwp Don't load empty 'assembly_ids' array
+# 18-Nov-2026 dwp Removed entries: id_codes_replaced_by case by ID format (normalizeEntryId) instead of upper case
 ##
 
 __docformat__ = "restructuredtext en"
@@ -44,6 +45,7 @@ import os
 
 import dateutil.parser
 from rcsb.utils.io.MarshalUtil import MarshalUtil
+from rcsb.utils.repository.RepositoryHelper import normalizeEntryId
 
 logger = logging.getLogger(__name__)
 
@@ -635,7 +637,7 @@ class RepoHoldingsDataPrep(object):
                 rbL = dT["obsoletedBy"] if "obsoletedBy" in dT else []
                 d1 = {"title": dT["title"], "details": dT["details"], "audit_authors": dT["depositionAuthors"]}
                 if rbL:
-                    d1["id_codes_replaced_by"] = [t.upper() for t in rbL]
+                    d1["id_codes_replaced_by"] = [normalizeEntryId(t) for t in rbL]
                 if ctL:
                     d1["repository_content_types"] = ctL
 

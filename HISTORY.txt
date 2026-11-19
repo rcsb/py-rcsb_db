@@ -395,4 +395,5 @@
                      archive short links (RepositoryHelper, rcsb.utils.repository >= 0.53; rcsb/jshortlink#14); PdbxLoader
                      input and purge IDs normalized by ID format, and entries that fail to read are purged before a
                      replace load; the holdings load fails when a holdings collection gets no documents; remove the
-                     update holdings (UpdateHoldingsProvider)
+                     update holdings (UpdateHoldingsProvider); local-mode removed holdings: id_codes_replaced_by case by
+                     ID format (was upper case)
