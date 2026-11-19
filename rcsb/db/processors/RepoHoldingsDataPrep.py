@@ -6,7 +6,7 @@
 # NOTE: This file is NOT used in production (i.e., when discoveryMode=='remote')!
 #       It is only used when discoveryMode=='local', which is only the case in very specific testing environments.
 #       Instead, "RepoHoldingsRemoteDataPrep.py" is used.
-# TODO: Remove this file if/when the discoveryMode setting is deprecated.
+# TODO: Remove this file if/when the discoveryMode setting is deprecated.  # pylint: disable=fixme
 #
 # Note 2:  This module uses well sandbox and repository defined file names
 #          within the configuration defined RCSB exchange sandbox path.

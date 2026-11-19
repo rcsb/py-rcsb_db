@@ -332,7 +332,7 @@ class RepoLoadWorkflow(object):
         #
         mU = MarshalUtil(workPath=self.__cachePath)
         #
-        # TODO: clean this upper() and lower() business up (but make sure to avoid creating issues for other workflows that use this, like BCIF)
+        # TODO: clean this upper() and lower() business up (but make sure to avoid creating issues for other workflows that use this, like BCIF)  # pylint: disable=fixme
         #
         if contentType == "pdbx_core":
             # Get list of ALL entries to be loaded for the current update cycle
