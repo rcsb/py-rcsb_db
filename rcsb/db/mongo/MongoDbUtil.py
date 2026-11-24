@@ -21,6 +21,8 @@
 #                       and add estimatedCount() for informational collection counts
 #      26-Oct-2026  dwp batch deleteList() into one delete_many() per batch of key values ($in, or $or for
 #                       compound keys) instead of one per document
+#      24-Nov-2026  dwp add optional projectionD to fetch()/fetchBatched() (full projection document, e.g. with
+#                       aggregation expressions such as $filter) as an alternative to selectL
 ##
 """
 Base class for simple essential database operations for MongoDb.
@@ -580,6 +582,9 @@ class MongoDbUtil(object):
             batchTimeoutSeconds (int, optional): per-batch timeout. Defaults to DEFAULT_FETCH_BATCH_TIMEOUT_SECONDS.
             maxRetries (int, optional): attempts per batch. Defaults to DEFAULT_FETCH_MAX_RETRIES.
             retryDelaySeconds (int, optional): base retry backoff. Defaults to DEFAULT_FETCH_RETRY_DELAY_SECONDS.
+            projectionD (dict, optional): projection document used instead of selectL/suppressId, e.g. to apply
+                aggregation expressions such as $filter server-side. The paging key is added (and stripped from
+                the returned documents) if the projection would leave it out. Defaults to None.
 
         Returns:
             list: list of documents -- an EMPTY list means the query matched no documents;
@@ -607,6 +612,7 @@ class MongoDbUtil(object):
         batchTimeoutSeconds=DEFAULT_FETCH_BATCH_TIMEOUT_SECONDS,
         maxRetries=DEFAULT_FETCH_MAX_RETRIES,
         retryDelaySeconds=DEFAULT_FETCH_RETRY_DELAY_SECONDS,
+        projectionD=None,
     ):
         """Generator yielding successive batches of documents satisfying the input query constraints.
 
@@ -632,7 +638,12 @@ class MongoDbUtil(object):
         self.testMongoObj()
         batchSize = DEFAULT_FETCH_BATCH_SIZE if batchSize is None else int(batchSize)
         maxRetries = max(1, int(maxRetries))
-        projectionD, stripSortKey = self.__makeFetchProjection(selectL, suppressId, sortKey)
+        if projectionD is not None and selectL:
+            raise ValueError("Provide either selectL or projectionD, not both")
+        if projectionD is not None:
+            projectionD, stripSortKey = self.__completeFetchProjection(projectionD, sortKey)
+        else:
+            projectionD, stripSortKey = self.__makeFetchProjection(selectL, suppressId, sortKey)
         clt = self.__mgObj[databaseName].get_collection(collectionName)
         #
         if batchSize <= 0:
@@ -737,6 +748,32 @@ class MongoDbUtil(object):
                 sD["_id"] = 1
                 stripSortKey = True
         elif sortKey not in sD:
+            sD[sortKey] = 1
+            stripSortKey = True
+        return sD, stripSortKey
+
+    @staticmethod
+    def __completeFetchProjection(projectionD, sortKey):
+        """Make sure a caller-supplied projection returns 'sortKey', which paging needs.
+
+        Returns:
+            (dict, bool): projection document, and a flag indicating whether 'sortKey' was added solely to
+            support paging and so must be removed from the documents handed back to the caller.
+        """
+        sD = dict(projectionD)
+        if not sD:
+            return None, False
+        # An exclusion projection lists only fields set to 0/False ('_id' may appear in either kind)
+        isExclusion = all(v in (0, False) and not isinstance(v, dict) for k, v in sD.items() if k != "_id")
+        stripSortKey = False
+        if sD.get(sortKey, None) in (0, False) and not isinstance(sD.get(sortKey), dict):
+            if sortKey == "_id" or isExclusion:
+                if sortKey == "_id":
+                    sD["_id"] = 1
+                else:
+                    sD.pop(sortKey)
+                stripSortKey = True
+        elif not isExclusion and sortKey not in sD and sortKey != "_id":  # '_id' is returned unless excluded
             sD[sortKey] = 1
             stripSortKey = True
         return sD, stripSortKey
