@@ -11,6 +11,8 @@
 #     1-Apr-2018 jdw update test connectionse
 #     6-Sep-2018 jdw add schema validation tests
 #     8-Jan-2019 jdw add tests for loading and recovering translated XML character references
+#    24-Nov-2026 dwp add testFetchProjection for fetch()/fetchBatched() with a projection document (projectionD),
+#                    and testFetchOptions for the configured paged-fetch/count defaults (MongoDbUtil(..., cfgOb=...))
 ##
 """
 Test cases for simple MongoDb client operations.
@@ -49,6 +51,8 @@ class MongoDbUtilTests(unittest.TestCase):
         #
         configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
         configName = "site_info_configuration"
+        self.__configPath = configPath
+        self.__configName = configName
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName)
         self.__resourceName = "MONGO_DB"
         self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName, sectionName=configName)
@@ -640,6 +644,117 @@ class MongoDbUtilTests(unittest.TestCase):
             logger.exception("Failing with %s", str(e))
             self.fail()
 
+    def testFetchProjection(self):
+        """Test case -  fetch()/fetchBatched() with a projection document (projectionD), incl. expressions and paging."""
+        try:
+            with Connection(cfgOb=self.__cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client)
+                ok = mg.createCollection(self.__dbName, self.__collectionName)
+                self.assertTrue(ok)
+                ok = mg.createIndex(self.__dbName, self.__collectionName, keyList=["DOC_NUM"], indexName="primary", indexType="DESCENDING", uniqueFlag=True)
+                self.assertTrue(ok)
+                nDocs = 25
+                dList = []
+                for ii in range(nDocs):
+                    dList.append(
+                        {
+                            "DOC_NUM": ii,
+                            "DOC_ID": "DOC_%d" % ii,
+                            "container": {"entry_id": "ENTRY_%d" % (ii // 3)},
+                            "features": [{"type": "A", "values": [ii, ii + 1]}, {"type": "B", "values": [ii]}, {"type": "C", "values": []}],
+                        }
+                    )
+                rIdL = mg.insertList(self.__dbName, self.__collectionName, dList, keyNames=["DOC_ID"], salvage=True)
+                self.assertEqual(len(rIdL), nDocs)
+                filterD = {"$filter": {"input": "$features", "as": "f", "cond": {"$in": ["$$f.type", ["A", "C"]]}}}
+                #
+                # Expression projection, '_id' excluded (paging adds and strips it), several batches
+                projD = {"_id": 0, "DOC_ID": 1, "entry_id": "$container.entry_id", "features": filterD}
+                batchL = list(mg.fetchBatched(self.__dbName, self.__collectionName, None, projectionD=projD, batchSize=10))
+                self.assertEqual([len(bL) for bL in batchL], [10, 10, 5])
+                rL = [dD for bL in batchL for dD in bL]
+                self.assertEqual([dD["DOC_ID"] for dD in rL], ["DOC_%d" % ii for ii in range(nDocs)])  # _id (insert) order
+                for ii, dD in enumerate(rL):
+                    self.assertEqual(set(dD.keys()), {"DOC_ID", "entry_id", "features"})
+                    self.assertEqual(dD["entry_id"], "ENTRY_%d" % (ii // 3))
+                    self.assertEqual([fD["type"] for fD in dD["features"]], ["A", "C"])
+                    self.assertEqual(dD["features"][0]["values"], [ii, ii + 1])
+                #
+                # Query constraint plus a non-'_id' paging key that the projection leaves out (added and stripped)
+                rL = mg.fetch(self.__dbName, self.__collectionName, None, queryD={"DOC_NUM": {"$gte": 5}}, projectionD={"_id": 0, "features": filterD}, batchSize=4, sortKey="DOC_NUM")
+                self.assertEqual(len(rL), nDocs - 5)
+                self.assertTrue(all(set(dD.keys()) == {"features"} for dD in rL))
+                self.assertEqual([dD["features"][0]["values"][0] for dD in rL], list(range(5, nDocs)))
+                #
+                # Inclusion projection without '_id': '_id' is returned as usual
+                rL = mg.fetch(self.__dbName, self.__collectionName, None, projectionD={"DOC_ID": 1}, batchSize=7)
+                self.assertEqual(len(rL), nDocs)
+                self.assertTrue(all(set(dD.keys()) == {"_id", "DOC_ID"} for dD in rL))
+                #
+                # Exclusion projection
+                rL = mg.fetch(self.__dbName, self.__collectionName, None, projectionD={"features": 0, "container": 0}, batchSize=7)
+                self.assertEqual(len(rL), nDocs)
+                self.assertTrue(all(set(dD.keys()) == {"_id", "DOC_NUM", "DOC_ID"} for dD in rL))
+                #
+                # selectL and projectionD are mutually exclusive
+                with self.assertRaises(ValueError):
+                    list(mg.fetchBatched(self.__dbName, self.__collectionName, ["DOC_ID"], projectionD={"DOC_ID": 1}))
+                self.assertIsNone(mg.fetch(self.__dbName, self.__collectionName, ["DOC_ID"], projectionD={"DOC_ID": 1}))
+                #
+                ok = mg.dropCollection(self.__dbName, self.__collectionName)
+                self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+            self.fail()
+
+    def testFetchOptions(self):
+        """Test case -  paged-fetch/count defaults read from the configuration (MongoDbUtil(client, cfgOb=...))."""
+        try:
+            defaultD = {"batchSize": 10000, "batchTimeoutSeconds": 600, "maxRetries": 3, "retryDelaySeconds": 10, "countTimeoutSeconds": 300}
+            # No configuration object: defaults
+            self.assertEqual(MongoDbUtil(None).getFetchOptions(), defaultD)
+            # The example configuration lists the defaults explicitly
+            self.assertEqual(MongoDbUtil(None, cfgOb=self.__cfgOb).getFetchOptions(), defaultD)
+            #
+            # Configured values (others keep their defaults); a value that isn't a number raises
+            cfgOb = ConfigUtil(configPath=self.__configPath, defaultSectionName=self.__configName)
+            sD = cfgOb.exportConfig(self.__configName)
+            for key in ["MONGO_DB_FETCH_RETRY_DELAY_SECONDS", "MONGO_DB_COUNT_TIMEOUT_SECONDS"]:
+                sD.pop(key, None)
+            sD.update({"MONGO_DB_FETCH_BATCH_SIZE": 4, "MONGO_DB_FETCH_BATCH_TIMEOUT_SECONDS": "120", "MONGO_DB_FETCH_MAX_RETRIES": "2"})
+            cfgOb.importConfig({self.__configName: sD})
+            badCfgOb = ConfigUtil(configPath=self.__configPath, defaultSectionName=self.__configName)
+            badCfgOb.importConfig({self.__configName: dict(sD, MONGO_DB_FETCH_RETRY_DELAY_SECONDS="abc")})
+            with self.assertRaises(ValueError):
+                MongoDbUtil(None, cfgOb=badCfgOb)
+            with Connection(cfgOb=cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client, cfgOb=cfgOb)
+                self.assertEqual(mg.getFetchOptions(), dict(defaultD, batchSize=4, batchTimeoutSeconds=120.0, maxRetries=2))
+                ok = mg.createCollection(self.__dbName, self.__collectionName)
+                self.assertTrue(ok)
+                rIdL = mg.insertList(self.__dbName, self.__collectionName, [{"DOC_ID": "DOC_%d" % ii} for ii in range(10)], keyNames=["DOC_ID"])
+                self.assertEqual(len(rIdL), 10)
+                # configured batch size, an explicit argument overriding it, and an instance without cfgOb
+                batchL = list(mg.fetchBatched(self.__dbName, self.__collectionName, ["DOC_ID"]))
+                self.assertEqual([len(bL) for bL in batchL], [4, 4, 2])
+                batchL = list(mg.fetchBatched(self.__dbName, self.__collectionName, ["DOC_ID"], batchSize=5))
+                self.assertEqual([len(bL) for bL in batchL], [5, 5])
+                batchL = list(MongoDbUtil(client).fetchBatched(self.__dbName, self.__collectionName, ["DOC_ID"]))
+                self.assertEqual([len(bL) for bL in batchL], [10])
+                self.assertEqual(mg.count(self.__dbName, self.__collectionName), 10)
+                ok = mg.dropCollection(self.__dbName, self.__collectionName)
+                self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+            self.fail()
+
+
+def suiteFetch():
+    suiteSelect = unittest.TestSuite()
+    suiteSelect.addTest(MongoDbUtilTests("testFetchProjection"))
+    suiteSelect.addTest(MongoDbUtilTests("testFetchOptions"))
+    return suiteSelect
+
 
 def suiteOps():
     suiteSelect = unittest.TestSuite()
@@ -701,4 +816,7 @@ if __name__ == "__main__":
     unittest.TextTestRunner(verbosity=2).run(mySuite)
 
     mySuite = suiteValidation()
+    unittest.TextTestRunner(verbosity=2).run(mySuite)
+
+    mySuite = suiteFetch()
     unittest.TextTestRunner(verbosity=2).run(mySuite)

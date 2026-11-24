@@ -16,6 +16,15 @@
 #      15-Jul-2025  dwp add getCollectionIndexes method
 #       7-May-2026  dwp add pre-check to each method to make sure self.__mgObj is not None;
 #                       remove try/except handling from deleteList to force failure
+#      15-Sep-2026  dwp add fetchBatched() to page large result sets over successive short-lived
+#                       cursors (bounded per-batch timeout + retry), bound count() with a timeout,
+#                       and add estimatedCount() for informational collection counts
+#      26-Oct-2026  dwp batch deleteList() into one delete_many() per batch of key values ($in, or $or for
+#                       compound keys) instead of one per document
+#      24-Nov-2026  dwp add optional projectionD to fetch()/fetchBatched() (full projection document, e.g. with
+#                       aggregation expressions such as $filter) as an alternative to selectL; optional cfgOb
+#                       constructor argument, from which the paged-fetch/count defaults are read
+#                       (MONGO_DB_FETCH_*, MONGO_DB_COUNT_TIMEOUT_SECONDS)
 ##
 """
 Base class for simple essential database operations for MongoDb.
@@ -27,18 +36,66 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Apache 2.0"
 
 import logging
+import time
 from collections import OrderedDict
 
 import pymongo
 
 logger = logging.getLogger(__name__)
 
+#
+# Transient server/network conditions worth retrying on a fresh cursor. Everything else
+# (bad query, auth failure, ...) is raised immediately.
+#
+RETRYABLE_FETCH_ERRORS = (
+    pymongo.errors.AutoReconnect,
+    pymongo.errors.ConnectionFailure,
+    pymongo.errors.ExecutionTimeout,
+    pymongo.errors.NetworkTimeout,
+    pymongo.errors.NotPrimaryError,
+    pymongo.errors.ServerSelectionTimeoutError,
+    pymongo.errors.WaitQueueTimeoutError,
+)
+
 
 class MongoDbUtil(object):
-    def __init__(self, mongoClientObj, verbose=False):
+    def __init__(self, mongoClientObj, verbose=False, cfgOb=None, sectionName=None):
+        """
+        Args:
+            mongoClientObj (obj): pymongo MongoClient
+            verbose (bool, optional): verbose logging. Defaults to False.
+            cfgOb (obj, optional): instance of ConfigUtil() to read the optional paged-fetch/count settings from
+                (MONGO_DB_FETCH_BATCH_SIZE etc., see __readFetchOptions()). Explicit method arguments override them.
+            sectionName (str, optional): configuration section. Defaults to the configuration's default section.
+        """
         self.__verbose = verbose
         self.__mgObj = mongoClientObj
         self.__mongoIndexTypes = {"DESCENDING": pymongo.DESCENDING, "ASCENDING": pymongo.ASCENDING, "TEXT": pymongo.TEXT}
+        self.__fetchOptions = self.__readFetchOptions(cfgOb, sectionName)
+
+    @staticmethod
+    def __readFetchOptions(cfgOb, sectionName):
+        """Return the paged-fetch and count settings from the configuration, with defaults for any that aren't set.
+
+        Paging (fetchBatched) exists because one long cursor can fail partway through: the server applies the
+        initial command's maxTimeMS (the client 'timeoutMS') to the cursor's total server time, getMores included.
+        Each batch gets its own short-lived cursor, timeout and retries instead.
+        """
+
+        def get(name, default):
+            return cfgOb.get(name, default=default, sectionName=sectionName) if cfgOb else default
+
+        return {
+            "batchSize": int(get("MONGO_DB_FETCH_BATCH_SIZE", 10000)),  # documents per batch (0 disables batching)
+            "batchTimeoutSeconds": float(get("MONGO_DB_FETCH_BATCH_TIMEOUT_SECONDS", 600)),  # per-batch timeout (0: none)
+            "maxRetries": int(get("MONGO_DB_FETCH_MAX_RETRIES", 3)),  # attempts per batch
+            "retryDelaySeconds": float(get("MONGO_DB_FETCH_RETRY_DELAY_SECONDS", 10)),  # base retry backoff
+            "countTimeoutSeconds": float(get("MONGO_DB_COUNT_TIMEOUT_SECONDS", 300)),  # count()/estimatedCount() timeout
+        }
+
+    def getFetchOptions(self):
+        """Return the paged-fetch and count settings in effect for this instance (configured values, else defaults)."""
+        return dict(self.__fetchOptions)
 
     def testMongoObj(self):
         """Sometimes self.__mgObj is randomly None and causes a failure. Not sure why...timeout?
@@ -283,7 +340,7 @@ class MongoDbUtil(object):
         """
         logger.info("Salvaging %s %s document list length %d", databaseName, collectionName, len(dList))
         dTupL = self.deleteList(databaseName, collectionName, dList, keyNames)
-        logger.info("Salvage bulk insert - deleting %d documents", len(dTupL))
+        logger.info("Salvage bulk insert - deleted %d documents", sum(n for _, n in dTupL))
         rIdL = self.insertListSerial(databaseName, collectionName, dList, keyNames)
         logger.info("Salvage bulk insert - salvaged document length %d", len(rIdL))
         return rIdL
@@ -392,46 +449,53 @@ class MongoDbUtil(object):
         #
         return rIdL
 
-    def deleteList(self, databaseName, collectionName, dList, keyNames):
-        """Delete the list of input documents based on a selection query by keyNames.
+    def deleteList(self, databaseName, collectionName, dList, keyNames, batchSize=1000):
+        """Delete all existing documents that share the keyNames values of the input documents.
 
+        The distinct key values across dList are removed with one delete_many() per batch of up to batchSize values
+        (an $in query for a single key name, or an $or of the per-document selections for compound keys), rather than
+        one delete_many() per document. Each delete waits for the configured write concern, so batching cuts the number
+        of round trips per load chunk from one per document to one per batch.
 
         Args:
             databaseName (str): Target database name
             collectionName (str): Target collection name
             dList (list): document list
             keyNames (list, optional): list of key names required to uniquely identify the object (dot notation)
+            batchSize (int, optional): maximum number of distinct key values per delete_many() call (default 1000)
 
         Returns:
-            list: (value tuple of key names, deletion count)
+            list: (selection query, deletion count) for each delete_many() call
 
         """
-        cD = {}
         delTupL = []
-        selectD = {}
         #
         self.testMongoObj()
         clt = self.__mgObj[databaseName].get_collection(collectionName)
         #
-        # NOTE: May want to look into grouping these into one single delete query instead of multiple individual ones,
-        #       and evaluating how much faster (if at all) that lets the workflow run. May be significant for CSMs.
-        #       If doing so, make sure that you only do so when the selectD has just one Key (e.g., not a paired key)
-        #       and make sure the delete query doesn't timeout too easily with this approach.
+        # Distinct selections in input order, e.g. {'rcsb_assembly_container_identifiers.entry_id': 'AF_AFQ06159F1'}
+        selectDL = []
+        cD = {}
         for dD in dList:  # each dD is an entire Mongo doc for an entry/entity/...
             kyVals = self.__getKeyValues(dD, keyNames)
             selectD = {ky: val for ky, val in zip(keyNames, kyVals)}
-            # Example 'selectD': {'rcsb_assembly_container_identifiers.entry_id': 'AF_AFQ06159F1'}
             tt = tuple(selectD.items())
             if tt in cD:
                 continue
             cD[tt] = True
-            rV = clt.delete_many(selectD)
-            try:
-                # delTupL.append((kyVals, r.deleted_count))
-                delTupL.append((selectD, rV.deleted_count))
-            except Exception as e:
-                logger.error("Failing %s and %s selectD %r with %s", databaseName, collectionName, selectD.items(), str(e))
-        logger.debug("%s %s deleted status %r", databaseName, collectionName, delTupL)
+            selectDL.append(selectD)
+        #
+        batchSize = max(int(batchSize), 1)
+        for ii in range(0, len(selectDL), batchSize):
+            batchL = selectDL[ii : ii + batchSize]
+            if len(keyNames) == 1:
+                ky = keyNames[0]
+                queryD = {ky: {"$in": [sD[ky] for sD in batchL]}}
+            else:
+                queryD = {"$or": batchL}
+            rV = clt.delete_many(queryD)
+            delTupL.append((queryD, rV.deleted_count))
+        logger.debug("%s %s deleted %d documents for %d selections in %d call(s)", databaseName, collectionName, sum(n for _, n in delTupL), len(selectDL), len(delTupL))
         #
         return delTupL
 
@@ -517,44 +581,282 @@ class MongoDbUtil(object):
             logger.exception("Failed to retrieve indexes for %s.%s with error: %s", databaseName, collectionName, str(e))
         return []
 
-    def fetch(self, databaseName, collectionName, selectL, queryD=None, suppressId=False):
-        """Fetch selections (selectL) from documents satisfying input
-        query constraints.
+    def fetch(self, databaseName, collectionName, selectL, queryD=None, suppressId=False, **kwargs):
+        """Fetch selections (selectL) from documents satisfying input query constraints.
+
+        The result set is retrieved in batches (see fetchBatched()) and accumulated here.
+        Callers that do not need the whole result set resident in memory at once should
+        iterate fetchBatched() directly.
+
+        Args:
+            databaseName (str): database name
+            collectionName (str): collection name
+            selectL (list): list of attribute names to return (empty/None returns whole documents)
+            queryD (dict, optional): selection query. Defaults to None.
+            suppressId (bool, optional): exclude '_id' from the returned documents. Defaults to False.
+            batchSize (int, optional): documents per batch (0 disables batching). Defaults to the configured
+                value, else 10000 (see __init__/__readFetchOptions, as for the other options below).
+            sortKey (str, optional): indexed attribute used to page the result set. Defaults to "_id".
+            batchTimeoutSeconds (int, optional): per-batch timeout. Defaults to the configured value, else 600.
+            maxRetries (int, optional): attempts per batch. Defaults to the configured value, else 3.
+            retryDelaySeconds (int, optional): base retry backoff. Defaults to the configured value, else 10.
+            projectionD (dict, optional): projection document used instead of selectL/suppressId, e.g. to apply
+                aggregation expressions such as $filter server-side. The paging key is added (and stripped from
+                the returned documents) if the projection would leave it out. Defaults to None.
+
+        Returns:
+            list: list of documents -- an EMPTY list means the query matched no documents;
+                  None means the fetch itself FAILED. Callers must distinguish the two.
         """
         dList = []
-        sD = {}
         self.testMongoObj()
         try:
-            qD = queryD if queryD is not None else None
-            if selectL:
-                sD = {k: 1 for k in selectL}
-                if suppressId:
-                    sD["_id"] = 0
-            else:
-                if suppressId:
-                    sD["_id"] = 0
-                else:
-                    sD = None
-            clt = self.__mgObj[databaseName].get_collection(collectionName)
-            # logger.debug("Got collection object %r" % c)
-            for dD in clt.find(filter=qD, projection=sD):
-                # logger.debug("Got doc %r" % d)
-                dList.append(dD)
+            for dL in self.fetchBatched(databaseName, collectionName, selectL, queryD=queryD, suppressId=suppressId, **kwargs):
+                dList.extend(dL)
             return dList
         except Exception as e:
             logger.exception("Failing with %s", str(e))
         return None
 
-    def count(self, databaseName, collectionName, countFilter=None):
+    def fetchBatched(
+        self,
+        databaseName,
+        collectionName,
+        selectL,
+        queryD=None,
+        suppressId=False,
+        batchSize=None,
+        sortKey="_id",
+        batchTimeoutSeconds=None,
+        maxRetries=None,
+        retryDelaySeconds=None,
+        projectionD=None,
+    ):
+        """Generator yielding successive batches of documents satisfying the input query constraints.
+
+        The result set is paged with a range query over 'sortKey' ('{sortKey: {"$gt": <last value
+        of the previous batch>}}' with an ascending sort and a limit), so each batch is served by
+        its own short-lived cursor. This bounds the amount of work that is lost -- and retried --
+        when a single round trip stalls, and keeps peak memory proportional to the batch size
+        rather than to the full result set.
+
+        Note:
+            'sortKey' must be indexed (the default, '_id', always is). Paging over an unindexed
+            attribute forces a server-side in-memory sort of the whole collection per batch.
+
+        Args:
+            (see fetch())
+
+        Yields:
+            list: a non-empty list of documents.
+
+        Raises:
+            pymongo.errors.PyMongoError: if a batch cannot be retrieved after 'maxRetries' attempts.
+        """
         self.testMongoObj()
+        batchSize = self.__fetchOptions["batchSize"] if batchSize is None else int(batchSize)
+        batchTimeoutSeconds = self.__fetchOptions["batchTimeoutSeconds"] if batchTimeoutSeconds is None else batchTimeoutSeconds
+        maxRetries = self.__fetchOptions["maxRetries"] if maxRetries is None else maxRetries
+        retryDelaySeconds = self.__fetchOptions["retryDelaySeconds"] if retryDelaySeconds is None else retryDelaySeconds
+        maxRetries = max(1, int(maxRetries))
+        if projectionD is not None and selectL:
+            raise ValueError("Provide either selectL or projectionD, not both")
+        if projectionD is not None:
+            projectionD, stripSortKey = self.__completeFetchProjection(projectionD, sortKey)
+        else:
+            projectionD, stripSortKey = self.__makeFetchProjection(selectL, suppressId, sortKey)
+        clt = self.__mgObj[databaseName].get_collection(collectionName)
+        #
+        if batchSize <= 0:
+            # Batching explicitly disabled -- single cursor over the full result set
+            logger.debug("Batching disabled for %s %s - using a single cursor", databaseName, collectionName)
+            dL = self.__fetchOneBatch(clt, queryD if queryD else None, projectionD, None, 0, batchTimeoutSeconds, maxRetries, retryDelaySeconds)
+            if dL:
+                yield dL
+            return
+        #
+        startTime = time.time()
+        lastKeyValue = None
+        totalCount = 0
+        batchNum = 0
+        while True:
+            batchNum += 1
+            bqD = self.__addRangeConstraint(queryD, sortKey, lastKeyValue)
+            dL = self.__fetchOneBatch(clt, bqD, projectionD, sortKey, batchSize, batchTimeoutSeconds, maxRetries, retryDelaySeconds)
+            if not dL:
+                break
+            if sortKey not in dL[-1]:
+                raise ValueError("Sort key %r absent from fetched documents of %s %s - cannot page result set" % (sortKey, databaseName, collectionName))
+            lastKeyValue = dL[-1][sortKey]
+            totalCount += len(dL)
+            numFetched = len(dL)
+            if stripSortKey:
+                for dD in dL:
+                    dD.pop(sortKey, None)
+            logger.debug("%s %s batch %d fetched %d documents (total %d)", databaseName, collectionName, batchNum, numFetched, totalCount)
+            yield dL
+            if numFetched < batchSize:
+                break
+        logger.info(
+            "Fetched %d documents from %s %s in %d batch(es) of %d (%.4f seconds)",
+            totalCount,
+            databaseName,
+            collectionName,
+            batchNum,
+            batchSize,
+            time.time() - startTime,
+        )
+
+    def __fetchOneBatch(self, clt, queryD, projectionD, sortKey, batchSize, batchTimeoutSeconds, maxRetries, retryDelaySeconds):
+        """Run a single batch query, retrying on transient server/network errors.
+
+        Each attempt uses a new cursor, and -- when 'batchTimeoutSeconds' is set -- its own
+        timeout budget (overriding any client-level 'timeoutMS' for the duration of the call).
+        """
+        lastErr = None
+        for attempt in range(1, maxRetries + 1):
+            try:
+                if batchTimeoutSeconds and float(batchTimeoutSeconds) > 0:
+                    with pymongo.timeout(float(batchTimeoutSeconds)):
+                        return self.__runFetchCursor(clt, queryD, projectionD, sortKey, batchSize)
+                return self.__runFetchCursor(clt, queryD, projectionD, sortKey, batchSize)
+            except RETRYABLE_FETCH_ERRORS as e:
+                lastErr = e
+                if attempt >= maxRetries:
+                    break
+                delaySeconds = float(retryDelaySeconds) * attempt
+                logger.warning(
+                    "Batch fetch on %s attempt %d of %d failed (%s) - retrying in %.1f seconds",
+                    clt.full_name,
+                    attempt,
+                    maxRetries,
+                    str(e),
+                    delaySeconds,
+                )
+                time.sleep(delaySeconds)
+        logger.error("Batch fetch on %s failed after %d attempt(s) with %s", clt.full_name, maxRetries, str(lastErr))
+        raise lastErr
+
+    @staticmethod
+    def __runFetchCursor(clt, queryD, projectionD, sortKey, batchSize):
+        cursor = clt.find(filter=queryD if queryD else None, projection=projectionD)
+        if sortKey:
+            cursor = cursor.sort(sortKey, pymongo.ASCENDING).limit(int(batchSize))
+        return list(cursor)
+
+    @staticmethod
+    def __makeFetchProjection(selectL, suppressId, sortKey):
+        """Build the projection for a batched fetch.
+
+        Returns:
+            (dict|None, bool): projection document (None selects whole documents), and a flag
+            indicating whether 'sortKey' was added solely to support paging and so must be
+            removed from the documents handed back to the caller.
+        """
+        if selectL:
+            sD = {k: 1 for k in selectL}
+            if suppressId:
+                sD["_id"] = 0
+        elif suppressId:
+            sD = {"_id": 0}
+        else:
+            # Whole documents - '_id' and every other attribute are already present
+            return None, False
+        #
+        stripSortKey = False
+        if sortKey == "_id":
+            if sD.get("_id", None) == 0:
+                sD["_id"] = 1
+                stripSortKey = True
+        elif sortKey not in sD:
+            sD[sortKey] = 1
+            stripSortKey = True
+        return sD, stripSortKey
+
+    @staticmethod
+    def __completeFetchProjection(projectionD, sortKey):
+        """Make sure a caller-supplied projection returns 'sortKey', which paging needs.
+
+        Returns:
+            (dict, bool): projection document, and a flag indicating whether 'sortKey' was added solely to
+            support paging and so must be removed from the documents handed back to the caller.
+        """
+        sD = dict(projectionD)
+        if not sD:
+            return None, False
+        # An exclusion projection lists only fields set to 0/False ('_id' may appear in either kind)
+        isExclusion = all(v in (0, False) and not isinstance(v, dict) for k, v in sD.items() if k != "_id")
+        stripSortKey = False
+        if sD.get(sortKey, None) in (0, False) and not isinstance(sD.get(sortKey), dict):
+            if sortKey == "_id" or isExclusion:
+                if sortKey == "_id":
+                    sD["_id"] = 1
+                else:
+                    sD.pop(sortKey)
+                stripSortKey = True
+        elif not isExclusion and sortKey not in sD and sortKey != "_id":  # '_id' is returned unless excluded
+            sD[sortKey] = 1
+            stripSortKey = True
+        return sD, stripSortKey
+
+    @staticmethod
+    def __addRangeConstraint(queryD, sortKey, lastKeyValue):
+        """Add the '{sortKey: {"$gt": lastKeyValue}}' paging constraint to the selection query."""
+        if lastKeyValue is None:
+            return dict(queryD) if queryD else {}
+        rangeD = {sortKey: {"$gt": lastKeyValue}}
+        if not queryD:
+            return rangeD
+        if sortKey in queryD or "$and" in queryD:
+            # Don't clobber an existing constraint on the sort key
+            return {"$and": [dict(queryD), rangeD]}
+        qD = dict(queryD)
+        qD.update(rangeD)
+        return qD
+
+    def count(self, databaseName, collectionName, countFilter=None, timeoutSeconds=None):
+        """Return the number of documents matching the (optional) filter.
+
+        Note:
+            An unfiltered count_documents() is a full collection scan on the server and can be
+            very slow on large collections - use estimatedCount() when an exact value is not
+            required. 'timeoutSeconds' bounds the call so a stalled count cannot consume the
+            whole client timeout budget (defaults to the configured value, else 300; see __init__).
+        """
+        self.testMongoObj()
+        timeoutSeconds = self.__fetchOptions["countTimeoutSeconds"] if timeoutSeconds is None else timeoutSeconds
         try:
             tF = countFilter if countFilter else {}
             clt = self.__mgObj[databaseName].get_collection(collectionName)
             logger.debug("Current indexes for %s %s : %r", databaseName, collectionName, clt.list_indexes())
+            if timeoutSeconds and float(timeoutSeconds) > 0:
+                with pymongo.timeout(float(timeoutSeconds)):
+                    return clt.count_documents(tF)
             return clt.count_documents(tF)
         except Exception as e:
             logger.exception("Failing for %s and %s with %s", databaseName, collectionName, str(e))
         return 0
+
+    def estimatedCount(self, databaseName, collectionName, timeoutSeconds=None):
+        """Return the estimated document count for a collection (from collection metadata).
+
+        This is O(1) on the server, unlike the collection scan performed by count(), and is
+        intended for informational/logging use where an exact count is not required.
+
+        Returns:
+            int: estimated document count, or -1 if the count could not be obtained.
+        """
+        self.testMongoObj()
+        timeoutSeconds = self.__fetchOptions["countTimeoutSeconds"] if timeoutSeconds is None else timeoutSeconds
+        try:
+            clt = self.__mgObj[databaseName].get_collection(collectionName)
+            if timeoutSeconds and float(timeoutSeconds) > 0:
+                with pymongo.timeout(float(timeoutSeconds)):
+                    return clt.estimated_document_count()
+            return clt.estimated_document_count()
+        except Exception as e:
+            logger.error("Failing for %s and %s with %s", databaseName, collectionName, str(e))
+        return -1
 
     def distinct(self, databaseName, collectionName, ky):
         """Return a list of distinct values for the input key in the collection."""
