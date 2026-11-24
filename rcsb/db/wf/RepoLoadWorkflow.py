@@ -17,6 +17,8 @@
 #  10-Sep-2025 js  Add support for bcif incremental update and IHM model loading
 #   6-Oct-2025 dwp Add support for load completion checking of 'core_chem_comp' collection
 #   9-Dec-2025 dwp Add more fine-grained load completion checking of 'pdbx_core' collections
+#   3-Nov-2026 mjt Fix getPdbHash for extended PDB IDs so bcif incremental update finds existing files
+#  18-Nov-2026 dwp Use the archive holdings short links (same on the current and extended-id archives)
 #
 ##
 __docformat__ = "restructuredtext en"
@@ -39,6 +41,7 @@ from rcsb.db.mongo.PdbxLoader import PdbxLoader
 from rcsb.db.utils.TimeUtil import TimeUtil
 from rcsb.utils.config.ConfigUtil import ConfigUtil
 from rcsb.utils.io.MarshalUtil import MarshalUtil
+from rcsb.utils.repository.RepositoryHelper import getHoldingsUrl, getRepositoryRootUrl
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +54,7 @@ class RepoLoadWorkflow(object):
         mockTopPath = kwargs.get("mockTopPath", None)
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=self.__configName, mockTopPath=mockTopPath)
         #
+        self.__baseUrlPDB = getRepositoryRootUrl(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName))
         self.__cachePath = kwargs.get("cachePath", ".")
         self.__cachePath = os.path.abspath(self.__cachePath)
         self.__debugFlag = kwargs.get("debugFlag", False)
@@ -116,7 +120,9 @@ class RepoLoadWorkflow(object):
             dataSetId = kwargs.get("dataSetId") if "dataSetId" in kwargs else tU.getCurrentWeekSignature()
             seqDataLocator = self.__cfgOb.getPath("RCSB_SEQUENCE_CLUSTER_DATA_PATH", sectionName=self.__configName)
             sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=self.__configName)
-            logger.info("In RepoLoadWorkflow.load 1 - sandboxPath: %r", sandboxPath)
+            #
+            sandboxPath = self.__cfgOb.getPath("RCSB_EXCHANGE_SANDBOX_PATH", sectionName=self.__configName)  # This isn't defined in production config, so returns None
+            logger.debug("Current sandboxPath: %r", sandboxPath)  # This is None in production, at least as of 2026-06-08
             #
             # NOTE: Temporarily set collectionGroupName here until all corresponding code in weekly-update-workflow is updated
             if databaseName:
@@ -205,7 +211,6 @@ class RepoLoadWorkflow(object):
             ok = cw.etl(dataSetId, seqDataLocator, loadType=loadType)
             okS = self.loadStatus(cw.getLoadStatus(), readBackCheck=readBackCheck)
         elif op == "etl_repository_holdings" and dbType == "mongo":
-            logger.info("In RepoLoadWorkflow.load 2 - sandboxPath: %r", sandboxPath)
             rhw = RepoHoldingsEtlWorker(
                 self.__cfgOb,
                 sandboxPath,
@@ -327,29 +332,31 @@ class RepoLoadWorkflow(object):
         #
         mU = MarshalUtil(workPath=self.__cachePath)
         #
+        # TODO: clean this upper() and lower() business up (but make sure to avoid creating issues for other workflows that use this, like BCIF)  # pylint: disable=fixme
+        #
         if contentType == "pdbx_core":
             # Get list of ALL entries to be loaded for the current update cycle
             if not holdingsFilePath:
-                holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb/holdings/released_structures_last_modified_dates.json.gz")
+                holdingsFilePath = os.path.join(getHoldingsUrl(self.__baseUrlPDB, "pdb"), "released_structures_last_modified_dates.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             #
             if incrementalUpdate:
                 holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix, contentType, prependOutputContentType, prependOutputHash)
             #
-            idL = [k.upper() for k in holdingsFileD]
+            idL = [k.lower() if k.startswith("pdb_") else k.upper() for k in holdingsFileD]
             logger.info("Total number of PDB entries: %d (obtained from file: %s)", len(idL), holdingsFilePath)
             random.shuffle(idL)  # randomize the order to reduce the chance of consecutive large structures occurring (which may cause memory spikes)
             filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, splitFileListPrefix, holdingsFilePath)
         #
         elif contentType == "pdbx_ihm":
             if not holdingsFilePath:
-                holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb_ihm/holdings/released_structures_last_modified_dates.json.gz")
+                holdingsFilePath = os.path.join(getHoldingsUrl(self.__baseUrlPDB, "pdb_ihm"), "released_structures_last_modified_dates.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             #
             if incrementalUpdate:
                 holdingsFileD = self.getTimeStampCheck(holdingsFileD, targetFileDir, targetFileSuffix, contentType, prependOutputContentType, prependOutputHash)
             #
-            idL = [k.upper() for k in holdingsFileD]
+            idL = [k.lower() if k.startswith("pdb_") else k.upper() for k in holdingsFileD]
             logger.info("Total number of IHM entries: %d (obtained from file: %s)", len(idL), holdingsFilePath)
             filePathMappingD = self.splitIdListAndWriteToFiles(idL, numSublistFiles, loadFileListDir, splitFileListPrefix, holdingsFilePath)
         #
@@ -413,7 +420,9 @@ class RepoLoadWorkflow(object):
         return ok
 
     def getPdbHash(self, pdbid):
-        return pdbid[1:3]
+        # middle two characters of a 4-character ID or last-but-one two of an extended ID (e.g., 1abc -> ab, pdb_00001abc -> ab),
+        # matching the output path set by py-rcsb_workflow bcif task_functions.py
+        return pdbid[-3:-1]
 
     def getCsmHash(self, pdbid):
         return os.path.join(pdbid[0:2], pdbid[-6:-4], pdbid[-4:-2])
@@ -586,17 +595,17 @@ class RepoLoadWorkflow(object):
         if contentType == "pdbx_core":
             # Get list of ALL entries to be loaded for the current update cycle
             if not holdingsFilePath:
-                holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb/holdings/released_structures_last_modified_dates.json.gz")
+                holdingsFilePath = os.path.join(getHoldingsUrl(self.__baseUrlPDB, "pdb"), "released_structures_last_modified_dates.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
-            idL = [k.upper() for k in holdingsFileD]
+            idL = [k.lower() if k.startswith("pdb_") else k.upper() for k in holdingsFileD]
             logger.info("Total number of entries to load: %d (obtained from file: %s)", len(idL), holdingsFilePath)
             return idL, len(idL)
 
         elif contentType == "pdbx_ihm":
             if not holdingsFilePath:
-                holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb_ihm/holdings/released_structures_last_modified_dates.json.gz")
+                holdingsFilePath = os.path.join(getHoldingsUrl(self.__baseUrlPDB, "pdb_ihm"), "released_structures_last_modified_dates.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
-            idL = [k.upper() for k in holdingsFileD]
+            idL = [k.lower() if k.startswith("pdb_") else k.upper() for k in holdingsFileD]
             logger.info("Total number of IHM entries: %d (obtained from file: %s)", len(idL), holdingsFilePath)
             return idL, len(idL)
 
@@ -611,7 +620,7 @@ class RepoLoadWorkflow(object):
             # Get list of ALL CCs to be loaded for the current update cycle (note that this will include several hundred “duplicated” chemical components
             # --that is, they are represented as a CC and as a BIRD, but only one representation is actually loaded to MongoDB
             if not holdingsFilePath:
-                holdingsFilePath = os.path.join(self.__cfgOb.getPath("PDB_REPO_URL", sectionName=self.__configName), "pdb/holdings/refdata_id_list.json.gz")
+                holdingsFilePath = os.path.join(getHoldingsUrl(self.__baseUrlPDB, "refdata"), "refdata_id_list.json.gz")
             holdingsFileD = mU.doImport(holdingsFilePath, fmt="json")
             idL = [k.upper() for k, v in holdingsFileD.items() if v["release_status"] == "REL" and v["content_type"] != "BIRD Family"]
             logger.info("Total number of entries to load: %d (obtained from file: %s)", len(idL), holdingsFilePath)

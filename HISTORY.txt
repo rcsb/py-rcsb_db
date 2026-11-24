@@ -390,6 +390,13 @@
   7-May-2026  V1.814 Configure logging at start of CLI executable scripts;
                      Add pre-check to MongoDbUtil methods to ensure MongoObj is not None
   4-Jun-2026  V1.815 Add logging statements for debugging
- 15-Sep-2026  V1.816 Add batched (paged) document retrieval to MongoDbUtil.fetchBatched() with per-batch
+  3-Nov-2026  V1.816 Fix getPdbHash for extended PDB IDs so bcif incremental update finds existing files
+ 18-Nov-2026  V1.817 Support the extended-ID (beta) archive alongside the current archive: holdings and load lists from the
+                     archive short links (RepositoryHelper, rcsb.utils.repository >= 0.53; rcsb/jshortlink#14); PdbxLoader
+                     input and purge IDs normalized by ID format, and entries that fail to read are purged before a
+                     replace load; the holdings load fails when a holdings collection gets no documents; remove the
+                     update holdings (UpdateHoldingsProvider); local-mode removed holdings: id_codes_replaced_by case by
+                     ID format (was upper case)
+ 24-Nov-2026  V1.818 Add batched (paged) document retrieval to MongoDbUtil.fetchBatched() with per-batch
                      timeout and retry; bound MongoDbUtil.count() with a timeout; add estimatedCount();
                      Batch MongoDbUtil.deleteList() into one delete_many() per batch of key values

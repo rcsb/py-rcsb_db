@@ -25,6 +25,8 @@
 # 21-Sep-2021 jdw overhaul using new resource files and with support for remote access
 #  4-Feb-2022 dwp Further overhaul for using new resource files and support for remote access
 #  7-Apr-2025 dwp Don't load empty 'assembly_ids' array
+# 18-Nov-2026 dwp Remove the update holdings (UpdateHoldingsProvider, getHoldingsUpdateEntry): the update entry
+#                 collection hasn't been loaded since Oct-2025
 ##
 
 __docformat__ = "restructuredtext en"
@@ -39,7 +41,6 @@ import logging
 from rcsb.utils.repository.CurrentHoldingsProvider import CurrentHoldingsProvider
 from rcsb.utils.repository.RemovedHoldingsProvider import RemovedHoldingsProvider
 from rcsb.utils.repository.UnreleasedHoldingsProvider import UnreleasedHoldingsProvider
-from rcsb.utils.repository.UpdateHoldingsProvider import UpdateHoldingsProvider
 
 
 logger = logging.getLogger(__name__)
@@ -56,23 +57,9 @@ class RepoHoldingsRemoteDataPrep(object):
         self.__cfgOb = kwargs.get("cfgOb", None)
         #
         self.__chP = CurrentHoldingsProvider(cachePath, useCache, **kwargs)
-        self.__uphP = UpdateHoldingsProvider(cachePath, useCache, **kwargs)
         self.__unhP = UnreleasedHoldingsProvider(cachePath, useCache, **kwargs)
         self.__rmhP = RemovedHoldingsProvider(cachePath, useCache, **kwargs)
         self.__currentCacheD = None
-
-    def getHoldingsUpdateEntry(self, updateId):
-        dList = []
-        retD = self.__uphP.getUpdateData()
-        for entryId, qD in retD.items():
-            tD = {"rcsb_id": entryId, "entry_id": entryId, "update_id": updateId}
-            rD = {
-                "rcsb_id": entryId,
-                "rcsb_repository_holdings_update_entry_container_identifiers": tD,
-                "rcsb_repository_holdings_update": qD,
-            }
-            dList.append(rD)
-        return dList
 
     def getHoldingsCurrentEntry(self, updateId):
         dList = []

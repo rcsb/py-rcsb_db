@@ -3,8 +3,13 @@
 # Author:  J. Westbrook
 # Date:  12-Jul-2018
 #
-# Note:  This module uses well sandbox and repository defined file names
-#        within the configuration defined RCSB exchange sandbox path.
+# NOTE: This file is NOT used in production (i.e., when discoveryMode=='remote')!
+#       It is only used when discoveryMode=='local', which is only the case in very specific testing environments.
+#       Instead, "RepoHoldingsRemoteDataPrep.py" is used.
+# TODO: Remove this file if/when the discoveryMode setting is deprecated.  # pylint: disable=fixme
+#
+# Note 2:  This module uses well sandbox and repository defined file names
+#          within the configuration defined RCSB exchange sandbox path.
 #
 # Update:
 # 16-Jul-2018 jdw adjust naming to current sandbox conventions.
@@ -26,6 +31,7 @@
 #                 (note that this file is only used when discoveryMode=='local')
 # 16-Oct-2024 dwp Remove usage of EDMAPS holdings file (again, note that this file is only used when discoveryMode=='local')
 #  7-Apr-2025 dwp Don't load empty 'assembly_ids' array
+# 18-Nov-2026 dwp Removed entries: id_codes_replaced_by case by ID format (normalizeEntryId) instead of upper case
 ##
 
 __docformat__ = "restructuredtext en"
@@ -39,6 +45,7 @@ import os
 
 import dateutil.parser
 from rcsb.utils.io.MarshalUtil import MarshalUtil
+from rcsb.utils.repository.RepositoryHelper import normalizeEntryId
 
 logger = logging.getLogger(__name__)
 
@@ -630,7 +637,7 @@ class RepoHoldingsDataPrep(object):
                 rbL = dT["obsoletedBy"] if "obsoletedBy" in dT else []
                 d1 = {"title": dT["title"], "details": dT["details"], "audit_authors": dT["depositionAuthors"]}
                 if rbL:
-                    d1["id_codes_replaced_by"] = [t.upper() for t in rbL]
+                    d1["id_codes_replaced_by"] = [normalizeEntryId(t) for t in rbL]
                 if ctL:
                     d1["repository_content_types"] = ctL
 
@@ -680,13 +687,12 @@ class RepoHoldingsDataPrep(object):
         """
         retD = {}
         fields = []
-        logger.info("In self.__getHoldingsPrerelease - self.__sandboxPath: %r", self.__sandboxPath)
-        logger.info("In self.__getHoldingsPrerelease - dirPath: %r", dirPath)
+        logger.info("HoldingsPrerelease sandboxPath (%r) dirPath (%r)", self.__sandboxPath, dirPath)
         dirPath = dirPath if dirPath else self.__sandboxPath
         try:
             # Get prerelease sequence data
             fp = os.path.join(dirPath, "sequence", "pdb_seq_prerelease.fasta")
-            logger.info("In self.__getHoldingsPrerelease - Importing file fp: %r", fp)
+            logger.info("Importing prerelease sequence data file: %r", fp)
             sD = self.__mU.doImport(fp, "fasta", commentStyle="prerelease")
             seqD = {}
             for sid in sD:
