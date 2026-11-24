@@ -43,6 +43,14 @@ site_info_configuration:
   _MONGO_DB_USER_NAME: ""
   _MONGO_DB_PASSWORD: ""
   #
+  # Optional paged-fetch and count settings, used by MongoDbUtil(client, cfgOb=cfgOb) (shown with their defaults)
+  #
+  MONGO_DB_FETCH_BATCH_SIZE: 10000
+  MONGO_DB_FETCH_BATCH_TIMEOUT_SECONDS: 600
+  MONGO_DB_FETCH_MAX_RETRIES: 3
+  MONGO_DB_FETCH_RETRY_DELAY_SECONDS: 10
+  MONGO_DB_COUNT_TIMEOUT_SECONDS: 300
+  #
   # Primary repository data and related computed repository data paths
   #
   BIRD_REPO_PATH: MOCK_BIRD_REPO
@@ -169,6 +177,14 @@ site_info_remote_configuration:
   #_MONGO_DB_USER_NAME: ""
   #_MONGO_DB_PASSWORD: ""
   MONGO_DB_ADMIN_DB_NAME: admin
+  #
+  # Optional paged-fetch and count settings, used by MongoDbUtil(client, cfgOb=cfgOb) (shown with their defaults)
+  #
+  MONGO_DB_FETCH_BATCH_SIZE: 10000
+  MONGO_DB_FETCH_BATCH_TIMEOUT_SECONDS: 600
+  MONGO_DB_FETCH_MAX_RETRIES: 3
+  MONGO_DB_FETCH_RETRY_DELAY_SECONDS: 10
+  MONGO_DB_COUNT_TIMEOUT_SECONDS: 300
   #
   #  Channel B
   # MONGO_DB_HOST: 128.6.159.133

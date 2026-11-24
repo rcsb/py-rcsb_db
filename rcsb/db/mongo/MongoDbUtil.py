@@ -22,7 +22,9 @@
 #      26-Oct-2026  dwp batch deleteList() into one delete_many() per batch of key values ($in, or $or for
 #                       compound keys) instead of one per document
 #      24-Nov-2026  dwp add optional projectionD to fetch()/fetchBatched() (full projection document, e.g. with
-#                       aggregation expressions such as $filter) as an alternative to selectL
+#                       aggregation expressions such as $filter) as an alternative to selectL; optional cfgOb
+#                       constructor argument, from which the paged-fetch/count defaults are read
+#                       (MONGO_DB_FETCH_*, MONGO_DB_COUNT_TIMEOUT_SECONDS)
 ##
 """
 Base class for simple essential database operations for MongoDb.
@@ -42,24 +44,6 @@ import pymongo
 logger = logging.getLogger(__name__)
 
 #
-# TODO: MOVE THESE TO CONFIG FILE AFTER VERIFYING THESE CHANGES WORK
-#
-# Default controls for batched (paged) document retrieval.
-#
-# A single find() cursor over a very large collection must complete -- including every getMore
-# round trip -- within the client 'timeoutMS' budget (CSOT applies to the entire life of a
-# cursor). On a slow or congested link that budget is exhausted mid-iteration and the whole
-# fetch is lost (pymongo.errors.ExecutionTimeout "operation exceeded time limit" during
-# getMore). Paging the result set with a range query over an indexed sort key gives every
-# batch its own short-lived cursor and its own timeout budget, so a stalled batch fails (and
-# is retried) in minutes instead of taking down an hour-long fetch.
-#
-DEFAULT_FETCH_BATCH_SIZE = 10000
-DEFAULT_FETCH_BATCH_TIMEOUT_SECONDS = 600
-DEFAULT_FETCH_MAX_RETRIES = 3
-DEFAULT_FETCH_RETRY_DELAY_SECONDS = 10
-DEFAULT_COUNT_TIMEOUT_SECONDS = 300
-#
 # Transient server/network conditions worth retrying on a fresh cursor. Everything else
 # (bad query, auth failure, ...) is raised immediately.
 #
@@ -75,10 +59,43 @@ RETRYABLE_FETCH_ERRORS = (
 
 
 class MongoDbUtil(object):
-    def __init__(self, mongoClientObj, verbose=False):
+    def __init__(self, mongoClientObj, verbose=False, cfgOb=None, sectionName=None):
+        """
+        Args:
+            mongoClientObj (obj): pymongo MongoClient
+            verbose (bool, optional): verbose logging. Defaults to False.
+            cfgOb (obj, optional): instance of ConfigUtil() to read the optional paged-fetch/count settings from
+                (MONGO_DB_FETCH_BATCH_SIZE etc., see __readFetchOptions()). Explicit method arguments override them.
+            sectionName (str, optional): configuration section. Defaults to the configuration's default section.
+        """
         self.__verbose = verbose
         self.__mgObj = mongoClientObj
         self.__mongoIndexTypes = {"DESCENDING": pymongo.DESCENDING, "ASCENDING": pymongo.ASCENDING, "TEXT": pymongo.TEXT}
+        self.__fetchOptions = self.__readFetchOptions(cfgOb, sectionName)
+
+    @staticmethod
+    def __readFetchOptions(cfgOb, sectionName):
+        """Return the paged-fetch and count settings from the configuration, with defaults for any that aren't set.
+
+        Paging (fetchBatched) exists because one long cursor can fail partway through: the server applies the
+        initial command's maxTimeMS (the client 'timeoutMS') to the cursor's total server time, getMores included.
+        Each batch gets its own short-lived cursor, timeout and retries instead.
+        """
+
+        def get(name, default):
+            return cfgOb.get(name, default=default, sectionName=sectionName) if cfgOb else default
+
+        return {
+            "batchSize": int(get("MONGO_DB_FETCH_BATCH_SIZE", 10000)),  # documents per batch (0 disables batching)
+            "batchTimeoutSeconds": float(get("MONGO_DB_FETCH_BATCH_TIMEOUT_SECONDS", 600)),  # per-batch timeout (0: none)
+            "maxRetries": int(get("MONGO_DB_FETCH_MAX_RETRIES", 3)),  # attempts per batch
+            "retryDelaySeconds": float(get("MONGO_DB_FETCH_RETRY_DELAY_SECONDS", 10)),  # base retry backoff
+            "countTimeoutSeconds": float(get("MONGO_DB_COUNT_TIMEOUT_SECONDS", 300)),  # count()/estimatedCount() timeout
+        }
+
+    def getFetchOptions(self):
+        """Return the paged-fetch and count settings in effect for this instance (configured values, else defaults)."""
+        return dict(self.__fetchOptions)
 
     def testMongoObj(self):
         """Sometimes self.__mgObj is randomly None and causes a failure. Not sure why...timeout?
@@ -577,11 +594,12 @@ class MongoDbUtil(object):
             selectL (list): list of attribute names to return (empty/None returns whole documents)
             queryD (dict, optional): selection query. Defaults to None.
             suppressId (bool, optional): exclude '_id' from the returned documents. Defaults to False.
-            batchSize (int, optional): documents per batch (0 disables batching). Defaults to DEFAULT_FETCH_BATCH_SIZE.
+            batchSize (int, optional): documents per batch (0 disables batching). Defaults to the configured
+                value, else 10000 (see __init__/__readFetchOptions, as for the other options below).
             sortKey (str, optional): indexed attribute used to page the result set. Defaults to "_id".
-            batchTimeoutSeconds (int, optional): per-batch timeout. Defaults to DEFAULT_FETCH_BATCH_TIMEOUT_SECONDS.
-            maxRetries (int, optional): attempts per batch. Defaults to DEFAULT_FETCH_MAX_RETRIES.
-            retryDelaySeconds (int, optional): base retry backoff. Defaults to DEFAULT_FETCH_RETRY_DELAY_SECONDS.
+            batchTimeoutSeconds (int, optional): per-batch timeout. Defaults to the configured value, else 600.
+            maxRetries (int, optional): attempts per batch. Defaults to the configured value, else 3.
+            retryDelaySeconds (int, optional): base retry backoff. Defaults to the configured value, else 10.
             projectionD (dict, optional): projection document used instead of selectL/suppressId, e.g. to apply
                 aggregation expressions such as $filter server-side. The paging key is added (and stripped from
                 the returned documents) if the projection would leave it out. Defaults to None.
@@ -609,9 +627,9 @@ class MongoDbUtil(object):
         suppressId=False,
         batchSize=None,
         sortKey="_id",
-        batchTimeoutSeconds=DEFAULT_FETCH_BATCH_TIMEOUT_SECONDS,
-        maxRetries=DEFAULT_FETCH_MAX_RETRIES,
-        retryDelaySeconds=DEFAULT_FETCH_RETRY_DELAY_SECONDS,
+        batchTimeoutSeconds=None,
+        maxRetries=None,
+        retryDelaySeconds=None,
         projectionD=None,
     ):
         """Generator yielding successive batches of documents satisfying the input query constraints.
@@ -636,7 +654,10 @@ class MongoDbUtil(object):
             pymongo.errors.PyMongoError: if a batch cannot be retrieved after 'maxRetries' attempts.
         """
         self.testMongoObj()
-        batchSize = DEFAULT_FETCH_BATCH_SIZE if batchSize is None else int(batchSize)
+        batchSize = self.__fetchOptions["batchSize"] if batchSize is None else int(batchSize)
+        batchTimeoutSeconds = self.__fetchOptions["batchTimeoutSeconds"] if batchTimeoutSeconds is None else batchTimeoutSeconds
+        maxRetries = self.__fetchOptions["maxRetries"] if maxRetries is None else maxRetries
+        retryDelaySeconds = self.__fetchOptions["retryDelaySeconds"] if retryDelaySeconds is None else retryDelaySeconds
         maxRetries = max(1, int(maxRetries))
         if projectionD is not None and selectL:
             raise ValueError("Provide either selectL or projectionD, not both")
@@ -793,16 +814,17 @@ class MongoDbUtil(object):
         qD.update(rangeD)
         return qD
 
-    def count(self, databaseName, collectionName, countFilter=None, timeoutSeconds=DEFAULT_COUNT_TIMEOUT_SECONDS):
+    def count(self, databaseName, collectionName, countFilter=None, timeoutSeconds=None):
         """Return the number of documents matching the (optional) filter.
 
         Note:
             An unfiltered count_documents() is a full collection scan on the server and can be
             very slow on large collections - use estimatedCount() when an exact value is not
             required. 'timeoutSeconds' bounds the call so a stalled count cannot consume the
-            whole client timeout budget.
+            whole client timeout budget (defaults to the configured value, else 300; see __init__).
         """
         self.testMongoObj()
+        timeoutSeconds = self.__fetchOptions["countTimeoutSeconds"] if timeoutSeconds is None else timeoutSeconds
         try:
             tF = countFilter if countFilter else {}
             clt = self.__mgObj[databaseName].get_collection(collectionName)
@@ -815,7 +837,7 @@ class MongoDbUtil(object):
             logger.exception("Failing for %s and %s with %s", databaseName, collectionName, str(e))
         return 0
 
-    def estimatedCount(self, databaseName, collectionName, timeoutSeconds=DEFAULT_COUNT_TIMEOUT_SECONDS):
+    def estimatedCount(self, databaseName, collectionName, timeoutSeconds=None):
         """Return the estimated document count for a collection (from collection metadata).
 
         This is O(1) on the server, unlike the collection scan performed by count(), and is
@@ -825,6 +847,7 @@ class MongoDbUtil(object):
             int: estimated document count, or -1 if the count could not be obtained.
         """
         self.testMongoObj()
+        timeoutSeconds = self.__fetchOptions["countTimeoutSeconds"] if timeoutSeconds is None else timeoutSeconds
         try:
             clt = self.__mgObj[databaseName].get_collection(collectionName)
             if timeoutSeconds and float(timeoutSeconds) > 0:

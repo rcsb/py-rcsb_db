@@ -11,7 +11,8 @@
 #     1-Apr-2018 jdw update test connectionse
 #     6-Sep-2018 jdw add schema validation tests
 #     8-Jan-2019 jdw add tests for loading and recovering translated XML character references
-#    24-Nov-2026 dwp add testFetchProjection for fetch()/fetchBatched() with a projection document (projectionD)
+#    24-Nov-2026 dwp add testFetchProjection for fetch()/fetchBatched() with a projection document (projectionD),
+#                    and testFetchOptions for the configured paged-fetch/count defaults (MongoDbUtil(..., cfgOb=...))
 ##
 """
 Test cases for simple MongoDb client operations.
@@ -50,6 +51,8 @@ class MongoDbUtilTests(unittest.TestCase):
         #
         configPath = os.path.join(TOPDIR, "rcsb", "db", "config", "exdb-config-example.yml")
         configName = "site_info_configuration"
+        self.__configPath = configPath
+        self.__configName = configName
         self.__cfgOb = ConfigUtil(configPath=configPath, defaultSectionName=configName)
         self.__resourceName = "MONGO_DB"
         self.__connectD = self.__assignResource(self.__cfgOb, resourceName=self.__resourceName, sectionName=configName)
@@ -704,10 +707,52 @@ class MongoDbUtilTests(unittest.TestCase):
             logger.exception("Failing with %s", str(e))
             self.fail()
 
+    def testFetchOptions(self):
+        """Test case -  paged-fetch/count defaults read from the configuration (MongoDbUtil(client, cfgOb=...))."""
+        try:
+            defaultD = {"batchSize": 10000, "batchTimeoutSeconds": 600, "maxRetries": 3, "retryDelaySeconds": 10, "countTimeoutSeconds": 300}
+            # No configuration object: defaults
+            self.assertEqual(MongoDbUtil(None).getFetchOptions(), defaultD)
+            # The example configuration lists the defaults explicitly
+            self.assertEqual(MongoDbUtil(None, cfgOb=self.__cfgOb).getFetchOptions(), defaultD)
+            #
+            # Configured values (others keep their defaults); a value that isn't a number raises
+            cfgOb = ConfigUtil(configPath=self.__configPath, defaultSectionName=self.__configName)
+            sD = cfgOb.exportConfig(self.__configName)
+            for key in ["MONGO_DB_FETCH_RETRY_DELAY_SECONDS", "MONGO_DB_COUNT_TIMEOUT_SECONDS"]:
+                sD.pop(key, None)
+            sD.update({"MONGO_DB_FETCH_BATCH_SIZE": 4, "MONGO_DB_FETCH_BATCH_TIMEOUT_SECONDS": "120", "MONGO_DB_FETCH_MAX_RETRIES": "2"})
+            cfgOb.importConfig({self.__configName: sD})
+            badCfgOb = ConfigUtil(configPath=self.__configPath, defaultSectionName=self.__configName)
+            badCfgOb.importConfig({self.__configName: dict(sD, MONGO_DB_FETCH_RETRY_DELAY_SECONDS="abc")})
+            with self.assertRaises(ValueError):
+                MongoDbUtil(None, cfgOb=badCfgOb)
+            with Connection(cfgOb=cfgOb, resourceName=self.__resourceName) as client:
+                mg = MongoDbUtil(client, cfgOb=cfgOb)
+                self.assertEqual(mg.getFetchOptions(), dict(defaultD, batchSize=4, batchTimeoutSeconds=120.0, maxRetries=2))
+                ok = mg.createCollection(self.__dbName, self.__collectionName)
+                self.assertTrue(ok)
+                rIdL = mg.insertList(self.__dbName, self.__collectionName, [{"DOC_ID": "DOC_%d" % ii} for ii in range(10)], keyNames=["DOC_ID"])
+                self.assertEqual(len(rIdL), 10)
+                # configured batch size, an explicit argument overriding it, and an instance without cfgOb
+                batchL = list(mg.fetchBatched(self.__dbName, self.__collectionName, ["DOC_ID"]))
+                self.assertEqual([len(bL) for bL in batchL], [4, 4, 2])
+                batchL = list(mg.fetchBatched(self.__dbName, self.__collectionName, ["DOC_ID"], batchSize=5))
+                self.assertEqual([len(bL) for bL in batchL], [5, 5])
+                batchL = list(MongoDbUtil(client).fetchBatched(self.__dbName, self.__collectionName, ["DOC_ID"]))
+                self.assertEqual([len(bL) for bL in batchL], [10])
+                self.assertEqual(mg.count(self.__dbName, self.__collectionName), 10)
+                ok = mg.dropCollection(self.__dbName, self.__collectionName)
+                self.assertTrue(ok)
+        except Exception as e:
+            logger.exception("Failing with %s", str(e))
+            self.fail()
+
 
 def suiteFetch():
     suiteSelect = unittest.TestSuite()
     suiteSelect.addTest(MongoDbUtilTests("testFetchProjection"))
+    suiteSelect.addTest(MongoDbUtilTests("testFetchOptions"))
     return suiteSelect
 
 
